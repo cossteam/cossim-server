@@ -1,9 +1,11 @@
 package service
 
 import (
+	"fmt"
 	"im/services/user/api/v1"
 	"im/services/user/domain/entity"
 	"im/services/user/domain/repository"
+	"im/services/user/utils"
 )
 
 type UserService struct {
@@ -31,7 +33,9 @@ func (g UserService) Register(request *api.UserRegisterRequest) (*entity.User, e
 		Password: request.Password,
 		NickName: request.NickName,
 		Avatar:   request.Avatar,
+		ID:       utils.GenUUid(),
 	})
+	fmt.Println("user =>", user)
 	if err != nil {
 		return nil, err
 	}

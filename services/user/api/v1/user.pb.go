@@ -83,15 +83,15 @@ type UserLoginResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id,omitempty"`
 	// @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"NickName,omitempty"`
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name,omitempty"`
 	// @inject_tag: json:"email" form:"email" uri:"email"
-	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"Email,omitempty"`
+	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email,omitempty"`
 	// @inject_tag: json:"tel" form:"tel" uri:"tel"
-	Tel string `protobuf:"bytes,4,opt,name=Tel,proto3" json:"Tel,omitempty"`
+	Tel string `protobuf:"bytes,4,opt,name=Tel,proto3" json:"tel,omitempty"`
 	// @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
-	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"Avatar,omitempty"`
+	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"avatar,omitempty"`
 }
 
 func (x *UserLoginResponse) Reset() {

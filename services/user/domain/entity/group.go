@@ -7,7 +7,7 @@ type Group struct {
 	Type            GroupType   `gorm:"default:1;comment:群聊类型" json:"type"`
 	Status          GroupStatus `gorm:"comment:群聊状态" json:"status"`
 	MaxMembersLimit int         `gorm:"comment:群聊人数限制" json:"max_members_limit"`
-	CreatorID       string      `gorm:"comment:创建者id" json:"creator_id"`
+	CreatorID       string      `gorm:"varchar(128);comment:创建者id" json:"creator_id"`
 	Name            string      `gorm:"comment:群聊名称" json:"name"`
 	Avatar          string      `gorm:"default:'';comment:头像（群）" json:"avatar"`
 }

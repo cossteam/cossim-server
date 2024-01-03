@@ -11,16 +11,27 @@ import (
 
 func login(c *gin.Context) {
 	type LoginRequest struct {
-		Username string `json:"username" binding:"required"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 	req := new(LoginRequest)
-	if err := c.ShouldBindJSON(req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "参数验证失败"})
 		return
 	}
-	c.JSON(200, gin.H{"code": 200, "msg": "登录成功"})
-	//c.JSON(userClient.Login(c, u))
+
+	resp, err := userClient.UserLogin(context.Background(), &user.UserLoginRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	//todo 生成token
+	if err != nil {
+		logger.Error("user service failed", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"code": 200, "msg": "登录成功", "data": resp})
 }
 
 func register(c *gin.Context) {
@@ -49,6 +60,12 @@ func register(c *gin.Context) {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(req.Email) {
 		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "邮箱格式不正确"})
+		return
+	}
+	//最少包括一个数字，大小字符，最短8个字符，最长20个字符
+	emailRegex = regexp.MustCompile(`^[a-zA-Z0-9$@$!%*?&]{8,20}$`)
+	if !emailRegex.MatchString(req.Password) || !emailRegex.MatchString(req.ConfirmPass) {
+		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "密码格式不正确"})
 		return
 	}
 
