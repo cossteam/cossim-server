@@ -24,6 +24,7 @@ func (g UserService) Register(request *api.UserRegisterRequest) (*entity.User, e
 		Email:    request.Email,
 		Password: request.Password,
 		NickName: request.NickName,
+		Avatar:   request.Avatar,
 	})
 	if err != nil {
 		return nil, err

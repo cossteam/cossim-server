@@ -31,6 +31,8 @@ message UserRegisterRequest{
   string Password=3;
   // @inject_tag: json:"confirm_password" form:"confirm_password" uri:"confirm_password"
   string ConfirmPassword=4;
+  // @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
+  string Avatar=5;
 }
 message UserRegisterResponse{
   // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
