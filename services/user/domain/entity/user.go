@@ -1,7 +1,7 @@
 package entity
 
 type User struct {
-	ID          string `gorm:"type:uuid;primary_key;comment:用户id" json:"id"`
+	ID          string `gorm:"type:varchar(32);primary_key;comment:用户id" json:"id"`
 	Email       string `gorm:"type:varchar(100);uniqueIndex;comment:邮箱" json:"email"`
 	Tel         string `gorm:"type:varchar(50);comment:联系电话" json:"tel"`
 	NickName    string `gorm:"type:varchar(255);comment:昵称" json:"nickname"`
