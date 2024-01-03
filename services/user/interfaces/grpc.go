@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"context"
 	"fmt"
 	"im/services/user/api/v1"
 	"im/services/user/domain/service"
@@ -9,10 +10,11 @@ import (
 
 type GrpcHandler struct {
 	svc service.UserService
+	api.UnimplementedUserServiceServer
 }
 
 // 用户登录
-func (g *GrpcHandler) UserLogin(request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
+func (g *GrpcHandler) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	if err := g.validateLogin(request); err != nil {
 		return nil, err
 	}
@@ -36,7 +38,7 @@ func (g *GrpcHandler) UserLogin(request *api.UserLoginRequest) (*api.UserLoginRe
 }
 
 // 用户注册
-func (g *GrpcHandler) UserRegister(request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
+func (g *GrpcHandler) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
 	//参数校验
 	err := g.validateRegister(request)
 	if err != nil {
