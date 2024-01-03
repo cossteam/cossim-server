@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5977c8de-63e1-4b0e-b972-d825c54eab40" name="更改" comment="feat(user_bff、user_service、mysql): user_bff代码实现,公共数据库配置、user_service代码实现">
+      <change afterPath="$PROJECT_DIR$/.idea/coss-server.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/services/user/cmd/mian.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/utils/jwt.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/utils/jwt.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/api/v1/user.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/api/v1/user.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/config/regex.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/config/regex.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/domain/service/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/domain/service/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/infrastructure/persistence/user_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/infrastructure/persistence/user_repository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/interfaces/grpc.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/interfaces/grpc.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/mian.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user/utils/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/utils/utils.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file:///usr/local/Cellar/go@1.20/1.20.12/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;am6737&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="ce4e9ba8-4425-4eb4-9737-d27fba6a7815" />
+        <option name="url" value="https://github.com/cossim/coss-server.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file:///usr/local/Cellar/go@1.20/1.20.12/libexec/src/net/http/status.go" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2aNUD6KLua4rtgzzRgJLJvzBQIG" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "Go 构建.go build im/interfaces/user/cmd.executor": "Run",
+    "Go 构建.go build im/pkg/db/migrations.executor": "Run",
+    "Go 构建.go build im/services/user.executor": "Run",
+    "Go 构建.go build im/services/user/cmd.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.automatic.dependencies.download": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "git-widget-placeholder": "main",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/macos-15/GolandProjects/coss-server/services/user/config",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/services/user/config" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/services/user/cmd" />
+      <recent name="$PROJECT_DIR$/interfaces/user/server/http" />
+      <recent name="$PROJECT_DIR$/services/user/domain/entity" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go 构建.go build im/services/user/cmd">
+    <configuration name="go build im/interfaces/user/cmd" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="coss-server" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="im/interfaces/user/cmd" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/interfaces/user/cmd/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go build im/pkg/db/migrations" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="coss-server" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="im/pkg/db/migrations" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/pkg/db/migrations/main.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go build im/services/user/cmd" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="coss-server" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="im/services/user/cmd" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/services/user/mian.go" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go 构建.go build im/pkg/db/migrations" />
+      <item itemvalue="Go 构建.go build im/interfaces/user/cmd" />
+      <item itemvalue="Go 构建.go build im/services/user/cmd" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go 构建.go build im/services/user/cmd" />
+        <item itemvalue="Go 构建.go build im/pkg/db/migrations" />
+        <item itemvalue="Go 构建.go build im/interfaces/user/cmd" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-266795519c66-911b893a1778-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-233.13135.104" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="feat(user、msg): user、msg实体定义，user服务规范示例" />
+    <MESSAGE value="feat(user_bff、user_service、mysql): user_bff代码实现,公共数据库配置、user_service代码实现" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(user_bff、user_service、mysql): user_bff代码实现,公共数据库配置、user_service代码实现" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>
