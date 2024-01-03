@@ -10,6 +10,12 @@ type UserService struct {
 	ur repository.UserRepository
 }
 
+func NewUserService(ur repository.UserRepository) *UserService {
+	return &UserService{
+		ur: ur,
+	}
+}
+
 func (g UserService) Login(request *api.UserLoginRequest) (*entity.User, error) {
 	user, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {

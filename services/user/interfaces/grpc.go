@@ -3,14 +3,28 @@ package interfaces
 import (
 	"context"
 	"fmt"
+	"im/pkg/config"
+	"im/pkg/db"
 	"im/services/user/api/v1"
 	"im/services/user/domain/service"
+	"im/services/user/infrastructure/persistence"
 	"im/services/user/utils"
 )
 
 type GrpcHandler struct {
-	svc service.UserService
+	svc *service.UserService
 	api.UnimplementedUserServiceServer
+}
+
+func NewGrpcHandler(c *config.AppConfig) *GrpcHandler {
+	dbConn, err := db.NewMySQLFromDSN(c.MySQL.DSN).GetConnection()
+	if err != nil {
+		panic(err)
+	}
+
+	return &GrpcHandler{
+		svc: service.NewUserService(persistence.NewUserRepo(dbConn)),
+	}
 }
 
 // 用户登录
@@ -40,6 +54,7 @@ func (g *GrpcHandler) UserLogin(ctx context.Context, request *api.UserLoginReque
 // 用户注册
 func (g *GrpcHandler) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
 	//参数校验
+	fmt.Println("UserRegister req => ", request)
 	err := g.validateRegister(request)
 	if err != nil {
 		return nil, err
@@ -78,9 +93,9 @@ func (g *GrpcHandler) validateRegister(request *api.UserRegisterRequest) error {
 	if !utils.IsEmail(request.Email) {
 		return fmt.Errorf("邮箱格式不正确")
 	}
-	if !utils.ValidatePassword(request.Password) || !utils.ValidatePassword(request.ConfirmPassword) {
-		return fmt.Errorf("密码格式不正确")
-	}
+	//if !utils.ValidatePassword(request.Password) || !utils.ValidatePassword(request.ConfirmPassword) {
+	//	return fmt.Errorf("密码格式不正确")
+	//}
 	if request.Password != request.ConfirmPassword {
 		return fmt.Errorf("两次密码不一致")
 	}

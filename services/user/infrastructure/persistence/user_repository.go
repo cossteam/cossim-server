@@ -10,6 +10,10 @@ type UserRepo struct {
 	db *gorm.DB
 }
 
+func NewUserRepo(db *gorm.DB) *UserRepo {
+	return &UserRepo{db: db}
+}
+
 var UserR *UserRepo
 
 // 根据邮箱获取用户信息
@@ -31,11 +35,11 @@ func (ur *UserRepo) GetUserInfoByUid(id string) (*entity.User, error) {
 }
 
 // 修改用户信息
-func (ur *UserRepo) UpdateUser(user *entity.User) error {
+func (ur *UserRepo) UpdateUser(user *entity.User) (*entity.User, error) {
 	if err := ur.db.Save(user).Error; err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return nil, nil
 }
 
 // 添加用户
