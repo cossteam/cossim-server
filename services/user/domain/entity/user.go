@@ -4,7 +4,7 @@ type User struct {
 	ID          string `gorm:"type:uuid;primary_key;comment:用户id" json:"id"`
 	Email       string `gorm:"type:varchar(100);uniqueIndex;comment:邮箱" json:"email"`
 	Tel         string `gorm:"type:varchar(50);comment:联系电话" json:"tel"`
-	Nickname    string `gorm:"type:varchar(255);comment:昵称" json:"nickname"`
+	NickName    string `gorm:"type:varchar(255);comment:昵称" json:"nickname"`
 	Avatar      string `gorm:"type:varchar(255);comment:头像" json:"avatar"`
 	PublicKey   string `gorm:"comment:用户公钥" json:"public_key,omitempty"`
 	Password    string `gorm:"type:varchar(50);comment:登录密码" json:"password,omitempty"`

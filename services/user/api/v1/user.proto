@@ -1,0 +1,45 @@
+syntax = "proto3";
+package api;
+option go_package = "im/services/user/api";
+
+message UserLoginRequest{
+  // @inject_tag: json:"email" form:"email" uri:"email"
+  string Email=1;
+  // @inject_tag: json:"password" form:"password" uri:"password"
+  string Password=2;
+}
+
+message UserLoginResponse{
+  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  string UserId=1;
+  // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
+  string NickName=2;
+  // @inject_tag: json:"email" form:"email" uri:"email"
+  string Email=3;
+  // @inject_tag: json:"tel" form:"tel" uri:"tel"
+  string Tel=4;
+  // @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
+  string Avatar=5;
+}
+
+message UserRegisterRequest{
+  // @inject_tag: json:"email" form:"email" uri:"email"
+  string Email=1;
+  // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
+  string NickName=2;
+  // @inject_tag: json:"password" form:"password" uri:"password"
+  string Password=3;
+  // @inject_tag: json:"confirm_password" form:"confirm_password" uri:"confirm_password"
+  string ConfirmPassword=4;
+}
+message UserRegisterResponse{
+  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  string UserId=1;
+}
+
+
+service UserService{
+  rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
+  rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
+//  rpc UserLogout(UserRequest) returns(UserCommonResponse);
+}
