@@ -4,26 +4,30 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5977c8de-63e1-4b0e-b972-d825c54eab40" name="更改" comment="feat:新增数据库迁移">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="5977c8de-63e1-4b0e-b972-d825c54eab40" name="更改" comment="feat: 登录、注册接口逻辑修改">
+      <change afterPath="$PROJECT_DIR$/interfaces/msg/cmd/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interfaces/msg/config/config.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interfaces/msg/config/config.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interfaces/msg/server/http/http.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interfaces/msg/server/http/msg.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interfaces/msg/service/service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interfaces/msg/service/user.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/db/migrations/config/config.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/db/migrations/config/config.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interfaces/msg/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/interfaces/user/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/interfaces/user/cmd/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/interfaces/user/cmd/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interfaces/user/server/http/http.go" beforeDir="false" afterPath="$PROJECT_DIR$/interfaces/user/server/http/http.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/interfaces/user/server/http/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/interfaces/user/server/http/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/api/v1/user.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/api/v1/user.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/cmd/.gitkeep" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/cmd/mian.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/cmd/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/config/.gitkeep" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/config/base.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/config/regex.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/domain/entity/.gitkeep" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/domain/entity/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/domain/entity/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/domain/entity/user_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/domain/entity/user_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/domain/entity/user_relation.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/domain/entity/user_relation.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/domain/service/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/domain/service/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/infrastructure/persistence/user_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/infrastructure/persistence/user_repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/interfaces/grpc.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/interfaces/grpc.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user/utils/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/user/utils/utils.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/db/migrations/cmd/root.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/db/migrations/cmd/root.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/db/migrations/core/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/db/migrations/core/db.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/utils/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/msg/domain/entity/group_message.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/msg/domain/entity/group_message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/msg/domain/entity/user_message.go" beforeDir="false" afterPath="$PROJECT_DIR$/services/msg/domain/entity/user_message.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,31 +73,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
-    &quot;Go 构建.go build im/interfaces/user/cmd.executor&quot;: &quot;Run&quot;,
-    &quot;Go 构建.go build im/pkg/db/migrations.executor&quot;: &quot;Run&quot;,
-    &quot;Go 构建.go build im/services/user.executor&quot;: &quot;Run&quot;,
-    &quot;Go 构建.go build im/services/user/cmd.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.modules.automatic.dependencies.download&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
-    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/macos-15/GolandProjects/coss-server/services/user/config&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultGoTemplateProperty": "Go File",
+    "Go 构建.go build im/interfaces/user/cmd.executor": "Run",
+    "Go 构建.go build im/pkg/db/migrations.executor": "Run",
+    "Go 构建.go build im/services/user.executor": "Run",
+    "Go 构建.go build im/services/user/cmd.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.go.modules.automatic.dependencies.download": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "git-widget-placeholder": "main",
+    "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/hitosea-005/Desktop/hitosea/coss-server/interfaces/msg",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/interfaces/msg" />
+      <recent name="$PROJECT_DIR$/pkg/db/migrations" />
       <recent name="$PROJECT_DIR$/services/user/config" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -157,7 +163,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat(user、msg): user、msg实体定义，user服务规范示例" />
     <MESSAGE value="feat(user_bff、user_service、mysql): user_bff代码实现,公共数据库配置、user_service代码实现" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(user_bff、user_service、mysql): user_bff代码实现,公共数据库配置、user_service代码实现" />
+    <MESSAGE value="feat: 登录、注册接口逻辑修改" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 登录、注册接口逻辑修改" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

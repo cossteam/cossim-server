@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"im/pkg/db/migrations/config"
 	"im/pkg/db/migrations/core"
 	"os"
 )
@@ -14,7 +15,10 @@ var rootCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		//运行
 		fmt.Println("加载数据库")
-		if err := core.InitDB(); err != nil {
+		if err := config.Init(); err != nil {
+			panic(err)
+		}
+		if err := core.InitDB(&config.C); err != nil {
 			fmt.Println("数据库加载失败", err)
 			os.Exit(1)
 		}

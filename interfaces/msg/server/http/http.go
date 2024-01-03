@@ -7,35 +7,31 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	//_ "im/docs"
 	"im/pkg/config"
-	user "im/services/user/api/v1"
 	"time"
 )
 
 var (
-	userClient user.UserServiceClient
-	cfg        *config.AppConfig
-	logger     *zap.Logger
+	//msgClient user.MsgServiceClient
+	cfg    *config.AppConfig
+	logger *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
-
 	setupLogger()
-	setupUserGRPCClient()
+	//setupUserGRPCClient()
 	setupGin()
 }
 
 func setupUserGRPCClient() {
-	var err error
-	userConn, err := grpc.Dial(cfg.GRPC.Addr, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	userClient = user.NewUserServiceClient(userConn)
+	//var err error
+	//userConn, err := grpc.Dial(cfg.GRPC.Addr, grpc.WithInsecure())
+	//if err != nil {
+	//	logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	//}
+	//
+	//msgClient = user.NewUserServiceClient(userConn)
 }
 
 func setupLogger() {
@@ -100,13 +96,9 @@ func setupGin() {
 	}()
 }
 
-// @title coss-user模块
-
+// @title Swagger Example API
 func route(engine *gin.Engine) {
-	u := engine.Group("/user")
-
-	u.POST("/login", login)
-	u.POST("/register", register)
-	u.GET("/swagger/user/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
-	//u.POST("/logout", handleLogout)
+	u := engine.Group("/msg")
+	u.GET("/ws", ws)
+	u.GET("/swagger/user/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 }

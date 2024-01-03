@@ -2,9 +2,9 @@ package main
 
 import (
 	_ "im/docs"
+	"im/interfaces/msg/server/http"
 	"im/interfaces/user/config"
 	_ "im/interfaces/user/config"
-	"im/interfaces/user/server/http"
 	"os"
 	"os/signal"
 	"syscall"

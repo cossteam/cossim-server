@@ -1,0 +1,16 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Swagger Example API",
+        "contact": {}
+    },
+    "paths": {
+        "/msg/ws": {
+            "get": {
+                "description": "websocket请求",
+                "summary": "websocket请求",
+                "responses": {}
+            }
+        }
+    }
+}

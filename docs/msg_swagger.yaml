@@ -1,0 +1,10 @@
+info:
+  contact: {}
+  title: Swagger Example API
+paths:
+  /msg/ws:
+    get:
+      description: websocket请求
+      responses: {}
+      summary: websocket请求
+swagger: "2.0"

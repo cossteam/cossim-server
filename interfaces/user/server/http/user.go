@@ -34,16 +34,25 @@ func login(c *gin.Context) {
 	c.JSON(200, gin.H{"code": 200, "msg": "登录成功", "data": resp})
 }
 
+type RegisterRequest struct {
+	//Email    string `json:"email" binding:"required,email"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	//ConfirmPass string `json:"confirm_password" binding:"required,eqfield=Password"`
+	ConfirmPass string `json:"confirm_password" binding:"required"`
+	Avatar      string `json:"avatar"`
+	Nickname    string `json:"nickname"`
+}
+
+// @Summary 用户注册
+// @Description 用户注册
+// @Accept  json
+// @Produce  json
+// @param request body RegisterRequest true "request"
+// @Success		200 {object} utils.Response{}
+// @Router /books [post]
 func register(c *gin.Context) {
-	type RegisterRequest struct {
-		//Email    string `json:"email" binding:"required,email"`
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-		//ConfirmPass string `json:"confirm_password" binding:"required,eqfield=Password"`
-		ConfirmPass string `json:"confirm_password" binding:"required"`
-		Avatar      string `json:"avatar"`
-		Nickname    string `json:"nickname"`
-	}
+
 	req := new(RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))

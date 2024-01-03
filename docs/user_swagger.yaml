@@ -1,0 +1,53 @@
+definitions:
+  http.RegisterRequest:
+    properties:
+      avatar:
+        type: string
+      confirm_password:
+        description: ConfirmPass string `json:"confirm_password" binding:"required,eqfield=Password"`
+        type: string
+      email:
+        description: Email    string `json:"email" binding:"required,email"`
+        type: string
+      nickname:
+        type: string
+      password:
+        type: string
+    required:
+    - confirm_password
+    - email
+    - password
+    type: object
+  utils.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: coss-user模块
+paths:
+  /books:
+    post:
+      consumes:
+      - application/json
+      description: 用户注册
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 用户注册
+swagger: "2.0"
