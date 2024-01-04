@@ -21,19 +21,25 @@ func NewUserService(ur repository.UserRepository) *UserService {
 
 func (g UserService) Login(request *api.UserLoginRequest) (*entity.User, error) {
 	user, err := g.ur.GetUserInfoByEmail(request.Email)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("用户不存在或密码错误")
-		}
-		return nil, err
-	}
-	if user.Password != request.Password {
+	if err == gorm.ErrRecordNotFound || user.Password != request.Password {
 		return nil, fmt.Errorf("用户不存在或密码错误")
 	}
-	if user.Status == entity.UserStatusLock {
-		return nil, fmt.Errorf("用户暂时被锁定,请先解锁")
+	if err != nil {
+		return nil, err
 	}
-	return user, nil
+
+	switch user.Status {
+	case entity.UserStatusLock:
+		return nil, fmt.Errorf("用户暂时被锁定，请先解锁")
+	case entity.UserStatusDeleted:
+		return nil, fmt.Errorf("用户已被删除")
+	case entity.UserStatusDisable:
+		return nil, fmt.Errorf("用户已被禁用")
+	case entity.UserStatusNormal:
+		return user, nil
+	default:
+		return nil, fmt.Errorf("用户状态异常")
+	}
 }
 
 func (g UserService) Register(request *api.UserRegisterRequest) (*entity.User, error) {
