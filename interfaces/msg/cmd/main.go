@@ -3,8 +3,8 @@ package main
 import (
 	_ "github.com/cossim/coss-server/docs"
 	"github.com/cossim/coss-server/interfaces/msg/config"
+	_ "github.com/cossim/coss-server/interfaces/msg/config"
 	"github.com/cossim/coss-server/interfaces/msg/server/http"
-	_ "github.com/cossim/coss-server/interfaces/user/config"
 	"os"
 	"os/signal"
 	"syscall"

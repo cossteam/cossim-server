@@ -103,11 +103,11 @@ func setupGin() {
 // @title coss-user模块
 
 func route(engine *gin.Engine) {
-	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware())
+	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(logger))
 	u := engine.Group("/user")
 
 	u.POST("/login", login)
 	u.POST("/register", register)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler()))
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)
 }

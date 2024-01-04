@@ -43,8 +43,7 @@ func login(c *gin.Context) {
 		Password: req.Password,
 	})
 	if err != nil {
-		logger.Error("user service failed", zap.Error(err))
-		response.Fail(c, err.Error(), nil)
+		c.Error(err)
 		return
 	}
 
@@ -115,8 +114,7 @@ func register(c *gin.Context) {
 		Avatar:          req.Avatar,
 	})
 	if err != nil {
-		logger.Error("user service failed", zap.Error(err))
-		response.Fail(c, err.Error(), nil)
+		c.Error(err)
 		return
 	}
 

@@ -100,5 +100,5 @@ func setupGin() {
 func route(engine *gin.Engine) {
 	u := engine.Group("/msg")
 	u.GET("/ws", ws)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler()))
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }
