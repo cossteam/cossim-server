@@ -40,3 +40,8 @@ func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgTy
 	}
 	return content, nil
 }
+
+func (g *MsgRepo) GetUserMsgList(uid string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) {
+	//TODO implement me
+	panic("implement me")
+}

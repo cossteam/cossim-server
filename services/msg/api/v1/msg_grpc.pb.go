@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MsgService_SendUserMessage_FullMethodName  = "/v1.MsgService/SendUserMessage"
-	MsgService_SendGroupMessage_FullMethodName = "/v1.MsgService/SendGroupMessage"
+	MsgService_SendUserMessage_FullMethodName    = "/v1.MsgService/SendUserMessage"
+	MsgService_SendGroupMessage_FullMethodName   = "/v1.MsgService/SendGroupMessage"
+	MsgService_GetUserMessageList_FullMethodName = "/v1.MsgService/GetUserMessageList"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -29,6 +30,7 @@ const (
 type MsgServiceClient interface {
 	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
 	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
+	GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error)
 }
 
 type msgServiceClient struct {
@@ -57,12 +59,22 @@ func (c *msgServiceClient) SendGroupMessage(ctx context.Context, in *SendGroupMs
 	return out, nil
 }
 
+func (c *msgServiceClient) GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error) {
+	out := new(GetUserMsgListResponse)
+	err := c.cc.Invoke(ctx, MsgService_GetUserMessageList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
 type MsgServiceServer interface {
 	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
 	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
+	GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -75,6 +87,9 @@ func (UnimplementedMsgServiceServer) SendUserMessage(context.Context, *SendUserM
 }
 func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendGroupMessage not implemented")
+}
+func (UnimplementedMsgServiceServer) GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessageList not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
@@ -125,6 +140,24 @@ func _MsgService_SendGroupMessage_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_GetUserMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserMsgListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetUserMessageList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetUserMessageList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetUserMessageList(ctx, req.(*GetUserMsgListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -139,6 +172,10 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendGroupMessage",
 			Handler:    _MsgService_SendGroupMessage_Handler,
+		},
+		{
+			MethodName: "GetUserMessageList",
+			Handler:    _MsgService_GetUserMessageList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

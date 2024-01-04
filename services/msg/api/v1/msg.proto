@@ -19,7 +19,7 @@ message SendGroupMsgRequest{
   // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
   string UserId=1;
   // @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
-  string GroupId=2;
+  int64 GroupId=2;
   // @inject_tag: json:"content" form:"content" uri:"content"
   string Content=3;
   // @inject_tag: json:"type" form:"type" uri:"type"
@@ -28,6 +28,52 @@ message SendGroupMsgRequest{
   uint64 ReplayId=5;
 }
 
+message GetUserMsgListRequest{
+  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  string UserId=1;
+  // @inject_tag: json:"type" form:"type" uri:"type"
+  int32 Type = 2;
+  // @inject_tag: json:"content" form:"content" uri:"content"
+  string Content = 3;
+  // @inject_tag: json:"page_size" form:"page_size" uri:"page_size"
+  int32 page_size = 4;
+  // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
+  int32 page_number = 5;
+}
+
+message UserMessage{
+  // @inject_tag: json:"id" form:"id" uri:"id"
+  int64 Id=1;
+  // @inject_tag: json:"sender_id" form:"sender_id" uri:"sender_id"
+  string SenderId=2;
+  // @inject_tag: json:"receiver_id" form:"receiver_id" uri:"receiver_id"
+  string ReceiverId=3;
+  // @inject_tag: json:"content" form:"content" uri:"content"
+  string Content=4;
+  // @inject_tag: json:"type" form:"type" uri:"type"
+  int32 Type=5;
+  // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
+  uint64 ReplayId=6;
+  // @inject_tag: json:"is_read" form:"is_read" uri:"is_read"
+  int32 IsRead=7;
+  // @inject_tag: json:"read_at" form:"read_at" uri:"read_at"
+  int64 ReadAt=8;
+  // @inject_tag: json:"receive_id" form:"receive_id" uri:"receive_id"
+  string ReceiveId=9;
+  // @inject_tag: json:"created_at" form:"created_at" uri:"created_at"
+  int64 CreatedAt=10;
+}
+
+message GetUserMsgListResponse{
+  // @inject_tag: json:"user_messages" form:"user_messages" uri:"user_messages"
+  repeated string UserMessages = 1;
+  // @inject_tag: json:"total" form:"total" uri:"total"
+  int32 Total = 2;
+  // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
+  int32 PageNumber = 3;
+  // @inject_tag: json:"current_page" form:"current_page" uri:"current_page"
+  int32 CurrentPage = 4;
+}
 
 message SendUserMsgResponse{
 
@@ -43,4 +89,5 @@ message SendGroupMsgResponse{
 service MsgService{
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
+  rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
 }

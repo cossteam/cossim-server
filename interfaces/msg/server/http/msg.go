@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/interfaces/msg/config"
+	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
-	"github.com/cossim/coss-server/pkg/utils"
 	msg "github.com/cossim/coss-server/services/msg/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-
 	"go.uber.org/zap"
 	"net/http"
 	"sync"
@@ -51,13 +50,10 @@ func ws(c *gin.Context) {
 		Uid:  "",
 		Rid:  wsRid,
 	}
-	token := c.GetHeader("Authorization")
-	if token != "" {
-		_, c2, err := utils.ParseToken(token)
-		if err != nil {
-			return
-		}
-		client.Uid = c2.UserId
+	client.Uid, err = pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 	//保存到线程池
 	client.wsOnlineClients()
@@ -74,7 +70,6 @@ func ws(c *gin.Context) {
 }
 
 type SendUserMsgRequest struct {
-	SenderId   string `json:"sender_id" binding:"required"`
 	ReceiverId string `json:"receiver_id" binding:"required"`
 	Content    string `json:"content" binding:"required"`
 	Type       uint   `json:"type" binding:"required"`
@@ -95,8 +90,14 @@ func sendUserMsg(c *gin.Context) {
 		response.Fail(c, "参数验证失败", nil)
 		return
 	}
-	_, err := msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
-		SenderId:   req.SenderId,
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//todo 判断好友关系是否正常
+	_, err = msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
+		SenderId:   thisId,
 		ReceiverId: req.ReceiverId,
 		Content:    req.Content,
 		Type:       int32(req.Type),
@@ -108,9 +109,56 @@ func sendUserMsg(c *gin.Context) {
 	}
 	if _, ok := pool[req.ReceiverId]; ok {
 		if len(pool[req.ReceiverId]) > 0 {
-			sendWsUserMsg(req.SenderId, req.ReceiverId, req.Content, req.Type)
+			sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId)
 		}
 	}
+	response.Success(c, "发送成功", gin.H{})
+}
+
+type SendGroupMsgRequest struct {
+	GroupId  int64  `json:"group_id" binding:"required"`
+	Content  string `json:"content" binding:"required"`
+	Type     uint   `json:"type" binding:"required"`
+	ReplayId uint   `json:"replay_id" binding:"required"`
+}
+
+// @Summary 发送群聊消息
+// @Description 发送群聊消息
+// @Accept  json
+// @Produce  json
+// @param request body SendUserMsgRequest true "request"
+// @Success		200 {object} utils.Response{}
+// @Router /msg/send/group [post]
+func sendGroupMsg(c *gin.Context) {
+	req := new(SendGroupMsgRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.Fail(c, "参数验证失败", nil)
+		return
+	}
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//todo 判断是否在群聊里
+	//todo 判断是否被禁言
+	uids, err := msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
+		GroupId:  req.GroupId,
+		Content:  req.Content,
+		Type:     int32(req.Type),
+		ReplayId: uint64(req.ReplayId),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
+	//if _, ok := pool[req.ReceiverId]; ok {
+	//	if len(pool[req.ReceiverId]) > 0 {
+	//		sendWsUserMsg(req.SenderId, req.ReceiverId, req.Content, req.Type, req.ReplayId)
+	//	}
+	//}
 	response.Success(c, "发送成功", gin.H{})
 }
 
@@ -122,23 +170,44 @@ type wsMsg struct {
 }
 
 // 推送私聊消息
-func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint) {
-	fmt.Println("待发送消息为：", msg)
+func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint) {
 	type wsUserMsg struct {
 		SenderId string `json:"uid"`
 		Content  string `json:"content"`
 		MsgType  uint   `json:"msgType"`
+		ReplayId uint   `json:"reply_id"`
 	}
 	//遍历该用户所有客户端
 	for _, c := range pool[receiverId] {
-		m := wsMsg{Uid: receiverId, Event: config.SendMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType}}
+		m := wsMsg{Uid: receiverId, Event: config.SendMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId}}
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
 			return
 		}
 	}
+}
 
+// 推送群聊消息
+func sendWsGroupMsg(uIds []string, userId string, groupId int64, msg string, msgType uint, replayId uint) {
+	type wsGroupMsg struct {
+		GroupId  int64  `json:"group_id"`
+		UserId   string `json:"uid"`
+		Content  string `json:"content"`
+		MsgType  uint   `json:"msgType"`
+		ReplayId uint   `json:"reply_id"`
+	}
+	//发送群聊消息
+	for _, uid := range uIds {
+		//遍历该用户所有客户端
+		for _, c := range pool[uid] {
+			m := wsMsg{Uid: uid, Event: config.SendMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{groupId, userId, msg, msgType, replayId}}
+			js, _ := json.Marshal(m)
+			err := c.Conn.WriteMessage(websocket.TextMessage, js)
+			if err != nil {
+			}
+		}
+	}
 }
 
 // 用户上线
@@ -148,7 +217,6 @@ func (c client) wsOnlineClients() {
 	pool[c.Uid] = append(pool[c.Uid], &c)
 	wsMutex.Unlock()
 	//通知前端接收离线消息
-	fmt.Println("通知前端接收离线消息")
 	msg := wsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid}
 	js, _ := json.Marshal(msg)
 	//上线推送消息
@@ -164,5 +232,4 @@ func (c client) wsOfflineClients() {
 	wsMutex.Unlock()
 	fmt.Println(c.Uid, "下线了")
 	return
-
 }

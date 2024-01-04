@@ -9,17 +9,18 @@ import (
 	"go.uber.org/zap"
 )
 
+type blackListRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
+
 // @Summary 黑名单
 // @Description 黑名单
 // @Accept  json
 // @Produce  json
-// @param request body LoginRequest true "request"
+// @param request body blackListRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/blacklist [get]
 func blackList(c *gin.Context) {
-	type blackListRequest struct {
-		UserID string `json:"user_id" binding:"required"`
-	}
 	req := new(blackListRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
@@ -59,17 +60,18 @@ func blackList(c *gin.Context) {
 	response.Success(c, "获取黑名单列表成功", gin.H{"blacklist": blacklist})
 }
 
+type friendListRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
+
 // @Summary 好友列表
 // @Description 好友列表
 // @Accept  json
 // @Produce  json
-// @param request body LoginRequest true "request"
+// @param request body friendListRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/friend_list [get]
 func friendList(c *gin.Context) {
-	type friendListRequest struct {
-		UserID string `json:"user_id" binding:"required"`
-	}
 	req := new(friendListRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))

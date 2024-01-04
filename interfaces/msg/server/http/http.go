@@ -106,5 +106,6 @@ func route(engine *gin.Engine) {
 	//u.Use(middleware.AuthMiddleware())
 	u.GET("/ws", ws)
 	u.POST("/send/user", sendUserMsg)
+	u.POST("/send/group", sendGroupMsg)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

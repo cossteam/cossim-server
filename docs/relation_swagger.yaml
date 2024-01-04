@@ -1,0 +1,217 @@
+definitions:
+  http.addBlacklistRequest:
+    properties:
+      friend_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - friend_id
+    - user_id
+    type: object
+  http.addFriendRequest:
+    properties:
+      friend_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - friend_id
+    type: object
+  http.blackListRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  http.confirmFriendRequest:
+    properties:
+      friend_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - friend_id
+    - user_id
+    type: object
+  http.deleteBlacklistRequest:
+    properties:
+      friend_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - friend_id
+    - user_id
+    type: object
+  http.deleteFriendRequest:
+    properties:
+      friend_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - friend_id
+    - user_id
+    type: object
+  http.friendListRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  utils.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: coss-relation模块
+paths:
+  /relation/add_blacklist:
+    post:
+      consumes:
+      - application/json
+      description: 添加黑名单
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.addBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 添加黑名单
+  /relation/add_friend:
+    post:
+      consumes:
+      - application/json
+      description: 添加好友
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.addFriendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 添加好友
+  /relation/blacklist:
+    get:
+      consumes:
+      - application/json
+      description: 黑名单
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.blackListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 黑名单
+  /relation/confirm_friend:
+    post:
+      consumes:
+      - application/json
+      description: 确认添加好友
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.confirmFriendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 确认添加好友
+  /relation/delete_blacklist:
+    post:
+      consumes:
+      - application/json
+      description: 删除黑名单
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.deleteBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 删除黑名单
+  /relation/delete_friend:
+    post:
+      consumes:
+      - application/json
+      description: 删除好友
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.deleteFriendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 删除好友
+  /relation/friend_list:
+    get:
+      consumes:
+      - application/json
+      description: 好友列表
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.friendListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 好友列表
+swagger: "2.0"

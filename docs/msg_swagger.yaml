@@ -7,15 +7,12 @@ definitions:
         type: string
       replay_id:
         type: integer
-      sender_id:
-        type: string
       type:
         type: integer
     required:
     - content
     - receiver_id
     - replay_id
-    - sender_id
     - type
     type: object
   utils.Response:
@@ -30,6 +27,26 @@ info:
   contact: {}
   title: Swagger Example API
 paths:
+  /msg/send/group:
+    post:
+      consumes:
+      - application/json
+      description: 发送群聊消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.SendUserMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 发送群聊消息
   /msg/send/user:
     post:
       consumes:

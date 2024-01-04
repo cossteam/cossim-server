@@ -93,7 +93,7 @@ func register(c *gin.Context) {
 	}
 
 	//最少包括一个数字，大小字符，最短8个字符，最长20个字符
-	emailRegex = regexp2.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&]).{8,20}$`, 0)
+	emailRegex = regexp2.MustCompile(`^(?=.*[0-9])(?=.*[a-zA-Z]).{6,50}$`, 0)
 	if isMatch, _ := emailRegex.MatchString(req.Password); !isMatch {
 		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "密码格式不正确"})
 		return

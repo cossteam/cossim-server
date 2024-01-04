@@ -15,6 +15,37 @@ const docTemplatemsg = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/msg/send/group": {
+            "post": {
+                "description": "发送群聊消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "发送群聊消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/send/user": {
             "post": {
                 "description": "发送私聊消息",
@@ -61,7 +92,6 @@ const docTemplatemsg = `{
                 "content",
                 "receiver_id",
                 "replay_id",
-                "sender_id",
                 "type"
             ],
             "properties": {
@@ -73,9 +103,6 @@ const docTemplatemsg = `{
                 },
                 "replay_id": {
                     "type": "integer"
-                },
-                "sender_id": {
-                    "type": "string"
                 },
                 "type": {
                     "type": "integer"

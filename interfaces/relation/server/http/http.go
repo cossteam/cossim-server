@@ -113,7 +113,7 @@ func setupGin() {
 	}()
 }
 
-// @title coss-user模块
+// @title coss-relation模块
 
 func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/relation")
