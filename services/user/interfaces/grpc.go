@@ -80,7 +80,7 @@ func (g *GrpcHandler) UserInfo(ctx context.Context, request *api.UserInfoRequest
 }
 
 func (g *GrpcHandler) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
-	var resp *api.GetBatchUserInfoResponse
+	resp := &api.GetBatchUserInfoResponse{}
 	users, err := g.svc.GetBatchGetUserInfo(request.UserIds)
 	if err != nil {
 		return nil, err

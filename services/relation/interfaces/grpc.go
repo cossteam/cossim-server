@@ -26,42 +26,47 @@ type GrpcHandler struct {
 }
 
 func (g *GrpcHandler) AddFriend(ctx context.Context, request *api.AddFriendRequest) (*api.AddFriendResponse, error) {
+	resp := &api.AddFriendResponse{}
 	if _, err := g.svc.AddFriend(ctx, request.GetUserId(), request.GetFriendId()); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return resp, nil
 }
 
 func (g *GrpcHandler) ConfirmFriend(ctx context.Context, request *api.ConfirmFriendRequest) (*api.ConfirmFriendResponse, error) {
+	resp := &api.ConfirmFriendResponse{}
 	if _, err := g.svc.ConfirmFriend(ctx, request.GetUserId(), request.GetFriendId()); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return resp, nil
 }
 
 func (g *GrpcHandler) DeleteFriend(ctx context.Context, request *api.DeleteFriendRequest) (*api.DeleteFriendResponse, error) {
+	resp := &api.DeleteFriendResponse{}
 	if _, err := g.svc.DeleteFriend(ctx, request.GetUserId(), request.GetFriendId()); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return resp, nil
 }
 
 func (g *GrpcHandler) AddBlacklist(ctx context.Context, request *api.AddBlacklistRequest) (*api.AddBlacklistResponse, error) {
-	if _, err := g.svc.DeleteBlacklist(ctx, request.GetUserId(), request.GetFriendId()); err != nil {
+	resp := &api.AddBlacklistResponse{}
+	if _, err := g.svc.AddBlacklist(ctx, request.GetUserId(), request.GetFriendId()); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return resp, nil
 }
 
 func (g *GrpcHandler) DeleteBlacklist(ctx context.Context, request *api.DeleteBlacklistRequest) (*api.DeleteBlacklistResponse, error) {
+	resp := &api.DeleteBlacklistResponse{}
 	if _, err := g.svc.DeleteBlacklist(ctx, request.GetUserId(), request.GetFriendId()); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return resp, nil
 }
 
 func (g *GrpcHandler) GetFriendList(ctx context.Context, request *api.GetFriendListRequest) (*api.GetFriendListResponse, error) {
-	var resp *api.GetFriendListResponse
+	resp := &api.GetFriendListResponse{} // 初始化 resp
 	friends, err := g.svc.GetFriendList(ctx, request.GetUserId())
 	if err != nil {
 		return nil, err
@@ -75,8 +80,8 @@ func (g *GrpcHandler) GetFriendList(ctx context.Context, request *api.GetFriendL
 }
 
 func (g *GrpcHandler) GetBlacklist(ctx context.Context, request *api.GetBlacklistRequest) (*api.GetBlacklistResponse, error) {
-	var resp *api.GetBlacklistResponse
-	blacks, err := g.svc.GetFriendList(ctx, request.GetUserId())
+	resp := &api.GetBlacklistResponse{} // 初始化 resp
+	blacks, err := g.svc.GetBlacklist(ctx, request.GetUserId())
 	if err != nil {
 		return nil, err
 	}

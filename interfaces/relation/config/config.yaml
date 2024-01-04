@@ -37,8 +37,8 @@ register:
 
 discovers:
   user:
-    name: "relation_service"
-    addr: "127.0.0.1:10002"
+    name: "user_service"
+    addr: "127.0.0.1:10003"
     dial: "3000ms"
     timeout: "5000ms"
   relation:

@@ -82,6 +82,7 @@ func friendList(c *gin.Context) {
 	// 检查用户是否存在
 	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
+		logger.Error("user service UserInfo", zap.Error(err))
 		c.Error(err)
 		return
 	}
@@ -94,6 +95,7 @@ func friendList(c *gin.Context) {
 	// 获取好友列表
 	friendListResp, err := relationClient.GetFriendList(context.Background(), &relationApi.GetFriendListRequest{UserId: req.UserID})
 	if err != nil {
+		logger.Error("user service GetFriendList", zap.Error(err))
 		c.Error(err)
 		return
 	}
@@ -105,6 +107,8 @@ func friendList(c *gin.Context) {
 
 	userInfos, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: users})
 	if err != nil {
+		logger.Error("user service GetBatchUserInfo", zap.Error(err))
+		c.Error(err)
 		return
 	}
 
@@ -276,7 +280,7 @@ func confirmFriend(c *gin.Context) {
 }
 
 type addFriendRequest struct {
-	UserId   string `json:"user_id" binding:"user_id"`
+	UserId   string `json:"user_id" binding:"required"`
 	FriendId string `json:"friend_id" binding:"required"`
 }
 

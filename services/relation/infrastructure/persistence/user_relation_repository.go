@@ -42,7 +42,15 @@ func (u *UserRelationRepo) GetRelationByID(userId, friendId string) (*entity.Use
 
 func (u *UserRelationRepo) GetRelationsByUserID(userId string) ([]*entity.UserRelation, error) {
 	var relations []*entity.UserRelation
-	if err := u.db.Where("user_id = ?", userId).Find(&relations).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.RelationStatusAdded).Find(&relations).Error; err != nil {
+		return nil, err
+	}
+	return relations, nil
+}
+
+func (u *UserRelationRepo) GetBlacklistByUserID(userId string) ([]*entity.UserRelation, error) {
+	var relations []*entity.UserRelation
+	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.RelationStatusBlocked).Find(&relations).Error; err != nil {
 		return nil, err
 	}
 	return relations, nil

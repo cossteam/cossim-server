@@ -118,7 +118,7 @@ func setupGin() {
 func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/relation")
 	u.GET("/friend_list", friendList)
-	u.POST("/blacklist", blackList)
+	u.GET("/blacklist", blackList)
 	u.POST("/add_friend", addFriend)
 	u.POST("/confirm_friend", confirmFriend)
 	u.POST("/delete_friend", deleteFriend)
