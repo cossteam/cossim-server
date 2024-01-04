@@ -22,7 +22,7 @@ func NewUserService(urr repository.UserRelationRepository) *UserService {
 func (u *UserService) AddFriend(ctx context.Context, userId, friendId string) (*entity.UserRelation, error) {
 	// Fetch the existing relationship between the user and friend
 	relation, err := u.urr.GetRelationByID(userId, friendId)
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("failed to add friend: %w", err)
 	}
 
@@ -58,6 +58,18 @@ func (u *UserService) ConfirmFriend(ctx context.Context, userId string, friendId
 
 	if relation == nil {
 		return nil, fmt.Errorf("relation not found")
+	}
+
+	newRelation := &entity.UserRelation{
+		UserID:   friendId,
+		FriendID: userId,
+		Status:   entity.RelationStatusAdded,
+	}
+
+	// Save the new relationship to the database
+	_, err = u.urr.CreateRelation(newRelation)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add friend: %w", err)
 	}
 
 	relation.Status = entity.RelationStatusAdded
@@ -97,6 +109,25 @@ func (u *UserService) AddBlacklist(ctx context.Context, userId, friendId string)
 		return nil, fmt.Errorf("failed to update relation: %w", err)
 	}
 
+	return nil, nil
+}
+
+func (u *UserService) DeleteBlacklist(ctx context.Context, userId, friendId string) (interface{}, error) {
+	// Assuming urr is a UserRelationRepository instance in UserService
+	relation1, err := u.urr.GetRelationByID(userId, friendId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve relation: %w", err)
+	}
+
+	if relation1 == nil {
+		return nil, fmt.Errorf("relation not found")
+	}
+
+	relation1.Status = entity.RelationStatusAdded
+	if _, err = u.urr.UpdateRelation(relation1); err != nil {
+		return nil, fmt.Errorf("failed to update relation: %w", err)
+	}
+
 	relation2, err := u.urr.GetRelationByID(friendId, userId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve relation: %w", err)
@@ -106,22 +137,9 @@ func (u *UserService) AddBlacklist(ctx context.Context, userId, friendId string)
 		return nil, fmt.Errorf("relation not found")
 	}
 
-	relation2.Status = entity.RelationStatusBlocked
+	relation2.Status = entity.RelationStatusAdded
 	if _, err = u.urr.UpdateRelation(relation2); err != nil {
 		return nil, fmt.Errorf("failed to update relation: %w", err)
-	}
-
-	return nil, nil
-}
-
-func (u *UserService) DeleteBlacklist(ctx context.Context, userId, friendId string) (interface{}, error) {
-	// Assuming urr is a UserRelationRepository instance in UserService
-	if err := u.urr.DeleteRelationByID(userId, friendId); err != nil {
-		return nil, fmt.Errorf("failed to delete from blacklist: %w", err)
-	}
-
-	if err := u.urr.DeleteRelationByID(friendId, userId); err != nil {
-		return nil, fmt.Errorf("failed to delete from blacklist: %w", err)
 	}
 
 	return nil, nil
@@ -137,4 +155,16 @@ func (u *UserService) GetFriendList(ctx context.Context, userId string) ([]*enti
 	}
 
 	return friends, nil
+}
+
+func (u *UserService) GetBlacklist(ctx context.Context, userId string) ([]*entity.UserRelation, error) {
+	blacklist, err := u.urr.GetBlacklistByUserID(userId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("未找到用户")
+		}
+		return nil, fmt.Errorf("获取用户好友信息失败: %w", err)
+	}
+
+	return blacklist, nil
 }
