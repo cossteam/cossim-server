@@ -1,6 +1,6 @@
 package main
 
-import "im/pkg/db/migrations/cmd"
+import "github.com/cossim/coss-server/pkg/db/migrations/cmd"
 
 func main() {
 	cmd.Execute()

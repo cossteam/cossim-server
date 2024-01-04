@@ -1,8 +1,8 @@
 package core
 
 import (
+	"github.com/cossim/coss-server/pkg/db/migrations/table"
 	"github.com/go-gormigrate/gormigrate/v2"
-	"im/pkg/db/migrations/table"
 	"reflect"
 	"sort"
 	"strings"

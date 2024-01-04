@@ -1,9 +1,9 @@
 package table
 
 import (
+	"github.com/cossim/coss-server/services/msg/domain/entity"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
-	"im/services/msg/domain/entity"
 )
 
 func (d InitDatabase) AddTableUserMsg() *gormigrate.Migration {

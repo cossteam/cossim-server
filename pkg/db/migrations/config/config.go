@@ -1,8 +1,8 @@
 package config
 
 import (
+	"github.com/cossim/coss-server/pkg/config"
 	"github.com/spf13/viper"
-	"im/pkg/config"
 )
 
 var C config.AppConfig

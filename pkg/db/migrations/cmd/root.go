@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/pkg/db/migrations/config"
+	"github.com/cossim/coss-server/pkg/db/migrations/core"
 	"github.com/spf13/cobra"
-	"im/pkg/db/migrations/config"
-	"im/pkg/db/migrations/core"
 	"os"
 )
 

@@ -1,9 +1,9 @@
 package core
 
 import (
+	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/db"
 	"gorm.io/gorm"
-	"im/pkg/config"
-	"im/pkg/db"
 )
 
 var (
