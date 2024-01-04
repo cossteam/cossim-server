@@ -109,20 +109,6 @@ func (u *UserService) AddBlacklist(ctx context.Context, userId, friendId string)
 		return nil, fmt.Errorf("failed to update relation: %w", err)
 	}
 
-	relation2, err := u.urr.GetRelationByID(friendId, userId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve relation: %w", err)
-	}
-
-	if relation2 == nil {
-		return nil, fmt.Errorf("relation not found")
-	}
-
-	relation2.Status = entity.RelationStatusBlocked
-	if _, err = u.urr.UpdateRelation(relation2); err != nil {
-		return nil, fmt.Errorf("failed to update relation: %w", err)
-	}
-
 	return nil, nil
 }
 
