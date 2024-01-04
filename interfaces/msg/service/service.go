@@ -1,7 +1,7 @@
 package service
 
 import (
-	"im/pkg/config"
+	"github.com/cossim/coss-server/pkg/config"
 )
 
 // Service struct

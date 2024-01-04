@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"github.com/cossim/coss-server/pkg/http/response"
+	"github.com/cossim/coss-server/pkg/utils"
 	user "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
@@ -26,13 +28,13 @@ func login(c *gin.Context) {
 	req := new(LoginRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "参数验证失败"})
+		response.Fail(c, "参数验证失败", nil)
 		return
 	}
 	// 正则表达式匹配邮箱格式
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(req.Email) {
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "邮箱格式不正确"})
+		response.Fail(c, "邮箱格式不正确", nil)
 		return
 	}
 
@@ -40,13 +42,20 @@ func login(c *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	})
-	//todo 生成token
 	if err != nil {
 		logger.Error("user service failed", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": err.Error()})
+		response.Fail(c, err.Error(), nil)
 		return
 	}
-	c.JSON(200, gin.H{"code": 200, "msg": "登录成功", "data": resp})
+
+	token, err := utils.GenerateToken(resp.UserId, resp.Email)
+	if err != nil {
+		logger.Error("failed to generate user token", zap.Error(err))
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+
+	response.Success(c, "登录成功", gin.H{"token": token})
 }
 
 type RegisterRequest struct {
@@ -71,12 +80,12 @@ func register(c *gin.Context) {
 	req := new(RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "参数验证失败"})
+		response.Fail(c, "参数验证失败", nil)
 		return
 	}
 
 	if req.Password != req.ConfirmPass {
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "密码和确认密码不匹配"})
+		response.Fail(c, "密码和确认密码不匹配", nil)
 		return
 	}
 
@@ -94,7 +103,7 @@ func register(c *gin.Context) {
 		return
 	}
 	if isMatch, _ := emailRegex.MatchString(req.ConfirmPass); !isMatch {
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "密码格式不正确"})
+		response.Fail(c, "密码格式不正确", nil)
 		return
 	}
 
@@ -107,11 +116,9 @@ func register(c *gin.Context) {
 	})
 	if err != nil {
 		logger.Error("user service failed", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": err.Error()})
+		response.Fail(c, err.Error(), nil)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"code": http.StatusOK, "msg": "注册成功", "data": map[string]interface{}{
-		"user_id": resp.UserId,
-	}})
+	response.Success(c, "注册成功", gin.H{"user_id": resp.UserId})
 }

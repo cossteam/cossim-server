@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/http/middleware"
 	user "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -102,10 +103,11 @@ func setupGin() {
 // @title coss-user模块
 
 func route(engine *gin.Engine) {
+	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware())
 	u := engine.Group("/user")
 
 	u.POST("/login", login)
 	u.POST("/register", register)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler()))
 	//u.POST("/logout", handleLogout)
 }

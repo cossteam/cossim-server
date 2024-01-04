@@ -2,17 +2,16 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"sync"
 	"time"
 )
-
-//=====
-// Mysql配置对象
-//=====
 
 // MySQL mysql配置
 type MySQL struct {
@@ -30,12 +29,15 @@ type MySQL struct {
 	MaxIdleConn int `toml:"max_idle_conn" env:"MYSQL_MAX_IDLE_CONN"`
 	// 一个连接的生命周期，这个和 Mysql Server配置有关系，必须小于 Server 配置
 	// 比如一个链接用 12 h 换一个 conn，保证一点的可用性
-	MaxLifeTime int `toml:"max_life_time" env:"MYSQL_MAX_LIFE_TIME"`
+	MaxLifeTime string `toml:"max_life_time" env:"MYSQL_MAX_LIFE_TIME"`
 	// Idle 连接 最多允许存货多久
-	MaxIdleTime int `toml:"max_idle_time" env:"MYSQL_MAX_idle_TIME"`
+	MaxIdleTime string `toml:"max_idle_time" env:"MYSQL_MAX_idle_TIME"`
 	// 作为私有变量，用于控制DetDB
 	lock sync.Mutex
 }
+
+var mysqlDb *gorm.DB
+var lock sync.Mutex
 
 type Option func(*MySQL)
 
@@ -51,13 +53,13 @@ func WithMaxIdleConn(maxIdleConn int) Option {
 	}
 }
 
-func WithMaxLifeTime(maxLifeTime int) Option {
+func WithMaxLifeTime(maxLifeTime string) Option {
 	return func(m *MySQL) {
 		m.MaxLifeTime = maxLifeTime
 	}
 }
 
-func WithMaxIdleTime(maxIdleTime int) Option {
+func WithMaxIdleTime(maxIdleTime string) Option {
 	return func(m *MySQL) {
 		m.MaxIdleTime = maxIdleTime
 	}
@@ -66,8 +68,8 @@ func WithMaxIdleTime(maxIdleTime int) Option {
 const (
 	DefaultMaxOpenConn = 10
 	DefaultMaxIdleConn = 5
-	DefaultMaxLifeTime = 7200
-	DefaultMaxIdleTime = 14400
+	DefaultMaxLifeTime = "2h"
+	DefaultMaxIdleTime = "4h"
 )
 
 func NewMySQL(host, port, username, password, database string, opts ...Option) (*MySQL, error) {
@@ -94,10 +96,10 @@ func NewMySQL(host, port, username, password, database string, opts ...Option) (
 	if c.MaxIdleConn == 0 {
 		c.MaxIdleConn = DefaultMaxIdleConn
 	}
-	if c.MaxLifeTime == 0 {
+	if len(c.MaxLifeTime) == 0 {
 		c.MaxLifeTime = DefaultMaxLifeTime
 	}
-	if c.MaxIdleTime == 0 {
+	if len(c.MaxIdleTime) == 0 {
 		c.MaxIdleTime = DefaultMaxIdleTime
 	}
 
@@ -123,17 +125,23 @@ func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 	if c.MaxIdleConn == 0 {
 		c.MaxIdleConn = DefaultMaxIdleConn
 	}
-	if c.MaxLifeTime == 0 {
+	if len(c.MaxLifeTime) == 0 {
 		c.MaxLifeTime = DefaultMaxLifeTime
 	}
-	if c.MaxIdleTime == 0 {
+	if len(c.MaxIdleTime) == 0 {
 		c.MaxIdleTime = DefaultMaxIdleTime
 	}
 
 	return c
 }
 
-var mysqlDb *gorm.DB
+func NewMysqlFromConfig(c *config.MySQLConfig, opts ...Option) *MySQL {
+	mysqlConn := NewMySQLFromDSN(c.DSN,
+		WithMaxIdleTime(c.IdleTimeout),
+	)
+
+	return mysqlConn
+}
 
 func (m *MySQL) GetConnection() (*gorm.DB, error) {
 	m.lock.Lock() // 锁住临界区，保证线程安全
@@ -165,18 +173,38 @@ func (m *MySQL) getDBConn() (*gorm.DB, error) {
 		return nil, fmt.Errorf("连接Mysql：%s，error：%s", dsn, err.Error())
 	}
 
+	maxLifeTime, err := utils.ParseDurationFromString(m.MaxLifeTime)
+	if err != nil {
+		return nil, err
+	}
+
+	maxIdleTime, err := utils.ParseDurationFromString(m.MaxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+
 	// 维护连接池
 	sqlDB, err := db.DB()
 	sqlDB.SetMaxOpenConns(m.MaxOpenConn)
 	sqlDB.SetMaxIdleConns(m.MaxIdleConn)
-	sqlDB.SetConnMaxLifetime(time.Second * time.Duration(m.MaxLifeTime))
-	sqlDB.SetConnMaxIdleTime(time.Second * time.Duration(m.MaxIdleTime))
+	sqlDB.SetConnMaxLifetime(maxLifeTime)
+	sqlDB.SetConnMaxIdleTime(maxIdleTime)
 
 	// 用于测试连接
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := sqlDB.PingContext(ctx); err != nil {
+	if err = sqlDB.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("ping mysql %s，error：%s", dsn, err.Error())
 	}
 	return db, nil
+}
+
+func GetConnection() (*gorm.DB, error) {
+	lock.Lock() // 锁住临界区，保证线程安全
+	defer lock.Unlock()
+
+	if mysqlDb == nil {
+		return mysqlDb, nil
+	}
+	return mysqlDb, errors.New("mysql connection is nil")
 }

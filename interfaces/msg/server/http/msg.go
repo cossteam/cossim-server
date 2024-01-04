@@ -3,9 +3,9 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cossim/coss-server/interfaces/msg/config"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"im/interfaces/msg/config"
 	"net/http"
 	"sync"
 )
