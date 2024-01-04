@@ -1,4 +1,14 @@
 definitions:
+  http.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   http.RegisterRequest:
     properties:
       avatar:
@@ -30,7 +40,27 @@ info:
   contact: {}
   title: coss-user模块
 paths:
-  /books:
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 用户登录
+  /user/register:
     post:
       consumes:
       - application/json

@@ -1,4 +1,4 @@
-PROJECT_NAME=user
+PROJECT_NAME=msg
 MAIN_FILE=cmd/main.go
 PKG := "github.com/cossim/coss-server/services/$(PROJECT_NAME)"
 MOD_DIR := $(shell go env GOMODCACHE)

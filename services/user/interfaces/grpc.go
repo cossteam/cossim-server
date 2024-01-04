@@ -55,13 +55,11 @@ func (g *GrpcHandler) UserLogin(ctx context.Context, request *api.UserLoginReque
 
 // 用户注册
 func (g *GrpcHandler) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
-	//参数校验
-	_, err := g.svc.GetUserInfoByEmail(request.Email)
-	if err == nil {
-		return nil, fmt.Errorf("邮箱已被注册")
-	}
 	//添加用户
 	userInfo, err := g.svc.Register(request)
+	if err != nil {
+		return nil, err
+	}
 	return &api.UserRegisterResponse{
 		UserId: userInfo.ID,
 	}, nil

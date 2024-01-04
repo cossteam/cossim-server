@@ -3,8 +3,8 @@ package entity
 type UserRelation struct {
 	ID                 uint           `gorm:"primaryKey;autoIncrement;comment:好友关系ID" json:"id"`
 	Status             RelationStatus `gorm:"comment:好友关系状态" json:"status"`
-	UserID             string         `gorm:"type:char(32);comment:用户ID" json:"user_id"`
-	FriendID           string         `gorm:"type:varchar(32);comment:好友ID" json:"friend_id"`
+	UserID             string         `gorm:"type:varchar(64);comment:用户ID" json:"user_id"`
+	FriendID           string         `gorm:"type:varchar(64);comment:好友ID" json:"friend_id"`
 	Remark             string         `gorm:"type:varchar(255);comment:备注" json:"remark"`
 	Label              []string       `gorm:"type:varchar(255);comment:标签" json:"label"`
 	SilentNotification bool           `gorm:"comment:静默通知" json:"silent_notification"`

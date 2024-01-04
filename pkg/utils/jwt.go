@@ -1,5 +1,12 @@
 package utils
 
+//
+//import (
+//	"github.com/cossim/coss-server/services/user/domain/entity"
+//	"github.com/cossim/coss-server/services/user/infrastructure/persistence"
+//	"time"
+//)
+//
 //type Claims struct {
 //	UserId string `json:"user_id"`
 //	Email  string `json:"email"`

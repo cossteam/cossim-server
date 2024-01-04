@@ -1,0 +1,46 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/services/msg/api/v1";
+
+message SendUserMessageRequest{
+  // @inject_tag: json:"sender_id" form:"sender_id" uri:"sender_id"
+  string SenderId=1;
+  // @inject_tag: json:"receiver_id" form:"receiver_id" uri:"receiver_id"
+  string ReceiverId=2;
+  // @inject_tag: json:"content" form:"content" uri:"content"
+  string Content=3;
+  // @inject_tag: json:"type" form:"type" uri:"type"
+  int32 Type=4;
+  // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
+  int64 ReplayId=5;
+}
+
+message SendGroupMessageRequest{
+  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  string UserId=1;
+  // @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
+  string GroupId=2;
+  // @inject_tag: json:"content" form:"content" uri:"content"
+  string Content=3;
+  // @inject_tag: json:"type" form:"type" uri:"type"
+  int32 Type=4;
+  // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
+  int64 ReplayId=5;
+}
+
+
+message SendUserMessageResponse{
+
+}
+
+message SendGroupMessageResponse{
+  // @inject_tag: json:"user_ids" form:"user_ids" uri:"user_ids"
+  repeated string UserIds = 1;
+}
+
+
+
+service MsgService{
+  rpc SendUserMessage(SendUserMessageRequest) returns(SendUserMessageResponse);
+  rpc SendGroupMessage(SendUserMessageRequest) returns(SendUserMessageResponse);
+}

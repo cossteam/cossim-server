@@ -8,9 +8,9 @@ type UserGroup struct {
 	JoinedAt           int64           `gorm:"comment:加入时间" json:"joined_at"`
 	MuteEndTime        int64           `gorm:"comment:禁言结束时间" json:"mute_end_time"`
 	TopAt              int64           `gorm:"comment:置顶时间" json:"top_at"`
-	UID                string          `gorm:"type:varchar(32);comment:用户ID" json:"uid"`
+	UID                string          `gorm:"type:varchar(64);comment:用户ID" json:"uid"`
 	GroupNickname      string          `gorm:"comment:群昵称" json:"group_nickname"`
-	Inviter            string          `gorm:"type:varchar(32);comment:邀请人id" json:"inviter"`
+	Inviter            string          `gorm:"type:varchar(64);comment:邀请人id" json:"inviter"`
 	Label              []string        `gorm:"type:varchar(255);comment:标签" json:"label"`
 	IsTop              bool            `gorm:"comment:是否置顶" json:"is_top"`
 	SilentNotification bool            `gorm:"comment:静默通知" json:"silent_notification"`

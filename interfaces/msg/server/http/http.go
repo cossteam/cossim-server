@@ -2,12 +2,12 @@ package http
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/pkg/config"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"im/pkg/config"
 	"time"
 )
 
@@ -100,5 +100,5 @@ func setupGin() {
 func route(engine *gin.Engine) {
 	u := engine.Group("/msg")
 	u.GET("/ws", ws)
-	u.GET("/swagger/user/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }
