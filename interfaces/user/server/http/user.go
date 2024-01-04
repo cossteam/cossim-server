@@ -54,7 +54,7 @@ func login(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "登录成功", gin.H{"token": token})
+	response.Success(c, "登录成功", gin.H{"token": token, "user_info": resp})
 }
 
 type RegisterRequest struct {
@@ -75,19 +75,16 @@ type RegisterRequest struct {
 // @Success		200 {object} utils.Response{}
 // @Router /user/register [post]
 func register(c *gin.Context) {
-
 	req := new(RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
 		return
 	}
-
 	if req.Password != req.ConfirmPass {
 		response.Fail(c, "密码和确认密码不匹配", nil)
 		return
 	}
-
 	// 正则表达式匹配邮箱格式
 	emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
 	if isMatch, _ := emailRegex.MatchString(req.Email); !isMatch {

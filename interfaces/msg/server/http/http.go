@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -98,7 +99,9 @@ func setupGin() {
 
 // @title Swagger Example API
 func route(engine *gin.Engine) {
-	u := engine.Group("/msg")
+	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware())
+	u := engine.Group("/api/v1/msg")
+	u.Use(middleware.AuthMiddleware())
 	u.GET("/ws", ws)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

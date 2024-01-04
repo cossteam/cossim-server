@@ -104,7 +104,7 @@ func setupGin() {
 
 func route(engine *gin.Engine) {
 	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(logger))
-	u := engine.Group("/user")
+	u := engine.Group("/api/v1/user")
 
 	u.POST("/login", login)
 	u.POST("/register", register)
