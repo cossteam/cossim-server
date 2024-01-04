@@ -23,12 +23,12 @@ func (g UserService) Login(request *api.UserLoginRequest) (*entity.User, error) 
 	user, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("用户不存在")
+			return nil, fmt.Errorf("用户不存在或密码错误")
 		}
 		return nil, err
 	}
 	if user.Password != request.Password {
-		return nil, fmt.Errorf("密码错误")
+		return nil, fmt.Errorf("用户不存在或密码错误")
 	}
 	if user.Status == entity.UserStatusLock {
 		return nil, fmt.Errorf("用户暂时被锁定,请先解锁")
