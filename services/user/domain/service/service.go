@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	api "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/cossim/coss-server/services/user/domain/entity"
 	"github.com/cossim/coss-server/services/user/domain/repository"
@@ -33,9 +32,9 @@ func (g UserService) Register(request *api.UserRegisterRequest) (*entity.User, e
 		Password: request.Password,
 		NickName: request.NickName,
 		Avatar:   request.Avatar,
+		Status:   entity.UserStatusLock,
 		ID:       utils.GenUUid(),
 	})
-	fmt.Println("user =>", user)
 	if err != nil {
 		return nil, err
 	}
