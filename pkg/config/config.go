@@ -42,13 +42,10 @@ type RegisterConfig struct {
 	Tags []string `mapstructure:"tags"`
 }
 
-type DiscoversConfig struct {
-	User UserConfig `mapstructure:"user"`
-	// Add other service configs here if needed
-}
+type DiscoversConfig map[string]ServiceConfig
 
-type UserConfig struct {
-	Name    string `ç:"name"`
+type ServiceConfig struct {
+	Name    string `mapstructure:"name"`
 	Addr    string `mapstructure:"addr"`
 	Dial    string `mapstructure:"dial"`
 	Timeout string `mapstructure:"timeout"`

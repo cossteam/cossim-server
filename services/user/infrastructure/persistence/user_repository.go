@@ -47,3 +47,13 @@ func (ur *UserRepo) InsertUser(user *entity.User) (*entity.User, error) {
 	}
 	return user, nil
 }
+
+func (ur *UserRepo) GetBatchGetUserInfoByIDs(userIds []string) ([]*entity.User, error) {
+	var users []*entity.User
+
+	if err := ur.db.Where("id IN ?", userIds).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

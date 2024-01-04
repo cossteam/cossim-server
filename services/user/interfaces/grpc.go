@@ -63,5 +63,38 @@ func (g *GrpcHandler) UserRegister(ctx context.Context, request *api.UserRegiste
 	return &api.UserRegisterResponse{
 		UserId: userInfo.ID,
 	}, nil
+}
 
+func (g *GrpcHandler) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
+	userInfo, err := g.svc.GetUserInfo(request.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &api.UserInfoResponse{
+		UserId:   userInfo.ID,
+		NickName: userInfo.NickName,
+		Email:    userInfo.Email,
+		Tel:      userInfo.Tel,
+		Avatar:   userInfo.Avatar,
+	}, nil
+}
+
+func (g *GrpcHandler) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
+	var resp *api.GetBatchUserInfoResponse
+	users, err := g.svc.GetBatchGetUserInfo(request.UserIds)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users {
+		resp.Users = append(resp.Users, &api.UserInfoResponse{
+			UserId:   user.ID,
+			NickName: user.NickName,
+			Email:    user.Email,
+			Tel:      user.Tel,
+			Avatar:   user.Avatar,
+		})
+	}
+
+	return resp, nil
 }

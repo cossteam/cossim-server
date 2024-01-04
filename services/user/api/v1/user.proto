@@ -2,14 +2,14 @@ syntax = "proto3";
 package v1;
 option go_package = "github.com/cossim/coss-server/services/user/api/v1";
 
-message UserLoginRequest{
+message UserLoginRequest {
   // @inject_tag: json:"email" form:"email" uri:"email"
   string Email=1;
   // @inject_tag: json:"password" form:"password" uri:"password"
   string Password=2;
 }
 
-message UserLoginResponse{
+message UserLoginResponse {
   // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
   string UserId=1;
   // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
@@ -22,7 +22,7 @@ message UserLoginResponse{
   string Avatar=5;
 }
 
-message UserRegisterRequest{
+message UserRegisterRequest {
   // @inject_tag: json:"email" form:"email" uri:"email"
   string Email=1;
   // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
@@ -34,14 +34,43 @@ message UserRegisterRequest{
   // @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
   string Avatar=5;
 }
-message UserRegisterResponse{
+
+message UserRegisterResponse {
   // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
   string UserId=1;
 }
 
+message UserInfoRequest {
+  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  string UserId=1;
+}
 
-service UserService{
+message UserInfoResponse {
+  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  string UserId=1;
+  // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
+  string NickName=2;
+  // @inject_tag: json:"email" form:"email" uri:"email"
+  string Email=3;
+  // @inject_tag: json:"tel" form:"tel" uri:"tel"
+  string Tel=4;
+  // @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
+  string Avatar=5;
+}
+
+message GetBatchUserInfoRequest {
+  repeated string UserIds = 1;
+}
+
+message GetBatchUserInfoResponse {
+  // @inject_tag: json:"users" form:"users"
+  repeated UserInfoResponse Users = 1;
+}
+
+service UserService {
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
   rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
-//  rpc UserLogout(UserRequest) returns(UserCommonResponse);
+  rpc UserInfo(UserInfoRequest) returns(UserInfoResponse);
+  rpc GetBatchUserInfo(GetBatchUserInfoRequest) returns (GetBatchUserInfoResponse);
+  //  rpc UserLogout(UserRequest) returns(UserCommonResponse);
 }

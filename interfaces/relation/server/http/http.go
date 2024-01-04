@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	relation "github.com/cossim/coss-server/services/relation/api/v1"
 	user "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -15,9 +16,10 @@ import (
 )
 
 var (
-	userClient user.UserServiceClient
-	cfg        *config.AppConfig
-	logger     *zap.Logger
+	userClient     user.UserServiceClient
+	relationClient relation.RelationServiceClient
+	cfg            *config.AppConfig
+	logger         *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
@@ -25,7 +27,18 @@ func Init(c *config.AppConfig) {
 
 	setupLogger()
 	setupUserGRPCClient()
+	setupRelationGRPCClient()
 	setupGin()
+}
+
+func setupRelationGRPCClient() {
+	var err error
+	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	relationClient = relation.NewRelationServiceClient(relationConn)
 }
 
 func setupUserGRPCClient() {
@@ -103,9 +116,14 @@ func setupGin() {
 // @title coss-user模块
 
 func route(engine *gin.Engine) {
-	u := engine.Group("/api/v1/user")
-	u.POST("/login", login)
-	u.POST("/register", register)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
+	u := engine.Group("/api/v1/relation")
+	u.GET("/friend_list", friendList)
+	u.POST("/blacklist", blackList)
+	u.POST("/add_friend", addFriend)
+	u.POST("/confirm_friend", confirmFriend)
+	u.POST("/delete_friend", deleteFriend)
+	u.POST("/add_blacklist", addBlacklist)
+	u.POST("/delete_blacklist", deleteBlacklist)
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("relation")))
 	//u.POST("/logout", handleLogout)
 }
