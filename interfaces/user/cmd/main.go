@@ -1,10 +1,10 @@
 package main
 
 import (
-	_ "im/docs"
-	"im/interfaces/user/config"
-	_ "im/interfaces/user/config"
-	"im/interfaces/user/server/http"
+	_ "github.com/cossim/coss-server/docs"
+	"github.com/cossim/coss-server/interfaces/user/config"
+	_ "github.com/cossim/coss-server/interfaces/user/config"
+	"github.com/cossim/coss-server/interfaces/user/server/http"
 	"os"
 	"os/signal"
 	"syscall"

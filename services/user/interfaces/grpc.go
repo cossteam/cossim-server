@@ -3,12 +3,13 @@ package interfaces
 import (
 	"context"
 	"fmt"
-	"im/pkg/config"
-	"im/pkg/db"
-	"im/services/user/api/v1"
-	"im/services/user/domain/service"
-	"im/services/user/infrastructure/persistence"
+	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/db"
 	"time"
+
+	api "github.com/cossim/coss-server/services/user/api/v1"
+	"github.com/cossim/coss-server/services/user/domain/service"
+	"github.com/cossim/coss-server/services/user/infrastructure/persistence"
 )
 
 type GrpcHandler struct {

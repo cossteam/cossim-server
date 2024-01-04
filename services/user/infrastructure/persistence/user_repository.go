@@ -1,8 +1,8 @@
 package persistence
 
 import (
+	"github.com/cossim/coss-server/services/user/domain/entity"
 	"gorm.io/gorm"
-	"im/services/user/domain/entity"
 )
 
 // UserRepo 需要实现UserRepository接口

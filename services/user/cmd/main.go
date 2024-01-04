@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	api "github.com/cossim/coss-server/services/user/api/v1"
+	"github.com/cossim/coss-server/services/user/config"
+	"github.com/cossim/coss-server/services/user/interfaces"
 	"google.golang.org/grpc"
-	"im/services/user/api/v1"
-	"im/services/user/config"
-	"im/services/user/interfaces"
 	"net"
 	"os"
 	"os/signal"

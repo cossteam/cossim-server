@@ -2,15 +2,14 @@ package http
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/pkg/config"
+	user "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
-	//_ "im/docs"
-	"im/pkg/config"
-	user "im/services/user/api/v1"
 	"time"
 )
 

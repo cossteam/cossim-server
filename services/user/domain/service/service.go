@@ -2,10 +2,10 @@ package service
 
 import (
 	"fmt"
-	"im/services/user/api/v1"
-	"im/services/user/domain/entity"
-	"im/services/user/domain/repository"
-	"im/services/user/utils"
+	api "github.com/cossim/coss-server/services/user/api/v1"
+	"github.com/cossim/coss-server/services/user/domain/entity"
+	"github.com/cossim/coss-server/services/user/domain/repository"
+	"github.com/cossim/coss-server/services/user/utils"
 )
 
 type UserService struct {

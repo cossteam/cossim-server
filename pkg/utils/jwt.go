@@ -1,14 +1,5 @@
 package utils
 
-//import (
-//	"errors"
-//	"github.com/golang-jwt/jwt/v5"
-//	"im/services/user/config"
-//	"im/services/user/domain/entity"
-//	"im/services/user/infrastructure/persistence"
-//	"time"
-//)
-//
 //type Claims struct {
 //	UserId string `json:"user_id"`
 //	Email  string `json:"email"`

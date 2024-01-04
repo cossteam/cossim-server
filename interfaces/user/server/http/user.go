@@ -2,9 +2,9 @@ package http
 
 import (
 	"context"
+	user "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	user "im/services/user/api/v1"
 	"net/http"
 	"regexp"
 )
@@ -92,6 +92,6 @@ func register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"code": http.StatusOK, "msg": "注册成功", "data": map[string]interface{}{
-		"userID": resp.UserId,
+		"user_id": resp.UserId,
 	}})
 }
