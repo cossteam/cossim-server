@@ -8,7 +8,7 @@ type UserMessage struct {
 	gorm.Model
 	Type      UserMessageType `gorm:";comment:消息类型" json:"type"`
 	IsRead    uint            `gorm:"default:0;comment:是否已读" json:"is_read"`
-	ReplyId   int             `gorm:"default:0;comment:回复ID" json:"reply_id"`
+	ReplyId   uint            `gorm:"default:0;comment:回复ID" json:"reply_id"`
 	ReadAt    int64           `gorm:"comment:阅读时间" json:"read_at"`
 	ReceiveID string          `gorm:"default:0;comment:接收用户id" json:"receive_id"`
 	SendID    string          `gorm:"default:0;comment:发送用户id" json:"send_id"`

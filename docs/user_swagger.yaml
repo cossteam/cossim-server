@@ -33,7 +33,7 @@ definitions:
       code:
         type: integer
       data: {}
-      message:
+      msg:
         type: string
     type: object
 info:

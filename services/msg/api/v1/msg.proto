@@ -2,7 +2,7 @@ syntax = "proto3";
 package v1;
 option go_package = "github.com/cossim/coss-server/services/msg/api/v1";
 
-message SendUserMessageRequest{
+message SendUserMsgRequest{
   // @inject_tag: json:"sender_id" form:"sender_id" uri:"sender_id"
   string SenderId=1;
   // @inject_tag: json:"receiver_id" form:"receiver_id" uri:"receiver_id"
@@ -12,10 +12,10 @@ message SendUserMessageRequest{
   // @inject_tag: json:"type" form:"type" uri:"type"
   int32 Type=4;
   // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
-  int64 ReplayId=5;
+  uint64 ReplayId=5;
 }
 
-message SendGroupMessageRequest{
+message SendGroupMsgRequest{
   // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
   string UserId=1;
   // @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
@@ -25,15 +25,15 @@ message SendGroupMessageRequest{
   // @inject_tag: json:"type" form:"type" uri:"type"
   int32 Type=4;
   // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
-  int64 ReplayId=5;
+  uint64 ReplayId=5;
 }
 
 
-message SendUserMessageResponse{
+message SendUserMsgResponse{
 
 }
 
-message SendGroupMessageResponse{
+message SendGroupMsgResponse{
   // @inject_tag: json:"user_ids" form:"user_ids" uri:"user_ids"
   repeated string UserIds = 1;
 }
@@ -41,6 +41,6 @@ message SendGroupMessageResponse{
 
 
 service MsgService{
-  rpc SendUserMessage(SendUserMessageRequest) returns(SendUserMessageResponse);
-  rpc SendGroupMessage(SendUserMessageRequest) returns(SendUserMessageResponse);
+  rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
+  rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
 }

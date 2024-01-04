@@ -24,7 +24,7 @@ redis:
   idleTimeout: "10s"
 
 grpc:
-  addr: "127.0.0.1:10002"
+  addr: "127.0.0.1:10003"
 
 # 注册本服务
 register:

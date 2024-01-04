@@ -14,8 +14,6 @@ func NewUserRepo(db *gorm.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-var UserR *UserRepo
-
 // 根据邮箱获取用户信息
 func (ur *UserRepo) GetUserInfoByEmail(email string) (*entity.User, error) {
 	var user entity.User

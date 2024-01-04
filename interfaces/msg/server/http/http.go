@@ -4,35 +4,37 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	api "github.com/cossim/coss-server/services/msg/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
 	"time"
 )
 
 var (
-	//msgClient user.MsgServiceClient
-	cfg    *config.AppConfig
-	logger *zap.Logger
+	msgClient api.MsgServiceClient
+	cfg       *config.AppConfig
+	logger    *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
-	//setupUserGRPCClient()
+	setupUserGRPCClient()
 	setupGin()
 }
 
 func setupUserGRPCClient() {
-	//var err error
-	//userConn, err := grpc.Dial(cfg.GRPC.Addr, grpc.WithInsecure())
-	//if err != nil {
-	//	logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	//}
-	//
-	//msgClient = user.NewUserServiceClient(userConn)
+	var err error
+	msgConn, err := grpc.Dial(cfg.GRPC.Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	msgClient = api.NewMsgServiceClient(msgConn)
 }
 
 func setupLogger() {
@@ -101,7 +103,8 @@ func setupGin() {
 func route(engine *gin.Engine) {
 	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware())
 	u := engine.Group("/api/v1/msg")
-	u.Use(middleware.AuthMiddleware())
+	//u.Use(middleware.AuthMiddleware())
 	u.GET("/ws", ws)
+	u.POST("/send/user", sendUserMsg)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

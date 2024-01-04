@@ -128,7 +128,7 @@ const docTemplateuser = `{
                     "type": "integer"
                 },
                 "data": {},
-                "message": {
+                "msg": {
                     "type": "string"
                 }
             }

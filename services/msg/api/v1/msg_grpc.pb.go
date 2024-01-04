@@ -27,8 +27,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgServiceClient interface {
-	SendUserMessage(ctx context.Context, in *SendUserMessageRequest, opts ...grpc.CallOption) (*SendUserMessageResponse, error)
-	SendGroupMessage(ctx context.Context, in *SendUserMessageRequest, opts ...grpc.CallOption) (*SendUserMessageResponse, error)
+	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
+	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
 }
 
 type msgServiceClient struct {
@@ -39,8 +39,8 @@ func NewMsgServiceClient(cc grpc.ClientConnInterface) MsgServiceClient {
 	return &msgServiceClient{cc}
 }
 
-func (c *msgServiceClient) SendUserMessage(ctx context.Context, in *SendUserMessageRequest, opts ...grpc.CallOption) (*SendUserMessageResponse, error) {
-	out := new(SendUserMessageResponse)
+func (c *msgServiceClient) SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error) {
+	out := new(SendUserMsgResponse)
 	err := c.cc.Invoke(ctx, MsgService_SendUserMessage_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -48,8 +48,8 @@ func (c *msgServiceClient) SendUserMessage(ctx context.Context, in *SendUserMess
 	return out, nil
 }
 
-func (c *msgServiceClient) SendGroupMessage(ctx context.Context, in *SendUserMessageRequest, opts ...grpc.CallOption) (*SendUserMessageResponse, error) {
-	out := new(SendUserMessageResponse)
+func (c *msgServiceClient) SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error) {
+	out := new(SendGroupMsgResponse)
 	err := c.cc.Invoke(ctx, MsgService_SendGroupMessage_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -61,8 +61,8 @@ func (c *msgServiceClient) SendGroupMessage(ctx context.Context, in *SendUserMes
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
 type MsgServiceServer interface {
-	SendUserMessage(context.Context, *SendUserMessageRequest) (*SendUserMessageResponse, error)
-	SendGroupMessage(context.Context, *SendUserMessageRequest) (*SendUserMessageResponse, error)
+	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
+	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -70,10 +70,10 @@ type MsgServiceServer interface {
 type UnimplementedMsgServiceServer struct {
 }
 
-func (UnimplementedMsgServiceServer) SendUserMessage(context.Context, *SendUserMessageRequest) (*SendUserMessageResponse, error) {
+func (UnimplementedMsgServiceServer) SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendUserMessage not implemented")
 }
-func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendUserMessageRequest) (*SendUserMessageResponse, error) {
+func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendGroupMessage not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
@@ -90,7 +90,7 @@ func RegisterMsgServiceServer(s grpc.ServiceRegistrar, srv MsgServiceServer) {
 }
 
 func _MsgService_SendUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendUserMessageRequest)
+	in := new(SendUserMsgRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -102,13 +102,13 @@ func _MsgService_SendUserMessage_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: MsgService_SendUserMessage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SendUserMessage(ctx, req.(*SendUserMessageRequest))
+		return srv.(MsgServiceServer).SendUserMessage(ctx, req.(*SendUserMsgRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MsgService_SendGroupMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendUserMessageRequest)
+	in := new(SendGroupMsgRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func _MsgService_SendGroupMessage_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: MsgService_SendGroupMessage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SendGroupMessage(ctx, req.(*SendUserMessageRequest))
+		return srv.(MsgServiceServer).SendGroupMessage(ctx, req.(*SendGroupMsgRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -1,10 +1,8 @@
 package repository
 
-import "github.com/cossim/coss-server/services/user/domain/entity"
+import "github.com/cossim/coss-server/services/msg/domain/entity"
 
-type UserRepository interface {
-	GetUserInfoByEmail(email string) (*entity.User, error)
-	GetUserInfoByUid(id string) (*entity.User, error)
-	UpdateUser(user *entity.User) (*entity.User, error)
-	InsertUser(user *entity.User) (*entity.User, error)
+type MsgRepository interface {
+	InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint) (*entity.UserMessage, error)
+	InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint) (*entity.GroupMessage, error)
 }

@@ -15,11 +15,83 @@ const docTemplatemsg = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/msg/send/user": {
+            "post": {
+                "description": "发送私聊消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "发送私聊消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/ws": {
             "get": {
                 "description": "websocket请求",
                 "summary": "websocket请求",
                 "responses": {}
+            }
+        }
+    },
+    "definitions": {
+        "http.SendUserMsgRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "receiver_id",
+                "replay_id",
+                "sender_id",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "receiver_id": {
+                    "type": "string"
+                },
+                "replay_id": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "utils.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                    "type": "string"
+                }
             }
         }
     }

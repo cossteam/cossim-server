@@ -1,7 +1,55 @@
+definitions:
+  http.SendUserMsgRequest:
+    properties:
+      content:
+        type: string
+      receiver_id:
+        type: string
+      replay_id:
+        type: integer
+      sender_id:
+        type: string
+      type:
+        type: integer
+    required:
+    - content
+    - receiver_id
+    - replay_id
+    - sender_id
+    - type
+    type: object
+  utils.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
 info:
   contact: {}
   title: Swagger Example API
 paths:
+  /msg/send/user:
+    post:
+      consumes:
+      - application/json
+      description: 发送私聊消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.SendUserMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 发送私聊消息
   /msg/ws:
     get:
       description: websocket请求
