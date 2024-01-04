@@ -7,13 +7,13 @@ GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
 .PHONY: all dep lint vet test test-coverage build clean
 
-#BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-BUILD_BRANCH := "main"
-#BUILD_COMMIT := ${shell git rev-parse HEAD}
-BUILD_COMMIT := "22193944514397212fe6a25189906ab9de49164a"
+BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+#BUILD_BRANCH := "main"
+BUILD_COMMIT := ${shell git rev-parse HEAD}
+#BUILD_COMMIT := "22193944514397212fe6a25189906ab9de49164a"
 BUILD_TIME := ${shell date '+%Y-%m-%d %H:%M:%S'}
 BUILD_GO_VERSION := $(shell go version | grep -o  'go[0-9].[0-9].*')
-VERSION_PATH := "im/pkg/version"
+VERSION_PATH := "github.com/cossim/coss-server/pkg/version"
 
 
 # Image URL to use all building/pushing image targets
@@ -56,7 +56,7 @@ gen: ## generate protobuf file
 	@protoc-go-inject-tag -input=api/v1/*.pb.go
 
 run: # Run Develop server
-	@go run cmd/$(MAIN_FILE) start -f etc/config.toml
+	@go run $(MAIN_FILE) start -f etc/config.toml
 
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
