@@ -70,7 +70,7 @@ message GetUserMsgListResponse{
   // @inject_tag: json:"total" form:"total" uri:"total"
   int32 Total = 2;
   // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
-  int32 PageNumber = 3;
+  int32 PageNum = 3;
   // @inject_tag: json:"current_page" form:"current_page" uri:"current_page"
   int32 CurrentPage = 4;
 }

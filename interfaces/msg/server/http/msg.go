@@ -95,6 +95,7 @@ func sendUserMsg(c *gin.Context) {
 		fmt.Println(err)
 		return
 	}
+	//todo 判断账号状态
 	//todo 判断好友关系是否正常
 	_, err = msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
 		SenderId:   thisId,
@@ -141,6 +142,7 @@ func sendGroupMsg(c *gin.Context) {
 		fmt.Println(err)
 		return
 	}
+	//todo 判断账号状态
 	//todo 判断是否在群聊里
 	//todo 判断是否被禁言
 	uids, err := msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
@@ -154,13 +156,78 @@ func sendGroupMsg(c *gin.Context) {
 		return
 	}
 	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
-	//if _, ok := pool[req.ReceiverId]; ok {
-	//	if len(pool[req.ReceiverId]) > 0 {
-	//		sendWsUserMsg(req.SenderId, req.ReceiverId, req.Content, req.Type, req.ReplayId)
-	//	}
-	//}
 	response.Success(c, "发送成功", gin.H{})
 }
+
+type msgListRequest struct {
+	//GroupId    int64  `json:"group_id" binding:"required"`
+	UserId   string `json:"user_id" binding:"required"`
+	Type     int32  `json:"type" binding:"required"`
+	Content  string `json:"content" binding:"required"`
+	PageNum  int    `json:"page_num" binding:"required"`
+	PageSize int    `json:"page_size" binding:"required"`
+}
+
+// @Summary 获取私聊消息
+// @Description 获取私聊消息
+// @Accept  json
+// @Produce  json
+// @Param UserId query string true "用户id"
+// @Param Type query string true "类型"
+// @Param Content query int false "消息"
+// @Param PageNumber query int false "页码"
+// @Param PageSize query int false "页大小"
+// @Success		200 {object} utils.Response{}
+// @Router /msg/list/user [get]
+//func getUserMsgList(c *gin.Context) {
+//	var num = c.Query("page_num")
+//	var size = c.Query("page_size")
+//	var id = c.Query("user_id")
+//	var msgType = c.Query("type")
+//	var content = c.Query("content")
+//
+//	if num == "" || size == "" || id == "" || msgType == "" {
+//		c.Error(fmt.Errorf("参数错误"))
+//		return
+//	}
+//	pageNum, _ := strconv.Atoi(num)
+//	pageSize, _ := strconv.Atoi(size)
+//	mt, _ := strconv.Atoi(msgType)
+//
+//	if pageNum == 0 || pageSize == 0 {
+//		c.Error(fmt.Errorf("参数错误"))
+//		return
+//	}
+//
+//	var msgListRequest = &msgListRequest{
+//		UserId:   id,
+//		Type:     int32(mt),
+//		Content:  content,
+//		PageNum:  pageNum,
+//		PageSize: pageSize,
+//	}
+//	thisId, err := pkghttp.ParseTokenReUid(c)
+//	if err != nil {
+//		fmt.Println(err)
+//		return
+//	}
+//	//todo 判断账号状态
+//	//todo 判断是否在群聊里
+//	//todo 判断是否被禁言
+//	uids, err := msgClient.GetUserMessageList(context.Background(), &msg.GetUserMsgListRequest{
+//		UserId:   msgListRequest.UserId,
+//		Content:  msgListRequest.Content,
+//		Type:     msgListRequest.Type,
+//		PageNum:  msgListRequest.PageNum,
+//		PageSize: int32(msgListRequest.PageSize),
+//	})
+//	if err != nil {
+//		c.Error(err)
+//		return
+//	}
+//	//sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
+//	response.Success(c, "获取成功", gin.H{})
+//}
 
 type wsMsg struct {
 	Uid   string             `json:"uid"`
