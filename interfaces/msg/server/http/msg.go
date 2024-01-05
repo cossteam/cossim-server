@@ -219,19 +219,19 @@ func getUserMsgList(c *gin.Context) {
 	var content = c.Query("content")
 
 	if num == "" || size == "" || id == "" {
-		c.Error(fmt.Errorf("参数错误"))
+		response.Fail(c, "参数错误", nil)
 		return
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		fmt.Println(err)
+		response.Fail(c, err.Error(), nil)
 		return
 	}
 	pageNum, _ := strconv.Atoi(num)
 	pageSize, _ := strconv.Atoi(size)
 	mt, _ := strconv.Atoi(msgType)
 	if pageNum == 0 || pageSize == 0 {
-		c.Error(fmt.Errorf("参数错误"))
+		response.Fail(c, "参数错误", nil)
 		return
 	}
 

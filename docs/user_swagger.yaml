@@ -38,8 +38,39 @@ definitions:
     type: object
 info:
   contact: {}
-  title: coss-user模块
+  title: coss-user服务
 paths:
+  /user/info:
+    get:
+      consumes:
+      - application/json
+      description: 查询用户信息
+      parameters:
+      - description: 用户id
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: 指定根据id还是邮箱类型查找
+        enum:
+        - 0
+        - 1
+        in: query
+        name: type
+        required: true
+        type: integer
+      - description: 邮箱
+        in: query
+        name: email
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 查询用户信息
   /user/login:
     post:
       consumes:

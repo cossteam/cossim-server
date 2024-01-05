@@ -106,6 +106,7 @@ func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/user")
 	u.POST("/login", login)
 	u.POST("/register", register)
+	u.GET("/info", GetUserInfo)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)
 }
