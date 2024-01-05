@@ -26,6 +26,7 @@ const (
 	RelationService_DeleteBlacklist_FullMethodName = "/v1.RelationService/DeleteBlacklist"
 	RelationService_GetFriendList_FullMethodName   = "/v1.RelationService/GetFriendList"
 	RelationService_GetBlacklist_FullMethodName    = "/v1.RelationService/GetBlacklist"
+	RelationService_GetUserRelation_FullMethodName = "/v1.RelationService/GetUserRelation"
 )
 
 // RelationServiceClient is the client API for RelationService service.
@@ -39,6 +40,7 @@ type RelationServiceClient interface {
 	DeleteBlacklist(ctx context.Context, in *DeleteBlacklistRequest, opts ...grpc.CallOption) (*DeleteBlacklistResponse, error)
 	GetFriendList(ctx context.Context, in *GetFriendListRequest, opts ...grpc.CallOption) (*GetFriendListResponse, error)
 	GetBlacklist(ctx context.Context, in *GetBlacklistRequest, opts ...grpc.CallOption) (*GetBlacklistResponse, error)
+	GetUserRelation(ctx context.Context, in *GetUserRelationRequest, opts ...grpc.CallOption) (*GetUserRelationResponse, error)
 }
 
 type relationServiceClient struct {
@@ -112,6 +114,15 @@ func (c *relationServiceClient) GetBlacklist(ctx context.Context, in *GetBlackli
 	return out, nil
 }
 
+func (c *relationServiceClient) GetUserRelation(ctx context.Context, in *GetUserRelationRequest, opts ...grpc.CallOption) (*GetUserRelationResponse, error) {
+	out := new(GetUserRelationResponse)
+	err := c.cc.Invoke(ctx, RelationService_GetUserRelation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RelationServiceServer is the server API for RelationService service.
 // All implementations must embed UnimplementedRelationServiceServer
 // for forward compatibility
@@ -123,6 +134,7 @@ type RelationServiceServer interface {
 	DeleteBlacklist(context.Context, *DeleteBlacklistRequest) (*DeleteBlacklistResponse, error)
 	GetFriendList(context.Context, *GetFriendListRequest) (*GetFriendListResponse, error)
 	GetBlacklist(context.Context, *GetBlacklistRequest) (*GetBlacklistResponse, error)
+	GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error)
 	mustEmbedUnimplementedRelationServiceServer()
 }
 
@@ -150,6 +162,9 @@ func (UnimplementedRelationServiceServer) GetFriendList(context.Context, *GetFri
 }
 func (UnimplementedRelationServiceServer) GetBlacklist(context.Context, *GetBlacklistRequest) (*GetBlacklistResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlacklist not implemented")
+}
+func (UnimplementedRelationServiceServer) GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserRelation not implemented")
 }
 func (UnimplementedRelationServiceServer) mustEmbedUnimplementedRelationServiceServer() {}
 
@@ -290,6 +305,24 @@ func _RelationService_GetBlacklist_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RelationService_GetUserRelation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserRelationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RelationServiceServer).GetUserRelation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RelationService_GetUserRelation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RelationServiceServer).GetUserRelation(ctx, req.(*GetUserRelationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RelationService_ServiceDesc is the grpc.ServiceDesc for RelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -324,6 +357,10 @@ var RelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBlacklist",
 			Handler:    _RelationService_GetBlacklist_Handler,
+		},
+		{
+			MethodName: "GetUserRelation",
+			Handler:    _RelationService_GetUserRelation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

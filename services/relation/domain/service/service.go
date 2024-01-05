@@ -181,3 +181,12 @@ func (u *UserService) GetBlacklist(ctx context.Context, userId string) ([]*entit
 
 	return blacklist, nil
 }
+
+func (u *UserService) GetUserRelation(ctx context.Context, userId string, friendId string) (uint, error) {
+	relation, err := u.urr.GetRelationByID(userId, friendId)
+	if err != nil {
+		return 0, nil
+	}
+
+	return uint(relation.Status), nil
+}

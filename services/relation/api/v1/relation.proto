@@ -87,6 +87,28 @@ message GetBlacklistResponse {
   repeated Blacklist Blacklist = 1;
 }
 
+message GetUserRelationRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+}
+
+enum RelationStatus {
+  RELATION_STATUS_Unknown = 0;
+  RELATION_STATUS_PENDING = 1;
+  RELATION_STATUS_ADDED = 2;
+  RELATION_STATUS_REJECTED = 3;
+  RELATION_STATUS_BLOCKED = 4;
+  RELATION_STATUS_DELETED = 5;
+}
+
+message GetUserRelationResponse {
+  // @inject_tag: json:"status"
+  RelationStatus Status = 1;
+}
+
+
 service RelationService {
   rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
   rpc ConfirmFriend(ConfirmFriendRequest) returns (ConfirmFriendResponse);
@@ -95,4 +117,5 @@ service RelationService {
   rpc DeleteBlacklist(DeleteBlacklistRequest) returns (DeleteBlacklistResponse);
   rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
   rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
+  rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
 }

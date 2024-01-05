@@ -92,3 +92,15 @@ func (g *GrpcHandler) GetBlacklist(ctx context.Context, request *api.GetBlacklis
 
 	return resp, nil
 }
+
+func (g *GrpcHandler) GetUserRelation(ctx context.Context, request *api.GetUserRelationRequest) (*api.GetUserRelationResponse, error) {
+	resp := &api.GetUserRelationResponse{} // 初始化 resp
+	status, err := g.svc.GetUserRelation(ctx, request.GetUserId(), request.GetFriendId())
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Status = api.RelationStatus(status)
+
+	return resp, nil
+}
