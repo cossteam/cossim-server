@@ -10,7 +10,6 @@ import (
 	userApi "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"regexp"
 )
 
 type blackListRequest struct {
@@ -323,8 +322,8 @@ func confirmFriend(c *gin.Context) {
 }
 
 type addFriendRequest struct {
-	Email string `json:"email" binding:"required"`
-	Msg   string `json:"msg"`
+	FriendId string `json:"friend_id" binding:"required"`
+	Msg      string `json:"msg"`
 }
 
 // @Summary 添加好友
@@ -348,7 +347,7 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.FriendId})
 	if err != nil {
 		c.Error(err)
 		return
@@ -358,25 +357,7 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	// 正则表达式匹配邮箱格式
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	if !emailRegex.MatchString(req.Email) {
-		response.Fail(c, "邮箱格式不正确", nil)
-		return
-	}
-
-	friend, err := userClient.GetUserInfoByEmail(context.Background(), &userApi.GetUserInfoByEmailRequest{Email: req.Email})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	if friend == nil {
-		response.Fail(c, "添加的用户不存在", nil)
-		return
-	}
-
-	if _, err := relationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{UserId: thisId, FriendId: friend.UserId}); err != nil {
+	if _, err := relationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{UserId: thisId, FriendId: user.UserId}); err != nil {
 		c.Error(err)
 		return
 	}

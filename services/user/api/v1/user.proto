@@ -39,7 +39,6 @@ message UserRegisterResponse {
   // @inject_tag: json:"user_id"
   string UserId=1;
 }
-
 message UserInfoRequest {
   // @inject_tag: json:"user_id"
   string UserId=1;
