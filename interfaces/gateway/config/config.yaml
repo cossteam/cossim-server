@@ -6,7 +6,7 @@ log:
 
 mysql:
   addr: "172.16.38.91:3306"
-  dsn: "root:123456@tcp(172.16.38.91:3306)/bbq?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4"
+  dsn: "root:888888@tcp(0.0.0.0:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4"
   readDSN:
     - "root:123456@tcp(172.16.38.91:3306)/bbq?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4"
   idleTimeout: "4h"
@@ -24,20 +24,30 @@ redis:
   idleTimeout: "10s"
 
 http:
-  addr: "0.0.0.0:8083"
+  addr: "0.0.0.0:8080"
 
 grpc:
-  addr: "127.0.0.1:10003"
+  addr: "127.0.0.1:10002"
 
 # 注册本服务
 register:
-  name: "user-bff"
+  name: "gateway"
   addr: "注册中心地址"
-  tags: ["消息服务", "user_service"]
+  tags: ["网关服务", "gateway"]
 
 discovers:
   user:
-    name: "user_service"
-    addr: "127.0.0.1:10003"
+    name: "user_bff"
+    addr: "0.0.0.0:8083"
+    dial: "3000ms"
+    timeout: "5000ms"
+  relation:
+    name: "relation_bff"
+    addr: "0.0.0.0:8082"
+    dial: "3000ms"
+    timeout: "5000ms"
+  msg:
+    name: "msg_bff"
+    addr: "0.0.0.0:8081"
     dial: "3000ms"
     timeout: "5000ms"

@@ -21,15 +21,15 @@ type blackListRequest struct {
 // @Success		200 {object} utils.Response{}
 // @Router /relation/blacklist [get]
 func blackList(c *gin.Context) {
-	req := new(blackListRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+	userID := c.Query("user_id")
+	if userID == "" {
+		logger.Error("用户id为空")
+		response.Fail(c, "用户id为空", nil)
 		return
 	}
 
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -41,7 +41,7 @@ func blackList(c *gin.Context) {
 	}
 
 	// 获取黑名单列表
-	blacklistResp, err := relationClient.GetBlacklist(context.Background(), &relationApi.GetBlacklistRequest{UserId: req.UserID})
+	blacklistResp, err := relationClient.GetBlacklist(context.Background(), &relationApi.GetBlacklistRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -72,15 +72,15 @@ type friendListRequest struct {
 // @Success		200 {object} utils.Response{}
 // @Router /relation/friend_list [get]
 func friendList(c *gin.Context) {
-	req := new(friendListRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+	userID := c.Query("user_id")
+	if userID == "" {
+		logger.Error("用户id为空")
+		response.Fail(c, "用户id为空", nil)
 		return
 	}
 
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		logger.Error("user service UserInfo", zap.Error(err))
 		c.Error(err)
@@ -93,7 +93,7 @@ func friendList(c *gin.Context) {
 	}
 
 	// 获取好友列表
-	friendListResp, err := relationClient.GetFriendList(context.Background(), &relationApi.GetFriendListRequest{UserId: req.UserID})
+	friendListResp, err := relationClient.GetFriendList(context.Background(), &relationApi.GetFriendListRequest{UserId: userID})
 	if err != nil {
 		logger.Error("user service GetFriendList", zap.Error(err))
 		c.Error(err)

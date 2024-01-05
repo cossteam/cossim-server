@@ -24,7 +24,7 @@ redis:
   idleTimeout: "10s"
 
 http:
-  addr: "127.0.0.1:8080"
+  addr: "127.0.0.1:8081"
 
 grpc:
   addr: "127.0.0.1:10002"

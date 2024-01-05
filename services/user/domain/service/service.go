@@ -54,8 +54,9 @@ func (u *UserService) Register(request *api.UserRegisterRequest) (*entity.User, 
 		Password: request.Password,
 		NickName: request.NickName,
 		Avatar:   request.Avatar,
-		Status:   entity.UserStatusLock,
-		ID:       utils.GenUUid(),
+		//Status:   entity.UserStatusLock,
+		Status: entity.UserStatusNormal,
+		ID:     utils.GenUUid(),
 	})
 	if err != nil {
 		return nil, err

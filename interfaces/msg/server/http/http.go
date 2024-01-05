@@ -86,7 +86,7 @@ func setupGin() {
 	engine := gin.New()
 
 	// 添加一些中间件或其他配置
-	// engine.Use(someMiddleware)
+	engine.Use(middleware.CORSMiddleware(), middleware.AuthMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
 
 	// 设置路由
 	route(engine)
@@ -101,7 +101,6 @@ func setupGin() {
 
 // @title Swagger Example API
 func route(engine *gin.Engine) {
-	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware())
 	u := engine.Group("/api/v1/msg")
 	//u.Use(middleware.AuthMiddleware())
 	u.GET("/ws", ws)

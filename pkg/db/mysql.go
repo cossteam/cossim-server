@@ -106,6 +106,10 @@ func NewMySQL(host, port, username, password, database string, opts ...Option) (
 	return c, nil
 }
 
+func NewDefaultMysqlConn() *MySQL {
+	return NewMySQLFromDSN("root:888888@tcp(0.0.0.0:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4")
+}
+
 func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 	if dsn == "" {
 		return nil
@@ -203,7 +207,7 @@ func GetConnection() (*gorm.DB, error) {
 	lock.Lock() // 锁住临界区，保证线程安全
 	defer lock.Unlock()
 
-	if mysqlDb == nil {
+	if mysqlDb != nil {
 		return mysqlDb, nil
 	}
 	return mysqlDb, errors.New("mysql connection is nil")

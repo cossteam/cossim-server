@@ -4,51 +4,24 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	relation "github.com/cossim/coss-server/services/relation/api/v1"
-	user "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
+	"io"
+	"net/http"
 	"time"
 )
 
 var (
-	userClient     user.UserServiceClient
-	relationClient relation.RelationServiceClient
-	cfg            *config.AppConfig
-	logger         *zap.Logger
+	cfg    *config.AppConfig
+	logger *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
 
 	setupLogger()
-	setupUserGRPCClient()
-	setupRelationGRPCClient()
 	setupGin()
-}
-
-func setupRelationGRPCClient() {
-	var err error
-	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	relationClient = relation.NewRelationServiceClient(relationConn)
-}
-
-func setupUserGRPCClient() {
-	var err error
-	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	userClient = user.NewUserServiceClient(userConn)
 }
 
 func setupLogger() {
@@ -100,7 +73,7 @@ func setupGin() {
 	engine := gin.New()
 
 	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.AuthMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
+	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(logger))
 
 	// 设置路由
 	route(engine)
@@ -113,16 +86,48 @@ func setupGin() {
 	}()
 }
 
-// @title coss-relation-bff服务
-
 func route(engine *gin.Engine) {
-	u := engine.Group("/api/v1/relation")
-	u.GET("/friend_list", friendList)
-	u.GET("/blacklist", blackList)
-	u.POST("/add_friend", addFriend)
-	u.POST("/confirm_friend", confirmFriend)
-	u.POST("/delete_friend", deleteFriend)
-	u.POST("/add_blacklist", addBlacklist)
-	u.POST("/delete_blacklist", deleteBlacklist)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("relation")))
+	gateway := engine.Group("/api/v1")
+	{
+		gateway.Any("/user/*path", proxyToService("http://127.0.0.1:8083"))
+		gateway.Any("/relation/*path", proxyToService("http://127.0.0.1:8082"))
+		gateway.Any("/msg/*path", proxyToService("http://127.0.0.1:8081"))
+	}
+}
+
+func proxyToService(targetURL string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 创建一个代理请求
+		proxyReq, err := http.NewRequest(c.Request.Method, targetURL+c.Request.URL.Path, c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create proxy request"})
+			return
+		}
+
+		// 添加查询字符串到代理请求的 URL 中
+		proxyReq.URL.RawQuery = c.Request.URL.RawQuery
+
+		// 复制请求头信息
+		proxyReq.Header = make(http.Header)
+		for h, val := range c.Request.Header {
+			proxyReq.Header[h] = val
+		}
+
+		// 发送代理请求
+		client := &http.Client{}
+		resp, err := client.Do(proxyReq)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch response from service"})
+			return
+		}
+		defer resp.Body.Close()
+
+		// 将 BFF 服务的响应返回给客户端
+		c.Status(resp.StatusCode)
+		for h, val := range resp.Header {
+			c.Header(h, val[0])
+		}
+		c.Writer.WriteHeader(resp.StatusCode)
+		io.Copy(c.Writer, resp.Body)
+	}
 }

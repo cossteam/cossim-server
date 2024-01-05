@@ -87,7 +87,7 @@ func setupGin() {
 	engine := gin.New()
 
 	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(logger))
+	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
 
 	// 设置路由
 	route(engine)
@@ -100,7 +100,7 @@ func setupGin() {
 	}()
 }
 
-// @title coss-user模块
+// @title coss-user服务
 
 func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/user")

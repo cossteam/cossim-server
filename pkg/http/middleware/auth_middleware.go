@@ -36,8 +36,19 @@ func AuthMiddleware() gin.HandlerFunc {
 		//	ctx.Abort()
 		//	return
 		//}
+		//
+		//conn, err := db.GetConnection()
+		//if err != nil {
+		//	fmt.Printf("获取数据库连接失败: %v", err)
+		//	ctx.JSON(http.StatusInternalServerError, gin.H{
+		//		"code": 500,
+		//		"msg":  http.StatusText(http.StatusInternalServerError),
+		//	})
+		//	ctx.Abort()
+		//	return
+		//}
 
-		conn, err := db.GetConnection()
+		conn, err := db.NewDefaultMysqlConn().GetConnection()
 		if err != nil {
 			fmt.Printf("获取数据库连接失败: %v", err)
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -48,7 +59,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		is, err := auth.NewAuthenticator(conn).ValidateToken(tokenString)
+		a := auth.NewAuthenticator(conn)
+
+		is, err := a.ValidateToken(tokenString)
 		if err != nil || !is {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
