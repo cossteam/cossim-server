@@ -24,7 +24,7 @@ redis:
   idleTimeout: "10s"
 
 http:
-  addr: "127.0.0.1:8081"
+  addr: "0.0.0.0:8081"
 
 grpc:
   addr: "127.0.0.1:10002"
@@ -36,8 +36,18 @@ register:
   tags: ["消息服务", "message_service"]
 
 discovers:
+  msg:
+    name: "msg_service"
+    addr: "0.0.0.0:10002"
+    dial: "3000ms"
+    timeout: "5000ms"
+  relation:
+    name: "relation_service"
+    addr: "0.0.0.0:10004"
+    dial: "3000ms"
+    timeout: "5000ms"
   user:
     name: "user_service"
-    addr: "注册中心地址"
+    addr: "0.0.0.0:10003"
     dial: "3000ms"
     timeout: "5000ms"

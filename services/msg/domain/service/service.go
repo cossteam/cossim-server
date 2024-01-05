@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/cossim/coss-server/services/msg/api/dataTransformers"
 	"github.com/cossim/coss-server/services/msg/domain/entity"
 	"github.com/cossim/coss-server/services/msg/domain/repository"
 )
@@ -21,4 +22,14 @@ func (g MsgService) SendUserMessage(senderId string, receiverId string, msg stri
 		return nil, err
 	}
 	return um, err
+}
+
+func (g MsgService) GetUserMessageList(userId string, friendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) dataTransformers.UserMsgListResponse {
+	ums, total, current := g.ur.GetUserMsgList(userId, friendId, content, msgType, pageNumber, pageSize)
+
+	return dataTransformers.UserMsgListResponse{
+		Total:        total,
+		CurrentPage:  current,
+		UserMessages: ums,
+	}
 }

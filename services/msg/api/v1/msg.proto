@@ -31,14 +31,16 @@ message SendGroupMsgRequest{
 message GetUserMsgListRequest{
   // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
   string UserId=1;
+  // @inject_tag: json:"friend_id" form:"friend_id" uri:"friend_id"
+  string FriendId = 2;
   // @inject_tag: json:"type" form:"type" uri:"type"
-  int32 Type = 2;
+  int32 Type = 3;
   // @inject_tag: json:"content" form:"content" uri:"content"
-  string Content = 3;
+  string Content = 4;
   // @inject_tag: json:"page_size" form:"page_size" uri:"page_size"
-  int32 page_size = 4;
+  int32 PageSize = 5;
   // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
-  int32 page_number = 5;
+  int32 PageNum = 6;
 }
 
 message UserMessage{
@@ -66,13 +68,11 @@ message UserMessage{
 
 message GetUserMsgListResponse{
   // @inject_tag: json:"user_messages" form:"user_messages" uri:"user_messages"
-  repeated string UserMessages = 1;
+  repeated UserMessage UserMessages = 1;
   // @inject_tag: json:"total" form:"total" uri:"total"
   int32 Total = 2;
-  // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
-  int32 PageNum = 3;
   // @inject_tag: json:"current_page" form:"current_page" uri:"current_page"
-  int32 CurrentPage = 4;
+  int32 CurrentPage = 3;
 }
 
 message SendUserMsgResponse{

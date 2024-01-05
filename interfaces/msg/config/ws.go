@@ -4,7 +4,7 @@ type WSEventType int
 
 const (
 	// 上线事件
-	OnlineEvent WSEventType = iota
+	OnlineEvent WSEventType = iota + 1
 	// 下线事件
 	OfflineEvent
 	// 发送消息事件

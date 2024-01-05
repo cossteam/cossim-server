@@ -7,11 +7,14 @@ import (
 	"github.com/cossim/coss-server/interfaces/msg/config"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
+	"github.com/cossim/coss-server/pkg/utils"
 	msg "github.com/cossim/coss-server/services/msg/api/v1"
+	relation "github.com/cossim/coss-server/services/relation/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -36,6 +39,9 @@ type client struct {
 // @Description websocket请求
 // @Router /msg/ws [get]
 func ws(c *gin.Context) {
+	var uid string
+	token := c.Query("token")
+
 	//升级http请求为websocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -43,6 +49,23 @@ func ws(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
+
+	if token == "" {
+		id, err := pkghttp.ParseTokenReUid(c)
+		if err != nil {
+			return
+		}
+		uid = id
+	} else {
+		_, c2, err := utils.ParseToken(token)
+		if err != nil {
+			return
+		}
+		uid = c2.UserId
+	}
+	if uid == "" {
+		return
+	}
 	//用户上线
 	wsRid++
 	client := &client{
@@ -50,18 +73,17 @@ func ws(c *gin.Context) {
 		Uid:  "",
 		Rid:  wsRid,
 	}
-	client.Uid, err = pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
+	client.Uid = uid
 	//保存到线程池
 	client.wsOnlineClients()
 	//读取客户端消息
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Println(err)
+			if err == websocket.ErrCloseSent {
+				fmt.Println("客户端已关闭")
+			}
 			//用户下线
 			client.wsOfflineClients()
 			return
@@ -92,11 +114,25 @@ func sendUserMsg(c *gin.Context) {
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		fmt.Println(err)
+		response.Fail(c, err.Error(), nil)
 		return
 	}
-	//todo 判断账号状态
+
 	//todo 判断好友关系是否正常
+	userRelationStatus, err := relationClient.GetUserRelation(context.Background(), &relation.GetUserRelationRequest{
+		UserId:   thisId,
+		FriendId: req.ReceiverId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if userRelationStatus.Status != relation.RelationStatus_RELATION_STATUS_ADDED {
+		response.Fail(c, "好友关系不正常", nil)
+		return
+	}
+
 	_, err = msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
 		SenderId:   thisId,
 		ReceiverId: req.ReceiverId,
@@ -142,7 +178,6 @@ func sendGroupMsg(c *gin.Context) {
 		fmt.Println(err)
 		return
 	}
-	//todo 判断账号状态
 	//todo 判断是否在群聊里
 	//todo 判断是否被禁言
 	uids, err := msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
@@ -172,62 +207,59 @@ type msgListRequest struct {
 // @Description 获取私聊消息
 // @Accept  json
 // @Produce  json
-// @Param UserId query string true "用户id"
-// @Param Type query string true "类型"
-// @Param Content query int false "消息"
-// @Param PageNumber query int false "页码"
-// @Param PageSize query int false "页大小"
+// @Param user_id query string true "用户id"
+// @Param type query string true "类型"
+// @Param content query string false "消息"
+// @Param page_num query int false "页码"
+// @Param page_size query int false "页大小"
 // @Success		200 {object} utils.Response{}
 // @Router /msg/list/user [get]
-//func getUserMsgList(c *gin.Context) {
-//	var num = c.Query("page_num")
-//	var size = c.Query("page_size")
-//	var id = c.Query("user_id")
-//	var msgType = c.Query("type")
-//	var content = c.Query("content")
-//
-//	if num == "" || size == "" || id == "" || msgType == "" {
-//		c.Error(fmt.Errorf("参数错误"))
-//		return
-//	}
-//	pageNum, _ := strconv.Atoi(num)
-//	pageSize, _ := strconv.Atoi(size)
-//	mt, _ := strconv.Atoi(msgType)
-//
-//	if pageNum == 0 || pageSize == 0 {
-//		c.Error(fmt.Errorf("参数错误"))
-//		return
-//	}
-//
-//	var msgListRequest = &msgListRequest{
-//		UserId:   id,
-//		Type:     int32(mt),
-//		Content:  content,
-//		PageNum:  pageNum,
-//		PageSize: pageSize,
-//	}
-//	thisId, err := pkghttp.ParseTokenReUid(c)
-//	if err != nil {
-//		fmt.Println(err)
-//		return
-//	}
-//	//todo 判断账号状态
-//	//todo 判断是否在群聊里
-//	//todo 判断是否被禁言
-//	uids, err := msgClient.GetUserMessageList(context.Background(), &msg.GetUserMsgListRequest{
-//		UserId:   msgListRequest.UserId,
-//		Content:  msgListRequest.Content,
-//		Type:     msgListRequest.Type,
-//		PageNum:  msgListRequest.PageNum,
-//		PageSize: int32(msgListRequest.PageSize),
-//	})
-//	if err != nil {
-//		c.Error(err)
-//		return
-//	}
-//	//sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
-//	response.Success(c, "获取成功", gin.H{})
-//}
+func getUserMsgList(c *gin.Context) {
+	var num = c.Query("page_num")
+	var size = c.Query("page_size")
+	var id = c.Query("user_id")
+	var msgType = c.Query("type")
+	var content = c.Query("content")
+
+	if num == "" || size == "" || id == "" {
+		c.Error(fmt.Errorf("参数错误"))
+		return
+	}
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	pageNum, _ := strconv.Atoi(num)
+	pageSize, _ := strconv.Atoi(size)
+	mt, _ := strconv.Atoi(msgType)
+	if pageNum == 0 || pageSize == 0 {
+		c.Error(fmt.Errorf("参数错误"))
+		return
+	}
+
+	var msgListRequest = &msgListRequest{
+		UserId:   id,
+		Type:     int32(mt),
+		Content:  content,
+		PageNum:  pageNum,
+		PageSize: pageSize,
+	}
+
+	msg, err := msgClient.GetUserMessageList(context.Background(), &msg.GetUserMsgListRequest{
+		UserId:   thisId,                //当前用户
+		FriendId: msgListRequest.UserId, //好友id
+		Content:  msgListRequest.Content,
+		Type:     msgListRequest.Type,
+		PageNum:  int32(msgListRequest.PageNum),
+		PageSize: int32(msgListRequest.PageSize),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	response.Success(c, "获取成功", gin.H{"msg_list": msg})
+}
 
 type wsMsg struct {
 	Uid   string             `json:"uid"`

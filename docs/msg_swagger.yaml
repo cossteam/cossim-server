@@ -27,6 +27,42 @@ info:
   contact: {}
   title: Swagger Example API
 paths:
+  /msg/list/user:
+    get:
+      consumes:
+      - application/json
+      description: 获取私聊消息
+      parameters:
+      - description: 用户id
+        in: query
+        name: UserId
+        required: true
+        type: string
+      - description: 类型
+        in: query
+        name: Type
+        required: true
+        type: string
+      - description: 消息
+        in: query
+        name: Content
+        type: integer
+      - description: 页码
+        in: query
+        name: PageNumber
+        type: integer
+      - description: 页大小
+        in: query
+        name: PageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 获取私聊消息
   /msg/send/group:
     post:
       consumes:
