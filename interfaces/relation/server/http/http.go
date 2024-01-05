@@ -113,7 +113,7 @@ func setupGin() {
 	}()
 }
 
-// @title coss-relation模块
+// @title coss-relation-bff服务
 
 func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/relation")

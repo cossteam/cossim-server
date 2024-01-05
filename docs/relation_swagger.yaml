@@ -17,6 +17,7 @@ definitions:
         type: string
     required:
     - friend_id
+    - user_id
     type: object
   http.blackListRequest:
     properties:
@@ -72,7 +73,7 @@ definitions:
     type: object
 info:
   contact: {}
-  title: coss-relation模块
+  title: coss-relation-bff服务
 paths:
   /relation/add_blacklist:
     post:

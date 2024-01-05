@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "coss-relation模块",
+        "title": "coss-relation-bff服务",
         "contact": {}
     },
     "paths": {
@@ -242,7 +242,8 @@
         "http.addFriendRequest": {
             "type": "object",
             "required": [
-                "friend_id"
+                "friend_id",
+                "user_id"
             ],
             "properties": {
                 "friend_id": {

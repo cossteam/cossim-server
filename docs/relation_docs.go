@@ -252,7 +252,8 @@ const docTemplaterelation = `{
         "http.addFriendRequest": {
             "type": "object",
             "required": [
-                "friend_id"
+                "friend_id",
+                "user_id"
             ],
             "properties": {
                 "friend_id": {
@@ -351,7 +352,7 @@ var SwaggerInforelation = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "coss-relation模块",
+	Title:            "coss-relation-bff服务",
 	Description:      "",
 	InfoInstanceName: "relation",
 	SwaggerTemplate:  docTemplaterelation,
