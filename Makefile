@@ -30,13 +30,44 @@ ifeq ($(BUILD_PATH),)
     $(error Invalid ACTION. Use 'make build ACTION=interfaces' or 'make build ACTION=services')
 endif
 
-.PHONY: dep test build-service build-interface docker-build docker-push
+.PHONY: dep test run build-service build-interface docker-build docker-push
 
 dep: ## Get the dependencies
 	@go mod tidy
 
 test: ## Run unittests
 	@go test -short ${PKG_LIST}
+
+run:
+ifdef ACTION
+ifdef NAME
+	@echo "Running make run in ${ACTION}/${NAME} directory"
+	@if [ -f "${ACTION}/${NAME}/Makefile" ]; then \
+		(cd ${ACTION}/${NAME} && make run); \
+	else \
+		echo "No Makefile found in ${ACTION}/${NAME} directory"; \
+	fi
+else
+	@echo "Running make run in all ${ACTION} directories"
+	@for dir in $(shell ls -d ${ACTION}/*); do \
+		if [ -f "$$dir/Makefile" ]; then \
+			(cd $$dir && make run); \
+		else \
+			echo "No Makefile found in $$dir"; \
+		fi \
+	done
+endif
+else
+	@echo "Running make run in all directories"
+	@for dir in $(shell ls -d */); do \
+		if [ -f "$$dir/Makefile" ]; then \
+			(cd $$dir && make run); \
+		else \
+			echo "No Makefile found in $$dir"; \
+		fi \
+	done
+endif
+
 
 # 构建指定grpc服务  make build-services ACTION=services NAME="user"
 build-services: dep ## Build the binary file

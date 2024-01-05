@@ -65,23 +65,10 @@ message UserInfoResponse {
   string Tel=4;
   // @inject_tag: json:"avatar"
   string Avatar=5;
+  // @inject_tag: json:"signature"
+  string Signature=6;
   // @inject_tag: json:"status"
-  UserStatus Status = 6;
-}
-
-message GetUserMsgListRequest {
-  // @inject_tag: json:"user_id"
-  string UserId=1;
-  // @inject_tag: json:"nick_name"
-  string NickName=2;
-  // @inject_tag: json:"email"
-  string Email=3;
-  // @inject_tag: json:"tel"
-  string Tel=4;
-  // @inject_tag: json:"avatar"
-  string Avatar=5;
-  // @inject_tag: json:"status"
-  UserStatus Status = 6;
+  UserStatus Status = 7;
 }
 
 message GetBatchUserInfoRequest {

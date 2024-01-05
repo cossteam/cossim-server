@@ -71,12 +71,13 @@ func (g *GrpcHandler) UserInfo(ctx context.Context, request *api.UserInfoRequest
 		return nil, err
 	}
 	return &api.UserInfoResponse{
-		UserId:   userInfo.ID,
-		NickName: userInfo.NickName,
-		Email:    userInfo.Email,
-		Tel:      userInfo.Tel,
-		Avatar:   userInfo.Avatar,
-		Status:   api.UserStatus(userInfo.Status),
+		UserId:    userInfo.ID,
+		NickName:  userInfo.NickName,
+		Email:     userInfo.Email,
+		Tel:       userInfo.Tel,
+		Avatar:    userInfo.Avatar,
+		Signature: userInfo.Signature,
+		Status:    api.UserStatus(userInfo.Status),
 	}, nil
 }
 
@@ -89,12 +90,13 @@ func (g *GrpcHandler) GetBatchUserInfo(ctx context.Context, request *api.GetBatc
 
 	for _, user := range users {
 		resp.Users = append(resp.Users, &api.UserInfoResponse{
-			UserId:   user.ID,
-			NickName: user.NickName,
-			Email:    user.Email,
-			Tel:      user.Tel,
-			Avatar:   user.Avatar,
-			Status:   api.UserStatus(user.Status),
+			UserId:    user.ID,
+			NickName:  user.NickName,
+			Email:     user.Email,
+			Tel:       user.Tel,
+			Avatar:    user.Avatar,
+			Signature: user.Signature,
+			Status:    api.UserStatus(user.Status),
 		})
 	}
 

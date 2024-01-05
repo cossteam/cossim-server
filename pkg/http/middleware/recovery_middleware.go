@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net/http"
 )
 
 func RecoveryMiddleware() gin.HandlerFunc {
@@ -39,16 +38,18 @@ func HandleGRPCErrors(c *gin.Context, logger *zap.Logger, err error) {
 	if grpcCode := status.Code(err); grpcCode == codes.Unavailable {
 		// 连接不可用错误处理
 		logger.Error("user service unavailable", zap.Error(err))
-		response.Fail(c, http.StatusText(http.StatusInternalServerError), nil)
+		//response.Fail(c, http.StatusText(http.StatusInternalServerError), nil)
+		response.GRPCError(c, err)
 		return
 	} else if grpcCode == codes.Unauthenticated {
 		// 未认证错误处理
 		logger.Error("user service unauthenticated", zap.Error(err))
-		response.Fail(c, http.StatusText(http.StatusInternalServerError), nil)
+		//response.Fail(c, http.StatusText(http.StatusInternalServerError), nil)
+		response.GRPCError(c, err)
 		return
 	}
 
 	// 其他 gRPC 错误处理
 	logger.Error("user service failed", zap.Error(err))
-	response.Fail(c, err.Error(), nil)
+	response.GRPCError(c, err)
 }

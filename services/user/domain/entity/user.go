@@ -11,6 +11,7 @@ type User struct {
 	LastIp      string     `gorm:"type:varchar(20);comment:最后登录IP" json:"last_ip"`
 	LineIp      string     `gorm:"type:varchar(20);comment:最后在线IP（接口）" json:"line_ip"`
 	CreatedIp   string     `gorm:"type:varchar(20);comment:注册IP" json:"created_ip"`
+	Signature   string     `gorm:"type:varchar(255);comment:个性签名" json:"signature"`
 	LineAt      int64      `gorm:"comment:最后在线时间（接口）" json:"line_at"`
 	LastAt      int64      `gorm:"comment:最后登录时间" json:"last_at"`
 	Status      UserStatus `gorm:"type:tinyint(4);default:0;comment:用户状态" json:"status"`
