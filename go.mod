@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/mozillazg/go-pinyin v0.20.0
+	github.com/pretty66/websocketproxy v0.0.0-20220507015215-930b3a686308
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4

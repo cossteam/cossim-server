@@ -81,9 +81,6 @@ func ws(c *gin.Context) {
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
-			if err == websocket.ErrCloseSent {
-				fmt.Println("客户端已关闭")
-			}
 			//用户下线
 			client.wsOfflineClients()
 			return
@@ -144,6 +141,7 @@ func sendUserMsg(c *gin.Context) {
 		return
 	}
 	if _, ok := pool[req.ReceiverId]; ok {
+		fmt.Println("pool[req.ReceiverId] => ", pool[req.ReceiverId])
 		if len(pool[req.ReceiverId]) > 0 {
 			sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId)
 		}
@@ -281,6 +279,7 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
+			logger.Error("send msg err", zap.Error(err))
 			return
 		}
 	}

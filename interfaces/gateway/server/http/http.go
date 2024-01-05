@@ -5,6 +5,7 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/pretty66/websocketproxy"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io"
@@ -86,17 +87,38 @@ func setupGin() {
 	}()
 }
 
+var (
+	userServiceURL      = "http://127.0.0.1:8083"
+	relationServiceURL  = "http://127.0.0.1:8082"
+	messageServiceURL   = "http://127.0.0.1:8081"
+	messageWsServiceURL = "ws://127.0.0.1:8081/api/v1/msg/ws"
+)
+
 func route(engine *gin.Engine) {
 	gateway := engine.Group("/api/v1")
 	{
-		gateway.Any("/user/*path", proxyToService("http://127.0.0.1:8083"))
-		gateway.Any("/relation/*path", proxyToService("http://127.0.0.1:8082"))
-		gateway.Any("/msg/*path", proxyToService("http://127.0.0.1:8081"))
+		gateway.Any("/user/*path", proxyToService(userServiceURL))
+		gateway.Any("/relation/*path", proxyToService(relationServiceURL))
+		gateway.Any("/msg/*path", proxyToService(messageServiceURL))
 	}
 }
 
 func proxyToService(targetURL string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if c.Request.Header.Get("Upgrade") == "websocket" {
+			wp, err := websocketproxy.NewProxy(messageWsServiceURL, func(r *http.Request) error {
+				// 握手时设置cookie, 权限验证
+				r.Header.Set("Cookie", "----")
+				// 伪装来源
+				r.Header.Set("Origin", messageServiceURL)
+				return nil
+			})
+			if err != nil {
+				fmt.Println("websocketproxy err ", err)
+			}
+			wp.Proxy(c.Writer, c.Request)
+			return
+		}
 		// 创建一个代理请求
 		proxyReq, err := http.NewRequest(c.Request.Method, targetURL+c.Request.URL.Path, c.Request.Body)
 		if err != nil {

@@ -51,5 +51,5 @@ func HandleGRPCErrors(c *gin.Context, logger *zap.Logger, err error) {
 
 	// 其他 gRPC 错误处理
 	logger.Error("user service failed", zap.Error(err))
-	response.GRPCError(c, err)
+	response.Fail(c, err.Error(), nil)
 }
