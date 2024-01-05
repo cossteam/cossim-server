@@ -73,7 +73,7 @@ func (g *GrpcHandler) GetFriendList(ctx context.Context, request *api.GetFriendL
 	}
 
 	for _, friend := range friends {
-		resp.FriendList = append(resp.FriendList, &api.Friend{UserId: friend.UserID})
+		resp.FriendList = append(resp.FriendList, &api.Friend{UserId: friend.FriendID})
 	}
 
 	return resp, nil

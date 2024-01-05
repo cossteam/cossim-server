@@ -38,11 +38,24 @@ func (u *UserService) AddFriend(ctx context.Context, userId, friendId string) (*
 	newRelation := &entity.UserRelation{
 		UserID:   userId,
 		FriendID: friendId,
-		Status:   entity.RelationStatusPending,
+		//Status:   entity.RelationStatusPending,
+		Status: entity.RelationStatusAdded,
 	}
 
 	// Save the new relationship to the database
 	savedRelation, err := u.urr.CreateRelation(newRelation)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add friend: %w", err)
+	}
+
+	n := &entity.UserRelation{
+		UserID:   friendId,
+		FriendID: userId,
+		Status:   entity.RelationStatusAdded,
+	}
+
+	// Save the new relationship to the database
+	_, err = u.urr.CreateRelation(n)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add friend: %w", err)
 	}

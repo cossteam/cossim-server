@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	relationApi "github.com/cossim/coss-server/services/relation/api/v1"
 	userApi "github.com/cossim/coss-server/services/user/api/v1"
@@ -25,6 +26,18 @@ func blackList(c *gin.Context) {
 	if userID == "" {
 		logger.Error("用户id为空")
 		response.Fail(c, "用户id为空", nil)
+		return
+	}
+
+	uid, err := http.ParseTokenReUid(c)
+	if err != nil {
+		return
+	}
+
+	// 检查用户是否在查询自己的黑名单列表
+	if userID != uid {
+		logger.Error("用户权限不足：不允许查询其他用户的黑名单列表")
+		response.Fail(c, "用户权限不足：不允许查询其他用户的黑名单列表", nil)
 		return
 	}
 
@@ -76,6 +89,18 @@ func friendList(c *gin.Context) {
 	if userID == "" {
 		logger.Error("用户id为空")
 		response.Fail(c, "用户id为空", nil)
+		return
+	}
+
+	uid, err := http.ParseTokenReUid(c)
+	if err != nil {
+		return
+	}
+
+	// 检查用户是否在查询自己的黑名单列表
+	if userID != uid {
+		logger.Error("用户权限不足：不允许查询其他用户的黑名单列表")
+		response.Fail(c, "用户权限不足：不允许查询其他用户的黑名单列表", nil)
 		return
 	}
 
