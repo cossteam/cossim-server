@@ -2,30 +2,45 @@ package http
 
 import (
 	"context"
-	chttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/http"
+	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	relationApi "github.com/cossim/coss-server/services/relation/api/v1"
 	userApi "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"regexp"
 )
+
+type blackListRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
 
 // @Summary 黑名单
 // @Description 黑名单
 // @Accept  json
 // @Produce  json
+// @param request body blackListRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/blacklist [get]
 func blackList(c *gin.Context) {
-	userID, err := chttp.ParseTokenReUid(c)
-	if err != nil {
-		response.InternalServerError(c)
-		return
-	}
+	userID := c.Query("user_id")
 	if userID == "" {
 		logger.Error("用户id为空")
 		response.Fail(c, "用户id为空", nil)
+		return
+	}
+
+	uid, err := http.ParseTokenReUid(c)
+	if err != nil {
+		return
+	}
+
+	// 检查用户是否在查询自己的黑名单列表
+	if userID != uid {
+		logger.Error("用户权限不足：不允许查询其他用户的黑名单列表")
+		response.Fail(c, "用户权限不足：不允许查询其他用户的黑名单列表", nil)
 		return
 	}
 
@@ -61,22 +76,34 @@ func blackList(c *gin.Context) {
 	response.Success(c, "获取黑名单列表成功", gin.H{"blacklist": blacklist})
 }
 
+type friendListRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
+
 // @Summary 好友列表
 // @Description 好友列表
 // @Accept  json
 // @Produce  json
+// @param request body friendListRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/friend_list [get]
 func friendList(c *gin.Context) {
-	userID, err := chttp.ParseTokenReUid(c)
-	if err != nil {
-		logger.Error("解析token失败", zap.Error(err))
-		response.InternalServerError(c)
-		return
-	}
+	userID := c.Query("user_id")
 	if userID == "" {
 		logger.Error("用户id为空")
 		response.Fail(c, "用户id为空", nil)
+		return
+	}
+
+	uid, err := http.ParseTokenReUid(c)
+	if err != nil {
+		return
+	}
+
+	// 检查用户是否在查询自己的黑名单列表
+	if userID != uid {
+		logger.Error("用户权限不足：不允许查询其他用户的黑名单列表")
+		response.Fail(c, "用户权限不足：不允许查询其他用户的黑名单列表", nil)
 		return
 	}
 
@@ -116,13 +143,12 @@ func friendList(c *gin.Context) {
 	var data []usersorter.User
 	for _, v := range userInfos.Users {
 		data = append(data, usersorter.CustomUserData{
-			UserID:    v.UserId,
-			NickName:  v.NickName,
-			Email:     v.Email,
-			Tel:       v.Tel,
-			Avatar:    v.Avatar,
-			Signature: v.Signature,
-			Status:    uint(v.Status),
+			UserID:   v.UserId,
+			NickName: v.NickName,
+			Email:    v.Email,
+			Tel:      v.Tel,
+			Avatar:   v.Avatar,
+			Status:   uint(v.Status),
 		})
 	}
 
@@ -297,8 +323,8 @@ func confirmFriend(c *gin.Context) {
 }
 
 type addFriendRequest struct {
-	UserId   string `json:"user_id" binding:"required"`
-	FriendId string `json:"friend_id" binding:"required"`
+	Email string `json:"email" binding:"required"`
+	Msg   string `json:"msg"`
 }
 
 // @Summary 添加好友
@@ -316,18 +342,30 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserId})
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
 	if err != nil {
 		c.Error(err)
 		return
 	}
-
 	if user == nil {
 		response.Fail(c, "用户不存在", nil)
 		return
 	}
 
-	friend, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.FriendId})
+	// 正则表达式匹配邮箱格式
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(req.Email) {
+		response.Fail(c, "邮箱格式不正确", nil)
+		return
+	}
+
+	friend, err := userClient.GetUserInfoByEmail(context.Background(), &userApi.GetUserInfoByEmailRequest{Email: req.Email})
 	if err != nil {
 		c.Error(err)
 		return
@@ -338,7 +376,7 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	if _, err := relationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{UserId: req.UserId, FriendId: req.FriendId}); err != nil {
+	if _, err := relationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{UserId: thisId, FriendId: friend.UserId}); err != nil {
 		c.Error(err)
 		return
 	}

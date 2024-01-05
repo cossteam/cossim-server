@@ -29,33 +29,33 @@ const docTemplatemsg = `{
                     {
                         "type": "string",
                         "description": "用户id",
-                        "name": "UserId",
+                        "name": "user_id",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "类型",
-                        "name": "Type",
+                        "name": "type",
                         "in": "query",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "消息",
-                        "name": "Content",
+                        "name": "content",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "页码",
-                        "name": "PageNumber",
+                        "name": "page_num",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "页大小",
-                        "name": "PageSize",
+                        "name": "page_size",
                         "in": "query"
                     }
                 ],
@@ -145,7 +145,6 @@ const docTemplatemsg = `{
             "required": [
                 "content",
                 "receiver_id",
-                "replay_id",
                 "type"
             ],
             "properties": {

@@ -74,6 +74,11 @@ message UserInfoResponse {
 message GetBatchUserInfoRequest {
   repeated string UserIds = 1;
 }
+message GetUserInfoByEmailRequest {
+  // @inject_tag: json:"email"
+  string Email = 1;
+}
+
 
 message GetBatchUserInfoResponse {
   // @inject_tag: json:"users" form:"users"
@@ -85,5 +90,6 @@ service UserService {
   rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
   rpc UserInfo(UserInfoRequest) returns(UserInfoResponse);
   rpc GetBatchUserInfo(GetBatchUserInfoRequest) returns (GetBatchUserInfoResponse);
+  rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
   //  rpc UserLogout(UserRequest) returns(UserCommonResponse);
 }

@@ -102,3 +102,20 @@ func (g *GrpcHandler) GetBatchUserInfo(ctx context.Context, request *api.GetBatc
 
 	return resp, nil
 }
+
+func (g *GrpcHandler) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
+
+	userInfo, err := g.svc.GetUserInfoByEmail(request.Email)
+	if err != nil {
+		return nil, err
+	}
+	return &api.UserInfoResponse{
+		UserId:    userInfo.ID,
+		NickName:  userInfo.NickName,
+		Email:     userInfo.Email,
+		Tel:       userInfo.Tel,
+		Avatar:    userInfo.Avatar,
+		Signature: userInfo.Signature,
+		Status:    api.UserStatus(userInfo.Status),
+	}, nil
+}

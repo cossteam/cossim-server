@@ -92,3 +92,15 @@ func (u *UserService) GetBatchGetUserInfo(userIds []string) ([]*entity.User, err
 	}
 	return users, nil
 }
+
+func (u *UserService) GetUserInfoByEmail(email string) (*entity.User, error) {
+	user, err := u.ur.GetUserInfoByEmail(email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("未找到用户")
+		}
+		return nil, fmt.Errorf("获取用户信息失败: %w", err)
+	}
+
+	return user, nil
+}

@@ -12,7 +12,6 @@ definitions:
     required:
     - content
     - receiver_id
-    - replay_id
     - type
     type: object
   utils.Response:
@@ -35,25 +34,25 @@ paths:
       parameters:
       - description: 用户id
         in: query
-        name: UserId
+        name: user_id
         required: true
         type: string
       - description: 类型
         in: query
-        name: Type
+        name: type
         required: true
         type: string
       - description: 消息
         in: query
-        name: Content
-        type: integer
+        name: content
+        type: string
       - description: 页码
         in: query
-        name: PageNumber
+        name: page_num
         type: integer
       - description: 页大小
         in: query
-        name: PageSize
+        name: page_size
         type: integer
       produces:
       - application/json
