@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
+	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	relationApi "github.com/cossim/coss-server/services/relation/api/v1"
 	userApi "github.com/cossim/coss-server/services/user/api/v1"
 	"github.com/gin-gonic/gin"
@@ -137,7 +138,22 @@ func friendList(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "获取好友列表成功", gin.H{"friend_list": userInfos.Users})
+	var data []usersorter.User
+	for _, v := range userInfos.Users {
+		data = append(data, usersorter.CustomUserData{
+			UserID:   v.UserId,
+			NickName: v.NickName,
+			Email:    v.Email,
+			Tel:      v.Tel,
+			Avatar:   v.Avatar,
+			Status:   uint(v.Status),
+		})
+	}
+
+	// Sort and group by specified field
+	groupedUsers := usersorter.SortAndGroupUsers(data, "NickName")
+
+	response.Success(c, "获取好友列表成功", usersorter.ConvertToGinH(groupedUsers))
 }
 
 type deleteBlacklistRequest struct {
