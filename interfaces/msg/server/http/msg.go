@@ -95,7 +95,7 @@ type SendUserMsgRequest struct {
 	ReceiverId string `json:"receiver_id" binding:"required"`
 	Content    string `json:"content" binding:"required"`
 	Type       uint   `json:"type" binding:"required"`
-	ReplayId   uint   `json:"replay_id" binding:"required"`
+	ReplayId   uint   `json:"replay_id" `
 }
 
 // @Summary 发送私聊消息
