@@ -3,59 +3,70 @@ package v1;
 option go_package = "github.com/cossim/coss-server/services/user/api/v1";
 
 message UserLoginRequest {
-  // @inject_tag: json:"email" form:"email" uri:"email"
+  // @inject_tag: json:"email"
   string Email=1;
-  // @inject_tag: json:"password" form:"password" uri:"password"
+  // @inject_tag: json:"password"
   string Password=2;
 }
 
 message UserLoginResponse {
-  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  // @inject_tag: json:"user_id"
   string UserId=1;
-  // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
+  // @inject_tag: json:"nick_name"
   string NickName=2;
-  // @inject_tag: json:"email" form:"email" uri:"email"
+  // @inject_tag: json:"email"
   string Email=3;
-  // @inject_tag: json:"tel" form:"tel" uri:"tel"
+  // @inject_tag: json:"tel"
   string Tel=4;
-  // @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
+  // @inject_tag: json:"avatar"
   string Avatar=5;
 }
 
 message UserRegisterRequest {
-  // @inject_tag: json:"email" form:"email" uri:"email"
+  // @inject_tag: json:"email"
   string Email=1;
-  // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
+  // @inject_tag: json:"nick_name"
   string NickName=2;
-  // @inject_tag: json:"password" form:"password" uri:"password"
+  // @inject_tag: json:"password"
   string Password=3;
-  // @inject_tag: json:"confirm_password" form:"confirm_password" uri:"confirm_password"
+  // @inject_tag: json:"confirm_password"
   string ConfirmPassword=4;
-  // @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
+  // @inject_tag: json:"avatar"
   string Avatar=5;
 }
 
 message UserRegisterResponse {
-  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  // @inject_tag: json:"user_id"
   string UserId=1;
 }
 
 message UserInfoRequest {
-  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  // @inject_tag: json:"user_id"
   string UserId=1;
 }
 
+// 定义用户状态枚举类型
+enum UserStatus {
+  USER_STATUS_UNKNOWN = 0;
+  USER_STATUS_NORMAL = 1;
+  USER_STATUS_DISABLE = 2;
+  USER_STATUS_DELETED = 3;
+  USER_STATUS_LOCK = 4;
+}
+
 message UserInfoResponse {
-  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  // @inject_tag: json:"user_id"
   string UserId=1;
-  // @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
+  // @inject_tag: json:"nick_name"
   string NickName=2;
-  // @inject_tag: json:"email" form:"email" uri:"email"
+  // @inject_tag: json:"email"
   string Email=3;
-  // @inject_tag: json:"tel" form:"tel" uri:"tel"
+  // @inject_tag: json:"tel"
   string Tel=4;
-  // @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
+  // @inject_tag: json:"avatar"
   string Avatar=5;
+  // @inject_tag: json:"status"
+  UserStatus Status = 6;
 }
 
 message GetBatchUserInfoRequest {

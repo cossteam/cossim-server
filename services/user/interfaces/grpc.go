@@ -76,6 +76,7 @@ func (g *GrpcHandler) UserInfo(ctx context.Context, request *api.UserInfoRequest
 		Email:    userInfo.Email,
 		Tel:      userInfo.Tel,
 		Avatar:   userInfo.Avatar,
+		Status:   api.UserStatus(userInfo.Status),
 	}, nil
 }
 
@@ -93,6 +94,7 @@ func (g *GrpcHandler) GetBatchUserInfo(ctx context.Context, request *api.GetBatc
 			Email:    user.Email,
 			Tel:      user.Tel,
 			Avatar:   user.Avatar,
+			Status:   api.UserStatus(user.Status),
 		})
 	}
 

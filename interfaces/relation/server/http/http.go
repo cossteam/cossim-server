@@ -100,7 +100,7 @@ func setupGin() {
 	engine := gin.New()
 
 	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.AuthMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
+	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
 
 	// 设置路由
 	route(engine)
@@ -116,13 +116,20 @@ func setupGin() {
 // @title coss-relation-bff服务
 
 func route(engine *gin.Engine) {
-	u := engine.Group("/api/v1/relation")
-	u.GET("/friend_list", friendList)
-	u.GET("/blacklist", blackList)
-	u.POST("/add_friend", addFriend)
-	u.POST("/confirm_friend", confirmFriend)
-	u.POST("/delete_friend", deleteFriend)
-	u.POST("/add_blacklist", addBlacklist)
-	u.POST("/delete_blacklist", deleteBlacklist)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("relation")))
+	// 添加不同的中间件给不同的路由组
+	// 比如除了swagger路径外其他的路径添加了身份验证中间件
+	api := engine.Group("/api/v1/relation")
+	api.Use(middleware.AuthMiddleware())
+
+	api.GET("/friend_list", friendList)
+	api.GET("/blacklist", blackList)
+	api.POST("/add_friend", addFriend)
+	api.POST("/confirm_friend", confirmFriend)
+	api.POST("/delete_friend", deleteFriend)
+	api.POST("/add_blacklist", addBlacklist)
+	api.POST("/delete_blacklist", deleteBlacklist)
+
+	// 为Swagger路径添加不需要身份验证的中间件
+	swagger := engine.Group("/api/v1/relation/swagger")
+	swagger.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("relation")))
 }

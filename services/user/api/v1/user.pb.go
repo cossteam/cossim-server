@@ -20,15 +20,71 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// 定义用户状态枚举类型
+type UserStatus int32
+
+const (
+	UserStatus_USER_STATUS_UNKNOWN UserStatus = 0
+	UserStatus_USER_STATUS_NORMAL  UserStatus = 1
+	UserStatus_USER_STATUS_DISABLE UserStatus = 2
+	UserStatus_USER_STATUS_DELETED UserStatus = 3
+	UserStatus_USER_STATUS_LOCK    UserStatus = 4
+)
+
+// Enum value maps for UserStatus.
+var (
+	UserStatus_name = map[int32]string{
+		0: "USER_STATUS_UNKNOWN",
+		1: "USER_STATUS_NORMAL",
+		2: "USER_STATUS_DISABLE",
+		3: "USER_STATUS_DELETED",
+		4: "USER_STATUS_LOCK",
+	}
+	UserStatus_value = map[string]int32{
+		"USER_STATUS_UNKNOWN": 0,
+		"USER_STATUS_NORMAL":  1,
+		"USER_STATUS_DISABLE": 2,
+		"USER_STATUS_DELETED": 3,
+		"USER_STATUS_LOCK":    4,
+	}
+)
+
+func (x UserStatus) Enum() *UserStatus {
+	p := new(UserStatus)
+	*p = x
+	return p
+}
+
+func (x UserStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (UserStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_v1_user_proto_enumTypes[0].Descriptor()
+}
+
+func (UserStatus) Type() protoreflect.EnumType {
+	return &file_api_v1_user_proto_enumTypes[0]
+}
+
+func (x UserStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use UserStatus.Descriptor instead.
+func (UserStatus) EnumDescriptor() ([]byte, []int) {
+	return file_api_v1_user_proto_rawDescGZIP(), []int{0}
+}
+
 type UserLoginRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"email" form:"email" uri:"email"
-	Email string `protobuf:"bytes,1,opt,name=Email,proto3" json:"email" form:"email" uri:"email"`
-	// @inject_tag: json:"password" form:"password" uri:"password"
-	Password string `protobuf:"bytes,2,opt,name=Password,proto3" json:"password" form:"password" uri:"password"`
+	// @inject_tag: json:"email"
+	Email string `protobuf:"bytes,1,opt,name=Email,proto3" json:"email"`
+	// @inject_tag: json:"password"
+	Password string `protobuf:"bytes,2,opt,name=Password,proto3" json:"password"`
 }
 
 func (x *UserLoginRequest) Reset() {
@@ -82,16 +138,16 @@ type UserLoginResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
-	// @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name" form:"nick_name" uri:"nick_name"`
-	// @inject_tag: json:"email" form:"email" uri:"email"
-	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email" form:"email" uri:"email"`
-	// @inject_tag: json:"tel" form:"tel" uri:"tel"
-	Tel string `protobuf:"bytes,4,opt,name=Tel,proto3" json:"tel" form:"tel" uri:"tel"`
-	// @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
-	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"avatar" form:"avatar" uri:"avatar"`
+	// @inject_tag: json:"user_id"
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	// @inject_tag: json:"nick_name"
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name"`
+	// @inject_tag: json:"email"
+	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email"`
+	// @inject_tag: json:"tel"
+	Tel string `protobuf:"bytes,4,opt,name=Tel,proto3" json:"tel"`
+	// @inject_tag: json:"avatar"
+	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"avatar"`
 }
 
 func (x *UserLoginResponse) Reset() {
@@ -166,16 +222,16 @@ type UserRegisterRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"email" form:"email" uri:"email"
-	Email string `protobuf:"bytes,1,opt,name=Email,proto3" json:"email" form:"email" uri:"email"`
-	// @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name" form:"nick_name" uri:"nick_name"`
-	// @inject_tag: json:"password" form:"password" uri:"password"
-	Password string `protobuf:"bytes,3,opt,name=Password,proto3" json:"password" form:"password" uri:"password"`
-	// @inject_tag: json:"confirm_password" form:"confirm_password" uri:"confirm_password"
-	ConfirmPassword string `protobuf:"bytes,4,opt,name=ConfirmPassword,proto3" json:"confirm_password" form:"confirm_password" uri:"confirm_password"`
-	// @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
-	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"avatar" form:"avatar" uri:"avatar"`
+	// @inject_tag: json:"email"
+	Email string `protobuf:"bytes,1,opt,name=Email,proto3" json:"email"`
+	// @inject_tag: json:"nick_name"
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name"`
+	// @inject_tag: json:"password"
+	Password string `protobuf:"bytes,3,opt,name=Password,proto3" json:"password"`
+	// @inject_tag: json:"confirm_password"
+	ConfirmPassword string `protobuf:"bytes,4,opt,name=ConfirmPassword,proto3" json:"confirm_password"`
+	// @inject_tag: json:"avatar"
+	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"avatar"`
 }
 
 func (x *UserRegisterRequest) Reset() {
@@ -250,8 +306,8 @@ type UserRegisterResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
+	// @inject_tag: json:"user_id"
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *UserRegisterResponse) Reset() {
@@ -298,8 +354,8 @@ type UserInfoRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
+	// @inject_tag: json:"user_id"
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *UserInfoRequest) Reset() {
@@ -346,16 +402,18 @@ type UserInfoResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
-	// @inject_tag: json:"nick_name" form:"nick_name" uri:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name" form:"nick_name" uri:"nick_name"`
-	// @inject_tag: json:"email" form:"email" uri:"email"
-	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email" form:"email" uri:"email"`
-	// @inject_tag: json:"tel" form:"tel" uri:"tel"
-	Tel string `protobuf:"bytes,4,opt,name=Tel,proto3" json:"tel" form:"tel" uri:"tel"`
-	// @inject_tag: json:"avatar" form:"avatar" uri:"avatar"
-	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"avatar" form:"avatar" uri:"avatar"`
+	// @inject_tag: json:"user_id"
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	// @inject_tag: json:"nick_name"
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name"`
+	// @inject_tag: json:"email"
+	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email"`
+	// @inject_tag: json:"tel"
+	Tel string `protobuf:"bytes,4,opt,name=Tel,proto3" json:"tel"`
+	// @inject_tag: json:"avatar"
+	Avatar string `protobuf:"bytes,5,opt,name=Avatar,proto3" json:"avatar"`
+	// @inject_tag: json:"status"
+	Status UserStatus `protobuf:"varint,6,opt,name=Status,proto3,enum=v1.UserStatus" json:"status"`
 }
 
 func (x *UserInfoResponse) Reset() {
@@ -423,6 +481,13 @@ func (x *UserInfoResponse) GetAvatar() string {
 		return x.Avatar
 	}
 	return ""
+}
+
+func (x *UserInfoResponse) GetStatus() UserStatus {
+	if x != nil {
+		return x.Status
+	}
+	return UserStatus_USER_STATUS_UNKNOWN
 }
 
 type GetBatchUserInfoRequest struct {
@@ -553,7 +618,7 @@ var file_api_v1_user_proto_rawDesc = []byte{
 	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x22,
 	0x29, 0x0a, 0x0f, 0x55, 0x73, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x22, 0x86, 0x01, 0x0a, 0x10, 0x55,
+	0x28, 0x09, 0x52, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x22, 0xae, 0x01, 0x0a, 0x10, 0x55,
 	0x73, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
 	0x16, 0x0a, 0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x06, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x4e, 0x69, 0x63, 0x6b, 0x4e,
@@ -562,14 +627,25 @@ var file_api_v1_user_proto_rawDesc = []byte{
 	0x28, 0x09, 0x52, 0x05, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x12, 0x10, 0x0a, 0x03, 0x54, 0x65, 0x6c,
 	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x54, 0x65, 0x6c, 0x12, 0x16, 0x0a, 0x06, 0x41,
 	0x76, 0x61, 0x74, 0x61, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x41, 0x76, 0x61,
-	0x74, 0x61, 0x72, 0x22, 0x33, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x42, 0x61, 0x74, 0x63, 0x68, 0x55,
-	0x73, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18,
-	0x0a, 0x07, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52,
-	0x07, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x73, 0x22, 0x46, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x42,
-	0x61, 0x74, 0x63, 0x68, 0x55, 0x73, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2a, 0x0a, 0x05, 0x55, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x49, 0x6e, 0x66,
-	0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x05, 0x55, 0x73, 0x65, 0x72, 0x73,
+	0x74, 0x61, 0x72, 0x12, 0x26, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x06, 0x20,
+	0x01, 0x28, 0x0e, 0x32, 0x0e, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x53, 0x74, 0x61,
+	0x74, 0x75, 0x73, 0x52, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22, 0x33, 0x0a, 0x17, 0x47,
+	0x65, 0x74, 0x42, 0x61, 0x74, 0x63, 0x68, 0x55, 0x73, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x73,
+	0x22, 0x46, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x42, 0x61, 0x74, 0x63, 0x68, 0x55, 0x73, 0x65, 0x72,
+	0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2a, 0x0a, 0x05,
+	0x55, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x76, 0x31,
+	0x2e, 0x55, 0x73, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x52, 0x05, 0x55, 0x73, 0x65, 0x72, 0x73, 0x2a, 0x85, 0x01, 0x0a, 0x0a, 0x55, 0x73, 0x65,
+	0x72, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x17, 0x0a, 0x13, 0x55, 0x53, 0x45, 0x52, 0x5f,
+	0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x4b, 0x4e, 0x4f, 0x57, 0x4e, 0x10, 0x00,
+	0x12, 0x16, 0x0a, 0x12, 0x55, 0x53, 0x45, 0x52, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f,
+	0x4e, 0x4f, 0x52, 0x4d, 0x41, 0x4c, 0x10, 0x01, 0x12, 0x17, 0x0a, 0x13, 0x55, 0x53, 0x45, 0x52,
+	0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x44, 0x49, 0x53, 0x41, 0x42, 0x4c, 0x45, 0x10,
+	0x02, 0x12, 0x17, 0x0a, 0x13, 0x55, 0x53, 0x45, 0x52, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53,
+	0x5f, 0x44, 0x45, 0x4c, 0x45, 0x54, 0x45, 0x44, 0x10, 0x03, 0x12, 0x14, 0x0a, 0x10, 0x55, 0x53,
+	0x45, 0x52, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x4c, 0x4f, 0x43, 0x4b, 0x10, 0x04,
 	0x32, 0x90, 0x02, 0x0a, 0x0b, 0x55, 0x73, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
 	0x12, 0x38, 0x0a, 0x09, 0x55, 0x73, 0x65, 0x72, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x12, 0x14, 0x2e,
 	0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75,
@@ -606,32 +682,35 @@ func file_api_v1_user_proto_rawDescGZIP() []byte {
 	return file_api_v1_user_proto_rawDescData
 }
 
+var file_api_v1_user_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_api_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_api_v1_user_proto_goTypes = []interface{}{
-	(*UserLoginRequest)(nil),         // 0: v1.UserLoginRequest
-	(*UserLoginResponse)(nil),        // 1: v1.UserLoginResponse
-	(*UserRegisterRequest)(nil),      // 2: v1.UserRegisterRequest
-	(*UserRegisterResponse)(nil),     // 3: v1.UserRegisterResponse
-	(*UserInfoRequest)(nil),          // 4: v1.UserInfoRequest
-	(*UserInfoResponse)(nil),         // 5: v1.UserInfoResponse
-	(*GetBatchUserInfoRequest)(nil),  // 6: v1.GetBatchUserInfoRequest
-	(*GetBatchUserInfoResponse)(nil), // 7: v1.GetBatchUserInfoResponse
+	(UserStatus)(0),                  // 0: v1.UserStatus
+	(*UserLoginRequest)(nil),         // 1: v1.UserLoginRequest
+	(*UserLoginResponse)(nil),        // 2: v1.UserLoginResponse
+	(*UserRegisterRequest)(nil),      // 3: v1.UserRegisterRequest
+	(*UserRegisterResponse)(nil),     // 4: v1.UserRegisterResponse
+	(*UserInfoRequest)(nil),          // 5: v1.UserInfoRequest
+	(*UserInfoResponse)(nil),         // 6: v1.UserInfoResponse
+	(*GetBatchUserInfoRequest)(nil),  // 7: v1.GetBatchUserInfoRequest
+	(*GetBatchUserInfoResponse)(nil), // 8: v1.GetBatchUserInfoResponse
 }
 var file_api_v1_user_proto_depIdxs = []int32{
-	5, // 0: v1.GetBatchUserInfoResponse.Users:type_name -> v1.UserInfoResponse
-	0, // 1: v1.UserService.UserLogin:input_type -> v1.UserLoginRequest
-	2, // 2: v1.UserService.UserRegister:input_type -> v1.UserRegisterRequest
-	4, // 3: v1.UserService.UserInfo:input_type -> v1.UserInfoRequest
-	6, // 4: v1.UserService.GetBatchUserInfo:input_type -> v1.GetBatchUserInfoRequest
-	1, // 5: v1.UserService.UserLogin:output_type -> v1.UserLoginResponse
-	3, // 6: v1.UserService.UserRegister:output_type -> v1.UserRegisterResponse
-	5, // 7: v1.UserService.UserInfo:output_type -> v1.UserInfoResponse
-	7, // 8: v1.UserService.GetBatchUserInfo:output_type -> v1.GetBatchUserInfoResponse
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: v1.UserInfoResponse.Status:type_name -> v1.UserStatus
+	6, // 1: v1.GetBatchUserInfoResponse.Users:type_name -> v1.UserInfoResponse
+	1, // 2: v1.UserService.UserLogin:input_type -> v1.UserLoginRequest
+	3, // 3: v1.UserService.UserRegister:input_type -> v1.UserRegisterRequest
+	5, // 4: v1.UserService.UserInfo:input_type -> v1.UserInfoRequest
+	7, // 5: v1.UserService.GetBatchUserInfo:input_type -> v1.GetBatchUserInfoRequest
+	2, // 6: v1.UserService.UserLogin:output_type -> v1.UserLoginResponse
+	4, // 7: v1.UserService.UserRegister:output_type -> v1.UserRegisterResponse
+	6, // 8: v1.UserService.UserInfo:output_type -> v1.UserInfoResponse
+	8, // 9: v1.UserService.GetBatchUserInfo:output_type -> v1.GetBatchUserInfoResponse
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_user_proto_init() }
@@ -742,13 +821,14 @@ func file_api_v1_user_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_v1_user_proto_rawDesc,
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_api_v1_user_proto_goTypes,
 		DependencyIndexes: file_api_v1_user_proto_depIdxs,
+		EnumInfos:         file_api_v1_user_proto_enumTypes,
 		MessageInfos:      file_api_v1_user_proto_msgTypes,
 	}.Build()
 	File_api_v1_user_proto = out.File
