@@ -118,7 +118,6 @@ func sendUserMsg(c *gin.Context) {
 		return
 	}
 
-	//todo 判断好友关系是否正常
 	userRelationStatus, err := relationClient.GetUserRelation(context.Background(), &relation.GetUserRelationRequest{
 		UserId:   thisId,
 		FriendId: req.ReceiverId,
@@ -278,7 +277,7 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 	}
 	//遍历该用户所有客户端
 	for _, c := range pool[receiverId] {
-		m := wsMsg{Uid: receiverId, Event: config.SendMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId}}
+		m := wsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId}}
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
@@ -300,7 +299,7 @@ func sendWsGroupMsg(uIds []string, userId string, groupId int64, msg string, msg
 	for _, uid := range uIds {
 		//遍历该用户所有客户端
 		for _, c := range pool[uid] {
-			m := wsMsg{Uid: uid, Event: config.SendMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{groupId, userId, msg, msgType, replayId}}
+			m := wsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{groupId, userId, msg, msgType, replayId}}
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)
 			if err != nil {
@@ -311,7 +310,6 @@ func sendWsGroupMsg(uIds []string, userId string, groupId int64, msg string, msg
 
 // 用户上线
 func (c client) wsOnlineClients() {
-	fmt.Println(c.Uid, "上线了")
 	wsMutex.Lock()
 	pool[c.Uid] = append(pool[c.Uid], &c)
 	wsMutex.Unlock()
@@ -329,6 +327,5 @@ func (c client) wsOfflineClients() {
 	//删除map中指定key的元素
 	delete(pool, c.Uid)
 	wsMutex.Unlock()
-	fmt.Println(c.Uid, "下线了")
 	return
 }
