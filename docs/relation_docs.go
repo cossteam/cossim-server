@@ -215,13 +215,9 @@ const docTemplaterelation = `{
         "http.addBlacklistRequest": {
             "type": "object",
             "required": [
-                "friend_id",
                 "user_id"
             ],
             "properties": {
-                "friend_id": {
-                    "type": "string"
-                },
                 "user_id": {
                     "type": "string"
                 }
@@ -230,13 +226,13 @@ const docTemplaterelation = `{
         "http.addFriendRequest": {
             "type": "object",
             "required": [
-                "friend_id"
+                "user_id"
             ],
             "properties": {
-                "friend_id": {
+                "msg": {
                     "type": "string"
                 },
-                "msg": {
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -244,13 +240,9 @@ const docTemplaterelation = `{
         "http.confirmFriendRequest": {
             "type": "object",
             "required": [
-                "friend_id",
                 "user_id"
             ],
             "properties": {
-                "friend_id": {
-                    "type": "string"
-                },
                 "user_id": {
                     "type": "string"
                 }
@@ -259,13 +251,9 @@ const docTemplaterelation = `{
         "http.deleteBlacklistRequest": {
             "type": "object",
             "required": [
-                "friend_id",
                 "user_id"
             ],
             "properties": {
-                "friend_id": {
-                    "type": "string"
-                },
                 "user_id": {
                     "type": "string"
                 }
@@ -274,13 +262,9 @@ const docTemplaterelation = `{
         "http.deleteFriendRequest": {
             "type": "object",
             "required": [
-                "friend_id",
                 "user_id"
             ],
             "properties": {
-                "friend_id": {
-                    "type": "string"
-                },
                 "user_id": {
                     "type": "string"
                 }

@@ -1,51 +1,39 @@
 definitions:
   http.addBlacklistRequest:
     properties:
-      friend_id:
-        type: string
       user_id:
         type: string
     required:
-    - friend_id
     - user_id
     type: object
   http.addFriendRequest:
     properties:
-      friend_id:
-        type: string
       msg:
-        type: string
-    required:
-    - friend_id
-    type: object
-  http.confirmFriendRequest:
-    properties:
-      friend_id:
         type: string
       user_id:
         type: string
     required:
-    - friend_id
+    - user_id
+    type: object
+  http.confirmFriendRequest:
+    properties:
+      user_id:
+        type: string
+    required:
     - user_id
     type: object
   http.deleteBlacklistRequest:
     properties:
-      friend_id:
-        type: string
       user_id:
         type: string
     required:
-    - friend_id
     - user_id
     type: object
   http.deleteFriendRequest:
     properties:
-      friend_id:
-        type: string
       user_id:
         type: string
     required:
-    - friend_id
     - user_id
     type: object
   utils.Response:
