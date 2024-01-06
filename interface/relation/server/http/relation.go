@@ -12,34 +12,22 @@ import (
 	"go.uber.org/zap"
 )
 
-type blackListRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 // @Summary 黑名单
 // @Description 黑名单
 // @Accept  json
 // @Produce  json
-// @param request body blackListRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/blacklist [get]
 func blackList(c *gin.Context) {
-	userID := c.Query("user_id")
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.Fail(c, "token解析失败", nil)
+		return
+	}
 	if userID == "" {
 		logger.Error("用户id为空")
 		response.Fail(c, "用户id为空", nil)
-		return
-	}
-
-	uid, err := http.ParseTokenReUid(c)
-	if err != nil {
-		return
-	}
-
-	// 检查用户是否在查询自己的黑名单列表
-	if userID != uid {
-		logger.Error("用户权限不足：不允许查询其他用户的黑名单列表")
-		response.Fail(c, "用户权限不足：不允许查询其他用户的黑名单列表", nil)
 		return
 	}
 
@@ -75,34 +63,22 @@ func blackList(c *gin.Context) {
 	response.Success(c, "获取黑名单列表成功", gin.H{"blacklist": blacklist})
 }
 
-type friendListRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 // @Summary 好友列表
 // @Description 好友列表
 // @Accept  json
 // @Produce  json
-// @param request body friendListRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/friend_list [get]
 func friendList(c *gin.Context) {
-	userID := c.Query("user_id")
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.Fail(c, "token解析失败", nil)
+		return
+	}
 	if userID == "" {
 		logger.Error("用户id为空")
 		response.Fail(c, "用户id为空", nil)
-		return
-	}
-
-	uid, err := http.ParseTokenReUid(c)
-	if err != nil {
-		return
-	}
-
-	// 检查用户是否在查询自己的黑名单列表
-	if userID != uid {
-		logger.Error("用户权限不足：不允许查询其他用户的黑名单列表")
-		response.Fail(c, "用户权限不足：不允许查询其他用户的黑名单列表", nil)
 		return
 	}
 
