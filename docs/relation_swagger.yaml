@@ -1,67 +1,18 @@
 definitions:
-  http.addBlacklistRequest:
+  http.SendUserMsgRequest:
     properties:
-      friend_id:
+      content:
         type: string
-      user_id:
+      receiver_id:
         type: string
+      replay_id:
+        type: integer
+      type:
+        type: integer
     required:
-    - friend_id
-    - user_id
-    type: object
-  http.addFriendRequest:
-    properties:
-      friend_id:
-        type: string
-      user_id:
-        type: string
-    required:
-    - friend_id
-    - user_id
-    type: object
-  http.blackListRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  http.confirmFriendRequest:
-    properties:
-      friend_id:
-        type: string
-      user_id:
-        type: string
-    required:
-    - friend_id
-    - user_id
-    type: object
-  http.deleteBlacklistRequest:
-    properties:
-      friend_id:
-        type: string
-      user_id:
-        type: string
-    required:
-    - friend_id
-    - user_id
-    type: object
-  http.deleteFriendRequest:
-    properties:
-      friend_id:
-        type: string
-      user_id:
-        type: string
-    required:
-    - friend_id
-    - user_id
-    type: object
-  http.friendListRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
+    - content
+    - receiver_id
+    - type
     type: object
   utils.Response:
     properties:
@@ -73,60 +24,36 @@ definitions:
     type: object
 info:
   contact: {}
-  title: coss-relation-bff服务
+  title: Swagger Example API
 paths:
-  /relation/add_blacklist:
-    post:
-      consumes:
-      - application/json
-      description: 添加黑名单
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.addBlacklistRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 添加黑名单
-  /relation/add_friend:
-    post:
-      consumes:
-      - application/json
-      description: 添加好友
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.addFriendRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 添加好友
-  /relation/blacklist:
+  /msg/list/user:
     get:
       consumes:
       - application/json
-      description: 黑名单
+      description: 获取私聊消息
       parameters:
-      - description: request
-        in: body
-        name: request
+      - description: 用户id
+        in: query
+        name: user_id
         required: true
-        schema:
-          $ref: '#/definitions/http.blackListRequest'
+        type: string
+      - description: 类型
+        in: query
+        name: type
+        required: true
+        type: string
+      - description: 消息
+        in: query
+        name: content
+        type: string
+      - description: 页码
+        in: query
+        name: page_num
+        type: integer
+      - description: 页大小
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
@@ -134,19 +61,19 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 黑名单
-  /relation/confirm_friend:
+      summary: 获取私聊消息
+  /msg/send/group:
     post:
       consumes:
       - application/json
-      description: 确认添加好友
+      description: 发送群聊消息
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.confirmFriendRequest'
+          $ref: '#/definitions/http.SendUserMsgRequest'
       produces:
       - application/json
       responses:
@@ -154,19 +81,19 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 确认添加好友
-  /relation/delete_blacklist:
+      summary: 发送群聊消息
+  /msg/send/user:
     post:
       consumes:
       - application/json
-      description: 删除黑名单
+      description: 发送私聊消息
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.deleteBlacklistRequest'
+          $ref: '#/definitions/http.SendUserMsgRequest'
       produces:
       - application/json
       responses:
@@ -174,45 +101,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 删除黑名单
-  /relation/delete_friend:
-    post:
-      consumes:
-      - application/json
-      description: 删除好友
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.deleteFriendRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 删除好友
-  /relation/friend_list:
+      summary: 发送私聊消息
+  /msg/ws:
     get:
-      consumes:
-      - application/json
-      description: 好友列表
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.friendListRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 好友列表
+      description: websocket请求
+      responses: {}
+      summary: websocket请求
 swagger: "2.0"
