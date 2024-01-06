@@ -15,16 +15,16 @@ const docTemplateuser = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/msg/list/user": {
+        "/user/info": {
             "get": {
-                "description": "获取私聊消息",
+                "description": "查询用户信息",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "获取私聊消息",
+                "summary": "查询用户信息",
                 "parameters": [
                     {
                         "type": "string",
@@ -34,28 +34,20 @@ const docTemplateuser = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "类型",
+                        "enum": [
+                            0,
+                            1
+                        ],
+                        "type": "integer",
+                        "description": "指定根据id还是邮箱类型查找",
                         "name": "type",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "消息",
-                        "name": "content",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "page_num",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页大小",
-                        "name": "page_size",
+                        "description": "邮箱",
+                        "name": "email",
                         "in": "query"
                     }
                 ],
@@ -69,16 +61,16 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/msg/send/group": {
+        "/user/login": {
             "post": {
-                "description": "发送群聊消息",
+                "description": "用户登录",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "发送群聊消息",
+                "summary": "用户登录",
                 "parameters": [
                     {
                         "description": "request",
@@ -86,7 +78,7 @@ const docTemplateuser = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                            "$ref": "#/definitions/http.LoginRequest"
                         }
                     }
                 ],
@@ -100,16 +92,16 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/msg/send/user": {
+        "/user/register": {
             "post": {
-                "description": "发送私聊消息",
+                "description": "用户注册",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "发送私聊消息",
+                "summary": "用户注册",
                 "parameters": [
                     {
                         "description": "request",
@@ -117,7 +109,7 @@ const docTemplateuser = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                            "$ref": "#/definitions/http.RegisterRequest"
                         }
                     }
                 ],
@@ -129,36 +121,49 @@ const docTemplateuser = `{
                         }
                     }
                 }
-            }
-        },
-        "/msg/ws": {
-            "get": {
-                "description": "websocket请求",
-                "summary": "websocket请求",
-                "responses": {}
             }
         }
     },
     "definitions": {
-        "http.SendUserMsgRequest": {
+        "http.LoginRequest": {
             "type": "object",
             "required": [
-                "content",
-                "receiver_id",
-                "type"
+                "email",
+                "password"
             ],
             "properties": {
-                "content": {
+                "email": {
                     "type": "string"
                 },
-                "receiver_id": {
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "email",
+                "password"
+            ],
+            "properties": {
+                "avatar": {
                     "type": "string"
                 },
-                "replay_id": {
-                    "type": "integer"
+                "confirm_password": {
+                    "description": "ConfirmPass string ` + "`" + `json:\"confirm_password\" binding:\"required,eqfield=Password\"` + "`" + `",
+                    "type": "string"
                 },
-                "type": {
-                    "type": "integer"
+                "email": {
+                    "description": "Email    string ` + "`" + `json:\"email\" binding:\"required,email\"` + "`" + `",
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         },
@@ -183,7 +188,7 @@ var SwaggerInfouser = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Swagger Example API",
+	Title:            "coss-user服务",
 	Description:      "",
 	InfoInstanceName: "user",
 	SwaggerTemplate:  docTemplateuser,

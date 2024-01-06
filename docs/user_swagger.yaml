@@ -1,18 +1,32 @@
 definitions:
-  http.SendUserMsgRequest:
+  http.LoginRequest:
     properties:
-      content:
+      email:
         type: string
-      receiver_id:
+      password:
         type: string
-      replay_id:
-        type: integer
-      type:
-        type: integer
     required:
-    - content
-    - receiver_id
-    - type
+    - email
+    - password
+    type: object
+  http.RegisterRequest:
+    properties:
+      avatar:
+        type: string
+      confirm_password:
+        description: ConfirmPass string `json:"confirm_password" binding:"required,eqfield=Password"`
+        type: string
+      email:
+        description: Email    string `json:"email" binding:"required,email"`
+        type: string
+      nickname:
+        type: string
+      password:
+        type: string
+    required:
+    - confirm_password
+    - email
+    - password
     type: object
   utils.Response:
     properties:
@@ -24,36 +38,31 @@ definitions:
     type: object
 info:
   contact: {}
-  title: Swagger Example API
+  title: coss-user服务
 paths:
-  /msg/list/user:
+  /user/info:
     get:
       consumes:
       - application/json
-      description: 获取私聊消息
+      description: 查询用户信息
       parameters:
       - description: 用户id
         in: query
         name: user_id
         required: true
         type: string
-      - description: 类型
+      - description: 指定根据id还是邮箱类型查找
+        enum:
+        - 0
+        - 1
         in: query
         name: type
         required: true
-        type: string
-      - description: 消息
-        in: query
-        name: content
-        type: string
-      - description: 页码
-        in: query
-        name: page_num
         type: integer
-      - description: 页大小
+      - description: 邮箱
         in: query
-        name: page_size
-        type: integer
+        name: email
+        type: string
       produces:
       - application/json
       responses:
@@ -61,19 +70,19 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 获取私聊消息
-  /msg/send/group:
+      summary: 查询用户信息
+  /user/login:
     post:
       consumes:
       - application/json
-      description: 发送群聊消息
+      description: 用户登录
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.SendUserMsgRequest'
+          $ref: '#/definitions/http.LoginRequest'
       produces:
       - application/json
       responses:
@@ -81,19 +90,19 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 发送群聊消息
-  /msg/send/user:
+      summary: 用户登录
+  /user/register:
     post:
       consumes:
       - application/json
-      description: 发送私聊消息
+      description: 用户注册
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.SendUserMsgRequest'
+          $ref: '#/definitions/http.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -101,10 +110,5 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 发送私聊消息
-  /msg/ws:
-    get:
-      description: websocket请求
-      responses: {}
-      summary: websocket请求
+      summary: 用户注册
 swagger: "2.0"

@@ -15,70 +15,16 @@ const docTemplaterelation = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/msg/list/user": {
-            "get": {
-                "description": "获取私聊消息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "获取私聊消息",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "用户id",
-                        "name": "user_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "类型",
-                        "name": "type",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "消息",
-                        "name": "content",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页码",
-                        "name": "page_num",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "页大小",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/send/group": {
+        "/relation/add_blacklist": {
             "post": {
-                "description": "发送群聊消息",
+                "description": "添加黑名单",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "发送群聊消息",
+                "summary": "添加黑名单",
                 "parameters": [
                     {
                         "description": "request",
@@ -86,7 +32,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                            "$ref": "#/definitions/http.addBlacklistRequest"
                         }
                     }
                 ],
@@ -100,16 +46,16 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/msg/send/user": {
+        "/relation/add_friend": {
             "post": {
-                "description": "发送私聊消息",
+                "description": "添加好友",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "发送私聊消息",
+                "summary": "添加好友",
                 "parameters": [
                     {
                         "description": "request",
@@ -117,7 +63,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                            "$ref": "#/definitions/http.addFriendRequest"
                         }
                     }
                 ],
@@ -131,34 +77,212 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/msg/ws": {
+        "/relation/blacklist": {
             "get": {
-                "description": "websocket请求",
-                "summary": "websocket请求",
-                "responses": {}
+                "description": "黑名单",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "黑名单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/confirm_friend": {
+            "post": {
+                "description": "确认添加好友",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "确认添加好友",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.confirmFriendRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/delete_blacklist": {
+            "post": {
+                "description": "删除黑名单",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "删除黑名单",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.deleteBlacklistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/delete_friend": {
+            "post": {
+                "description": "删除好友",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "删除好友",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.deleteFriendRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/friend_list": {
+            "get": {
+                "description": "好友列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "好友列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
             }
         }
     },
     "definitions": {
-        "http.SendUserMsgRequest": {
+        "http.addBlacklistRequest": {
             "type": "object",
             "required": [
-                "content",
-                "receiver_id",
-                "type"
+                "friend_id",
+                "user_id"
             ],
             "properties": {
-                "content": {
+                "friend_id": {
                     "type": "string"
                 },
-                "receiver_id": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.addFriendRequest": {
+            "type": "object",
+            "required": [
+                "friend_id"
+            ],
+            "properties": {
+                "friend_id": {
                     "type": "string"
                 },
-                "replay_id": {
-                    "type": "integer"
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.confirmFriendRequest": {
+            "type": "object",
+            "required": [
+                "friend_id",
+                "user_id"
+            ],
+            "properties": {
+                "friend_id": {
+                    "type": "string"
                 },
-                "type": {
-                    "type": "integer"
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.deleteBlacklistRequest": {
+            "type": "object",
+            "required": [
+                "friend_id",
+                "user_id"
+            ],
+            "properties": {
+                "friend_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.deleteFriendRequest": {
+            "type": "object",
+            "required": [
+                "friend_id",
+                "user_id"
+            ],
+            "properties": {
+                "friend_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -183,7 +307,7 @@ var SwaggerInforelation = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Swagger Example API",
+	Title:            "coss-relation-bff服务",
 	Description:      "",
 	InfoInstanceName: "relation",
 	SwaggerTemplate:  docTemplaterelation,
