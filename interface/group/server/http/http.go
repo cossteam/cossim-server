@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	relation "github.com/cossim/coss-server/service/relation/api/v1"
+	group "github.com/cossim/coss-server/service/group/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -16,31 +17,18 @@ import (
 )
 
 var (
-	userClient      user.UserServiceClient
-	relationClient  relation.UserRelationServiceClient
-	userGroupClient relation.GroupRelationServiceClient
-	cfg             *config.AppConfig
-	logger          *zap.Logger
+	userClient  user.UserServiceClient
+	groupClient group.GroupServiceClient
+
+	cfg    *config.AppConfig
+	logger *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
-
 	setupLogger()
-	setupUserGRPCClient()
-	setupRelationGRPCClient()
+	setupGroupGRPCClient()
 	setupGin()
-}
-
-func setupRelationGRPCClient() {
-	var err error
-	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	relationClient = relation.NewUserRelationServiceClient(relationConn)
-	userGroupClient = relation.NewGroupRelationServiceClient(relationConn)
 }
 
 func setupUserGRPCClient() {
@@ -51,6 +39,15 @@ func setupUserGRPCClient() {
 	}
 
 	userClient = user.NewUserServiceClient(userConn)
+}
+func setupGroupGRPCClient() {
+	var err error
+	groupConn, err := grpc.Dial(cfg.Discovers["group"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	groupClient = group.NewGroupServiceClient(groupConn)
 }
 
 func setupLogger() {
@@ -115,24 +112,11 @@ func setupGin() {
 	}()
 }
 
-// @title coss-relation-bff服务
+// @title coss-user服务
 
 func route(engine *gin.Engine) {
-	// 添加不同的中间件给不同的路由组
-	// 比如除了swagger路径外其他的路径添加了身份验证中间件
-	api := engine.Group("/api/v1/relation")
-	api.Use(middleware.AuthMiddleware())
-
-	api.GET("/friend_list", friendList)
-	api.GET("/blacklist", blackList)
-	api.POST("/add_friend", addFriend)
-	api.POST("/confirm_friend", confirmFriend)
-	api.POST("/delete_friend", deleteFriend)
-	api.POST("/add_blacklist", addBlacklist)
-	api.POST("/delete_blacklist", deleteBlacklist)
-	api.POST("/group/join", joinGroup)
-
-	// 为Swagger路径添加不需要身份验证的中间件
-	swagger := engine.Group("/api/v1/relation/swagger")
-	swagger.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("relation")))
+	u := engine.Group("/api/v1/group")
+	u.POST("/create", middleware.AuthMiddleware(), createGroup)
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("group")))
+	//u.POST("/logout", handleLogout)
 }

@@ -144,14 +144,15 @@ func GetUserInfo(c *gin.Context) {
 		return
 	}
 	gtype, _ := strconv.Atoi(getType)
-	// 正则表达式匹配邮箱格式
-	emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
-	if isMatch, _ := emailRegex.MatchString(email); !isMatch {
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "邮箱格式不正确"})
-		return
-	}
+
 	switch GetType(gtype) {
 	case EmailType:
+		// 正则表达式匹配邮箱格式
+		emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
+		if isMatch, _ := emailRegex.MatchString(email); !isMatch {
+			c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "邮箱格式不正确"})
+			return
+		}
 		resp, err := userClient.GetUserInfoByEmail(context.Background(), &user.GetUserInfoByEmailRequest{
 			Email: email,
 		})
@@ -176,5 +177,7 @@ func GetUserInfo(c *gin.Context) {
 			return
 		}
 		response.Success(c, "查询成功", gin.H{"user_info": resp})
+	default:
+		response.Fail(c, "参数错误", nil)
 	}
 }

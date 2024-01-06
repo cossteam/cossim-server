@@ -19,13 +19,13 @@ message SendGroupMsgRequest{
   // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
   string UserId=1;
   // @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
-  int64 GroupId=2;
+  uint32 GroupId=2;
   // @inject_tag: json:"content" form:"content" uri:"content"
   string Content=3;
   // @inject_tag: json:"type" form:"type" uri:"type"
-  int32 Type=4;
+  uint32 Type=4;
   // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
-  uint64 ReplayId=5;
+  uint32 ReplayId=5;
 }
 
 message GetUserMsgListRequest{
@@ -80,8 +80,10 @@ message SendUserMsgResponse{
 }
 
 message SendGroupMsgResponse{
-  // @inject_tag: json:"user_ids" form:"user_ids" uri:"user_ids"
-  repeated string UserIds = 1;
+  // @inject_tag: json:"msg_id" form:"msg_id" uri:"msg_id"
+  uint32 msgId = 1;
+  // @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
+  uint32 groupId = 2;
 }
 
 

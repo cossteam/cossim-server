@@ -1,0 +1,22 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
+
+message UserGroupRequest {
+  string user_id = 1;
+  uint32 group_id = 2;
+}
+message UserGroupResponse {
+}
+message GroupID {
+  uint32 group_id = 1;
+}
+
+message UserIDs {
+  repeated string user_ids = 1;
+}
+
+service GroupRelationService {
+  rpc InsertUserGroup(UserGroupRequest) returns (UserGroupResponse);
+  rpc GetUserGroupIDs(GroupID) returns (UserIDs);
+}

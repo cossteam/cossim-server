@@ -109,7 +109,7 @@ message GetUserRelationResponse {
 }
 
 
-service RelationService {
+service UserRelationService {
   rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
   rpc ConfirmFriend(ConfirmFriendRequest) returns (ConfirmFriendResponse);
   rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);

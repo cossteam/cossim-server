@@ -1,0 +1,47 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/group/api/v1";
+
+message Group {
+  uint32 Id = 1;
+  int32 Type = 2;
+  int32 Status = 3;
+  int32 Max_members_limit = 4;
+  string Creator_id = 5;
+  string Name = 6;
+  string Avatar = 7;
+}
+
+message GetGroupInfoRequest {
+  uint32 Gid = 1;
+}
+
+message GetBatchGroupInfoRequest {
+  repeated uint32 Group_ids = 1;
+}
+
+message GetBatchGroupInfoResponse {
+  repeated Group groups = 1;
+}
+
+message UpdateGroupRequest {
+  Group group = 1;
+}
+
+message InsertGroupRequest {
+  Group group = 1;
+}
+
+message DeleteGroupRequest {
+  uint32 gid = 1;
+}
+
+message EmptyResponse {}
+
+service GroupService {
+  rpc GetGroupInfoByGid (GetGroupInfoRequest) returns (Group);
+  rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
+  rpc UpdateGroup (UpdateGroupRequest) returns (Group);
+  rpc InsertGroup (InsertGroupRequest) returns (Group);
+  rpc DeleteGroup (DeleteGroupRequest) returns (EmptyResponse);
+}

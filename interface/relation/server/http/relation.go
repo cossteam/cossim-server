@@ -414,3 +414,36 @@ func addFriend(c *gin.Context) {
 
 	response.Success(c, "发送好友请求成功", gin.H{})
 }
+
+type joinGroupRequest struct {
+	GroupID uint32 `json:"group_id" binding:"required"`
+}
+
+// @Summary 加入群聊
+// @Description 加入群聊
+// @Accept  json
+// @Produce  json
+// @param request body joinGroupRequest true "request"
+// @Success		200 {object} utils.Response{}
+// @Router /relation/group/join [post]
+func joinGroup(c *gin.Context) {
+	req := new(joinGroupRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.Fail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = userGroupClient.InsertUserGroup(context.Background(), &relationApi.UserGroupRequest{UserId: thisId, GroupId: req.GroupID})
+	if err != nil {
+		return
+	}
+
+	response.Success(c, "发送好友请求成功", gin.H{})
+}

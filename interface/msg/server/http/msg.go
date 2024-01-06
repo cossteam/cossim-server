@@ -150,17 +150,17 @@ func sendUserMsg(c *gin.Context) {
 }
 
 type SendGroupMsgRequest struct {
-	GroupId  int64  `json:"group_id" binding:"required"`
+	GroupId  uint32 `json:"group_id" binding:"required"`
 	Content  string `json:"content" binding:"required"`
-	Type     uint   `json:"type" binding:"required"`
-	ReplayId uint   `json:"replay_id" binding:"required"`
+	Type     uint32 `json:"type" binding:"required"`
+	ReplayId uint32 `json:"replay_id" binding:"required"`
 }
 
 // @Summary 发送群聊消息
 // @Description 发送群聊消息
 // @Accept  json
 // @Produce  json
-// @param request body SendUserMsgRequest true "request"
+// @param request body SendGroupMsgRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /msg/send/group [post]
 func sendGroupMsg(c *gin.Context) {
@@ -177,16 +177,21 @@ func sendGroupMsg(c *gin.Context) {
 	}
 	//todo 判断是否在群聊里
 	//todo 判断是否被禁言
-	uids, err := msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
+	_, err = msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
 		GroupId:  req.GroupId,
 		Content:  req.Content,
-		Type:     int32(req.Type),
-		ReplayId: uint64(req.ReplayId),
+		Type:     req.Type,
+		ReplayId: req.ReplayId,
 	})
+	// 发送成功进行消息推送
 	if err != nil {
 		c.Error(err)
 		return
 	}
+	//查询群聊所有用户id
+	uids, err := userGroupClient.GetUserGroupIDs(context.Background(), &relation.GroupID{
+		GroupId: uint32(req.GroupId),
+	})
 	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
 	response.Success(c, "发送成功", gin.H{})
 }
@@ -286,7 +291,7 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 }
 
 // 推送群聊消息
-func sendWsGroupMsg(uIds []string, userId string, groupId int64, msg string, msgType uint, replayId uint) {
+func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, msgType uint32, replayId uint32) {
 	type wsGroupMsg struct {
 		GroupId  int64  `json:"group_id"`
 		UserId   string `json:"uid"`
@@ -297,8 +302,11 @@ func sendWsGroupMsg(uIds []string, userId string, groupId int64, msg string, msg
 	//发送群聊消息
 	for _, uid := range uIds {
 		//遍历该用户所有客户端
+		if uid == userId {
+			continue
+		}
 		for _, c := range pool[uid] {
-			m := wsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{groupId, userId, msg, msgType, replayId}}
+			m := wsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId)}}
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)
 			if err != nil {

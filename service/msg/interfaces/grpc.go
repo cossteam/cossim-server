@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	api "github.com/cossim/coss-server/service/msg/api/v1"
@@ -37,12 +38,19 @@ func (g *GrpcHandler) SendUserMessage(ctx context.Context, request *api.SendUser
 
 // 发送群聊消息
 func (g *GrpcHandler) SendGroupMessage(ctx context.Context, request *api.SendGroupMsgRequest) (*api.SendGroupMsgResponse, error) {
-
-	return &api.SendGroupMsgResponse{}, nil
+	resp, err := g.svc.SendGroupMessage(request.UserId, uint(request.GroupId), request.Content, entity.UserMessageType(request.Type), uint(request.ReplayId))
+	if err != nil {
+		return nil, err
+	}
+	return &api.SendGroupMsgResponse{
+		MsgId:   uint32(resp.Id),
+		GroupId: uint32(resp.GroupID),
+	}, nil
 }
 
 // 获取私聊消息
 func (g *GrpcHandler) GetUserMessageList(ctx context.Context, request *api.GetUserMsgListRequest) (*api.GetUserMsgListResponse, error) {
+	fmt.Println("GetUserMessageList req => ", request)
 	res := g.svc.GetUserMessageList(request.UserId, request.FriendId, request.Content, entity.UserMessageType(request.Type), int(request.PageNum), int(request.PageSize))
 	msgs := make([]*api.UserMessage, 0)
 	if len(res.UserMessages) > 0 {

@@ -16,13 +16,16 @@ func NewGrpcHandler(c *config.AppConfig) *GrpcHandler {
 	}
 
 	return &GrpcHandler{
-		svc: service.NewUserService(persistence.NewUserRelationRepo(dbConn)),
+		svc:  service.NewUserService(persistence.NewUserRelationRepo(dbConn)),
+		gsvc: service.NewUserGroupService(persistence.NewGroupRelationRepo(dbConn)),
 	}
 }
 
 type GrpcHandler struct {
-	svc *service.UserService
-	api.UnimplementedRelationServiceServer
+	svc  *service.UserService
+	gsvc *service.UserGroupService
+	api.UnimplementedUserRelationServiceServer
+	api.UnimplementedGroupRelationServiceServer
 }
 
 func (g *GrpcHandler) AddFriend(ctx context.Context, request *api.AddFriendRequest) (*api.AddFriendResponse, error) {
@@ -103,4 +106,30 @@ func (g *GrpcHandler) GetUserRelation(ctx context.Context, request *api.GetUserR
 	resp.Status = api.RelationStatus(status)
 
 	return resp, nil
+}
+
+func (g *GrpcHandler) InsertUserGroup(ctx context.Context, in *api.UserGroupRequest) (*api.UserGroupResponse, error) {
+	// 调用持久层方法插入用户群关系
+	_, err := g.gsvc.InsertUserGroup(in.UserId, uint(in.GroupId))
+	if err != nil {
+		return nil, err
+	}
+
+	// 将领域模型转换为 gRPC API 模型
+	response := &api.UserGroupResponse{}
+
+	return response, nil
+}
+
+func (g *GrpcHandler) GetUserGroupIDs(ctx context.Context, in *api.GroupID) (*api.UserIDs, error) {
+	// 调用持久层方法获取用户群关系列表
+	userGroupIDs, err := g.gsvc.GetUserGroupIDs(uint(in.GroupId))
+	if err != nil {
+		return nil, err
+	}
+	// 将用户ID列表转换为 gRPC API 模型
+	response := &api.UserIDs{
+		UserIds: userGroupIDs,
+	}
+	return response, nil
 }

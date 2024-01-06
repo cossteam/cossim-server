@@ -33,3 +33,17 @@ func (g MsgService) GetUserMessageList(userId string, friendId string, content s
 		UserMessages: ums,
 	}
 }
+func (g MsgService) SendGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint) (*dataTransformers.GroupMessageResponse, error) {
+	ums, err := g.ur.InsertGroupMessage(uid, groupId, msg, msgType, replyId)
+	if err != nil {
+		return nil, err
+	}
+	return &dataTransformers.GroupMessageResponse{
+		Id:      ums.ID,
+		Content: ums.Content,
+		ReplyId: ums.ReplyId,
+		GroupID: ums.GroupID,
+		Type:    ums.Type,
+		UID:     ums.UID,
+	}, nil
+}

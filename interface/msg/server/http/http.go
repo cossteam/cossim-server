@@ -18,11 +18,12 @@ import (
 )
 
 var (
-	msgClient      msgApi.MsgServiceClient
-	relationClient relationApi.RelationServiceClient
-	userClient     userApi.UserServiceClient
-	cfg            *config.AppConfig
-	logger         *zap.Logger
+	msgClient       msgApi.MsgServiceClient
+	relationClient  relationApi.UserRelationServiceClient
+	userGroupClient relationApi.GroupRelationServiceClient
+	userClient      userApi.UserServiceClient
+	cfg             *config.AppConfig
+	logger          *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
@@ -41,7 +42,8 @@ func setupRelationGRPCClient() {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	relationClient = relationApi.NewRelationServiceClient(relationConn)
+	relationClient = relationApi.NewUserRelationServiceClient(relationConn)
+	userGroupClient = relationApi.NewGroupRelationServiceClient(relationConn)
 }
 
 func setupMsgGRPCClient() {
