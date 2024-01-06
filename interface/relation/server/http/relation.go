@@ -25,11 +25,6 @@ func blackList(c *gin.Context) {
 		response.Fail(c, "token解析失败", nil)
 		return
 	}
-	if userID == "" {
-		logger.Error("用户id为空")
-		response.Fail(c, "用户id为空", nil)
-		return
-	}
 
 	// 检查用户是否存在
 	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
@@ -74,11 +69,6 @@ func friendList(c *gin.Context) {
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
 		response.Fail(c, "token解析失败", nil)
-		return
-	}
-	if userID == "" {
-		logger.Error("用户id为空")
-		response.Fail(c, "用户id为空", nil)
 		return
 	}
 
@@ -134,8 +124,7 @@ func friendList(c *gin.Context) {
 }
 
 type deleteBlacklistRequest struct {
-	UserID   string `json:"user_id" binding:"required"`
-	FriendID string `json:"friend_id" binding:"required"`
+	UserID string `json:"user_id" binding:"required"`
 }
 
 // @Summary 删除黑名单
@@ -153,8 +142,15 @@ func deleteBlacklist(c *gin.Context) {
 		return
 	}
 
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.Fail(c, "token解析失败", nil)
+		return
+	}
+
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -165,8 +161,20 @@ func deleteBlacklist(c *gin.Context) {
 		return
 	}
 
+	// 检查要删除的黑名单用户是否存在
+	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if user2 == nil {
+		response.Fail(c, "用户不存在", nil)
+		return
+	}
+
 	// 进行删除黑名单操作
-	if _, err = relationClient.DeleteBlacklist(context.Background(), &relationApi.DeleteBlacklistRequest{UserId: req.UserID, FriendId: req.FriendID}); err != nil {
+	if _, err = relationClient.DeleteBlacklist(context.Background(), &relationApi.DeleteBlacklistRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
@@ -175,8 +183,7 @@ func deleteBlacklist(c *gin.Context) {
 }
 
 type addBlacklistRequest struct {
-	UserID   string `json:"user_id" binding:"required"`
-	FriendID string `json:"friend_id" binding:"required"`
+	UserID string `json:"user_id" binding:"required"`
 }
 
 // @Summary 添加黑名单
@@ -194,8 +201,15 @@ func addBlacklist(c *gin.Context) {
 		return
 	}
 
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.Fail(c, "token解析失败", nil)
+		return
+	}
+
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -206,8 +220,20 @@ func addBlacklist(c *gin.Context) {
 		return
 	}
 
+	// 检查添加黑名单的用户是否存在
+	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if user2 == nil {
+		response.Fail(c, "用户不存在", nil)
+		return
+	}
+
 	// 进行添加黑名单操作
-	if _, err = relationClient.AddBlacklist(context.Background(), &relationApi.AddBlacklistRequest{UserId: req.UserID, FriendId: req.FriendID}); err != nil {
+	if _, err = relationClient.AddBlacklist(context.Background(), &relationApi.AddBlacklistRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
@@ -216,8 +242,7 @@ func addBlacklist(c *gin.Context) {
 }
 
 type deleteFriendRequest struct {
-	UserID   string `json:"user_id" binding:"required"`
-	FriendID string `json:"friend_id" binding:"required"`
+	UserID string `json:"user_id" binding:"required"`
 }
 
 // @Summary 删除好友
@@ -235,8 +260,15 @@ func deleteFriend(c *gin.Context) {
 		return
 	}
 
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.Fail(c, "token解析失败", nil)
+		return
+	}
+
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -247,8 +279,20 @@ func deleteFriend(c *gin.Context) {
 		return
 	}
 
+	// 检查删除的用户是否存在
+	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if user2 == nil {
+		response.Fail(c, "要删除的用户不存在", nil)
+		return
+	}
+
 	// 进行删除好友操作
-	if _, err = relationClient.DeleteFriend(context.Background(), &relationApi.DeleteFriendRequest{UserId: req.UserID, FriendId: req.FriendID}); err != nil {
+	if _, err = relationClient.DeleteFriend(context.Background(), &relationApi.DeleteFriendRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
@@ -257,8 +301,7 @@ func deleteFriend(c *gin.Context) {
 }
 
 type confirmFriendRequest struct {
-	UserID   string `json:"user_id" binding:"required"`
-	FriendID string `json:"friend_id" binding:"required"`
+	UserID string `json:"user_id" binding:"required"`
 }
 
 // @Summary 确认添加好友
@@ -276,8 +319,15 @@ func confirmFriend(c *gin.Context) {
 		return
 	}
 
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.Fail(c, "token解析失败", nil)
+		return
+	}
+
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -288,8 +338,20 @@ func confirmFriend(c *gin.Context) {
 		return
 	}
 
+	// 检查要添加的用户是否存在
+	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if user2 == nil {
+		response.Fail(c, "用户不存在", nil)
+		return
+	}
+
 	// 进行确认好友操作
-	if _, err = relationClient.ConfirmFriend(context.Background(), &relationApi.ConfirmFriendRequest{UserId: req.UserID, FriendId: req.FriendID}); err != nil {
+	if _, err = relationClient.ConfirmFriend(context.Background(), &relationApi.ConfirmFriendRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
@@ -298,8 +360,8 @@ func confirmFriend(c *gin.Context) {
 }
 
 type addFriendRequest struct {
-	FriendId string `json:"friend_id" binding:"required"`
-	Msg      string `json:"msg"`
+	UserID string `json:"user_id" binding:"required"`
+	Msg    string `json:"msg"`
 }
 
 // @Summary 添加好友
@@ -323,7 +385,7 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.FriendId})
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
 		c.Error(err)
 		return
