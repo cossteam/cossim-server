@@ -385,7 +385,8 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	// 检查用户是否存在
+	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
 	if err != nil {
 		c.Error(err)
 		return
@@ -395,7 +396,18 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	if _, err := relationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{UserId: thisId, FriendId: user.UserId}); err != nil {
+	// 检查添加的用户是否存在
+	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if user2 == nil {
+		response.Fail(c, "用户不存在", nil)
+		return
+	}
+
+	if _, err := relationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{UserId: thisId, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
