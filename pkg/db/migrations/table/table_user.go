@@ -1,7 +1,7 @@
 package table
 
 import (
-	"github.com/cossim/coss-server/services/user/domain/entity"
+	"github.com/cossim/coss-server/service/user/domain/entity"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )

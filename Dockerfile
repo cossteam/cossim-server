@@ -15,14 +15,14 @@ ARG BUILD_GO_VERSION
 ARG BUILD_PATH
 ARG MAIN_FILE
 
-ARG GOPROXY=https://goproxy.cn
-
 ENV GOPROXY=https://goproxy.cn
 ENV GO111MODULE=on
 
 RUN echo "VERSION_PATH=${VERSION_PATH}" \
     && echo "BUILD_PATH=${BUILD_PATH}" \
     && echo "MAIN_FILE=${MAIN_FILE}"
+
+COPY ${BUILD_PATH}/config/config.yaml /tmp/config.yaml
 
 #RUN echo "BUILD_BRANCH=${BUILD_BRANCH}" \
 #    && echo "BUILD_COMMIT=${BUILD_COMMIT}" \
@@ -35,4 +35,5 @@ RUN go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BR
 
 FROM alpine
 COPY --from=builder /tmp/main .
+COPY --from=builder /tmp/config.yaml ./config/config.yaml
 ENTRYPOINT ["/main"]

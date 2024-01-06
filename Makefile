@@ -3,7 +3,7 @@ PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 MAIN_FILE=cmd/main.go
 NAME= ""
 DIR := $(shell pwd)
-IMG ?= hub.hitosea.com/coss-server/${ACTION}-${NAME}:latest
+IMG ?= hub.hitosea.com/cossim/${NAME}-${ACTION}:latest
 
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 #BUILD_BRANCH := "main"
@@ -17,20 +17,20 @@ DOCKER_BUILD_PATH := ""
 ACTION := ""
 
 # 根据传入的 ACTION 参数设置 BUILD_PATH
-ifeq ($(ACTION), interfaces)
-	BUILD_PATH := ${DIR}/interfaces/${NAME}
-	DOCKER_BUILD_PATH :="interfaces/${NAME}"
-else ifeq ($(ACTION), services)
-	BUILD_PATH := ${DIR}/services/${NAME}
-	DOCKER_BUILD_PATH := "services/${NAME}"
+ifeq ($(ACTION), interface)
+	BUILD_PATH := ${DIR}/interface/${NAME}
+	DOCKER_BUILD_PATH :="interface/${NAME}"
+else ifeq ($(ACTION), service)
+	BUILD_PATH := ${DIR}/service/${NAME}
+	DOCKER_BUILD_PATH := "service/${NAME}"
 endif
 
 # 如果没有设置 BUILD_PATH，输出错误信息
 ifeq ($(BUILD_PATH),)
-    $(error Invalid ACTION. Use 'make build ACTION=interfaces' or 'make build ACTION=services')
+    $(error Invalid ACTION. Use 'make build ACTION=interface' or 'make build ACTION=service')
 endif
 
-.PHONY: dep test run build-service build-interface docker-build docker-push
+.PHONY: dep test build-service build-interface docker-build docker-push
 
 dep: ## Get the dependencies
 	@go mod tidy
@@ -38,39 +38,69 @@ dep: ## Get the dependencies
 test: ## Run unittests
 	@go test -short ${PKG_LIST}
 
-run:
-ifdef ACTION
-ifdef NAME
-	@echo "Running make run in ${ACTION}/${NAME} directory"
-	@if [ -f "${ACTION}/${NAME}/Makefile" ]; then \
-		(cd ${ACTION}/${NAME} && make run); \
-	else \
-		echo "No Makefile found in ${ACTION}/${NAME} directory"; \
-	fi
-else
-	@echo "Running make run in all ${ACTION} directories"
-	@for dir in $(shell ls -d ${ACTION}/*); do \
+SERVICE_DIR := ./service
+INTERFACE_DIR := ./interface
+
+.PHONY: run run_service run_interface
+
+.PHONY: run stop
+
+run: run_service run_interface
+
+stop:
+	@trap 'echo "Stopping service..." && pkill -P $$ && exit' INT ; sleep infinity
+
+run_service:
+	@for dir in $(shell ls -d $(SERVICE_DIR)/*); do \
 		if [ -f "$$dir/Makefile" ]; then \
-			(cd $$dir && make run); \
+			(cd $$dir && make run &); \
 		else \
 			echo "No Makefile found in $$dir"; \
 		fi \
 	done
-endif
-else
-	@echo "Running make run in all directories"
-	@for dir in $(shell ls -d */); do \
+
+run_interface:
+	@for dir in $(shell ls -d $(INTERFACE_DIR)/*); do \
 		if [ -f "$$dir/Makefile" ]; then \
-			(cd $$dir && make run); \
+			(cd $$dir && make run &); \
 		else \
 			echo "No Makefile found in $$dir"; \
 		fi \
 	done
-endif
 
 
-# 构建指定grpc服务  make build-services ACTION=services NAME="user"
-build-services: dep ## Build the binary file
+#ifdef ACTION
+#ifdef NAME
+#	@echo "Running make run in ${ACTION}/${NAME} directory"
+#	@if [ -f "${ACTION}/${NAME}/Makefile" ]; then \
+#		(cd ${ACTION}/${NAME} && make run); \
+#	else \
+#		echo "No Makefile found in ${ACTION}/${NAME} directory"; \
+#	fi
+#else
+#	@echo "Running make run in all ${ACTION} directories"
+#	@for dir in $(shell ls -d ${ACTION}/*); do \
+#		if [ -f "$$dir/Makefile" ]; then \
+#			(cd $$dir && make run); \
+#		else \
+#			echo "No Makefile found in $$dir"; \
+#		fi \
+#	done
+#endif
+#else
+#	@echo "Running make run in all directories"
+#	@for dir in $(shell ls -d */); do \
+#		if [ -f "$$dir/Makefile" ]; then \
+#			(cd $$dir && make run); \
+#		else \
+#			echo "No Makefile found in $$dir"; \
+#		fi \
+#	done
+#endif
+
+
+# 构建指定grpc服务  make build-service ACTION=service NAME="user"
+build-service: dep ## Build the binary file
 ifdef NAME
 	@echo "Building with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}/$(MAIN_FILE)"
 	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}/$(MAIN_FILE)
@@ -78,8 +108,8 @@ else
 	@echo "Please provide service NAME"
 endif
 
-# 构建指定接口服务  make build-interfaces ACTION=interfaces NAME="user"
-build-interfaces: dep
+# 构建指定接口服务  make build-interface ACTION=interface NAME="user"
+build-interface: dep
 ifdef NAME
 	@echo "Building ${INTERFACE_NAME} interface with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}/$(MAIN_FILE)"
 	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}/$(MAIN_FILE)
