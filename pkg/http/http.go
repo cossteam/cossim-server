@@ -1,13 +1,19 @@
 package http
 
 import (
+	"errors"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
-// ParseTokenReUid 解析请求头中的token返回uid
+// ParseTokenReUid 解析请求头中的 token 返回 uid
 func ParseTokenReUid(ctx *gin.Context) (string, error) {
 	tokenString := ctx.GetHeader("Authorization")
+
+	if tokenString == "" {
+		return "", errors.New("authorization header is empty")
+	}
+
 	token := tokenString[7:]
 	if token != "" {
 		_, c2, err := utils.ParseToken(token)
@@ -16,5 +22,6 @@ func ParseTokenReUid(ctx *gin.Context) (string, error) {
 		}
 		return c2.UserId, nil
 	}
-	return "", nil
+
+	return "", errors.New("token is empty")
 }
