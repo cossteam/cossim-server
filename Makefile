@@ -2,8 +2,10 @@ PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 
 MAIN_FILE=cmd/main.go
 NAME= ""
+REGISTRY ?= "hub.hitosea.com/cossim"
+TAG ?= "dev"
 DIR := $(shell pwd)
-IMG ?= hub.hitosea.com/cossim/${NAME}-${ACTION}:latest
+IMG ?= ${REGISTRY}/${NAME}-${ACTION}:${TAG}
 
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 #BUILD_BRANCH := "main"
