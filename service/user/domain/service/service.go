@@ -104,3 +104,17 @@ func (u *UserService) GetUserInfoByEmail(email string) (*entity.User, error) {
 
 	return user, nil
 }
+
+// 获取用户公钥
+func (u *UserService) GetPublicKey(userId string) (string, error) {
+	key, err := u.ur.GetUserPublicKey(userId)
+	if err != nil {
+		return "", err
+	}
+	return key, nil
+}
+
+// 设置用户公钥
+func (u *UserService) SetPublicKey(userId, publicKey string) error {
+	return u.ur.SetUserPublicKey(userId, publicKey)
+}

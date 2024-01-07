@@ -53,6 +53,7 @@ enum UserStatus {
   USER_STATUS_LOCK = 4;
 }
 
+
 message UserInfoResponse {
   // @inject_tag: json:"user_id"
   string UserId=1;
@@ -83,12 +84,33 @@ message GetBatchUserInfoResponse {
   // @inject_tag: json:"users" form:"users"
   repeated UserInfoResponse Users = 1;
 }
+message UserRequest {
+  // @inject_tag: json:"user_id"
+  string user_id = 1;
+}
 
+message GetUserPublicKeyResponse {
+  // @inject_tag: json:"public_key"
+  string public_key = 1;
+}
+
+message SetPublicKeyRequest {
+  // @inject_tag: json:"user_id"
+  string user_id = 1;
+  // @inject_tag: json:"public_key"
+  string public_key = 2;
+}
+message UserResponse {
+  // @inject_tag: json:"user_id"
+  string user_id = 1;
+}
 service UserService {
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
   rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
   rpc UserInfo(UserInfoRequest) returns(UserInfoResponse);
   rpc GetBatchUserInfo(GetBatchUserInfoRequest) returns (GetBatchUserInfoResponse);
   rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
-  //  rpc UserLogout(UserRequest) returns(UserCommonResponse);
+  rpc GetUserPublicKey (UserRequest) returns (GetUserPublicKeyResponse);
+  rpc SetUserPublicKey (SetPublicKeyRequest) returns (UserResponse);
 }
+

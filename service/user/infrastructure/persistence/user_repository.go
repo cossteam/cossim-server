@@ -57,3 +57,17 @@ func (ur *UserRepo) GetBatchGetUserInfoByIDs(userIds []string) ([]*entity.User, 
 
 	return users, nil
 }
+
+// GetUserPublicKey 获取用户公钥
+func (ur *UserRepo) GetUserPublicKey(userId string) (string, error) {
+	var user entity.User
+	if err := ur.db.Where("id = ?", userId).First(&user).Error; err != nil {
+		return "", err
+	}
+	return user.PublicKey, nil
+}
+
+// SetUserPublicKey 设置用户公钥
+func (ur *UserRepo) SetUserPublicKey(userId, publicKey string) error {
+	return ur.db.Model(entity.User{}).Where("id = ?", userId).Update("public_key", publicKey).Error
+}

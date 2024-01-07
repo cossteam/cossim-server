@@ -119,3 +119,18 @@ func (g *GrpcHandler) GetUserInfoByEmail(ctx context.Context, request *api.GetUs
 		Status:    api.UserStatus(userInfo.Status),
 	}, nil
 }
+
+func (g *GrpcHandler) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
+	key, err := g.svc.GetPublicKey(in.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &api.GetUserPublicKeyResponse{PublicKey: key}, nil
+}
+
+func (g *GrpcHandler) SetUserPublicKey(ctx context.Context, in *api.SetPublicKeyRequest) (*api.UserResponse, error) {
+	if err := g.svc.SetPublicKey(in.UserId, in.PublicKey); err != nil {
+		return nil, err
+	}
+	return &api.UserResponse{UserId: in.UserId}, nil
+}

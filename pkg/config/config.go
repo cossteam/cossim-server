@@ -52,11 +52,20 @@ type ServiceConfig struct {
 }
 
 type AppConfig struct {
-	Log       LogConfig       `mapstructure:"log"`
-	MySQL     MySQLConfig     `mapstructure:"mysql"`
-	Redis     RedisConfig     `mapstructure:"redis"`
-	HTTP      HTTPConfig      `mapstructure:"http"`
-	GRPC      GRPCConfig      `mapstructure:"grpc"`
-	Register  RegisterConfig  `mapstructure:"register"`
-	Discovers DiscoversConfig `mapstructure:"discovers"`
+	Log        LogConfig        `mapstructure:"log"`
+	MySQL      MySQLConfig      `mapstructure:"mysql"`
+	Redis      RedisConfig      `mapstructure:"redis"`
+	HTTP       HTTPConfig       `mapstructure:"http"`
+	GRPC       GRPCConfig       `mapstructure:"grpc"`
+	Register   RegisterConfig   `mapstructure:"register"`
+	Discovers  DiscoversConfig  `mapstructure:"discovers"`
+	Encryption EncryptionConfig `mapstructure:"encryption"`
+}
+
+type EncryptionConfig struct {
+	Enable     bool   `mapstructure:"enable"`
+	Name       string `mapstructure:"name"`
+	Email      string `mapstructure:"email"`
+	RsaBits    int    `mapstructure:"rsaBits"`
+	Passphrase string `mapstructure:"passphrase"`
 }
