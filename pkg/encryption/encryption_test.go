@@ -23,6 +23,7 @@ func TestEncryption(t *testing.T) {
 		return
 	}
 	resp, err := en.SecretMessage("{\"id\":\"666666\"}", en.GetPublicKey(), readString)
+	fmt.Println("公钥:", en.GetPublicKey())
 	if err != nil {
 		return
 	}

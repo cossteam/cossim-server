@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils"
 	user "github.com/cossim/coss-server/service/user/api/v1"
@@ -180,4 +181,44 @@ func GetUserInfo(c *gin.Context) {
 	default:
 		response.Fail(c, "参数错误", nil)
 	}
+}
+
+type SetPublicKeyRequest struct {
+	PublicKey string `json:"public_key" binding:"required"`
+}
+
+// @Summary 设置用户公钥
+// @Description 设置用户公钥
+// @Accept json
+// @Produce json
+// @param request body SetPublicKeyRequest true "request"
+// @Security BearerToken
+// @Success 200 {object} utils.Response{}
+// @Router /user/key/set [post]
+func setUserPublicKey(c *gin.Context) {
+	req := new(SetPublicKeyRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.Fail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+
+	// 调用服务端设置用户公钥的方法
+	uid, err := userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
+		UserId:    thisId,
+		PublicKey: req.PublicKey,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, "设置用户公钥成功", gin.H{"user_id": uid.UserId})
 }

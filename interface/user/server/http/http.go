@@ -107,6 +107,7 @@ func route(engine *gin.Engine) {
 	u.POST("/login", login)
 	u.POST("/register", register)
 	u.GET("/info", GetUserInfo)
+	u.POST("/key/set", middleware.AuthMiddleware(), setUserPublicKey)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)
 }
