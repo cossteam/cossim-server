@@ -13,8 +13,8 @@ type Encryptor interface {
 	GenerateRandomKey(keySize int) ([]byte, error)
 	GenerateKeyPair() error
 	SecretMessage(message string, publicKey string, rkey []byte) (*SecretResponse, error)
-	DecryptMessage(message string) string
-	DecryptMessageWithKey(message, key string) string
+	DecryptMessage(message string) (string, error)
+	DecryptMessageWithKey(message, key string) (string, error)
 	GetPrivateKey() string
 	GetPublicKey() string
 }
@@ -116,21 +116,22 @@ func (e *MyEncryptor) GenerateKeyPair() error {
 }
 
 // DecryptMessage 使用私钥解密消息
-func (e *MyEncryptor) DecryptMessage(message string) string {
+func (e *MyEncryptor) DecryptMessage(message string) (string, error) {
+	fmt.Println("999999999999999999999999999999999999999999999999999999999999999999999999999s")
 	decrypted, err := helper.DecryptBinaryMessageArmored(e.privateKey, e.passphrase, message)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return string(decrypted)
+	return string(decrypted), nil
 }
 
 // DecryptMessageWithKey 使用对称密钥解密消息
-func (e *MyEncryptor) DecryptMessageWithKey(message, key string) string {
+func (e *MyEncryptor) DecryptMessageWithKey(message, key string) (string, error) {
 	decrypted, err := helper.DecryptMessageWithPassword([]byte(key), message)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return decrypted
+	return decrypted, nil
 }
 
 // 获取私钥

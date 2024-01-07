@@ -1,8 +1,10 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
@@ -18,14 +20,37 @@ var (
 	userClient user.UserServiceClient
 	cfg        *config.AppConfig
 	logger     *zap.Logger
+	enc        encryption.Encryptor
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
-
 	setupLogger()
+	setupEncryption()
 	setupUserGRPCClient()
 	setupGin()
+}
+
+func setupEncryption() {
+	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits)
+	err := enc.GenerateKeyPair()
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+
+	readString, err := encryption.GenerateRandomKey(32)
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	resp, err := enc.SecretMessage("{\"public_key\":\"7777777777777777777777777777777777\"}", enc.GetPublicKey(), readString)
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	j, err := json.Marshal(resp)
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	fmt.Println("加密后消息：", string(j))
 }
 
 func setupUserGRPCClient() {
@@ -107,7 +132,7 @@ func route(engine *gin.Engine) {
 	u.POST("/login", login)
 	u.POST("/register", register)
 	u.GET("/info", GetUserInfo)
-	u.POST("/key/set", middleware.AuthMiddleware(), setUserPublicKey)
+	u.POST("/key/set", middleware.AuthMiddleware(), middleware.EncryptionMiddleware(enc), setUserPublicKey)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)
 }

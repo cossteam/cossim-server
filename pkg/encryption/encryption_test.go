@@ -31,8 +31,8 @@ func TestEncryption(t *testing.T) {
 	fmt.Println("加密后消息：", string(j))
 
 	if en.GetPrivateKey() != "" {
-		key := en.DecryptMessage(resp.Secret)
-		msg := en.DecryptMessageWithKey(resp.Message, key)
+		key, _ := en.DecryptMessage(resp.Secret)
+		msg, _ := en.DecryptMessageWithKey(resp.Message, key)
 		fmt.Println("解密后消息：", msg)
 	}
 }
