@@ -47,7 +47,7 @@ const docTemplategroup = `{
             }
         },
         "/group/delete": {
-            "delete": {
+            "post": {
                 "description": "删除群聊",
                 "consumes": [
                     "application/json"

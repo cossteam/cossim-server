@@ -175,7 +175,7 @@ func createGroup(c *gin.Context) {
 // @Produce  json
 // @Param gid query string true "群聊ID"
 // @Success 200 {object} utils.Response{}
-// @Router /group/delete [delete]
+// @Router /group/delete [post]
 func deleteGroup(c *gin.Context) {
 	gid := c.Query("gid")
 	if gid == "" {
