@@ -1,6 +1,7 @@
 package response
 
 import (
+	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
@@ -47,4 +48,24 @@ func extractErrorMessage(input string) string {
 	}
 
 	return match[1]
+}
+
+func SetResponse(c *gin.Context, code int, msg string, data interface{}) {
+	c.Set("response", utils.Response{
+		Code: code,
+		Msg:  msg,
+		Data: data,
+	})
+}
+
+func SetSuccess(ctx *gin.Context, msg string, data gin.H) {
+	SetResponse(ctx, 200, msg, data)
+}
+
+func SetFail(ctx *gin.Context, msg string, data gin.H) {
+	SetResponse(ctx, 400, msg, data)
+}
+
+func SetInternalServerError(ctx *gin.Context) {
+	SetResponse(ctx, InternalServerErrorCode, http.StatusText(InternalServerErrorCode), nil)
 }

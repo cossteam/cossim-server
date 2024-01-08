@@ -138,7 +138,7 @@ const docTemplategroup = `{
             }
         },
         "/group/update/{gid}": {
-            "put": {
+            "post": {
                 "description": "更新群聊信息",
                 "consumes": [
                     "application/json"

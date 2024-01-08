@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -23,6 +22,8 @@ var (
 	enc        encryption.Encryptor
 )
 
+var ThisKey string
+
 func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
@@ -32,25 +33,26 @@ func Init(c *config.AppConfig) {
 }
 
 func setupEncryption() {
-	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits)
+	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	err := enc.GenerateKeyPair()
 	if err != nil {
 		logger.Fatal("Failed to ", zap.Error(err))
 	}
-
-	readString, err := encryption.GenerateRandomKey(32)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	resp, err := enc.SecretMessage("{\"public_key\":\"7777777777777777777777777777777777\"}", enc.GetPublicKey(), readString)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	j, err := json.Marshal(resp)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	fmt.Println("加密后消息：", string(j))
+	fmt.Println("公钥：\n", enc.GetPublicKey())
+	ThisKey = enc.GetPublicKey()
+	//readString, err := encryption.GenerateRandomKey(32)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//resp, err := enc.SecretMessage("{\"email\":\"7777777777777777777777777777777777\"}", enc.GetPublicKey(), readString)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//j, err := json.Marshal(resp)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//fmt.Println("加密后消息：", string(j))
 }
 
 func setupUserGRPCClient() {
@@ -112,7 +114,7 @@ func setupGin() {
 	engine := gin.New()
 
 	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
+	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.EncryptionMiddleware(enc), middleware.RecoveryMiddleware())
 
 	// 设置路由
 	route(engine)
@@ -131,8 +133,8 @@ func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/user")
 	u.POST("/login", login)
 	u.POST("/register", register)
-	u.GET("/info", GetUserInfo)
-	u.POST("/key/set", middleware.AuthMiddleware(), middleware.EncryptionMiddleware(enc), setUserPublicKey)
+	u.GET("/info", middleware.AuthMiddleware(), GetUserInfo)
+	u.POST("/key/set", middleware.AuthMiddleware(), setUserPublicKey)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)
 }

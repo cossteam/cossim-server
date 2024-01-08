@@ -151,7 +151,7 @@ func GetUserInfo(c *gin.Context) {
 		// 正则表达式匹配邮箱格式
 		emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
 		if isMatch, _ := emailRegex.MatchString(email); !isMatch {
-			c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "邮箱格式不正确"})
+			response.SetFail(c, "邮箱格式不正确", nil)
 			return
 		}
 		resp, err := userClient.GetUserInfoByEmail(context.Background(), &user.GetUserInfoByEmailRequest{
@@ -162,10 +162,10 @@ func GetUserInfo(c *gin.Context) {
 			return
 		}
 		if resp == nil {
-			response.Fail(c, "用户不存在", nil)
+			response.SetFail(c, "用户不存在", nil)
 			return
 		}
-		response.Success(c, "查询成功", gin.H{"user_info": resp})
+		response.SetSuccess(c, "查询成功", gin.H{"user_info": resp})
 	case UserIdType:
 		resp, err := userClient.UserInfo(context.Background(), &user.UserInfoRequest{
 			UserId: userId,
@@ -174,12 +174,12 @@ func GetUserInfo(c *gin.Context) {
 			c.Error(err)
 		}
 		if resp == nil {
-			response.Fail(c, "用户不存在", nil)
+			response.SetFail(c, "用户不存在", nil)
 			return
 		}
-		response.Success(c, "查询成功", gin.H{"user_info": resp})
+		response.SetSuccess(c, "查询成功", gin.H{"user_info": resp})
 	default:
-		response.Fail(c, "参数错误", nil)
+		response.SetFail(c, "参数错误", nil)
 	}
 }
 
@@ -199,19 +199,18 @@ func setUserPublicKey(c *gin.Context) {
 	req := new(SetPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
-
 	// 调用服务端设置用户公钥的方法
-	uid, err := userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
+	_, err = userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
 		UserId:    thisId,
 		PublicKey: req.PublicKey,
 	})
@@ -220,5 +219,10 @@ func setUserPublicKey(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "设置用户公钥成功", gin.H{"user_id": uid.UserId})
+	response.SetSuccess(c, "设置用户公钥成功", gin.H{"public_key": ThisKey})
+	//c.Set("response", utils.Response{
+	//	Code: 200,
+	//	Msg:  "设置用户公钥成功",
+	//	Data: gin.H{"user_id": uid.UserId},
+	//})
 }

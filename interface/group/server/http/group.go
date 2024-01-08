@@ -85,7 +85,7 @@ type updateGroupRequest struct {
 // @Produce  json
 // @Param request body updateGroupRequest true "请求体"
 // @Success 200 {object} utils.Response{}
-// @Router /group/update/{gid} [put]
+// @Router /group/update/{gid} [post]
 func updateGroup(c *gin.Context) {
 	req := new(updateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {

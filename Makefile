@@ -68,6 +68,14 @@ run_interface:
 		fi \
 	done
 
+swag: ## Run unittests
+	@swag i -g http.go -dir interface/user/server/http,pkg/utils --instanceName user
+	@swag i -g http.go -dir interface/msg/server/http,pkg/utils --instanceName msg
+	@swag i -g http.go -dir interface/relation/server/http,pkg/utils --instanceName relation
+	@swag i -g http.go -dir interface/group/server/http,pkg/utils --instanceName group
+
+
+
 
 #ifdef ACTION
 #ifdef NAME
