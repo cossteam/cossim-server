@@ -209,6 +209,37 @@ const docTemplaterelation = `{
                     }
                 }
             }
+        },
+        "/relation/group/join": {
+            "post": {
+                "description": "加入群聊",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "加入群聊",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.joinGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -267,6 +298,17 @@ const docTemplaterelation = `{
             "properties": {
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "http.joinGroupRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "integer"
                 }
             }
         },

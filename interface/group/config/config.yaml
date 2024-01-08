@@ -36,9 +36,9 @@ register:
   tags: ["消息服务", "message_service"]
 
 discovers:
-  msg:
-    name: "msg_service"
-    addr: "msg_service:10000"
+  group:
+    name: "group_service"
+    addr: "msg_service:10005"
     dial: "3000ms"
     timeout: "5000ms"
   relation:

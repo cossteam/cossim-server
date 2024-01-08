@@ -36,6 +36,13 @@ definitions:
     required:
     - user_id
     type: object
+  http.joinGroupRequest:
+    properties:
+      group_id:
+        type: integer
+    required:
+    - group_id
+    type: object
   utils.Response:
     properties:
       code:
@@ -174,4 +181,24 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 好友列表
+  /relation/group/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.joinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 加入群聊
 swagger: "2.0"
