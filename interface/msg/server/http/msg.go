@@ -301,10 +301,10 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 	}
 	//发送群聊消息
 	for _, uid := range uIds {
-		//遍历该用户所有客户端
-		if uid == userId {
-			continue
-		}
+		////遍历该用户所有客户端
+		//if uid == userId {
+		//	continue
+		//}
 		for _, c := range pool[uid] {
 			m := wsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId)}}
 			js, _ := json.Marshal(m)

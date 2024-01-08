@@ -122,7 +122,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       summary: 获取群聊信息
   /group/update/{gid}:
-    put:
+    post:
       consumes:
       - application/json
       description: 更新群聊信息

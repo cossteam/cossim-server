@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/gopenpgp/v2/helper"
+	"github.com/cossim/coss-server/service/user/domain/entity"
+	"gorm.io/gorm"
 	"strings"
 )
 
@@ -17,10 +19,12 @@ type Encryptor interface {
 	DecryptMessageWithKey(message, key string) (string, error)
 	GetPrivateKey() string
 	GetPublicKey() string
+	IsEnable() bool
 }
 
 // MyEncryptor 结构体实现了 Encryptor 接口
 type MyEncryptor struct {
+	enable     bool
 	privateKey string
 	publicKey  string
 	passphrase []byte
@@ -46,13 +50,35 @@ type SecretResponse struct {
 }
 
 // NewEncryptor 创建一个新的 Encryptor 实例
-func NewEncryptor(passphrase []byte, name, email string, rsaBits int) Encryptor {
+func NewEncryptor(passphrase []byte, name, email string, rsaBits int, enable bool) Encryptor {
 	return &MyEncryptor{
 		passphrase: passphrase,
 		name:       name,
 		email:      email,
 		rsaBits:    rsaBits,
+		enable:     enable,
 	}
+}
+
+type EncryptedAuthenticator struct {
+	DB *gorm.DB
+}
+
+func NewEncryptedAuthenticator(db *gorm.DB) *EncryptedAuthenticator {
+	return &EncryptedAuthenticator{
+		DB: db,
+	}
+}
+
+const _queryUser = "SELECT * FROM users WHERE id = ?"
+
+// QueryUser retrieves user information by user ID
+func (a *EncryptedAuthenticator) QueryUser(userID string) (entity.User, error) {
+	var user entity.User
+	if err := a.DB.Raw(_queryUser, userID).Scan(&user).Error; err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
 }
 
 // GenerateRandomKey 生成随机对称密钥
@@ -86,10 +112,6 @@ func (e *MyEncryptor) SecretMessage(message string, publicKey string, rkey []byt
 	}
 	data.Secret = marmor
 
-	//j, err := json.Marshal(data)
-	//if err != nil {
-	//	return "", err
-	//}
 	return data, nil
 }
 
@@ -117,7 +139,6 @@ func (e *MyEncryptor) GenerateKeyPair() error {
 
 // DecryptMessage 使用私钥解密消息
 func (e *MyEncryptor) DecryptMessage(message string) (string, error) {
-	fmt.Println("999999999999999999999999999999999999999999999999999999999999999999999999999s")
 	decrypted, err := helper.DecryptBinaryMessageArmored(e.privateKey, e.passphrase, message)
 	if err != nil {
 		return "", err
@@ -142,4 +163,8 @@ func (e *MyEncryptor) GetPrivateKey() string {
 // 获取公钥
 func (e *MyEncryptor) GetPublicKey() string {
 	return e.publicKey
+}
+
+func (e *MyEncryptor) IsEnable() bool {
+	return e.enable
 }
