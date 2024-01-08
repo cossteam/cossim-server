@@ -4,7 +4,7 @@ import (
 	"fmt"
 	api "github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/config"
-	"github.com/cossim/coss-server/service/msg/interfaces"
+	"github.com/cossim/coss-server/service/msg/service"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -24,8 +24,8 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	handler := interfaces.NewGrpcHandler(&config.C)
-	api.RegisterMsgServiceServer(grpcServer, handler)
+	svc := service.NewService(&config.C)
+	api.RegisterMsgServiceServer(grpcServer, svc)
 
 	fmt.Printf("gRPC server is running on addr: %s\n", config.C.GRPC.Addr)
 
