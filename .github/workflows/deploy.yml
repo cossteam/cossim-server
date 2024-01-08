@@ -6,6 +6,11 @@ on:
       - 'releases/**'
       - 'main'
       - 'master'
+    paths:
+      - 'docs/**'
+      - 'interface/**'
+      - 'pkg/**'
+      - 'service/**'
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,5 +26,5 @@ jobs:
           script: |
             sudo -i
             cd /hitosea/coss-server/
-            docker-compose pull
-            docker-compose up -d
+            sudo docker-compose pull
+            sudo docker-compose up -d
