@@ -7,23 +7,18 @@ type LogConfig struct {
 }
 
 type MySQLConfig struct {
-	Addr         string   `mapstructure:"addr"`
-	DSN          string   `mapstructure:"dsn"`
-	ReadDSN      []string `mapstructure:"readDSN"`
-	IdleTimeout  string   `mapstructure:"idleTimeout"`
-	QueryTimeout string   `mapstructure:"queryTimeout"`
-	ExecTimeout  string   `mapstructure:"execTimeout"`
-	TranTimeout  string   `mapstructure:"tranTimeout"`
+	Addr         string `mapstructure:"addr"`
+	DSN          string `mapstructure:"dsn"`
+	RootPassword string `mapstructure:"root_password"`
+	Database     string `mapstructure:"database"`
+	User         string `mapstructure:"user"`
+	Password     string `mapstructure:"password"`
 }
 
 type RedisConfig struct {
-	Name         string `mapstructure:"name"`
-	Proto        string `mapstructure:"proto"`
-	Addr         string `mapstructure:"addr"`
-	DialTimeout  string `mapstructure:"dialTimeout"`
-	ReadTimeout  string `mapstructure:"readTimeout"`
-	WriteTimeout string `mapstructure:"writeTimeout"`
-	IdleTimeout  string `mapstructure:"idleTimeout"`
+	Name  string `mapstructure:"name"`
+	Proto string `mapstructure:"proto"`
+	Addr  string `mapstructure:"addr"`
 }
 
 type HTTPConfig struct {
@@ -45,10 +40,8 @@ type RegisterConfig struct {
 type DiscoversConfig map[string]ServiceConfig
 
 type ServiceConfig struct {
-	Name    string `mapstructure:"name"`
-	Addr    string `mapstructure:"addr"`
-	Dial    string `mapstructure:"dial"`
-	Timeout string `mapstructure:"timeout"`
+	Name string `mapstructure:"name"`
+	Addr string `mapstructure:"addr"`
 }
 
 type AppConfig struct {

@@ -142,11 +142,13 @@ func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 }
 
 func NewMysqlFromConfig(c *config.MySQLConfig, opts ...Option) *MySQL {
-	mysqlConn := NewMySQLFromDSN(c.DSN,
-		WithMaxIdleTime(c.IdleTimeout),
-	)
+	mysqlC := NewMySQLFromDSN(fmt.Sprintf(GenerateMysqlDSN("root", c.RootPassword, c.Addr, c.Database)))
 
-	return mysqlConn
+	return mysqlC
+}
+
+func GenerateMysqlDSN(rootUsername, rootPassword, addr, database string) string {
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8,utf8mb4&multiStatements=true", rootUsername, rootPassword, addr, database)
 }
 
 func (m *MySQL) GetConnection() (*gorm.DB, error) {

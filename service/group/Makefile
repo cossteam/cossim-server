@@ -56,7 +56,7 @@ gen: ## generate protobuf file
 	@protoc-go-inject-tag -input=api/v1/*.pb.go
 
 run: # Run Develop server
-	@go run $(MAIN_FILE) start -f etc/config.toml
+	@go run $(MAIN_FILE) --config ./config/config.yaml
 
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

@@ -24,30 +24,27 @@ redis:
   idleTimeout: "10s"
 
 http:
-  addr: "0.0.0.0:8084"
+  addr: "0.0.0.0:8083"
 
 grpc:
-  addr: "127.0.0.1:10002"
+  addr: "127.0.0.1:10003"
 
 # 注册本服务
 register:
-  name: "user-bff"
+  name: "user_bff"
   addr: "注册中心地址"
-  tags: ["消息服务", "message_service"]
+  tags: ["消息服务", "user_service"]
 
 discovers:
-  group:
-    name: "group_service"
-    addr: "group_service:10005"
-    dial: "3000ms"
-    timeout: "5000ms"
-  relation:
-    name: "relation_service"
-    addr: "relation_service:10001"
-    dial: "3000ms"
-    timeout: "5000ms"
   user:
     name: "user_service"
     addr: "user_service:10002"
     dial: "3000ms"
     timeout: "5000ms"
+
+encryption:
+  enabled: true
+  name: coss-im
+  email: max.mustermann@example.com
+  passphrase: LongSecret
+  rsaBits: 2048
