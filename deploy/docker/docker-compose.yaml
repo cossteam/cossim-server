@@ -161,7 +161,7 @@ services:
     volumes:
       - ./config/service/group.yaml:/config/config.yaml
     expose:
-      - "10003"
+      - "10005"
     depends_on:
       mysql:
         condition: service_healthy

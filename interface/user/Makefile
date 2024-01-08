@@ -68,10 +68,12 @@ help: ## Display this help screen
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
+	# make docker-build ACTION=interface NAME=user
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
+	# make docker-build ACTION=interface NAME=user
 	docker push ${IMG}
 
 # PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple
