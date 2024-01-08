@@ -1,23 +1,24 @@
 package config
 
 import (
+	"flag"
 	"github.com/cossim/coss-server/pkg/config"
-	"github.com/spf13/viper"
 )
 
 var Conf config.AppConfig
+var configFile string
+
+func init() {
+	flag.StringVar(&configFile, "config", "", "Path to configuration file")
+	flag.Parse()
+}
 
 func Init() error {
-	viper.SetConfigFile("./config/config.yaml")
-	viper.SetConfigType("yaml")
-
-	if err := viper.ReadInConfig(); err != nil {
+	c, err := config.LoadFile(configFile)
+	if err != nil {
 		return err
 	}
-
-	if err := viper.Unmarshal(&Conf); err != nil {
-		return err
-	}
+	Conf = *c
 
 	return nil
 }

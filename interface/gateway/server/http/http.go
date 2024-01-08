@@ -21,6 +21,7 @@ var (
 	relationServiceURL  string
 	messageServiceURL   string
 	messageWsServiceURL string
+	groupServiceURL     string
 )
 
 func Init(c *config.AppConfig) {
@@ -80,6 +81,7 @@ func setupURLs() {
 	relationServiceURL = "http://" + cfg.Discovers["relation"].Addr
 	messageServiceURL = "http://" + cfg.Discovers["msg"].Addr
 	messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Addr + "/api/v1/msg/ws"
+	groupServiceURL = "http://" + cfg.Discovers["group"].Addr
 }
 
 func setupGin() {
@@ -110,6 +112,7 @@ func route(engine *gin.Engine) {
 		gateway.Any("/user/*path", proxyToService(userServiceURL))
 		gateway.Any("/relation/*path", proxyToService(relationServiceURL))
 		gateway.Any("/msg/*path", proxyToService(messageServiceURL))
+		gateway.Any("/group/*path", proxyToService(groupServiceURL))
 	}
 }
 

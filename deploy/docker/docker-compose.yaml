@@ -1,6 +1,7 @@
 version: '3.9'
 services:
   mysql:
+    container_name: cossim-mysql
     image: mysql:5.7
     volumes:
     - ./data/var/lib/mysql:/var/lib/mysql
@@ -27,18 +28,26 @@ services:
       retries: 10
       start_period: 30s
   gateway:
+    container_name: cossim_gateway
     image: hub.hitosea.com/cossim/gateway-interface
-#    volumes:
-#    - ./data/interface/gateway/config:/config:ro
+    volumes:
+    - ./config/interface/gateway.yaml:/config/config.yaml
+    command:
+    - "--config"
+    - "/config/config.yaml"
     ports:
     - "8080:8080"
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
   msg_bff:
+    container_name: cossim_msg_bff
     image: hub.hitosea.com/cossim/msg-interface
-#    volumes:
-#    - ./data/interface/msg/config:/app/config/:ro
+    command:
+    - "--config"
+    - "/config/config.yaml"
+    volumes:
+      - ./config/interface/msg.yaml:/config/config.yaml
     expose:
     - "8081"
     depends_on:
@@ -48,9 +57,13 @@ services:
       SOME_VARIABLE: some_value
     restart: on-failure
   relation_bff:
+    container_name: cossim_relation_bff
     image: hub.hitosea.com/cossim/relation-interface
-#    volumes:
-#    - ./data/interface/relation/config:/app/config/:ro
+    command:
+    - "--config"
+    - "/config/config.yaml"
+    volumes:
+      - ./config/interface/relation.yaml:/config/config.yaml
     expose:
     - "8082"
     depends_on:
@@ -60,9 +73,13 @@ services:
       SOME_VARIABLE: some_value
     restart: on-failure
   user_bff:
+    container_name: cossim_user_bff
     image: hub.hitosea.com/cossim/user-interface
-#    volumes:
-#    - ./data/interface/user/config:/app/config/:ro
+    command:
+    - "--config"
+    - "/config/config.yaml"
+    volumes:
+      - ./config/interface/user.yaml:/config/config.yaml
     expose:
     - "8083"
     depends_on:
@@ -71,10 +88,30 @@ services:
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
+  group_bff:
+    container_name: cossim_group_bff
+    image: hub.hitosea.com/cossim/group-interface
+    command:
+      - "--config"
+      - "/config/config.yaml"
+    volumes:
+      - ./config/interface/group.yaml:/config/config.yaml
+    expose:
+      - "8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SOME_VARIABLE: some_value
+    restart: on-failure
   msg_service:
+    container_name: cossim_msg_service
     image: hub.hitosea.com/cossim/msg-service
-#    volumes:
-#    - ./data/service/msg/config:/app/config/:ro
+    command:
+    - "--config"
+    - "/config/config.yaml"
+    volumes:
+      - ./config/service/msg.yaml:/config/config.yaml
     expose:
     - "10000"
     depends_on:
@@ -84,9 +121,13 @@ services:
       SOME_VARIABLE: some_value
     restart: on-failure
   relation_service:
+    container_name: cossim_relation_service
     image: hub.hitosea.com/cossim/relation-service
-#    volumes:
-#    - ./data/service/relation/config:/app/config/:ro
+    command:
+    - "--config"
+    - "/config/config.yaml"
+    volumes:
+      - ./config/service/relation.yaml:/config/config.yaml
     expose:
     - "10001"
     depends_on:
@@ -96,11 +137,31 @@ services:
       SOME_VARIABLE: some_value
     restart: on-failure
   user_service:
+    container_name: cossim_user_service
     image: hub.hitosea.com/cossim/user-service
-#    volumes:
-#    - ./data/service/user/config:/app/config/:ro
+    command:
+      - "--config"
+      - "/config/config.yaml"
+    volumes:
+      - ./config/service/user.yaml:/config/config.yaml
     expose:
-    - "10002"
+      - "10002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SOME_VARIABLE: some_value
+    restart: on-failure
+  group_service:
+    container_name: cossim_group_service
+    image: hub.hitosea.com/cossim/group-service
+    command:
+      - "--config"
+      - "/config/config.yaml"
+    volumes:
+      - ./config/service/group.yaml:/config/config.yaml
+    expose:
+      - "10003"
     depends_on:
       mysql:
         condition: service_healthy

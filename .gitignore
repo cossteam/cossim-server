@@ -1,2 +1,3 @@
 .idea/
-/data/*
+/deploy/docker/data
+/deploy/docker/config/**.yaml
