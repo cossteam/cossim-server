@@ -1,4 +1,20 @@
 definitions:
+  http.SendGroupMsgRequest:
+    properties:
+      content:
+        type: string
+      group_id:
+        type: integer
+      replay_id:
+        type: integer
+      type:
+        type: integer
+    required:
+    - content
+    - group_id
+    - replay_id
+    - type
+    type: object
   http.SendUserMsgRequest:
     properties:
       content:
@@ -73,7 +89,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.SendUserMsgRequest'
+          $ref: '#/definitions/http.SendGroupMsgRequest'
       produces:
       - application/json
       responses:

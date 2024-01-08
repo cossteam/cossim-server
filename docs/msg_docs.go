@@ -86,7 +86,7 @@ const docTemplatemsg = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                            "$ref": "#/definitions/http.SendGroupMsgRequest"
                         }
                     }
                 ],
@@ -140,6 +140,29 @@ const docTemplatemsg = `{
         }
     },
     "definitions": {
+        "http.SendGroupMsgRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "group_id",
+                "replay_id",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "replay_id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "integer"
+                }
+            }
+        },
         "http.SendUserMsgRequest": {
             "type": "object",
             "required": [

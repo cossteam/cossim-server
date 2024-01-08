@@ -5,40 +5,116 @@
         "contact": {}
     },
     "paths": {
-        "/user/info": {
+        "/group/create": {
+            "post": {
+                "description": "创建群聊",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "创建群聊",
+                "parameters": [
+                    {
+                        "description": "请求体",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.createGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/group/delete": {
+            "delete": {
+                "description": "删除群聊",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "删除群聊",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "群聊ID",
+                        "name": "gid",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/group/getBatch": {
             "get": {
-                "description": "查询用户信息",
+                "description": "批量获取群聊信息",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "查询用户信息",
+                "summary": "批量获取群聊信息",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "用户id",
-                        "name": "user_id",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "群聊ID列表",
+                        "name": "groupIds",
                         "in": "query",
                         "required": true
-                    },
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/group/info": {
+            "get": {
+                "description": "获取群聊信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取群聊信息",
+                "parameters": [
                     {
-                        "enum": [
-                            0,
-                            1
-                        ],
                         "type": "integer",
-                        "description": "指定根据id还是邮箱类型查找",
-                        "name": "type",
+                        "description": "群聊ID",
+                        "name": "gid",
                         "in": "query",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "邮箱",
-                        "name": "email",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -51,91 +127,24 @@
                 }
             }
         },
-        "/user/key/set": {
-            "post": {
-                "security": [
-                    {
-                        "BearerToken": []
-                    }
-                ],
-                "description": "设置用户公钥",
+        "/group/update/{gid}": {
+            "put": {
+                "description": "更新群聊信息",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "设置用户公钥",
+                "summary": "更新群聊信息",
                 "parameters": [
                     {
-                        "description": "request",
+                        "description": "请求体",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SetPublicKeyRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/login": {
-            "post": {
-                "description": "用户登录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "用户登录",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/register": {
-            "post": {
-                "description": "用户注册",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "用户注册",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.RegisterRequest"
+                            "$ref": "#/definitions/http.updateGroupRequest"
                         }
                     }
                 ],
@@ -151,56 +160,49 @@
         }
     },
     "definitions": {
-        "http.LoginRequest": {
+        "http.createGroupRequest": {
             "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "confirm_password",
-                "email",
-                "password"
-            ],
             "properties": {
                 "avatar": {
                     "type": "string"
                 },
-                "confirm_password": {
-                    "description": "ConfirmPass string `json:\"confirm_password\" binding:\"required,eqfield=Password\"`",
+                "max_members_limit": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 },
-                "email": {
-                    "description": "Email    string `json:\"email\" binding:\"required,email\"`",
-                    "type": "string"
+                "status": {
+                    "type": "integer"
                 },
-                "nickname": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
+                "type": {
+                    "type": "integer"
                 }
             }
         },
-        "http.SetPublicKeyRequest": {
+        "http.updateGroupRequest": {
             "type": "object",
-            "required": [
-                "public_key"
-            ],
             "properties": {
-                "public_key": {
+                "avatar": {
                     "type": "string"
+                },
+                "creator_id": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "max_members_limit": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "integer"
                 }
             }
         },

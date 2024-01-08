@@ -1,0 +1,144 @@
+definitions:
+  http.createGroupRequest:
+    properties:
+      avatar:
+        type: string
+      max_members_limit:
+        type: integer
+      name:
+        type: string
+      status:
+        type: integer
+      type:
+        type: integer
+    type: object
+  http.updateGroupRequest:
+    properties:
+      avatar:
+        type: string
+      creator_id:
+        type: string
+      group_id:
+        type: integer
+      max_members_limit:
+        type: integer
+      name:
+        type: string
+      status:
+        type: integer
+      type:
+        type: integer
+    type: object
+  utils.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: coss-user服务
+paths:
+  /group/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建群聊
+      parameters:
+      - description: 请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.createGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 创建群聊
+  /group/delete:
+    delete:
+      consumes:
+      - application/json
+      description: 删除群聊
+      parameters:
+      - description: 群聊ID
+        in: query
+        name: gid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 删除群聊
+  /group/getBatch:
+    get:
+      consumes:
+      - application/json
+      description: 批量获取群聊信息
+      parameters:
+      - collectionFormat: csv
+        description: 群聊ID列表
+        in: query
+        items:
+          type: string
+        name: groupIds
+        required: true
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 批量获取群聊信息
+  /group/info:
+    get:
+      consumes:
+      - application/json
+      description: 获取群聊信息
+      parameters:
+      - description: 群聊ID
+        in: query
+        name: gid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 获取群聊信息
+  /group/update/{gid}:
+    put:
+      consumes:
+      - application/json
+      description: 更新群聊信息
+      parameters:
+      - description: 请求体
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.updateGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 更新群聊信息
+swagger: "2.0"

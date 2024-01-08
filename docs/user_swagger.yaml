@@ -28,6 +28,13 @@ definitions:
     - email
     - password
     type: object
+  http.SetPublicKeyRequest:
+    properties:
+      public_key:
+        type: string
+    required:
+    - public_key
+    type: object
   utils.Response:
     properties:
       code:
@@ -71,6 +78,28 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 查询用户信息
+  /user/key/set:
+    post:
+      consumes:
+      - application/json
+      description: 设置用户公钥
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.SetPublicKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerToken: []
+      summary: 设置用户公钥
   /user/login:
     post:
       consumes:
