@@ -5,9 +5,12 @@ definitions:
         type: string
       password:
         type: string
+      public_key:
+        type: string
     required:
     - email
     - password
+    - public_key
     type: object
   http.RegisterRequest:
     properties:
@@ -140,4 +143,30 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 用户注册
+  /user/system/key/get:
+    get:
+      consumes:
+      - application/json
+      description: 获取系统pgp公钥
+      parameters:
+      - description: 指定根据id还是邮箱类型查找
+        enum:
+        - 0
+        - 1
+        in: query
+        name: type
+        required: true
+        type: integer
+      - description: 邮箱
+        in: query
+        name: email
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 获取系统pgp公钥
 swagger: "2.0"

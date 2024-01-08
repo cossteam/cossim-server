@@ -17,7 +17,7 @@ import (
 func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 检查请求方法是否为 GET
-		if c.Request.Method != http.MethodGet && encryptor.IsEnable() && c.Request.URL.Path != "/api/v1/user/key/set" {
+		if c.Request.Method != http.MethodGet && encryptor.IsEnable() && c.Request.URL.Path != "/api/v1/user/system/key/get" {
 			var request encryption.SecretResponse
 			if err := c.ShouldBindJSON(&request); err != nil {
 				c.AbortWithStatusJSON(400, gin.H{"code": 400, "error": "Failed to read request body"})
@@ -51,7 +51,7 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 				})
 				return
 			}
-			if !encryptor.IsEnable() {
+			if !encryptor.IsEnable() || c.Request.URL.Path == "/api/v1/user/system/key/get" {
 				c.String(http.StatusOK, string(msgStr))
 				return
 			}

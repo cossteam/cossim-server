@@ -9,14 +9,14 @@ import (
 	"github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"net/http"
 	"regexp"
 	"strconv"
 )
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Email     string `json:"email" binding:"required"`
+	Password  string `json:"password" binding:"required"`
+	PublicKey string `json:"public_key" binding:"required"`
 }
 
 // @Summary 用户登录
@@ -30,13 +30,13 @@ func login(c *gin.Context) {
 	req := new(LoginRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 	// 正则表达式匹配邮箱格式
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(req.Email) {
-		response.Fail(c, "邮箱格式不正确", nil)
+		response.SetFail(c, "邮箱格式不正确", nil)
 		return
 	}
 
@@ -48,15 +48,21 @@ func login(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	_, err = userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
+		PublicKey: req.PublicKey,
+	})
+	if err != nil {
+		return
+	}
 
 	token, err := utils.GenerateToken(resp.UserId, resp.Email)
 	if err != nil {
 		logger.Error("failed to generate user token", zap.Error(err))
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
-	response.Success(c, "登录成功", gin.H{"token": token, "user_info": resp})
+	response.SetSuccess(c, "登录成功", gin.H{"token": token, "user_info": resp})
 }
 
 type RegisterRequest struct {
@@ -80,28 +86,28 @@ func register(c *gin.Context) {
 	req := new(RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 	if req.Password != req.ConfirmPass {
-		response.Fail(c, "密码和确认密码不匹配", nil)
+		response.SetFail(c, "密码和确认密码不匹配", nil)
 		return
 	}
 	// 正则表达式匹配邮箱格式
 	emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
 	if isMatch, _ := emailRegex.MatchString(req.Email); !isMatch {
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "邮箱格式不正确"})
+		response.SetFail(c, "邮箱格式不正确", nil)
 		return
 	}
 
 	//最少包括一个数字，大小字符，最短8个字符，最长20个字符
 	emailRegex = regexp2.MustCompile(`^(?=.*[0-9])(?=.*[a-zA-Z]).{6,50}$`, 0)
 	if isMatch, _ := emailRegex.MatchString(req.Password); !isMatch {
-		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "msg": "密码格式不正确"})
+		response.SetFail(c, "密码格式不正确", nil)
 		return
 	}
 	if isMatch, _ := emailRegex.MatchString(req.ConfirmPass); !isMatch {
-		response.Fail(c, "密码格式不正确", nil)
+		response.SetFail(c, "密码格式不正确", nil)
 		return
 	}
 
@@ -117,7 +123,7 @@ func register(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "注册成功", gin.H{"user_id": resp.UserId})
+	response.SetSuccess(c, "注册成功", gin.H{"user_id": resp.UserId})
 }
 
 type GetType int
@@ -220,9 +226,17 @@ func setUserPublicKey(c *gin.Context) {
 	}
 
 	response.SetSuccess(c, "设置用户公钥成功", gin.H{"public_key": ThisKey})
-	//c.Set("response", utils.Response{
-	//	Code: 200,
-	//	Msg:  "设置用户公钥成功",
-	//	Data: gin.H{"user_id": uid.UserId},
-	//})
+}
+
+// @Summary 获取系统pgp公钥
+// @Description 获取系统pgp公钥
+// @Accept  json
+// @Produce  json
+// @Param type query GetType true "指定根据id还是邮箱类型查找"
+// @Param email query string false "邮箱"
+// @Success		200 {object} utils.Response{}
+// @Router /user/system/key/get [get]
+func GetSystemPublicKey(c *gin.Context) {
+
+	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": ThisKey})
 }

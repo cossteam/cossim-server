@@ -62,7 +62,7 @@ paths:
             $ref: '#/definitions/utils.Response'
       summary: 创建群聊
   /group/delete:
-    delete:
+    post:
       consumes:
       - application/json
       description: 删除群聊
