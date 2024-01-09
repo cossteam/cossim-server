@@ -1,6 +1,7 @@
 package entity
 
 type UserGroup struct {
+	ID                 uint            `gorm:"primaryKey;autoIncrement;comment:群组关系ID" json:"id"`
 	GroupID            uint            `gorm:"comment:群组ID" json:"group_id"`
 	Status             UserGroupStatus `gorm:"comment:状态（比如已加入、申请中等）" json:"status"`
 	Identity           GroupIdentity   `gorm:"comment:身份（比如管理员、普通用户）" json:"identity"`
@@ -8,6 +9,7 @@ type UserGroup struct {
 	JoinedAt           int64           `gorm:"comment:加入时间" json:"joined_at"`
 	MuteEndTime        int64           `gorm:"comment:禁言结束时间" json:"mute_end_time"`
 	TopAt              int64           `gorm:"comment:置顶时间" json:"top_at"`
+	SessionShow        ShowSession     `gorm:"comment:是否显示会话" json:"session_show"`
 	UID                string          `gorm:"type:varchar(64);comment:用户ID" json:"uid"`
 	GroupNickname      string          `gorm:"comment:群昵称" json:"group_nickname"`
 	Inviter            string          `gorm:"type:varchar(64);comment:邀请人id" json:"inviter"`
@@ -16,6 +18,9 @@ type UserGroup struct {
 	IsTop              bool            `gorm:"comment:是否置顶" json:"is_top"`
 	SilentNotification bool            `gorm:"comment:静默通知" json:"silent_notification"`
 	PrivacyMode        bool            `gorm:"comment:隐私模式" json:"privacy_mode"`
+	CreatedAt          int64           `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
+	UpdatedAt          int64           `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
+	DeletedAt          int64           `gorm:"comment:删除时间" json:"deleted_at"`
 }
 
 type UserGroupStatus uint
@@ -25,6 +30,13 @@ const (
 	StatusApplying                            // 申请中
 	StatusBlocked                             // 被封禁
 	StatusReject                              // 被拒绝
+)
+
+type ShowSession uint
+
+const (
+	IsShow  ShowSession = iota // 已加入
+	NotShow                    // 申请中
 )
 
 type GroupIdentity uint

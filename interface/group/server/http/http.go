@@ -5,6 +5,7 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	group "github.com/cossim/coss-server/service/group/api/v1"
+	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 
 	"github.com/gin-gonic/gin"
@@ -17,18 +18,30 @@ import (
 )
 
 var (
-	userClient  user.UserServiceClient
-	groupClient group.GroupServiceClient
-
-	cfg    *config.AppConfig
-	logger *zap.Logger
+	userClient      user.UserServiceClient
+	groupClient     group.GroupServiceClient
+	relationClient  relationApi.UserRelationServiceClient
+	userGroupClient relationApi.GroupRelationServiceClient
+	cfg             *config.AppConfig
+	logger          *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
+	setupRelationGRPCClient()
 	setupGroupGRPCClient()
 	setupGin()
+}
+func setupRelationGRPCClient() {
+	var err error
+	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	relationClient = relationApi.NewUserRelationServiceClient(relationConn)
+	userGroupClient = relationApi.NewGroupRelationServiceClient(relationConn)
 }
 
 func setupUserGRPCClient() {

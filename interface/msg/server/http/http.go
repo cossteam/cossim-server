@@ -135,5 +135,6 @@ func route(engine *gin.Engine) {
 	u.POST("/send/user", middleware.AuthMiddleware(), sendUserMsg)
 	u.POST("/send/group", middleware.AuthMiddleware(), sendGroupMsg)
 	u.GET("/list/user", middleware.AuthMiddleware(), getUserMsgList)
+	u.GET("/dialog/list", middleware.AuthMiddleware(), getUserDialogList)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

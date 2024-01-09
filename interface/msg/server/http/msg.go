@@ -263,6 +263,89 @@ func getUserMsgList(c *gin.Context) {
 	response.Success(c, "获取成功", gin.H{"msg_list": msg})
 }
 
+type ConversationType uint
+
+const (
+	UserConversation ConversationType = iota
+	GroupConversation
+)
+
+type UserDialogListResponse struct {
+	UserId  string `json:"user_id,omitempty"`
+	GroupId uint32 `json:"group_id,omitempty"`
+	// 会话类型
+	DialogType ConversationType `json:"dialog_type"`
+	// 会话名称
+	DialogName string `json:"dialog_name"`
+	// 会话头像
+	DialogAvatar string `json:"dialog_avatar"`
+	// 会话未读消息数
+	DialogUnreadCount int    `json:"dialog_unread_count"`
+	LastMessage       string `json:"last_message"`
+}
+type Message struct {
+	// 消息类型
+	MsgType uint `json:"msg_type"`
+	// 消息内容
+	Content string `json:"content"`
+	// 消息发送者
+	SenderId string `json:"sender_id"`
+	// 消息发送时间
+	SendTime int64 `json:"send_time"`
+	// 消息id
+	MsgId uint64 `json:"msg_id"`
+}
+
+// 获取用户对话列表
+// @Summary 获取用户对话列表
+// @Description 获取用户对话列表
+// @Accept  json
+// @Produce  json
+// @Success		200 {object} utils.Response{}
+// @Router /msg/dialog/list [get]
+func getUserDialogList(c *gin.Context) {
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+
+	//获取私聊的会话列表
+	ids, err := relationClient.GetUserRelationShowSessionIds(context.Background(), &relation.UUserID{
+		UserId: thisId,
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//获取群聊的会话列表
+	gids, err := userGroupClient.GetUserGroupShowSessionGroupIDs(context.Background(), &relation.UserID{
+		UserId: thisId,
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//根据用户id查询最后一条消息
+	msgs, err := msgClient.GetLastMsgsForUserWithFriends(context.Background(), &msg.UserMsgsRequest{
+		UserId:   thisId,
+		FriendId: ids.UserIds,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	//根据群聊id查询查询最后一条消息
+	gmsgs, err := msgClient.GetLastMsgsForGroupsWithIDs(context.Background(), &msg.GroupMsgsRequest{
+		GroupId: gids.GroupIds,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	response.Success(c, "获取成功", gin.H{"msg_list": msgs, "group_msg_list": gmsgs})
+}
+
 type wsMsg struct {
 	Uid   string             `json:"uid"`
 	Event config.WSEventType `json:"event"`

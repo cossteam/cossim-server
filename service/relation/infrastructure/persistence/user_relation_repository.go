@@ -55,3 +55,13 @@ func (u *UserRelationRepo) GetBlacklistByUserID(userId string) ([]*entity.UserRe
 	}
 	return relations, nil
 }
+
+func (u *UserRelationRepo) GetUserShowSessionUserIds(userId string) ([]string, error) {
+	var ids []string
+	u.db.Model(entity.UserRelation{}).Where("user_id =? AND session_show =?", userId, entity.IsShow).Pluck("friend_id", &ids)
+	return ids, nil
+}
+
+func (u *UserRelationRepo) SetUserShowSession(userId, friendId string, showSession entity.ShowSession) error {
+	return u.db.Model(entity.UserRelation{}).Where("user_id =? AND friend_id =?", userId, friendId).Update("session_show", showSession).Error
+}

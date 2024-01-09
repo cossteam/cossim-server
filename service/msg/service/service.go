@@ -57,11 +57,11 @@ func (s *Service) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 
 	for _, m := range ums {
 		resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
-			Id:         int64(m.ID),
+			Id:         uint32(m.ID),
 			SenderId:   m.SendID,
 			ReceiverId: m.ReceiveID,
 			Content:    m.Content,
-			Type:       int32(m.Type),
+			Type:       uint32(int32(m.Type)),
 			ReplayId:   uint64(m.ReplyId),
 			IsRead:     int32(m.IsRead),
 			ReadAt:     m.ReadAt,
@@ -72,4 +72,56 @@ func (s *Service) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 	resp.CurrentPage = current
 
 	return resp, nil
+}
+
+func (s *Service) GetLastMsgsForUserWithFriends(ctx context.Context, in *v1.UserMsgsRequest) (*v1.UserMessages, error) {
+
+	msgs, err := s.mr.GetLastMsgsForUserWithFriends(in.UserId, in.FriendId)
+	if err != nil {
+		return nil, err
+	}
+	nmsgs := make([]*v1.UserMessage, 0)
+	for _, m := range msgs {
+		nmsgs = append(nmsgs, &v1.UserMessage{
+			Id:        uint32(m.ID),
+			Content:   m.Content,
+			Type:      uint32(m.Type),
+			ReplayId:  uint64(m.ReplyId),
+			ReadAt:    m.ReadAt,
+			CreatedAt: m.CreatedAt.Unix(),
+		})
+	}
+
+	return &v1.UserMessages{
+		UserMessages: nmsgs,
+	}, nil
+}
+
+func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, in *v1.GroupMsgsRequest) (*v1.GroupMessages, error) {
+	ids := make([]uint, 0)
+	if len(in.GroupId) > 0 {
+		for _, id := range in.GroupId {
+			ids = append(ids, uint(id))
+		}
+	}
+	msgs, err := s.mr.GetLastMsgsForGroupsWithIDs(ids)
+	if err != nil {
+		return nil, err
+	}
+	nmsgs := make([]*v1.GroupMessage, 0)
+	for _, m := range msgs {
+		nmsgs = append(nmsgs, &v1.GroupMessage{
+			Id:        uint32(m.ID),
+			Uid:       m.UID,
+			Content:   m.Content,
+			Type:      uint32(m.Type),
+			ReplyId:   uint32(m.ReplyId),
+			ReadCount: int32(m.ReadCount),
+			CreatedAt: m.CreatedAt.Unix(),
+		})
+	}
+
+	return &v1.GroupMessages{
+		GroupMessages: nmsgs,
+	}, nil
 }

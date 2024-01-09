@@ -44,26 +44,44 @@ message GetUserMsgListRequest{
 }
 
 message UserMessage{
-  // @inject_tag: json:"id" form:"id" uri:"id"
-  int64 Id=1;
-  // @inject_tag: json:"sender_id" form:"sender_id" uri:"sender_id"
+  // @inject_tag: json:"id"
+  uint32 Id=1;
+  // @inject_tag: json:"sender_id"
   string SenderId=2;
-  // @inject_tag: json:"receiver_id" form:"receiver_id" uri:"receiver_id"
+  // @inject_tag: json:"receiver_id"
   string ReceiverId=3;
-  // @inject_tag: json:"content" form:"content" uri:"content"
+  // @inject_tag: json:"content"
   string Content=4;
-  // @inject_tag: json:"type" form:"type" uri:"type"
-  int32 Type=5;
-  // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
+  // @inject_tag: json:"type"
+  uint32 Type=5;
+  // @inject_tag: json:"replay_id"
   uint64 ReplayId=6;
-  // @inject_tag: json:"is_read" form:"is_read" uri:"is_read"
+  // @inject_tag: json:"is_read"
   int32 IsRead=7;
-  // @inject_tag: json:"read_at" form:"read_at" uri:"read_at"
+  // @inject_tag: json:"read_at"
   int64 ReadAt=8;
-  // @inject_tag: json:"receive_id" form:"receive_id" uri:"receive_id"
+  // @inject_tag: json:"receive_id"
   string ReceiveId=9;
-  // @inject_tag: json:"created_at" form:"created_at" uri:"created_at"
+  // @inject_tag: json:"created_at"
   int64 CreatedAt=10;
+}
+message GroupMessage {
+  // @inject_tag: json:"id"
+  uint32 Id = 1;
+  //  @inject_tag: json:"group_id"
+  uint32 Group_id = 2;
+  // @inject_tag: json:"type"
+  uint32 Type = 3;
+  // @inject_tag: json:"reply_id"
+  uint32 Reply_id = 4;
+  // @inject_tag: json:"read_count"
+  int32 Read_count = 5;
+  // @inject_tag: json:"uid"
+  string Uid = 6;
+  // @inject_tag: json:"content"
+  string Content = 7;
+  // @inject_tag: json:"created_at"
+  int64 Created_at = 8;
 }
 
 message GetUserMsgListResponse{
@@ -86,10 +104,40 @@ message SendGroupMsgResponse{
   uint32 groupId = 2;
 }
 
+message UserMsgRequest {
+  // @inject_tag: json:"user_id"
+  string user_id = 1;
+  // @inject_tag: json:"friend_id"
+  string friend_id = 2;
+}
 
+message GroupMsgRequest {
+  // @inject_tag: json:"user_id"
+  uint32 group_id = 1;
+}
+message UserMessages {
+  // @inject_tag: json:"user_messages"
+  repeated UserMessage UserMessages = 1;
+}
 
+message GroupMessages {
+  // @inject_tag: json:"group_messages"
+  repeated GroupMessage GroupMessages = 1;
+}
+message UserMsgsRequest {
+  // @inject_tag: json:"user_id"
+  string user_id = 1;
+  // @inject_tag: json:"friend_id"
+  repeated string friend_id = 2;
+}
+message GroupMsgsRequest {
+  // @inject_tag: json:"group_id"
+  repeated uint32 group_id = 1;
+}
 service MsgService{
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
   rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
+  rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
+  rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
 }

@@ -5,6 +5,7 @@ import (
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	api "github.com/cossim/coss-server/service/group/api/v1"
+	rapi "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )
@@ -163,6 +164,15 @@ func createGroup(c *gin.Context) {
 	})
 	if err != nil {
 		response.Fail(c, "创建群聊失败", nil)
+		return
+	}
+	_, err = userGroupClient.InsertUserGroup(context.Background(), &rapi.UserGroupRequest{
+		GroupId:        createdGroup.Id,
+		UserId:         thisId,
+		ShowSession:    0,
+		RelationStatus: 2,
+	})
+	if err != nil {
 		return
 	}
 

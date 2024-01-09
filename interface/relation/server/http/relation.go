@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -378,7 +379,7 @@ func addFriend(c *gin.Context) {
 		response.Fail(c, "参数验证失败", nil)
 		return
 	}
-
+	fmt.Println(111111)
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.Fail(c, err.Error(), nil)

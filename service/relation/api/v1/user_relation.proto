@@ -87,6 +87,12 @@ message GetBlacklistResponse {
   repeated Blacklist Blacklist = 1;
 }
 
+message SetUserRelationShowSessionRequest{
+  string user_id = 1;
+  string friend_id = 2;
+  uint32 show_session = 3;
+}
+
 message GetUserRelationRequest {
   // @inject_tag: json:"user_id"
   string UserId = 1;
@@ -107,7 +113,13 @@ message GetUserRelationResponse {
   // @inject_tag: json:"status"
   RelationStatus Status = 1;
 }
-
+message UEmpty {}
+message UUserID {
+  string user_id = 1;
+}
+message UUserIDs {
+  repeated string user_ids = 1;
+}
 
 service UserRelationService {
   rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
@@ -118,4 +130,6 @@ service UserRelationService {
   rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
   rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
   rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
+  rpc SetUserRelationShowSession(SetUserRelationShowSessionRequest) returns (UEmpty);
+  rpc GetUserRelationShowSessionIds(UUserID) returns (UUserIDs);
 }

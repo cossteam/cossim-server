@@ -75,6 +75,7 @@ type RegisterRequest struct {
 	ConfirmPass string `json:"confirm_password" binding:"required"`
 	Avatar      string `json:"avatar"`
 	Nickname    string `json:"nickname"`
+	PublicKey   string `json:"public_key" binding:"required"`
 }
 
 // @Summary 用户注册
@@ -122,6 +123,13 @@ func register(c *gin.Context) {
 	})
 	if err != nil {
 		c.Error(err)
+		return
+	}
+	_, err = userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
+		PublicKey: req.PublicKey,
+		UserId:    resp.UserId,
+	})
+	if err != nil {
 		return
 	}
 	c.Set("user_id", resp.UserId)
@@ -240,6 +248,5 @@ func setUserPublicKey(c *gin.Context) {
 // @Success		200 {object} utils.Response{}
 // @Router /user/system/key/get [get]
 func GetSystemPublicKey(c *gin.Context) {
-
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": ThisKey})
 }

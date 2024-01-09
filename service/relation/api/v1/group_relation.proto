@@ -5,18 +5,42 @@ option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
 message UserGroupRequest {
   string user_id = 1;
   uint32 group_id = 2;
+  uint32 show_session = 3;
+  uint32 relation_status = 4;
 }
 message UserGroupResponse {
 }
 message GroupID {
+  // @inject_tag: json:"group_id"
   uint32 group_id = 1;
 }
 
 message UserIDs {
+  // @inject_tag: json:"user_ids"
   repeated string user_ids = 1;
 }
+message GroupIDs {
+  // @inject_tag: json:"group_ids"
+  repeated uint32 group_ids = 1;
+}
+message UserID {
+  // @inject_tag: json:"user_id"
+  string user_id = 1;
+}
+message SetUserGroupShowSessionRequest{
+  // @inject_tag: json:"user_id"
+  string user_id = 1;
+  // @inject_tag: json:"group_id"
+  uint32 group_id = 2;
+  // @inject_tag: json:"show_session"
+  uint32 show_session = 3;
+}
+message Empty{}
 
 service GroupRelationService {
   rpc InsertUserGroup(UserGroupRequest) returns (UserGroupResponse);
   rpc GetUserGroupIDs(GroupID) returns (UserIDs);
+  rpc GetUserGroupShowSessionGroupIDs(UserID) returns (GroupIDs);
+  rpc SetUserGroupShowSession(SetUserGroupShowSessionRequest) returns (Empty);
 }
+

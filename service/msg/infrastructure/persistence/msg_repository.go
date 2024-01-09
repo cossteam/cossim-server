@@ -72,3 +72,36 @@ func (g *MsgRepo) GetUserMsgList(userId, friendId string, content string, msgTyp
 	return results, int32(count), int32(pageNumber)
 
 }
+
+func (g *MsgRepo) GetLastMsgsForUserWithFriends(userID string, friendIDs []string) ([]*entity.UserMessage, error) {
+	var userMessages []*entity.UserMessage
+
+	result := g.db.
+		Where("(send_id = ? AND receive_id IN (?)) OR (send_id IN (?) AND receive_id = ?)",
+			userID, friendIDs, friendIDs, userID).
+		Group("receive_id").
+		Order("created_at DESC").
+		Find(&userMessages)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return userMessages, nil
+}
+
+func (g *MsgRepo) GetLastMsgsForGroupsWithIDs(groupIDs []uint) ([]*entity.GroupMessage, error) {
+	var groupMessages []*entity.GroupMessage
+
+	result := g.db.
+		Where("group_id IN (?)", groupIDs).
+		Group("group_id").
+		Order("created_at DESC").
+		Find(&groupMessages)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return groupMessages, nil
+}

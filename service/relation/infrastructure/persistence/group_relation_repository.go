@@ -27,3 +27,13 @@ func (repo *GroupRelationRepo) GetUserGroupIDs(gid uint) ([]string, error) {
 	}
 	return userGroupIDs, nil
 }
+
+func (repo *GroupRelationRepo) GetUserGroupShowSessionGroupIds(userId string) ([]uint, error) {
+	var groupIDs []uint
+	repo.db.Model(&entity.UserGroup{}).Where("uid =? AND session_show = ?", userId, entity.IsShow).Pluck("group_id", &groupIDs)
+	return groupIDs, nil
+}
+
+func (repo *GroupRelationRepo) SetUserGroupShowSession(userId string, groupId uint, showSession entity.ShowSession) error {
+	return repo.db.Model(&entity.UserGroup{}).Where("uid =? AND group_id = ?", userId, groupId).Update("session_show", showSession).Error
+}
