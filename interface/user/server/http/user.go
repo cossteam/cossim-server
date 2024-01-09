@@ -50,6 +50,7 @@ func login(c *gin.Context) {
 	}
 	_, err = userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
 		PublicKey: req.PublicKey,
+		UserId:    resp.UserId,
 	})
 	if err != nil {
 		return
@@ -61,6 +62,7 @@ func login(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
+	c.Set("user_id", resp.UserId)
 
 	response.SetSuccess(c, "登录成功", gin.H{"token": token, "user_info": resp})
 }
@@ -122,6 +124,7 @@ func register(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	c.Set("user_id", resp.UserId)
 
 	response.SetSuccess(c, "注册成功", gin.H{"user_id": resp.UserId})
 }

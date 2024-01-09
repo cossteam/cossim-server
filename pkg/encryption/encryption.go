@@ -7,12 +7,12 @@ import (
 	"github.com/ProtonMail/gopenpgp/v2/helper"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"gorm.io/gorm"
+	"math/big"
 	"strings"
 )
 
 // Encryptor 接口定义了加密和解密的方法
 type Encryptor interface {
-	GenerateRandomKey(keySize int) ([]byte, error)
 	GenerateKeyPair() error
 	SecretMessage(message string, publicKey string, rkey []byte) (*SecretResponse, error)
 	DecryptMessage(message string) (string, error)
@@ -20,6 +20,8 @@ type Encryptor interface {
 	GetPrivateKey() string
 	GetPublicKey() string
 	IsEnable() bool
+	SetPublicKey(publicKey string)
+	SetPrivateKey(privateKey string)
 }
 
 // MyEncryptor 结构体实现了 Encryptor 接口
@@ -34,13 +36,20 @@ type MyEncryptor struct {
 }
 
 // 生成随机对称秘钥
-func GenerateRandomKey(keySize int) ([]byte, error) {
-	key := make([]byte, keySize)
-	_, err := rand.Read(key)
-	if err != nil {
-		return nil, err
+func GenerateRandomKey(length int) (string, error) {
+	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	charsetLength := big.NewInt(int64(len(charset)))
+
+	var result strings.Builder
+	for i := 0; i < length; i++ {
+		randomIndex, err := rand.Int(rand.Reader, charsetLength)
+		if err != nil {
+			panic(err)
+		}
+		result.WriteByte(charset[randomIndex.Int64()])
 	}
-	return key, nil
+
+	return result.String(), nil
 }
 
 // 加密消息响应格式
@@ -81,16 +90,6 @@ func (a *EncryptedAuthenticator) QueryUser(userID string) (entity.User, error) {
 	return user, nil
 }
 
-// GenerateRandomKey 生成随机对称密钥
-func (e *MyEncryptor) GenerateRandomKey(keySize int) ([]byte, error) {
-	key := make([]byte, keySize)
-	_, err := rand.Read(key)
-	if err != nil {
-		return nil, err
-	}
-	return key, nil
-}
-
 // SecretMessage 根据公钥与随机对称秘钥加密消息
 func (e *MyEncryptor) SecretMessage(message string, publicKey string, rkey []byte) (*SecretResponse, error) {
 	if publicKey == "" {
@@ -105,7 +104,6 @@ func (e *MyEncryptor) SecretMessage(message string, publicKey string, rkey []byt
 		return nil, err
 	}
 	data.Message = armor
-
 	marmor, err := helper.EncryptMessageArmored(publicKey, string(rkey))
 	if err != nil {
 		return nil, err
@@ -167,4 +165,11 @@ func (e *MyEncryptor) GetPublicKey() string {
 
 func (e *MyEncryptor) IsEnable() bool {
 	return e.enable
+}
+
+func (e *MyEncryptor) SetPrivateKey(privateKey string) {
+	e.privateKey = privateKey
+}
+func (e *MyEncryptor) SetPublicKey(publicKey string) {
+	e.publicKey = publicKey
 }

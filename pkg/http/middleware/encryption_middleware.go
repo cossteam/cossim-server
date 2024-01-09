@@ -20,27 +20,26 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 		if c.Request.Method != http.MethodGet && encryptor.IsEnable() && c.Request.URL.Path != "/api/v1/user/system/key/get" {
 			var request encryption.SecretResponse
 			if err := c.ShouldBindJSON(&request); err != nil {
-				c.AbortWithStatusJSON(400, gin.H{"code": 400, "error": "Failed to read request body"})
+				c.AbortWithStatusJSON(400, gin.H{"code": 400, "error": "非加密请求体"})
 				return
 			}
 			// 进行解密操作
 			key, err := encryptor.DecryptMessage(request.Secret)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("解析对称秘钥失败：", err)
 				c.AbortWithStatusJSON(400, gin.H{"code": 400, "error": "Failed to read request body"})
 				return
 			}
-
 			data, err := encryptor.DecryptMessageWithKey(request.Message, key)
 			if err != nil {
 				c.AbortWithStatusJSON(400, gin.H{"code": 400, "error": "Failed to read request body"})
 				return
 			}
+
 			//将解密后的数据放入上下文，供后续处理使用
 			c.Request.Body = ioutil.NopCloser(strings.NewReader(data))
 		}
 		c.Next()
-
 		if storedResponse, exists := c.Get("response"); exists {
 			response := storedResponse.(utils.Response)
 			msgStr, err := json.Marshal(response)
@@ -51,19 +50,19 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 				})
 				return
 			}
-			if !encryptor.IsEnable() || c.Request.URL.Path == "/api/v1/user/system/key/get" {
-				c.String(http.StatusOK, string(msgStr))
+			if !encryptor.IsEnable() || c.Request.URL.Path == "/api/v1/user/system/key/get" || response.Code != 200 {
+				c.JSON(http.StatusOK, gin.H{"code": response.Code, "msg": response.Msg, "data": response.Data})
 				return
 			}
-			rkey, err := encryptor.GenerateRandomKey(32)
+			rkey, err := encryption.GenerateRandomKey(32)
 			if err != nil {
+				fmt.Println("生成秘钥失败:", err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code": 500,
 					"msg":  http.StatusText(http.StatusInternalServerError),
 				})
 				return
 			}
-
 			conn, err := db.NewDefaultMysqlConn().GetConnection()
 			if err != nil {
 				fmt.Println("db conn failed", err)
@@ -73,7 +72,6 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 				})
 				return
 			}
-
 			ea := encryption.NewEncryptedAuthenticator(conn)
 			if err != nil {
 				fmt.Println("init db", err)
@@ -83,15 +81,32 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 				})
 				return
 			}
-			thisId, err := pkghttp.ParseTokenReUid(c)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"code": 401,
-					"msg":  err.Error(),
-				})
-				return
+			var userId string
+			if c.Request.URL.Path == "/api/v1/user/login" || c.Request.URL.Path == "/api/v1/user/register" {
+				if userIdResponse, exists := c.Get("user_id"); exists {
+					id := userIdResponse.(string)
+					if id != "" {
+						userId = id
+					}
+				} else {
+					userId, err = pkghttp.ParseTokenReUid(c)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, gin.H{
+							"code": 401,
+							"msg":  err.Error(),
+						})
+						return
+					}
+				}
+				if userId == "" {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"code": 400,
+						"msg":  "找不到用户",
+					})
+					return
+				}
 			}
-			user, err := ea.QueryUser(thisId)
+			user, err := ea.QueryUser(userId)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code": 500,
@@ -107,27 +122,18 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 				return
 			}
 			// 进行加密操作
-			encryptedResponse, err := encryptor.SecretMessage(string(msgStr), user.PublicKey, rkey)
+			encryptedResponse, err := encryptor.SecretMessage(string(msgStr), user.PublicKey, []byte(rkey))
 			if err != nil {
+				fmt.Println("加密失败：", err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code": 500,
 					"msg":  "PublicKey error:" + err.Error(),
 				})
 				return
 			}
+			c.JSON(http.StatusOK, gin.H{"message": encryptedResponse.Message, "secret": encryptedResponse.Secret})
 
-			// 替换响应体为加密后的数据
-			msg, err := json.Marshal(encryptedResponse)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"code": 500,
-					"msg":  http.StatusText(http.StatusInternalServerError),
-				})
-				return
-			}
-			c.String(http.StatusOK, string(msg))
 		}
-
 		return
 	}
 }
