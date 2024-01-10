@@ -114,7 +114,7 @@ func route(engine *gin.Engine) {
 	// 添加不同的中间件给不同的路由组
 	// 比如除了swagger路径外其他的路径添加了身份验证中间件
 	api := engine.Group("/api/v1/storage")
-	//api.Use(middleware.AuthMiddleware())
+	api.Use(middleware.AuthMiddleware())
 
 	api.GET("/files/download/:type/:id", download)
 	api.GET("/files/:id", getFileInfo)

@@ -199,3 +199,19 @@ services:
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
+  storage_service:
+    container_name: cossim_storage_service
+    image: hub.hitosea.com/cossim/storage-service
+    command:
+      - "--config"
+      - "/config/config.yaml"
+    volumes:
+      - ./config/service/storage.yaml:/config/config.yaml
+    expose:
+      - "10006"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SOME_VARIABLE: some_value
+    restart: on-failure

@@ -11,6 +11,15 @@ mysql:
 http:
   addr: "0.0.0.0:8085"
 
+oss:
+  minio:
+    name: "minio"
+    addr: "minio:9000"
+    accessKey: ""
+    secretKey: ""
+    ssl: false
+    presignedExpires: ""
+
 # 注册本服务
 register:
   name: "upload_bff"
@@ -21,15 +30,6 @@ discovers:
   storage:
     name: "storage_service"
     addr: "storage_service:10006"
-    dial: "3000ms"
-    timeout: "5000ms"
-  minio:
-    name: "minio"
-    addr: "minio:9000"
-    accessKey: ""
-    secretKey: ""
-    ssl: false
-    presignedExpires: ""
     dial: "3000ms"
     timeout: "5000ms"
   gateway:
