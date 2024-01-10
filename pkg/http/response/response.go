@@ -14,7 +14,7 @@ const (
 func Response(ctx *gin.Context, httpStatus int, code int, msg string, data interface{}) {
 	ctx.JSON(httpStatus, utils.Response{
 		Code: code,
-		Msg:  msg,
+		Msg:  extractErrorMessage(msg),
 		Data: data,
 	})
 }

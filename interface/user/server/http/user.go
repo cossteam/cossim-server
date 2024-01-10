@@ -42,7 +42,7 @@ func login(c *gin.Context) {
 
 	resp, err := userClient.UserLogin(context.Background(), &user.UserLoginRequest{
 		Email:    req.Email,
-		Password: req.Password,
+		Password: utils.HashString(req.Password),
 	})
 	if err != nil {
 		c.Error(err)
@@ -117,7 +117,7 @@ func register(c *gin.Context) {
 	resp, err := userClient.UserRegister(context.Background(), &user.UserRegisterRequest{
 		Email:           req.Email,
 		NickName:        req.Nickname,
-		Password:        req.Password,
+		Password:        utils.HashString(req.Password),
 		ConfirmPassword: req.ConfirmPass,
 		Avatar:          req.Avatar,
 	})
