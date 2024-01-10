@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/db"
-	api "github.com/cossim/coss-server/service/group/api/v1"
-	"github.com/cossim/coss-server/service/group/config"
-	"github.com/cossim/coss-server/service/group/infrastructure/persistence"
-	"github.com/cossim/coss-server/service/group/service"
+	api "github.com/cossim/coss-server/service/storage/api/v1"
+	"github.com/cossim/coss-server/service/storage/config"
+	"github.com/cossim/coss-server/service/storage/infrastructure/persistence"
+	"github.com/cossim/coss-server/service/storage/service"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -36,8 +36,8 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	svc := service.NewService(infra)
-	api.RegisterGroupServiceServer(grpcServer, svc)
+	svc := service.NewService(&config.Conf, infra)
+	api.RegisterStorageServiceServer(grpcServer, svc)
 
 	fmt.Printf("gRPC server is running on addr: %s\n", config.Conf.GRPC.Addr)
 

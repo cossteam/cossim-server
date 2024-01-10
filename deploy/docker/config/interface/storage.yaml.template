@@ -1,0 +1,37 @@
+log:
+  stdout: true
+  v: -1
+  file: "logs/app.log"
+  format: "console" # console、json
+
+mysql:
+  addr: "mysql:3306"
+  dsn: "root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4"
+
+http:
+  addr: "0.0.0.0:8085"
+
+# 注册本服务
+register:
+  name: "upload_bff"
+  addr: "注册中心地址"
+  tags: ["上传服务", "upload_bff"]
+
+discovers:
+  storage:
+    name: "storage_service"
+    addr: "storage_service:10006"
+    dial: "3000ms"
+    timeout: "5000ms"
+  minio:
+    name: "minio"
+    addr: "minio:9000"
+    accessKey: "E003IlrA7X83C5hmS6oV"
+    secretKey: "Ns7lKyU9JWPpQ21L6z6SMOMzx1ZgX2dxFQTRKZcs"
+    ssl: false
+    presignedExpires: ""
+    dial: "3000ms"
+    timeout: "5000ms"
+  gateway:
+    name: "gateway"
+    addr: "gateway:8080"
