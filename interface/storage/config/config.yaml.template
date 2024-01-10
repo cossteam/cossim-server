@@ -9,7 +9,7 @@ mysql:
   dsn: "root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4"
 
 http:
-  addr: "0.0.0.0:8082"
+  addr: "0.0.0.0:8085"
 
 # 注册本服务
 register:
@@ -23,3 +23,15 @@ discovers:
     addr: "storage_service:10006"
     dial: "3000ms"
     timeout: "5000ms"
+  minio:
+    name: "minio"
+    addr: "minio:9000"
+    accessKey: ""
+    secretKey: ""
+    ssl: false
+    presignedExpires: ""
+    dial: "3000ms"
+    timeout: "5000ms"
+  gateway:
+    name: "gateway"
+    addr: "gateway:8080"
