@@ -3,37 +3,50 @@ package v1;
 option go_package = "github.com/cossim/coss-server/service/group/api/v1";
 
 message Group {
+  // @inject_tag: json:"id"
   uint32 Id = 1;
+  // @inject_tag: json:"type"
   int32 Type = 2;
+  // @inject_tag: json:"status"
   int32 Status = 3;
+  // @inject_tag: json:"max_members_limit"
   int32 Max_members_limit = 4;
+  // @inject_tag: json:"creator_id"
   string Creator_id = 5;
+  // @inject_tag: json:"name"
   string Name = 6;
+  // @inject_tag: json:"avatar"
   string Avatar = 7;
 }
 
 message GetGroupInfoRequest {
+  // @inject_tag: json:"gid"
   uint32 Gid = 1;
 }
 
 message GetBatchGroupInfoRequest {
+  // @inject_tag: json:"group_ids"
   repeated uint32 Group_ids = 1;
 }
 
 message GetBatchGroupInfoResponse {
+  // @inject_tag: json:"groups"
   repeated Group groups = 1;
 }
 
 message UpdateGroupRequest {
+  // @inject_tag: json:"group"
   Group group = 1;
 }
 
 message InsertGroupRequest {
+  // @inject_tag: json:"group"
   Group group = 1;
 }
 
 message DeleteGroupRequest {
-  uint32 gid = 1;
+  // @inject_tag: json:"gid"
+  uint32 Gid = 1;
 }
 
 message EmptyResponse {}

@@ -86,23 +86,23 @@ message GetBatchUserInfoResponse {
 }
 message UserRequest {
   // @inject_tag: json:"user_id"
-  string user_id = 1;
+  string UserId = 1;
 }
 
 message GetUserPublicKeyResponse {
   // @inject_tag: json:"public_key"
-  string public_key = 1;
+  string PublicKey = 1;
 }
 
 message SetPublicKeyRequest {
   // @inject_tag: json:"user_id"
-  string user_id = 1;
+  string UserId = 1;
   // @inject_tag: json:"public_key"
-  string public_key = 2;
+  string PublicKey = 2;
 }
 message UserResponse {
   // @inject_tag: json:"user_id"
-  string user_id = 1;
+  string UserId = 1;
 }
 service UserService {
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
