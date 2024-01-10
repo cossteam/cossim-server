@@ -13,7 +13,8 @@ func RecoveryMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				response.Fail(ctx, fmt.Sprint(err), nil)
+				fmt.Printf("recover error: %v\n", err)
+				response.InternalServerError(ctx)
 			}
 		}()
 

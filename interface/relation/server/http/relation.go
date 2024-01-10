@@ -72,7 +72,6 @@ func friendList(c *gin.Context) {
 		response.Fail(c, "token解析失败", nil)
 		return
 	}
-
 	// 检查用户是否存在
 	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
@@ -93,7 +92,6 @@ func friendList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
 	var users []string
 	for _, user := range friendListResp.FriendList {
 		users = append(users, user.UserId)
