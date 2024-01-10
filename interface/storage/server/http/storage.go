@@ -22,7 +22,7 @@ import (
 // @param type formData integer false "文件类型"
 // @Produce  json
 // @Success		200 {object} utils.Response{}
-// @Router /files [post]
+// @Router /storage/files [post]
 func upload(c *gin.Context) {
 	//userID, err := http.ParseTokenReUid(c)
 	//if err != nil {
@@ -98,7 +98,7 @@ func upload(c *gin.Context) {
 // @param id path string true "文件id"
 // @Produce  json
 // @Success		200 {object} utils.Response{}
-// @Router /files/download/:type/:id [get]
+// @Router /storage/files/download/:type/:id [get]
 func download(c *gin.Context) {
 	targetURL := "http://" + conf.MinioConf.Endpoint
 	URL := c.Request.URL.String()
@@ -151,7 +151,7 @@ func download(c *gin.Context) {
 // @param id path string true "文件id"
 // @Produce  json
 // @Success		200 {object} utils.Response{}
-// @Router /files/:id [get]
+// @Router /storage/files/:id [get]
 func getFileInfo(c *gin.Context) {
 	//fileID := c.Query("file_id")
 	fileID := c.Param("id")
@@ -181,7 +181,7 @@ func getFileInfo(c *gin.Context) {
 // @param id path string true "文件id"
 // @Produce  json
 // @Success		200 {object} utils.Response{}
-// @Router /files/:id [delete]
+// @Router /storage/files/:id [delete]
 func deleteFile(c *gin.Context) {
 	//req := &DeleteFileRequest{}
 	//if err := c.ShouldBindJSON(&req); err != nil {

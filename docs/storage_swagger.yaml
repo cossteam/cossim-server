@@ -1,0 +1,85 @@
+definitions:
+  utils.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: coss-storage-bff服务
+paths:
+  /storage/files:
+    post:
+      description: 上传文件
+      parameters:
+      - description: 文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 文件类型
+        in: formData
+        name: type
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 上传文件
+  /storage/files/:id:
+    delete:
+      description: 删除文件
+      parameters:
+      - description: 文件id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 删除文件
+    get:
+      description: 获取文件信息
+      parameters:
+      - description: 文件id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 获取文件信息
+  /storage/files/download/:type/:id:
+    get:
+      description: 下载文件
+      parameters:
+      - description: 文件id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 下载文件
+swagger: "2.0"
