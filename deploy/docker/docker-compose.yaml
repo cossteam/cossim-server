@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   mysql:
-    container_name: cossim-mysql
+    container_name: cossim_mysql
     image: mysql:5.7
     volumes:
     - ./data/var/lib/mysql:/var/lib/mysql
@@ -10,8 +10,8 @@ services:
     ]
     expose:
     - "3306"
-#    ports:
-#    - "3306:3306"
+    ports:
+    - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: "Hitosea@123.."
       MYSQL_DATABASE: coss
@@ -27,6 +27,21 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
+  minio:
+    image: quay.io/minio/minio
+    container_name: cossim_minio
+    ports:
+    - "9000:9000"
+    - "9001:9001"
+    expose:
+    - "9000"
+    - "9001"
+    environment:
+      MINIO_ROOT_USER: ROOTUSER
+      MINIO_ROOT_PASSWORD: CHANGEME123
+    volumes:
+      - ./data/var/lib/minio:/data
+    command: server /data --console-address ":9001"
   gateway:
     container_name: cossim_gateway
     image: hub.hitosea.com/cossim/gateway-interface
@@ -96,6 +111,22 @@ services:
       - "/config/config.yaml"
     volumes:
       - ./config/interface/group.yaml:/config/config.yaml
+    expose:
+      - "8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SOME_VARIABLE: some_value
+    restart: on-failure
+  storgae_bff:
+    container_name: cossim_storgae_bff
+    image: hub.hitosea.com/cossim/storage-interface
+    command:
+      - "--config"
+      - "/config/config.yaml"
+    volumes:
+      - ./config/interface/storage.yaml:/config/config.yaml
     expose:
       - "8084"
     depends_on:
