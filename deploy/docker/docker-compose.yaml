@@ -119,7 +119,7 @@ services:
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
-  storgae_bff:
+  storage_bff:
     container_name: cossim_storgae_bff
     image: hub.hitosea.com/cossim/storage-interface
     command:
