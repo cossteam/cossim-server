@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type LoginRequest struct {
@@ -112,6 +113,11 @@ func register(c *gin.Context) {
 	if isMatch, _ := emailRegex.MatchString(req.ConfirmPass); !isMatch {
 		response.SetFail(c, "密码格式不正确", nil)
 		return
+	}
+
+	req.Nickname = strings.TrimSpace(req.Email)
+	if req.Nickname == "" {
+		req.Nickname = req.Email
 	}
 
 	resp, err := userClient.UserRegister(context.Background(), &user.UserRegisterRequest{
