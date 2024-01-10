@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"github.com/cossim/coss-server/service/user/domain/repository"
 	"github.com/cossim/coss-server/service/user/utils"
@@ -13,17 +11,11 @@ import (
 	"time"
 
 	api "github.com/cossim/coss-server/service/user/api/v1"
-	"github.com/cossim/coss-server/service/user/infrastructure/persistence"
 )
 
-func NewService(c *config.AppConfig) *Service {
-	dbConn, err := db.NewMySQLFromDSN(c.MySQL.DSN).GetConnection()
-	if err != nil {
-		panic(err)
-	}
-
+func NewService(ur repository.UserRepository) *Service {
 	return &Service{
-		ur: persistence.NewUserRepo(dbConn),
+		ur: ur,
 	}
 }
 
@@ -35,11 +27,11 @@ type Service struct {
 // 用户登录
 func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	userInfo, err := g.ur.GetUserInfoByEmail(request.Email)
-	if err == gorm.ErrRecordNotFound || userInfo.Password != request.Password {
+	if errors.Is(err, gorm.ErrRecordNotFound) || userInfo.Password != request.Password {
 		return nil, fmt.Errorf("用户不存在或密码错误")
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("登录失败，请重试")
 	}
 
 	if userInfo.Password != request.Password {
@@ -89,7 +81,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 		ID:     utils.GenUUid(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("注册失败，请重试")
 	}
 
 	return &api.UserRegisterResponse{
@@ -100,7 +92,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 func (g *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
 	userInfo, err := g.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("获取用户信息失败，请重试")
 	}
 	return &api.UserInfoResponse{
 		UserId:    userInfo.ID,

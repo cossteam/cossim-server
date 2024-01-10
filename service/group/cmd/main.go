@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/pkg/db"
 	api "github.com/cossim/coss-server/service/group/api/v1"
 	"github.com/cossim/coss-server/service/group/config"
+	"github.com/cossim/coss-server/service/group/infrastructure/persistence"
 	"github.com/cossim/coss-server/service/group/service"
 	"google.golang.org/grpc"
 	"net"
@@ -23,9 +25,19 @@ func main() {
 		panic(err)
 	}
 
+	dbConn, err := db.NewMySQLFromDSN(config.Conf.MySQL.DSN).GetConnection()
+	if err != nil {
+		panic(err)
+	}
+
+	infra := persistence.NewRepositories(dbConn)
+	if err = infra.Automigrate(); err != nil {
+		panic(err)
+	}
+
 	grpcServer := grpc.NewServer()
-	handler := service.NewService(&config.Conf)
-	api.RegisterGroupServiceServer(grpcServer, handler)
+	svc := service.NewService(infra)
+	api.RegisterGroupServiceServer(grpcServer, svc)
 
 	fmt.Printf("gRPC server is running on addr: %s\n", config.Conf.GRPC.Addr)
 
