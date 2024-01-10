@@ -24,7 +24,7 @@ import (
 // @Success		200 {object} utils.Response{}
 // @Router /storage/files [post]
 func upload(c *gin.Context) {
-	//userID, err := http.ParseTokenReUid(c)
+	//userID, err := http2.ParseTokenReUid(c)
 	//if err != nil {
 	//	logger.Error("token解析失败", zap.Error(err))
 	//	response.Fail(c, "token解析失败", nil)
@@ -46,6 +46,9 @@ func upload(c *gin.Context) {
 		response.Fail(c, err.Error(), nil)
 		return
 	}
+
+	//c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 8<<20)
+
 	fileObj, err := file.Open()
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
@@ -172,7 +175,7 @@ func getFileInfo(c *gin.Context) {
 	}
 	info.Url = URL
 
-	response.SetSuccess(c, "获取文件信息成功", info)
+	response.Success(c, "获取文件信息成功", info)
 }
 
 // deleteFile
