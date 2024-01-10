@@ -33,10 +33,13 @@ func upload(c *gin.Context) {
 
 	// 获取表单中的整数字段，如果字段不存在或无法解析为整数，则使用默认值 0
 	value := c.PostForm("type")
+	if value == "" {
+		value = "0"
+	}
 	_Type, err := strconv.Atoi(value)
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
-		response.Fail(c, "上传失败", nil)
+		logger.Error("type解析失败", zap.Error(err))
+		response.Fail(c, "文件类型解析失败", nil)
 		return
 	}
 
