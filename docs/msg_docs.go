@@ -164,6 +164,7 @@ const docTemplatemsg = `{
             "type": "object",
             "required": [
                 "content",
+                "dialog_id",
                 "group_id",
                 "replay_id",
                 "type"
@@ -171,6 +172,9 @@ const docTemplatemsg = `{
             "properties": {
                 "content": {
                     "type": "string"
+                },
+                "dialog_id": {
+                    "type": "integer"
                 },
                 "group_id": {
                     "type": "integer"
@@ -187,12 +191,16 @@ const docTemplatemsg = `{
             "type": "object",
             "required": [
                 "content",
+                "dialog_id",
                 "receiver_id",
                 "type"
             ],
             "properties": {
                 "content": {
                     "type": "string"
+                },
+                "dialog_id": {
+                    "type": "integer"
                 },
                 "receiver_id": {
                     "type": "string"
