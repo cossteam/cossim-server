@@ -11,15 +11,15 @@ const (
 	InternalServerErrorCode = http.StatusInternalServerError
 )
 
-func Response(ctx *gin.Context, httpStatus int, code int, msg string, data gin.H) {
-	ctx.JSON(httpStatus, gin.H{
-		"code": code,
-		"msg":  extractErrorMessage(msg),
-		"data": data,
+func Response(ctx *gin.Context, httpStatus int, code int, msg string, data interface{}) {
+	ctx.JSON(httpStatus, utils.Response{
+		Code: code,
+		Msg:  msg,
+		Data: data,
 	})
 }
 
-func Success(ctx *gin.Context, msg string, data gin.H) {
+func Success(ctx *gin.Context, msg string, data interface{}) {
 	Response(ctx, http.StatusOK, 200, msg, data)
 }
 

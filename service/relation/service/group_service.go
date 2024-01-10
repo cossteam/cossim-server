@@ -8,7 +8,6 @@ import (
 
 func (s *Service) InsertUserGroup(ctx context.Context, request *v1.UserGroupRequest) (*v1.UserGroupResponse, error) {
 	resp := &v1.UserGroupResponse{}
-
 	// 创建领域模型
 	userGroup := &entity.UserGroup{
 		UID:     request.GetUserId(),
