@@ -56,3 +56,8 @@ discovers:
     addr: "group_bff:8084"
     dial: "3000ms"
     timeout: "5000ms"
+  storage:
+    name: "storage_bff"
+    addr: "storage_bff:8085"
+    dial: "3000ms"
+    timeout: "5000ms"
