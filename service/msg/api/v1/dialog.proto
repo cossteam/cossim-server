@@ -1,0 +1,68 @@
+
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/msg/api/v1";
+
+message CreateDialogRequest {
+  //  @inject_tag: json:"owner_id"
+  string OwnerId = 1;
+  //  @inject_tag: json:"type"
+  uint32 Type = 2;
+  //  @inject_tag: json:"group_id"
+  uint32 GroupId = 3;
+}
+
+message CreateDialogResponse {
+  //  @inject_tag: json:"id"
+  uint32 Id = 1;
+  //  @inject_tag: json:"owner_id"
+  string OwnerId = 2;
+  //  @inject_tag: json:"type"
+  uint32 Type = 3;
+  //  @inject_tag: json:"group_id"
+  uint32 GroupId = 4;
+}
+message JoinDialogRequest {
+  //  @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+  //  @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+message GetUserDialogListRequest {
+  //  @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+message GetUserDialogListResponse {
+  //  @inject_tag: json:"dialog_ids"
+  repeated uint32 DialogIds = 1;
+}
+
+message GetDialogByIdsRequest {
+  //  @inject_tag: json:"dialog_ids"
+  repeated uint32 DialogIds = 1;
+}
+message GetDialogByIdsResponse {
+  //  @inject_tag: json:"dialogs"
+  repeated Dialog Dialogs = 1;
+}
+
+message Dialog {
+  //  @inject_tag: json:"id"
+  uint32 Id = 1;
+  //  @inject_tag: json:"owner_id"
+  string OwnerId = 2;
+  //  @inject_tag: json:"type"
+  uint32 Type = 3;
+  //  @inject_tag: json:"group_id"
+  uint32 GroupId = 4;
+}
+
+message Empty {}
+
+service DialogService {
+  rpc CreateDialog(CreateDialogRequest) returns (CreateDialogResponse) {}
+  rpc JoinDialog(JoinDialogRequest) returns (Empty) {}
+  rpc GetUserDialogList(GetUserDialogListRequest) returns (GetUserDialogListResponse) {}
+  rpc GetDialogByIds(GetDialogByIdsRequest) returns (GetDialogByIdsResponse) {}
+}

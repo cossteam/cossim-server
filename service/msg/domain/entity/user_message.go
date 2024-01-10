@@ -7,6 +7,7 @@ import (
 type UserMessage struct {
 	gorm.Model
 	Type      UserMessageType `gorm:";comment:消息类型" json:"type"`
+	DialogId  uint            `gorm:"default:0;comment:对话ID" json:"dialog_id"`
 	IsRead    uint            `gorm:"default:0;comment:是否已读" json:"is_read"`
 	ReplyId   uint            `gorm:"default:0;comment:回复ID" json:"reply_id"`
 	ReadAt    int64           `gorm:"comment:阅读时间" json:"read_at"`

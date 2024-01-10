@@ -42,7 +42,7 @@ func (ur *UserRepo) UpdateUser(user *entity.User) (*entity.User, error) {
 
 // 添加用户
 func (ur *UserRepo) InsertUser(user *entity.User) (*entity.User, error) {
-	if err := ur.db.Save(user).Error; err != nil {
+	if err := ur.db.Create(user).Error; err != nil {
 		return nil, err
 	}
 	return user, nil

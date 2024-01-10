@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -39,21 +38,22 @@ func setupEncryption() {
 	if err != nil {
 		logger.Fatal("Failed to ", zap.Error(err))
 	}
-	fmt.Println("公钥：\n", enc.GetPublicKey())
 	ThisKey = enc.GetPublicKey()
-	readString, err := encryption.GenerateRandomKey(32)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	resp, err := enc.SecretMessage("{\"email\":\"1233@qq.com\",\"password\":\"123123Aa\"}", enc.GetPublicKey(), readString)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	j, err := json.Marshal(resp)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	fmt.Println("加密后消息：", string(j))
+
+	fmt.Println("公钥：\n", enc.GetPublicKey())
+	//readString, err := encryption.GenerateRandomKey(32)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//resp, err := enc.SecretMessage("{\"email\":\"1233@qq.com\",\"password\":\"123123Aa\"}", enc.GetPublicKey(), readString)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//j, err := json.Marshal(resp)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//fmt.Println("加密后消息：", string(j))
 }
 
 func setupUserGRPCClient() {

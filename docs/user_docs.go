@@ -224,7 +224,8 @@ const docTemplateuser = `{
             "required": [
                 "confirm_password",
                 "email",
-                "password"
+                "password",
+                "public_key"
             ],
             "properties": {
                 "avatar": {
@@ -242,6 +243,9 @@ const docTemplateuser = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "public_key": {
                     "type": "string"
                 }
             }

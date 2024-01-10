@@ -8,12 +8,14 @@ import (
 
 type Repositories struct {
 	Mr repository.MsgRepository
+	Dr repository.DialogRepository
 	db *gorm.DB
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
 		Mr: NewMsgRepo(db),
+		Dr: NewDialogRepo(db),
 		db: db,
 	}
 }

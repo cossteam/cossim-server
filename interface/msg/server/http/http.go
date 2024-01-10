@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	userApi "github.com/cossim/coss-server/service/user/api/v1"
-
+	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
+	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -21,7 +21,9 @@ var (
 	msgClient       msgApi.MsgServiceClient
 	relationClient  relationApi.UserRelationServiceClient
 	userGroupClient relationApi.GroupRelationServiceClient
+	groupClient     groupApi.GroupServiceClient
 	userClient      userApi.UserServiceClient
+	dialogClient    msgApi.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
 )
@@ -29,12 +31,32 @@ var (
 func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
+	setupDialogGRPCClient()
 	setupMsgGRPCClient()
 	setupUserGRPCClient()
+	setupGroupGRPCClient()
 	setupRelationGRPCClient()
 	setupGin()
 }
+func setupGroupGRPCClient() {
+	var err error
+	groupConn, err := grpc.Dial(cfg.Discovers["group"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
 
+	groupClient = groupApi.NewGroupServiceClient(groupConn)
+}
+
+func setupDialogGRPCClient() {
+	var err error
+	msgConn, err := grpc.Dial(cfg.Discovers["msg"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	dialogClient = msgApi.NewDialogServiceClient(msgConn)
+}
 func setupRelationGRPCClient() {
 	var err error
 	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
@@ -135,5 +157,6 @@ func route(engine *gin.Engine) {
 	u.POST("/send/user", middleware.AuthMiddleware(), sendUserMsg)
 	u.POST("/send/group", middleware.AuthMiddleware(), sendGroupMsg)
 	u.GET("/list/user", middleware.AuthMiddleware(), getUserMsgList)
+	u.GET("/dialog/list", middleware.AuthMiddleware(), getUserDialogList)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

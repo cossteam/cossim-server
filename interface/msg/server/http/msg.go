@@ -8,8 +8,10 @@ import (
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils"
+	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msg "github.com/cossim/coss-server/service/msg/api/v1"
 	relation "github.com/cossim/coss-server/service/relation/api/v1"
+	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -89,6 +91,7 @@ func ws(c *gin.Context) {
 }
 
 type SendUserMsgRequest struct {
+	DialogId   uint32 `json:"dialog_id" binding:"required"`
 	ReceiverId string `json:"receiver_id" binding:"required"`
 	Content    string `json:"content" binding:"required"`
 	Type       uint   `json:"type" binding:"required"`
@@ -130,6 +133,7 @@ func sendUserMsg(c *gin.Context) {
 	}
 
 	_, err = msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
+		DialogId:   req.DialogId,
 		SenderId:   thisId,
 		ReceiverId: req.ReceiverId,
 		Content:    req.Content,
@@ -150,6 +154,7 @@ func sendUserMsg(c *gin.Context) {
 }
 
 type SendGroupMsgRequest struct {
+	DialogId uint32 `json:"dialog_id" binding:"required"`
 	GroupId  uint32 `json:"group_id" binding:"required"`
 	Content  string `json:"content" binding:"required"`
 	Type     uint32 `json:"type" binding:"required"`
@@ -178,6 +183,7 @@ func sendGroupMsg(c *gin.Context) {
 	//todo 判断是否在群聊里
 	//todo 判断是否被禁言
 	_, err = msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
+		DialogId: req.DialogId,
 		GroupId:  req.GroupId,
 		Content:  req.Content,
 		Type:     req.Type,
@@ -261,6 +267,127 @@ func getUserMsgList(c *gin.Context) {
 		return
 	}
 	response.Success(c, "获取成功", gin.H{"msg_list": msg})
+}
+
+type ConversationType uint
+
+const (
+	UserConversation ConversationType = iota
+	GroupConversation
+)
+
+type UserDialogListResponse struct {
+	DialogId uint32 `json:"dialog_id"`
+	UserId   string `json:"user_id,omitempty"`
+	GroupId  uint32 `json:"group_id,omitempty"`
+	// 会话类型
+	DialogType ConversationType `json:"dialog_type"`
+	// 会话名称
+	DialogName string `json:"dialog_name"`
+	// 会话头像
+	DialogAvatar string `json:"dialog_avatar"`
+	// 会话未读消息数
+	DialogUnreadCount int     `json:"dialog_unread_count"`
+	LastMessage       Message `json:"last_message"`
+}
+type Message struct {
+	// 消息类型
+	MsgType uint `json:"msg_type"`
+	// 消息内容
+	Content string `json:"content"`
+	// 消息发送者
+	SenderId string `json:"sender_id"`
+	// 消息发送时间
+	SendTime int64 `json:"send_time"`
+	// 消息id
+	MsgId uint64 `json:"msg_id"`
+}
+
+// 获取用户对话列表
+// @Summary 获取用户对话列表
+// @Description 获取用户对话列表
+// @Accept  json
+// @Produce  json
+// @Success		200 {object} utils.Response{}
+// @Router /msg/dialog/list [get]
+func getUserDialogList(c *gin.Context) {
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+	//获取对话id
+	ids, err := dialogClient.GetUserDialogList(context.Background(), &msg.GetUserDialogListRequest{
+		UserId: thisId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	//获取对话信息
+	infos, err := dialogClient.GetDialogByIds(context.Background(), &msg.GetDialogByIdsRequest{
+		DialogIds: ids.DialogIds,
+	})
+	//获取最后一条消息
+	dialogIds, err := msgClient.GetLastMsgsByDialogIds(context.Background(), &msg.GetLastMsgsByDialogIdsRequest{
+		DialogIds: ids.DialogIds,
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//封装响应数据
+	var responseList = make([]UserDialogListResponse, 0)
+	for _, v := range infos.Dialogs {
+		var re UserDialogListResponse
+		//用户
+		if v.Type == 0 {
+			info, err := userClient.UserInfo(context.Background(), &user.UserInfoRequest{
+				UserId: v.OwnerId,
+			})
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			re.DialogId = v.Id
+			re.DialogAvatar = info.Avatar
+			re.DialogName = info.NickName
+			re.DialogType = 0
+			re.DialogUnreadCount = 10
+			re.UserId = info.UserId
+		} else if v.Type == 1 {
+			//群聊
+			info, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{
+				Gid: v.GroupId,
+			})
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			re.DialogAvatar = info.Avatar
+			re.DialogName = info.Name
+			re.DialogType = 1
+			re.DialogUnreadCount = 10
+			re.UserId = v.OwnerId
+			re.DialogId = v.Id
+		}
+		// 匹配最后一条消息
+		for _, msg := range dialogIds.LastMsgs {
+			if msg.DialogId == v.Id {
+				re.LastMessage = Message{
+					MsgId:    uint64(msg.Id),
+					Content:  msg.Content,
+					SenderId: msg.SenderId,
+					SendTime: msg.CreatedAt,
+					MsgType:  uint(msg.Type),
+				}
+				break
+			}
+		}
+
+		responseList = append(responseList, re)
+	}
+	response.Success(c, "获取成功", gin.H{"chat_list": responseList})
 }
 
 type wsMsg struct {

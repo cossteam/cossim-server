@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	msg "github.com/cossim/coss-server/service/msg/api/v1"
 	relation "github.com/cossim/coss-server/service/relation/api/v1"
+
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -19,14 +21,15 @@ var (
 	userClient      user.UserServiceClient
 	relationClient  relation.UserRelationServiceClient
 	userGroupClient relation.GroupRelationServiceClient
+	dialogClient    msg.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
-
 	setupLogger()
+	setupDialogGRPCClient()
 	setupUserGRPCClient()
 	setupRelationGRPCClient()
 	setupGin()
@@ -41,6 +44,15 @@ func setupRelationGRPCClient() {
 
 	relationClient = relation.NewUserRelationServiceClient(relationConn)
 	userGroupClient = relation.NewGroupRelationServiceClient(relationConn)
+}
+func setupDialogGRPCClient() {
+	var err error
+	msgConn, err := grpc.Dial(cfg.Discovers["msg"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	dialogClient = msg.NewDialogServiceClient(msgConn)
 }
 
 func setupUserGRPCClient() {
@@ -125,7 +137,7 @@ func route(engine *gin.Engine) {
 
 	api.GET("/friend_list", friendList)
 	api.GET("/blacklist", blackList)
-	api.POST("/add_friend", addFriend)
+	api.POST("/add_friend", middleware.AuthMiddleware(), addFriend)
 	api.POST("/confirm_friend", confirmFriend)
 	api.POST("/delete_friend", deleteFriend)
 	api.POST("/add_blacklist", addBlacklist)

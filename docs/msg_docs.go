@@ -15,6 +15,26 @@ const docTemplatemsg = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/msg/dialog/list": {
+            "get": {
+                "description": "获取用户对话列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取用户对话列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/list/user": {
             "get": {
                 "description": "获取私聊消息",

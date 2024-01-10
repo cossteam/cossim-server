@@ -8,11 +8,9 @@ type UserRelation struct {
 	Remark             string         `gorm:"type:varchar(255);comment:备注" json:"remark"`
 	Label              []string       `gorm:"type:varchar(255);comment:标签" json:"label"`
 	SilentNotification bool           `gorm:"comment:静默通知" json:"silent_notification"`
-	IsTop              bool           `gorm:"comment:是否置顶" json:"is_top"`
-	TopAt              int64          `gorm:"comment:置顶时间" json:"top_at"`
 	CreatedAt          int64          `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt          int64          `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
-	DeletedAt          int64          `gorm:"autoUpdateTime;comment:删除时间" json:"deleted_at"`
+	DeletedAt          int64          `gorm:"comment:删除时间" json:"deleted_at"`
 }
 
 type RelationStatus uint
