@@ -37,11 +37,11 @@ func Init() error {
 			panic(fmt.Errorf("fatal error config file: %s", err))
 		}
 		minioConfig := &MinioConfig{
-			Endpoint:         viper.GetString("discovers.minio.addr"),
-			AccessKey:        viper.GetString("discovers.minio.accessKey"),
-			SecretKey:        viper.GetString("discovers.minio.secretKey"),
-			SSL:              viper.GetBool("discovers.minio.ssl"),
-			PresignedExpires: viper.GetInt("discovers.minio.presignedExpires"),
+			Endpoint:         viper.GetString("oss.minio.addr"),
+			AccessKey:        viper.GetString("oss.minio.accessKey"),
+			SecretKey:        viper.GetString("oss.minio.secretKey"),
+			SSL:              viper.GetBool("oss.minio.ssl"),
+			PresignedExpires: viper.GetInt("oss.minio.presignedExpires"),
 		}
 		MinioConf = minioConfig
 	}
