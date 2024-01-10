@@ -10,7 +10,7 @@ type UserRelation struct {
 	SilentNotification bool           `gorm:"comment:静默通知" json:"silent_notification"`
 	CreatedAt          int64          `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt          int64          `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
-	DeletedAt          int64          `gorm:"comment:删除时间" json:"deleted_at"`
+	DeletedAt          int64          `gorm:"default:null;comment:删除时间" json:"deleted_at"`
 }
 
 type RelationStatus uint
