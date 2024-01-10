@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"net/http"
+	"sort"
 	"strconv"
 	"sync"
 )
@@ -196,7 +197,7 @@ func sendGroupMsg(c *gin.Context) {
 	}
 	//查询群聊所有用户id
 	uids, err := userGroupClient.GetUserGroupIDs(context.Background(), &relation.GroupID{
-		GroupId: uint32(req.GroupId),
+		GroupId: req.GroupId,
 	})
 	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
 	response.Success(c, "发送成功", nil)
@@ -387,6 +388,10 @@ func getUserDialogList(c *gin.Context) {
 
 		responseList = append(responseList, re)
 	}
+	//根据发送时间排序
+	sort.Slice(responseList, func(i, j int) bool {
+		return responseList[i].LastMessage.SendTime > responseList[j].LastMessage.SendTime
+	})
 	response.Success(c, "获取成功", responseList)
 }
 
