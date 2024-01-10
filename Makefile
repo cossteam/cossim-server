@@ -16,6 +16,8 @@ BUILD_PATH := ""
 DOCKER_BUILD_PATH := ""
 ACTION := ""
 
+INTERFACE_LIST ?= group msg relation storage user
+
 # 根据传入的 ACTION 参数设置 BUILD_PATH
 ifeq ($(ACTION), interface)
 	BUILD_PATH := ${DIR}/interface/${NAME}
@@ -69,13 +71,9 @@ run_interface:
 	done
 
 swag: ## Run unittests
-	@swag i -g http.go -dir interface/user/server/http,pkg/utils --instanceName user
-	@swag i -g http.go -dir interface/msg/server/http,pkg/utils --instanceName msg
-	@swag i -g http.go -dir interface/relation/server/http,pkg/utils --instanceName relation
-	@swag i -g http.go -dir interface/group/server/http,pkg/utils --instanceName group
-
-
-
+	$(foreach dir,$(INTERFACE_LIST), \
+		swag i -g http.go -dir interface/$(dir)/server/http,pkg/utils --instanceName $(dir); \
+	)
 
 #ifdef ACTION
 #ifdef NAME
