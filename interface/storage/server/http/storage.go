@@ -172,7 +172,7 @@ func getFileInfo(c *gin.Context) {
 	}
 	info.Url = URL
 
-	response.SetSuccess(c, "获取文件信息成功", gin.H{"info": info})
+	response.SetSuccess(c, "获取文件信息成功", info)
 }
 
 // deleteFile

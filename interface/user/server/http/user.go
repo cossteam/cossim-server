@@ -182,7 +182,7 @@ func GetUserInfo(c *gin.Context) {
 			response.SetFail(c, "用户不存在", nil)
 			return
 		}
-		response.SetSuccess(c, "查询成功", gin.H{"user_info": resp})
+		response.SetSuccess(c, "查询成功", resp)
 	case UserIdType:
 		resp, err := userClient.UserInfo(context.Background(), &user.UserInfoRequest{
 			UserId: userId,
@@ -194,7 +194,7 @@ func GetUserInfo(c *gin.Context) {
 			response.SetFail(c, "用户不存在", nil)
 			return
 		}
-		response.SetSuccess(c, "查询成功", gin.H{"user_info": resp})
+		response.SetSuccess(c, "查询成功", resp)
 	default:
 		response.SetFail(c, "参数错误", nil)
 	}

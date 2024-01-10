@@ -170,7 +170,6 @@ func createGroup(c *gin.Context) {
 	_, err = userGroupClient.InsertUserGroup(context.Background(), &rapi.UserGroupRequest{
 		GroupId:        createdGroup.Id,
 		UserId:         thisId,
-		ShowSession:    0,
 		RelationStatus: 2,
 	})
 	if err != nil {
@@ -190,7 +189,7 @@ func createGroup(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "创建群聊成功", gin.H{"group": createdGroup})
+	response.Success(c, "创建群聊成功", createdGroup)
 }
 
 // @Summary 删除群聊

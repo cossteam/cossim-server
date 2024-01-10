@@ -150,7 +150,7 @@ func sendUserMsg(c *gin.Context) {
 			sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId)
 		}
 	}
-	response.Success(c, "发送成功", gin.H{})
+	response.Success(c, "发送成功", nil)
 }
 
 type SendGroupMsgRequest struct {
@@ -199,7 +199,7 @@ func sendGroupMsg(c *gin.Context) {
 		GroupId: uint32(req.GroupId),
 	})
 	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
-	response.Success(c, "发送成功", gin.H{})
+	response.Success(c, "发送成功", nil)
 }
 
 type msgListRequest struct {
@@ -266,7 +266,7 @@ func getUserMsgList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	response.Success(c, "获取成功", gin.H{"msg_list": msg})
+	response.Success(c, "获取成功", msg)
 }
 
 type ConversationType uint
@@ -387,7 +387,7 @@ func getUserDialogList(c *gin.Context) {
 
 		responseList = append(responseList, re)
 	}
-	response.Success(c, "获取成功", gin.H{"chat_list": responseList})
+	response.Success(c, "获取成功", responseList)
 }
 
 type wsMsg struct {
