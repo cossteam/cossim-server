@@ -1,0 +1,75 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/storage/api/v1";
+
+message UploadRequest {
+  // @inject_tag: json:"user_id"
+  string UserID = 1;
+  // @inject_tag: json:"file_name"
+  string FileName = 2;
+  // @inject_tag: json:"path"
+  string Path = 3;
+  // @inject_tag: json:"url"
+  string Url = 4;
+  // @inject_tag: json:provider"
+  string Provider = 5;
+  // @inject_tag: json:"type"
+  FileType Type = 6;
+  // @inject_tag: json:"size"
+  uint64 Size = 7;
+}
+
+message UploadResponse {
+  // @inject_tag: json:"url"
+  string Url = 1;
+}
+
+// 文件类型的枚举
+enum FileType {
+  Text = 0;     // 文本消息
+  Voice = 1;    // 语音消息
+  Image = 2;    // 图片消息
+  File = 3;     // 文件消息
+  Video = 4;    // 视频消息
+  Emoji = 5;    // Emoji表情
+  Sticker = 6;  // 表情包
+}
+
+message GetFileInfoRequest {
+  // @inject_tag: json:"file_id"
+  string FileID = 1;
+}
+
+message GetFileInfoResponse {
+  // @inject_tag: json:"file_id"
+  string FileID = 1;
+  // @inject_tag: json:"file_name"
+  string FileName = 2;
+  // @inject_tag: json:"url"
+  string Url = 3;
+  // @inject_tag: json:"size"
+  uint64 Size = 4;
+  // @inject_tag: json:"type"
+  FileType Type = 5;
+  // @inject_tag: json:"created_at"
+  string CreatedAt = 6;
+  // @inject_tag: json:"updated_at"
+  string UpdatedAt = 7;
+  // @inject_tag: json:"path"
+  string Path = 8;
+}
+
+message DeleteRequest {
+  // @inject_tag: json:"file_id"
+  string FileID = 1;
+}
+
+message DeleteResponse {
+
+}
+
+service StorageService {
+  rpc Upload(UploadRequest) returns (UploadResponse);
+  rpc GetFileInfo(GetFileInfoRequest) returns (GetFileInfoResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+}
