@@ -2,22 +2,15 @@ package service
 
 import (
 	"context"
-	"github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
 	"github.com/cossim/coss-server/service/msg/domain/repository"
 	"github.com/cossim/coss-server/service/msg/infrastructure/persistence"
 )
 
-func NewService(c *config.AppConfig) *Service {
-	dbConn, err := db.NewMySQLFromDSN(c.MySQL.DSN).GetConnection()
-	if err != nil {
-		panic(err)
-	}
-
+func NewService(repo *persistence.Repositories) *Service {
 	return &Service{
-		mr: persistence.NewMsgRepo(dbConn),
+		mr: repo.Mr,
 	}
 }
 
