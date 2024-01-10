@@ -214,7 +214,8 @@
             "required": [
                 "confirm_password",
                 "email",
-                "password"
+                "password",
+                "public_key"
             ],
             "properties": {
                 "avatar": {
@@ -232,6 +233,9 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "public_key": {
                     "type": "string"
                 }
             }

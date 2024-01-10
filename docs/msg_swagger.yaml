@@ -42,6 +42,19 @@ info:
   contact: {}
   title: Swagger Example API
 paths:
+  /msg/dialog/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户对话列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 获取用户对话列表
   /msg/list/user:
     get:
       consumes:

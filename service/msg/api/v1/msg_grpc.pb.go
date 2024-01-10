@@ -24,6 +24,7 @@ const (
 	MsgService_GetUserMessageList_FullMethodName            = "/v1.MsgService/GetUserMessageList"
 	MsgService_GetLastMsgsForUserWithFriends_FullMethodName = "/v1.MsgService/GetLastMsgsForUserWithFriends"
 	MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName   = "/v1.MsgService/GetLastMsgsForGroupsWithIDs"
+	MsgService_GetLastMsgsByDialogIds_FullMethodName        = "/v1.MsgService/GetLastMsgsByDialogIds"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -35,6 +36,7 @@ type MsgServiceClient interface {
 	GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error)
 	GetLastMsgsForUserWithFriends(ctx context.Context, in *UserMsgsRequest, opts ...grpc.CallOption) (*UserMessages, error)
 	GetLastMsgsForGroupsWithIDs(ctx context.Context, in *GroupMsgsRequest, opts ...grpc.CallOption) (*GroupMessages, error)
+	GetLastMsgsByDialogIds(ctx context.Context, in *GetLastMsgsByDialogIdsRequest, opts ...grpc.CallOption) (*GetLastMsgsResponse, error)
 }
 
 type msgServiceClient struct {
@@ -90,6 +92,15 @@ func (c *msgServiceClient) GetLastMsgsForGroupsWithIDs(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *msgServiceClient) GetLastMsgsByDialogIds(ctx context.Context, in *GetLastMsgsByDialogIdsRequest, opts ...grpc.CallOption) (*GetLastMsgsResponse, error) {
+	out := new(GetLastMsgsResponse)
+	err := c.cc.Invoke(ctx, MsgService_GetLastMsgsByDialogIds_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
@@ -99,6 +110,7 @@ type MsgServiceServer interface {
 	GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error)
 	GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error)
 	GetLastMsgsForGroupsWithIDs(context.Context, *GroupMsgsRequest) (*GroupMessages, error)
+	GetLastMsgsByDialogIds(context.Context, *GetLastMsgsByDialogIdsRequest) (*GetLastMsgsResponse, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -120,6 +132,9 @@ func (UnimplementedMsgServiceServer) GetLastMsgsForUserWithFriends(context.Conte
 }
 func (UnimplementedMsgServiceServer) GetLastMsgsForGroupsWithIDs(context.Context, *GroupMsgsRequest) (*GroupMessages, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsForGroupsWithIDs not implemented")
+}
+func (UnimplementedMsgServiceServer) GetLastMsgsByDialogIds(context.Context, *GetLastMsgsByDialogIdsRequest) (*GetLastMsgsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsByDialogIds not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
@@ -224,6 +239,24 @@ func _MsgService_GetLastMsgsForGroupsWithIDs_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_GetLastMsgsByDialogIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLastMsgsByDialogIdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetLastMsgsByDialogIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetLastMsgsByDialogIds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetLastMsgsByDialogIds(ctx, req.(*GetLastMsgsByDialogIdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -250,6 +283,10 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLastMsgsForGroupsWithIDs",
 			Handler:    _MsgService_GetLastMsgsForGroupsWithIDs_Handler,
+		},
+		{
+			MethodName: "GetLastMsgsByDialogIds",
+			Handler:    _MsgService_GetLastMsgsByDialogIds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

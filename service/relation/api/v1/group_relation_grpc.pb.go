@@ -19,10 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupRelationService_InsertUserGroup_FullMethodName                 = "/v1.GroupRelationService/InsertUserGroup"
-	GroupRelationService_GetUserGroupIDs_FullMethodName                 = "/v1.GroupRelationService/GetUserGroupIDs"
-	GroupRelationService_GetUserGroupShowSessionGroupIDs_FullMethodName = "/v1.GroupRelationService/GetUserGroupShowSessionGroupIDs"
-	GroupRelationService_SetUserGroupShowSession_FullMethodName         = "/v1.GroupRelationService/SetUserGroupShowSession"
+	GroupRelationService_InsertUserGroup_FullMethodName = "/v1.GroupRelationService/InsertUserGroup"
+	GroupRelationService_GetUserGroupIDs_FullMethodName = "/v1.GroupRelationService/GetUserGroupIDs"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -31,8 +29,6 @@ const (
 type GroupRelationServiceClient interface {
 	InsertUserGroup(ctx context.Context, in *UserGroupRequest, opts ...grpc.CallOption) (*UserGroupResponse, error)
 	GetUserGroupIDs(ctx context.Context, in *GroupID, opts ...grpc.CallOption) (*UserIDs, error)
-	GetUserGroupShowSessionGroupIDs(ctx context.Context, in *UserID, opts ...grpc.CallOption) (*GroupIDs, error)
-	SetUserGroupShowSession(ctx context.Context, in *SetUserGroupShowSessionRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type groupRelationServiceClient struct {
@@ -61,32 +57,12 @@ func (c *groupRelationServiceClient) GetUserGroupIDs(ctx context.Context, in *Gr
 	return out, nil
 }
 
-func (c *groupRelationServiceClient) GetUserGroupShowSessionGroupIDs(ctx context.Context, in *UserID, opts ...grpc.CallOption) (*GroupIDs, error) {
-	out := new(GroupIDs)
-	err := c.cc.Invoke(ctx, GroupRelationService_GetUserGroupShowSessionGroupIDs_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *groupRelationServiceClient) SetUserGroupShowSession(ctx context.Context, in *SetUserGroupShowSessionRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, GroupRelationService_SetUserGroupShowSession_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // GroupRelationServiceServer is the server API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
 type GroupRelationServiceServer interface {
 	InsertUserGroup(context.Context, *UserGroupRequest) (*UserGroupResponse, error)
 	GetUserGroupIDs(context.Context, *GroupID) (*UserIDs, error)
-	GetUserGroupShowSessionGroupIDs(context.Context, *UserID) (*GroupIDs, error)
-	SetUserGroupShowSession(context.Context, *SetUserGroupShowSessionRequest) (*Empty, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -99,12 +75,6 @@ func (UnimplementedGroupRelationServiceServer) InsertUserGroup(context.Context, 
 }
 func (UnimplementedGroupRelationServiceServer) GetUserGroupIDs(context.Context, *GroupID) (*UserIDs, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserGroupIDs not implemented")
-}
-func (UnimplementedGroupRelationServiceServer) GetUserGroupShowSessionGroupIDs(context.Context, *UserID) (*GroupIDs, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserGroupShowSessionGroupIDs not implemented")
-}
-func (UnimplementedGroupRelationServiceServer) SetUserGroupShowSession(context.Context, *SetUserGroupShowSessionRequest) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetUserGroupShowSession not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
 
@@ -155,42 +125,6 @@ func _GroupRelationService_GetUserGroupIDs_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupRelationService_GetUserGroupShowSessionGroupIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserID)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GroupRelationServiceServer).GetUserGroupShowSessionGroupIDs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GroupRelationService_GetUserGroupShowSessionGroupIDs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupRelationServiceServer).GetUserGroupShowSessionGroupIDs(ctx, req.(*UserID))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GroupRelationService_SetUserGroupShowSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetUserGroupShowSessionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GroupRelationServiceServer).SetUserGroupShowSession(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GroupRelationService_SetUserGroupShowSession_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupRelationServiceServer).SetUserGroupShowSession(ctx, req.(*SetUserGroupShowSessionRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -205,14 +139,6 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserGroupIDs",
 			Handler:    _GroupRelationService_GetUserGroupIDs_Handler,
-		},
-		{
-			MethodName: "GetUserGroupShowSessionGroupIDs",
-			Handler:    _GroupRelationService_GetUserGroupShowSessionGroupIDs_Handler,
-		},
-		{
-			MethodName: "SetUserGroupShowSession",
-			Handler:    _GroupRelationService_SetUserGroupShowSession_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -3,16 +3,19 @@ package v1;
 option go_package = "github.com/cossim/coss-server/service/msg/api/v1";
 
 message SendUserMsgRequest{
-  // @inject_tag: json:"sender_id" form:"sender_id" uri:"sender_id"
+  // @inject_tag: json:"sender_id"
   string SenderId=1;
-  // @inject_tag: json:"receiver_id" form:"receiver_id" uri:"receiver_id"
+  // @inject_tag: json:"receiver_id"
   string ReceiverId=2;
-  // @inject_tag: json:"content" form:"content" uri:"content"
+  // @inject_tag: json:"content"
   string Content=3;
-  // @inject_tag: json:"type" form:"type" uri:"type"
+  // @inject_tag: json:"type"
   int32 Type=4;
-  // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
+  // @inject_tag: json:"replay_id"
   uint64 ReplayId=5;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 6;
+
 }
 
 message SendGroupMsgRequest{
@@ -26,6 +29,8 @@ message SendGroupMsgRequest{
   uint32 Type=4;
   // @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
   uint32 ReplayId=5;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 6;
 }
 
 message GetUserMsgListRequest{
@@ -64,6 +69,8 @@ message UserMessage{
   string ReceiveId=9;
   // @inject_tag: json:"created_at"
   int64 CreatedAt=10;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 11;
 }
 message GroupMessage {
   // @inject_tag: json:"id"
@@ -82,6 +89,8 @@ message GroupMessage {
   string Content = 7;
   // @inject_tag: json:"created_at"
   int64 Created_at = 8;
+  // @inject_tag: json:"dialog_id"
+  uint32 Dialog_id = 9;
 }
 
 message GetUserMsgListResponse{
@@ -130,14 +139,39 @@ message UserMsgsRequest {
   // @inject_tag: json:"friend_id"
   repeated string friend_id = 2;
 }
+
 message GroupMsgsRequest {
   // @inject_tag: json:"group_id"
   repeated uint32 group_id = 1;
 }
+message LastMsg {
+  // @inject_tag: json:"id"
+  uint32 Id = 1;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 2;
+  // @inject_tag: json:"type"
+  uint32 Type = 3;
+  // @inject_tag: json:"content"
+  string content = 4;
+  // @inject_tag: json:"created_at"
+  int64 CreatedAt = 5;
+  // @inject_tag: json:"sender_id"
+  string SenderId = 6;
+}
+message GetLastMsgsResponse {
+  repeated LastMsg LastMsgs = 1;
+}
+
+message GetLastMsgsByDialogIdsRequest {
+  // @inject_tag: json:"dialog_ids"
+  repeated uint32 DialogIds = 1;
+}
+
 service MsgService{
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
   rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
   rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
   rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
+  rpc GetLastMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
 }

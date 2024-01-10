@@ -26,10 +26,13 @@ definitions:
         type: string
       password:
         type: string
+      public_key:
+        type: string
     required:
     - confirm_password
     - email
     - password
+    - public_key
     type: object
   http.SetPublicKeyRequest:
     properties:

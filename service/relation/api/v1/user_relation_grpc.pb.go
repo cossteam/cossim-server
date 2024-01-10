@@ -19,16 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserRelationService_AddFriend_FullMethodName                     = "/v1.UserRelationService/AddFriend"
-	UserRelationService_ConfirmFriend_FullMethodName                 = "/v1.UserRelationService/ConfirmFriend"
-	UserRelationService_DeleteFriend_FullMethodName                  = "/v1.UserRelationService/DeleteFriend"
-	UserRelationService_AddBlacklist_FullMethodName                  = "/v1.UserRelationService/AddBlacklist"
-	UserRelationService_DeleteBlacklist_FullMethodName               = "/v1.UserRelationService/DeleteBlacklist"
-	UserRelationService_GetFriendList_FullMethodName                 = "/v1.UserRelationService/GetFriendList"
-	UserRelationService_GetBlacklist_FullMethodName                  = "/v1.UserRelationService/GetBlacklist"
-	UserRelationService_GetUserRelation_FullMethodName               = "/v1.UserRelationService/GetUserRelation"
-	UserRelationService_SetUserRelationShowSession_FullMethodName    = "/v1.UserRelationService/SetUserRelationShowSession"
-	UserRelationService_GetUserRelationShowSessionIds_FullMethodName = "/v1.UserRelationService/GetUserRelationShowSessionIds"
+	UserRelationService_AddFriend_FullMethodName       = "/v1.UserRelationService/AddFriend"
+	UserRelationService_ConfirmFriend_FullMethodName   = "/v1.UserRelationService/ConfirmFriend"
+	UserRelationService_DeleteFriend_FullMethodName    = "/v1.UserRelationService/DeleteFriend"
+	UserRelationService_AddBlacklist_FullMethodName    = "/v1.UserRelationService/AddBlacklist"
+	UserRelationService_DeleteBlacklist_FullMethodName = "/v1.UserRelationService/DeleteBlacklist"
+	UserRelationService_GetFriendList_FullMethodName   = "/v1.UserRelationService/GetFriendList"
+	UserRelationService_GetBlacklist_FullMethodName    = "/v1.UserRelationService/GetBlacklist"
+	UserRelationService_GetUserRelation_FullMethodName = "/v1.UserRelationService/GetUserRelation"
 )
 
 // UserRelationServiceClient is the client API for UserRelationService service.
@@ -43,8 +41,6 @@ type UserRelationServiceClient interface {
 	GetFriendList(ctx context.Context, in *GetFriendListRequest, opts ...grpc.CallOption) (*GetFriendListResponse, error)
 	GetBlacklist(ctx context.Context, in *GetBlacklistRequest, opts ...grpc.CallOption) (*GetBlacklistResponse, error)
 	GetUserRelation(ctx context.Context, in *GetUserRelationRequest, opts ...grpc.CallOption) (*GetUserRelationResponse, error)
-	SetUserRelationShowSession(ctx context.Context, in *SetUserRelationShowSessionRequest, opts ...grpc.CallOption) (*UEmpty, error)
-	GetUserRelationShowSessionIds(ctx context.Context, in *UUserID, opts ...grpc.CallOption) (*UUserIDs, error)
 }
 
 type userRelationServiceClient struct {
@@ -127,24 +123,6 @@ func (c *userRelationServiceClient) GetUserRelation(ctx context.Context, in *Get
 	return out, nil
 }
 
-func (c *userRelationServiceClient) SetUserRelationShowSession(ctx context.Context, in *SetUserRelationShowSessionRequest, opts ...grpc.CallOption) (*UEmpty, error) {
-	out := new(UEmpty)
-	err := c.cc.Invoke(ctx, UserRelationService_SetUserRelationShowSession_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userRelationServiceClient) GetUserRelationShowSessionIds(ctx context.Context, in *UUserID, opts ...grpc.CallOption) (*UUserIDs, error) {
-	out := new(UUserIDs)
-	err := c.cc.Invoke(ctx, UserRelationService_GetUserRelationShowSessionIds_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserRelationServiceServer is the server API for UserRelationService service.
 // All implementations must embed UnimplementedUserRelationServiceServer
 // for forward compatibility
@@ -157,8 +135,6 @@ type UserRelationServiceServer interface {
 	GetFriendList(context.Context, *GetFriendListRequest) (*GetFriendListResponse, error)
 	GetBlacklist(context.Context, *GetBlacklistRequest) (*GetBlacklistResponse, error)
 	GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error)
-	SetUserRelationShowSession(context.Context, *SetUserRelationShowSessionRequest) (*UEmpty, error)
-	GetUserRelationShowSessionIds(context.Context, *UUserID) (*UUserIDs, error)
 	mustEmbedUnimplementedUserRelationServiceServer()
 }
 
@@ -189,12 +165,6 @@ func (UnimplementedUserRelationServiceServer) GetBlacklist(context.Context, *Get
 }
 func (UnimplementedUserRelationServiceServer) GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserRelation not implemented")
-}
-func (UnimplementedUserRelationServiceServer) SetUserRelationShowSession(context.Context, *SetUserRelationShowSessionRequest) (*UEmpty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetUserRelationShowSession not implemented")
-}
-func (UnimplementedUserRelationServiceServer) GetUserRelationShowSessionIds(context.Context, *UUserID) (*UUserIDs, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserRelationShowSessionIds not implemented")
 }
 func (UnimplementedUserRelationServiceServer) mustEmbedUnimplementedUserRelationServiceServer() {}
 
@@ -353,42 +323,6 @@ func _UserRelationService_GetUserRelation_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserRelationService_SetUserRelationShowSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetUserRelationShowSessionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserRelationServiceServer).SetUserRelationShowSession(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserRelationService_SetUserRelationShowSession_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserRelationServiceServer).SetUserRelationShowSession(ctx, req.(*SetUserRelationShowSessionRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserRelationService_GetUserRelationShowSessionIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UUserID)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserRelationServiceServer).GetUserRelationShowSessionIds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserRelationService_GetUserRelationShowSessionIds_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserRelationServiceServer).GetUserRelationShowSessionIds(ctx, req.(*UUserID))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UserRelationService_ServiceDesc is the grpc.ServiceDesc for UserRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -427,14 +361,6 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserRelation",
 			Handler:    _UserRelationService_GetUserRelation_Handler,
-		},
-		{
-			MethodName: "SetUserRelationShowSession",
-			Handler:    _UserRelationService_SetUserRelationShowSession_Handler,
-		},
-		{
-			MethodName: "GetUserRelationShowSessionIds",
-			Handler:    _UserRelationService_GetUserRelationShowSessionIds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -9,6 +9,4 @@ type UserRelationRepository interface {
 	GetRelationByID(userId, friendId string) (*entity.UserRelation, error)
 	GetRelationsByUserID(userId string) ([]*entity.UserRelation, error)
 	GetBlacklistByUserID(userId string) ([]*entity.UserRelation, error)
-	GetUserShowSessionUserIds(userId string) ([]string, error)
-	SetUserShowSession(userId, friendId string, showSession entity.ShowSession) error
 }

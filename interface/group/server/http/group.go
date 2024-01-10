@@ -5,6 +5,7 @@ import (
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	api "github.com/cossim/coss-server/service/group/api/v1"
+	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
 	rapi "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/gin-gonic/gin"
 	"strconv"
@@ -173,6 +174,19 @@ func createGroup(c *gin.Context) {
 		RelationStatus: 2,
 	})
 	if err != nil {
+		c.Error(err)
+		return
+	}
+	//创建对话
+	dialog, err := dialogClient.CreateDialog(context.Background(), &msgApi.CreateDialogRequest{OwnerId: thisId, Type: 0, GroupId: createdGroup.Id})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	//加入对话
+	_, err = dialogClient.JoinDialog(context.Background(), &msgApi.JoinDialogRequest{DialogId: dialog.Id, UserId: thisId})
+	if err != nil {
+		c.Error(err)
 		return
 	}
 

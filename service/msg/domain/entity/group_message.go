@@ -6,6 +6,7 @@ import (
 
 type GroupMessage struct {
 	gorm.Model
+	DialogId  uint            `gorm:"default:0;comment:对话ID" json:"dialog_id"`
 	GroupID   uint            `gorm:"comment:群聊id" json:"group_id"`
 	Type      UserMessageType `gorm:"comment:消息类型" json:"type"`
 	ReplyId   uint            `gorm:"default:0;comment:回复ID" json:"reply_id"`

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	group "github.com/cossim/coss-server/service/group/api/v1"
+	groupApi "github.com/cossim/coss-server/service/group/api/v1"
+	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
-	user "github.com/cossim/coss-server/service/user/api/v1"
-
+	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -18,10 +18,11 @@ import (
 )
 
 var (
-	userClient      user.UserServiceClient
-	groupClient     group.GroupServiceClient
+	userClient      userApi.UserServiceClient
+	groupClient     groupApi.GroupServiceClient
 	relationClient  relationApi.UserRelationServiceClient
 	userGroupClient relationApi.GroupRelationServiceClient
+	dialogClient    msgApi.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
 )
@@ -29,9 +30,19 @@ var (
 func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
+	setupDialogGRPCClient()
 	setupRelationGRPCClient()
 	setupGroupGRPCClient()
 	setupGin()
+}
+func setupDialogGRPCClient() {
+	var err error
+	msgConn, err := grpc.Dial(cfg.Discovers["msg"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	dialogClient = msgApi.NewDialogServiceClient(msgConn)
 }
 func setupRelationGRPCClient() {
 	var err error
@@ -51,7 +62,7 @@ func setupUserGRPCClient() {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	userClient = user.NewUserServiceClient(userConn)
+	userClient = userApi.NewUserServiceClient(userConn)
 }
 func setupGroupGRPCClient() {
 	var err error
@@ -60,7 +71,7 @@ func setupGroupGRPCClient() {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	groupClient = group.NewGroupServiceClient(groupConn)
+	groupClient = groupApi.NewGroupServiceClient(groupConn)
 }
 
 func setupLogger() {

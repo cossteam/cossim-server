@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"github.com/cossim/coss-server/service/msg/api/dataTransformers"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
 	"gorm.io/gorm"
 )
@@ -12,14 +13,14 @@ type MsgRepo struct {
 func NewMsgRepo(db *gorm.DB) *MsgRepo {
 	return &MsgRepo{db: db}
 }
-
-func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint) (*entity.UserMessage, error) {
+func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.UserMessage, error) {
 	content := &entity.UserMessage{
 		SendID:    senderId,
 		ReceiveID: receiverId,
 		Content:   msg,
 		Type:      msgType,
 		ReplyId:   replyId,
+		DialogId:  dialogId,
 	}
 	if err := g.db.Save(content).Error; err != nil {
 		return nil, err
@@ -27,13 +28,14 @@ func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg stri
 	return content, nil
 }
 
-func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint) (*entity.GroupMessage, error) {
+func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.GroupMessage, error) {
 	content := &entity.GroupMessage{
-		UID:     uid,
-		GroupID: groupId,
-		Content: msg,
-		Type:    msgType,
-		ReplyId: replyId,
+		UID:      uid,
+		GroupID:  groupId,
+		Content:  msg,
+		Type:     msgType,
+		ReplyId:  replyId,
+		DialogId: dialogId,
 	}
 	if err := g.db.Save(content).Error; err != nil {
 		return nil, err
@@ -104,4 +106,49 @@ func (g *MsgRepo) GetLastMsgsForGroupsWithIDs(groupIDs []uint) ([]*entity.GroupM
 	}
 
 	return groupMessages, nil
+}
+
+func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.LastMessage, error) {
+	// 查询 GroupMessage 表中每个 dialog_id 的最后一条数据
+	var groupMessages []*entity.GroupMessage
+	for _, dialogId := range dialogIds {
+		var lastMsg entity.GroupMessage
+		g.db.Where("dialog_id =?", dialogId).Select("id, dialog_id, content, type, uid as send_id, created_at").Order("created_at DESC").First(&lastMsg)
+		if lastMsg.ID != 0 {
+			groupMessages = append(groupMessages, &lastMsg)
+		}
+	}
+	// 查询 UserMessage 表中每个 dialog_id 的最后一条数据
+	var userMessages []*entity.UserMessage
+	for _, dialogId := range dialogIds {
+		var lastMsg entity.UserMessage
+		g.db.Where("dialog_id =?", dialogId).Select("id, dialog_id, content, type, send_id, created_at").Order("created_at DESC").First(&lastMsg)
+		if lastMsg.ID != 0 {
+			userMessages = append(userMessages, &lastMsg)
+		}
+	}
+
+	// 合并两个表的数据
+	var result []dataTransformers.LastMessage
+	for _, groupMsg := range groupMessages {
+		result = append(result, dataTransformers.LastMessage{
+			ID:       groupMsg.ID,
+			DialogId: groupMsg.DialogId,
+			Content:  groupMsg.Content,
+			Type:     uint(groupMsg.Type),
+			SenderId: groupMsg.UID,
+			CreateAt: groupMsg.CreatedAt.Unix(),
+		})
+	}
+	for _, userMsg := range userMessages {
+		result = append(result, dataTransformers.LastMessage{
+			ID:       userMsg.ID,
+			DialogId: userMsg.DialogId,
+			Content:  userMsg.Content,
+			Type:     uint(userMsg.Type),
+			SenderId: userMsg.SendID,
+			CreateAt: userMsg.CreatedAt.Unix(),
+		})
+	}
+	return result, nil
 }

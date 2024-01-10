@@ -2,11 +2,11 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
+	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
@@ -379,7 +379,6 @@ func addFriend(c *gin.Context) {
 		response.Fail(c, "参数验证失败", nil)
 		return
 	}
-	fmt.Println(111111)
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.Fail(c, err.Error(), nil)
@@ -412,7 +411,24 @@ func addFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
+	//创建对话
+	dialog, err := dialogClient.CreateDialog(context.Background(), &msgApi.CreateDialogRequest{OwnerId: thisId, Type: 0, GroupId: 0})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	//加入对话
+	_, err = dialogClient.JoinDialog(context.Background(), &msgApi.JoinDialogRequest{DialogId: dialog.Id, UserId: thisId})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	//对方加入对话
+	_, err = dialogClient.JoinDialog(context.Background(), &msgApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	response.Success(c, "发送好友请求成功", gin.H{})
 }
 

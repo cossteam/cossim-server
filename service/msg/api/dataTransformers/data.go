@@ -19,3 +19,12 @@ type GroupMessageResponse struct {
 	UID       string                 `json:"uid"`
 	Content   string                 `json:"content"`
 }
+
+type LastMessage struct {
+	ID       uint   `json:"id"`
+	DialogId uint   `json:"dialog_id"`
+	Content  string `json:"msg"`
+	Type     uint   `json:"msg_type"`
+	SenderId string `json:"sender_id"`
+	CreateAt int64  `json:"create_at"`
+}

@@ -215,19 +215,3 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	resp.Status = v1.RelationStatus(relation.Status)
 	return resp, nil
 }
-
-func (s *Service) SetUserRelationShowSession(ctx context.Context, in *v1.SetUserRelationShowSessionRequest) (*v1.UEmpty, error) {
-	err := s.urr.SetUserShowSession(in.UserId, in.FriendId, entity.ShowSession(in.ShowSession))
-	if err != nil {
-		return nil, err
-	}
-	return &v1.UEmpty{}, nil
-}
-
-func (s *Service) GetUserRelationShowSessionIds(ctx context.Context, in *v1.UUserID) (*v1.UUserIDs, error) {
-	ids, err := s.urr.GetUserShowSessionUserIds(in.UserId)
-	if err != nil {
-		return nil, err
-	}
-	return &v1.UUserIDs{UserIds: ids}, nil
-}
