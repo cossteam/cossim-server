@@ -3,6 +3,8 @@ definitions:
     properties:
       content:
         type: string
+      dialog_id:
+        type: integer
       group_id:
         type: integer
       replay_id:
@@ -11,6 +13,7 @@ definitions:
         type: integer
     required:
     - content
+    - dialog_id
     - group_id
     - replay_id
     - type
@@ -19,6 +22,8 @@ definitions:
     properties:
       content:
         type: string
+      dialog_id:
+        type: integer
       receiver_id:
         type: string
       replay_id:
@@ -27,6 +32,7 @@ definitions:
         type: integer
     required:
     - content
+    - dialog_id
     - receiver_id
     - type
     type: object

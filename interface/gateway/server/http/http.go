@@ -22,6 +22,7 @@ var (
 	messageServiceURL   string
 	messageWsServiceURL string
 	groupServiceURL     string
+	storageServiceURL   string
 )
 
 func Init(c *config.AppConfig) {
@@ -82,6 +83,7 @@ func setupURLs() {
 	messageServiceURL = "http://" + cfg.Discovers["msg"].Addr
 	messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Addr + "/api/v1/msg/ws"
 	groupServiceURL = "http://" + cfg.Discovers["group"].Addr
+	storageServiceURL = "http://" + cfg.Discovers["storage"].Addr
 }
 
 func setupGin() {
@@ -113,6 +115,7 @@ func route(engine *gin.Engine) {
 		gateway.Any("/relation/*path", proxyToService(relationServiceURL))
 		gateway.Any("/msg/*path", proxyToService(messageServiceURL))
 		gateway.Any("/group/*path", proxyToService(groupServiceURL))
+		gateway.Any("/storage/*path", proxyToService(storageServiceURL))
 	}
 }
 
@@ -149,7 +152,6 @@ func proxyToService(targetURL string) gin.HandlerFunc {
 		for h, val := range c.Request.Header {
 			proxyReq.Header[h] = val
 		}
-
 		// 发送代理请求
 		client := &http.Client{}
 		resp, err := client.Do(proxyReq)

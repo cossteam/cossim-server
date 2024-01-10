@@ -46,3 +46,8 @@ discovers:
     addr: "relation_service:10001"
     dial: "3000ms"
     timeout: "5000ms"
+  msg:
+    name: "msg_service"
+    addr: "msg_service:10000"
+    dial: "3000ms"
+    timeout: "5000ms"
