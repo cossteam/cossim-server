@@ -12,11 +12,11 @@ var MinioConf *MinioConfig
 var configFile string
 
 type MinioConfig struct {
-	Endpoint         string `mapstructure:"endpoint"`
-	AccessKey        string `mapstructure:"accessKey"`
-	SecretKey        string `mapstructure:"secretKey"`
-	SSL              bool   `mapstructure:"ssl"`
-	PresignedExpires int    `mapstructure:"presignedExpires"`
+	Endpoint  string `mapstructure:"endpoint"`
+	AccessKey string `mapstructure:"accessKey"`
+	SecretKey string `mapstructure:"secretKey"`
+	SSL       bool   `mapstructure:"ssl"`
+	//PresignedExpires int    `mapstructure:"presignedExpires"`
 }
 
 func init() {
@@ -37,11 +37,11 @@ func Init() error {
 			panic(fmt.Errorf("fatal error config file: %s", err))
 		}
 		minioConfig := &MinioConfig{
-			Endpoint:         viper.GetString("oss.minio.addr"),
-			AccessKey:        viper.GetString("oss.minio.accessKey"),
-			SecretKey:        viper.GetString("oss.minio.secretKey"),
-			SSL:              viper.GetBool("oss.minio.ssl"),
-			PresignedExpires: viper.GetInt("oss.minio.presignedExpires"),
+			Endpoint:  viper.GetString("oss.minio.addr"),
+			AccessKey: viper.GetString("oss.minio.accessKey"),
+			SecretKey: viper.GetString("oss.minio.secretKey"),
+			SSL:       viper.GetBool("oss.minio.ssl"),
+			//PresignedExpires: viper.GetInt("oss.minio.presignedExpires"),
 		}
 		MinioConf = minioConfig
 	}
