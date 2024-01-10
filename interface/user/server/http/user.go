@@ -73,7 +73,6 @@ type RegisterRequest struct {
 	Password string `json:"password" binding:"required"`
 	//ConfirmPass string `json:"confirm_password" binding:"required,eqfield=Password"`
 	ConfirmPass string `json:"confirm_password" binding:"required"`
-	Avatar      string `json:"avatar"`
 	Nickname    string `json:"nickname"`
 	PublicKey   string `json:"public_key" binding:"required"`
 }
@@ -119,7 +118,6 @@ func register(c *gin.Context) {
 		NickName:        req.Nickname,
 		Password:        utils.HashString(req.Password),
 		ConfirmPassword: req.ConfirmPass,
-		Avatar:          req.Avatar,
 	})
 	if err != nil {
 		c.Error(err)
