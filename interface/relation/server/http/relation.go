@@ -56,7 +56,7 @@ func blackList(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "获取黑名单列表成功", gin.H{"blacklist": blacklist})
+	response.Success(c, "获取黑名单列表成功", blacklist)
 }
 
 // @Summary 好友列表
@@ -121,7 +121,7 @@ func friendList(c *gin.Context) {
 	// Sort and group by specified field
 	groupedUsers := usersorter.SortAndGroupUsers(data, "NickName")
 
-	response.Success(c, "获取好友列表成功", usersorter.ConvertToGinH(groupedUsers))
+	response.Success(c, "获取好友列表成功", groupedUsers)
 }
 
 type deleteBlacklistRequest struct {
@@ -180,7 +180,7 @@ func deleteBlacklist(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "删除黑名单成功", gin.H{})
+	response.Success(c, "删除黑名单成功", nil)
 }
 
 type addBlacklistRequest struct {
@@ -239,7 +239,7 @@ func addBlacklist(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "添加到黑名单成功", gin.H{})
+	response.Success(c, "添加到黑名单成功", nil)
 }
 
 type deleteFriendRequest struct {
@@ -298,7 +298,7 @@ func deleteFriend(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "删除好友成功", gin.H{})
+	response.Success(c, "删除好友成功", nil)
 }
 
 type confirmFriendRequest struct {
@@ -357,7 +357,7 @@ func confirmFriend(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "确认好友成功", gin.H{})
+	response.Success(c, "确认好友成功", nil)
 }
 
 type addFriendRequest struct {
@@ -429,7 +429,7 @@ func addFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	response.Success(c, "发送好友请求成功", gin.H{})
+	response.Success(c, "发送好友请求成功", nil)
 }
 
 type joinGroupRequest struct {
@@ -462,5 +462,5 @@ func joinGroup(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "发送好友请求成功", gin.H{})
+	response.Success(c, "发送好友请求成功", nil)
 }

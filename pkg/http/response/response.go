@@ -23,7 +23,7 @@ func Success(ctx *gin.Context, msg string, data interface{}) {
 	Response(ctx, http.StatusOK, 200, msg, data)
 }
 
-func Fail(ctx *gin.Context, msg string, data gin.H) {
+func Fail(ctx *gin.Context, msg string, data interface{}) {
 	Response(ctx, http.StatusOK, 400, msg, data)
 }
 
@@ -58,11 +58,11 @@ func SetResponse(c *gin.Context, code int, msg string, data interface{}) {
 	})
 }
 
-func SetSuccess(ctx *gin.Context, msg string, data gin.H) {
+func SetSuccess(ctx *gin.Context, msg string, data interface{}) {
 	SetResponse(ctx, 200, msg, data)
 }
 
-func SetFail(ctx *gin.Context, msg string, data gin.H) {
+func SetFail(ctx *gin.Context, msg string, data interface{}) {
 	SetResponse(ctx, 400, msg, data)
 }
 
