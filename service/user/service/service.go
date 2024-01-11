@@ -48,11 +48,11 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 
 	switch userInfo.Status {
 	case entity.UserStatusLock:
-		return nil, status.Error(codes.Code(code.UserErrLocked.Code()), err.Error())
+		return nil, status.Error(codes.Code(code.UserErrLocked.Code()), code.UserErrLocked.Message())
 	case entity.UserStatusDeleted:
-		return nil, status.Error(codes.Code(code.UserErrDeleted.Code()), err.Error())
+		return nil, status.Error(codes.Code(code.UserErrDeleted.Code()), code.UserErrDeleted.Message())
 	case entity.UserStatusDisable:
-		return nil, status.Error(codes.Code(code.UserErrDisabled.Code()), err.Error())
+		return nil, status.Error(codes.Code(code.UserErrDisabled.Code()), code.UserErrDisabled.Message())
 	case entity.UserStatusNormal:
 		return &api.UserLoginResponse{
 			UserId:   userInfo.ID,
@@ -62,7 +62,7 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 			Avatar:   userInfo.Avatar,
 		}, nil
 	default:
-		return nil, status.Error(codes.Code(code.UserErrStatusException.Code()), err.Error())
+		return nil, status.Error(codes.Code(code.UserErrStatusException.Code()), code.UserErrStatusException.Message())
 	}
 }
 
