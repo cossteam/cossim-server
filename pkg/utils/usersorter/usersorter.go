@@ -15,13 +15,13 @@ type User interface{}
 
 // CustomUserData Custom struct implementing the User interface
 type CustomUserData struct {
-	UserID    string `json:"user_id,omitempty"`
-	NickName  string `json:"nick_name,omitempty"`
-	Email     string `json:"email,omitempty"`
-	Tel       string `json:"tel,omitempty"`
-	Avatar    string `json:"avatar,omitempty"`
+	UserID    string `json:"user_id"`
+	NickName  string `json:"nick_name"`
+	Email     string `json:"email"`
+	Tel       string `json:"tel"`
+	Avatar    string `json:"avatar"`
 	Signature string ` json:"signature"`
-	Status    uint   `json:"status,omitempty"`
+	Status    uint   `json:"status"`
 }
 
 func ConvertToGinH(data map[string][]interface{}) gin.H {
