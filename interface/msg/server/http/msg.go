@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var (
@@ -160,6 +161,7 @@ type SendGroupMsgRequest struct {
 	Content  string `json:"content" binding:"required"`
 	Type     uint32 `json:"type" binding:"required"`
 	ReplayId uint32 `json:"replay_id" binding:"required"`
+	SendAt   int64  `json:"send_at" binding:"required"`
 }
 
 // @Summary 发送群聊消息
@@ -422,10 +424,11 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 		Content  string `json:"content"`
 		MsgType  uint   `json:"msgType"`
 		ReplayId uint   `json:"reply_id"`
+		SendAt   int64  `json:"send_at"`
 	}
 	//遍历该用户所有客户端
 	for _, c := range pool[receiverId] {
-		m := wsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId}}
+		m := wsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId, time.Now().Unix()}}
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
@@ -443,6 +446,7 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 		Content  string `json:"content"`
 		MsgType  uint   `json:"msgType"`
 		ReplayId uint   `json:"reply_id"`
+		SendAt   int64  `json:"send_at"`
 	}
 	//发送群聊消息
 	for _, uid := range uIds {
@@ -451,7 +455,7 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 		//	continue
 		//}
 		for _, c := range pool[uid] {
-			m := wsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId)}}
+			m := wsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix()}}
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)
 			if err != nil {
