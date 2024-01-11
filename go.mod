@@ -13,6 +13,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.66
 	github.com/mozillazg/go-pinyin v0.20.0
 	github.com/pretty66/websocketproxy v0.0.0-20220507015215-930b3a686308
+	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4

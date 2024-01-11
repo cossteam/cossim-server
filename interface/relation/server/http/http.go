@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	"github.com/cossim/coss-server/pkg/msg_queue"
 	msg "github.com/cossim/coss-server/service/msg/api/v1"
 	relation "github.com/cossim/coss-server/service/relation/api/v1"
-
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -22,6 +22,7 @@ var (
 	relationClient  relation.UserRelationServiceClient
 	userGroupClient relation.GroupRelationServiceClient
 	dialogClient    msg.DialogServiceClient
+	rabbitMQClient  *msg_queue.RabbitMQ
 	cfg             *config.AppConfig
 	logger          *zap.Logger
 )
@@ -31,6 +32,7 @@ func Init(c *config.AppConfig) {
 	setupLogger()
 	setupDialogGRPCClient()
 	setupUserGRPCClient()
+	setRabbitMQProvider()
 	setupRelationGRPCClient()
 	setupGin()
 }
@@ -54,7 +56,13 @@ func setupDialogGRPCClient() {
 
 	dialogClient = msg.NewDialogServiceClient(msgConn)
 }
-
+func setRabbitMQProvider() {
+	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr))
+	if err != nil {
+		logger.Fatal("Failed to connect to RabbitMQ", zap.Error(err))
+	}
+	rabbitMQClient = rmq
+}
 func setupUserGRPCClient() {
 	var err error
 	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr, grpc.WithInsecure())
