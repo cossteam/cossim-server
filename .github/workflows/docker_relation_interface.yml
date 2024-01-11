@@ -10,7 +10,7 @@ on:
       - 'pkg/config/**.go'
       - 'pkg/http/**.go'
       - 'docs/relation*.*'
-      - 'interface/relation/**'
+      - 'interface/relation/**.go'
 jobs:
   build_relation_interface:
     runs-on: ubuntu-latest
