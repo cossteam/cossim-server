@@ -12,6 +12,13 @@ mysql:
   user: "coss"
   password: "888888"
 
+message_queue:
+  name: "rabbitmq"
+  username: ""
+  password: ""
+  addr: "rabbitmq:5672"
+  port: "5672"
+
 http:
   addr: "0.0.0.0:8081"
 

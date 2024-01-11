@@ -44,15 +44,24 @@ type ServiceConfig struct {
 	Addr string `mapstructure:"addr"`
 }
 
+type MessageQueueConfig struct {
+	Name     string `mapstructure:"name"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	Addr     string `mapstructure:"addr"`
+	Port     string `mapstructure:"port"`
+}
+
 type AppConfig struct {
-	Log        LogConfig        `mapstructure:"log"`
-	MySQL      MySQLConfig      `mapstructure:"mysql"`
-	Redis      RedisConfig      `mapstructure:"redis"`
-	HTTP       HTTPConfig       `mapstructure:"http"`
-	GRPC       GRPCConfig       `mapstructure:"grpc"`
-	Register   RegisterConfig   `mapstructure:"register"`
-	Discovers  DiscoversConfig  `mapstructure:"discovers"`
-	Encryption EncryptionConfig `mapstructure:"encryption"`
+	Log          LogConfig          `mapstructure:"log"`
+	MySQL        MySQLConfig        `mapstructure:"mysql"`
+	Redis        RedisConfig        `mapstructure:"redis"`
+	HTTP         HTTPConfig         `mapstructure:"http"`
+	GRPC         GRPCConfig         `mapstructure:"grpc"`
+	Register     RegisterConfig     `mapstructure:"register"`
+	Discovers    DiscoversConfig    `mapstructure:"discovers"`
+	Encryption   EncryptionConfig   `mapstructure:"encryption"`
+	MessageQueue MessageQueueConfig `mapstructure:"message_queue"`
 }
 
 type EncryptionConfig struct {
