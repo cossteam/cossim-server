@@ -8,7 +8,7 @@ on:
        - 'master'
     paths:
       - 'pkg/config/**.go'
-      - 'service/relation/**'
+      - 'service/relation/**.go'
 jobs:
   build_relation_service:
     runs-on: ubuntu-latest

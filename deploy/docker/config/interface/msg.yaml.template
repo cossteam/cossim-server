@@ -6,7 +6,7 @@ log:
 
 mysql:
   addr: "mysql:3306"
-  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8,utf8mb4"
+  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4"
   root_password: "888888"
   database: "coss"
   user: "coss"
@@ -34,3 +34,6 @@ discovers:
   user:
     name: "user_service"
     addr: "user_service:10002"
+  group:
+    name: "group_service"
+    addr: "group_service:10005"
