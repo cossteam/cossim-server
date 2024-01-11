@@ -8,7 +8,7 @@ on:
        - 'master'
     paths:
       - 'pkg/config/**.go'
-      - 'service/msg/**'
+      - 'service/msg/**.go'
 jobs:
   build_msg_service:
     runs-on: ubuntu-latest

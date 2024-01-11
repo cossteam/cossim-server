@@ -8,7 +8,7 @@ on:
        - 'master'
     paths:
       - 'pkg/config/**.go'
-      - 'service/group/**'
+      - 'service/group/**.go'
 jobs:
   build_group_service:
     runs-on: ubuntu-latest

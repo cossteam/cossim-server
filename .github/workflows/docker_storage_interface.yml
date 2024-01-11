@@ -10,7 +10,7 @@ on:
       - 'pkg/config/**.go'
       - 'pkg/http/**.go'
       - 'docs/storage*.*'
-      - 'interface/storage/**'
+      - 'interface/storage/**.go'
 jobs:
   build_storage_interface:
     runs-on: ubuntu-latest

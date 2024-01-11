@@ -10,7 +10,7 @@ on:
       - 'pkg/config/**.go'
       - 'pkg/http/**.go'
       - 'docs/msg*.*'
-      - 'interface/msg/**'
+      - 'interface/msg/**.go'
 jobs:
   build_msg_interface:
     runs-on: ubuntu-latest

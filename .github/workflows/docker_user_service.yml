@@ -8,7 +8,7 @@ on:
        - 'master'
     paths:
       - 'pkg/config/**.go'
-      - 'service/user/**'
+      - 'service/user/**.go'
 jobs:
   build_user_service:
     runs-on: ubuntu-latest

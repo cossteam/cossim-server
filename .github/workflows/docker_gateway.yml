@@ -8,7 +8,7 @@ on:
       - 'master'
     paths:
       - 'pkg/config/**.go'
-      - 'interface/gateway/**'
+      - 'interface/gateway/**.go'
 jobs:
   build_gateway:
     runs-on: ubuntu-latest

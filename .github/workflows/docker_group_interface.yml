@@ -10,7 +10,7 @@ on:
       - 'pkg/config/**.go'
       - 'pkg/http/**.go'
       - 'docs/group*.*'
-      - 'interface/group/**'
+      - 'interface/group/**.go'
 jobs:
   build_group_interface:
     runs-on: ubuntu-latest

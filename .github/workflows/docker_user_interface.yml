@@ -10,7 +10,7 @@ on:
       - 'pkg/config/**.go'
       - 'pkg/http/**.go'
       - 'docs/user*.*'
-      - 'interface/user/**'
+      - 'interface/user/**.go'
 jobs:
   build_user_interface:
     runs-on: ubuntu-latest
