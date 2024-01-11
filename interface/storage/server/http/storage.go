@@ -43,6 +43,22 @@ func upload(c *gin.Context) {
 		return
 	}
 
+	// 文件大小限制
+	var maxFileSize int64
+	switch storagev1.FileType(_Type) {
+	case storagev1.FileType_Video:
+		// 设置 FileType_Video 的大小限制为 500MB
+		maxFileSize = 500 << 20
+	case storagev1.FileType_Image:
+		// 设置 FileType_Image 的大小限制为 100MB
+		maxFileSize = 100 << 20
+	default:
+		// 默认设置为 8MB
+		maxFileSize = 8 << 20
+	}
+	// 文件大小限制 30MB
+	//c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileSize)
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
@@ -50,7 +66,11 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	//c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 8<<20)
+	if file.Size > maxFileSize {
+		logger.Error("文件大小超过限制", zap.Error(err))
+		response.Fail(c, "文件大小超过限制", nil)
+		return
+	}
 
 	fileObj, err := file.Open()
 	if err != nil {
