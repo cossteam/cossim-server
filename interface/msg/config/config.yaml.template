@@ -6,7 +6,7 @@ log:
 
 mysql:
   addr: "mysql:3306"
-  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8,utf8mb4"
+  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4"
   root_password: "888888"
   database: "coss"
   user: "coss"

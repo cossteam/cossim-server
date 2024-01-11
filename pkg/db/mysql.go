@@ -107,8 +107,8 @@ func NewMySQL(host, port, username, password, database string, opts ...Option) (
 }
 
 func NewDefaultMysqlConn() *MySQL {
-	return NewMySQLFromDSN("root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4")
-	//return NewMySQLFromDSN("root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4")
+	return NewMySQLFromDSN("root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4")
+	//return NewMySQLFromDSN("root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4")
 
 }
 
@@ -148,7 +148,7 @@ func NewMysqlFromConfig(c *config.MySQLConfig, opts ...Option) *MySQL {
 }
 
 func GenerateMysqlDSN(rootUsername, rootPassword, addr, database string) string {
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8,utf8mb4&multiStatements=true", rootUsername, rootPassword, addr, database)
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true", rootUsername, rootPassword, addr, database)
 }
 
 func (m *MySQL) GetConnection() (*gorm.DB, error) {

@@ -6,7 +6,7 @@ log:
 
 mysql:
   addr: "mysql:3306"
-  dsn: "root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8,utf8mb4"
+  dsn: "root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
 
 http:
   addr: "0.0.0.0:8085"
