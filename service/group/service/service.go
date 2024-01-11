@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/service/group/api/v1"
 	"github.com/cossim/coss-server/service/group/domain/entity"
 	"github.com/cossim/coss-server/service/group/domain/repository"
 	"github.com/cossim/coss-server/service/group/infrastructure/persistence"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func NewService(repo *persistence.Repositories) *Service {
@@ -22,7 +25,7 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, request *v1.GetGroupInf
 
 	group, err := s.gr.GetGroupInfoByGid(uint(request.GetGid()))
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.GroupErrGetGroupInfoByGidFailed.Code()), err.Error())
 	}
 
 	// 将领域模型转换为 gRPC API 模型
@@ -53,7 +56,7 @@ func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, request *v1.GetBat
 
 	groups, err := s.gr.GetBatchGetGroupInfoByIDs(groupIds)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
 	}
 
 	// 将领域模型转换为 gRPC API 模型
@@ -89,7 +92,7 @@ func (s *Service) UpdateGroup(ctx context.Context, request *v1.UpdateGroupReques
 
 	updatedGroup, err := s.gr.UpdateGroup(group)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.GroupErrUpdateGroupFailed.Code()), err.Error())
 	}
 
 	// 将领域模型转换为 gRPC API 模型
@@ -119,7 +122,7 @@ func (s *Service) InsertGroup(ctx context.Context, request *v1.InsertGroupReques
 
 	createdGroup, err := s.gr.InsertGroup(group)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.GroupErrInsertGroupFailed.Code()), err.Error())
 	}
 
 	// 将领域模型转换为 gRPC API 模型
@@ -139,7 +142,7 @@ func (s *Service) DeleteGroup(ctx context.Context, request *v1.DeleteGroupReques
 	resp := &v1.EmptyResponse{}
 
 	if err := s.gr.DeleteGroup(uint(request.GetGid())); err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
 	}
 
 	return resp, nil

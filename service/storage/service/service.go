@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/service/storage/api/v1"
@@ -11,6 +12,8 @@ import (
 	"github.com/cossim/coss-server/service/storage/infrastructure/persistence"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strconv"
 )
 
@@ -35,11 +38,10 @@ type Service struct {
 
 func (s Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.UploadResponse, error) {
 	resp := &v1.UploadResponse{}
-	fmt.Println("request.Path => ", request.Path)
 
 	_, fileName, err := minio.ParseKey(request.Path)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.StorageErrParseFilePathFailed.Code()), err.Error())
 	}
 	file := &entity.File{
 		ID:      fileName,
@@ -55,7 +57,7 @@ func (s Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Upl
 
 	if err = s.fr.Create(file); err != nil {
 		logger.Error("创建文件记录失败", zap.Error(err))
-		return resp, fmt.Errorf("上传文件失败")
+		return resp, status.Error(codes.Code(code.StorageErrCreateFileRecordFailed.Code()), err.Error())
 	}
 
 	return resp, nil
@@ -65,7 +67,7 @@ func (s Service) GetFileInfo(ctx context.Context, request *v1.GetFileInfoRequest
 	file, err := s.fr.GetByID(request.FileID)
 	if err != nil {
 		logger.Error("查询文件信息失败", zap.Error(err))
-		return nil, fmt.Errorf("获取文件信息失败")
+		return nil, status.Error(codes.Code(code.StorageErrGetFileInfoFailed.Code()), err.Error())
 	}
 
 	return &v1.GetFileInfoResponse{
@@ -86,7 +88,7 @@ func (s Service) Delete(ctx context.Context, request *v1.DeleteRequest) (*v1.Del
 	err := s.fr.Delete(request.FileID)
 	if err != nil {
 		logger.Error("删除文件记录失败", zap.Error(err))
-		return nil, fmt.Errorf("删除文件失败")
+		return nil, status.Error(codes.Code(code.StorageErrDeleteFileFailed.Code()), err.Error())
 	}
 
 	// 返回删除成功的响应

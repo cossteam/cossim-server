@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *Service) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) (*v1.CreateDialogResponse, error) {
@@ -11,7 +14,7 @@ func (s *Service) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) 
 
 	dialog, err := s.dr.CreateDialog(in.OwnerId, entity.DialogType(in.Type), uint(in.GroupId))
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
 	}
 	return &v1.CreateDialogResponse{
 		Id:      uint32(dialog.ID),
@@ -25,7 +28,7 @@ func (s *Service) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1
 	resp := &v1.Empty{}
 	_, err := s.dr.JoinDialog(uint(in.DialogId), in.UserId)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 	}
 	return resp, nil
 }
@@ -34,7 +37,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, in *v1.GetUserDialogLis
 	resp := &v1.GetUserDialogListResponse{}
 	ids, err := s.dr.GetUserDialogs(in.UserId)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.DialogErrGetUserDialogListFailed.Code()), err.Error())
 	}
 	nids := make([]uint32, 0)
 	if len(ids) > 0 {
@@ -56,7 +59,7 @@ func (s *Service) GetDialogByIds(ctx context.Context, in *v1.GetDialogByIdsReque
 	}
 	infos, err := s.dr.GetDialogsByIDs(nids)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.DialogErrGetUserDialogListFailed.Code()), err.Error())
 	}
 	var dialogInfos []*v1.Dialog
 	if len(infos) > 0 {
@@ -77,7 +80,7 @@ func (s *Service) GetDialogUsersByDialogID(ctx context.Context, in *v1.GetDialog
 	resp := &v1.GetDialogUsersByDialogIDResponse{}
 	users, err := s.dr.GetDialogUsersByDialogID(uint(in.DialogId))
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.DialogErrGetUserDialogListFailed.Code()), err.Error())
 	}
 	var ids []string
 	for _, id := range users {

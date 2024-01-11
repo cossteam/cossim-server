@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *Service) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRequest) (*v1.SendUserMsgResponse, error) {
@@ -11,7 +14,7 @@ func (s *Service) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRe
 
 	_, err := s.mr.InsertUserMessage(request.GetSenderId(), request.GetReceiverId(), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()))
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.MsgErrInsertUserMessageFailed.Code()), err.Error())
 	}
 	return resp, err
 }
@@ -21,7 +24,7 @@ func (s *Service) SendGroupMessage(ctx context.Context, request *v1.SendGroupMsg
 
 	ums, err := s.mr.InsertGroupMessage(request.GetUserId(), uint(request.GetGroupId()), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()))
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.MsgErrInsertGroupMessageFailed.Code()), err.Error())
 	}
 
 	return &v1.SendGroupMsgResponse{
@@ -58,7 +61,7 @@ func (s *Service) GetLastMsgsForUserWithFriends(ctx context.Context, in *v1.User
 	resp := &v1.UserMessages{}
 	msgs, err := s.mr.GetLastMsgsForUserWithFriends(in.UserId, in.FriendId)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsForUserWithFriends.Code()), err.Error())
 	}
 	nmsgs := make([]*v1.UserMessage, 0)
 	for _, m := range msgs {
@@ -85,7 +88,7 @@ func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, in *v1.GroupM
 	}
 	msgs, err := s.mr.GetLastMsgsForGroupsWithIDs(ids)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsForGroupsWithIDs.Code()), err.Error())
 	}
 	nmsgs := make([]*v1.GroupMessage, 0)
 	for _, m := range msgs {
@@ -114,7 +117,7 @@ func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, in *v1.GetLastMsgs
 	}
 	result, err := s.mr.GetLastMsgsByDialogIDs(ids)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())
 	}
 
 	if len(result) > 0 {
