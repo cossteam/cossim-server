@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"time"
 )
 
 type RabbitMQ struct {
 	connection *amqp.Connection
-	//channel    *amqp.Channel
+	channel    *amqp.Channel
 }
 
 // NewRabbitMQ 用于创建 RabbitMQ 结构实例
@@ -20,31 +19,41 @@ func NewRabbitMQ(url string) (*RabbitMQ, error) {
 		return nil, err
 	}
 
-	//ch, err := conn.Channel()
-	//if err != nil {
-	//	conn.Close()
-	//	return nil, err
-	//}
+	ch, err := conn.Channel()
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
 
 	return &RabbitMQ{
 		connection: conn,
-		//channel:    ch,
+		channel:    ch,
 	}, nil
+}
+func (r *RabbitMQ) NewChannel() (*amqp.Channel, error) {
+	ch, err := r.connection.Channel()
+	if err != nil {
+		return nil, err
+	}
+	return ch, nil
+}
+func (r *RabbitMQ) GetChannel() *amqp.Channel {
+	return r.channel
+}
+
+func (r *RabbitMQ) GetConnection() *amqp.Connection {
+	return r.connection
 }
 
 // Close 关闭 RabbitMQ 连接和通道
 func (r *RabbitMQ) Close() {
-	//r.channel.Close()
+	r.channel.Close()
 	r.connection.Close()
 }
 
 // PublishMessage 用于发布消息
 func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
-	channel, err := r.connection.Channel()
-	if err != nil {
-		return err
-	}
-	q, err := channel.QueueDeclare(
+	q, err := r.channel.QueueDeclare(
 		queueName,
 		false,
 		true,
@@ -64,10 +73,7 @@ func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
 			return err
 		}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	fmt.Println("发布消息：", string(msg))
-	return channel.PublishWithContext(ctx,
+	return r.channel.PublishWithContext(context.Background(),
 		"",
 		q.Name,
 		false,
@@ -79,11 +85,7 @@ func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
 }
 
 // ConsumeMessages 用于消费消息
-func (r *RabbitMQ) ConsumeMessages(queueName string) (<-chan amqp.Delivery, error) {
-	channel, err := r.connection.Channel()
-	if err != nil {
-		return nil, err
-	}
+func ConsumeMessages(queueName string, channel *amqp.Channel) (amqp.Delivery, bool, error) {
 	q, err := channel.QueueDeclare(
 		queueName,
 		false,
@@ -93,16 +95,13 @@ func (r *RabbitMQ) ConsumeMessages(queueName string) (<-chan amqp.Delivery, erro
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return amqp.Delivery{}, false, err
+	}
+	msg, ok, err := channel.Get(q.Name, true)
+	if err != nil {
+		fmt.Println(err)
+		return amqp.Delivery{}, false, err
 	}
 
-	return channel.Consume(
-		q.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	return msg, ok, nil
 }

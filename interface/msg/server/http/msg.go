@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/interface/msg/config"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
+	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msg "github.com/cossim/coss-server/service/msg/api/v1"
@@ -39,7 +40,7 @@ type client struct {
 	Conn  *websocket.Conn
 	Uid   string //客户端所有者
 	Rid   int64  //客户端id
-	queue <-chan amqp091.Delivery
+	queue *amqp091.Channel
 }
 
 // @Summary websocket请求
@@ -75,8 +76,7 @@ func ws(c *gin.Context) {
 	}
 	//用户上线
 	wsRid++
-	messages, err := rabbitMQClient.ConsumeMessages(uid)
-
+	messages, err := rabbitMQClient.NewChannel()
 	fmt.Println("rabbitMqClient => ", rabbitMQClient)
 	if err != nil {
 		log.Fatal("Error consuming messages from RabbitMQ: ", err)
@@ -163,7 +163,6 @@ func sendUserMsg(c *gin.Context) {
 			return
 		}
 	}
-	fmt.Println("用户离线")
 	msg := WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, Data: &wsUserMsg{
 		SendAt:   time.Now().Unix(),
 		DialogId: req.DialogId,
@@ -539,22 +538,23 @@ func (c client) wsOnlineClients() {
 	js, _ := json.Marshal(msg)
 	//上线推送消息
 	c.Conn.WriteMessage(websocket.TextMessage, js)
-	fmt.Println("用户上线")
+
 	go func() {
-		for message := range c.queue {
-			c.Conn.WriteMessage(websocket.TextMessage, message.Body)
+		for {
+			msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
+			if err != nil || !ok {
+				//fmt.Println(err)
+				return
+			}
+			c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
 		}
 	}()
 }
 
 // 用户离线
 func (c client) wsOfflineClients() {
-	fmt.Println("离线")
-	//已存在
 	wsMutex.Lock()
-	//删除map中指定key的元素
+	defer wsMutex.Unlock()
+	// 删除用户
 	delete(Pool, c.Uid)
-	//<-c.queue
-	wsMutex.Unlock()
-	return
 }
