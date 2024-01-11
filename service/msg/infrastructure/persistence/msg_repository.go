@@ -47,7 +47,7 @@ func (g *MsgRepo) GetUserMsgList(userId, friendId string, content string, msgTyp
 	var results []entity.UserMessage
 
 	query := g.db.Model(&entity.UserMessage{})
-	query = query.Where("(send_id = ? AND receive_id = ?) OR (send_id = ? AND receive_id = ?)", userId, friendId, friendId, userId)
+	query = query.Where("(send_id = ? AND receive_id = ?) OR (send_id = ? AND receive_id = ?)", userId, friendId, friendId, userId).Order("created_at DESC")
 
 	if content != "" {
 		query = query.Where("content LIKE ?", "%"+content+"%")
