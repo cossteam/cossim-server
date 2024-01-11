@@ -30,7 +30,7 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 		if relation.Status == entity.RelationStatusPending {
 			return resp, status.Error(codes.Code(code.RelationErrFriendNotFound.Code()), "好友状态处于申请中")
 		} else if relation.Status == entity.RelationStatusAdded {
-			return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "好友状态处于申请中")
+			return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
 		}
 	}
 
