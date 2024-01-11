@@ -9,4 +9,5 @@ type DialogRepository interface {
 	JoinDialog(dialogID uint, userID string) (*entity.DialogUser, error)
 	GetUserDialogs(userID string) ([]uint, error)
 	GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
+	GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUser, error)
 }

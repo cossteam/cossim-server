@@ -72,3 +72,17 @@ func (s *Service) GetDialogByIds(ctx context.Context, in *v1.GetDialogByIdsReque
 	resp.Dialogs = dialogInfos
 	return resp, nil
 }
+
+func (s *Service) GetDialogUsersByDialogID(ctx context.Context, in *v1.GetDialogUsersByDialogIDRequest) (*v1.GetDialogUsersByDialogIDResponse, error) {
+	resp := &v1.GetDialogUsersByDialogIDResponse{}
+	users, err := s.dr.GetDialogUsersByDialogID(uint(in.DialogId))
+	if err != nil {
+		return resp, err
+	}
+	var ids []string
+	for _, id := range users {
+		ids = append(ids, id.UserId)
+	}
+	resp.UserIds = ids
+	return resp, nil
+}
