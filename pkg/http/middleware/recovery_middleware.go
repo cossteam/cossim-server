@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -14,6 +15,10 @@ func RecoveryMiddleware() gin.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Printf("recover error: %v\n", err)
+				if e, ok := err.(error); ok {
+					response.Fail(ctx, code.Cause(e).Message(), nil)
+					return
+				}
 				response.InternalServerError(ctx)
 			}
 		}()
@@ -26,12 +31,34 @@ func GRPCErrorMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 		if err := c.Errors.Last(); err != nil {
-			if grpcErr, ok := err.Err.(error); ok {
-				HandleGRPCErrors(c, logger, grpcErr)
+			if e, ok := err.Err.(error); ok {
+				HandleError(c, logger, e)
 				c.Abort()
 			}
 		}
 	}
+}
+
+func HandleError(c *gin.Context, logger *zap.Logger, err error) {
+	// 判断 gRPC 错误码
+	if grpcCode := status.Code(err); grpcCode == codes.Unavailable {
+		// 连接不可用错误处理
+		logger.Error("service unavailable", zap.Error(err))
+	} else if grpcCode == codes.Unauthenticated {
+		// 未认证错误处理
+		logger.Error("service unauthenticated", zap.Error(err))
+	} else {
+		logger.Error("service error", zap.Error(err))
+	}
+
+	var ec code.Codes
+	if st, ok := status.FromError(err); ok {
+		ec = code.Code(int(st.Code()))
+	} else {
+		response.InternalServerError(c)
+		return
+	}
+	response.Fail(c, ec.Message(), nil)
 }
 
 func HandleGRPCErrors(c *gin.Context, logger *zap.Logger, err error) {

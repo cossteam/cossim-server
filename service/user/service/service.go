@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"github.com/cossim/coss-server/service/user/domain/repository"
 	"github.com/cossim/coss-server/service/user/utils"
+	codes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 	"time"
 
@@ -27,15 +30,14 @@ type Service struct {
 // 用户登录
 func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	userInfo, err := g.ur.GetUserInfoByEmail(request.Email)
-	if errors.Is(err, gorm.ErrRecordNotFound) || userInfo.Password != request.Password {
-		return nil, fmt.Errorf("用户不存在或密码错误")
-	}
 	if err != nil {
-		return nil, fmt.Errorf("登录失败，请重试")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+		}
 	}
 
 	if userInfo.Password != request.Password {
-		return nil, fmt.Errorf("密码错误")
+		return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 	}
 	//修改登录时间
 	userInfo.LastAt = time.Now().Unix()
@@ -46,11 +48,11 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 
 	switch userInfo.Status {
 	case entity.UserStatusLock:
-		return nil, fmt.Errorf("用户暂时被锁定，请先解锁")
+		return nil, status.Error(codes.Code(code.UserErrLocked.Code()), err.Error())
 	case entity.UserStatusDeleted:
-		return nil, fmt.Errorf("用户已被删除")
+		return nil, status.Error(codes.Code(code.UserErrDeleted.Code()), err.Error())
 	case entity.UserStatusDisable:
-		return nil, fmt.Errorf("用户已被禁用")
+		return nil, status.Error(codes.Code(code.UserErrDisabled.Code()), err.Error())
 	case entity.UserStatusNormal:
 		return &api.UserLoginResponse{
 			UserId:   userInfo.ID,
@@ -60,7 +62,7 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 			Avatar:   userInfo.Avatar,
 		}, nil
 	default:
-		return nil, fmt.Errorf("用户状态异常")
+		return nil, status.Error(codes.Code(code.UserErrStatusException.Code()), err.Error())
 	}
 }
 
@@ -69,7 +71,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 	//添加用户
 	_, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err == nil {
-		return nil, fmt.Errorf("邮箱已被注册")
+		return nil, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), err.Error())
 	}
 	userInfo, err := g.ur.InsertUser(&entity.User{
 		Email:    request.Email,
@@ -81,7 +83,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 		ID:     utils.GenUUid(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("注册失败，请重试")
+		return nil, status.Error(codes.Code(code.UserErrRegistrationFailed.Code()), err.Error())
 	}
 
 	return &api.UserRegisterResponse{
@@ -92,7 +94,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 func (g *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
 	userInfo, err := g.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
-		return nil, fmt.Errorf("获取用户信息失败，请重试")
+		return nil, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
 	return &api.UserInfoResponse{
 		UserId:    userInfo.ID,
@@ -110,7 +112,7 @@ func (g *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUse
 	users, err := g.ur.GetBatchGetUserInfoByIDs(request.UserIds)
 	if err != nil {
 		fmt.Printf("无法获取用户列表信息: %v\n", err)
-		return nil, fmt.Errorf("无法获取用户列表信息")
+		return nil, status.Error(codes.Code(code.UserErrUnableToGetUserListInfo.Code()), err.Error())
 	}
 	for _, user := range users {
 		resp.Users = append(resp.Users, &api.UserInfoResponse{
@@ -131,9 +133,9 @@ func (g *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserIn
 	userInfo, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("未找到用户")
+			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
-		return nil, fmt.Errorf("获取用户信息失败: %w", err)
+		return nil, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
 	return &api.UserInfoResponse{
 		UserId:    userInfo.ID,
@@ -149,14 +151,17 @@ func (g *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserIn
 func (g *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
 	key, err := g.ur.GetUserPublicKey(in.UserId)
 	if err != nil {
-		return &api.GetUserPublicKeyResponse{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.Code(code.UserErrPublicKeyNotExist.Code()), err.Error())
+		}
+		return &api.GetUserPublicKeyResponse{}, status.Error(codes.Code(code.UserErrGetUserPublicKeyFailed.Code()), err.Error())
 	}
 	return &api.GetUserPublicKeyResponse{PublicKey: key}, nil
 }
 
 func (g *Service) SetUserPublicKey(ctx context.Context, in *api.SetPublicKeyRequest) (*api.UserResponse, error) {
 	if err := g.ur.SetUserPublicKey(in.UserId, in.PublicKey); err != nil {
-		return nil, err
+		return nil, status.Error(codes.Code(code.UserErrSaveUserPublicKeyFailed.Code()), err.Error())
 	}
 	return &api.UserResponse{UserId: in.UserId}, nil
 }
