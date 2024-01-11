@@ -34,3 +34,6 @@ discovers:
   user:
     name: "user_service"
     addr: "user_service:10002"
+  group:
+    name: "group_service"
+    addr: "group_service:10005"
