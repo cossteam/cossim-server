@@ -23,6 +23,13 @@ redis:
   writeTimeout: "1s"
   idleTimeout: "10s"
 
+message_queue:
+  name: "rabbitmq"
+  username: ""
+  password: ""
+  addr: "rabbitmq:5672"
+  port: "5672"
+
 http:
   addr: "0.0.0.0:8082"
 
