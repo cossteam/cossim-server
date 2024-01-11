@@ -343,19 +343,32 @@ func getUserDialogList(c *gin.Context) {
 		var re UserDialogListResponse
 		//用户
 		if v.Type == 0 {
-			info, err := userClient.UserInfo(context.Background(), &user.UserInfoRequest{
-				UserId: v.OwnerId,
+			users, _ := dialogClient.GetDialogUsersByDialogID(context.Background(), &msg.GetDialogUsersByDialogIDRequest{
+				DialogId: v.Id,
 			})
-			if err != nil {
-				fmt.Println(err)
+			if len(users.UserIds) == 0 {
 				continue
 			}
-			re.DialogId = v.Id
-			re.DialogAvatar = info.Avatar
-			re.DialogName = info.NickName
-			re.DialogType = 0
-			re.DialogUnreadCount = 10
-			re.UserId = info.UserId
+			for _, id := range users.UserIds {
+				if id == thisId {
+					continue
+				}
+				info, err := userClient.UserInfo(context.Background(), &user.UserInfoRequest{
+					UserId: id,
+				})
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				re.DialogId = v.Id
+				re.DialogAvatar = info.Avatar
+				re.DialogName = info.NickName
+				re.DialogType = 0
+				re.DialogUnreadCount = 10
+				re.UserId = info.UserId
+				break
+			}
+
 		} else if v.Type == 1 {
 			//群聊
 			info, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{

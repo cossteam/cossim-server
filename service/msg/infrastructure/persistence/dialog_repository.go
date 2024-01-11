@@ -65,3 +65,11 @@ func (g *DialogRepo) GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
 	//}
 	return dialogUsers, nil
 }
+
+func (g *DialogRepo) GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUser, error) {
+	var dialogUsers []*entity.DialogUser
+	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id =?", dialogID).Find(&dialogUsers).Error; err != nil {
+		return nil, err
+	}
+	return dialogUsers, nil
+}

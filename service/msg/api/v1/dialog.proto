@@ -57,6 +57,14 @@ message Dialog {
   //  @inject_tag: json:"group_id"
   uint32 GroupId = 4;
 }
+message GetDialogUsersByDialogIDRequest {
+  //  @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+}
+message GetDialogUsersByDialogIDResponse {
+  //  @inject_tag: json:"user_ids"
+  repeated string UserIds = 1;
+}
 
 message Empty {}
 
@@ -65,4 +73,5 @@ service DialogService {
   rpc JoinDialog(JoinDialogRequest) returns (Empty) {}
   rpc GetUserDialogList(GetUserDialogListRequest) returns (GetUserDialogListResponse) {}
   rpc GetDialogByIds(GetDialogByIdsRequest) returns (GetDialogByIdsResponse) {}
+  rpc GetDialogUsersByDialogID(GetDialogUsersByDialogIDRequest) returns (GetDialogUsersByDialogIDResponse) {}
 }

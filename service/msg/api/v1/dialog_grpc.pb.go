@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DialogService_CreateDialog_FullMethodName      = "/v1.DialogService/CreateDialog"
-	DialogService_JoinDialog_FullMethodName        = "/v1.DialogService/JoinDialog"
-	DialogService_GetUserDialogList_FullMethodName = "/v1.DialogService/GetUserDialogList"
-	DialogService_GetDialogByIds_FullMethodName    = "/v1.DialogService/GetDialogByIds"
+	DialogService_CreateDialog_FullMethodName             = "/v1.DialogService/CreateDialog"
+	DialogService_JoinDialog_FullMethodName               = "/v1.DialogService/JoinDialog"
+	DialogService_GetUserDialogList_FullMethodName        = "/v1.DialogService/GetUserDialogList"
+	DialogService_GetDialogByIds_FullMethodName           = "/v1.DialogService/GetDialogByIds"
+	DialogService_GetDialogUsersByDialogID_FullMethodName = "/v1.DialogService/GetDialogUsersByDialogID"
 )
 
 // DialogServiceClient is the client API for DialogService service.
@@ -33,6 +34,7 @@ type DialogServiceClient interface {
 	JoinDialog(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error)
 	GetDialogByIds(ctx context.Context, in *GetDialogByIdsRequest, opts ...grpc.CallOption) (*GetDialogByIdsResponse, error)
+	GetDialogUsersByDialogID(ctx context.Context, in *GetDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*GetDialogUsersByDialogIDResponse, error)
 }
 
 type dialogServiceClient struct {
@@ -79,6 +81,15 @@ func (c *dialogServiceClient) GetDialogByIds(ctx context.Context, in *GetDialogB
 	return out, nil
 }
 
+func (c *dialogServiceClient) GetDialogUsersByDialogID(ctx context.Context, in *GetDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*GetDialogUsersByDialogIDResponse, error) {
+	out := new(GetDialogUsersByDialogIDResponse)
+	err := c.cc.Invoke(ctx, DialogService_GetDialogUsersByDialogID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DialogServiceServer is the server API for DialogService service.
 // All implementations must embed UnimplementedDialogServiceServer
 // for forward compatibility
@@ -87,6 +98,7 @@ type DialogServiceServer interface {
 	JoinDialog(context.Context, *JoinDialogRequest) (*Empty, error)
 	GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error)
 	GetDialogByIds(context.Context, *GetDialogByIdsRequest) (*GetDialogByIdsResponse, error)
+	GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error)
 	mustEmbedUnimplementedDialogServiceServer()
 }
 
@@ -105,6 +117,9 @@ func (UnimplementedDialogServiceServer) GetUserDialogList(context.Context, *GetU
 }
 func (UnimplementedDialogServiceServer) GetDialogByIds(context.Context, *GetDialogByIdsRequest) (*GetDialogByIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDialogByIds not implemented")
+}
+func (UnimplementedDialogServiceServer) GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDialogUsersByDialogID not implemented")
 }
 func (UnimplementedDialogServiceServer) mustEmbedUnimplementedDialogServiceServer() {}
 
@@ -191,6 +206,24 @@ func _DialogService_GetDialogByIds_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_GetDialogUsersByDialogID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDialogUsersByDialogIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).GetDialogUsersByDialogID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_GetDialogUsersByDialogID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).GetDialogUsersByDialogID(ctx, req.(*GetDialogUsersByDialogIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DialogService_ServiceDesc is the grpc.ServiceDesc for DialogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -213,6 +246,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDialogByIds",
 			Handler:    _DialogService_GetDialogByIds_Handler,
+		},
+		{
+			MethodName: "GetDialogUsersByDialogID",
+			Handler:    _DialogService_GetDialogUsersByDialogID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
