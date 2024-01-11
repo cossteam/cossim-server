@@ -42,6 +42,14 @@ services:
     volumes:
       - ./data/var/lib/minio:/data
     command: server /data --console-address ":9001"
+  rabbitmq:
+    image: "rabbitmq:latest"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: root
+      RABBITMQ_DEFAULT_PASS: Hitosea@123..
   gateway:
     container_name: cossim_gateway
     image: hub.hitosea.com/cossim/gateway-interface
