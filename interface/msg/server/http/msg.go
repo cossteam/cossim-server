@@ -14,7 +14,9 @@ import (
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
@@ -30,13 +32,14 @@ var (
 			return true
 		},
 	}
-	pool = make(map[string][]*client)
+	Pool = make(map[string][]*client)
 )
 
 type client struct {
-	Conn *websocket.Conn
-	Uid  string //客户端所有者
-	Rid  int64  //客户端id
+	Conn  *websocket.Conn
+	Uid   string //客户端所有者
+	Rid   int64  //客户端id
+	queue <-chan amqp091.Delivery
 }
 
 // @Summary websocket请求
@@ -72,10 +75,17 @@ func ws(c *gin.Context) {
 	}
 	//用户上线
 	wsRid++
+	messages, err := rabbitMQClient.ConsumeMessages(uid)
+
+	fmt.Println("rabbitMqClient => ", rabbitMQClient)
+	if err != nil {
+		log.Fatal("Error consuming messages from RabbitMQ: ", err)
+	}
 	client := &client{
-		Conn: conn,
-		Uid:  "",
-		Rid:  wsRid,
+		Conn:  conn,
+		Uid:   "",
+		Rid:   wsRid,
+		queue: messages,
 	}
 
 	client.Uid = uid
@@ -146,11 +156,28 @@ func sendUserMsg(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	if _, ok := pool[req.ReceiverId]; ok {
-		fmt.Println("pool[req.ReceiverId] => ", pool[req.ReceiverId])
-		if len(pool[req.ReceiverId]) > 0 {
-			sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId)
+	if _, ok := Pool[req.ReceiverId]; ok {
+		if len(Pool[req.ReceiverId]) > 0 {
+			sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId)
+			response.Success(c, "发送成功", nil)
+			return
 		}
+	}
+	fmt.Println("用户离线")
+	msg := WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, Data: &wsUserMsg{
+		SendAt:   time.Now().Unix(),
+		DialogId: req.DialogId,
+		SenderId: thisId,
+		Content:  req.Content,
+		MsgType:  req.Type,
+		ReplayId: req.ReplayId,
+	}}
+	// todo 记录离线推送
+	err = rabbitMQClient.PublishMessage(req.ReceiverId, msg)
+	if err != nil {
+		fmt.Println("发布消息失败：", err)
+		response.Fail(c, "发送好友请求失败", nil)
+		return
 	}
 	response.Success(c, "发送成功", nil)
 }
@@ -201,7 +228,7 @@ func sendGroupMsg(c *gin.Context) {
 	uids, err := userGroupClient.GetUserGroupIDs(context.Background(), &relation.GroupID{
 		GroupId: req.GroupId,
 	})
-	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId)
+	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId, req.DialogId)
 	response.Success(c, "发送成功", nil)
 }
 
@@ -410,25 +437,26 @@ func getUserDialogList(c *gin.Context) {
 	response.Success(c, "获取成功", responseList)
 }
 
-type wsMsg struct {
+type WsMsg struct {
 	Uid   string             `json:"uid"`
 	Event config.WSEventType `json:"event"`
 	Rid   int64              `json:"rid"`
 	Data  interface{}        `json:"data"`
 }
+type wsUserMsg struct {
+	SenderId string `json:"sender_id"`
+	Content  string `json:"content"`
+	MsgType  uint   `json:"msgType"`
+	ReplayId uint   `json:"reply_id"`
+	SendAt   int64  `json:"send_at"`
+	DialogId uint32 `json:"dialog_id"`
+}
 
 // 推送私聊消息
-func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint) {
-	type wsUserMsg struct {
-		SenderId string `json:"uid"`
-		Content  string `json:"content"`
-		MsgType  uint   `json:"msgType"`
-		ReplayId uint   `json:"reply_id"`
-		SendAt   int64  `json:"send_at"`
-	}
+func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
 	//遍历该用户所有客户端
-	for _, c := range pool[receiverId] {
-		m := wsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId, time.Now().Unix()}}
+	for _, c := range Pool[receiverId] {
+		m := WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId, time.Now().Unix(), dialogId}}
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
@@ -438,50 +466,95 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 	}
 }
 
+type wsGroupMsg struct {
+	GroupId  int64  `json:"group_id"`
+	UserId   string `json:"uid"`
+	Content  string `json:"content"`
+	MsgType  uint   `json:"msgType"`
+	ReplayId uint   `json:"reply_id"`
+	SendAt   int64  `json:"send_at"`
+	DialogId uint32 `json:"dialog_id"`
+}
+
 // 推送群聊消息
-func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, msgType uint32, replayId uint32) {
-	type wsGroupMsg struct {
-		GroupId  int64  `json:"group_id"`
-		UserId   string `json:"uid"`
-		Content  string `json:"content"`
-		MsgType  uint   `json:"msgType"`
-		ReplayId uint   `json:"reply_id"`
-		SendAt   int64  `json:"send_at"`
-	}
+func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, msgType uint32, replayId uint32, dialogId uint32) {
 	//发送群聊消息
 	for _, uid := range uIds {
 		////遍历该用户所有客户端
 		//if uid == userId {
 		//	continue
 		//}
-		for _, c := range pool[uid] {
-			m := wsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix()}}
+		for _, c := range Pool[uid] {
+			m := WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix(), dialogId}}
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)
 			if err != nil {
 			}
 		}
+		msg := WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Data: &wsGroupMsg{
+			GroupId:  int64(groupId),
+			UserId:   userId,
+			Content:  msg,
+			MsgType:  uint(msgType),
+			ReplayId: uint(replayId),
+			SendAt:   time.Now().Unix(),
+			DialogId: dialogId,
+		}}
+		// todo 记录离线推送
+		err := rabbitMQClient.PublishMessage(uid, msg)
+		if err != nil {
+			fmt.Println("发布消息失败：", err)
+		}
+	}
+}
+
+// SendMsg 推送消息
+func SendMsg(uid string, event config.WSEventType, data interface{}) {
+	for _, c := range Pool[uid] {
+		m := WsMsg{Uid: uid, Event: event, Rid: c.Rid, Data: data}
+		js, _ := json.Marshal(m)
+		fmt.Println(string(js))
+		err := c.Conn.WriteMessage(websocket.TextMessage, js)
+		if err != nil {
+			logger.Error("send msg err", zap.Error(err))
+			return
+		}
+	}
+}
+
+// 推送多个用户消息
+func SendMsgToUsers(uids []string, event config.WSEventType, data interface{}) {
+	for _, uid := range uids {
+		SendMsg(uid, event, data)
 	}
 }
 
 // 用户上线
 func (c client) wsOnlineClients() {
 	wsMutex.Lock()
-	pool[c.Uid] = append(pool[c.Uid], &c)
+	Pool[c.Uid] = append(Pool[c.Uid], &c)
 	wsMutex.Unlock()
 	//通知前端接收离线消息
-	msg := wsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid}
+	msg := WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid}
 	js, _ := json.Marshal(msg)
 	//上线推送消息
 	c.Conn.WriteMessage(websocket.TextMessage, js)
+	fmt.Println("用户上线")
+	go func() {
+		for message := range c.queue {
+			c.Conn.WriteMessage(websocket.TextMessage, message.Body)
+		}
+	}()
 }
 
 // 用户离线
 func (c client) wsOfflineClients() {
+	fmt.Println("离线")
 	//已存在
 	wsMutex.Lock()
 	//删除map中指定key的元素
-	delete(pool, c.Uid)
+	delete(Pool, c.Uid)
+	//<-c.queue
 	wsMutex.Unlock()
 	return
 }

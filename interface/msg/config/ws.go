@@ -12,4 +12,8 @@ const (
 	SendGroupMessageEvent
 	// 推送系统通知事件
 	SystemNotificationEvent
+	// 添加好友事件
+	AddFriendEvent
+	//确认好友
+	ConfirmFriendEvent
 )

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	"github.com/cossim/coss-server/pkg/msg_queue"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
@@ -22,6 +23,7 @@ var (
 	relationClient  relationApi.UserRelationServiceClient
 	userGroupClient relationApi.GroupRelationServiceClient
 	groupClient     groupApi.GroupServiceClient
+	rabbitMQClient  *msg_queue.RabbitMQ
 	userClient      userApi.UserServiceClient
 	dialogClient    msgApi.DialogServiceClient
 	cfg             *config.AppConfig
@@ -35,8 +37,16 @@ func Init(c *config.AppConfig) {
 	setupMsgGRPCClient()
 	setupUserGRPCClient()
 	setupGroupGRPCClient()
+	setRabbitMQProvider()
 	setupRelationGRPCClient()
 	setupGin()
+}
+func setRabbitMQProvider() {
+	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr))
+	if err != nil {
+		logger.Fatal("Failed to connect to RabbitMQ", zap.Error(err))
+	}
+	rabbitMQClient = rmq
 }
 func setupGroupGRPCClient() {
 	var err error

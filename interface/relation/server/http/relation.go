@@ -2,8 +2,12 @@ package http
 
 import (
 	"context"
+	"fmt"
+	msgconfig "github.com/cossim/coss-server/interface/msg/config"
+	msghttp "github.com/cossim/coss-server/interface/msg/server/http"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
+
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
@@ -300,7 +304,8 @@ func deleteFriend(c *gin.Context) {
 }
 
 type confirmFriendRequest struct {
-	UserID string `json:"user_id" binding:"required"`
+	UserID      string `json:"user_id" binding:"required"`
+	P2PublicKey string `json:"p2public_key"`
 }
 
 // @Summary 确认添加好友
@@ -354,13 +359,21 @@ func confirmFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
+	msg := msghttp.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
+	// todo 记录离线推送
+	err = rabbitMQClient.PublishMessage(req.UserID, msg)
+	if err != nil {
+		fmt.Println("发布消息失败：", err)
+		response.Fail(c, "同意好友请求失败", nil)
+		return
+	}
 	response.Success(c, "确认好友成功", nil)
 }
 
 type addFriendRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-	Msg    string `json:"msg"`
+	UserID      string `json:"user_id" binding:"required"`
+	Msg         string `json:"msg"`
+	P2PublicKey string `json:"p2public_key"`
 }
 
 // @Summary 添加好友
@@ -382,7 +395,6 @@ func addFriend(c *gin.Context) {
 		response.Fail(c, err.Error(), nil)
 		return
 	}
-
 	// 检查用户是否存在
 	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
 	if err != nil {
@@ -404,7 +416,6 @@ func addFriend(c *gin.Context) {
 		response.Fail(c, "用户不存在", nil)
 		return
 	}
-
 	if _, err := relationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{UserId: thisId, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
@@ -421,10 +432,28 @@ func addFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	//对方加入对话
+	//todo 对方加入对话
 	_, err = dialogClient.JoinDialog(context.Background(), &msgApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
 	if err != nil {
 		c.Error(err)
+		return
+	}
+	////判断对方是否在线
+	//fmt.Println(msghttp.Pool[req.UserID])
+	//if _, ok := msghttp.Pool[req.UserID]; ok {
+	//	if len(msghttp.Pool[req.UserID]) > 0 {
+	//		fmt.Println("用户在线:")
+	//		msghttp.SendMsg(req.UserID, msgconfig.AddFriendEvent, req)
+	//		response.Success(c, "发送好友请求成功", nil)
+	//		return
+	//	}
+	//}
+	msg := msghttp.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
+	// todo 记录离线推送
+	err = rabbitMQClient.PublishMessage(req.UserID, msg)
+	if err != nil {
+		fmt.Println("发布消息失败：", err)
+		response.Fail(c, "发送好友请求失败", nil)
 		return
 	}
 	response.Success(c, "发送好友请求成功", nil)
