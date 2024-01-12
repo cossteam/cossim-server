@@ -104,6 +104,35 @@ message UserResponse {
   // @inject_tag: json:"user_id"
   string UserId = 1;
 }
+message ModifyUserPasswordRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"password"
+  string Password = 2;
+}
+message User {
+  // @inject_tag: json:"user_id"
+  string UserId=1;
+  // @inject_tag: json:"nick_name"
+  string NickName=2;
+  // @inject_tag: json:"email"
+  string Email=3;
+  // @inject_tag: json:"tel"
+  string Tel=4;
+  // @inject_tag: json:"avatar"
+  string Avatar=5;
+  // @inject_tag: json:"signature"
+  string Signature=6;
+  // @inject_tag: json:"status"
+  UserStatus Status = 7;
+}
+message GetUserPasswordByUserIdResponse {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"password"
+  string Password = 2;
+}
+
 service UserService {
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
   rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
@@ -112,5 +141,8 @@ service UserService {
   rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
   rpc GetUserPublicKey (UserRequest) returns (GetUserPublicKeyResponse);
   rpc SetUserPublicKey (SetPublicKeyRequest) returns (UserResponse);
+  rpc ModifyUserInfo(User) returns (UserResponse);
+  rpc ModifyUserPassword(ModifyUserPasswordRequest) returns (UserResponse);
+  rpc GetUserPasswordByUserId(UserRequest) returns (GetUserPasswordByUserIdResponse);
 }
 

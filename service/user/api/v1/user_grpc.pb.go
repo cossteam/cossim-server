@@ -19,13 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserService_UserLogin_FullMethodName          = "/v1.UserService/UserLogin"
-	UserService_UserRegister_FullMethodName       = "/v1.UserService/UserRegister"
-	UserService_UserInfo_FullMethodName           = "/v1.UserService/UserInfo"
-	UserService_GetBatchUserInfo_FullMethodName   = "/v1.UserService/GetBatchUserInfo"
-	UserService_GetUserInfoByEmail_FullMethodName = "/v1.UserService/GetUserInfoByEmail"
-	UserService_GetUserPublicKey_FullMethodName   = "/v1.UserService/GetUserPublicKey"
-	UserService_SetUserPublicKey_FullMethodName   = "/v1.UserService/SetUserPublicKey"
+	UserService_UserLogin_FullMethodName               = "/v1.UserService/UserLogin"
+	UserService_UserRegister_FullMethodName            = "/v1.UserService/UserRegister"
+	UserService_UserInfo_FullMethodName                = "/v1.UserService/UserInfo"
+	UserService_GetBatchUserInfo_FullMethodName        = "/v1.UserService/GetBatchUserInfo"
+	UserService_GetUserInfoByEmail_FullMethodName      = "/v1.UserService/GetUserInfoByEmail"
+	UserService_GetUserPublicKey_FullMethodName        = "/v1.UserService/GetUserPublicKey"
+	UserService_SetUserPublicKey_FullMethodName        = "/v1.UserService/SetUserPublicKey"
+	UserService_ModifyUserInfo_FullMethodName          = "/v1.UserService/ModifyUserInfo"
+	UserService_ModifyUserPassword_FullMethodName      = "/v1.UserService/ModifyUserPassword"
+	UserService_GetUserPasswordByUserId_FullMethodName = "/v1.UserService/GetUserPasswordByUserId"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -39,6 +42,9 @@ type UserServiceClient interface {
 	GetUserInfoByEmail(ctx context.Context, in *GetUserInfoByEmailRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
 	GetUserPublicKey(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*GetUserPublicKeyResponse, error)
 	SetUserPublicKey(ctx context.Context, in *SetPublicKeyRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	ModifyUserInfo(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
+	ModifyUserPassword(ctx context.Context, in *ModifyUserPasswordRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	GetUserPasswordByUserId(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*GetUserPasswordByUserIdResponse, error)
 }
 
 type userServiceClient struct {
@@ -112,6 +118,33 @@ func (c *userServiceClient) SetUserPublicKey(ctx context.Context, in *SetPublicK
 	return out, nil
 }
 
+func (c *userServiceClient) ModifyUserInfo(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error) {
+	out := new(UserResponse)
+	err := c.cc.Invoke(ctx, UserService_ModifyUserInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ModifyUserPassword(ctx context.Context, in *ModifyUserPasswordRequest, opts ...grpc.CallOption) (*UserResponse, error) {
+	out := new(UserResponse)
+	err := c.cc.Invoke(ctx, UserService_ModifyUserPassword_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUserPasswordByUserId(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*GetUserPasswordByUserIdResponse, error) {
+	out := new(GetUserPasswordByUserIdResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserPasswordByUserId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -123,6 +156,9 @@ type UserServiceServer interface {
 	GetUserInfoByEmail(context.Context, *GetUserInfoByEmailRequest) (*UserInfoResponse, error)
 	GetUserPublicKey(context.Context, *UserRequest) (*GetUserPublicKeyResponse, error)
 	SetUserPublicKey(context.Context, *SetPublicKeyRequest) (*UserResponse, error)
+	ModifyUserInfo(context.Context, *User) (*UserResponse, error)
+	ModifyUserPassword(context.Context, *ModifyUserPasswordRequest) (*UserResponse, error)
+	GetUserPasswordByUserId(context.Context, *UserRequest) (*GetUserPasswordByUserIdResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -150,6 +186,15 @@ func (UnimplementedUserServiceServer) GetUserPublicKey(context.Context, *UserReq
 }
 func (UnimplementedUserServiceServer) SetUserPublicKey(context.Context, *SetPublicKeyRequest) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetUserPublicKey not implemented")
+}
+func (UnimplementedUserServiceServer) ModifyUserInfo(context.Context, *User) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifyUserInfo not implemented")
+}
+func (UnimplementedUserServiceServer) ModifyUserPassword(context.Context, *ModifyUserPasswordRequest) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifyUserPassword not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserPasswordByUserId(context.Context, *UserRequest) (*GetUserPasswordByUserIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserPasswordByUserId not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -290,6 +335,60 @@ func _UserService_SetUserPublicKey_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_ModifyUserInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(User)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ModifyUserInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ModifyUserInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ModifyUserInfo(ctx, req.(*User))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ModifyUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModifyUserPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ModifyUserPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ModifyUserPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ModifyUserPassword(ctx, req.(*ModifyUserPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetUserPasswordByUserId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserPasswordByUserId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserPasswordByUserId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserPasswordByUserId(ctx, req.(*UserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -324,6 +423,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetUserPublicKey",
 			Handler:    _UserService_SetUserPublicKey_Handler,
+		},
+		{
+			MethodName: "ModifyUserInfo",
+			Handler:    _UserService_ModifyUserInfo_Handler,
+		},
+		{
+			MethodName: "ModifyUserPassword",
+			Handler:    _UserService_ModifyUserPassword_Handler,
+		},
+		{
+			MethodName: "GetUserPasswordByUserId",
+			Handler:    _UserService_GetUserPasswordByUserId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

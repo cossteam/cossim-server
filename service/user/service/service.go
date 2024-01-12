@@ -29,22 +29,24 @@ type Service struct {
 
 // 用户登录
 func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
+	resp := &api.UserLoginResponse{}
+
 	userInfo, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
-		return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 
 	if userInfo.Password != request.Password {
-		return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), code.UserErrNotExistOrPassword.Message())
+		return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), code.UserErrNotExistOrPassword.Message())
 	}
 	//修改登录时间
 	userInfo.LastAt = time.Now().Unix()
 	_, err = g.ur.UpdateUser(userInfo)
 	if err != nil {
-		return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 
 	switch userInfo.Status {
@@ -63,16 +65,17 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 			Avatar:   userInfo.Avatar,
 		}, nil
 	default:
-		return nil, status.Error(codes.Code(code.UserErrStatusException.Code()), code.UserErrStatusException.Message())
+		return resp, status.Error(codes.Code(code.UserErrStatusException.Code()), code.UserErrStatusException.Message())
 	}
 }
 
 // 用户注册
 func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
+	resp := &api.UserRegisterResponse{}
 	//添加用户
 	_, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err == nil {
-		return nil, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), err.Error())
 	}
 	userInfo, err := g.ur.InsertUser(&entity.User{
 		Email:    request.Email,
@@ -84,23 +87,24 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 		ID:     utils.GenUUid(),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Code(code.UserErrRegistrationFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrRegistrationFailed.Code()), err.Error())
 	}
-
-	return &api.UserRegisterResponse{
+	resp = &api.UserRegisterResponse{
 		UserId: userInfo.ID,
-	}, nil
+	}
+	return resp, nil
 }
 
 func (g *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
+	resp := &api.UserInfoResponse{}
 	userInfo, err := g.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
-		return nil, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
-	return &api.UserInfoResponse{
+	resp = &api.UserInfoResponse{
 		UserId:    userInfo.ID,
 		NickName:  userInfo.NickName,
 		Email:     userInfo.Email,
@@ -108,7 +112,8 @@ func (g *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*
 		Avatar:    userInfo.Avatar,
 		Signature: userInfo.Signature,
 		Status:    api.UserStatus(userInfo.Status),
-	}, nil
+	}
+	return resp, nil
 }
 
 func (g *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
@@ -134,14 +139,15 @@ func (g *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUse
 }
 
 func (g *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
+	resp := &api.UserInfoResponse{}
 	userInfo, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
-		return nil, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
-	return &api.UserInfoResponse{
+	resp = &api.UserInfoResponse{
 		UserId:    userInfo.ID,
 		NickName:  userInfo.NickName,
 		Email:     userInfo.Email,
@@ -149,14 +155,15 @@ func (g *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserIn
 		Avatar:    userInfo.Avatar,
 		Signature: userInfo.Signature,
 		Status:    api.UserStatus(userInfo.Status),
-	}, nil
+	}
+	return resp, nil
 }
 
 func (g *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
 	key, err := g.ur.GetUserPublicKey(in.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.Code(code.UserErrPublicKeyNotExist.Code()), err.Error())
+			return &api.GetUserPublicKeyResponse{}, status.Error(codes.Code(code.UserErrPublicKeyNotExist.Code()), err.Error())
 		}
 		return &api.GetUserPublicKeyResponse{}, status.Error(codes.Code(code.UserErrGetUserPublicKeyFailed.Code()), err.Error())
 	}
@@ -165,28 +172,53 @@ func (g *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*a
 
 func (g *Service) SetUserPublicKey(ctx context.Context, in *api.SetPublicKeyRequest) (*api.UserResponse, error) {
 	if err := g.ur.SetUserPublicKey(in.UserId, in.PublicKey); err != nil {
-		return nil, status.Error(codes.Code(code.UserErrSaveUserPublicKeyFailed.Code()), err.Error())
+		return &api.UserResponse{}, status.Error(codes.Code(code.UserErrSaveUserPublicKeyFailed.Code()), err.Error())
 	}
 	return &api.UserResponse{UserId: in.UserId}, nil
 }
 
-//
-//func (u *UserService) UpdateUserInfo(user *entity.User) (*entity.User, error) {
-//	user, err := u.ur.UpdateUser(user)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return user, nil
-//}
+func (g *Service) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserResponse, error) {
+	resp := &api.UserResponse{}
+	user, err := g.ur.UpdateUser(&entity.User{
+		ID:        in.UserId,
+		NickName:  in.NickName,
+		Avatar:    in.Avatar,
+		Signature: in.Signature,
+		Status:    entity.UserStatus(in.Status),
+		Tel:       in.Tel,
+	})
+	if err != nil {
+		return resp, err
+	}
+	resp = &api.UserResponse{UserId: user.ID}
+	return resp, nil
+}
 
-//func (u *UserService) GetUserInfo(userId string) (*entity.User, error) {
-//	user, err := u.ur.GetUserInfoByUid(userId)
-//	if err != nil {
-//		if errors.Is(err, gorm.ErrRecordNotFound) {
-//			return nil, fmt.Errorf("未找到用户")
-//		}
-//		return nil, fmt.Errorf("获取用户信息失败: %w", err)
-//	}
-//
-//	return user, nil
-//}
+func (g *Service) ModifyUserPassword(ctx context.Context, in *api.ModifyUserPasswordRequest) (*api.UserResponse, error) {
+	resp := &api.UserResponse{}
+	user, err := g.ur.UpdateUser(&entity.User{
+		ID:       in.UserId,
+		Password: in.Password,
+	})
+	if err != nil {
+		return resp, err
+	}
+	resp = &api.UserResponse{UserId: user.ID}
+	return resp, nil
+}
+
+func (g *Service) GetUserPasswordByUserId(ctx context.Context, in *api.UserRequest) (*api.GetUserPasswordByUserIdResponse, error) {
+	resp := &api.GetUserPasswordByUserIdResponse{}
+	userInfo, err := g.ur.GetUserInfoByUid(in.UserId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+		}
+		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
+	}
+	resp = &api.GetUserPasswordByUserIdResponse{
+		Password: userInfo.Password,
+		UserId:   userInfo.ID,
+	}
+	return resp, nil
+}

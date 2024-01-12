@@ -252,3 +252,128 @@ func setUserPublicKey(c *gin.Context) {
 func GetSystemPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": ThisKey})
 }
+
+type UserInfoRequest struct {
+	NickName  string `json:"nickname"`
+	Tel       string `json:"tel"`
+	Avatar    string `json:"avatar"`
+	Signature string `json:"signature"`
+	//Status    int    `json:"status"`
+}
+
+// @Summary 修改用户信息
+// @Description 修改用户信息
+// @Accept json
+// @Produce json
+// @param request body UserInfoRequest true "request"
+// @Security BearerToken
+// @Success 200 {object} utils.Response{}
+// @Router /user/info/modify [post]
+func modifyUserInfo(c *gin.Context) {
+	req := new(UserInfoRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+	// 调用服务端设置用户公钥的方法
+	_, err = userClient.ModifyUserInfo(context.Background(), &user.User{
+		UserId:    thisId,
+		NickName:  req.NickName,
+		Tel:       req.Tel,
+		Avatar:    req.Avatar,
+		Signature: req.Signature,
+		//Status:    user.UserStatus(req.Status),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
+}
+
+type PasswordRequest struct {
+	OldPasswprd string `json:"old_password" binding:"required"`
+	Password    string `json:"password" binding:"required"`
+	ConfirmPass string `json:"confirm_password" binding:"required"`
+}
+
+// @Summary 修改用户密码
+// @Description 修改用户密码
+// @Accept json
+// @Produce json
+// @param request body PasswordRequest true "request"
+// @Security BearerToken
+// @Success 200 {object} utils.Response{}
+// @Router /user/password/modify [post]
+func modifyUserPassword(c *gin.Context) {
+	req := new(PasswordRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+	req.Password = strings.TrimSpace(req.Password)
+	req.OldPasswprd = strings.TrimSpace(req.OldPasswprd)
+	req.ConfirmPass = strings.TrimSpace(req.ConfirmPass)
+	if req.OldPasswprd == "" {
+		response.SetFail(c, "旧密码不能为空", nil)
+		return
+	}
+	if req.Password == "" || req.ConfirmPass == "" {
+		response.SetFail(c, "密码不能为空", nil)
+		return
+	}
+	if req.Password != req.ConfirmPass {
+		response.SetFail(c, "密码和确认密码不匹配", nil)
+		return
+	}
+
+	pwdRegex := regexp2.MustCompile(`^(?=.*[0-9])(?=.*[a-zA-Z]).{6,50}$`, 0)
+	if isMatch, _ := pwdRegex.MatchString(req.Password); !isMatch {
+		response.SetFail(c, "密码格式不正确", nil)
+		return
+	}
+	if isMatch, _ := pwdRegex.MatchString(req.ConfirmPass); !isMatch {
+		response.SetFail(c, "密码格式不正确", nil)
+		return
+	}
+	//查询用户旧密码
+	info, err := userClient.GetUserPasswordByUserId(context.Background(), &user.UserRequest{
+		UserId: thisId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if info.Password != utils.HashString(req.OldPasswprd) {
+		response.SetFail(c, "旧密码不正确", nil)
+		return
+	}
+	// 调用服务端设置用户公钥的方法
+	_, err = userClient.ModifyUserPassword(context.Background(), &user.ModifyUserPasswordRequest{
+		UserId:   thisId,
+		Password: utils.HashString(req.Password),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
+}
