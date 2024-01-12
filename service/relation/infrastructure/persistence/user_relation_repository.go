@@ -42,7 +42,7 @@ func (u *UserRelationRepo) GetRelationByID(userId, friendId string) (*entity.Use
 
 func (u *UserRelationRepo) GetRelationsByUserID(userId string) ([]*entity.UserRelation, error) {
 	var relations []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.RelationStatusAdded).Find(&relations).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.UserStatusAdded).Find(&relations).Error; err != nil {
 		return nil, err
 	}
 	return relations, nil
@@ -50,8 +50,16 @@ func (u *UserRelationRepo) GetRelationsByUserID(userId string) ([]*entity.UserRe
 
 func (u *UserRelationRepo) GetBlacklistByUserID(userId string) ([]*entity.UserRelation, error) {
 	var relations []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.RelationStatusBlocked).Find(&relations).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.UserStatusBlocked).Find(&relations).Error; err != nil {
 		return nil, err
 	}
 	return relations, nil
+}
+
+func (u *UserRelationRepo) GetFriendRequestListByUserID(userId string) ([]*entity.UserRelation, error) {
+	var urs []*entity.UserRelation
+	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.UserStatusApplying).Find(&urs).Error; err != nil {
+		return nil, err
+	}
+	return urs, nil
 }

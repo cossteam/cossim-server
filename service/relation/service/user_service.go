@@ -19,17 +19,17 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	friendId := request.GetFriendId()
 	// Fetch the existing relationship between the user and friend
 	relation, err := s.urr.GetRelationByID(userId, friendId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.RelationErrUserNotFound.Code()), err.Error())
-		}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		//if errors.Is(err, gorm.ErrRecordNotFound) {
+		//	return resp, status.Error(codes.Code(code.RelationErrUserNotFound.Code()), err.Error())
+		//}
 		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
 	}
 
 	if relation != nil {
-		if relation.Status == entity.RelationStatusPending {
-			return resp, status.Error(codes.Code(code.RelationErrFriendNotFound.Code()), "好友状态处于申请中")
-		} else if relation.Status == entity.RelationStatusAdded {
+		if relation.Status == entity.UserStatusPending {
+			return resp, status.Error(codes.Code(code.RelationErrFriendRequestAlreadyPending.Code()), "好友状态处于申请中")
+		} else if relation.Status == entity.UserStatusAdded {
 			return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
 		}
 	}
@@ -38,8 +38,9 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	relation1 := &entity.UserRelation{
 		UserID:   userId,
 		FriendID: friendId,
-		//Status:   entity.RelationStatusPending,
-		Status: entity.RelationStatusAdded,
+		Remark:   request.Msg,
+		Status:   entity.UserStatusPending,
+		//Status: entity.UserStatusAdded,
 	}
 
 	// Save the new relationship to the database
@@ -51,7 +52,8 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	relation2 := &entity.UserRelation{
 		UserID:   friendId,
 		FriendID: userId,
-		Status:   entity.RelationStatusAdded,
+		Status:   entity.UserStatusApplying,
+		//Status:   entity.UserStatusAdded,
 	}
 
 	// Save the new relationship to the database
@@ -76,7 +78,7 @@ func (s *Service) ConfirmFriend(ctx context.Context, request *v1.ConfirmFriendRe
 	newRelation := &entity.UserRelation{
 		UserID:   friendId,
 		FriendID: userId,
-		Status:   entity.RelationStatusAdded,
+		Status:   entity.UserStatusAdded,
 	}
 
 	// Save the new relationship to the database
@@ -85,7 +87,7 @@ func (s *Service) ConfirmFriend(ctx context.Context, request *v1.ConfirmFriendRe
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to create relation: %v", err))
 	}
 
-	relation.Status = entity.RelationStatusAdded
+	relation.Status = entity.UserStatusAdded
 	if _, err = s.urr.UpdateRelation(relation); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
@@ -121,11 +123,11 @@ func (s *Service) AddBlacklist(ctx context.Context, request *v1.AddBlacklistRequ
 		return resp, status.Error(codes.Code(code.RelationErrAddBlacklistFailed.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
 	}
 
-	if relation1.Status != entity.RelationStatusAdded {
+	if relation1.Status != entity.UserStatusAdded {
 		return resp, code.RelationErrFriendNotFound
 	}
 
-	relation1.Status = entity.RelationStatusBlocked
+	relation1.Status = entity.UserStatusBlocked
 	if _, err = s.urr.UpdateRelation(relation1); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrAddBlacklistFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
@@ -144,7 +146,7 @@ func (s *Service) DeleteBlacklist(ctx context.Context, request *v1.DeleteBlackli
 		return resp, status.Error(codes.Code(code.RelationErrDeleteBlacklistFailed.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
 	}
 
-	relation1.Status = entity.RelationStatusAdded
+	relation1.Status = entity.UserStatusAdded
 	if _, err = s.urr.UpdateRelation(relation1); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrDeleteBlacklistFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
@@ -154,7 +156,7 @@ func (s *Service) DeleteBlacklist(ctx context.Context, request *v1.DeleteBlackli
 	//	return resp, code.RelationErrDeleteBlacklistFailed.Reason(fmt.Errorf("failed to retrieve relation: %w", err))
 	//}
 	//
-	//relation2.Status = entity.RelationStatusAdded
+	//relation2.Status = entity.UserStatusAdded
 	//if _, err = s.urr.UpdateRelation(relation2); err != nil {
 	//	return resp, code.RelationErrDeleteBlacklistFailed.Reason(fmt.Errorf("failed to update relation: %w", err))
 	//}
@@ -207,5 +209,23 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	}
 
 	resp.Status = v1.RelationStatus(relation.Status)
+	return resp, nil
+}
+
+func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
+	resp := &v1.GetFriendRequestListResponse{}
+
+	friends, err := s.urr.GetFriendRequestListByUserID(request.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrGetJoinRequestListFailed.Code()), err.Error())
+	}
+
+	for _, friend := range friends {
+		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
+			UserId: friend.UserID,
+			Msg:    friend.Remark,
+		})
+	}
+
 	return resp, nil
 }
