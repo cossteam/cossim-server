@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
-	msghttp "github.com/cossim/coss-server/interface/msg/server/http"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/msg_queue"
+	"time"
 
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
@@ -359,7 +360,7 @@ func confirmFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	msg := msghttp.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
+	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
 	// todo 记录离线推送
 	err = rabbitMQClient.PublishMessage(req.UserID, msg)
 	if err != nil {
@@ -438,18 +439,14 @@ func addFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	////判断对方是否在线
-	//fmt.Println(msghttp.Pool[req.UserID])
-	//if _, ok := msghttp.Pool[req.UserID]; ok {
-	//	if len(msghttp.Pool[req.UserID]) > 0 {
-	//		fmt.Println("用户在线:")
-	//		msghttp.SendMsg(req.UserID, msgconfig.AddFriendEvent, req)
-	//		response.Success(c, "发送好友请求成功", nil)
-	//		return
-	//	}
-	//}
-	msg := msghttp.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
-	// todo 记录离线推送
+	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
+
+	//通知消息服务有消息需要发送
+	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	if err != nil {
+		return
+	}
+
 	err = rabbitMQClient.PublishMessage(req.UserID, msg)
 	if err != nil {
 		fmt.Println("发布消息失败：", err)

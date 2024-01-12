@@ -76,10 +76,9 @@ func ws(c *gin.Context) {
 	}
 	//用户上线
 	wsRid++
-	messages, err := rabbitMQClient.NewChannel()
-	fmt.Println("rabbitMqClient => ", rabbitMQClient)
-	if err != nil {
-		log.Fatal("Error consuming messages from RabbitMQ: ", err)
+	messages := rabbitMQClient.GetChannel()
+	if messages.IsClosed() {
+		log.Fatal("Channel is Closed")
 	}
 	client := &client{
 		Conn:  conn,
@@ -163,7 +162,7 @@ func sendUserMsg(c *gin.Context) {
 			return
 		}
 	}
-	msg := WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, Data: &wsUserMsg{
+	msg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now().Unix(), Data: &wsUserMsg{
 		SendAt:   time.Now().Unix(),
 		DialogId: req.DialogId,
 		SenderId: thisId,
@@ -436,12 +435,6 @@ func getUserDialogList(c *gin.Context) {
 	response.Success(c, "获取成功", responseList)
 }
 
-type WsMsg struct {
-	Uid   string             `json:"uid"`
-	Event config.WSEventType `json:"event"`
-	Rid   int64              `json:"rid"`
-	Data  interface{}        `json:"data"`
-}
 type wsUserMsg struct {
 	SenderId string `json:"sender_id"`
 	Content  string `json:"content"`
@@ -455,7 +448,7 @@ type wsUserMsg struct {
 func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
 	//遍历该用户所有客户端
 	for _, c := range Pool[receiverId] {
-		m := WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, Data: &wsUserMsg{senderId, msg, msgType, replayId, time.Now().Unix(), dialogId}}
+		m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, SendAt: time.Now().Unix(), Data: &wsUserMsg{senderId, msg, msgType, replayId, time.Now().Unix(), dialogId}}
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
@@ -484,13 +477,13 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 		//	continue
 		//}
 		for _, c := range Pool[uid] {
-			m := WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix(), dialogId}}
+			m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix(), dialogId}}
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)
 			if err != nil {
 			}
 		}
-		msg := WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Data: &wsGroupMsg{
+		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &wsGroupMsg{
 			GroupId:  int64(groupId),
 			UserId:   userId,
 			Content:  msg,
@@ -509,10 +502,12 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 
 // SendMsg 推送消息
 func SendMsg(uid string, event config.WSEventType, data interface{}) {
+	if _, ok := Pool[uid]; !ok {
+		return
+	}
 	for _, c := range Pool[uid] {
-		m := WsMsg{Uid: uid, Event: event, Rid: c.Rid, Data: data}
+		m := config.WsMsg{Uid: uid, Event: event, Rid: c.Rid, Data: data, SendAt: time.Now().Unix()}
 		js, _ := json.Marshal(m)
-		fmt.Println(string(js))
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
 			logger.Error("send msg err", zap.Error(err))
@@ -534,21 +529,20 @@ func (c client) wsOnlineClients() {
 	Pool[c.Uid] = append(Pool[c.Uid], &c)
 	wsMutex.Unlock()
 	//通知前端接收离线消息
-	msg := WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid}
+	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now().Unix()}
 	js, _ := json.Marshal(msg)
 	//上线推送消息
 	c.Conn.WriteMessage(websocket.TextMessage, js)
-
-	go func() {
-		for {
-			msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
-			if err != nil || !ok {
-				//fmt.Println(err)
-				return
-			}
-			c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
+	//go func() {
+	for {
+		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
+		if err != nil || !ok {
+			//c.queue.Close()
+			return
 		}
-	}()
+		c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
+	}
+	//}()
 }
 
 // 用户离线

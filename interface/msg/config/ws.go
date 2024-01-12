@@ -17,3 +17,11 @@ const (
 	//确认好友
 	ConfirmFriendEvent
 )
+
+type WsMsg struct {
+	Uid    string      `json:"uid"`
+	Event  WSEventType `json:"event"`
+	Rid    int64       `json:"rid"`
+	SendAt int64       `json:"send_at"`
+	Data   interface{} `json:"data"`
+}
