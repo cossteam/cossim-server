@@ -51,6 +51,12 @@ message DeleteGroupRequest {
 
 message EmptyResponse {}
 
+enum GroupStatus {
+  GROUP_STATUS_NORMAL = 0;   // 正常状态
+  GROUP_STATUS_LOCKED = 1;   // 锁定状态
+  GROUP_STATUS_DELETED = 2;  // 删除状态
+}
+
 service GroupService {
   rpc GetGroupInfoByGid (GetGroupInfoRequest) returns (Group);
   rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
