@@ -43,6 +43,7 @@ func Init(c *config.AppConfig) {
 }
 func setRabbitMQProvider() {
 	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr))
+	fmt.Println("cfg.MessageQueue => ", cfg.MessageQueue)
 	if err != nil {
 		logger.Fatal("Failed to connect to RabbitMQ", zap.Error(err))
 	}

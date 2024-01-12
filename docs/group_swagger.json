@@ -162,6 +162,9 @@
     "definitions": {
         "http.createGroupRequest": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "avatar": {
                     "type": "string"
@@ -171,9 +174,6 @@
                 },
                 "name": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "integer"
                 },
                 "type": {
                     "type": "integer"

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
@@ -17,7 +18,7 @@ func (s *Service) GetUserGroupIDs(ctx context.Context, id *v1.GroupID) (*v1.User
 	// 调用持久层方法获取用户群关系列表
 	userGroupIDs, err := s.grr.GetUserGroupIDs(id.GetGroupId())
 	if err != nil {
-		return resp, code.RelationErrGetUserGroupIDsFailed.Reason(err)
+		return resp, status.Error(codes.Code(code.RelationErrGetGroupIDsFailed.Code()), err.Error())
 	}
 
 	resp.UserIds = userGroupIDs
@@ -34,13 +35,15 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 		Status:  entity.GroupStatusApplying,
 	}
 
+	fmt.Println("JoinGroup request: ", request)
+
 	// 检查是否已经存在加入申请
 	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
 	}
 
-	if relation.Status == entity.GroupStatusApplying {
+	if relation != nil && relation.Status == entity.GroupStatusApplying {
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestAlreadyPending.Code()), code.RelationGroupErrRequestFailed.Message())
 	}
 
@@ -58,8 +61,15 @@ func (s *Service) ApproveJoinGroup(ctx context.Context, request *v1.ApproveJoinG
 
 	// 检查是否已经存在加入申请
 	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.RelationGroupErrNoJoinRequestRecords.Code()), code.RelationGroupErrNoJoinRequestRecords.Message())
+		}
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+	}
+
+	if relation == nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrNoJoinRequestRecords.Code()), code.RelationGroupErrNoJoinRequestRecords.Message())
 	}
 
 	if relation.Status == entity.GroupStatusJoined {
@@ -137,5 +147,19 @@ func (s *Service) GetGroupJoinRequestList(ctx context.Context, request *v1.GetGr
 		})
 	}
 
+	return resp, nil
+}
+
+func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRelationRequest) (*v1.GetGroupRelationResponse, error) {
+	resp := &v1.GetGroupRelationResponse{}
+
+	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrGroupRelationFailed.Code()), err.Error())
+	}
+
+	resp.GroupId = uint32(relation.GroupID)
+	resp.UserId = relation.UserID
+	resp.Identity = v1.GroupIdentity(uint32(relation.Identity))
 	return resp, nil
 }

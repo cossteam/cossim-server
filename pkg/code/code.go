@@ -3,8 +3,6 @@ package code
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"sync/atomic"
 )
 
@@ -29,9 +27,9 @@ type CodeC struct {
 
 func (e CodeC) Error() string {
 	//return strconv.FormatInt(int64(e.code), 10)
-	return status.Errorf(codes.Code(e.code), "Invalid argument: ID cannot be zero").Error()
+	//return status.Errorf(codes.Code(e.code), "Invalid argument: ID cannot be zero").Error()
 	//return status.Error(codes.Code(e.code), e.reason).Error()
-	//return e.reason
+	return e.reason
 }
 
 func (e CodeC) Code() int {

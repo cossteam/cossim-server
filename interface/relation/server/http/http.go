@@ -5,6 +5,7 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	group "github.com/cossim/coss-server/service/group/api/v1"
 	msg "github.com/cossim/coss-server/service/msg/api/v1"
 	relation "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
@@ -18,23 +19,35 @@ import (
 )
 
 var (
-	userClient      user.UserServiceClient
-	relationClient  relation.UserRelationServiceClient
-	userGroupClient relation.GroupRelationServiceClient
-	dialogClient    msg.DialogServiceClient
-	rabbitMQClient  *msg_queue.RabbitMQ
-	cfg             *config.AppConfig
-	logger          *zap.Logger
+	groupClient         group.GroupServiceClient
+	userClient          user.UserServiceClient
+	userRelationClient  relation.UserRelationServiceClient
+	groupRelationClient relation.GroupRelationServiceClient
+	dialogClient        msg.DialogServiceClient
+	rabbitMQClient      *msg_queue.RabbitMQ
+	cfg                 *config.AppConfig
+	logger              *zap.Logger
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
+	setupGroupGRPCClient()
 	setupDialogGRPCClient()
 	setupUserGRPCClient()
 	setRabbitMQProvider()
 	setupRelationGRPCClient()
 	setupGin()
+}
+
+func setupGroupGRPCClient() {
+	var err error
+	conn, err := grpc.Dial(cfg.Discovers["group"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+
+	groupClient = group.NewGroupServiceClient(conn)
 }
 
 func setupRelationGRPCClient() {
@@ -44,8 +57,8 @@ func setupRelationGRPCClient() {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	relationClient = relation.NewUserRelationServiceClient(relationConn)
-	userGroupClient = relation.NewGroupRelationServiceClient(relationConn)
+	userRelationClient = relation.NewUserRelationServiceClient(relationConn)
+	groupRelationClient = relation.NewGroupRelationServiceClient(relationConn)
 }
 func setupDialogGRPCClient() {
 	var err error
@@ -143,15 +156,29 @@ func route(engine *gin.Engine) {
 	api := engine.Group("/api/v1/relation")
 	api.Use(middleware.AuthMiddleware())
 
-	api.GET("/friend_list", friendList)
-	api.GET("/blacklist", blackList)
-	api.POST("/add_friend", middleware.AuthMiddleware(), addFriend)
-	api.POST("/confirm_friend", confirmFriend)
-	api.POST("/delete_friend", deleteFriend)
-	api.POST("/switch/e2e/key", switchUserE2EPublicKey)
-	api.POST("/add_blacklist", addBlacklist)
-	api.POST("/delete_blacklist", deleteBlacklist)
-	api.POST("/group/join", joinGroup)
+	u := api.Group("/user")
+	u.GET("/friend_list", friendList)
+	u.GET("/blacklist", blackList)
+	u.GET("/request_list", userRequestList)
+	u.POST("/add_friend", middleware.AuthMiddleware(), addFriend)
+	u.POST("/confirm_friend", confirmFriend)
+	u.POST("/delete_friend", deleteFriend)
+	u.POST("/add_blacklist", addBlacklist)
+	u.POST("/delete_blacklist", deleteBlacklist)
+
+	g := api.Group("/group")
+	g.GET("/member", getGroupMember)
+	g.GET("/request_list", groupRequestList)
+	// 申请加入群聊
+	g.POST("/join", joinGroup)
+	// 同意加入群聊
+	g.POST("/approve", approveJoinGroup)
+	// 拒绝加入群聊
+	g.POST("/reject", rejectJoinGroup)
+	// 移出群聊
+	g.POST("/remove", removeUserFromGroup)
+	// 退出群聊
+	g.POST("quit", quitGroup)
 
 	// 为Swagger路径添加不需要身份验证的中间件
 	swagger := engine.Group("/api/v1/relation/swagger")

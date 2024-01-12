@@ -58,3 +58,6 @@ discovers:
     addr: "msg_service:10000"
     dial: "3000ms"
     timeout: "5000ms"
+  group:
+    name: "group_service"
+    addr: "group_service:10005"

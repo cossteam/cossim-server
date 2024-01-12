@@ -12,9 +12,21 @@ definitions:
         type: string
       msg:
         type: string
+      p2public_key:
+        type: string
       user_id:
         type: string
     required:
+    - user_id
+    type: object
+  http.approveJoinGroupRequest:
+    properties:
+      group_id:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - group_id
     - user_id
     type: object
   http.confirmFriendRequest:
@@ -57,6 +69,36 @@ definitions:
     - public_key
     - user_id
     type: object
+  http.quitGroupRequest:
+    properties:
+      group_id:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - group_id
+    - user_id
+    type: object
+  http.rejectJoinGroupRequest:
+    properties:
+      group_id:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - group_id
+    - user_id
+    type: object
+  http.removeUserFromGroupRequest:
+    properties:
+      group_id:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - group_id
+    - user_id
+    type: object
   utils.Response:
     properties:
       code:
@@ -69,7 +111,7 @@ info:
   contact: {}
   title: coss-relation-bff服务
 paths:
-  /relation/add_blacklist:
+  /relation//user/add_blacklist:
     post:
       consumes:
       - application/json
@@ -89,40 +131,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 添加黑名单
-  /relation/add_friend:
-    post:
-      consumes:
-      - application/json
-      description: 添加好友
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.addFriendRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 添加好友
-  /relation/blacklist:
-    get:
-      consumes:
-      - application/json
-      description: 黑名单
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 黑名单
-  /relation/confirm_friend:
+  /relation//user/confirm_friend:
     post:
       consumes:
       - application/json
@@ -142,7 +151,174 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 确认添加好友
-  /relation/delete_blacklist:
+  /relation/group/approve:
+    post:
+      consumes:
+      - application/json
+      description: 同意加入群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.approveJoinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 同意加入群聊
+  /relation/group/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.joinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 加入群聊
+  /relation/group/member:
+    get:
+      description: 群聊成员列表
+      parameters:
+      - description: 群聊ID
+        in: query
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 群聊成员列表
+  /relation/group/quit:
+    post:
+      consumes:
+      - application/json
+      description: 退出群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.quitGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 退出群聊
+  /relation/group/reject:
+    post:
+      consumes:
+      - application/json
+      description: 拒绝加入群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.rejectJoinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 拒绝加入群聊
+  /relation/group/remove:
+    post:
+      consumes:
+      - application/json
+      description: 将用户从群聊移除
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.removeUserFromGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 将用户从群聊移除
+  /relation/group/request_list:
+    get:
+      description: 群聊申请列表
+      parameters:
+      - description: 群聊ID
+        in: query
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 群聊申请列表
+  /relation/user/add_friend:
+    post:
+      consumes:
+      - application/json
+      description: 添加好友
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.addFriendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 添加好友
+  /relation/user/blacklist:
+    get:
+      consumes:
+      - application/json
+      description: 黑名单
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 黑名单
+  /relation/user/delete_blacklist:
     post:
       consumes:
       - application/json
@@ -162,7 +338,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 删除黑名单
-  /relation/delete_friend:
+  /relation/user/delete_friend:
     post:
       consumes:
       - application/json
@@ -182,7 +358,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 删除好友
-  /relation/friend_list:
+  /relation/user/friend_list:
     get:
       consumes:
       - application/json
@@ -195,18 +371,9 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 好友列表
-  /relation/group/join:
-    post:
-      consumes:
-      - application/json
-      description: 加入群聊
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.joinGroupRequest'
+  /relation/user/request_list:
+    get:
+      description: 好友申请列表
       produces:
       - application/json
       responses:
@@ -237,4 +404,5 @@ paths:
       security:
       - BearerToken: []
       summary: 交换用户端到端公钥
+      summary: 好友申请列表
 swagger: "2.0"
