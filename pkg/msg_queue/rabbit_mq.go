@@ -130,6 +130,17 @@ func (r *RabbitMQ) ConsumeMessagesWithChan(queueName string) (<-chan amqp.Delive
 		nil,    // args
 	)
 }
+
+// 删除空闲的队列和资源
+func (r *RabbitMQ) DeleteEmptyQueue(queueName string) error {
+	//channel, err := r.NewChannel()
+	_, err := r.channel.QueueDelete(queueName, true, false, false)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *RabbitMQ) ConsumeServiceMessages(queueName ServiceType, exchangeName string) (<-chan amqp.Delivery, error) {
 	//channel, err := r.NewChannel()
 	err := r.channel.ExchangeDeclare(

@@ -95,6 +95,9 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 func (g *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
 	userInfo, err := g.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+		}
 		return nil, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
 	return &api.UserInfoResponse{

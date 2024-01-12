@@ -538,6 +538,8 @@ func (c client) wsOnlineClients() {
 		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
 		if err != nil || !ok {
 			//c.queue.Close()
+			//拉取完之后删除队列
+			_ = rabbitMQClient.DeleteEmptyQueue(c.Uid)
 			return
 		}
 		c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
