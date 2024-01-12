@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Group struct {
 	gorm.Model
-	Type            GroupType   `gorm:"default:1;comment:群聊类型" json:"type"`
+	Type            GroupType   `gorm:"default:0;comment:群聊类型" json:"type"`
 	Status          GroupStatus `gorm:"comment:群聊状态" json:"status"`
 	MaxMembersLimit int         `gorm:"comment:群聊人数限制" json:"max_members_limit"`
 	CreatorID       string      `gorm:"type:varchar(64);comment:创建者id" json:"creator_id"`
@@ -15,14 +15,14 @@ type Group struct {
 type GroupType uint
 
 const (
-	TypePublic  GroupType = iota + 1 // 公开群
-	TypePrivate                      // 私密群
+	TypePublic  GroupType = iota // 公开群
+	TypePrivate                  // 私密群
 )
 
 type GroupStatus uint
 
 const (
-	StatusActive   GroupStatus = iota + 1 // 活跃状态
-	StatusInactive                        // 不活跃状态
-	StatusClosed                          // 已关闭状态
+	GroupStatusNormal  GroupStatus = iota // 正常状态
+	GroupStatusLocked                     // 锁定状态
+	GroupStatusDeleted                    // 删除状态
 )

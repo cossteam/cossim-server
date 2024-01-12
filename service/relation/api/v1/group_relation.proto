@@ -10,8 +10,10 @@ message UserGroupRequest {
   // @inject_tag: json:"relation_status"
   uint32 RelationStatus = 4;
 }
+
 message UserGroupResponse {
 }
+
 message GroupID {
   // @inject_tag: json:"group_id"
   uint32 GroupId = 1;
@@ -23,8 +25,82 @@ message UserIDs {
 }
 
 
+message JoinGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1; // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;  // 用户id
+  // @inject_tag: json:"msg"
+  string Msg = 3; // 申请信息
+}
+
+message JoinGroupResponse {
+
+}
+
+message ApproveJoinGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;     // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;  // 用户id
+}
+
+message ApproveJoinGroupResponse {
+}
+
+message RejectJoinGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;     // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;     // 拒绝的用户id
+}
+
+message RejectJoinGroupResponse {
+}
+
+message RemoveFromGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;     // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;     // 移除的用户id
+}
+
+message RemoveFromGroupResponse {
+}
+
+message LeaveGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;   // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;    // 拒绝的用户id
+}
+
+message LeaveGroupResponse {
+}
+
+message GetGroupJoinRequestListRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+}
+
+message GroupJoinRequestListResponse {
+  repeated GroupJoinRequestList GroupJoinRequestList = 1;
+}
+
+message GroupJoinRequestList {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;    // 用户id
+  // @inject_tag: json:"msg"
+  string Msg = 2;       // 申请信息
+}
+
 service GroupRelationService {
-  rpc InsertUserGroup(UserGroupRequest) returns (UserGroupResponse);
+  rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
   rpc GetUserGroupIDs(GroupID) returns (UserIDs);
+  rpc ApproveJoinGroup (ApproveJoinGroupRequest) returns (ApproveJoinGroupResponse);
+  rpc RejectJoinGroup (RejectJoinGroupRequest) returns (RejectJoinGroupResponse);
+  rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);
+  rpc LeaveGroup (LeaveGroupRequest) returns (LeaveGroupResponse);
+  rpc GetGroupJoinRequestList (GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse);
 }
 
