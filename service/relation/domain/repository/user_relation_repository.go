@@ -9,4 +9,5 @@ type UserRelationRepository interface {
 	GetRelationByID(userId, friendId string) (*entity.UserRelation, error)
 	GetRelationsByUserID(userId string) ([]*entity.UserRelation, error)
 	GetBlacklistByUserID(userId string) ([]*entity.UserRelation, error)
+	GetFriendRequestListByUserID(userId string) ([]*entity.UserRelation, error)
 }
