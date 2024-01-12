@@ -10,6 +10,8 @@ definitions:
     properties:
       msg:
         type: string
+      p2public_key:
+        type: string
       user_id:
         type: string
     required:
@@ -17,6 +19,8 @@ definitions:
     type: object
   http.confirmFriendRequest:
     properties:
+      p2public_key:
+        type: string
       user_id:
         type: string
     required:
@@ -42,6 +46,16 @@ definitions:
         type: integer
     required:
     - group_id
+    type: object
+  http.switchUserE2EPublicKeyRequest:
+    properties:
+      public_key:
+        type: string
+      user_id:
+        type: string
+    required:
+    - public_key
+    - user_id
     type: object
   utils.Response:
     properties:
@@ -201,4 +215,26 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 加入群聊
+  /user/switch/e2e/public_key:
+    post:
+      consumes:
+      - application/json
+      description: 交换用户端到端公钥
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.switchUserE2EPublicKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerToken: []
+      summary: 交换用户端到端公钥
 swagger: "2.0"

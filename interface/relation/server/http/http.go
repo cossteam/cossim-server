@@ -148,6 +148,7 @@ func route(engine *gin.Engine) {
 	api.POST("/add_friend", middleware.AuthMiddleware(), addFriend)
 	api.POST("/confirm_friend", confirmFriend)
 	api.POST("/delete_friend", deleteFriend)
+	api.POST("/switch/e2e/key", switchUserE2EPublicKey)
 	api.POST("/add_blacklist", addBlacklist)
 	api.POST("/delete_blacklist", deleteBlacklist)
 	api.POST("/group/join", joinGroup)

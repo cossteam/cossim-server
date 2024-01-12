@@ -69,10 +69,8 @@ func login(c *gin.Context) {
 }
 
 type RegisterRequest struct {
-	//Email    string `json:"email" binding:"required,email"`
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	//ConfirmPass string `json:"confirm_password" binding:"required,eqfield=Password"`
+	Email       string `json:"email" binding:"required"`
+	Password    string `json:"password" binding:"required"`
 	ConfirmPass string `json:"confirm_password" binding:"required"`
 	Nickname    string `json:"nickname"`
 	PublicKey   string `json:"public_key" binding:"required"`

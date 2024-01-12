@@ -488,3 +488,56 @@ func joinGroup(c *gin.Context) {
 
 	response.Success(c, "发送好友请求成功", nil)
 }
+
+type switchUserE2EPublicKeyRequest struct {
+	UserId    string `json:"user_id" binding:"required"`
+	PublicKey string `json:"public_key" binding:"required"`
+}
+
+// @Summary 交换用户端到端公钥
+// @Description 交换用户端到端公钥
+// @Accept json
+// @Produce json
+// @param request body switchUserE2EPublicKeyRequest true "request"
+// @Security BearerToken
+// @Success 200 {object} utils.Response{}
+// @Router /user/switch/e2e/key [post]
+func switchUserE2EPublicKey(c *gin.Context) {
+	req := new(switchUserE2EPublicKeyRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.Fail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserId})
+	if err != nil {
+		response.Fail(c, "用户不存在", nil)
+		return
+	}
+	reqm := switchUserE2EPublicKeyRequest{
+		UserId:    thisId,
+		PublicKey: req.PublicKey,
+	}
+	msg := msgconfig.WsMsg{Uid: req.UserId, Event: msgconfig.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now().Unix()}
+
+	//通知消息服务有消息需要发送
+	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	if err != nil {
+		return
+	}
+
+	err = rabbitMQClient.PublishMessage(req.UserId, msg)
+	if err != nil {
+		fmt.Println("发布消息失败：", err)
+		response.Fail(c, "发送好友请求失败", nil)
+		return
+	}
+	response.Success(c, "交换用户公钥成功", nil)
+}
