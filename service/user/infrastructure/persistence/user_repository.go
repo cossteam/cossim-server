@@ -34,7 +34,7 @@ func (ur *UserRepo) GetUserInfoByUid(id string) (*entity.User, error) {
 
 // 修改用户信息
 func (ur *UserRepo) UpdateUser(user *entity.User) (*entity.User, error) {
-	if err := ur.db.Save(user).Error; err != nil {
+	if err := ur.db.Model(&entity.User{}).Where("id = ?", user.ID).Updates(user).Error; err != nil {
 		return nil, err
 	}
 	return user, nil

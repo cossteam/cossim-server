@@ -8,9 +8,9 @@ definitions:
     type: object
   http.addFriendRequest:
     properties:
-      msg:
+      e2eublic_key:
         type: string
-      p2public_key:
+      msg:
         type: string
       user_id:
         type: string
@@ -215,7 +215,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 加入群聊
-  /user/switch/e2e/public_key:
+  /user/switch/e2e/key:
     post:
       consumes:
       - application/json

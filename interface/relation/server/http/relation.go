@@ -374,7 +374,7 @@ func confirmFriend(c *gin.Context) {
 type addFriendRequest struct {
 	UserID      string `json:"user_id" binding:"required"`
 	Msg         string `json:"msg"`
-	P2PublicKey string `json:"p2public_key"`
+	E2EublicKey string `json:"e2eublic_key"`
 }
 
 // @Summary 添加好友
@@ -481,7 +481,7 @@ func joinGroup(c *gin.Context) {
 		return
 	}
 
-	_, err = userGroupClient.InsertUserGroup(context.Background(), &relationApi.UserGroupRequest{UserId: thisId, GroupId: req.GroupID})
+	_, err = userGroupClient.JoinGroup(context.Background(), &relationApi.JoinGroupRequest{UserId: thisId, GroupId: req.GroupID})
 	if err != nil {
 		return
 	}

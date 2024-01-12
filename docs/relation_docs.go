@@ -241,7 +241,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/user/switch/e2e/public_key": {
+        "/user/switch/e2e/key": {
             "post": {
                 "security": [
                     {
@@ -296,10 +296,10 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
-                "msg": {
+                "e2eublic_key": {
                     "type": "string"
                 },
-                "p2public_key": {
+                "msg": {
                     "type": "string"
                 },
                 "user_id": {

@@ -12,6 +12,19 @@ definitions:
     - password
     - public_key
     type: object
+  http.PasswordRequest:
+    properties:
+      confirm_password:
+        type: string
+      old_password:
+        type: string
+      password:
+        type: string
+    required:
+    - confirm_password
+    - old_password
+    - password
+    type: object
   http.RegisterRequest:
     properties:
       confirm_password:
@@ -36,6 +49,19 @@ definitions:
         type: string
     required:
     - public_key
+    type: object
+  http.UserInfoRequest:
+    properties:
+      avatar:
+        type: string
+      nickname:
+        type: string
+      signature:
+        type: string
+      status:
+        type: integer
+      tel:
+        type: string
     type: object
   utils.Response:
     properties:
@@ -80,6 +106,28 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 查询用户信息
+  /user/info/modify:
+    post:
+      consumes:
+      - application/json
+      description: 修改用户信息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.UserInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerToken: []
+      summary: 修改用户信息
   /user/key/set:
     post:
       consumes:
@@ -122,6 +170,28 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 用户登录
+  /user/password/modify:
+    post:
+      consumes:
+      - application/json
+      description: 修改用户密码
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.PasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerToken: []
+      summary: 修改用户密码
   /user/register:
     post:
       consumes:

@@ -136,6 +136,8 @@ func route(engine *gin.Engine) {
 	u.POST("/register", register)
 	u.GET("/info", middleware.AuthMiddleware(), GetUserInfo)
 	u.GET("/system/key/get", GetSystemPublicKey)
+	u.POST("/info/modify", middleware.AuthMiddleware(), modifyUserInfo)
+	u.POST("/password/modify", middleware.AuthMiddleware(), modifyUserPassword)
 	u.POST("/key/set", middleware.AuthMiddleware(), setUserPublicKey)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)

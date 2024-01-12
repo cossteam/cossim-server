@@ -61,6 +61,42 @@ const docTemplateuser = `{
                 }
             }
         },
+        "/user/info/modify": {
+            "post": {
+                "security": [
+                    {
+                        "BearerToken": []
+                    }
+                ],
+                "description": "修改用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "修改用户信息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.UserInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/key/set": {
             "post": {
                 "security": [
@@ -115,6 +151,42 @@ const docTemplateuser = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/http.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/password/modify": {
+            "post": {
+                "security": [
+                    {
+                        "BearerToken": []
+                    }
+                ],
+                "description": "修改用户密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "修改用户密码",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.PasswordRequest"
                         }
                     }
                 ],
@@ -219,6 +291,25 @@ const docTemplateuser = `{
                 }
             }
         },
+        "http.PasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "old_password",
+                "password"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "http.RegisterRequest": {
             "type": "object",
             "required": [
@@ -252,6 +343,26 @@ const docTemplateuser = `{
             ],
             "properties": {
                 "public_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.UserInfoRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "tel": {
                     "type": "string"
                 }
             }
