@@ -24,7 +24,7 @@ var (
 
 	// 关系服务状态码定义
 	RelationErrUserNotFound                = New(13000, "用户不存在")
-	RelationErrFriendNotFound              = New(13001, "好友不存在")
+	RelationUserErrFriendRelationNotFound  = New(13001, "好友关系不存在")
 	RelationErrRelationNotFound            = New(13002, "关系不存在")
 	RelationErrAddFriendFailed             = New(13003, "添加好友失败")
 	RelationErrFriendRequestAlreadyPending = New(13004, "好友请求已经发送，等待确认")
@@ -37,9 +37,10 @@ var (
 	RelationErrGetBlacklistFailed          = New(13011, "获取黑名单列表失败")
 	RelationErrGetUserRelationFailed       = New(13012, "获取用户关系失败")
 	RelationUserErrGetRequestListFailed    = New(13013, "获取用户申请列表失败")
+	RelationUserErrNoFriendRequestRecords  = New(13014, "未找到好友申请记录")
 
-	RelationErrInsertUserGroupFailed          = New(13101, "创建群聊失败")
-	RelationErrGetUserGroupIDsFailed          = New(13102, "获取群聊列表失败")
+	RelationErrCreateGroupFailed              = New(13101, "创建群聊失败")
+	RelationErrGetGroupIDsFailed              = New(13102, "获取群聊成员")
 	RelationGroupErrRequestFailed             = New(13103, "申请加入群聊失败")
 	RelationGroupErrRequestAlreadyPending     = New(13104, "已申请加入群聊，等待确认")
 	RelationGroupErrAlreadyInGroup            = New(13105, "已经在群聊中")
@@ -49,6 +50,7 @@ var (
 	RelationGroupErrRemoveUserFromGroupFailed = New(13109, "将用户移除群聊失败")
 	RelationGroupErrLeaveGroupFailed          = New(13110, "退出群聊失败")
 	RelationGroupErrGetJoinRequestListFailed  = New(13111, "获取群聊申请列表失败")
+	RelationGroupErrGroupRelationFailed       = New(13112, "获取用户群组关系失败")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed       = New(14000, "发送消息失败")
@@ -67,4 +69,5 @@ var (
 	GroupErrUpdateGroupFailed            = New(15002, "更新群聊信息失败")
 	GroupErrInsertGroupFailed            = New(15003, "创建群组失败")
 	GroupErrDeleteGroupFailed            = New(15004, "删除群聊失败")
+	GroupErrGroupNotFound                = New(15005, "群聊不存在")
 )

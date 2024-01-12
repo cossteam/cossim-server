@@ -38,7 +38,7 @@ func GetGroupInfoByGid(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "获取群聊信息成功", gin.H{"group": group})
+	response.Success(c, "获取群聊信息成功", group)
 }
 
 // @Summary 批量获取群聊信息
@@ -126,9 +126,8 @@ func updateGroup(c *gin.Context) {
 
 type createGroupRequest struct {
 	Type            uint32 `json:"type"`
-	Status          uint32 `json:"status"`
 	MaxMembersLimit uint32 `json:"max_members_limit"`
-	Name            string `json:"name"`
+	Name            string `json:"name" binding:"required"`
 	Avatar          string `json:"avatar"`
 }
 
@@ -153,7 +152,6 @@ func createGroup(c *gin.Context) {
 	}
 	group := &api.Group{
 		Type:            int32(req.Type),
-		Status:          int32(req.Status),
 		MaxMembersLimit: int32(req.MaxMembersLimit),
 		CreatorId:       thisId,
 		Name:            req.Name,
@@ -167,10 +165,10 @@ func createGroup(c *gin.Context) {
 		response.Fail(c, "创建群聊失败", nil)
 		return
 	}
-	_, err = userGroupClient.InsertUserGroup(context.Background(), &rapi.UserGroupRequest{
-		GroupId:        createdGroup.Id,
-		UserId:         thisId,
-		RelationStatus: 2,
+
+	_, err = userGroupClient.JoinGroup(context.Background(), &rapi.JoinGroupRequest{
+		GroupId: createdGroup.Id,
+		UserId:  thisId,
 	})
 	if err != nil {
 		c.Error(err)

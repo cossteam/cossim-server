@@ -94,6 +94,28 @@ message GroupJoinRequestList {
   string Msg = 2;       // 申请信息
 }
 
+message GetGroupRelationRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;     // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;     // 用户id
+}
+
+message GetGroupRelationResponse {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1; // 群聊ID
+  // @inject_tag: json:"user_id"
+  string UserId = 2;  // 用户ID
+  // @inject_tag: json:"identity"
+  GroupIdentity Identity = 4;  // 群聊身份
+}
+
+// 添加 GroupIdentity 枚举定义
+enum GroupIdentity {
+  IDENTITY_USER = 0;  // 普通用户
+  IDENTITY_ADMIN = 1; // 管理员
+}
+
 service GroupRelationService {
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
   rpc GetUserGroupIDs(GroupID) returns (UserIDs);
@@ -102,5 +124,6 @@ service GroupRelationService {
   rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);
   rpc LeaveGroup (LeaveGroupRequest) returns (LeaveGroupResponse);
   rpc GetGroupJoinRequestList (GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse);
+  rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
 }
 

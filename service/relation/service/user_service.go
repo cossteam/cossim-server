@@ -39,9 +39,13 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 		UserID:   userId,
 		FriendID: friendId,
 		Remark:   request.Msg,
-		Status:   entity.UserStatusPending,
-		//Status: entity.UserStatusAdded,
+		//Status:   entity.UserStatusPending,
+		Status: entity.UserStatusAdded,
 	}
+	//
+	//if userId == friendId {
+	//	relation1.Status = entity.UserStatusAdded
+	//}
 
 	// Save the new relationship to the database
 	_, err = s.urr.CreateRelation(relation1)
@@ -52,9 +56,13 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	relation2 := &entity.UserRelation{
 		UserID:   friendId,
 		FriendID: userId,
-		Status:   entity.UserStatusApplying,
-		//Status:   entity.UserStatusAdded,
+		//Status:   entity.UserStatusApplying,
+		Status: entity.UserStatusAdded,
 	}
+
+	//if userId == friendId {
+	//	relation2.Status = entity.UserStatusAdded
+	//}
 
 	// Save the new relationship to the database
 	_, err = s.urr.CreateRelation(relation2)
@@ -70,25 +78,32 @@ func (s *Service) ConfirmFriend(ctx context.Context, request *v1.ConfirmFriendRe
 
 	userId := request.GetUserId()
 	friendId := request.GetFriendId()
-	relation, err := s.urr.GetRelationByID(userId, friendId)
+	relation1, err := s.urr.GetRelationByID(userId, friendId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+		}
+		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to get relation: %v", err))
+	}
+
+	if relation1.Status == entity.UserStatusAdded {
+		return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
+	}
+
+	relation1.Status = entity.UserStatusAdded
+	_, err = s.urr.UpdateRelation(relation1)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
+	}
+
+	relation2, err := s.urr.GetRelationByID(friendId, userId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to get relation: %v", err))
 	}
 
-	newRelation := &entity.UserRelation{
-		UserID:   friendId,
-		FriendID: userId,
-		Status:   entity.UserStatusAdded,
-	}
-
-	// Save the new relationship to the database
-	_, err = s.urr.CreateRelation(newRelation)
+	relation2.Status = entity.UserStatusAdded
+	_, err = s.urr.UpdateRelation(relation2)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to create relation: %v", err))
-	}
-
-	relation.Status = entity.UserStatusAdded
-	if _, err = s.urr.UpdateRelation(relation); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
 
@@ -120,11 +135,14 @@ func (s *Service) AddBlacklist(ctx context.Context, request *v1.AddBlacklistRequ
 	// Assuming urr is a UserRelationRepository instance in UserService
 	relation1, err := s.urr.GetRelationByID(userId, friendId)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.RelationUserErrFriendRelationNotFound.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
+		}
 		return resp, status.Error(codes.Code(code.RelationErrAddBlacklistFailed.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
 	}
 
 	if relation1.Status != entity.UserStatusAdded {
-		return resp, code.RelationErrFriendNotFound
+		return resp, code.RelationUserErrFriendRelationNotFound
 	}
 
 	relation1.Status = entity.UserStatusBlocked
@@ -221,8 +239,9 @@ func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 	}
 
 	for _, friend := range friends {
+		fmt.Println("GetFriendRequestList => ", friend)
 		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
-			UserId: friend.UserID,
+			UserId: friend.FriendID,
 			Msg:    friend.Remark,
 		})
 	}

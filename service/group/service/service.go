@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/service/group/api/v1"
 	"github.com/cossim/coss-server/service/group/domain/entity"
@@ -9,6 +10,7 @@ import (
 	"github.com/cossim/coss-server/service/group/infrastructure/persistence"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 func NewService(repo *persistence.Repositories) *Service {
@@ -25,14 +27,17 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, request *v1.GetGroupInf
 
 	group, err := s.gr.GetGroupInfoByGid(uint(request.GetGid()))
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.GroupErrGroupNotFound.Code()), err.Error())
+		}
 		return resp, status.Error(codes.Code(code.GroupErrGetGroupInfoByGidFailed.Code()), err.Error())
 	}
 
 	// 将领域模型转换为 gRPC API 模型
 	resp = &v1.Group{
 		Id:              uint32(group.ID),
-		Type:            int32(uint32(group.Type)),
-		Status:          int32(uint32(group.Status)),
+		Type:            int32(group.Type),
+		Status:          int32(group.Status),
 		MaxMembersLimit: int32(group.MaxMembersLimit),
 		CreatorId:       group.CreatorID,
 		Name:            group.Name,

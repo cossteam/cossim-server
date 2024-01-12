@@ -7,10 +7,10 @@ definitions:
         type: integer
       name:
         type: string
-      status:
-        type: integer
       type:
         type: integer
+    required:
+    - name
     type: object
   http.updateGroupRequest:
     properties:

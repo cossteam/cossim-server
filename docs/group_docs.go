@@ -172,6 +172,9 @@ const docTemplategroup = `{
     "definitions": {
         "http.createGroupRequest": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "avatar": {
                     "type": "string"
@@ -181,9 +184,6 @@ const docTemplategroup = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "integer"
                 },
                 "type": {
                     "type": "integer"

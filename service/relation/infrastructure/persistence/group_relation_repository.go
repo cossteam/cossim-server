@@ -22,7 +22,7 @@ func (repo *GroupRelationRepo) CreateRelation(ur *entity.GroupRelation) (*entity
 
 func (repo *GroupRelationRepo) GetUserGroupIDs(gid uint32) ([]string, error) {
 	var userGroupIDs []string
-	if err := repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Pluck("uid", &userGroupIDs).Error; err != nil {
+	if err := repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Pluck("user_id", &userGroupIDs).Error; err != nil {
 		return nil, err
 	}
 	return userGroupIDs, nil

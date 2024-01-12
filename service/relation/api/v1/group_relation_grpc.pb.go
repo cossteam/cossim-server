@@ -26,6 +26,7 @@ const (
 	GroupRelationService_RemoveFromGroup_FullMethodName         = "/v1.GroupRelationService/RemoveFromGroup"
 	GroupRelationService_LeaveGroup_FullMethodName              = "/v1.GroupRelationService/LeaveGroup"
 	GroupRelationService_GetGroupJoinRequestList_FullMethodName = "/v1.GroupRelationService/GetGroupJoinRequestList"
+	GroupRelationService_GetGroupRelation_FullMethodName        = "/v1.GroupRelationService/GetGroupRelation"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -39,6 +40,7 @@ type GroupRelationServiceClient interface {
 	RemoveFromGroup(ctx context.Context, in *RemoveFromGroupRequest, opts ...grpc.CallOption) (*RemoveFromGroupResponse, error)
 	LeaveGroup(ctx context.Context, in *LeaveGroupRequest, opts ...grpc.CallOption) (*LeaveGroupResponse, error)
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
+	GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error)
 }
 
 type groupRelationServiceClient struct {
@@ -112,6 +114,15 @@ func (c *groupRelationServiceClient) GetGroupJoinRequestList(ctx context.Context
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error) {
+	out := new(GetGroupRelationResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_GetGroupRelation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupRelationServiceServer is the server API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
@@ -123,6 +134,7 @@ type GroupRelationServiceServer interface {
 	RemoveFromGroup(context.Context, *RemoveFromGroupRequest) (*RemoveFromGroupResponse, error)
 	LeaveGroup(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error)
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
+	GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -150,6 +162,9 @@ func (UnimplementedGroupRelationServiceServer) LeaveGroup(context.Context, *Leav
 }
 func (UnimplementedGroupRelationServiceServer) GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupJoinRequestList not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupRelation not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
 
@@ -290,6 +305,24 @@ func _GroupRelationService_GetGroupJoinRequestList_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_GetGroupRelation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupRelationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).GetGroupRelation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_GetGroupRelation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).GetGroupRelation(ctx, req.(*GetGroupRelationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -324,6 +357,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupJoinRequestList",
 			Handler:    _GroupRelationService_GetGroupJoinRequestList_Handler,
+		},
+		{
+			MethodName: "GetGroupRelation",
+			Handler:    _GroupRelationService_GetGroupRelation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

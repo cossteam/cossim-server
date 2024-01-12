@@ -139,8 +139,15 @@ func setupGin() {
 // @title coss-user服务
 
 func route(engine *gin.Engine) {
-	u := engine.Group("/api/v1/group")
-	u.POST("/create", middleware.AuthMiddleware(), createGroup)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("group")))
+	g := engine.Group("/api/v1/group")
+	// 获取群聊信息
+	g.GET("/info", middleware.AuthMiddleware(), GetGroupInfoByGid)
+	// 创建群聊
+	g.POST("/create", middleware.AuthMiddleware(), createGroup)
+	// 删除群聊
+	g.POST("/delete", middleware.AuthMiddleware(), deleteGroup)
+	// 更新群聊信息
+	g.POST("/update", middleware.AuthMiddleware(), updateGroup)
+	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("group")))
 	//u.POST("/logout", handleLogout)
 }
