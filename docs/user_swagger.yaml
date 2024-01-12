@@ -14,13 +14,9 @@ definitions:
     type: object
   http.RegisterRequest:
     properties:
-      avatar:
-        type: string
       confirm_password:
-        description: ConfirmPass string `json:"confirm_password" binding:"required,eqfield=Password"`
         type: string
       email:
-        description: Email    string `json:"email" binding:"required,email"`
         type: string
       nickname:
         type: string

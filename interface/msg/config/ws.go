@@ -16,4 +16,14 @@ const (
 	AddFriendEvent
 	//确认好友
 	ConfirmFriendEvent
+	//推送好友公钥接口
+	PushE2EPublicKeyEvent
 )
+
+type WsMsg struct {
+	Uid    string      `json:"uid"`
+	Event  WSEventType `json:"event"`
+	Rid    int64       `json:"rid"`
+	SendAt int64       `json:"send_at"`
+	Data   interface{} `json:"data"`
+}

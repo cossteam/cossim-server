@@ -37,6 +37,7 @@ func (r *RabbitMQ) NewChannel() (*amqp.Channel, error) {
 	}
 	return ch, nil
 }
+
 func (r *RabbitMQ) GetChannel() *amqp.Channel {
 	return r.channel
 }
@@ -104,4 +105,126 @@ func ConsumeMessages(queueName string, channel *amqp.Channel) (amqp.Delivery, bo
 	}
 
 	return msg, ok, nil
+}
+
+func (r *RabbitMQ) ConsumeMessagesWithChan(queueName string) (<-chan amqp.Delivery, error) {
+	//channel, err := r.NewChannel()
+	q, err := r.channel.QueueDeclare(
+		queueName,
+		false,
+		true,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return r.channel.Consume(
+		q.Name, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+}
+func (r *RabbitMQ) ConsumeServiceMessages(queueName ServiceType, exchangeName string) (<-chan amqp.Delivery, error) {
+	//channel, err := r.NewChannel()
+	err := r.channel.ExchangeDeclare(
+		exchangeName,
+		amqp.ExchangeDirect,
+		false,
+		true,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	q, err := r.channel.QueueDeclare(
+		string(queueName),
+		false,
+		true,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	//绑定队列到交换机
+	err = r.channel.QueueBind(q.Name, "", Service_Exchange, false, nil)
+	if err != nil {
+		return nil, err
+	}
+	return r.channel.Consume(
+		q.Name, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+}
+func (r *RabbitMQ) PublishServiceMessage(serviceName, targetName ServiceType, exchangeName string, action ServiceActionType, body interface{}) error {
+	//channel, err := r.NewChannel()
+	//if err != nil {
+	//	return err
+	//}
+	err := r.channel.ExchangeDeclare(
+		exchangeName,
+		amqp.ExchangeDirect,
+		false,
+		true,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	q, err := r.channel.QueueDeclare(
+		string(targetName),
+		false,
+		true,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		fmt.Println("Failed to declare a queue :", err)
+		return err
+	}
+
+	//绑定队列到交换机
+	err = r.channel.QueueBind(q.Name, string(targetName), Service_Exchange, false, nil)
+	if err != nil {
+		return err
+	}
+	var msg []byte
+	data := &ServiceQueueMsg{
+		Action: action,
+		Data:   body,
+		Form:   serviceName,
+	}
+	if body != nil {
+		//解析成json
+		msg, err = json.Marshal(&data)
+		if err != nil {
+			return err
+		}
+	}
+	return r.channel.PublishWithContext(context.Background(),
+		Service_Exchange,
+		q.Name,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        msg,
+		})
 }

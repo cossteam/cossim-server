@@ -240,6 +240,42 @@ const docTemplaterelation = `{
                     }
                 }
             }
+        },
+        "/user/switch/e2e/public_key": {
+            "post": {
+                "security": [
+                    {
+                        "BearerToken": []
+                    }
+                ],
+                "description": "交换用户端到端公钥",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "交换用户端到端公钥",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.switchUserE2EPublicKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -263,6 +299,9 @@ const docTemplaterelation = `{
                 "msg": {
                     "type": "string"
                 },
+                "p2public_key": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }
@@ -274,6 +313,9 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
+                "p2public_key": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }
@@ -309,6 +351,21 @@ const docTemplaterelation = `{
             "properties": {
                 "group_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "http.switchUserE2EPublicKeyRequest": {
+            "type": "object",
+            "required": [
+                "public_key",
+                "user_id"
+            ],
+            "properties": {
+                "public_key": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
