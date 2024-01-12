@@ -34,16 +34,17 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
+		return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 
 	if userInfo.Password != request.Password {
-		return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+		return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), code.UserErrNotExistOrPassword.Message())
 	}
 	//修改登录时间
 	userInfo.LastAt = time.Now().Unix()
 	_, err = g.ur.UpdateUser(userInfo)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 
 	switch userInfo.Status {
