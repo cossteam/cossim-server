@@ -15,16 +15,16 @@ const docTemplaterelation = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/relation//user/add_blacklist": {
+        "/relation/delete_blacklist": {
             "post": {
-                "description": "添加黑名单",
+                "description": "删除黑名单",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "添加黑名单",
+                "summary": "删除黑名单",
                 "parameters": [
                     {
                         "description": "request",
@@ -32,38 +32,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.addBlacklistRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/relation//user/confirm_friend": {
-            "post": {
-                "description": "确认添加好友",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "确认添加好友",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.confirmFriendRequest"
+                            "$ref": "#/definitions/http.deleteBlacklistRequest"
                         }
                     }
                 ],
@@ -198,14 +167,14 @@ const docTemplaterelation = `{
         },
         "/relation/group/reject": {
             "post": {
-                "description": "拒绝加入群聊",
+                "description": "拒绝用户加入群聊",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "拒绝加入群聊",
+                "summary": "拒绝用户加入群聊",
                 "parameters": [
                     {
                         "description": "request",
@@ -284,6 +253,37 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/user/add_blacklist": {
+            "post": {
+                "description": "添加黑名单",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "添加黑名单",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.addBlacklistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/user/add_friend": {
             "post": {
                 "description": "添加好友",
@@ -335,16 +335,16 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/delete_blacklist": {
+        "/relation/user/confirm_friend": {
             "post": {
-                "description": "删除黑名单",
+                "description": "确认添加好友",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "删除黑名单",
+                "summary": "确认添加好友",
                 "parameters": [
                     {
                         "description": "request",
@@ -352,7 +352,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.deleteBlacklistRequest"
+                            "$ref": "#/definitions/http.confirmFriendRequest"
                         }
                     }
                 ],
@@ -489,9 +489,6 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
-                "e2eublic_key": {
-                    "type": "string"
-                },
                 "msg": {
                     "type": "string"
                 },
@@ -521,9 +518,13 @@ const docTemplaterelation = `{
         "http.confirmFriendRequest": {
             "type": "object",
             "required": [
+                "dialog_id",
                 "user_id"
             ],
             "properties": {
+                "dialog_id": {
+                    "type": "integer"
+                },
                 "p2public_key": {
                     "type": "string"
                 },
@@ -565,33 +566,14 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "http.switchUserE2EPublicKeyRequest": {
-            "type": "object",
-            "required": [
-                "public_key",
-                "user_id"
-            ],
-            "properties": {
-                "public_key": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "http.quitGroupRequest": {
             "type": "object",
             "required": [
-                "group_id",
-                "user_id"
+                "group_id"
             ],
             "properties": {
                 "group_id": {
                     "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },
@@ -619,6 +601,21 @@ const docTemplaterelation = `{
             "properties": {
                 "group_id": {
                     "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.switchUserE2EPublicKeyRequest": {
+            "type": "object",
+            "required": [
+                "public_key",
+                "user_id"
+            ],
+            "properties": {
+                "public_key": {
+                    "type": "string"
                 },
                 "user_id": {
                     "type": "string"

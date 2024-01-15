@@ -337,18 +337,6 @@ func deleteFriend(c *gin.Context) {
 		return
 	}
 
-	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	if user == nil {
-		response.Fail(c, "用户不存在", nil)
-		return
-	}
-
 	// 检查删除的用户是否存在
 	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
