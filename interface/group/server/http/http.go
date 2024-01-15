@@ -5,7 +5,6 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
-	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
@@ -22,7 +21,7 @@ var (
 	groupClient     groupApi.GroupServiceClient
 	relationClient  relationApi.UserRelationServiceClient
 	userGroupClient relationApi.GroupRelationServiceClient
-	dialogClient    msgApi.DialogServiceClient
+	dialogClient    relationApi.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
 )
@@ -42,7 +41,7 @@ func setupDialogGRPCClient() {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	dialogClient = msgApi.NewDialogServiceClient(msgConn)
+	dialogClient = relationApi.NewDialogServiceClient(msgConn)
 }
 func setupRelationGRPCClient() {
 	var err error

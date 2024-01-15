@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/cossim/coss-server/service/msg/domain/entity"
+	"github.com/cossim/coss-server/service/relation/domain/entity"
 )
 
 type DialogRepository interface {
@@ -10,4 +10,7 @@ type DialogRepository interface {
 	GetUserDialogs(userID string) ([]uint, error)
 	GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
 	GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUser, error)
+	DeleteDialogByIds(dialogIDs []uint) error
+	DeleteDialogByDialogID(dialogID uint) error
+	DeleteDialogUserByDialogID(dialogID uint) error
 }

@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 package v1;
-option go_package = "github.com/cossim/coss-server/service/msg/api/v1";
+option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
 
 message CreateDialogRequest {
   //  @inject_tag: json:"owner_id"
@@ -65,13 +65,33 @@ message GetDialogUsersByDialogIDResponse {
   //  @inject_tag: json:"user_ids"
   repeated string UserIds = 1;
 }
+message DeleteDialogByIdsRequest {
+  //  @inject_tag: json:"dialog_ids"
+  repeated uint32 DialogIds = 1;
+}
+message DeleteDialogByIdsResponse {}
 
-message Empty {}
+message DeleteDialogByIdRequest {
+  //  @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+}
+message DeleteDialogByIdResponse {}
+message DeleteDialogUsersByDialogIDRequest {
+  //  @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+}
+message DeleteDialogUsersByDialogIDResponse {}
+
+message JoinDialogResponse {}
 
 service DialogService {
   rpc CreateDialog(CreateDialogRequest) returns (CreateDialogResponse) {}
-  rpc JoinDialog(JoinDialogRequest) returns (Empty) {}
+  rpc JoinDialog(JoinDialogRequest) returns (JoinDialogResponse) {}
   rpc GetUserDialogList(GetUserDialogListRequest) returns (GetUserDialogListResponse) {}
   rpc GetDialogByIds(GetDialogByIdsRequest) returns (GetDialogByIdsResponse) {}
   rpc GetDialogUsersByDialogID(GetDialogUsersByDialogIDRequest) returns (GetDialogUsersByDialogIDResponse) {}
+
+  rpc DeleteDialogByIds(DeleteDialogByIdsRequest) returns (DeleteDialogByIdsResponse) {}
+  rpc DeleteDialogById(DeleteDialogByIdRequest) returns (DeleteDialogByIdResponse) {}
+  rpc DeleteDialogUsersByDialogID(DeleteDialogUsersByDialogIDRequest) returns (DeleteDialogUsersByDialogIDResponse) {}
 }

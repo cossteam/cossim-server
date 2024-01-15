@@ -9,6 +9,7 @@ import (
 type Repositories struct {
 	Urr repository.UserRelationRepository
 	Grr repository.GroupRelationRepository
+	Dr  repository.DialogRepository
 	db  *gorm.DB
 }
 
@@ -16,10 +17,11 @@ func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
 		Urr: NewUserRelationRepo(db),
 		Grr: NewGroupRelationRepo(db),
+		Dr:  NewDialogRepo(db),
 		db:  db,
 	}
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.GroupRelation{}, &entity.UserRelation{})
+	return s.db.AutoMigrate(&entity.GroupRelation{}, &entity.UserRelation{}, &entity.Dialog{}, &entity.DialogUser{})
 }

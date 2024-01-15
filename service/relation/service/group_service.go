@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
@@ -34,8 +33,6 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 		Remark:  request.Msg,
 		Status:  entity.GroupStatusApplying,
 	}
-
-	fmt.Println("JoinGroup request: ", request)
 
 	// 检查是否已经存在加入申请
 	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
@@ -162,4 +159,12 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	resp.UserId = relation.UserID
 	resp.Identity = v1.GroupIdentity(uint32(relation.Identity))
 	return resp, nil
+}
+
+func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupID) (*v1.Empty, error) {
+	err := s.grr.DeleteGroupRelationByID(in.GroupId)
+	if err != nil {
+		return &v1.Empty{}, err
+	}
+	return &v1.Empty{}, nil
 }
