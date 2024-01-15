@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *Service) GetUserGroupIDs(ctx context.Context, id *v1.GroupID) (*v1.UserIDs, error) {
-	resp := &v1.UserIDs{}
+func (s *Service) GetUserGroupIDs(ctx context.Context, id *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
+	resp := &v1.UserIdsResponse{}
 
 	// 调用持久层方法获取用户群关系列表
 	userGroupIDs, err := s.grr.GetUserGroupIDs(id.GetGroupId())
@@ -28,10 +28,11 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 	resp := &v1.JoinGroupResponse{}
 
 	userGroup := &entity.GroupRelation{
-		UserID:  request.UserId,
-		GroupID: uint(request.GroupId),
-		Remark:  request.Msg,
-		Status:  entity.GroupStatusApplying,
+		UserID:   request.UserId,
+		GroupID:  uint(request.GroupId),
+		Remark:   request.Msg,
+		Status:   entity.GroupStatusApplying,
+		Identity: entity.GroupIdentity(request.Identify),
 	}
 
 	// 检查是否已经存在加入申请
@@ -42,6 +43,10 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 
 	if relation != nil && relation.Status == entity.GroupStatusApplying {
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestAlreadyPending.Code()), code.RelationGroupErrRequestFailed.Message())
+	}
+	//如果是群主，则直接加入群组
+	if request.Identify == v1.GroupIdentity_IDENTITY_OWNER {
+		userGroup.Status = entity.GroupStatusJoined
 	}
 
 	// 插入加入申请
@@ -163,10 +168,20 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	return resp, nil
 }
 
-func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupID) (*v1.Empty, error) {
+func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*v1.Empty, error) {
 	err := s.grr.DeleteGroupRelationByID(in.GroupId)
 	if err != nil {
 		return &v1.Empty{}, err
 	}
 	return &v1.Empty{}, nil
+}
+
+func (s *Service) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
+	var resp = &v1.UserIdsResponse{}
+	ids, err := s.grr.GetGroupAdminIds(in.GroupId)
+	if err != nil {
+		return resp, err
+	}
+	resp.UserIds = ids
+	return resp, nil
 }

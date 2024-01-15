@@ -383,7 +383,7 @@ func confirmFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
+	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.ConfirmFriendEvent, Data: req}
 	err = rabbitMQClient.PublishMessage(req.UserID, msg)
 	if err != nil {
 		logger.Error("发送消息失败", zap.Error(err))
@@ -399,10 +399,6 @@ type addFriendRequest struct {
 	Msg         string `json:"msg"`
 	P2PublicKey string `json:"p2public_key"`
 }
-
-//type addFriendResponse struct {
-//	User uint32 `json:"dialog_id"`
-//}
 
 // @Summary 添加好友
 // @Description 添加好友
@@ -483,7 +479,7 @@ func getGroupMember(c *gin.Context) {
 		return
 	}
 
-	groupRelation, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationApi.GroupID{GroupId: uint32(gid)})
+	groupRelation, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationApi.GroupIDRequest{GroupId: uint32(gid)})
 	if err != nil {
 		response.Fail(c, "获取群聊成员失败", nil)
 		return
@@ -627,11 +623,38 @@ func joinGroup(c *gin.Context) {
 		return
 	}
 
-	_, err = groupRelationClient.JoinGroup(context.Background(), &relationApi.JoinGroupRequest{UserId: uid, GroupId: req.GroupID})
+	//添加普通用户申请
+	_, err = groupRelationClient.JoinGroup(context.Background(), &relationApi.JoinGroupRequest{UserId: uid, GroupId: req.GroupID, Identify: relationApi.GroupIdentity_IDENTITY_USER})
 	if err != nil {
 		c.Error(err)
 		return
 	}
+	//查询所有管理员
+	adminIds, err := groupRelationClient.GetGroupAdminIds(context.Background(), &relationApi.GroupIDRequest{
+		GroupId: req.GroupID,
+	})
+	fmt.Println(adminIds)
+	//TODO 推送通知给群主、管理员
+	//for _, id := range adminIds.UserIds {
+	//	msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: req, SendAt: time.Now().Unix()}
+	//	//通知消息服务有消息需要发送
+	//	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	//	if err != nil {
+	//		return
+	//	}
+	//	err = rabbitMQClient.PublishMessage(id, msg)
+	//	if err != nil {
+	//		fmt.Println("发布消息失败：", err)
+	//		response.Fail(c, "发送好友请求失败", nil)
+	//		return
+	//	}
+	//}
+	//msg := msgconfig.WsMsg{Uid: uid, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
+	////通知消息服务有消息需要发送
+	//err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	//if err != nil {
+	//	return
+	//}
 
 	response.Success(c, "发送加入群聊请求成功", nil)
 }
@@ -708,6 +731,7 @@ func approveJoinGroup(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	//TODO 推送通知给用户
 
 	response.Success(c, "同意加入群聊成功", nil)
 }
@@ -742,6 +766,7 @@ func rejectJoinGroup(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	//TODO 推送通知给用户
 
 	response.Success(c, "拒绝加入群聊成功", nil)
 }

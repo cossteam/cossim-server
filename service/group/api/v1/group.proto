@@ -6,9 +6,9 @@ message Group {
   // @inject_tag: json:"id"
   uint32 Id = 1;
   // @inject_tag: json:"type"
-  int32 Type = 2;
+  GroupType Type = 2;
   // @inject_tag: json:"status"
-  int32 Status = 3;
+  GroupStatus Status = 3;
   // @inject_tag: json:"max_members_limit"
   int32 Max_members_limit = 4;
   // @inject_tag: json:"creator_id"
@@ -39,7 +39,7 @@ message UpdateGroupRequest {
   Group group = 1;
 }
 
-message InsertGroupRequest {
+message CreateGroupRequest {
   // @inject_tag: json:"group"
   Group group = 1;
 }
@@ -56,11 +56,15 @@ enum GroupStatus {
   GROUP_STATUS_LOCKED = 1;   // 锁定状态
   GROUP_STATUS_DELETED = 2;  // 删除状态
 }
+enum GroupType {
+  TypePublic  = 0; // 公开群
+  TypePrivate = 1; // 私有群
+}
 
 service GroupService {
   rpc GetGroupInfoByGid (GetGroupInfoRequest) returns (Group);
   rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
   rpc UpdateGroup (UpdateGroupRequest) returns (Group);
-  rpc InsertGroup (InsertGroupRequest) returns (Group);
+  rpc CreateGroup (CreateGroupRequest) returns (Group);
   rpc DeleteGroup (DeleteGroupRequest) returns (EmptyResponse);
 }

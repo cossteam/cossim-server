@@ -57,3 +57,9 @@ func (repo *GroupRelationRepo) GetJoinRequestListByID(gid uint32) ([]*entity.Gro
 func (repo *GroupRelationRepo) DeleteGroupRelationByID(gid uint32) error {
 	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Delete(&entity.GroupRelation{}).Error
 }
+
+func (repo *GroupRelationRepo) GetGroupAdminIds(gid uint32) ([]string, error) {
+	var adminIds []string
+	repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND status = ?", gid, entity.IdentityAdmin).Pluck("user_id", &adminIds)
+	return adminIds, nil
+}

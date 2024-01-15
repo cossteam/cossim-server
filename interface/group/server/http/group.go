@@ -106,6 +106,9 @@ func updateGroup(c *gin.Context) {
 		response.Fail(c, err.Error(), nil)
 		return
 	}
+	if !IsValidGroupType(api.GroupType(req.Type)) {
+		response.Fail(c, "群聊类型错误", nil)
+	}
 	sf, err := userGroupClient.GetGroupRelation(context.Background(), &rapi.GetGroupRelationRequest{
 		UserId:  thisId,
 		GroupId: req.GroupId,
@@ -120,8 +123,8 @@ func updateGroup(c *gin.Context) {
 	}
 
 	// 更新群聊信息
-	group.Type = int32(req.Type)
-	group.Status = int32(req.Status)
+	group.Type = api.GroupType(int32(req.Type))
+	group.Status = api.GroupStatus(int32(req.Status))
 	group.MaxMembersLimit = int32(req.MaxMembersLimit)
 	group.CreatorId = req.CreatorID
 	group.Name = req.Name
@@ -149,10 +152,15 @@ type createGroupResponse struct {
 	Id              uint32 `json:"id"`
 	Avatar          string `json:"avatar"`
 	Name            string `json:"name"`
+	Type            uint32 `json:"type"`
 	Status          int32  `json:"status"`
 	MaxMembersLimit int32  `json:"max_members_limit"`
 	CreatorId       string `json:"creator_id"`
 	DialogId        uint32 `json:"dialog_id"`
+}
+
+func IsValidGroupType(value api.GroupType) bool {
+	return value == api.GroupType_TypePublic || value == api.GroupType_TypePrivate
 }
 
 // @Summary 创建群聊
@@ -174,25 +182,31 @@ func createGroup(c *gin.Context) {
 		response.Fail(c, err.Error(), nil)
 		return
 	}
+	//判断参数如果不属于枚举定义的则返回错误
+	if !IsValidGroupType(api.GroupType(req.Type)) {
+		response.Fail(c, "群聊类型错误", nil)
+		return
+	}
 	group := &api.Group{
-		Type:            int32(req.Type),
+		Type:            api.GroupType(int32(req.Type)),
 		MaxMembersLimit: int32(req.MaxMembersLimit),
 		CreatorId:       thisId,
 		Name:            req.Name,
 		Avatar:          req.Avatar,
 	}
 
-	createdGroup, err := groupClient.InsertGroup(context.Background(), &api.InsertGroupRequest{
+	createdGroup, err := groupClient.CreateGroup(context.Background(), &api.CreateGroupRequest{
 		Group: group,
 	})
 	if err != nil {
-		response.Fail(c, "创建群聊失败", nil)
+		c.Error(err)
 		return
 	}
 
 	_, err = userGroupClient.JoinGroup(context.Background(), &rapi.JoinGroupRequest{
-		GroupId: createdGroup.Id,
-		UserId:  thisId,
+		GroupId:  createdGroup.Id,
+		UserId:   thisId,
+		Identify: rapi.GroupIdentity_IDENTITY_OWNER,
 	})
 	if err != nil {
 		c.Error(err)
@@ -214,7 +228,8 @@ func createGroup(c *gin.Context) {
 		Id:              createdGroup.Id,
 		Avatar:          createdGroup.Avatar,
 		Name:            createdGroup.Name,
-		Status:          createdGroup.Status,
+		Type:            uint32(createdGroup.Type),
+		Status:          int32(createdGroup.Status),
 		MaxMembersLimit: createdGroup.MaxMembersLimit,
 		CreatorId:       createdGroup.CreatorId,
 		DialogId:        dialog.Id,
@@ -282,7 +297,7 @@ func deleteGroup(c *gin.Context) {
 		return
 	}
 	//1.删除群聊成员
-	_, err = userGroupClient.DeleteGroupRelationByGroupId(context.Background(), &rapi.GroupID{
+	_, err = userGroupClient.DeleteGroupRelationByGroupId(context.Background(), &rapi.GroupIDRequest{
 		GroupId: uint32(gidInt),
 	})
 	if err != nil {

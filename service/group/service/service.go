@@ -36,8 +36,8 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, request *v1.GetGroupInf
 	// 将领域模型转换为 gRPC API 模型
 	resp = &v1.Group{
 		Id:              uint32(group.ID),
-		Type:            int32(group.Type),
-		Status:          int32(group.Status),
+		Type:            v1.GroupType(group.Type),
+		Status:          v1.GroupStatus(group.Status),
 		MaxMembersLimit: int32(group.MaxMembersLimit),
 		CreatorId:       group.CreatorID,
 		Name:            group.Name,
@@ -69,8 +69,8 @@ func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, request *v1.GetBat
 	for _, group := range groups {
 		groupAPI := &v1.Group{
 			Id:              uint32(group.ID),
-			Type:            int32(uint32(group.Type)),
-			Status:          int32(uint32(group.Status)),
+			Type:            v1.GroupType(group.Type),
+			Status:          v1.GroupStatus(group.Status),
 			MaxMembersLimit: int32(group.MaxMembersLimit),
 			CreatorId:       group.CreatorID,
 			Name:            group.Name,
@@ -103,8 +103,8 @@ func (s *Service) UpdateGroup(ctx context.Context, request *v1.UpdateGroupReques
 	// 将领域模型转换为 gRPC API 模型
 	resp = &v1.Group{
 		Id:              uint32(updatedGroup.ID),
-		Type:            int32(uint32(updatedGroup.Type)),
-		Status:          int32(uint32(updatedGroup.Status)),
+		Type:            v1.GroupType(group.Type),
+		Status:          v1.GroupStatus(group.Status),
 		MaxMembersLimit: int32(updatedGroup.MaxMembersLimit),
 		CreatorId:       updatedGroup.CreatorID,
 		Name:            updatedGroup.Name,
@@ -113,7 +113,7 @@ func (s *Service) UpdateGroup(ctx context.Context, request *v1.UpdateGroupReques
 	return resp, nil
 }
 
-func (s *Service) InsertGroup(ctx context.Context, request *v1.InsertGroupRequest) (*v1.Group, error) {
+func (s *Service) CreateGroup(ctx context.Context, request *v1.CreateGroupRequest) (*v1.Group, error) {
 	resp := &v1.Group{}
 
 	group := &entity.Group{
@@ -133,8 +133,8 @@ func (s *Service) InsertGroup(ctx context.Context, request *v1.InsertGroupReques
 	// 将领域模型转换为 gRPC API 模型
 	resp = &v1.Group{
 		Id:              uint32(createdGroup.ID),
-		Type:            int32(uint32(createdGroup.Type)),
-		Status:          int32(uint32(createdGroup.Status)),
+		Type:            v1.GroupType(group.Type),
+		Status:          v1.GroupStatus(group.Status),
 		MaxMembersLimit: int32(createdGroup.MaxMembersLimit),
 		CreatorId:       createdGroup.CreatorID,
 		Name:            createdGroup.Name,

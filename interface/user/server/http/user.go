@@ -238,7 +238,6 @@ type UserInfoRequest struct {
 	Tel       string `json:"tel"`
 	Avatar    string `json:"avatar"`
 	Signature string `json:"signature"`
-	//Status    int    `json:"status"`
 }
 
 // @Summary 修改用户信息

@@ -18,6 +18,11 @@ const (
 	ConfirmFriendEvent
 	//推送好友公钥接口
 	PushE2EPublicKeyEvent
+
+	//申请加入群聊
+	JoinGroupEvent
+	//同意加入群聊
+	ApproveJoinGroupEvent
 )
 
 type WsMsg struct {
