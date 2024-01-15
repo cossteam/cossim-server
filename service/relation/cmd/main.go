@@ -39,6 +39,7 @@ func main() {
 	svc := service.NewService(infra)
 	api.RegisterUserRelationServiceServer(grpcServer, svc)
 	api.RegisterGroupRelationServiceServer(grpcServer, svc)
+	api.RegisterDialogServiceServer(grpcServer, svc)
 
 	fmt.Printf("gRPC server is running on addr: %s\n", config.Conf.GRPC.Addr)
 

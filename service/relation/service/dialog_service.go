@@ -24,8 +24,8 @@ func (s *Service) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) 
 	}, nil
 }
 
-func (s *Service) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1.Empty, error) {
-	resp := &v1.Empty{}
+func (s *Service) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
+	resp := &v1.JoinDialogResponse{}
 	_, err := s.dr.JoinDialog(uint(in.DialogId), in.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
