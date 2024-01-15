@@ -372,6 +372,7 @@ func deleteFriend(c *gin.Context) {
 
 type confirmFriendRequest struct {
 	UserID      string `json:"user_id" binding:"required"`
+	DialogId    uint32 `json:"dialog_id" binding:"required"`
 	P2PublicKey string `json:"p2public_key"`
 }
 
@@ -397,18 +398,6 @@ func confirmFriend(c *gin.Context) {
 		return
 	}
 
-	// 检查用户是否存在
-	//user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//
-	//if user == nil {
-	//	response.Fail(c, "用户不存在", nil)
-	//	return
-	//}
-
 	// 检查要添加的用户是否存在
 	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
@@ -420,27 +409,51 @@ func confirmFriend(c *gin.Context) {
 		response.Fail(c, "用户不存在", nil)
 		return
 	}
-
+	// 检查对话是否存在
+	_, err = dialogClient.GetDialogByIds(context.Background(), &relationApi.GetDialogByIdsRequest{DialogIds: []uint32{req.DialogId}})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	//检查是否已经在对话中
+	du, err := dialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relationApi.GetDialogUserByDialogIDAndUserIdRequest{DialogId: req.DialogId, UserId: userID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if du != nil {
+		response.Fail(c, "已经加入对话中", nil)
+		return
+	}
 	// 进行确认好友操作
 	if _, err = userRelationClient.ConfirmFriend(context.Background(), &relationApi.ConfirmFriendRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
+	//确认添加好友之后加入对话
+	_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: req.DialogId, UserId: req.UserID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
 	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
-	// todo 记录离线推送
 	err = rabbitMQClient.PublishMessage(req.UserID, msg)
 	if err != nil {
 		fmt.Println("发布消息失败：", err)
-		response.Fail(c, "同意好友请求失败", nil)
+		response.Fail(c, "同意好友申请失败", nil)
 		return
 	}
-	response.Success(c, "确认好友成功", nil)
+	response.Success(c, "同意好友申请成功", nil)
 }
 
 type addFriendRequest struct {
 	UserID      string `json:"user_id" binding:"required"`
 	Msg         string `json:"msg"`
 	P2PublicKey string `json:"p2public_key"`
+}
+type addFriendResponse struct {
+	DialogId uint32 `json:"dialog_id"`
 }
 
 // @Summary 添加好友
@@ -503,12 +516,11 @@ func addFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	//todo 对方加入对话
-	_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
+	//_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
 	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
 
 	//通知消息服务有消息需要发送
@@ -523,7 +535,8 @@ func addFriend(c *gin.Context) {
 		response.Fail(c, "发送好友请求失败", nil)
 		return
 	}
-	response.Success(c, "发送好友请求成功", nil)
+
+	response.Success(c, "发送好友请求成功", &addFriendResponse{DialogId: dialog.Id})
 }
 
 // @Summary 群聊成员列表

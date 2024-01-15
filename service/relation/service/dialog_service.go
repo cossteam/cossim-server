@@ -119,3 +119,17 @@ func (s *Service) DeleteDialogUsersByDialogID(ctx context.Context, in *v1.Delete
 	}
 	return resp, nil
 }
+
+func (s *Service) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.GetDialogUserByDialogIDAndUserIdRequest) (*v1.GetDialogUserByDialogIDAndUserIdResponse, error) {
+	var resp = &v1.GetDialogUserByDialogIDAndUserIdResponse{}
+	user, err := s.dr.GetDialogUserByDialogIDAndUserID(uint(in.DialogId), in.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrGetDialogUserByDialogIDAndUserIDFailed.Code()), err.Error())
+	}
+	resp.DialogId = uint32(user.DialogId)
+	resp.UserId = user.UserId
+	resp.IsShow = uint32(user.IsShow)
+	resp.TopAt = uint64(user.TopAt)
+
+	return resp, nil
+}
