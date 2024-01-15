@@ -518,13 +518,9 @@ const docTemplaterelation = `{
         "http.confirmFriendRequest": {
             "type": "object",
             "required": [
-                "dialog_id",
                 "user_id"
             ],
             "properties": {
-                "dialog_id": {
-                    "type": "integer"
-                },
                 "p2public_key": {
                     "type": "string"
                 },

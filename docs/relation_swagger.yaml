@@ -29,14 +29,11 @@ definitions:
     type: object
   http.confirmFriendRequest:
     properties:
-      dialog_id:
-        type: integer
       p2public_key:
         type: string
       user_id:
         type: string
     required:
-    - dialog_id
     - user_id
     type: object
   http.deleteBlacklistRequest:

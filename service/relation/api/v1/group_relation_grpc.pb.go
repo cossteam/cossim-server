@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	GroupRelationService_JoinGroup_FullMethodName                    = "/v1.GroupRelationService/JoinGroup"
 	GroupRelationService_GetUserGroupIDs_FullMethodName              = "/v1.GroupRelationService/GetUserGroupIDs"
+	GroupRelationService_GetGroupAdminIds_FullMethodName             = "/v1.GroupRelationService/GetGroupAdminIds"
 	GroupRelationService_ApproveJoinGroup_FullMethodName             = "/v1.GroupRelationService/ApproveJoinGroup"
 	GroupRelationService_RejectJoinGroup_FullMethodName              = "/v1.GroupRelationService/RejectJoinGroup"
 	GroupRelationService_RemoveFromGroup_FullMethodName              = "/v1.GroupRelationService/RemoveFromGroup"
@@ -35,14 +36,15 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GroupRelationServiceClient interface {
 	JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
-	GetUserGroupIDs(ctx context.Context, in *GroupID, opts ...grpc.CallOption) (*UserIDs, error)
+	GetUserGroupIDs(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
+	GetGroupAdminIds(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
 	ApproveJoinGroup(ctx context.Context, in *ApproveJoinGroupRequest, opts ...grpc.CallOption) (*ApproveJoinGroupResponse, error)
 	RejectJoinGroup(ctx context.Context, in *RejectJoinGroupRequest, opts ...grpc.CallOption) (*RejectJoinGroupResponse, error)
 	RemoveFromGroup(ctx context.Context, in *RemoveFromGroupRequest, opts ...grpc.CallOption) (*RemoveFromGroupResponse, error)
 	LeaveGroup(ctx context.Context, in *LeaveGroupRequest, opts ...grpc.CallOption) (*LeaveGroupResponse, error)
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
 	GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error)
-	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupID, opts ...grpc.CallOption) (*Empty, error)
+	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type groupRelationServiceClient struct {
@@ -62,9 +64,18 @@ func (c *groupRelationServiceClient) JoinGroup(ctx context.Context, in *JoinGrou
 	return out, nil
 }
 
-func (c *groupRelationServiceClient) GetUserGroupIDs(ctx context.Context, in *GroupID, opts ...grpc.CallOption) (*UserIDs, error) {
-	out := new(UserIDs)
+func (c *groupRelationServiceClient) GetUserGroupIDs(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error) {
+	out := new(UserIdsResponse)
 	err := c.cc.Invoke(ctx, GroupRelationService_GetUserGroupIDs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) GetGroupAdminIds(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error) {
+	out := new(UserIdsResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_GetGroupAdminIds_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +136,7 @@ func (c *groupRelationServiceClient) GetGroupRelation(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Context, in *GroupID, opts ...grpc.CallOption) (*Empty, error) {
+func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -139,14 +150,15 @@ func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Co
 // for forward compatibility
 type GroupRelationServiceServer interface {
 	JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
-	GetUserGroupIDs(context.Context, *GroupID) (*UserIDs, error)
+	GetUserGroupIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
+	GetGroupAdminIds(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
 	ApproveJoinGroup(context.Context, *ApproveJoinGroupRequest) (*ApproveJoinGroupResponse, error)
 	RejectJoinGroup(context.Context, *RejectJoinGroupRequest) (*RejectJoinGroupResponse, error)
 	RemoveFromGroup(context.Context, *RemoveFromGroupRequest) (*RemoveFromGroupResponse, error)
 	LeaveGroup(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error)
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
 	GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error)
-	DeleteGroupRelationByGroupId(context.Context, *GroupID) (*Empty, error)
+	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -157,8 +169,11 @@ type UnimplementedGroupRelationServiceServer struct {
 func (UnimplementedGroupRelationServiceServer) JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinGroup not implemented")
 }
-func (UnimplementedGroupRelationServiceServer) GetUserGroupIDs(context.Context, *GroupID) (*UserIDs, error) {
+func (UnimplementedGroupRelationServiceServer) GetUserGroupIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserGroupIDs not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) GetGroupAdminIds(context.Context, *GroupIDRequest) (*UserIdsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupAdminIds not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) ApproveJoinGroup(context.Context, *ApproveJoinGroupRequest) (*ApproveJoinGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApproveJoinGroup not implemented")
@@ -178,7 +193,7 @@ func (UnimplementedGroupRelationServiceServer) GetGroupJoinRequestList(context.C
 func (UnimplementedGroupRelationServiceServer) GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupRelation not implemented")
 }
-func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupID) (*Empty, error) {
+func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupId not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
@@ -213,7 +228,7 @@ func _GroupRelationService_JoinGroup_Handler(srv interface{}, ctx context.Contex
 }
 
 func _GroupRelationService_GetUserGroupIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GroupID)
+	in := new(GroupIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -225,7 +240,25 @@ func _GroupRelationService_GetUserGroupIDs_Handler(srv interface{}, ctx context.
 		FullMethod: GroupRelationService_GetUserGroupIDs_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupRelationServiceServer).GetUserGroupIDs(ctx, req.(*GroupID))
+		return srv.(GroupRelationServiceServer).GetUserGroupIDs(ctx, req.(*GroupIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_GetGroupAdminIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).GetGroupAdminIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_GetGroupAdminIds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).GetGroupAdminIds(ctx, req.(*GroupIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -339,7 +372,7 @@ func _GroupRelationService_GetGroupRelation_Handler(srv interface{}, ctx context
 }
 
 func _GroupRelationService_DeleteGroupRelationByGroupId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GroupID)
+	in := new(GroupIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -351,7 +384,7 @@ func _GroupRelationService_DeleteGroupRelationByGroupId_Handler(srv interface{},
 		FullMethod: GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupId(ctx, req.(*GroupID))
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupId(ctx, req.(*GroupIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -370,6 +403,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserGroupIDs",
 			Handler:    _GroupRelationService_GetUserGroupIDs_Handler,
+		},
+		{
+			MethodName: "GetGroupAdminIds",
+			Handler:    _GroupRelationService_GetGroupAdminIds_Handler,
 		},
 		{
 			MethodName: "ApproveJoinGroup",

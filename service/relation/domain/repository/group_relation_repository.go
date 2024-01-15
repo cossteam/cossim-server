@@ -10,4 +10,5 @@ type GroupRelationRepository interface {
 	GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error)
 	GetJoinRequestListByID(gid uint32) ([]*entity.GroupRelation, error)
 	DeleteGroupRelationByID(gid uint32) error
+	GetGroupAdminIds(gid uint32) ([]string, error)
 }

@@ -34,6 +34,7 @@ type GroupIdentity uint
 const (
 	IdentityUser  GroupIdentity = iota // 普通用户
 	IdentityAdmin                      // 管理员
+	IdentityOwner
 )
 
 type EntryMethod uint
