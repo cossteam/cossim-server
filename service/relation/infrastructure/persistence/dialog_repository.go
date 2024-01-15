@@ -81,6 +81,14 @@ func (g *DialogRepo) GetDialogUserByDialogIDAndUserID(dialogID uint, userID stri
 	return DialogUser, nil
 }
 
+func (g *DialogRepo) GetDialogByGroupId(groupId uint) (*entity.Dialog, error) {
+	var dialog *entity.Dialog
+	if err := g.db.Model(&entity.Dialog{}).Where("group_id = ?", groupId).First(&dialog).Error; err != nil {
+		return nil, err
+	}
+	return dialog, nil
+}
+
 func (g *DialogRepo) DeleteDialogByIds(dialogIDs []uint) error {
 	return g.db.Where("id IN (?)", dialogIDs).Delete(&entity.Dialog{}).Error
 }
@@ -91,4 +99,8 @@ func (g *DialogRepo) DeleteDialogByDialogID(dialogID uint) error {
 
 func (g *DialogRepo) DeleteDialogUserByDialogID(dialogID uint) error {
 	return g.db.Where("dialog_id = ?", dialogID).Unscoped().Delete(&entity.DialogUser{}).Error
+}
+
+func (g *DialogRepo) DeleteDialogUserByDialogIDAndUserID(dialogID uint, userID string) error {
+	return g.db.Where("dialog_id = ? AND user_id = ?", dialogID, userID).Delete(&entity.DialogUser{}).Error
 }

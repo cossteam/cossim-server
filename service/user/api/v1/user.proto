@@ -20,6 +20,8 @@ message UserLoginResponse {
   string Tel=4;
   // @inject_tag: json:"avatar"
   string Avatar=5;
+  // @inject_tag: json:"signature"
+  string Signature=6;
 }
 
 message UserRegisterRequest {

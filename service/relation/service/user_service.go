@@ -91,6 +91,7 @@ func (s *Service) ConfirmFriend(ctx context.Context, request *v1.ConfirmFriendRe
 	}
 
 	relation1.Status = entity.UserStatusAdded
+	relation1.DialogId = uint(request.DialogId)
 	_, err = s.urr.UpdateRelation(relation1)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
@@ -102,6 +103,7 @@ func (s *Service) ConfirmFriend(ctx context.Context, request *v1.ConfirmFriendRe
 	}
 
 	relation2.Status = entity.UserStatusAdded
+	relation2.DialogId = uint(request.DialogId)
 	_, err = s.urr.UpdateRelation(relation2)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
