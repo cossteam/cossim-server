@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DialogService_CreateDialog_FullMethodName                = "/v1.DialogService/CreateDialog"
-	DialogService_JoinDialog_FullMethodName                  = "/v1.DialogService/JoinDialog"
-	DialogService_GetUserDialogList_FullMethodName           = "/v1.DialogService/GetUserDialogList"
-	DialogService_GetDialogByIds_FullMethodName              = "/v1.DialogService/GetDialogByIds"
-	DialogService_GetDialogUsersByDialogID_FullMethodName    = "/v1.DialogService/GetDialogUsersByDialogID"
-	DialogService_DeleteDialogByIds_FullMethodName           = "/v1.DialogService/DeleteDialogByIds"
-	DialogService_DeleteDialogById_FullMethodName            = "/v1.DialogService/DeleteDialogById"
-	DialogService_DeleteDialogUsersByDialogID_FullMethodName = "/v1.DialogService/DeleteDialogUsersByDialogID"
+	DialogService_CreateDialog_FullMethodName                     = "/v1.DialogService/CreateDialog"
+	DialogService_JoinDialog_FullMethodName                       = "/v1.DialogService/JoinDialog"
+	DialogService_GetUserDialogList_FullMethodName                = "/v1.DialogService/GetUserDialogList"
+	DialogService_GetDialogByIds_FullMethodName                   = "/v1.DialogService/GetDialogByIds"
+	DialogService_GetDialogUsersByDialogID_FullMethodName         = "/v1.DialogService/GetDialogUsersByDialogID"
+	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName = "/v1.DialogService/GetDialogUserByDialogIDAndUserID"
+	DialogService_DeleteDialogByIds_FullMethodName                = "/v1.DialogService/DeleteDialogByIds"
+	DialogService_DeleteDialogById_FullMethodName                 = "/v1.DialogService/DeleteDialogById"
+	DialogService_DeleteDialogUsersByDialogID_FullMethodName      = "/v1.DialogService/DeleteDialogUsersByDialogID"
 )
 
 // DialogServiceClient is the client API for DialogService service.
@@ -38,6 +39,7 @@ type DialogServiceClient interface {
 	GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error)
 	GetDialogByIds(ctx context.Context, in *GetDialogByIdsRequest, opts ...grpc.CallOption) (*GetDialogByIdsResponse, error)
 	GetDialogUsersByDialogID(ctx context.Context, in *GetDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*GetDialogUsersByDialogIDResponse, error)
+	GetDialogUserByDialogIDAndUserID(ctx context.Context, in *GetDialogUserByDialogIDAndUserIdRequest, opts ...grpc.CallOption) (*GetDialogUserByDialogIDAndUserIdResponse, error)
 	DeleteDialogByIds(ctx context.Context, in *DeleteDialogByIdsRequest, opts ...grpc.CallOption) (*DeleteDialogByIdsResponse, error)
 	DeleteDialogById(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error)
 	DeleteDialogUsersByDialogID(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
@@ -96,6 +98,15 @@ func (c *dialogServiceClient) GetDialogUsersByDialogID(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *dialogServiceClient) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *GetDialogUserByDialogIDAndUserIdRequest, opts ...grpc.CallOption) (*GetDialogUserByDialogIDAndUserIdResponse, error) {
+	out := new(GetDialogUserByDialogIDAndUserIdResponse)
+	err := c.cc.Invoke(ctx, DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dialogServiceClient) DeleteDialogByIds(ctx context.Context, in *DeleteDialogByIdsRequest, opts ...grpc.CallOption) (*DeleteDialogByIdsResponse, error) {
 	out := new(DeleteDialogByIdsResponse)
 	err := c.cc.Invoke(ctx, DialogService_DeleteDialogByIds_FullMethodName, in, out, opts...)
@@ -132,6 +143,7 @@ type DialogServiceServer interface {
 	GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error)
 	GetDialogByIds(context.Context, *GetDialogByIdsRequest) (*GetDialogByIdsResponse, error)
 	GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error)
+	GetDialogUserByDialogIDAndUserID(context.Context, *GetDialogUserByDialogIDAndUserIdRequest) (*GetDialogUserByDialogIDAndUserIdResponse, error)
 	DeleteDialogByIds(context.Context, *DeleteDialogByIdsRequest) (*DeleteDialogByIdsResponse, error)
 	DeleteDialogById(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error)
 	DeleteDialogUsersByDialogID(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
@@ -156,6 +168,9 @@ func (UnimplementedDialogServiceServer) GetDialogByIds(context.Context, *GetDial
 }
 func (UnimplementedDialogServiceServer) GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDialogUsersByDialogID not implemented")
+}
+func (UnimplementedDialogServiceServer) GetDialogUserByDialogIDAndUserID(context.Context, *GetDialogUserByDialogIDAndUserIdRequest) (*GetDialogUserByDialogIDAndUserIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDialogUserByDialogIDAndUserID not implemented")
 }
 func (UnimplementedDialogServiceServer) DeleteDialogByIds(context.Context, *DeleteDialogByIdsRequest) (*DeleteDialogByIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogByIds not implemented")
@@ -269,6 +284,24 @@ func _DialogService_GetDialogUsersByDialogID_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_GetDialogUserByDialogIDAndUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDialogUserByDialogIDAndUserIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).GetDialogUserByDialogIDAndUserID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).GetDialogUserByDialogIDAndUserID(ctx, req.(*GetDialogUserByDialogIDAndUserIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DialogService_DeleteDialogByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteDialogByIdsRequest)
 	if err := dec(in); err != nil {
@@ -349,6 +382,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDialogUsersByDialogID",
 			Handler:    _DialogService_GetDialogUsersByDialogID_Handler,
+		},
+		{
+			MethodName: "GetDialogUserByDialogIDAndUserID",
+			Handler:    _DialogService_GetDialogUserByDialogIDAndUserID_Handler,
 		},
 		{
 			MethodName: "DeleteDialogByIds",

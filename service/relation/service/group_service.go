@@ -158,6 +158,8 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	resp.GroupId = uint32(relation.GroupID)
 	resp.UserId = relation.UserID
 	resp.Identity = v1.GroupIdentity(uint32(relation.Identity))
+	resp.MuteEndTime = relation.MuteEndTime
+	resp.Status = v1.GroupRelationStatus(uint32(relation.Status))
 	return resp, nil
 }
 

@@ -142,7 +142,25 @@ func sendUserMsg(c *gin.Context) {
 		response.Fail(c, "好友关系不正常", nil)
 		return
 	}
-
+	dialogs, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
+		DialogIds: []uint32{req.DialogId},
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if len(dialogs.Dialogs) == 0 {
+		response.Fail(c, "对话不存在", nil)
+		return
+	}
+	_, err = dialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relation.GetDialogUserByDialogIDAndUserIdRequest{
+		DialogId: req.DialogId,
+		UserId:   thisId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	_, err = msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
 		DialogId:   req.DialogId,
 		SenderId:   thisId,
@@ -162,7 +180,7 @@ func sendUserMsg(c *gin.Context) {
 			return
 		}
 	}
-	msg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now().Unix(), Data: &wsUserMsg{
+	wsMsg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now().Unix(), Data: &wsUserMsg{
 		SendAt:   time.Now().Unix(),
 		DialogId: req.DialogId,
 		SenderId: thisId,
@@ -170,7 +188,7 @@ func sendUserMsg(c *gin.Context) {
 		MsgType:  req.Type,
 		ReplayId: req.ReplayId,
 	}}
-	err = rabbitMQClient.PublishMessage(req.ReceiverId, msg)
+	err = rabbitMQClient.PublishMessage(req.ReceiverId, wsMsg)
 	if err != nil {
 		fmt.Println("发布消息失败：", err)
 		response.Fail(c, "发送好友请求失败", nil)
@@ -207,7 +225,6 @@ func sendGroupMsg(c *gin.Context) {
 		fmt.Println(err)
 		return
 	}
-	//todo 判断是否在群聊里
 	if req.GroupId == 0 {
 		response.Fail(c, "群聊id不正确", nil)
 		return
@@ -220,7 +237,41 @@ func sendGroupMsg(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	//todo 判断是否被禁言
+	groupRelation, err := userGroupClient.GetGroupRelation(context.Background(), &relation.GetGroupRelationRequest{
+		GroupId: req.GroupId,
+		UserId:  thisId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if groupRelation.Status != relation.GroupRelationStatus_GroupStatusJoined {
+		response.Fail(c, "用户在群里中状态不正常", nil)
+		return
+	}
+	if groupRelation.MuteEndTime > time.Now().Unix() && groupRelation.MuteEndTime != 0 {
+		response.Fail(c, "用户禁言中", nil)
+		return
+	}
+	dialogs, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
+		DialogIds: []uint32{req.DialogId},
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if len(dialogs.Dialogs) == 0 {
+		response.Fail(c, "对话不存在", nil)
+		return
+	}
+	_, err = dialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relation.GetDialogUserByDialogIDAndUserIdRequest{
+		DialogId: req.DialogId,
+		UserId:   thisId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	_, err = msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
 		DialogId: req.DialogId,
 		GroupId:  req.GroupId,
@@ -503,7 +554,6 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			SendAt:   time.Now().Unix(),
 			DialogId: dialogId,
 		}}
-		// todo 记录离线推送
 		err := rabbitMQClient.PublishMessage(uid, msg)
 		if err != nil {
 			fmt.Println("发布消息失败：", err)

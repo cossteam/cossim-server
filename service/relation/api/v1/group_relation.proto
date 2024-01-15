@@ -106,8 +106,15 @@ message GetGroupRelationResponse {
   uint32 GroupId = 1; // 群聊ID
   // @inject_tag: json:"user_id"
   string UserId = 2;  // 用户ID
+  // @inject_tag: json:"status"
+  GroupRelationStatus Status = 3;
   // @inject_tag: json:"identity"
   GroupIdentity Identity = 4;  // 群聊身份
+  // @inject_tag: json:"join_method"
+  uint32 JoinMethod = 5;
+  // @inject_tag: json:"join_time"
+  int64 JoinTime = 6;
+  int64 MuteEndTime = 7;
 }
 
 message Empty {
@@ -119,6 +126,12 @@ enum GroupIdentity {
   IDENTITY_USER = 0;  // 普通用户
   IDENTITY_ADMIN = 1; // 管理员
   IDENTITY_OWNER = 2;
+}
+enum GroupRelationStatus {
+    GroupStatusApplying  = 0; // 申请中
+    GroupStatusJoined    = 1; // 已加入
+    GroupStatusReject    = 2; // 被拒绝
+    GroupStatusBlocked   = 3; // 被封禁
 }
 
 service GroupRelationService {

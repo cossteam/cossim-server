@@ -145,6 +145,16 @@ type createGroupRequest struct {
 	Avatar          string `json:"avatar"`
 }
 
+type createGroupResponse struct {
+	Id              uint32 `json:"id"`
+	Avatar          string `json:"avatar"`
+	Name            string `json:"name"`
+	Status          int32  `json:"status"`
+	MaxMembersLimit int32  `json:"max_members_limit"`
+	CreatorId       string `json:"creator_id"`
+	DialogId        uint32 `json:"dialog_id"`
+}
+
 // @Summary 创建群聊
 // @Description 创建群聊
 // @Accept  json
@@ -200,8 +210,17 @@ func createGroup(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	resp := &createGroupResponse{
+		Id:              createdGroup.Id,
+		Avatar:          createdGroup.Avatar,
+		Name:            createdGroup.Name,
+		Status:          createdGroup.Status,
+		MaxMembersLimit: createdGroup.MaxMembersLimit,
+		CreatorId:       createdGroup.CreatorId,
+		DialogId:        dialog.Id,
+	}
 
-	response.Success(c, "创建群聊成功", createdGroup)
+	response.Success(c, "创建群聊成功", resp)
 }
 
 // @Summary 删除群聊

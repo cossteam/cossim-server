@@ -13,4 +13,5 @@ type DialogRepository interface {
 	DeleteDialogByIds(dialogIDs []uint) error
 	DeleteDialogByDialogID(dialogID uint) error
 	DeleteDialogUserByDialogID(dialogID uint) error
+	GetDialogUserByDialogIDAndUserID(dialogID uint, userID string) (*entity.DialogUser, error)
 }
