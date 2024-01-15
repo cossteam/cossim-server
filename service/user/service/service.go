@@ -51,18 +51,19 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 
 	switch userInfo.Status {
 	case entity.UserStatusLock:
-		return nil, status.Error(codes.Code(code.UserErrLocked.Code()), code.UserErrLocked.Message())
+		return resp, status.Error(codes.Code(code.UserErrLocked.Code()), code.UserErrLocked.Message())
 	case entity.UserStatusDeleted:
-		return nil, status.Error(codes.Code(code.UserErrDeleted.Code()), code.UserErrDeleted.Message())
+		return resp, status.Error(codes.Code(code.UserErrDeleted.Code()), code.UserErrDeleted.Message())
 	case entity.UserStatusDisable:
-		return nil, status.Error(codes.Code(code.UserErrDisabled.Code()), code.UserErrDisabled.Message())
+		return resp, status.Error(codes.Code(code.UserErrDisabled.Code()), code.UserErrDisabled.Message())
 	case entity.UserStatusNormal:
 		return &api.UserLoginResponse{
-			UserId:   userInfo.ID,
-			NickName: userInfo.NickName,
-			Email:    userInfo.Email,
-			Tel:      userInfo.Tel,
-			Avatar:   userInfo.Avatar,
+			UserId:    userInfo.ID,
+			NickName:  userInfo.NickName,
+			Email:     userInfo.Email,
+			Tel:       userInfo.Tel,
+			Avatar:    userInfo.Avatar,
+			Signature: userInfo.Signature,
 		}, nil
 	default:
 		return resp, status.Error(codes.Code(code.UserErrStatusException.Code()), code.UserErrStatusException.Message())

@@ -133,3 +133,23 @@ func (s *Service) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.G
 
 	return resp, nil
 }
+
+func (s *Service) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+	var resp = &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
+	err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(in.DialogId), in.UserId)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
+func (s *Service) GetDialogByGroupId(ctx context.Context, in *v1.GetDialogByGroupIdRequest) (*v1.GetDialogByGroupIdResponse, error) {
+	var resp = &v1.GetDialogByGroupIdResponse{}
+	dialog, err := s.dr.GetDialogByGroupId(uint(in.GroupId))
+	if err != nil {
+		return resp, err
+	}
+	resp.DialogId = uint32(dialog.ID)
+	resp.GroupId = uint32(dialog.GroupId)
+	return resp, nil
+}
