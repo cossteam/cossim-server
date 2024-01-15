@@ -359,9 +359,6 @@ const docTemplateuser = `{
                 "signature": {
                     "type": "string"
                 },
-                "status": {
-                    "type": "integer"
-                },
                 "tel": {
                     "type": "string"
                 }

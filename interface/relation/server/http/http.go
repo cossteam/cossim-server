@@ -159,7 +159,7 @@ func route(engine *gin.Engine) {
 	u.GET("/friend_list", friendList)
 	u.GET("/blacklist", blackList)
 	u.GET("/request_list", userRequestList)
-	u.POST("/add_friend", middleware.AuthMiddleware(), addFriend)
+	u.POST("/add_friend", addFriend)
 	u.POST("/confirm_friend", confirmFriend)
 	u.POST("/delete_friend", deleteFriend)
 	u.POST("/add_blacklist", addBlacklist)

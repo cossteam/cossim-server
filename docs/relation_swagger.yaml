@@ -8,8 +8,6 @@ definitions:
     type: object
   http.addFriendRequest:
     properties:
-      e2eublic_key:
-        type: string
       msg:
         type: string
       p2public_key:
@@ -31,11 +29,14 @@ definitions:
     type: object
   http.confirmFriendRequest:
     properties:
+      dialog_id:
+        type: integer
       p2public_key:
         type: string
       user_id:
         type: string
     required:
+    - dialog_id
     - user_id
     type: object
   http.deleteBlacklistRequest:
@@ -59,25 +60,12 @@ definitions:
     required:
     - group_id
     type: object
-  http.switchUserE2EPublicKeyRequest:
-    properties:
-      public_key:
-        type: string
-      user_id:
-        type: string
-    required:
-    - public_key
-    - user_id
-    type: object
   http.quitGroupRequest:
     properties:
       group_id:
         type: integer
-      user_id:
-        type: string
     required:
     - group_id
-    - user_id
     type: object
   http.rejectJoinGroupRequest:
     properties:
@@ -99,6 +87,16 @@ definitions:
     - group_id
     - user_id
     type: object
+  http.switchUserE2EPublicKeyRequest:
+    properties:
+      public_key:
+        type: string
+      user_id:
+        type: string
+    required:
+    - public_key
+    - user_id
+    type: object
   utils.Response:
     properties:
       code:
@@ -111,18 +109,18 @@ info:
   contact: {}
   title: coss-relation-bff服务
 paths:
-  /relation//user/add_blacklist:
+  /relation/delete_blacklist:
     post:
       consumes:
       - application/json
-      description: 添加黑名单
+      description: 删除黑名单
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.addBlacklistRequest'
+          $ref: '#/definitions/http.deleteBlacklistRequest'
       produces:
       - application/json
       responses:
@@ -130,27 +128,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 添加黑名单
-  /relation//user/confirm_friend:
-    post:
-      consumes:
-      - application/json
-      description: 确认添加好友
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.confirmFriendRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 确认添加好友
+      summary: 删除黑名单
   /relation/group/approve:
     post:
       consumes:
@@ -232,7 +210,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 拒绝加入群聊
+      description: 拒绝用户加入群聊
       parameters:
       - description: request
         in: body
@@ -247,7 +225,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 拒绝加入群聊
+      summary: 拒绝用户加入群聊
   /relation/group/remove:
     post:
       consumes:
@@ -285,6 +263,26 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 群聊申请列表
+  /relation/user/add_blacklist:
+    post:
+      consumes:
+      - application/json
+      description: 添加黑名单
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.addBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 添加黑名单
   /relation/user/add_friend:
     post:
       consumes:
@@ -318,18 +316,18 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 黑名单
-  /relation/user/delete_blacklist:
+  /relation/user/confirm_friend:
     post:
       consumes:
       - application/json
-      description: 删除黑名单
+      description: 确认添加好友
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.deleteBlacklistRequest'
+          $ref: '#/definitions/http.confirmFriendRequest'
       produces:
       - application/json
       responses:
@@ -337,7 +335,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 删除黑名单
+      summary: 确认添加好友
   /relation/user/delete_friend:
     post:
       consumes:
@@ -381,7 +379,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/utils.Response'
-      summary: 加入群聊
+      summary: 好友申请列表
   /user/switch/e2e/key:
     post:
       consumes:
@@ -404,5 +402,4 @@ paths:
       security:
       - BearerToken: []
       summary: 交换用户端到端公钥
-      summary: 好友申请列表
 swagger: "2.0"

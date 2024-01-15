@@ -58,8 +58,6 @@ definitions:
         type: string
       signature:
         type: string
-      status:
-        type: integer
       tel:
         type: string
     type: object
