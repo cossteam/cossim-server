@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"github.com/cossim/coss-server/pkg/code"
-	v1 "github.com/cossim/coss-server/service/msg/api/v1"
-	"github.com/cossim/coss-server/service/msg/domain/entity"
+	v1 "github.com/cossim/coss-server/service/relation/api/v1"
+	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -87,5 +87,35 @@ func (s *Service) GetDialogUsersByDialogID(ctx context.Context, in *v1.GetDialog
 		ids = append(ids, id.UserId)
 	}
 	resp.UserIds = ids
+	return resp, nil
+}
+
+func (s *Service) DeleteDialogByIds(ctx context.Context, in *v1.DeleteDialogByIdsRequest) (*v1.DeleteDialogByIdsResponse, error) {
+	var resp = &v1.DeleteDialogByIdsResponse{}
+	uintIds := make([]uint, 0)
+	if len(in.DialogIds) > 0 {
+		for _, id := range in.DialogIds {
+			uintIds = append(uintIds, uint(id))
+		}
+	}
+	if err := s.dr.DeleteDialogByIds(uintIds); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteDialogById(ctx context.Context, in *v1.DeleteDialogByIdRequest) (*v1.DeleteDialogByIdResponse, error) {
+	var resp = &v1.DeleteDialogByIdResponse{}
+	if err := s.dr.DeleteDialogByDialogID(uint(in.DialogId)); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteDialogUsersByDialogID(ctx context.Context, in *v1.DeleteDialogUsersByDialogIDRequest) (*v1.DeleteDialogUsersByDialogIDResponse, error) {
+	var resp = &v1.DeleteDialogUsersByDialogIDResponse{}
+	if err := s.dr.DeleteDialogUserByDialogID(uint(in.DialogId)); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), err.Error())
+	}
 	return resp, nil
 }

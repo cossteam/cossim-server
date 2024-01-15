@@ -6,7 +6,6 @@ import (
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	group "github.com/cossim/coss-server/service/group/api/v1"
-	msg "github.com/cossim/coss-server/service/msg/api/v1"
 	relation "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
@@ -23,7 +22,7 @@ var (
 	userClient          user.UserServiceClient
 	userRelationClient  relation.UserRelationServiceClient
 	groupRelationClient relation.GroupRelationServiceClient
-	dialogClient        msg.DialogServiceClient
+	dialogClient        relation.DialogServiceClient
 	rabbitMQClient      *msg_queue.RabbitMQ
 	cfg                 *config.AppConfig
 	logger              *zap.Logger
@@ -67,7 +66,7 @@ func setupDialogGRPCClient() {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	dialogClient = msg.NewDialogServiceClient(msgConn)
+	dialogClient = relation.NewDialogServiceClient(msgConn)
 }
 func setRabbitMQProvider() {
 	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr))

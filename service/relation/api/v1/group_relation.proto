@@ -110,10 +110,15 @@ message GetGroupRelationResponse {
   GroupIdentity Identity = 4;  // 群聊身份
 }
 
+message Empty {
+}
+
+
 // 添加 GroupIdentity 枚举定义
 enum GroupIdentity {
   IDENTITY_USER = 0;  // 普通用户
   IDENTITY_ADMIN = 1; // 管理员
+  IDENTITY_OWNER = 2;
 }
 
 service GroupRelationService {
@@ -125,5 +130,6 @@ service GroupRelationService {
   rpc LeaveGroup (LeaveGroupRequest) returns (LeaveGroupResponse);
   rpc GetGroupJoinRequestList (GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse);
   rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
+  rpc DeleteGroupRelationByGroupId (GroupID) returns (Empty);
 }
 

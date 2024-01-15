@@ -1,7 +1,7 @@
 package persistence
 
 import (
-	"github.com/cossim/coss-server/service/msg/domain/entity"
+	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"gorm.io/gorm"
 )
 
@@ -72,4 +72,16 @@ func (g *DialogRepo) GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUs
 		return nil, err
 	}
 	return dialogUsers, nil
+}
+
+func (g *DialogRepo) DeleteDialogByIds(dialogIDs []uint) error {
+	return g.db.Where("id IN (?)", dialogIDs).Delete(&entity.Dialog{}).Error
+}
+
+func (g *DialogRepo) DeleteDialogByDialogID(dialogID uint) error {
+	return g.db.Where("id = ?", dialogID).Delete(&entity.Dialog{}).Error
+}
+
+func (g *DialogRepo) DeleteDialogUserByDialogID(dialogID uint) error {
+	return g.db.Where("dialog_id = ?", dialogID).Unscoped().Delete(&entity.DialogUser{}).Error
 }

@@ -25,7 +25,7 @@ var (
 	groupClient     groupApi.GroupServiceClient
 	rabbitMQClient  *msg_queue.RabbitMQ
 	userClient      userApi.UserServiceClient
-	dialogClient    msgApi.DialogServiceClient
+	dialogClient    relationApi.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
 )
@@ -66,7 +66,7 @@ func setupDialogGRPCClient() {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	dialogClient = msgApi.NewDialogServiceClient(msgConn)
+	dialogClient = relationApi.NewDialogServiceClient(msgConn)
 }
 func setupRelationGRPCClient() {
 	var err error

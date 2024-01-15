@@ -62,6 +62,8 @@ var (
 	DialogErrCreateDialogFailed         = New(14100, "创建对话失败")
 	DialogErrJoinDialogFailed           = New(14101, "加入对话失败")
 	DialogErrGetUserDialogListFailed    = New(14102, "获取用户对话列表失败")
+	DialogErrDeleteDialogFailed         = New(14103, "删除对话失败")
+	DialogErrDeleteDialogUsersFailed    = New(14104, "删除对话用户失败")
 
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed      = New(15000, "获取群聊信息失败")

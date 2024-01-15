@@ -170,7 +170,6 @@ func sendUserMsg(c *gin.Context) {
 		MsgType:  req.Type,
 		ReplayId: req.ReplayId,
 	}}
-	// todo 记录离线推送
 	err = rabbitMQClient.PublishMessage(req.ReceiverId, msg)
 	if err != nil {
 		fmt.Println("发布消息失败：", err)
@@ -209,6 +208,18 @@ func sendGroupMsg(c *gin.Context) {
 		return
 	}
 	//todo 判断是否在群聊里
+	if req.GroupId == 0 {
+		response.Fail(c, "群聊id不正确", nil)
+		return
+	}
+	_, err = userGroupClient.GetGroupRelation(context.Background(), &relation.GetGroupRelationRequest{
+		UserId:  thisId,
+		GroupId: req.GroupId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	//todo 判断是否被禁言
 	_, err = msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
 		DialogId: req.DialogId,
@@ -345,7 +356,7 @@ func getUserDialogList(c *gin.Context) {
 		return
 	}
 	//获取对话id
-	ids, err := dialogClient.GetUserDialogList(context.Background(), &msg.GetUserDialogListRequest{
+	ids, err := dialogClient.GetUserDialogList(context.Background(), &relation.GetUserDialogListRequest{
 		UserId: thisId,
 	})
 	if err != nil {
@@ -353,7 +364,7 @@ func getUserDialogList(c *gin.Context) {
 		return
 	}
 	//获取对话信息
-	infos, err := dialogClient.GetDialogByIds(context.Background(), &msg.GetDialogByIdsRequest{
+	infos, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
 	//获取最后一条消息
@@ -370,7 +381,7 @@ func getUserDialogList(c *gin.Context) {
 		var re UserDialogListResponse
 		//用户
 		if v.Type == 0 {
-			users, _ := dialogClient.GetDialogUsersByDialogID(context.Background(), &msg.GetDialogUsersByDialogIDRequest{
+			users, _ := dialogClient.GetDialogUsersByDialogID(context.Background(), &relation.GetDialogUsersByDialogIDRequest{
 				DialogId: v.Id,
 			})
 			if len(users.UserIds) == 0 {
