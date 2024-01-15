@@ -79,10 +79,11 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 		return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), err.Error())
 	}
 	userInfo, err := g.ur.InsertUser(&entity.User{
-		Email:    request.Email,
-		Password: request.Password,
-		NickName: request.NickName,
-		Avatar:   request.Avatar,
+		Email:     request.Email,
+		Password:  request.Password,
+		NickName:  request.NickName,
+		Avatar:    request.Avatar,
+		PublicKey: request.PublicKey,
 		//Status:   entity.UserStatusLock,
 		Status: entity.UserStatusNormal,
 		ID:     utils.GenUUid(),
