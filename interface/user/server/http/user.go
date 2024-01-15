@@ -49,13 +49,6 @@ func login(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	_, err = userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
-		PublicKey: req.PublicKey,
-		UserId:    resp.UserId,
-	})
-	if err != nil {
-		return
-	}
 
 	token, err := utils.GenerateToken(resp.UserId, resp.Email)
 	if err != nil {
@@ -122,16 +115,10 @@ func register(c *gin.Context) {
 		NickName:        req.Nickname,
 		Password:        utils.HashString(req.Password),
 		ConfirmPassword: req.ConfirmPass,
+		PublicKey:       req.PublicKey,
 	})
 	if err != nil {
 		c.Error(err)
-		return
-	}
-	_, err = userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
-		PublicKey: req.PublicKey,
-		UserId:    resp.UserId,
-	})
-	if err != nil {
 		return
 	}
 	c.Set("user_id", resp.UserId)
