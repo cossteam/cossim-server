@@ -21,7 +21,6 @@ import (
 
 // @Summary 黑名单
 // @Description 黑名单
-// @Accept  json
 // @Produce  json
 // @Success		200 {object} utils.Response{}
 // @Router /relation/user/blacklist [get]
@@ -34,14 +33,9 @@ func blackList(c *gin.Context) {
 	}
 
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
-		return
-	}
-
-	if user == nil {
-		response.Fail(c, "用户不存在", nil)
 		return
 	}
 
@@ -59,6 +53,7 @@ func blackList(c *gin.Context) {
 
 	blacklist, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: users})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 
@@ -67,7 +62,6 @@ func blackList(c *gin.Context) {
 
 // @Summary 好友列表
 // @Description 好友列表
-// @Accept  json
 // @Produce  json
 // @Success		200 {object} utils.Response{}
 // @Router /relation/user/friend_list [get]
@@ -79,15 +73,10 @@ func friendList(c *gin.Context) {
 		return
 	}
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		logger.Error("user service UserInfo", zap.Error(err))
 		c.Error(err)
-		return
-	}
-
-	if user == nil {
-		response.Fail(c, "用户不存在", nil)
 		return
 	}
 
@@ -98,6 +87,7 @@ func friendList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+
 	var users []string
 	for _, user := range friendListResp.FriendList {
 		users = append(users, user.UserId)
@@ -165,7 +155,6 @@ func userRequestList(c *gin.Context) {
 	var ids []string
 	var data []*requestListResponse
 	for _, v := range reqList.FriendRequestList {
-		fmt.Println("reqList v => ", v)
 		ids = append(ids, v.UserId)
 		data = append(data, &requestListResponse{
 			UserID: v.UserId,
@@ -175,16 +164,15 @@ func userRequestList(c *gin.Context) {
 
 	users, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: ids})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 
 	for _, v := range data {
 		for _, u := range users.Users {
-			fmt.Println("uu => ", u)
 			if v.UserID == u.UserId {
 				v.Nickname = u.NickName
 				v.Avatar = u.Avatar
-				fmt.Println("vv => ", v)
 				break
 			}
 		}
@@ -220,26 +208,16 @@ func deleteBlacklist(c *gin.Context) {
 	}
 
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
-		return
-	}
-
-	if user == nil {
-		response.Fail(c, "用户不存在", nil)
 		return
 	}
 
 	// 检查要删除的黑名单用户是否存在
-	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
-		return
-	}
-
-	if user2 == nil {
-		response.Fail(c, "用户不存在", nil)
 		return
 	}
 
@@ -278,27 +256,10 @@ func addBlacklist(c *gin.Context) {
 		return
 	}
 
-	// 检查用户是否存在
-	//user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//
-	//if user == nil {
-	//	response.Fail(c, "用户不存在", nil)
-	//	return
-	//}
-
 	// 检查添加黑名单的用户是否存在
-	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
 		c.Error(err)
-		return
-	}
-
-	if user2 == nil {
-		response.Fail(c, "用户不存在", nil)
 		return
 	}
 
@@ -338,16 +299,12 @@ func deleteFriend(c *gin.Context) {
 	}
 
 	// 检查删除的用户是否存在
-	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	if user2 == nil {
-		response.Fail(c, "要删除的用户不存在", nil)
-		return
-	}
 	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationApi.GetUserRelationRequest{UserId: userID, FriendId: req.UserID})
 	if err != nil {
 		c.Error(err)
@@ -396,16 +353,12 @@ func confirmFriend(c *gin.Context) {
 	}
 
 	// 检查要添加的用户是否存在
-	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	if user2 == nil {
-		response.Fail(c, "用户不存在", nil)
-		return
-	}
 	//创建对话
 	dialog, err := dialogClient.CreateDialog(context.Background(), &relationApi.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
 	if err != nil {
@@ -433,10 +386,11 @@ func confirmFriend(c *gin.Context) {
 	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req}
 	err = rabbitMQClient.PublishMessage(req.UserID, msg)
 	if err != nil {
-		fmt.Println("发布消息失败：", err)
+		logger.Error("发送消息失败", zap.Error(err))
 		response.Fail(c, "同意好友申请失败", nil)
 		return
 	}
+
 	response.Success(c, "同意好友申请成功", nil)
 }
 
@@ -470,27 +424,20 @@ func addFriend(c *gin.Context) {
 		return
 	}
 	// 检查用户是否存在
-	user, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
 	if err != nil {
 		c.Error(err)
-		return
-	}
-	if user == nil {
-		response.Fail(c, "用户不存在", nil)
 		return
 	}
 
 	// 检查添加的用户是否存在
-	user2, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	if user2 == nil {
-		response.Fail(c, "用户不存在", nil)
-		return
-	}
-	if _, err := userRelationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{
+
+	if _, err = userRelationClient.AddFriend(context.Background(), &relationApi.AddFriendRequest{
 		UserId:   thisId,
 		FriendId: req.UserID,
 		Msg:      req.Msg,
@@ -499,13 +446,7 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	//_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
 	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
-
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
@@ -514,7 +455,7 @@ func addFriend(c *gin.Context) {
 
 	err = rabbitMQClient.PublishMessage(req.UserID, msg)
 	if err != nil {
-		fmt.Println("发布消息失败：", err)
+		logger.Error("发送消息失败", zap.Error(err))
 		response.Fail(c, "发送好友请求失败", nil)
 		return
 	}
@@ -550,6 +491,7 @@ func getGroupMember(c *gin.Context) {
 
 	resp, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: groupRelation.UserIds})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 
