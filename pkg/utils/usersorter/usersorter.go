@@ -22,6 +22,7 @@ type CustomUserData struct {
 	Avatar    string `json:"avatar"`
 	Signature string ` json:"signature"`
 	Status    uint   `json:"status"`
+	DialogId  uint32 `json:"dialog_id"`
 }
 
 func ConvertToGinH(data map[string][]interface{}) gin.H {

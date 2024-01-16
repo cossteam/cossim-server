@@ -196,7 +196,7 @@ func (s *Service) GetFriendList(ctx context.Context, request *v1.GetFriendListRe
 	}
 
 	for _, friend := range friends {
-		resp.FriendList = append(resp.FriendList, &v1.Friend{UserId: friend.FriendID})
+		resp.FriendList = append(resp.FriendList, &v1.Friend{UserId: friend.FriendID, DialogId: uint32(friend.DialogId)})
 	}
 
 	return resp, nil
@@ -241,7 +241,6 @@ func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 	}
 
 	for _, friend := range friends {
-		fmt.Println("GetFriendRequestList => ", friend)
 		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
 			UserId: friend.FriendID,
 			Msg:    friend.Remark,

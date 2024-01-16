@@ -101,14 +101,21 @@ func friendList(c *gin.Context) {
 
 	var data []usersorter.User
 	for _, v := range userInfos.Users {
-		data = append(data, usersorter.CustomUserData{
-			UserID:   v.UserId,
-			NickName: v.NickName,
-			Email:    v.Email,
-			Tel:      v.Tel,
-			Avatar:   v.Avatar,
-			Status:   uint(v.Status),
-		})
+		for _, friend := range friendListResp.FriendList {
+			if friend.UserId == v.UserId {
+				data = append(data, usersorter.CustomUserData{
+					UserID:   v.UserId,
+					NickName: v.NickName,
+					Email:    v.Email,
+					Tel:      v.Tel,
+					Avatar:   v.Avatar,
+					Status:   uint(v.Status),
+					DialogId: friend.DialogId,
+				})
+				break
+			}
+		}
+
 	}
 
 	// Sort and group by specified field
