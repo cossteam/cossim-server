@@ -64,6 +64,8 @@ message DeleteBlacklistResponse {
 message Friend {
   // @inject_tag: json:"user_id" form:"user_id"
   string UserId = 1;
+  // @inject_tag: json:"dialog_id" form:"dialog_id"
+  uint32 DialogId = 2;
 }
 
 message GetFriendListRequest {
@@ -96,8 +98,9 @@ message GetUserRelationRequest {
   string UserId = 1;
   // @inject_tag: json:"friend_id"
   string FriendId = 2;
-
 }
+
+
 
 enum RelationStatus {
   RELATION_STATUS_Unknown = 0;
