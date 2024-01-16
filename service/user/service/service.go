@@ -76,7 +76,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 	//添加用户
 	_, err := g.ur.GetUserInfoByEmail(request.Email)
 	if err == nil {
-		return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), code.UserErrEmailAlreadyRegistered.Message())
 	}
 	userInfo, err := g.ur.InsertUser(&entity.User{
 		Email:     request.Email,
@@ -91,9 +91,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 	if err != nil {
 		return resp, status.Error(codes.Code(code.UserErrRegistrationFailed.Code()), err.Error())
 	}
-	resp = &api.UserRegisterResponse{
-		UserId: userInfo.ID,
-	}
+	resp.UserId = userInfo.ID
 	return resp, nil
 }
 
