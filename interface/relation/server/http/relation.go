@@ -325,8 +325,8 @@ func deleteFriend(c *gin.Context) {
 }
 
 type confirmFriendRequest struct {
-	UserID      string `json:"user_id" binding:"required"`
-	P2PublicKey string `json:"p2public_key"`
+	UserID       string `json:"user_id" binding:"required"`
+	E2EPublicKey string `json:"e2e_public_key"`
 }
 
 // @Summary 确认添加好友
@@ -394,9 +394,9 @@ func confirmFriend(c *gin.Context) {
 }
 
 type addFriendRequest struct {
-	UserID      string `json:"user_id" binding:"required"`
-	Msg         string `json:"msg"`
-	P2PublicKey string `json:"p2public_key"`
+	UserID       string `json:"user_id" binding:"required"`
+	Msg          string `json:"msg"`
+	E2EPublicKey string `json:"e2e_public_key"`
 }
 
 // @Summary 添加好友

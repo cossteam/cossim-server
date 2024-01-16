@@ -39,8 +39,8 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 		UserID:   userId,
 		FriendID: friendId,
 		Remark:   request.Msg,
-		//Status:   entity.UserStatusPending,
-		Status: entity.UserStatusAdded,
+		Status:   entity.UserStatusPending,
+		//Status: entity.UserStatusAdded,
 	}
 	//
 	//if userId == friendId {
@@ -56,8 +56,8 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	relation2 := &entity.UserRelation{
 		UserID:   friendId,
 		FriendID: userId,
-		//Status:   entity.UserStatusApplying,
-		Status: entity.UserStatusAdded,
+		Status:   entity.UserStatusApplying,
+		//Status: entity.UserStatusAdded,
 	}
 
 	//if userId == friendId {

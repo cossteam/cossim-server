@@ -543,6 +543,8 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)
 			if err != nil {
+				fmt.Println("send ws msg err:", err)
+				continue
 			}
 		}
 		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &wsGroupMsg{
@@ -563,11 +565,18 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 
 // SendMsg 推送消息
 func SendMsg(uid string, event config.WSEventType, data interface{}) {
+	m := config.WsMsg{Uid: uid, Event: event, Rid: 0, Data: data, SendAt: time.Now().Unix()}
 	if _, ok := Pool[uid]; !ok {
+		//不在线则推送到消息队列
+		err := rabbitMQClient.PublishMessage(uid, m)
+		if err != nil {
+			fmt.Println("发布消息失败：", err)
+			return
+		}
 		return
 	}
 	for _, c := range Pool[uid] {
-		m := config.WsMsg{Uid: uid, Event: event, Rid: c.Rid, Data: data, SendAt: time.Now().Unix()}
+		m.Rid = c.Rid
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
