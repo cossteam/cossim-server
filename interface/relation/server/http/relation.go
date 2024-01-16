@@ -331,20 +331,21 @@ func deleteFriend(c *gin.Context) {
 	response.Success(c, "删除好友成功", nil)
 }
 
-type confirmFriendRequest struct {
-	UserID       string `json:"user_id" binding:"required"`
-	E2EPublicKey string `json:"e2e_public_key"`
+type manageFriendRequests struct {
+	UserID       string                     `json:"user_id" binding:"required"`
+	Status       relationApi.RelationStatus `json:"status" binding:"required"`
+	E2EPublicKey string                     `json:"e2e_public_key"`
 }
 
-// @Summary 确认添加好友
-// @Description 确认添加好友
+// @Summary 管理好友请求
+// @Description 管理好友请求
 // @Accept  json
 // @Produce  json
-// @param request body confirmFriendRequest true "request"
+// @param request body manageFriendRequests true "request"
 // @Success		200 {object} utils.Response{}
-// @Router /relation/user/confirm_friend [post]
-func confirmFriend(c *gin.Context) {
-	req := new(confirmFriendRequest)
+// @Router /relation/user/manage_friend [post]
+func manageFriend(c *gin.Context) {
+	req := new(manageFriendRequests)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -383,21 +384,27 @@ func confirmFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
+	var status relationApi.RelationStatus
+	if req.Status == 1 {
+		status = relationApi.RelationStatus_RELATION_STATUS_ADDED
+	} else {
+		status = relationApi.RelationStatus_RELATION_STATUS_REJECTED
+	}
 	// 进行确认好友操作
-	if _, err = userRelationClient.ConfirmFriend(context.Background(), &relationApi.ConfirmFriendRequest{UserId: userID, FriendId: req.UserID, DialogId: dialog.Id}); err != nil {
+	if _, err = userRelationClient.ManageFriend(context.Background(), &relationApi.ManageFriendRequest{UserId: userID, FriendId: req.UserID, DialogId: dialog.Id, Status: status}); err != nil {
 		c.Error(err)
 		return
 	}
-	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.ConfirmFriendEvent, Data: req}
+	req.UserID = userID
+	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.ManageFriendEvent, Data: req}
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
 		logger.Error("推送服务消息失败", zap.Error(err))
-		response.Fail(c, "同意好友申请失败", nil)
+		response.Fail(c, "管理好友申请失败", nil)
 		return
 	}
 
-	response.Success(c, "同意好友申请成功", nil)
+	response.Success(c, "管理好友申请成功", nil)
 }
 
 type addFriendRequest struct {
@@ -448,6 +455,7 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
+	req.UserID = thisId
 	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
@@ -693,7 +701,7 @@ func approveJoinGroup(c *gin.Context) {
 		return
 	}
 
-	if groupApi.GroupStatus(group.Status) != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
 		response.Fail(c, "群聊状态不可用", nil)
 		return
 	}

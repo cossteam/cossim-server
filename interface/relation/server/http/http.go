@@ -160,7 +160,7 @@ func route(engine *gin.Engine) {
 	u.GET("/blacklist", blackList)
 	u.GET("/request_list", userRequestList)
 	u.POST("/add_friend", addFriend)
-	u.POST("/confirm_friend", confirmFriend)
+	u.POST("/manage_friend", manageFriend)
 	u.POST("/delete_friend", deleteFriend)
 	u.POST("/add_blacklist", addBlacklist)
 	u.POST("/delete_blacklist", deleteBlacklist)

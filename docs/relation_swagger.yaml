@@ -27,15 +27,6 @@ definitions:
     - group_id
     - user_id
     type: object
-  http.confirmFriendRequest:
-    properties:
-      e2e_public_key:
-        type: string
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
   http.deleteBlacklistRequest:
     properties:
       user_id:
@@ -56,6 +47,8 @@ definitions:
         type: integer
     required:
     - group_id
+    type: object
+  http.manageFriendRequests:
     type: object
   http.quitGroupRequest:
     properties:
@@ -311,26 +304,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 黑名单
-  /relation/user/confirm_friend:
-    post:
-      consumes:
-      - application/json
-      description: 确认添加好友
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.confirmFriendRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 确认添加好友
   /relation/user/delete_friend:
     post:
       consumes:
@@ -362,6 +335,26 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 好友列表
+  /relation/user/manage_friend:
+    post:
+      consumes:
+      - application/json
+      description: 管理好友请求
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.manageFriendRequests'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 管理好友请求
   /relation/user/request_list:
     get:
       description: 好友申请列表

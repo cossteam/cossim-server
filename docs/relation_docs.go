@@ -332,37 +332,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/confirm_friend": {
-            "post": {
-                "description": "确认添加好友",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "确认添加好友",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.confirmFriendRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/relation/user/delete_friend": {
             "post": {
                 "description": "删除好友",
@@ -401,6 +370,37 @@ const docTemplaterelation = `{
                     "application/json"
                 ],
                 "summary": "好友列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/user/manage_friend": {
+            "post": {
+                "description": "管理好友请求",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "管理好友请求",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.manageFriendRequests"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -509,20 +509,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "http.confirmFriendRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "e2e_public_key": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "http.deleteBlacklistRequest": {
             "type": "object",
             "required": [
@@ -555,6 +541,9 @@ const docTemplaterelation = `{
                     "type": "integer"
                 }
             }
+        },
+        "http.manageFriendRequests": {
+            "type": "object"
         },
         "http.quitGroupRequest": {
             "type": "object",

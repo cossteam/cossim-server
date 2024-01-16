@@ -116,6 +116,7 @@ func register(c *gin.Context) {
 		Password:        utils.HashString(req.Password),
 		ConfirmPassword: req.ConfirmPass,
 		PublicKey:       req.PublicKey,
+		Avatar:          "https://fastly.picsum.photos/id/1036/200/200.jpg?hmac=Yb5E0WTltIYlUDPDqT-d0Llaaq0mJnwiCUtxx8RrtVE",
 	})
 	if err != nil {
 		c.Error(err)

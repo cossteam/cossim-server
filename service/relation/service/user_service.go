@@ -73,8 +73,8 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	return resp, nil
 }
 
-func (s *Service) ConfirmFriend(ctx context.Context, request *v1.ConfirmFriendRequest) (*v1.ConfirmFriendResponse, error) {
-	resp := &v1.ConfirmFriendResponse{}
+func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
+	resp := &v1.ManageFriendResponse{}
 
 	userId := request.GetUserId()
 	friendId := request.GetFriendId()
@@ -90,7 +90,7 @@ func (s *Service) ConfirmFriend(ctx context.Context, request *v1.ConfirmFriendRe
 		return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
 	}
 
-	relation1.Status = entity.UserStatusAdded
+	relation1.Status = entity.UserRelationStatus(request.Status)
 	relation1.DialogId = uint(request.DialogId)
 	_, err = s.urr.UpdateRelation(relation1)
 	if err != nil {
