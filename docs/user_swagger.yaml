@@ -5,12 +5,9 @@ definitions:
         type: string
       password:
         type: string
-      public_key:
-        type: string
     required:
     - email
     - password
-    - public_key
     type: object
   http.PasswordRequest:
     properties:
