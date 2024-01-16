@@ -15,9 +15,9 @@ import (
 )
 
 type LoginRequest struct {
-	Email     string `json:"email" binding:"required"`
-	Password  string `json:"password" binding:"required"`
-	PublicKey string `json:"public_key" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	//PublicKey string `json:"public_key" binding:"required"`
 }
 
 // @Summary 用户登录
