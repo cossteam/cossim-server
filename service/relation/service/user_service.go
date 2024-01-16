@@ -96,13 +96,12 @@ func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequ
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
-
 	relation2, err := s.urr.GetRelationByID(friendId, userId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to get relation: %v", err))
 	}
 
-	relation2.Status = entity.UserStatusAdded
+	relation2.Status = entity.UserRelationStatus(request.Status)
 	relation2.DialogId = uint(request.DialogId)
 	_, err = s.urr.UpdateRelation(relation2)
 	if err != nil {

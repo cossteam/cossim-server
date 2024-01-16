@@ -366,7 +366,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.manageFriendRequests"
+                            "$ref": "#/definitions/http.ManageFriendRequest"
                         }
                     }
                 ],
@@ -435,6 +435,23 @@ const docTemplaterelation = `{
         }
     },
     "definitions": {
+        "http.ManageFriendRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "e2e_public_key": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "http.addBlacklistRequest": {
             "type": "object",
             "required": [
@@ -514,9 +531,6 @@ const docTemplaterelation = `{
                     "type": "integer"
                 }
             }
-        },
-        "http.manageFriendRequests": {
-            "type": "object"
         },
         "http.quitGroupRequest": {
             "type": "object",
