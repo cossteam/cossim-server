@@ -164,6 +164,7 @@ func route(engine *gin.Engine) {
 	u.POST("/delete_friend", deleteFriend)
 	u.POST("/add_blacklist", addBlacklist)
 	u.POST("/delete_blacklist", deleteBlacklist)
+	u.POST("/switch/e2e/key", switchUserE2EPublicKey)
 
 	g := api.Group("/group")
 	g.GET("/member", getGroupMember)
