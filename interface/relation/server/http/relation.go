@@ -385,7 +385,7 @@ func confirmFriend(c *gin.Context) {
 	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.ConfirmFriendEvent, Data: req}
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
-		logger.Error("推送服务消息是吧", zap.Error(err))
+		logger.Error("推送服务消息失败", zap.Error(err))
 		response.Fail(c, "同意好友申请失败", nil)
 		return
 	}

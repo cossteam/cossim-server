@@ -276,17 +276,13 @@ const docTemplateuser = `{
             "type": "object",
             "required": [
                 "email",
-                "password",
-                "public_key"
+                "password"
             ],
             "properties": {
                 "email": {
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                },
-                "public_key": {
                     "type": "string"
                 }
             }

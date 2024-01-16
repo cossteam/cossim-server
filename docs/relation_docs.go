@@ -318,9 +318,6 @@ const docTemplaterelation = `{
         "/relation/user/blacklist": {
             "get": {
                 "description": "黑名单",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -400,9 +397,6 @@ const docTemplaterelation = `{
         "/relation/user/friend_list": {
             "get": {
                 "description": "好友列表",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -434,7 +428,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/user/switch/e2e/key": {
+        "/relation/user/switch/e2e/key": {
             "post": {
                 "security": [
                     {
@@ -489,10 +483,10 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
-                "msg": {
+                "e2e_public_key": {
                     "type": "string"
                 },
-                "p2public_key": {
+                "msg": {
                     "type": "string"
                 },
                 "user_id": {
@@ -521,7 +515,7 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
-                "p2public_key": {
+                "e2e_public_key": {
                     "type": "string"
                 },
                 "user_id": {

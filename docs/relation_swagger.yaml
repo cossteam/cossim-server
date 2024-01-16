@@ -8,9 +8,9 @@ definitions:
     type: object
   http.addFriendRequest:
     properties:
-      msg:
+      e2e_public_key:
         type: string
-      p2public_key:
+      msg:
         type: string
       user_id:
         type: string
@@ -29,7 +29,7 @@ definitions:
     type: object
   http.confirmFriendRequest:
     properties:
-      p2public_key:
+      e2e_public_key:
         type: string
       user_id:
         type: string
@@ -302,8 +302,6 @@ paths:
       summary: 添加好友
   /relation/user/blacklist:
     get:
-      consumes:
-      - application/json
       description: 黑名单
       produces:
       - application/json
@@ -355,8 +353,6 @@ paths:
       summary: 删除好友
   /relation/user/friend_list:
     get:
-      consumes:
-      - application/json
       description: 好友列表
       produces:
       - application/json
@@ -377,7 +373,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 好友申请列表
-  /user/switch/e2e/key:
+  /relation/user/switch/e2e/key:
     post:
       consumes:
       - application/json
