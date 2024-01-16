@@ -21,10 +21,13 @@ definitions:
     properties:
       group_id:
         type: integer
+      status:
+        type: integer
       user_id:
         type: string
     required:
     - group_id
+    - status
     - user_id
     type: object
   http.deleteBlacklistRequest:
@@ -56,16 +59,6 @@ definitions:
         type: integer
     required:
     - group_id
-    type: object
-  http.rejectJoinGroupRequest:
-    properties:
-      group_id:
-        type: integer
-      user_id:
-        type: string
-    required:
-    - group_id
-    - user_id
     type: object
   http.removeUserFromGroupRequest:
     properties:
@@ -119,26 +112,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 删除黑名单
-  /relation/group/approve:
-    post:
-      consumes:
-      - application/json
-      description: 同意加入群聊
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.approveJoinGroupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 同意加入群聊
   /relation/group/join:
     post:
       consumes:
@@ -159,6 +132,26 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 加入群聊
+  /relation/group/manage_join_group:
+    post:
+      consumes:
+      - application/json
+      description: 管理加入群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.approveJoinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 管理加入群聊
   /relation/group/member:
     get:
       description: 群聊成员列表
@@ -196,26 +189,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 退出群聊
-  /relation/group/reject:
-    post:
-      consumes:
-      - application/json
-      description: 拒绝用户加入群聊
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.rejectJoinGroupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 拒绝用户加入群聊
   /relation/group/remove:
     post:
       consumes:

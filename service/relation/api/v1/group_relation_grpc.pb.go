@@ -22,8 +22,7 @@ const (
 	GroupRelationService_JoinGroup_FullMethodName                    = "/v1.GroupRelationService/JoinGroup"
 	GroupRelationService_GetUserGroupIDs_FullMethodName              = "/v1.GroupRelationService/GetUserGroupIDs"
 	GroupRelationService_GetGroupAdminIds_FullMethodName             = "/v1.GroupRelationService/GetGroupAdminIds"
-	GroupRelationService_ApproveJoinGroup_FullMethodName             = "/v1.GroupRelationService/ApproveJoinGroup"
-	GroupRelationService_RejectJoinGroup_FullMethodName              = "/v1.GroupRelationService/RejectJoinGroup"
+	GroupRelationService_ManageJoinGroup_FullMethodName              = "/v1.GroupRelationService/ManageJoinGroup"
 	GroupRelationService_RemoveFromGroup_FullMethodName              = "/v1.GroupRelationService/RemoveFromGroup"
 	GroupRelationService_LeaveGroup_FullMethodName                   = "/v1.GroupRelationService/LeaveGroup"
 	GroupRelationService_GetGroupJoinRequestList_FullMethodName      = "/v1.GroupRelationService/GetGroupJoinRequestList"
@@ -38,8 +37,7 @@ type GroupRelationServiceClient interface {
 	JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
 	GetUserGroupIDs(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
 	GetGroupAdminIds(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
-	ApproveJoinGroup(ctx context.Context, in *ApproveJoinGroupRequest, opts ...grpc.CallOption) (*ApproveJoinGroupResponse, error)
-	RejectJoinGroup(ctx context.Context, in *RejectJoinGroupRequest, opts ...grpc.CallOption) (*RejectJoinGroupResponse, error)
+	ManageJoinGroup(ctx context.Context, in *ManageJoinGroupRequest, opts ...grpc.CallOption) (*ManageJoinGroupResponse, error)
 	RemoveFromGroup(ctx context.Context, in *RemoveFromGroupRequest, opts ...grpc.CallOption) (*RemoveFromGroupResponse, error)
 	LeaveGroup(ctx context.Context, in *LeaveGroupRequest, opts ...grpc.CallOption) (*LeaveGroupResponse, error)
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
@@ -82,18 +80,9 @@ func (c *groupRelationServiceClient) GetGroupAdminIds(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *groupRelationServiceClient) ApproveJoinGroup(ctx context.Context, in *ApproveJoinGroupRequest, opts ...grpc.CallOption) (*ApproveJoinGroupResponse, error) {
-	out := new(ApproveJoinGroupResponse)
-	err := c.cc.Invoke(ctx, GroupRelationService_ApproveJoinGroup_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *groupRelationServiceClient) RejectJoinGroup(ctx context.Context, in *RejectJoinGroupRequest, opts ...grpc.CallOption) (*RejectJoinGroupResponse, error) {
-	out := new(RejectJoinGroupResponse)
-	err := c.cc.Invoke(ctx, GroupRelationService_RejectJoinGroup_FullMethodName, in, out, opts...)
+func (c *groupRelationServiceClient) ManageJoinGroup(ctx context.Context, in *ManageJoinGroupRequest, opts ...grpc.CallOption) (*ManageJoinGroupResponse, error) {
+	out := new(ManageJoinGroupResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_ManageJoinGroup_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +141,7 @@ type GroupRelationServiceServer interface {
 	JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
 	GetUserGroupIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
 	GetGroupAdminIds(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
-	ApproveJoinGroup(context.Context, *ApproveJoinGroupRequest) (*ApproveJoinGroupResponse, error)
-	RejectJoinGroup(context.Context, *RejectJoinGroupRequest) (*RejectJoinGroupResponse, error)
+	ManageJoinGroup(context.Context, *ManageJoinGroupRequest) (*ManageJoinGroupResponse, error)
 	RemoveFromGroup(context.Context, *RemoveFromGroupRequest) (*RemoveFromGroupResponse, error)
 	LeaveGroup(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error)
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
@@ -175,11 +163,8 @@ func (UnimplementedGroupRelationServiceServer) GetUserGroupIDs(context.Context, 
 func (UnimplementedGroupRelationServiceServer) GetGroupAdminIds(context.Context, *GroupIDRequest) (*UserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupAdminIds not implemented")
 }
-func (UnimplementedGroupRelationServiceServer) ApproveJoinGroup(context.Context, *ApproveJoinGroupRequest) (*ApproveJoinGroupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ApproveJoinGroup not implemented")
-}
-func (UnimplementedGroupRelationServiceServer) RejectJoinGroup(context.Context, *RejectJoinGroupRequest) (*RejectJoinGroupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RejectJoinGroup not implemented")
+func (UnimplementedGroupRelationServiceServer) ManageJoinGroup(context.Context, *ManageJoinGroupRequest) (*ManageJoinGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ManageJoinGroup not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) RemoveFromGroup(context.Context, *RemoveFromGroupRequest) (*RemoveFromGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveFromGroup not implemented")
@@ -263,38 +248,20 @@ func _GroupRelationService_GetGroupAdminIds_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupRelationService_ApproveJoinGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ApproveJoinGroupRequest)
+func _GroupRelationService_ManageJoinGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ManageJoinGroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupRelationServiceServer).ApproveJoinGroup(ctx, in)
+		return srv.(GroupRelationServiceServer).ManageJoinGroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupRelationService_ApproveJoinGroup_FullMethodName,
+		FullMethod: GroupRelationService_ManageJoinGroup_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupRelationServiceServer).ApproveJoinGroup(ctx, req.(*ApproveJoinGroupRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _GroupRelationService_RejectJoinGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RejectJoinGroupRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GroupRelationServiceServer).RejectJoinGroup(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: GroupRelationService_RejectJoinGroup_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupRelationServiceServer).RejectJoinGroup(ctx, req.(*RejectJoinGroupRequest))
+		return srv.(GroupRelationServiceServer).ManageJoinGroup(ctx, req.(*ManageJoinGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -409,12 +376,8 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GroupRelationService_GetGroupAdminIds_Handler,
 		},
 		{
-			MethodName: "ApproveJoinGroup",
-			Handler:    _GroupRelationService_ApproveJoinGroup_Handler,
-		},
-		{
-			MethodName: "RejectJoinGroup",
-			Handler:    _GroupRelationService_RejectJoinGroup_Handler,
+			MethodName: "ManageJoinGroup",
+			Handler:    _GroupRelationService_ManageJoinGroup_Handler,
 		},
 		{
 			MethodName: "RemoveFromGroup",

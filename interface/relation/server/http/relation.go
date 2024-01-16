@@ -395,8 +395,10 @@ func manageFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	targetId := req.UserID
 	req.UserID = userID
-	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.ManageFriendEvent, Data: req}
+
+	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.ManageFriendEvent, Data: req}
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
 		logger.Error("推送服务消息失败", zap.Error(err))
@@ -454,9 +456,9 @@ func addFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
+	targetId := req.UserID
 	req.UserID = thisId
-	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
+	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
@@ -656,9 +658,8 @@ func joinGroup(c *gin.Context) {
 	adminIds, err := groupRelationClient.GetGroupAdminIds(context.Background(), &relationApi.GroupIDRequest{
 		GroupId: req.GroupID,
 	})
-	//TODO 推送通知给群主、管理员
 	for _, id := range adminIds.UserIds {
-		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: req, SendAt: time.Now().Unix()}
+		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now().Unix()}
 		//通知消息服务有消息需要发送
 		err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 		if err != nil {
@@ -672,16 +673,17 @@ func joinGroup(c *gin.Context) {
 type approveJoinGroupRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"`
 	UserID  string `json:"user_id" binding:"required"`
+	Status  uint32 `json:"status" binding:"required"`
 }
 
-// @Summary 同意加入群聊
-// @Description 同意加入群聊
+// @Summary 管理加入群聊
+// @Description 管理加入群聊
 // @Accept  json
 // @Produce  json
 // @param request body approveJoinGroupRequest true "request"
 // @Success		200 {object} utils.Response{}
-// @Router /relation/group/approve [post]
-func approveJoinGroup(c *gin.Context) {
+// @Router /relation/group/manage_join_group [post]
+func manageJoinGroup(c *gin.Context) {
 	req := new(approveJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
@@ -706,24 +708,14 @@ func approveJoinGroup(c *gin.Context) {
 		return
 	}
 
-	// 获取群聊加入请求列表
-	joins, err := groupRelationClient.GetGroupJoinRequestList(context.Background(), &relationApi.GetGroupJoinRequestListRequest{GroupId: req.GroupID})
-	if err != nil {
-		c.Error(err)
+	relation, err := groupRelationClient.GetGroupRelation(context.Background(), &relationApi.GetGroupRelationRequest{GroupId: req.GroupID, UserId: userID})
+
+	if relation == nil {
+		response.Fail(c, "没有加入群聊的申请", nil)
 		return
 	}
-
-	// 判断用户是否在请求列表中
-	var found bool
-	for _, join := range joins.GroupJoinRequestList {
-		if join.UserId == userID {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		response.Fail(c, "没有加入群聊的申请", nil)
+	if relation.Status != relationApi.GroupRelationStatus_GroupStatusJoined {
+		response.Fail(c, "已经加入群聊", nil)
 		return
 	}
 	id, err := dialogClient.GetDialogByGroupId(context.Background(), &relationApi.GetDialogByGroupIdRequest{GroupId: req.GroupID})
@@ -736,49 +728,24 @@ func approveJoinGroup(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	var status relationApi.GroupRelationStatus
+	if req.Status == 1 {
+		status = relationApi.GroupRelationStatus_GroupStatusJoined
+	} else {
+		status = relationApi.GroupRelationStatus_GroupStatusReject
+	}
 	// 执行同意加入群聊操作
-	if _, err = groupRelationClient.ApproveJoinGroup(context.Background(), &relationApi.ApproveJoinGroupRequest{UserId: req.UserID, GroupId: req.GroupID}); err != nil {
+	if _, err = groupRelationClient.ManageJoinGroup(context.Background(), &relationApi.ManageJoinGroupRequest{UserId: req.UserID, GroupId: req.GroupID, Status: status}); err != nil {
 		c.Error(err)
 		return
 	}
-	//TODO 推送通知给用户
-
-	response.Success(c, "同意加入群聊成功", nil)
-}
-
-type rejectJoinGroupRequest struct {
-	GroupID uint32 `json:"group_id" binding:"required"`
-	UserID  string `json:"user_id" binding:"required"`
-}
-
-// @Summary 拒绝用户加入群聊
-// @Description 拒绝用户加入群聊
-// @Accept  json
-// @Produce  json
-// @param request body rejectJoinGroupRequest true "request"
-// @Success		200 {object} utils.Response{}
-// @Router /relation/group/reject [post]
-func rejectJoinGroup(c *gin.Context) {
-	req := new(rejectJoinGroupRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
-		return
-	}
-
-	userID, err := pkghttp.ParseTokenReUid(c)
+	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "status": status}, SendAt: time.Now().Unix()}
+	//通知消息服务有消息需要发送
+	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
 		return
 	}
-
-	if _, err = groupRelationClient.RejectJoinGroup(context.Background(), &relationApi.RejectJoinGroupRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
-		c.Error(err)
-		return
-	}
-	//TODO 推送通知给用户
-
-	response.Success(c, "拒绝加入群聊成功", nil)
+	response.Success(c, "同意加入群聊成功", nil)
 }
 
 type removeUserFromGroupRequest struct {

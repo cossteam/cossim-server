@@ -40,25 +40,18 @@ message JoinGroupResponse {
 
 }
 
-message ApproveJoinGroupRequest {
+message ManageJoinGroupRequest {
   // @inject_tag: json:"group_id"
   uint32 GroupId = 1;     // 群聊id
   // @inject_tag: json:"user_id"
   string UserId = 2;  // 用户id
+  // @inject_tag: json:"status"
+  GroupRelationStatus Status = 3;
 }
 
-message ApproveJoinGroupResponse {
+message ManageJoinGroupResponse {
 }
 
-message RejectJoinGroupRequest {
-  // @inject_tag: json:"group_id"
-  uint32 GroupId = 1;     // 群聊id
-  // @inject_tag: json:"user_id"
-  string UserId = 2;     // 拒绝的用户id
-}
-
-message RejectJoinGroupResponse {
-}
 
 message RemoveFromGroupRequest {
   // @inject_tag: json:"group_id"
@@ -140,8 +133,7 @@ service GroupRelationService {
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
   rpc GetUserGroupIDs(GroupIDRequest) returns (UserIdsResponse);
   rpc GetGroupAdminIds(GroupIDRequest) returns (UserIdsResponse);
-  rpc ApproveJoinGroup (ApproveJoinGroupRequest) returns (ApproveJoinGroupResponse);
-  rpc RejectJoinGroup (RejectJoinGroupRequest) returns (RejectJoinGroupResponse);
+  rpc ManageJoinGroup (ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
   rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);
   rpc LeaveGroup (LeaveGroupRequest) returns (LeaveGroupResponse);
   rpc GetGroupJoinRequestList (GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse);

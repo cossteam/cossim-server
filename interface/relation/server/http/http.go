@@ -171,10 +171,9 @@ func route(engine *gin.Engine) {
 	g.GET("/request_list", groupRequestList)
 	// 申请加入群聊
 	g.POST("/join", joinGroup)
-	// 同意加入群聊
-	g.POST("/approve", approveJoinGroup)
-	// 拒绝加入群聊
-	g.POST("/reject", rejectJoinGroup)
+	// 管理加入群聊
+	g.POST("/manage_join_group", manageJoinGroup)
+
 	// 移出群聊
 	g.POST("/remove", removeUserFromGroup)
 	// 退出群聊

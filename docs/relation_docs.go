@@ -46,37 +46,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/approve": {
-            "post": {
-                "description": "同意加入群聊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "同意加入群聊",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.approveJoinGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/relation/group/join": {
             "post": {
                 "description": "加入群聊",
@@ -95,6 +64,37 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/http.joinGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/manage_join_group": {
+            "post": {
+                "description": "管理加入群聊",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "管理加入群聊",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.approveJoinGroupRequest"
                         }
                     }
                 ],
@@ -152,37 +152,6 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/http.quitGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/relation/group/reject": {
-            "post": {
-                "description": "拒绝用户加入群聊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "拒绝用户加入群聊",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.rejectJoinGroupRequest"
                         }
                     }
                 ],
@@ -498,10 +467,14 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "group_id",
+                "status",
                 "user_id"
             ],
             "properties": {
                 "group_id": {
+                    "type": "integer"
+                },
+                "status": {
                     "type": "integer"
                 },
                 "user_id": {
@@ -553,21 +526,6 @@ const docTemplaterelation = `{
             "properties": {
                 "group_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "http.rejectJoinGroupRequest": {
-            "type": "object",
-            "required": [
-                "group_id",
-                "user_id"
-            ],
-            "properties": {
-                "group_id": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },

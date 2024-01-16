@@ -58,8 +58,8 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 	return resp, nil
 }
 
-func (s *Service) ApproveJoinGroup(ctx context.Context, request *v1.ApproveJoinGroupRequest) (*v1.ApproveJoinGroupResponse, error) {
-	resp := &v1.ApproveJoinGroupResponse{}
+func (s *Service) ManageJoinGroup(ctx context.Context, request *v1.ManageJoinGroupRequest) (*v1.ManageJoinGroupResponse, error) {
+	resp := &v1.ManageJoinGroupResponse{}
 
 	// 检查是否已经存在加入申请
 	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
@@ -78,37 +78,11 @@ func (s *Service) ApproveJoinGroup(ctx context.Context, request *v1.ApproveJoinG
 		return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), code.RelationGroupErrAlreadyInGroup.Message())
 	}
 
-	relation.Status = entity.GroupStatusJoined
-
+	relation.Status = entity.GroupRelationStatus(request.Status)
 	// 插入加入申请
 	_, err = s.grr.UpdateRelation(relation)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
-	}
-
-	return resp, nil
-}
-
-func (s *Service) RejectJoinGroup(ctx context.Context, request *v1.RejectJoinGroupRequest) (*v1.RejectJoinGroupResponse, error) {
-	resp := &v1.RejectJoinGroupResponse{}
-
-	// 获取用户群关系信息
-	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.RelationGroupErrNoJoinRequestRecords.Code()), code.RelationGroupErrNoJoinRequestRecords.Message())
-		}
-		return resp, status.Error(codes.Code(code.RelationGroupErrRejectJoinGroupFailed.Code()), err.Error())
-	}
-
-	if relation.Status != entity.GroupStatusApplying {
-		return resp, status.Error(codes.Code(code.RelationGroupErrRejectJoinGroupFailed.Code()), "用户群聊状态异常")
-	}
-
-	relation.Status = entity.GroupStatusReject
-	_, err = s.grr.UpdateRelation(relation)
-	if err != nil {
-		return nil, err
 	}
 
 	return resp, nil
