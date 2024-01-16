@@ -534,19 +534,20 @@ type wsGroupMsg struct {
 func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, msgType uint32, replayId uint32, dialogId uint32) {
 	//发送群聊消息
 	for _, uid := range uIds {
-		////遍历该用户所有客户端
-		//if uid == userId {
-		//	continue
-		//}
-		for _, c := range Pool[uid] {
-			m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix(), dialogId}}
-			js, _ := json.Marshal(m)
-			err := c.Conn.WriteMessage(websocket.TextMessage, js)
-			if err != nil {
-				fmt.Println("send ws msg err:", err)
-				continue
+		//在线则推送ws
+		if _, ok := Pool[uid]; ok {
+			for _, c := range Pool[uid] {
+				m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix(), dialogId}}
+				js, _ := json.Marshal(m)
+				err := c.Conn.WriteMessage(websocket.TextMessage, js)
+				if err != nil {
+					fmt.Println("send ws msg err:", err)
+					continue
+				}
 			}
+			return
 		}
+		//否则推送到消息队列
 		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &wsGroupMsg{
 			GroupId:  int64(groupId),
 			UserId:   userId,

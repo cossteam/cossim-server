@@ -46,37 +46,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/approve": {
-            "post": {
-                "description": "同意加入群聊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "同意加入群聊",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.approveJoinGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/relation/group/join": {
             "post": {
                 "description": "加入群聊",
@@ -95,6 +64,37 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/http.joinGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/manage_join_group": {
+            "post": {
+                "description": "管理加入群聊",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "管理加入群聊",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.approveJoinGroupRequest"
                         }
                     }
                 ],
@@ -152,37 +152,6 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/http.quitGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/relation/group/reject": {
-            "post": {
-                "description": "拒绝用户加入群聊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "拒绝用户加入群聊",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.rejectJoinGroupRequest"
                         }
                     }
                 ],
@@ -332,37 +301,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/confirm_friend": {
-            "post": {
-                "description": "确认添加好友",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "确认添加好友",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/http.confirmFriendRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/relation/user/delete_friend": {
             "post": {
                 "description": "删除好友",
@@ -401,6 +339,37 @@ const docTemplaterelation = `{
                     "application/json"
                 ],
                 "summary": "好友列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/user/manage_friend": {
+            "post": {
+                "description": "管理好友请求",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "管理好友请求",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.manageFriendRequests"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -498,25 +467,15 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "group_id",
+                "status",
                 "user_id"
             ],
             "properties": {
                 "group_id": {
                     "type": "integer"
                 },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.confirmFriendRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "e2e_public_key": {
-                    "type": "string"
+                "status": {
+                    "type": "integer"
                 },
                 "user_id": {
                     "type": "string"
@@ -556,6 +515,9 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "http.manageFriendRequests": {
+            "type": "object"
+        },
         "http.quitGroupRequest": {
             "type": "object",
             "required": [
@@ -564,21 +526,6 @@ const docTemplaterelation = `{
             "properties": {
                 "group_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "http.rejectJoinGroupRequest": {
-            "type": "object",
-            "required": [
-                "group_id",
-                "user_id"
-            ],
-            "properties": {
-                "group_id": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },

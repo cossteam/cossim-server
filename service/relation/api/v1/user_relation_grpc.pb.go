@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	UserRelationService_AddFriend_FullMethodName            = "/v1.UserRelationService/AddFriend"
-	UserRelationService_ConfirmFriend_FullMethodName        = "/v1.UserRelationService/ConfirmFriend"
+	UserRelationService_ManageFriend_FullMethodName         = "/v1.UserRelationService/ManageFriend"
 	UserRelationService_DeleteFriend_FullMethodName         = "/v1.UserRelationService/DeleteFriend"
 	UserRelationService_AddBlacklist_FullMethodName         = "/v1.UserRelationService/AddBlacklist"
 	UserRelationService_DeleteBlacklist_FullMethodName      = "/v1.UserRelationService/DeleteBlacklist"
@@ -35,7 +35,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserRelationServiceClient interface {
 	AddFriend(ctx context.Context, in *AddFriendRequest, opts ...grpc.CallOption) (*AddFriendResponse, error)
-	ConfirmFriend(ctx context.Context, in *ConfirmFriendRequest, opts ...grpc.CallOption) (*ConfirmFriendResponse, error)
+	ManageFriend(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error)
 	DeleteFriend(ctx context.Context, in *DeleteFriendRequest, opts ...grpc.CallOption) (*DeleteFriendResponse, error)
 	AddBlacklist(ctx context.Context, in *AddBlacklistRequest, opts ...grpc.CallOption) (*AddBlacklistResponse, error)
 	DeleteBlacklist(ctx context.Context, in *DeleteBlacklistRequest, opts ...grpc.CallOption) (*DeleteBlacklistResponse, error)
@@ -62,9 +62,9 @@ func (c *userRelationServiceClient) AddFriend(ctx context.Context, in *AddFriend
 	return out, nil
 }
 
-func (c *userRelationServiceClient) ConfirmFriend(ctx context.Context, in *ConfirmFriendRequest, opts ...grpc.CallOption) (*ConfirmFriendResponse, error) {
-	out := new(ConfirmFriendResponse)
-	err := c.cc.Invoke(ctx, UserRelationService_ConfirmFriend_FullMethodName, in, out, opts...)
+func (c *userRelationServiceClient) ManageFriend(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error) {
+	out := new(ManageFriendResponse)
+	err := c.cc.Invoke(ctx, UserRelationService_ManageFriend_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (c *userRelationServiceClient) GetFriendRequestList(ctx context.Context, in
 // for forward compatibility
 type UserRelationServiceServer interface {
 	AddFriend(context.Context, *AddFriendRequest) (*AddFriendResponse, error)
-	ConfirmFriend(context.Context, *ConfirmFriendRequest) (*ConfirmFriendResponse, error)
+	ManageFriend(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error)
 	DeleteFriend(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error)
 	AddBlacklist(context.Context, *AddBlacklistRequest) (*AddBlacklistResponse, error)
 	DeleteBlacklist(context.Context, *DeleteBlacklistRequest) (*DeleteBlacklistResponse, error)
@@ -157,8 +157,8 @@ type UnimplementedUserRelationServiceServer struct {
 func (UnimplementedUserRelationServiceServer) AddFriend(context.Context, *AddFriendRequest) (*AddFriendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddFriend not implemented")
 }
-func (UnimplementedUserRelationServiceServer) ConfirmFriend(context.Context, *ConfirmFriendRequest) (*ConfirmFriendResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfirmFriend not implemented")
+func (UnimplementedUserRelationServiceServer) ManageFriend(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ManageFriend not implemented")
 }
 func (UnimplementedUserRelationServiceServer) DeleteFriend(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFriend not implemented")
@@ -212,20 +212,20 @@ func _UserRelationService_AddFriend_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserRelationService_ConfirmFriend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfirmFriendRequest)
+func _UserRelationService_ManageFriend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ManageFriendRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserRelationServiceServer).ConfirmFriend(ctx, in)
+		return srv.(UserRelationServiceServer).ManageFriend(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserRelationService_ConfirmFriend_FullMethodName,
+		FullMethod: UserRelationService_ManageFriend_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserRelationServiceServer).ConfirmFriend(ctx, req.(*ConfirmFriendRequest))
+		return srv.(UserRelationServiceServer).ManageFriend(ctx, req.(*ManageFriendRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -368,8 +368,8 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserRelationService_AddFriend_Handler,
 		},
 		{
-			MethodName: "ConfirmFriend",
-			Handler:    _UserRelationService_ConfirmFriend_Handler,
+			MethodName: "ManageFriend",
+			Handler:    _UserRelationService_ManageFriend_Handler,
 		},
 		{
 			MethodName: "DeleteFriend",

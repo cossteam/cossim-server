@@ -21,19 +21,13 @@ definitions:
     properties:
       group_id:
         type: integer
+      status:
+        type: integer
       user_id:
         type: string
     required:
     - group_id
-    - user_id
-    type: object
-  http.confirmFriendRequest:
-    properties:
-      e2e_public_key:
-        type: string
-      user_id:
-        type: string
-    required:
+    - status
     - user_id
     type: object
   http.deleteBlacklistRequest:
@@ -57,22 +51,14 @@ definitions:
     required:
     - group_id
     type: object
+  http.manageFriendRequests:
+    type: object
   http.quitGroupRequest:
     properties:
       group_id:
         type: integer
     required:
     - group_id
-    type: object
-  http.rejectJoinGroupRequest:
-    properties:
-      group_id:
-        type: integer
-      user_id:
-        type: string
-    required:
-    - group_id
-    - user_id
     type: object
   http.removeUserFromGroupRequest:
     properties:
@@ -126,26 +112,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 删除黑名单
-  /relation/group/approve:
-    post:
-      consumes:
-      - application/json
-      description: 同意加入群聊
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.approveJoinGroupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 同意加入群聊
   /relation/group/join:
     post:
       consumes:
@@ -166,6 +132,26 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 加入群聊
+  /relation/group/manage_join_group:
+    post:
+      consumes:
+      - application/json
+      description: 管理加入群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.approveJoinGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 管理加入群聊
   /relation/group/member:
     get:
       description: 群聊成员列表
@@ -203,26 +189,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 退出群聊
-  /relation/group/reject:
-    post:
-      consumes:
-      - application/json
-      description: 拒绝用户加入群聊
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.rejectJoinGroupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 拒绝用户加入群聊
   /relation/group/remove:
     post:
       consumes:
@@ -311,26 +277,6 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 黑名单
-  /relation/user/confirm_friend:
-    post:
-      consumes:
-      - application/json
-      description: 确认添加好友
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/http.confirmFriendRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: 确认添加好友
   /relation/user/delete_friend:
     post:
       consumes:
@@ -362,6 +308,26 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 好友列表
+  /relation/user/manage_friend:
+    post:
+      consumes:
+      - application/json
+      description: 管理好友请求
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.manageFriendRequests'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 管理好友请求
   /relation/user/request_list:
     get:
       description: 好友申请列表
