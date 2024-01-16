@@ -331,21 +331,21 @@ func deleteFriend(c *gin.Context) {
 	response.Success(c, "删除好友成功", nil)
 }
 
-type manageFriendRequests struct {
-	UserID       string                     `json:"user_id" binding:"required"`
-	Status       relationApi.RelationStatus `json:"status" binding:"required"`
-	E2EPublicKey string                     `json:"e2e_public_key"`
+type ManageFriendRequest struct {
+	UserID       string `json:"user_id" binding:"required"`
+	Status       int32  `json:"status"`
+	E2EPublicKey string `json:"e2e_public_key"`
 }
 
 // @Summary 管理好友请求
 // @Description 管理好友请求
 // @Accept  json
 // @Produce  json
-// @param request body manageFriendRequests true "request"
+// @param request body ManageFriendRequest true "request"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/user/manage_friend [post]
 func manageFriend(c *gin.Context) {
-	req := new(manageFriendRequests)
+	req := new(ManageFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -366,39 +366,55 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
-	//创建对话
-	dialog, err := dialogClient.CreateDialog(context.Background(), &relationApi.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//加入对话
-	_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: userID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//确认添加好友之后加入对话
-	_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
 	var status relationApi.RelationStatus
+	var dialogId uint32 = 0
 	if req.Status == 1 {
 		status = relationApi.RelationStatus_RELATION_STATUS_ADDED
+		//创建对话
+		dialog, err := dialogClient.CreateDialog(context.Background(), &relationApi.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		//加入对话
+		_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: userID})
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		//确认添加好友之后加入对话
+		_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		dialogId = dialog.Id
 	} else {
 		status = relationApi.RelationStatus_RELATION_STATUS_REJECTED
 	}
 	// 进行确认好友操作
-	if _, err = userRelationClient.ManageFriend(context.Background(), &relationApi.ManageFriendRequest{UserId: userID, FriendId: req.UserID, DialogId: dialog.Id, Status: status}); err != nil {
+	if _, err = userRelationClient.ManageFriend(context.Background(), &relationApi.ManageFriendRequest{UserId: userID, FriendId: req.UserID, DialogId: dialogId, Status: status}); err != nil {
 		c.Error(err)
 		return
 	}
 	targetId := req.UserID
 	req.UserID = userID
-
-	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.ManageFriendEvent, Data: req}
+	targetInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: targetId})
+	if err != nil {
+		return
+	}
+	myInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	if err != nil {
+		return
+	}
+	wsMsgData := map[string]interface{}{"user_id": userID, "status": req.Status}
+	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.ManageFriendEvent, Data: wsMsgData}
+	var responseData interface{}
+	if req.Status == 1 {
+		wsMsgData["target_info"] = myInfo
+		wsMsgData["public_key"] = req.E2EPublicKey
+		responseData = targetInfo
+	}
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
 		logger.Error("推送服务消息失败", zap.Error(err))
@@ -406,7 +422,7 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "管理好友申请成功", nil)
+	response.Success(c, "管理好友申请成功", responseData)
 }
 
 type addFriendRequest struct {

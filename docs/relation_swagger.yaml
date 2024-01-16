@@ -1,4 +1,15 @@
 definitions:
+  http.ManageFriendRequest:
+    properties:
+      e2e_public_key:
+        type: string
+      status:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
   http.addBlacklistRequest:
     properties:
       user_id:
@@ -50,8 +61,6 @@ definitions:
         type: integer
     required:
     - group_id
-    type: object
-  http.manageFriendRequests:
     type: object
   http.quitGroupRequest:
     properties:
@@ -319,7 +328,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.manageFriendRequests'
+          $ref: '#/definitions/http.ManageFriendRequest'
       produces:
       - application/json
       responses:

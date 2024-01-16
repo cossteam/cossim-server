@@ -14,7 +14,7 @@ const (
 	SystemNotificationEvent
 	// 添加好友事件
 	AddFriendEvent
-	//确认好友
+	//管理好友请求
 	ManageFriendEvent
 	//推送好友公钥接口
 	PushE2EPublicKeyEvent
