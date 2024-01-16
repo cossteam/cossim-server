@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
@@ -384,9 +383,9 @@ func confirmFriend(c *gin.Context) {
 		return
 	}
 	msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.ConfirmFriendEvent, Data: req}
-	err = rabbitMQClient.PublishMessage(req.UserID, msg)
+	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
-		logger.Error("发送消息失败", zap.Error(err))
+		logger.Error("推送服务消息是吧", zap.Error(err))
 		response.Fail(c, "同意好友申请失败", nil)
 		return
 	}
@@ -446,13 +445,6 @@ func addFriend(c *gin.Context) {
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
-		return
-	}
-
-	err = rabbitMQClient.PublishMessage(req.UserID, msg)
-	if err != nil {
-		logger.Error("发送消息失败", zap.Error(err))
-		response.Fail(c, "发送好友请求失败", nil)
 		return
 	}
 
@@ -618,8 +610,24 @@ func joinGroup(c *gin.Context) {
 		return
 	}
 
-	if groupApi.GroupStatus(group.Status) != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
 		response.Fail(c, "群聊状态不可用", nil)
+		return
+	}
+	//判断是否在群聊中
+	relation, err := groupRelationClient.GetGroupRelation(context.Background(), &relationApi.GetGroupRelationRequest{
+		GroupId: req.GroupID,
+		UserId:  uid,
+	})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	if relation != nil {
+		if relation.Status == relationApi.GroupRelationStatus_GroupStatusJoined {
+			response.Fail(c, "您已经在群聊中", nil)
+			return
+		}
 		return
 	}
 
@@ -633,28 +641,15 @@ func joinGroup(c *gin.Context) {
 	adminIds, err := groupRelationClient.GetGroupAdminIds(context.Background(), &relationApi.GroupIDRequest{
 		GroupId: req.GroupID,
 	})
-	fmt.Println(adminIds)
 	//TODO 推送通知给群主、管理员
-	//for _, id := range adminIds.UserIds {
-	//	msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: req, SendAt: time.Now().Unix()}
-	//	//通知消息服务有消息需要发送
-	//	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	//	if err != nil {
-	//		return
-	//	}
-	//	err = rabbitMQClient.PublishMessage(id, msg)
-	//	if err != nil {
-	//		fmt.Println("发布消息失败：", err)
-	//		response.Fail(c, "发送好友请求失败", nil)
-	//		return
-	//	}
-	//}
-	//msg := msgconfig.WsMsg{Uid: uid, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
-	////通知消息服务有消息需要发送
-	//err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	//if err != nil {
-	//	return
-	//}
+	for _, id := range adminIds.UserIds {
+		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: req, SendAt: time.Now().Unix()}
+		//通知消息服务有消息需要发送
+		err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		if err != nil {
+			return
+		}
+	}
 
 	response.Success(c, "发送加入群聊请求成功", nil)
 }
@@ -879,7 +874,7 @@ type switchUserE2EPublicKeyRequest struct {
 // @param request body switchUserE2EPublicKeyRequest true "request"
 // @Security BearerToken
 // @Success 200 {object} utils.Response{}
-// @Router /user/switch/e2e/key [post]
+// @Router /relation/user/switch/e2e/key [post]
 func switchUserE2EPublicKey(c *gin.Context) {
 	req := new(switchUserE2EPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -911,11 +906,5 @@ func switchUserE2EPublicKey(c *gin.Context) {
 		return
 	}
 
-	err = rabbitMQClient.PublishMessage(req.UserId, msg)
-	if err != nil {
-		fmt.Println("发布消息失败：", err)
-		response.Fail(c, "发送好友请求失败", nil)
-		return
-	}
 	response.Success(c, "交换用户公钥成功", nil)
 }
