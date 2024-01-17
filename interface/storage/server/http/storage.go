@@ -21,7 +21,7 @@ import (
 // @param file formData file true "文件"
 // @param type formData integer false "文件类型"
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /storage/files [post]
 func upload(c *gin.Context) {
 	//userID, err := http2.ParseTokenReUid(c)
@@ -123,7 +123,7 @@ func upload(c *gin.Context) {
 // @Description 下载文件
 // @param id path string true "文件id"
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /storage/files/download/:type/:id [get]
 func download(c *gin.Context) {
 	targetURL := "http://" + conf.MinioConf.Endpoint
@@ -176,7 +176,7 @@ func download(c *gin.Context) {
 // @Description 获取文件信息
 // @param id path string true "文件id"
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /storage/files/:id [get]
 func getFileInfo(c *gin.Context) {
 	//fileID := c.Query("file_id")
@@ -206,7 +206,7 @@ func getFileInfo(c *gin.Context) {
 // @Description 删除文件
 // @param id path string true "文件id"
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /storage/files/:id [delete]
 func deleteFile(c *gin.Context) {
 	//req := &DeleteFileRequest{}

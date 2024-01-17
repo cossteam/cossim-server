@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cossim/coss-server/interface/msg/api/model"
 	"github.com/cossim/coss-server/interface/msg/config"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -101,23 +102,15 @@ func ws(c *gin.Context) {
 	}
 }
 
-type SendUserMsgRequest struct {
-	DialogId   uint32 `json:"dialog_id" binding:"required"`
-	ReceiverId string `json:"receiver_id" binding:"required"`
-	Content    string `json:"content" binding:"required"`
-	Type       uint   `json:"type" binding:"required"`
-	ReplayId   uint   `json:"replay_id" `
-}
-
 // @Summary 发送私聊消息
 // @Description 发送私聊消息
 // @Accept  json
 // @Produce  json
-// @param request body SendUserMsgRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.SendUserMsgRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /msg/send/user [post]
 func sendUserMsg(c *gin.Context) {
-	req := new(SendUserMsgRequest)
+	req := new(model.SendUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -180,7 +173,7 @@ func sendUserMsg(c *gin.Context) {
 			return
 		}
 	}
-	wsMsg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now().Unix(), Data: &wsUserMsg{
+	wsMsg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now().Unix(), Data: &model.WsUserMsg{
 		SendAt:   time.Now().Unix(),
 		DialogId: req.DialogId,
 		SenderId: thisId,
@@ -197,24 +190,15 @@ func sendUserMsg(c *gin.Context) {
 	response.Success(c, "发送成功", nil)
 }
 
-type SendGroupMsgRequest struct {
-	DialogId uint32 `json:"dialog_id" binding:"required"`
-	GroupId  uint32 `json:"group_id" binding:"required"`
-	Content  string `json:"content" binding:"required"`
-	Type     uint32 `json:"type" binding:"required"`
-	ReplayId uint32 `json:"replay_id" binding:"required"`
-	SendAt   int64  `json:"send_at" binding:"required"`
-}
-
 // @Summary 发送群聊消息
 // @Description 发送群聊消息
 // @Accept  json
 // @Produce  json
-// @param request body SendGroupMsgRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.SendGroupMsgRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /msg/send/group [post]
 func sendGroupMsg(c *gin.Context) {
-	req := new(SendGroupMsgRequest)
+	req := new(model.SendGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -292,15 +276,6 @@ func sendGroupMsg(c *gin.Context) {
 	response.Success(c, "发送成功", nil)
 }
 
-type msgListRequest struct {
-	//GroupId    int64  `json:"group_id" binding:"required"`
-	UserId   string `json:"user_id" binding:"required"`
-	Type     int32  `json:"type" binding:"required"`
-	Content  string `json:"content" binding:"required"`
-	PageNum  int    `json:"page_num" binding:"required"`
-	PageSize int    `json:"page_size" binding:"required"`
-}
-
 // @Summary 获取私聊消息
 // @Description 获取私聊消息
 // @Accept  json
@@ -310,7 +285,7 @@ type msgListRequest struct {
 // @Param content query string false "消息"
 // @Param page_num query int false "页码"
 // @Param page_size query int false "页大小"
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /msg/list/user [get]
 func getUserMsgList(c *gin.Context) {
 	var num = c.Query("page_num")
@@ -336,7 +311,7 @@ func getUserMsgList(c *gin.Context) {
 		return
 	}
 
-	var msgListRequest = &msgListRequest{
+	var msgListRequest = &model.MsgListRequest{
 		UserId:   id,
 		Type:     int32(mt),
 		Content:  content,
@@ -359,46 +334,12 @@ func getUserMsgList(c *gin.Context) {
 	response.Success(c, "获取成功", msg)
 }
 
-type ConversationType uint
-
-const (
-	UserConversation ConversationType = iota
-	GroupConversation
-)
-
-type UserDialogListResponse struct {
-	DialogId uint32 `json:"dialog_id"`
-	UserId   string `json:"user_id,omitempty"`
-	GroupId  uint32 `json:"group_id,omitempty"`
-	// 会话类型
-	DialogType ConversationType `json:"dialog_type"`
-	// 会话名称
-	DialogName string `json:"dialog_name"`
-	// 会话头像
-	DialogAvatar string `json:"dialog_avatar"`
-	// 会话未读消息数
-	DialogUnreadCount int     `json:"dialog_unread_count"`
-	LastMessage       Message `json:"last_message"`
-}
-type Message struct {
-	// 消息类型
-	MsgType uint `json:"msg_type"`
-	// 消息内容
-	Content string `json:"content"`
-	// 消息发送者
-	SenderId string `json:"sender_id"`
-	// 消息发送时间
-	SendTime int64 `json:"send_time"`
-	// 消息id
-	MsgId uint64 `json:"msg_id"`
-}
-
 // 获取用户对话列表
 // @Summary 获取用户对话列表
 // @Description 获取用户对话列表
 // @Accept  json
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /msg/dialog/list [get]
 func getUserDialogList(c *gin.Context) {
 	thisId, err := pkghttp.ParseTokenReUid(c)
@@ -427,9 +368,9 @@ func getUserDialogList(c *gin.Context) {
 		return
 	}
 	//封装响应数据
-	var responseList = make([]UserDialogListResponse, 0)
+	var responseList = make([]model.UserDialogListResponse, 0)
 	for _, v := range infos.Dialogs {
-		var re UserDialogListResponse
+		var re model.UserDialogListResponse
 		//用户
 		if v.Type == 0 {
 			users, _ := dialogClient.GetDialogUsersByDialogID(context.Background(), &relation.GetDialogUsersByDialogIDRequest{
@@ -477,7 +418,7 @@ func getUserDialogList(c *gin.Context) {
 		// 匹配最后一条消息
 		for _, msg := range dialogIds.LastMsgs {
 			if msg.DialogId == v.Id {
-				re.LastMessage = Message{
+				re.LastMessage = model.Message{
 					MsgId:    uint64(msg.Id),
 					Content:  msg.Content,
 					SenderId: msg.SenderId,
@@ -497,20 +438,11 @@ func getUserDialogList(c *gin.Context) {
 	response.Success(c, "获取成功", responseList)
 }
 
-type wsUserMsg struct {
-	SenderId string `json:"sender_id"`
-	Content  string `json:"content"`
-	MsgType  uint   `json:"msgType"`
-	ReplayId uint   `json:"reply_id"`
-	SendAt   int64  `json:"send_at"`
-	DialogId uint32 `json:"dialog_id"`
-}
-
 // 推送私聊消息
 func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
 	//遍历该用户所有客户端
 	for _, c := range Pool[receiverId] {
-		m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, SendAt: time.Now().Unix(), Data: &wsUserMsg{senderId, msg, msgType, replayId, time.Now().Unix(), dialogId}}
+		m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, SendAt: time.Now().Unix(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: time.Now().Unix(), DialogId: dialogId}}
 		js, _ := json.Marshal(m)
 		err := c.Conn.WriteMessage(websocket.TextMessage, js)
 		if err != nil {
@@ -520,16 +452,6 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 	}
 }
 
-type wsGroupMsg struct {
-	GroupId  int64  `json:"group_id"`
-	UserId   string `json:"uid"`
-	Content  string `json:"content"`
-	MsgType  uint   `json:"msgType"`
-	ReplayId uint   `json:"reply_id"`
-	SendAt   int64  `json:"send_at"`
-	DialogId uint32 `json:"dialog_id"`
-}
-
 // 推送群聊消息
 func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, msgType uint32, replayId uint32, dialogId uint32) {
 	//发送群聊消息
@@ -537,7 +459,7 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 		//在线则推送ws
 		if _, ok := Pool[uid]; ok {
 			for _, c := range Pool[uid] {
-				m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &wsGroupMsg{int64(groupId), userId, msg, uint(msgType), uint(replayId), time.Now().Unix(), dialogId}}
+				m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &model.WsGroupMsg{GroupId: int64(groupId), UserId: userId, Content: msg, MsgType: uint(msgType), ReplayId: uint(replayId), SendAt: time.Now().Unix(), DialogId: dialogId}}
 				js, _ := json.Marshal(m)
 				err := c.Conn.WriteMessage(websocket.TextMessage, js)
 				if err != nil {
@@ -548,7 +470,7 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			return
 		}
 		//否则推送到消息队列
-		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &wsGroupMsg{
+		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &model.WsGroupMsg{
 			GroupId:  int64(groupId),
 			UserId:   userId,
 			Content:  msg,
@@ -604,7 +526,6 @@ func (c client) wsOnlineClients() {
 	js, _ := json.Marshal(msg)
 	//上线推送消息
 	c.Conn.WriteMessage(websocket.TextMessage, js)
-	//go func() {
 	for {
 		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
 		if err != nil || !ok {
@@ -615,7 +536,6 @@ func (c client) wsOnlineClients() {
 		}
 		c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
 	}
-	//}()
 }
 
 // 用户离线

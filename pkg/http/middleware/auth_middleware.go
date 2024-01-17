@@ -64,7 +64,6 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 
 		is, err := a.ValidateToken(tokenString)
 		if err != nil || !is {
-			fmt.Println(err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  http.StatusText(http.StatusUnauthorized),
