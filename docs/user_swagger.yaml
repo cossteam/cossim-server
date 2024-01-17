@@ -165,6 +165,19 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: 用户登录
+  /user/logout:
+    post:
+      consumes:
+      - application/json
+      description: 退出登录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: 退出登录
   /user/password/modify:
     post:
       consumes:

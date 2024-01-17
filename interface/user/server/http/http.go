@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -16,10 +17,11 @@ import (
 )
 
 var (
-	userClient user.UserServiceClient
-	cfg        *config.AppConfig
-	logger     *zap.Logger
-	enc        encryption.Encryptor
+	userClient  user.UserServiceClient
+	redisClient *redis.Client
+	cfg         *config.AppConfig
+	logger      *zap.Logger
+	enc         encryption.Encryptor
 )
 
 var ThisKey string
@@ -28,8 +30,18 @@ func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
 	setupEncryption()
+	setupRedis()
 	setupUserGRPCClient()
 	setupGin()
+}
+func setupRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
+		//Protocol: cfg,
+	})
+	redisClient = rdb
 }
 
 func setupEncryption() {
@@ -134,11 +146,12 @@ func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/user")
 	u.POST("/login", login)
 	u.POST("/register", register)
-	u.GET("/info", middleware.AuthMiddleware(), GetUserInfo)
+	u.GET("/info", middleware.AuthMiddleware(redisClient), GetUserInfo)
+	u.POST("/logout", middleware.AuthMiddleware(redisClient), logout)
 	u.GET("/system/key/get", GetSystemPublicKey)
-	u.POST("/info/modify", middleware.AuthMiddleware(), modifyUserInfo)
-	u.POST("/password/modify", middleware.AuthMiddleware(), modifyUserPassword)
-	u.POST("/key/set", middleware.AuthMiddleware(), setUserPublicKey)
+	u.POST("/info/modify", middleware.AuthMiddleware(redisClient), modifyUserInfo)
+	u.POST("/password/modify", middleware.AuthMiddleware(redisClient), modifyUserPassword)
+	u.POST("/key/set", middleware.AuthMiddleware(redisClient), setUserPublicKey)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)
 }

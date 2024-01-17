@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -19,6 +20,7 @@ import (
 var (
 	sp            storage.StorageProvider
 	storageClient storagev1.StorageServiceClient
+	redisClient   *redis.Client
 	cfg           *config.AppConfig
 	logger        *zap.Logger
 	downloadURL   = "/api/v1/storage/files/download"
@@ -26,11 +28,20 @@ var (
 
 func Init(c *config.AppConfig) {
 	cfg = c
-
+	setupRedis()
 	setupLogger()
 	setupStorageClient()
 	setMinIOProvider()
 	setupGin()
+}
+func setupRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
+		//Protocol: cfg,
+	})
+	redisClient = rdb
 }
 
 func setupStorageClient() {
