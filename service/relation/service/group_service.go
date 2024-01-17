@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *Service) GetUserGroupIDs(ctx context.Context, id *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
+func (s *Service) GetGroupUserIDs(ctx context.Context, id *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
 	resp := &v1.UserIdsResponse{}
 
 	// 调用持久层方法获取用户群关系列表
