@@ -58,7 +58,7 @@ func (u *UserRelationRepo) GetBlacklistByUserID(userId string) ([]*entity.UserRe
 
 func (u *UserRelationRepo) GetFriendRequestListByUserID(userId string) ([]*entity.UserRelation, error) {
 	var urs []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.UserStatusApplying).Find(&urs).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status IN ?", userId, []entity.UserRelationStatus{entity.UserStatusApplying, entity.UserStatusRejected, entity.UserStatusPending}).Find(&urs).Error; err != nil {
 		return nil, err
 	}
 	return urs, nil
