@@ -573,7 +573,7 @@ const docTemplaterelation = `{
                     "type": "string"
                 },
                 "request_at": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "status": {
                     "type": "integer"

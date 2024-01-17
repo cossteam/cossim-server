@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	GroupRelationService_JoinGroup_FullMethodName                    = "/v1.GroupRelationService/JoinGroup"
 	GroupRelationService_GetGroupUserIDs_FullMethodName              = "/v1.GroupRelationService/GetGroupUserIDs"
+	GroupRelationService_GetUserGroupIDs_FullMethodName              = "/v1.GroupRelationService/GetUserGroupIDs"
+	GroupRelationService_GetUserGroupRequestList_FullMethodName      = "/v1.GroupRelationService/GetUserGroupRequestList"
 	GroupRelationService_GetGroupAdminIds_FullMethodName             = "/v1.GroupRelationService/GetGroupAdminIds"
 	GroupRelationService_GetUserManageGroupID_FullMethodName         = "/v1.GroupRelationService/GetUserManageGroupID"
 	GroupRelationService_ManageJoinGroup_FullMethodName              = "/v1.GroupRelationService/ManageJoinGroup"
@@ -39,6 +41,10 @@ type GroupRelationServiceClient interface {
 	JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
 	// 获取群聊成员ID列表
 	GetGroupUserIDs(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
+	// 获取用户的所有群聊ID列表
+	GetUserGroupIDs(ctx context.Context, in *GetUserGroupIDsRequest, opts ...grpc.CallOption) (*GetUserGroupIDsResponse, error)
+	// 获取用户的所有群聊列表信息
+	GetUserGroupRequestList(ctx context.Context, in *GetUserGroupRequestListRequest, opts ...grpc.CallOption) (*GetUserGroupRequestListResponse, error)
 	// 获取群聊管理员ID列表
 	GetGroupAdminIds(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
 	// 获取用户管理的群聊ID列表
@@ -51,7 +57,7 @@ type GroupRelationServiceClient interface {
 	LeaveGroup(ctx context.Context, in *LeaveGroupRequest, opts ...grpc.CallOption) (*LeaveGroupResponse, error)
 	// 获取群聊加入申请列表
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
-	// 获取群聊关系信息
+	// 获取用户与群聊关系信息
 	GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error)
 	// 根据群聊ID删除群聊关系
 	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error)
@@ -77,6 +83,24 @@ func (c *groupRelationServiceClient) JoinGroup(ctx context.Context, in *JoinGrou
 func (c *groupRelationServiceClient) GetGroupUserIDs(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error) {
 	out := new(UserIdsResponse)
 	err := c.cc.Invoke(ctx, GroupRelationService_GetGroupUserIDs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) GetUserGroupIDs(ctx context.Context, in *GetUserGroupIDsRequest, opts ...grpc.CallOption) (*GetUserGroupIDsResponse, error) {
+	out := new(GetUserGroupIDsResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_GetUserGroupIDs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) GetUserGroupRequestList(ctx context.Context, in *GetUserGroupRequestListRequest, opts ...grpc.CallOption) (*GetUserGroupRequestListResponse, error) {
+	out := new(GetUserGroupRequestListResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_GetUserGroupRequestList_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +187,10 @@ type GroupRelationServiceServer interface {
 	JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
 	// 获取群聊成员ID列表
 	GetGroupUserIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
+	// 获取用户的所有群聊ID列表
+	GetUserGroupIDs(context.Context, *GetUserGroupIDsRequest) (*GetUserGroupIDsResponse, error)
+	// 获取用户的所有群聊列表信息
+	GetUserGroupRequestList(context.Context, *GetUserGroupRequestListRequest) (*GetUserGroupRequestListResponse, error)
 	// 获取群聊管理员ID列表
 	GetGroupAdminIds(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
 	// 获取用户管理的群聊ID列表
@@ -175,7 +203,7 @@ type GroupRelationServiceServer interface {
 	LeaveGroup(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error)
 	// 获取群聊加入申请列表
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
-	// 获取群聊关系信息
+	// 获取用户与群聊关系信息
 	GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error)
 	// 根据群聊ID删除群聊关系
 	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error)
@@ -191,6 +219,12 @@ func (UnimplementedGroupRelationServiceServer) JoinGroup(context.Context, *JoinG
 }
 func (UnimplementedGroupRelationServiceServer) GetGroupUserIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupUserIDs not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) GetUserGroupIDs(context.Context, *GetUserGroupIDsRequest) (*GetUserGroupIDsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserGroupIDs not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) GetUserGroupRequestList(context.Context, *GetUserGroupRequestListRequest) (*GetUserGroupRequestListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserGroupRequestList not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) GetGroupAdminIds(context.Context, *GroupIDRequest) (*UserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupAdminIds not implemented")
@@ -261,6 +295,42 @@ func _GroupRelationService_GetGroupUserIDs_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GroupRelationServiceServer).GetGroupUserIDs(ctx, req.(*GroupIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_GetUserGroupIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserGroupIDsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).GetUserGroupIDs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_GetUserGroupIDs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).GetUserGroupIDs(ctx, req.(*GetUserGroupIDsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_GetUserGroupRequestList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserGroupRequestListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).GetUserGroupRequestList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_GetUserGroupRequestList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).GetUserGroupRequestList(ctx, req.(*GetUserGroupRequestListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -423,6 +493,14 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupUserIDs",
 			Handler:    _GroupRelationService_GetGroupUserIDs_Handler,
+		},
+		{
+			MethodName: "GetUserGroupIDs",
+			Handler:    _GroupRelationService_GetUserGroupIDs_Handler,
+		},
+		{
+			MethodName: "GetUserGroupRequestList",
+			Handler:    _GroupRelationService_GetUserGroupRequestList_Handler,
 		},
 		{
 			MethodName: "GetGroupAdminIds",
