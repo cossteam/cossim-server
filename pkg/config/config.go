@@ -16,9 +16,10 @@ type MySQLConfig struct {
 }
 
 type RedisConfig struct {
-	Name  string `mapstructure:"name"`
-	Proto string `mapstructure:"proto"`
-	Addr  string `mapstructure:"addr"`
+	Name     string `mapstructure:"name"`
+	Proto    string `mapstructure:"proto"`
+	Password string `mapstructure:"password"`
+	Addr     string `mapstructure:"addr"`
 }
 
 type HTTPConfig struct {

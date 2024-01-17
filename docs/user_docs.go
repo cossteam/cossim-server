@@ -164,6 +164,26 @@ const docTemplateuser = `{
                 }
             }
         },
+        "/user/logout": {
+            "post": {
+                "description": "退出登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "退出登录",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/password/modify": {
             "post": {
                 "security": [

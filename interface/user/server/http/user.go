@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type LoginRequest struct {
@@ -56,9 +57,40 @@ func login(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
+	err = redisClient.Set(context.Background(), resp.UserId, token, 60*60*24*3*time.Second).Err()
+	if err != nil {
+		logger.Error("failed to set user token", zap.Error(err))
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
 	c.Set("user_id", resp.UserId)
 
 	response.SetSuccess(c, "登录成功", gin.H{"token": token, "user_info": resp})
+}
+
+// @Summary 退出登录
+// @Description 退出登录
+// @Accept  json
+// @Produce  json
+// @Success		200 {object} utils.Response{}
+// @Router /user/logout [post]
+func logout(c *gin.Context) {
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	err = redisClient.Del(context.Background(), thisId).Err()
+	if err != nil {
+		logger.Error("failed to set user token", zap.Error(err))
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+	c.Set("user_id", thisId)
+
+	response.SetSuccess(c, "退出登录成功", nil)
 }
 
 type RegisterRequest struct {

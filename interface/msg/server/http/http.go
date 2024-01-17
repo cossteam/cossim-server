@@ -10,6 +10,7 @@ import (
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -21,6 +22,7 @@ import (
 var (
 	msgClient       msgApi.MsgServiceClient
 	relationClient  relationApi.UserRelationServiceClient
+	redisClient     *redis.Client
 	userGroupClient relationApi.GroupRelationServiceClient
 	groupClient     groupApi.GroupServiceClient
 	rabbitMQClient  *msg_queue.RabbitMQ
@@ -36,10 +38,20 @@ func Init(c *config.AppConfig) {
 	setupDialogGRPCClient()
 	setupMsgGRPCClient()
 	setupUserGRPCClient()
+	setupRedis()
 	setupGroupGRPCClient()
 	setRabbitMQProvider()
 	setupRelationGRPCClient()
 	setupGin()
+}
+func setupRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
+		//Protocol: cfg,
+	})
+	redisClient = rdb
 }
 func setRabbitMQProvider() {
 	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr))
@@ -165,9 +177,9 @@ func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/msg")
 	//u.Use(middleware.AuthMiddleware())
 	u.GET("/ws", ws)
-	u.POST("/send/user", middleware.AuthMiddleware(), sendUserMsg)
-	u.POST("/send/group", middleware.AuthMiddleware(), sendGroupMsg)
-	u.GET("/list/user", middleware.AuthMiddleware(), getUserMsgList)
-	u.GET("/dialog/list", middleware.AuthMiddleware(), getUserDialogList)
+	u.POST("/send/user", middleware.AuthMiddleware(redisClient), sendUserMsg)
+	u.POST("/send/group", middleware.AuthMiddleware(redisClient), sendGroupMsg)
+	u.GET("/list/user", middleware.AuthMiddleware(redisClient), getUserMsgList)
+	u.GET("/dialog/list", middleware.AuthMiddleware(redisClient), getUserDialogList)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

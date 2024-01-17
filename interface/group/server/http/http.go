@@ -8,6 +8,7 @@ import (
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -20,6 +21,7 @@ var (
 	userClient      userApi.UserServiceClient
 	groupClient     groupApi.GroupServiceClient
 	relationClient  relationApi.UserRelationServiceClient
+	redisClient     *redis.Client
 	userGroupClient relationApi.GroupRelationServiceClient
 	dialogClient    relationApi.DialogServiceClient
 	cfg             *config.AppConfig
@@ -30,9 +32,19 @@ func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
 	setupDialogGRPCClient()
+	setupRedis()
 	setupRelationGRPCClient()
 	setupGroupGRPCClient()
 	setupGin()
+}
+func setupRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
+		//Protocol: cfg,
+	})
+	redisClient = rdb
 }
 func setupDialogGRPCClient() {
 	var err error
@@ -140,13 +152,13 @@ func setupGin() {
 func route(engine *gin.Engine) {
 	g := engine.Group("/api/v1/group")
 	// 获取群聊信息
-	g.GET("/info", middleware.AuthMiddleware(), GetGroupInfoByGid)
+	g.GET("/info", middleware.AuthMiddleware(redisClient), GetGroupInfoByGid)
 	// 创建群聊
-	g.POST("/create", middleware.AuthMiddleware(), createGroup)
+	g.POST("/create", middleware.AuthMiddleware(redisClient), createGroup)
 	// 删除群聊
-	g.POST("/delete", middleware.AuthMiddleware(), deleteGroup)
+	g.POST("/delete", middleware.AuthMiddleware(redisClient), deleteGroup)
 	// 更新群聊信息
-	g.POST("/update", middleware.AuthMiddleware(), updateGroup)
+	g.POST("/update", middleware.AuthMiddleware(redisClient), updateGroup)
 	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("group")))
 	//u.POST("/logout", handleLogout)
 }

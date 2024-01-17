@@ -9,6 +9,7 @@ import (
 	relation "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -20,6 +21,7 @@ import (
 var (
 	groupClient         group.GroupServiceClient
 	userClient          user.UserServiceClient
+	redisClient         *redis.Client
 	userRelationClient  relation.UserRelationServiceClient
 	groupRelationClient relation.GroupRelationServiceClient
 	dialogClient        relation.DialogServiceClient
@@ -32,13 +34,22 @@ func Init(c *config.AppConfig) {
 	cfg = c
 	setupLogger()
 	setupGroupGRPCClient()
+	setupRedis()
 	setupDialogGRPCClient()
 	setupUserGRPCClient()
 	setRabbitMQProvider()
 	setupRelationGRPCClient()
 	setupGin()
 }
-
+func setupRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
+		//Protocol: cfg,
+	})
+	redisClient = rdb
+}
 func setupGroupGRPCClient() {
 	var err error
 	conn, err := grpc.Dial(cfg.Discovers["group"].Addr, grpc.WithInsecure())
@@ -153,7 +164,7 @@ func route(engine *gin.Engine) {
 	// 添加不同的中间件给不同的路由组
 	// 比如除了swagger路径外其他的路径添加了身份验证中间件
 	api := engine.Group("/api/v1/relation")
-	api.Use(middleware.AuthMiddleware())
+	api.Use(middleware.AuthMiddleware(redisClient))
 
 	u := api.Group("/user")
 	u.GET("/friend_list", friendList)

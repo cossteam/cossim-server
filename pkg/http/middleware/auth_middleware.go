@@ -5,11 +5,12 @@ import (
 	"github.com/cossim/coss-server/pkg/auth"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"net/http"
 	"strings"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取 authorization header
 		tokenString := ctx.GetHeader("Authorization")
@@ -59,10 +60,11 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		a := auth.NewAuthenticator(conn)
+		a := auth.NewAuthenticator(conn, rdb)
 
 		is, err := a.ValidateToken(tokenString)
 		if err != nil || !is {
+			fmt.Println(err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  http.StatusText(http.StatusUnauthorized),
