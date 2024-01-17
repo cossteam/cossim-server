@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/msg_queue"
@@ -22,7 +23,7 @@ import (
 // @Summary 黑名单
 // @Description 黑名单
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /relation/user/blacklist [get]
 func blackList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -63,7 +64,7 @@ func blackList(c *gin.Context) {
 // @Summary 好友列表
 // @Description 好友列表
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /relation/user/friend_list [get]
 func friendList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -128,7 +129,7 @@ func friendList(c *gin.Context) {
 // @Summary 好友申请列表
 // @Description 好友申请列表
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /relation/user/request_list [get]
 func userRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -151,20 +152,11 @@ func userRequestList(c *gin.Context) {
 		return
 	}
 
-	type requestListResponse struct {
-		UserID    string `json:"user_id"`
-		Nickname  string `json:"nickname"`
-		Avatar    string `json:"avatar"`
-		Msg       string `json:"msg"`
-		RequestAt string `json:"request_at"`
-		Status    uint32 `json:"status"`
-	}
-
 	var ids []string
-	var data []*requestListResponse
+	var data []*model.RequestListResponse
 	for _, v := range reqList.FriendRequestList {
 		ids = append(ids, v.UserId)
-		data = append(data, &requestListResponse{
+		data = append(data, &model.RequestListResponse{
 			UserID: v.UserId,
 			Msg:    v.Msg,
 			Status: uint32(v.Status),
@@ -190,19 +182,15 @@ func userRequestList(c *gin.Context) {
 	response.Success(c, "获取好友申请列表成功", data)
 }
 
-type deleteBlacklistRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 // @Summary 删除黑名单
 // @Description 删除黑名单
 // @Accept  json
 // @Produce  json
-// @param request body deleteBlacklistRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.DeleteBlacklistRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /relation/delete_blacklist [post]
 func deleteBlacklist(c *gin.Context) {
-	req := new(deleteBlacklistRequest)
+	req := new(model.DeleteBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -239,19 +227,15 @@ func deleteBlacklist(c *gin.Context) {
 	response.Success(c, "删除黑名单成功", nil)
 }
 
-type addBlacklistRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 // @Summary 添加黑名单
 // @Description 添加黑名单
 // @Accept  json
 // @Produce  json
 // @param request body addBlacklistRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /relation/user/add_blacklist [post]
 func addBlacklist(c *gin.Context) {
-	req := new(addBlacklistRequest)
+	req := new(model.AddBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -281,19 +265,15 @@ func addBlacklist(c *gin.Context) {
 	response.Success(c, "添加到黑名单成功", nil)
 }
 
-type deleteFriendRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 // @Summary 删除好友
 // @Description 删除好友
 // @Accept  json
 // @Produce  json
-// @param request body deleteFriendRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.DeleteFriendRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /relation/user/delete_friend [post]
 func deleteFriend(c *gin.Context) {
-	req := new(deleteFriendRequest)
+	req := new(model.DeleteFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -340,21 +320,15 @@ func deleteFriend(c *gin.Context) {
 	response.Success(c, "删除好友成功", nil)
 }
 
-type ManageFriendRequest struct {
-	UserID       string `json:"user_id" binding:"required"`
-	Status       int32  `json:"status"`
-	E2EPublicKey string `json:"e2e_public_key"`
-}
-
 // @Summary 管理好友请求
 // @Description 管理好友请求
 // @Accept  json
 // @Produce  json
-// @param request body ManageFriendRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.ManageFriendRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /relation/user/manage_friend [post]
 func manageFriend(c *gin.Context) {
-	req := new(ManageFriendRequest)
+	req := new(model.ManageFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -449,21 +423,15 @@ func manageFriend(c *gin.Context) {
 	response.Success(c, "管理好友申请成功", responseData)
 }
 
-type addFriendRequest struct {
-	UserID       string `json:"user_id" binding:"required"`
-	Msg          string `json:"msg"`
-	E2EPublicKey string `json:"e2e_public_key"`
-}
-
 // @Summary 添加好友
 // @Description 添加好友
 // @Accept  json
 // @Produce  json
-// @param request body addFriendRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.AddFriendRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /relation/user/add_friend [post]
 func addFriend(c *gin.Context) {
-	req := new(addFriendRequest)
+	req := new(model.AddFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -512,7 +480,7 @@ func addFriend(c *gin.Context) {
 // @Description 群聊成员列表
 // @Param group_id query integer true "群聊ID"
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /relation/group/member [get]
 func getGroupMember(c *gin.Context) {
 	// 从请求中获取群聊ID
@@ -560,15 +528,6 @@ func getGroupMember(c *gin.Context) {
 	response.Success(c, "获取群聊成员成功", data)
 }
 
-type requestListResponse struct {
-	UserID    string `json:"user_id" description:"用户ID"`
-	Nickname  string `json:"nickname" description:"用户昵称"`
-	Avatar    string `json:"avatar" description:"用户头像"`
-	Msg       string `json:"msg" description:"申请消息"`
-	RequestAt int64  `json:"request_at" description:"申请时间"`
-	Status    uint32 `json:"status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
-}
-
 // groupRequestList 获取群聊申请列表
 // @Summary 获取群聊申请列表
 // @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)
@@ -577,7 +536,7 @@ type requestListResponse struct {
 // @Produce json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @Success		200 {object} utils.Response{data=requestListResponse}
+// @Success		200 {object} model.Response{data=model.RequestListResponse}
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -601,14 +560,14 @@ func groupRequestList(c *gin.Context) {
 	}
 
 	var ids []string
-	var data []*requestListResponse
+	var data []*model.RequestListResponse
 	for _, v := range reqList.GroupJoinRequestList {
 		ids = append(ids, v.UserId)
-		data = append(data, &requestListResponse{
-			UserID:    v.UserId,
-			Msg:       v.Msg,
-			Status:    uint32(v.Status),
-			RequestAt: v.CreatedAt,
+		data = append(data, &model.RequestListResponse{
+			UserID: v.UserId,
+			Msg:    v.Msg,
+			Status: uint32(v.Status),
+			//RequestAt: v.CreatedAt,
 		})
 	}
 
@@ -631,19 +590,15 @@ func groupRequestList(c *gin.Context) {
 	response.Success(c, "获取群聊申请列表成功", data)
 }
 
-type joinGroupRequest struct {
-	GroupID uint32 `json:"group_id" binding:"required"`
-}
-
 // @Summary 加入群聊
 // @Description 加入群聊
 // @Accept  json
 // @Produce  json
-// @param request body joinGroupRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.JoinGroupRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /relation/group/join [post]
 func joinGroup(c *gin.Context) {
-	req := new(joinGroupRequest)
+	req := new(model.JoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -708,21 +663,15 @@ func joinGroup(c *gin.Context) {
 	response.Success(c, "发送加入群聊请求成功", nil)
 }
 
-type approveJoinGroupRequest struct {
-	GroupID uint32 `json:"group_id" binding:"required"`
-	UserID  string `json:"user_id" binding:"required"`
-	Status  uint32 `json:"status"`
-}
-
 // @Summary 管理加入群聊
 // @Description 管理加入群聊
 // @Accept  json
 // @Produce  json
-// @param request body approveJoinGroupRequest true "Status (0: rejected, 1: joined)"
-// @Success		200 {object} utils.Response{}
+// @param request body model.ManageJoinGroupRequest true "Status (0: rejected, 1: joined)"
+// @Success		200 {object} model.Response{}
 // @Router /relation/group/manage_join_group [post]
 func manageJoinGroup(c *gin.Context) {
-	req := new(approveJoinGroupRequest)
+	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -789,20 +738,15 @@ func manageJoinGroup(c *gin.Context) {
 	response.Success(c, "管理群聊申请成功", nil)
 }
 
-type removeUserFromGroupRequest struct {
-	GroupID uint32 `json:"group_id" binding:"required"`
-	UserID  string `json:"user_id" binding:"required"`
-}
-
 // @Summary 将用户从群聊移除
 // @Description 将用户从群聊移除
 // @Accept  json
 // @Produce  json
-// @param request body removeUserFromGroupRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.RemoveUserFromGroupRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /relation/group/remove [post]
 func removeUserFromGroup(c *gin.Context) {
-	req := new(removeUserFromGroupRequest)
+	req := new(model.RemoveUserFromGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -839,19 +783,15 @@ func removeUserFromGroup(c *gin.Context) {
 	response.Success(c, "移出群聊成功", nil)
 }
 
-type quitGroupRequest struct {
-	GroupID uint32 `json:"group_id" binding:"required"`
-}
-
 // @Summary 退出群聊
 // @Description 退出群聊
 // @Accept  json
 // @Produce  json
-// @param request body quitGroupRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.QuitGroupRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /relation/group/quit [post]
 func quitGroup(c *gin.Context) {
-	req := new(quitGroupRequest)
+	req := new(model.QuitGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -885,21 +825,16 @@ func quitGroup(c *gin.Context) {
 	response.Success(c, "退出群聊成功", nil)
 }
 
-type switchUserE2EPublicKeyRequest struct {
-	UserId    string `json:"user_id" binding:"required"`
-	PublicKey string `json:"public_key" binding:"required"`
-}
-
 // @Summary 交换用户端到端公钥
 // @Description 交换用户端到端公钥
 // @Accept json
 // @Produce json
-// @param request body switchUserE2EPublicKeyRequest true "request"
+// @param request body model.SwitchUserE2EPublicKeyRequest true "request"
 // @Security BearerToken
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /relation/user/switch/e2e/key [post]
 func switchUserE2EPublicKey(c *gin.Context) {
-	req := new(switchUserE2EPublicKeyRequest)
+	req := new(model.SwitchUserE2EPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.Fail(c, "参数验证失败", nil)
@@ -917,7 +852,7 @@ func switchUserE2EPublicKey(c *gin.Context) {
 		response.Fail(c, "用户不存在", nil)
 		return
 	}
-	reqm := switchUserE2EPublicKeyRequest{
+	reqm := model.SwitchUserE2EPublicKeyRequest{
 		UserId:    thisId,
 		PublicKey: req.PublicKey,
 	}

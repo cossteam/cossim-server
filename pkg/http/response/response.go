@@ -1,7 +1,6 @@
 package response
 
 import (
-	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
@@ -11,8 +10,14 @@ const (
 	InternalServerErrorCode = http.StatusInternalServerError
 )
 
+type BaseResponse struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
 func Response(ctx *gin.Context, httpStatus int, code int, msg string, data interface{}) {
-	ctx.JSON(httpStatus, utils.Response{
+	ctx.JSON(httpStatus, BaseResponse{
 		Code: code,
 		Msg:  extractErrorMessage(msg),
 		Data: data,
@@ -51,7 +56,7 @@ func extractErrorMessage(input string) string {
 }
 
 func SetResponse(c *gin.Context, code int, msg string, data interface{}) {
-	c.Set("response", utils.Response{
+	c.Set("response", BaseResponse{
 		Code: code,
 		Msg:  msg,
 		Data: data,

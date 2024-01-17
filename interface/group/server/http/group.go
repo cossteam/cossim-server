@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/cossim/coss-server/interface/group/api/model"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	api "github.com/cossim/coss-server/service/group/api/v1"
@@ -15,7 +16,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param gid query int32 true "群聊ID"
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /group/info [get]
 func GetGroupInfoByGid(c *gin.Context) {
 	gid := c.Query("gid")
@@ -45,7 +46,7 @@ func GetGroupInfoByGid(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param groupIds query []string true "群聊ID列表"
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /group/getBatch [get]
 func getBatchGroupInfoByIDs(c *gin.Context) {
 	groupIds := c.QueryArray("groupIds")
@@ -70,25 +71,15 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 	response.Success(c, "批量获取群聊信息成功", gin.H{"groups": groups})
 }
 
-type updateGroupRequest struct {
-	Type            uint32 `json:"type"`
-	Status          uint32 `json:"status"`
-	MaxMembersLimit uint32 `json:"max_members_limit"`
-	CreatorID       string `json:"creator_id"`
-	Name            string `json:"name"`
-	Avatar          string `json:"avatar"`
-	GroupId         uint32 `json:"group_id"`
-}
-
 // @Summary 更新群聊信息
 // @Description 更新群聊信息
 // @Accept  json
 // @Produce  json
 // @Param request body updateGroupRequest true "请求体"
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /group/update/{gid} [post]
 func updateGroup(c *gin.Context) {
-	req := new(updateGroupRequest)
+	req := new(model.UpdateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Fail(c, "参数验证失败", nil)
 		return
@@ -106,7 +97,7 @@ func updateGroup(c *gin.Context) {
 		response.Fail(c, err.Error(), nil)
 		return
 	}
-	if !IsValidGroupType(api.GroupType(req.Type)) {
+	if !model.IsValidGroupType(api.GroupType(req.Type)) {
 		response.Fail(c, "群聊类型错误", nil)
 	}
 	sf, err := userGroupClient.GetGroupRelation(context.Background(), &rapi.GetGroupRelationRequest{
@@ -141,37 +132,15 @@ func updateGroup(c *gin.Context) {
 	response.Success(c, "更新群聊信息成功", gin.H{"group": updatedGroup})
 }
 
-type createGroupRequest struct {
-	Type            uint32 `json:"type"`
-	MaxMembersLimit uint32 `json:"max_members_limit"`
-	Name            string `json:"name" binding:"required"`
-	Avatar          string `json:"avatar"`
-}
-
-type createGroupResponse struct {
-	Id              uint32 `json:"id"`
-	Avatar          string `json:"avatar"`
-	Name            string `json:"name"`
-	Type            uint32 `json:"type"`
-	Status          int32  `json:"status"`
-	MaxMembersLimit int32  `json:"max_members_limit"`
-	CreatorId       string `json:"creator_id"`
-	DialogId        uint32 `json:"dialog_id"`
-}
-
-func IsValidGroupType(value api.GroupType) bool {
-	return value == api.GroupType_TypePublic || value == api.GroupType_TypePrivate
-}
-
 // @Summary 创建群聊
 // @Description 创建群聊
 // @Accept  json
 // @Produce  json
 // @Param request body createGroupRequest true "请求体"
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /group/create [post]
 func createGroup(c *gin.Context) {
-	req := new(createGroupRequest)
+	req := new(model.CreateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Fail(c, "参数验证失败", nil)
 		return
@@ -183,7 +152,7 @@ func createGroup(c *gin.Context) {
 		return
 	}
 	//判断参数如果不属于枚举定义的则返回错误
-	if !IsValidGroupType(api.GroupType(req.Type)) {
+	if !model.IsValidGroupType(api.GroupType(req.Type)) {
 		response.Fail(c, "群聊类型错误", nil)
 		return
 	}
@@ -224,7 +193,7 @@ func createGroup(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	resp := &createGroupResponse{
+	resp := &model.CreateGroupResponse{
 		Id:              createdGroup.Id,
 		Avatar:          createdGroup.Avatar,
 		Name:            createdGroup.Name,
@@ -243,7 +212,7 @@ func createGroup(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param gid query string true "群聊ID"
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /group/delete [post]
 func deleteGroup(c *gin.Context) {
 	gid := c.Query("gid")

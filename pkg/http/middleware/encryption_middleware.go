@@ -6,7 +6,7 @@ import (
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
-	"github.com/cossim/coss-server/pkg/utils"
+	resp "github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
@@ -41,7 +41,7 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 		}
 		c.Next()
 		if storedResponse, exists := c.Get("response"); exists {
-			response := storedResponse.(utils.Response)
+			response := storedResponse.(resp.BaseResponse)
 			msgStr, err := json.Marshal(response)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{

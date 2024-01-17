@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/cossim/coss-server/interface/user/api/model"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils"
@@ -15,21 +16,15 @@ import (
 	"time"
 )
 
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	//PublicKey string `json:"public_key" binding:"required"`
-}
-
 // @Summary 用户登录
 // @Description 用户登录
 // @Accept  json
 // @Produce  json
-// @param request body LoginRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.LoginRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /user/login [post]
 func login(c *gin.Context) {
-	req := new(LoginRequest)
+	req := new(model.LoginRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
@@ -72,7 +67,7 @@ func login(c *gin.Context) {
 // @Description 退出登录
 // @Accept  json
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /user/logout [post]
 func logout(c *gin.Context) {
 
@@ -93,23 +88,15 @@ func logout(c *gin.Context) {
 	response.SetSuccess(c, "退出登录成功", nil)
 }
 
-type RegisterRequest struct {
-	Email       string `json:"email" binding:"required"`
-	Password    string `json:"password" binding:"required"`
-	ConfirmPass string `json:"confirm_password" binding:"required"`
-	Nickname    string `json:"nickname"`
-	PublicKey   string `json:"public_key" binding:"required"`
-}
-
 // @Summary 用户注册
 // @Description 用户注册
 // @Accept  json
 // @Produce  json
-// @param request body RegisterRequest true "request"
-// @Success		200 {object} utils.Response{}
+// @param request body model.RegisterRequest true "request"
+// @Success		200 {object} model.Response{}
 // @Router /user/register [post]
 func register(c *gin.Context) {
-	req := new(RegisterRequest)
+	req := new(model.RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
@@ -159,13 +146,6 @@ func register(c *gin.Context) {
 	response.SetSuccess(c, "注册成功", gin.H{"user_id": resp.UserId})
 }
 
-type GetType int
-
-const (
-	EmailType GetType = iota
-	UserIdType
-)
-
 // @Summary 查询用户信息
 // @Description 查询用户信息
 // @Accept  json
@@ -173,7 +153,7 @@ const (
 // @Param user_id query string true "用户id"
 // @Param type query GetType true "指定根据id还是邮箱类型查找"
 // @Param email query string false "邮箱"
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /user/info [get]
 func GetUserInfo(c *gin.Context) {
 	email := c.Query("email")
@@ -185,8 +165,8 @@ func GetUserInfo(c *gin.Context) {
 	}
 	gtype, _ := strconv.Atoi(getType)
 
-	switch GetType(gtype) {
-	case EmailType:
+	switch model.GetType(gtype) {
+	case model.EmailType:
 		// 正则表达式匹配邮箱格式
 		emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
 		if isMatch, _ := emailRegex.MatchString(email); !isMatch {
@@ -201,7 +181,7 @@ func GetUserInfo(c *gin.Context) {
 			return
 		}
 		response.SetSuccess(c, "查询成功", resp)
-	case UserIdType:
+	case model.UserIdType:
 		resp, err := userClient.UserInfo(context.Background(), &user.UserInfoRequest{
 			UserId: userId,
 		})
@@ -215,20 +195,16 @@ func GetUserInfo(c *gin.Context) {
 	}
 }
 
-type SetPublicKeyRequest struct {
-	PublicKey string `json:"public_key" binding:"required"`
-}
-
 // @Summary 设置用户公钥
 // @Description 设置用户公钥
 // @Accept json
 // @Produce json
-// @param request body SetPublicKeyRequest true "request"
+// @param request body model.SetPublicKeyRequest true "request"
 // @Security BearerToken
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /user/key/set [post]
 func setUserPublicKey(c *gin.Context) {
-	req := new(SetPublicKeyRequest)
+	req := new(model.SetPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
@@ -260,29 +236,22 @@ func setUserPublicKey(c *gin.Context) {
 // @Produce  json
 // @Param type query GetType true "指定根据id还是邮箱类型查找"
 // @Param email query string false "邮箱"
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} model.Response{}
 // @Router /user/system/key/get [get]
 func GetSystemPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": ThisKey})
-}
-
-type UserInfoRequest struct {
-	NickName  string `json:"nickname"`
-	Tel       string `json:"tel"`
-	Avatar    string `json:"avatar"`
-	Signature string `json:"signature"`
 }
 
 // @Summary 修改用户信息
 // @Description 修改用户信息
 // @Accept json
 // @Produce json
-// @param request body UserInfoRequest true "request"
+// @param request body model.UserInfoRequest true "request"
 // @Security BearerToken
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /user/info/modify [post]
 func modifyUserInfo(c *gin.Context) {
-	req := new(UserInfoRequest)
+	req := new(model.UserInfoRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
@@ -312,22 +281,16 @@ func modifyUserInfo(c *gin.Context) {
 	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
 }
 
-type PasswordRequest struct {
-	OldPasswprd string `json:"old_password" binding:"required"`
-	Password    string `json:"password" binding:"required"`
-	ConfirmPass string `json:"confirm_password" binding:"required"`
-}
-
 // @Summary 修改用户密码
 // @Description 修改用户密码
 // @Accept json
 // @Produce json
-// @param request body PasswordRequest true "request"
+// @param request body model.PasswordRequest true "request"
 // @Security BearerToken
-// @Success 200 {object} utils.Response{}
+// @Success 200 {object} model.Response{}
 // @Router /user/password/modify [post]
 func modifyUserPassword(c *gin.Context) {
-	req := new(PasswordRequest)
+	req := new(model.PasswordRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
