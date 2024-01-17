@@ -285,7 +285,7 @@ func sendGroupMsg(c *gin.Context) {
 		return
 	}
 	//查询群聊所有用户id
-	uids, err := userGroupClient.GetUserGroupIDs(context.Background(), &relation.GroupIDRequest{
+	uids, err := userGroupClient.GetGroupUserIDs(context.Background(), &relation.GroupIDRequest{
 		GroupId: req.GroupId,
 	})
 	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId, req.DialogId)
