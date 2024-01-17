@@ -11,13 +11,13 @@ type GroupRelation struct {
 	UserID             string              `gorm:"type:varchar(64);comment:用户ID" json:"user_id"`
 	GroupNickname      string              `gorm:"comment:群昵称" json:"group_nickname"`
 	Inviter            string              `gorm:"type:varchar(64);comment:邀请人id" json:"inviter"`
-	Remark             string              `gorm:"type:varchar(255);comment:添加好友备注" json:"remark"`
+	Remark             string              `gorm:"type:varchar(255);comment:添加群聊备注" json:"remark"`
 	Label              []string            `gorm:"type:varchar(255);comment:标签" json:"label"`
 	SilentNotification bool                `gorm:"comment:静默通知" json:"silent_notification"`
 	PrivacyMode        bool                `gorm:"comment:隐私模式" json:"privacy_mode"`
 	CreatedAt          int64               `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt          int64               `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
-	DeletedAt          int64               `gorm:"default:null;comment:删除时间" json:"deleted_at"`
+	DeletedAt          int64               `gorm:"default:0;comment:删除时间" json:"deleted_at"`
 }
 
 type GroupRelationStatus uint

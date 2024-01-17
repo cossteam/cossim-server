@@ -89,7 +89,7 @@ const docTemplaterelation = `{
                 "summary": "管理加入群聊",
                 "parameters": [
                     {
-                        "description": "request",
+                        "description": "Status (0: rejected, 1: joined)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -203,20 +203,23 @@ const docTemplaterelation = `{
                     "application/json"
                 ],
                 "summary": "群聊申请列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "群聊ID",
-                        "name": "group_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/http.requestListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -484,7 +487,6 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "group_id",
-                "status",
                 "user_id"
             ],
             "properties": {
@@ -551,6 +553,29 @@ const docTemplaterelation = `{
             ],
             "properties": {
                 "group_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.requestListResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "request_at": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "integer"
                 },
                 "user_id": {
