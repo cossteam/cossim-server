@@ -565,7 +565,7 @@ type requestListResponse struct {
 	Nickname  string `json:"nickname" description:"用户昵称"`
 	Avatar    string `json:"avatar" description:"用户头像"`
 	Msg       string `json:"msg" description:"申请消息"`
-	RequestAt string `json:"request_at" description:"申请时间"`
+	RequestAt int64  `json:"request_at" description:"申请时间"`
 	Status    uint32 `json:"status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
 }
 
@@ -589,18 +589,7 @@ func groupRequestList(c *gin.Context) {
 		return
 	}
 
-	r1, err := groupRelationClient.GetUserManageGroupID(context.Background(), &relationApi.GetUserManageGroupIDRequest{UserId: userID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	var gids []*relationApi.GroupIDRequest
-	for _, v := range r1.GroupIDs {
-		gids = append(gids, &relationApi.GroupIDRequest{GroupId: v.GroupId})
-	}
-
-	reqList, err := groupRelationClient.GetGroupJoinRequestList(context.Background(), &relationApi.GetGroupJoinRequestListRequest{GroupIds: gids})
+	reqList, err := groupRelationClient.GetUserGroupRequestList(context.Background(), &relationApi.GetUserGroupRequestListRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -611,9 +600,10 @@ func groupRequestList(c *gin.Context) {
 	for _, v := range reqList.GroupJoinRequestList {
 		ids = append(ids, v.UserId)
 		data = append(data, &requestListResponse{
-			UserID: v.UserId,
-			Msg:    v.Msg,
-			Status: uint32(v.Status),
+			UserID:    v.UserId,
+			Msg:       v.Msg,
+			Status:    uint32(v.Status),
+			RequestAt: v.CreatedAt,
 		})
 	}
 
