@@ -8,6 +8,8 @@ type GroupRelationRepository interface {
 	DeleteRelationByID(gid uint32, uid string) error
 	GetUserGroupIDs(gid uint32) ([]string, error)
 	GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error)
+	GetUserManageGroupIDs(uid string) ([]uint32, error) // 获取用户管理的或创建的群聊ID
+	GetJoinRequestBatchListByID(gids []uint32) ([]*entity.GroupRelation, error)
 	GetJoinRequestListByID(gid uint32) ([]*entity.GroupRelation, error)
 	DeleteGroupRelationByID(gid uint32) error
 	GetGroupAdminIds(gid uint32) ([]string, error)

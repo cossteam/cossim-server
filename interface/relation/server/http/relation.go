@@ -541,23 +541,10 @@ func getGroupMember(c *gin.Context) {
 
 // @Summary 群聊申请列表
 // @Description 群聊申请列表
-// @Param group_id query integer true "群聊ID"
 // @Produce  json
 // @Success		200 {object} utils.Response{}
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
-	groupID := c.Query("group_id")
-	if groupID == "" {
-		response.Fail(c, "群聊ID不能为空", nil)
-		return
-	}
-
-	gid, err := strconv.ParseUint(groupID, 10, 32)
-	if err != nil {
-		response.Fail(c, "群聊ID格式错误", nil)
-		return
-	}
-
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
@@ -572,7 +559,18 @@ func groupRequestList(c *gin.Context) {
 		return
 	}
 
-	reqList, err := groupRelationClient.GetGroupJoinRequestList(context.Background(), &relationApi.GetGroupJoinRequestListRequest{GroupId: uint32(gid)})
+	r1, err := groupRelationClient.GetUserManageGroupID(context.Background(), &relationApi.GetUserManageGroupIDRequest{UserId: userID})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	var gids []*relationApi.GroupIDRequest
+	for _, v := range r1.GroupIDs {
+		gids = append(gids, &relationApi.GroupIDRequest{GroupId: v.GroupId})
+	}
+
+	reqList, err := groupRelationClient.GetGroupJoinRequestList(context.Background(), &relationApi.GetGroupJoinRequestListRequest{GroupIds: gids})
 	if err != nil {
 		c.Error(err)
 		return
@@ -692,14 +690,14 @@ func joinGroup(c *gin.Context) {
 type approveJoinGroupRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"`
 	UserID  string `json:"user_id" binding:"required"`
-	Status  uint32 `json:"status" binding:"required"`
+	Status  uint32 `json:"status"`
 }
 
 // @Summary 管理加入群聊
 // @Description 管理加入群聊
 // @Accept  json
 // @Produce  json
-// @param request body approveJoinGroupRequest true "request"
+// @param request body approveJoinGroupRequest true ""Status (0: rejected, 1: joined)""
 // @Success		200 {object} utils.Response{}
 // @Router /relation/group/manage_join_group [post]
 func manageJoinGroup(c *gin.Context) {
@@ -728,7 +726,10 @@ func manageJoinGroup(c *gin.Context) {
 	}
 
 	relation, err := groupRelationClient.GetGroupRelation(context.Background(), &relationApi.GetGroupRelationRequest{GroupId: req.GroupID, UserId: userID})
-
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	if relation == nil {
 		response.Fail(c, "没有加入群聊的申请", nil)
 		return
@@ -764,7 +765,7 @@ func manageJoinGroup(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	response.Success(c, "同意加入群聊成功", nil)
+	response.Success(c, "管理群聊申请成功", nil)
 }
 
 type removeUserFromGroupRequest struct {

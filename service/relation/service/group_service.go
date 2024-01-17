@@ -111,7 +111,12 @@ func (s *Service) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest)
 func (s *Service) GetGroupJoinRequestList(ctx context.Context, request *v1.GetGroupJoinRequestListRequest) (*v1.GroupJoinRequestListResponse, error) {
 	resp := &v1.GroupJoinRequestListResponse{}
 
-	joins, err := s.grr.GetJoinRequestListByID(request.GroupId)
+	var ids []uint32
+	for _, v := range request.GroupIds {
+		ids = append(ids, v.GroupId)
+	}
+
+	joins, err := s.grr.GetJoinRequestBatchListByID(ids)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	}
@@ -157,5 +162,20 @@ func (s *Service) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (
 		return resp, err
 	}
 	resp.UserIds = ids
+	return resp, nil
+}
+
+func (s *Service) GetUserManageGroupID(ctx context.Context, request *v1.GetUserManageGroupIDRequest) (*v1.GetUserManageGroupIDResponse, error) {
+	resp := &v1.GetUserManageGroupIDResponse{}
+
+	ids, err := s.grr.GetUserManageGroupIDs(request.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
+	}
+
+	for _, id := range ids {
+		resp.GroupIDs = append(resp.GroupIDs, &v1.GroupIDRequest{GroupId: id})
+	}
+
 	return resp, nil
 }

@@ -74,8 +74,7 @@ message LeaveGroupResponse {
 }
 
 message GetGroupJoinRequestListRequest {
-  // @inject_tag: json:"group_id"
-  uint32 GroupId = 1;
+  repeated GroupIDRequest GroupIds = 1;
 }
 
 message GroupJoinRequestListResponse {
@@ -129,10 +128,20 @@ enum GroupRelationStatus {
     GroupStatusBlocked   = 3; // 被封禁
 }
 
+message GetUserManageGroupIDRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message GetUserManageGroupIDResponse {
+  repeated GroupIDRequest GroupIDs = 1;
+}
+
 service GroupRelationService {
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
   rpc GetUserGroupIDs(GroupIDRequest) returns (UserIdsResponse);
   rpc GetGroupAdminIds(GroupIDRequest) returns (UserIdsResponse);
+  rpc GetUserManageGroupID(GetUserManageGroupIDRequest) returns (GetUserManageGroupIDResponse);
   rpc ManageJoinGroup (ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
   rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);
   rpc LeaveGroup (LeaveGroupRequest) returns (LeaveGroupResponse);
