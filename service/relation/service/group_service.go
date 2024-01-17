@@ -15,12 +15,53 @@ func (s *Service) GetGroupUserIDs(ctx context.Context, id *v1.GroupIDRequest) (*
 	resp := &v1.UserIdsResponse{}
 
 	// 调用持久层方法获取用户群关系列表
-	userGroupIDs, err := s.grr.GetUserGroupIDs(id.GetGroupId())
+	userGroupIDs, err := s.grr.GetGroupUserIDs(id.GetGroupId())
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
+	}
+
+	resp.UserIds = userGroupIDs
+	return resp, nil
+}
+
+func (s *Service) GetUserGroupIDs(ctx context.Context, request *v1.GetUserGroupIDsRequest) (*v1.GetUserGroupIDsResponse, error) {
+	resp := &v1.GetUserGroupIDsResponse{}
+
+	ds, err := s.grr.GetUserGroupIDs(request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrGetGroupIDsFailed.Code()), err.Error())
 	}
 
-	resp.UserIds = userGroupIDs
+	for _, v := range ds {
+		resp.GroupId = append(resp.GroupId, v)
+	}
+	return resp, nil
+}
+
+func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUserGroupRequestListRequest) (*v1.GetUserGroupRequestListResponse, error) {
+	resp := &v1.GetUserGroupRequestListResponse{}
+
+	ids, err := s.grr.GetUserGroupIDs(request.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
+	}
+
+	reqList, err := s.grr.GetJoinRequestBatchListByID(ids)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
+	}
+
+	for _, v := range reqList {
+		if v.UserID == request.UserId {
+			continue
+		}
+		resp.GroupJoinRequestList = append(resp.GroupJoinRequestList, &v1.GroupJoinRequestList{
+			UserId:    v.UserID,
+			Msg:       v.Remark,
+			Status:    v1.GroupRelationStatus(v.Status),
+			CreatedAt: v.CreatedAt,
+		})
+	}
 	return resp, nil
 }
 

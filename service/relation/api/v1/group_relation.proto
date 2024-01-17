@@ -88,6 +88,8 @@ message GroupJoinRequestList {
   string Msg = 2;       // 申请信息
   // @inject_tag: json:"status"
   GroupRelationStatus Status = 3;
+  // @inject_tag: json:"created_at"
+  int64 CreatedAt = 4;
 }
 
 message GetGroupRelationRequest {
@@ -123,6 +125,7 @@ enum GroupIdentity {
   IDENTITY_ADMIN = 1; // 管理员
   IDENTITY_OWNER = 2;
 }
+
 enum GroupRelationStatus {
     GroupStatusApplying  = 0; // 申请中
     GroupStatusJoined    = 1; // 已加入
@@ -139,12 +142,37 @@ message GetUserManageGroupIDResponse {
   repeated GroupIDRequest GroupIDs = 1;
 }
 
+message GetUserGroupIDsRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;  // 用户ID
+}
+
+message GetUserGroupIDsResponse {
+  // @inject_tag: json:"group_id"
+  repeated  uint32 GroupId = 1; // 群聊ID
+}
+
+message GetUserGroupRequestListRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message GetUserGroupRequestListResponse {
+  repeated GroupJoinRequestList GroupJoinRequestList = 1;
+}
+
 service GroupRelationService {
   // 加入群聊
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
 
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
+
+  // 获取用户的所有群聊ID列表
+  rpc GetUserGroupIDs(GetUserGroupIDsRequest) returns (GetUserGroupIDsResponse);
+
+  // 获取用户的所有群聊列表信息
+  rpc GetUserGroupRequestList(GetUserGroupRequestListRequest) returns (GetUserGroupRequestListResponse);
 
   // 获取群聊管理员ID列表
   rpc GetGroupAdminIds(GroupIDRequest) returns (UserIdsResponse);

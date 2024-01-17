@@ -528,9 +528,14 @@ func getGroupMember(c *gin.Context) {
 	response.Success(c, "获取群聊成员成功", data)
 }
 
-// @Summary 群聊申请列表
-// @Description 群聊申请列表
-// @Produce  json
+// groupRequestList 获取群聊申请列表
+// @Summary 获取群聊申请列表
+// @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)
+// @Tags GroupRelation
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param Authorization header string true "Bearer JWT"
 // @Success		200 {object} model.Response{data=model.RequestListResponse}
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
@@ -548,18 +553,7 @@ func groupRequestList(c *gin.Context) {
 		return
 	}
 
-	r1, err := groupRelationClient.GetUserManageGroupID(context.Background(), &relationApi.GetUserManageGroupIDRequest{UserId: userID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	var gids []*relationApi.GroupIDRequest
-	for _, v := range r1.GroupIDs {
-		gids = append(gids, &relationApi.GroupIDRequest{GroupId: v.GroupId})
-	}
-
-	reqList, err := groupRelationClient.GetGroupJoinRequestList(context.Background(), &relationApi.GetGroupJoinRequestListRequest{GroupIds: gids})
+	reqList, err := groupRelationClient.GetUserGroupRequestList(context.Background(), &relationApi.GetUserGroupRequestListRequest{UserId: userID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -573,6 +567,7 @@ func groupRequestList(c *gin.Context) {
 			UserID: v.UserId,
 			Msg:    v.Msg,
 			Status: uint32(v.Status),
+			//RequestAt: v.CreatedAt,
 		})
 	}
 

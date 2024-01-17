@@ -188,11 +188,31 @@
         },
         "/relation/group/request_list": {
             "get": {
-                "description": "群聊申请列表",
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "群聊申请列表",
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "获取群聊申请列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -563,7 +583,7 @@
                     "type": "string"
                 },
                 "request_at": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "status": {
                     "type": "integer"
