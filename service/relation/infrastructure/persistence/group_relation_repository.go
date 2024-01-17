@@ -28,6 +28,16 @@ func (repo *GroupRelationRepo) GetUserGroupIDs(gid uint32) ([]string, error) {
 	return userGroupIDs, nil
 }
 
+func (repo *GroupRelationRepo) GetUserManageGroupIDs(uid string) ([]uint32, error) {
+	var groupIDs []uint32
+
+	if err := repo.db.Model(&entity.GroupRelation{}).Distinct("group_id").Where("user_id = ? AND identity IN ?", uid, []entity.GroupIdentity{entity.IdentityAdmin, entity.IdentityOwner}).Pluck("group_id", &groupIDs).Error; err != nil {
+		return nil, err
+	}
+
+	return groupIDs, nil
+}
+
 func (repo *GroupRelationRepo) UpdateRelation(ur *entity.GroupRelation) (*entity.GroupRelation, error) {
 	if err := repo.db.Model(&entity.GroupRelation{}).Where("id = ?", ur.ID).Updates(ur).Error; err != nil {
 		return ur, err
@@ -54,8 +64,17 @@ func (repo *GroupRelationRepo) GetJoinRequestListByID(gid uint32) ([]*entity.Gro
 	}
 	return joinRequests, nil
 }
+
 func (repo *GroupRelationRepo) DeleteGroupRelationByID(gid uint32) error {
 	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Delete(&entity.GroupRelation{}).Error
+}
+
+func (repo *GroupRelationRepo) GetJoinRequestBatchListByID(gids []uint32) ([]*entity.GroupRelation, error) {
+	var joinRequests []*entity.GroupRelation
+	if err := repo.db.Where("group_id IN (?) AND status = ?", gids, entity.GroupStatusApplying).Find(&joinRequests).Error; err != nil {
+		return joinRequests, err
+	}
+	return joinRequests, nil
 }
 
 func (repo *GroupRelationRepo) GetGroupAdminIds(gid uint32) ([]string, error) {
