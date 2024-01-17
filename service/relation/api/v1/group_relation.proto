@@ -140,14 +140,33 @@ message GetUserManageGroupIDResponse {
 }
 
 service GroupRelationService {
+  // 加入群聊
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
-  rpc GetUserGroupIDs(GroupIDRequest) returns (UserIdsResponse);
+
+  // 获取群聊成员ID列表
+  rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
+
+  // 获取群聊管理员ID列表
   rpc GetGroupAdminIds(GroupIDRequest) returns (UserIdsResponse);
+
+  // 获取用户管理的群聊ID列表
   rpc GetUserManageGroupID(GetUserManageGroupIDRequest) returns (GetUserManageGroupIDResponse);
+
+  // 管理群聊加入申请
   rpc ManageJoinGroup (ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
+
+  // 从群聊中移除成员
   rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);
+
+  // 退出群聊
   rpc LeaveGroup (LeaveGroupRequest) returns (LeaveGroupResponse);
+
+  // 获取群聊加入申请列表
   rpc GetGroupJoinRequestList (GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse);
+
+  // 获取用户与群聊关系信息
   rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
+
+  // 根据群聊ID删除群聊关系
   rpc DeleteGroupRelationByGroupId (GroupIDRequest) returns (Empty);
 }

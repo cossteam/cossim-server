@@ -528,7 +528,7 @@ func getGroupMember(c *gin.Context) {
 		return
 	}
 
-	groupRelation, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationApi.GroupIDRequest{GroupId: uint32(gid)})
+	groupRelation, err := groupRelationClient.GetGroupUserIDs(context.Background(), &relationApi.GroupIDRequest{GroupId: uint32(gid)})
 	if err != nil {
 		response.Fail(c, "获取群聊成员失败", nil)
 		return
