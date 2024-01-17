@@ -412,7 +412,7 @@ func manageFriend(c *gin.Context) {
 	var responseData interface{}
 	if req.Status == 1 {
 		wsMsgData["target_info"] = myInfo
-		wsMsgData["public_key"] = req.E2EPublicKey
+		wsMsgData["e2e_public_key"] = req.E2EPublicKey
 		responseData = targetInfo
 	}
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
