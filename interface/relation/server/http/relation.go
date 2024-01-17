@@ -569,9 +569,14 @@ type requestListResponse struct {
 	Status    uint32 `json:"status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
 }
 
-// @Summary 群聊申请列表
-// @Description 群聊申请列表
-// @Produce  json
+// groupRequestList 获取群聊申请列表
+// @Summary 获取群聊申请列表
+// @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)
+// @Tags GroupRelation
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param Authorization header string true "Bearer JWT"
 // @Success		200 {object} utils.Response{data=requestListResponse}
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {

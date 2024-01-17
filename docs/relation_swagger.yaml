@@ -234,7 +234,15 @@ paths:
       summary: 将用户从群聊移除
   /relation/group/request_list:
     get:
-      description: 群聊申请列表
+      consumes:
+      - application/json
+      description: 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -247,7 +255,11 @@ paths:
                 data:
                   $ref: '#/definitions/http.requestListResponse'
               type: object
-      summary: 群聊申请列表
+      security:
+      - Bearer: []
+      summary: 获取群聊申请列表
+      tags:
+      - GroupRelation
   /relation/user/add_blacklist:
     post:
       consumes:
