@@ -560,10 +560,19 @@ func getGroupMember(c *gin.Context) {
 	response.Success(c, "获取群聊成员成功", data)
 }
 
+type requestListResponse struct {
+	UserID    string `json:"user_id" description:"用户ID"`
+	Nickname  string `json:"nickname" description:"用户昵称"`
+	Avatar    string `json:"avatar" description:"用户头像"`
+	Msg       string `json:"msg" description:"申请消息"`
+	RequestAt string `json:"request_at" description:"申请时间"`
+	Status    uint32 `json:"status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
+}
+
 // @Summary 群聊申请列表
 // @Description 群聊申请列表
 // @Produce  json
-// @Success		200 {object} utils.Response{}
+// @Success		200 {object} utils.Response{data=requestListResponse}
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -597,14 +606,6 @@ func groupRequestList(c *gin.Context) {
 		return
 	}
 
-	type requestListResponse struct {
-		UserID    string `json:"user_id"`
-		Nickname  string `json:"nickname"`
-		Avatar    string `json:"avatar"`
-		Msg       string `json:"msg"`
-		RequestAt string `json:"request_at"`
-	}
-
 	var ids []string
 	var data []*requestListResponse
 	for _, v := range reqList.GroupJoinRequestList {
@@ -612,6 +613,7 @@ func groupRequestList(c *gin.Context) {
 		data = append(data, &requestListResponse{
 			UserID: v.UserId,
 			Msg:    v.Msg,
+			Status: uint32(v.Status),
 		})
 	}
 
@@ -674,16 +676,19 @@ func joinGroup(c *gin.Context) {
 		GroupId: req.GroupID,
 		UserId:  uid,
 	})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
 	if relation != nil {
 		if relation.Status == relationApi.GroupRelationStatus_GroupStatusJoined {
 			response.Fail(c, "您已经在群聊中", nil)
 			return
 		}
-		return
+		if relation.Status == relationApi.GroupRelationStatus_GroupStatusReject {
+			response.Fail(c, "拒绝加入群聊", nil)
+			return
+		}
+		if relation.Status == relationApi.GroupRelationStatus_GroupStatusBlocked {
+			response.Fail(c, "群聊状态不可用", nil)
+			return
+		}
 	}
 
 	//添加普通用户申请
@@ -718,7 +723,7 @@ type approveJoinGroupRequest struct {
 // @Description 管理加入群聊
 // @Accept  json
 // @Produce  json
-// @param request body approveJoinGroupRequest true ""Status (0: rejected, 1: joined)""
+// @param request body approveJoinGroupRequest true "Status (0: rejected, 1: joined)"
 // @Success		200 {object} utils.Response{}
 // @Router /relation/group/manage_join_group [post]
 func manageJoinGroup(c *gin.Context) {

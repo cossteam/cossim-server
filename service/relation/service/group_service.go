@@ -125,6 +125,7 @@ func (s *Service) GetGroupJoinRequestList(ctx context.Context, request *v1.GetGr
 		resp.GroupJoinRequestList = append(resp.GroupJoinRequestList, &v1.GroupJoinRequestList{
 			UserId: join.UserID,
 			Msg:    join.Remark,
+			Status: v1.GroupRelationStatus(join.Status),
 		})
 	}
 

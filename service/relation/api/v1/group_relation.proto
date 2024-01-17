@@ -86,6 +86,8 @@ message GroupJoinRequestList {
   string UserId = 1;    // 用户id
   // @inject_tag: json:"msg"
   string Msg = 2;       // 申请信息
+  // @inject_tag: json:"status"
+  GroupRelationStatus Status = 3;
 }
 
 message GetGroupRelationRequest {

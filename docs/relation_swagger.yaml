@@ -38,7 +38,6 @@ definitions:
         type: string
     required:
     - group_id
-    - status
     - user_id
     type: object
   http.deleteBlacklistRequest:
@@ -78,6 +77,21 @@ definitions:
     required:
     - group_id
     - user_id
+    type: object
+  http.requestListResponse:
+    properties:
+      avatar:
+        type: string
+      msg:
+        type: string
+      nickname:
+        type: string
+      request_at:
+        type: string
+      status:
+        type: integer
+      user_id:
+        type: string
     type: object
   http.switchUserE2EPublicKeyRequest:
     properties:
@@ -147,7 +161,7 @@ paths:
       - application/json
       description: 管理加入群聊
       parameters:
-      - description: request
+      - description: 'Status (0: rejected, 1: joined)'
         in: body
         name: request
         required: true
@@ -221,19 +235,18 @@ paths:
   /relation/group/request_list:
     get:
       description: 群聊申请列表
-      parameters:
-      - description: 群聊ID
-        in: query
-        name: group_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/http.requestListResponse'
+              type: object
       summary: 群聊申请列表
   /relation/user/add_blacklist:
     post:
