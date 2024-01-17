@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
@@ -318,6 +319,11 @@ func deleteFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	//
+	if relation.Status != relationApi.RelationStatus_RELATION_STATUS_ADDED {
+		response.Fail(c, "不是好友", nil)
+		return
+	}
 	//删除自己的对话用户
 	_, err = dialogClient.DeleteDialogUserByDialogIDAndUserID(context.Background(), &relationApi.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID})
 	if err != nil {
@@ -373,25 +379,40 @@ func manageFriend(c *gin.Context) {
 	var dialogId uint32 = 0
 	if req.Status == 1 {
 		status = relationApi.RelationStatus_RELATION_STATUS_ADDED
-		//创建对话
-		dialog, err := dialogClient.CreateDialog(context.Background(), &relationApi.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
+		relation, err := userRelationClient.GetUserRelation(context.Background(), &relationApi.GetUserRelationRequest{UserId: userID, FriendId: req.UserID})
 		if err != nil {
 			c.Error(err)
 			return
 		}
-		//加入对话
-		_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: userID})
-		if err != nil {
-			c.Error(err)
-			return
+		if relation != nil && relation.DialogId != 0 {
+			fmt.Println("之前已经有关系，直接加入对话")
+			_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: relation.DialogId, UserId: req.UserID})
+			if err != nil {
+				c.Error(err)
+				return
+			}
+			dialogId = relation.DialogId
+		} else {
+			//创建对话
+			dialog, err := dialogClient.CreateDialog(context.Background(), &relationApi.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
+			if err != nil {
+				c.Error(err)
+				return
+			}
+			//加入对话
+			_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: userID})
+			if err != nil {
+				c.Error(err)
+				return
+			}
+			//确认添加好友之后加入对话
+			_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
+			if err != nil {
+				c.Error(err)
+				return
+			}
+			dialogId = dialog.Id
 		}
-		//确认添加好友之后加入对话
-		_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
-		if err != nil {
-			c.Error(err)
-			return
-		}
-		dialogId = dialog.Id
 	} else {
 		status = relationApi.RelationStatus_RELATION_STATUS_REJECTED
 	}

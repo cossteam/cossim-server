@@ -3,6 +3,7 @@ package persistence
 import (
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"gorm.io/gorm"
+	"time"
 )
 
 // UserRelationRepo 需要实现UserRelationRepository接口
@@ -22,19 +23,19 @@ func (u *UserRelationRepo) CreateRelation(ur *entity.UserRelation) (*entity.User
 }
 
 func (u *UserRelationRepo) UpdateRelation(ur *entity.UserRelation) (*entity.UserRelation, error) {
-	if err := u.db.Save(ur).Error; err != nil {
+	if err := u.db.Model(&entity.UserRelation{}).Where("ID = ?", ur.ID).Updates(ur).Error; err != nil {
 		return nil, err
 	}
 	return ur, nil
 }
 
 func (u *UserRelationRepo) DeleteRelationByID(userId, friendId string) error {
-	return u.db.Where("user_id = ? AND friend_id = ?", userId, friendId).Delete(&entity.UserRelation{}).Error
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", userId, friendId).Update("deleted_at", time.Now().Unix()).Error
 }
 
 func (u *UserRelationRepo) GetRelationByID(userId, friendId string) (*entity.UserRelation, error) {
 	var relation entity.UserRelation
-	if err := u.db.Where("user_id = ? AND friend_id = ?", userId, friendId).First(&relation).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).First(&relation).Error; err != nil {
 		return nil, err
 	}
 	return &relation, nil
@@ -42,7 +43,7 @@ func (u *UserRelationRepo) GetRelationByID(userId, friendId string) (*entity.Use
 
 func (u *UserRelationRepo) GetRelationsByUserID(userId string) ([]*entity.UserRelation, error) {
 	var relations []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.UserStatusAdded).Find(&relations).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status = ? AND deleted_at = 0", userId, entity.UserStatusAdded).Find(&relations).Error; err != nil {
 		return nil, err
 	}
 	return relations, nil
@@ -50,7 +51,7 @@ func (u *UserRelationRepo) GetRelationsByUserID(userId string) ([]*entity.UserRe
 
 func (u *UserRelationRepo) GetBlacklistByUserID(userId string) ([]*entity.UserRelation, error) {
 	var relations []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND status = ?", userId, entity.UserStatusBlocked).Find(&relations).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status = ? AND deleted_at = 0", userId, entity.UserStatusBlocked).Find(&relations).Error; err != nil {
 		return nil, err
 	}
 	return relations, nil
@@ -58,8 +59,12 @@ func (u *UserRelationRepo) GetBlacklistByUserID(userId string) ([]*entity.UserRe
 
 func (u *UserRelationRepo) GetFriendRequestListByUserID(userId string) ([]*entity.UserRelation, error) {
 	var urs []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND status IN ?", userId, []entity.UserRelationStatus{entity.UserStatusApplying, entity.UserStatusRejected, entity.UserStatusPending}).Find(&urs).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status IN ? AND deleted_at = 0", userId, []entity.UserRelationStatus{entity.UserStatusApplying, entity.UserStatusRejected, entity.UserStatusPending}).Find(&urs).Error; err != nil {
 		return nil, err
 	}
 	return urs, nil
+}
+
+func (u *UserRelationRepo) UpdateRelationColumn(id uint, column string, value interface{}) error {
+	return u.db.Model(&entity.UserRelation{}).Where("id = ?", id).Update(column, value).Error
 }

@@ -17,37 +17,46 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 
 	userId := request.GetUserId()
 	friendId := request.GetFriendId()
-	// Fetch the existing relationship between the user and friend
 	relation, err := s.urr.GetRelationByID(userId, friendId)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		//if errors.Is(err, gorm.ErrRecordNotFound) {
-		//	return resp, status.Error(codes.Code(code.RelationErrUserNotFound.Code()), err.Error())
-		//}
 		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
 	}
-
 	if relation != nil {
 		if relation.Status == entity.UserStatusPending {
 			return resp, status.Error(codes.Code(code.RelationErrFriendRequestAlreadyPending.Code()), "好友状态处于申请中")
-		} else if relation.Status == entity.UserStatusAdded {
+		} else if relation.Status == entity.UserStatusAdded && relation.DeletedAt == 0 {
 			return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
 		}
 	}
-
-	// Create a new UserRelation instance with relation status pending
+	//检查之前是否有记录
+	relation3, err := s.urr.GetRelationByID(friendId, userId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
+	}
+	if relation3 != nil {
+		relation4 := &entity.UserRelation{
+			UserID:   userId,
+			FriendID: friendId,
+			Remark:   request.Msg,
+			DialogId: relation3.DialogId,
+			Status:   entity.UserStatusPending,
+		}
+		_, err = s.urr.CreateRelation(relation4)
+		if err != nil {
+			return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
+		}
+		err := s.urr.UpdateRelationColumn(relation3.ID, "status", entity.UserStatusApplying)
+		if err != nil {
+			return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
+		}
+		return resp, nil
+	}
 	relation1 := &entity.UserRelation{
 		UserID:   userId,
 		FriendID: friendId,
 		Remark:   request.Msg,
 		Status:   entity.UserStatusPending,
-		//Status: entity.UserStatusAdded,
 	}
-	//
-	//if userId == friendId {
-	//	relation1.Status = entity.UserStatusAdded
-	//}
-
-	// Save the new relationship to the database
 	_, err = s.urr.CreateRelation(relation1)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
@@ -57,14 +66,8 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 		UserID:   friendId,
 		FriendID: userId,
 		Status:   entity.UserStatusApplying,
-		//Status: entity.UserStatusAdded,
 	}
 
-	//if userId == friendId {
-	//	relation2.Status = entity.UserStatusAdded
-	//}
-
-	// Save the new relationship to the database
 	_, err = s.urr.CreateRelation(relation2)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
@@ -121,9 +124,9 @@ func (s *Service) DeleteFriend(ctx context.Context, request *v1.DeleteFriendRequ
 		return resp, status.Error(codes.Code(code.RelationErrDeleteFriendFailed.Code()), fmt.Sprintf("failed to delete relation: %v", err))
 	}
 
-	if err := s.urr.DeleteRelationByID(friendId, userId); err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrDeleteFriendFailed.Code()), fmt.Sprintf("failed to delete relation: %v", err))
-	}
+	//if err := s.urr.DeleteRelationByID(friendId, userId); err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationErrDeleteFriendFailed.Code()), fmt.Sprintf("failed to delete relation: %v", err))
+	//}
 
 	return resp, nil
 }
@@ -228,6 +231,9 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	}
 
 	resp.Status = v1.RelationStatus(relation.Status)
+	resp.DialogId = uint32(relation.DialogId)
+	resp.UserId = relation.UserID
+	resp.FriendId = relation.FriendID
 	return resp, nil
 }
 
@@ -243,6 +249,7 @@ func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
 			UserId: friend.FriendID,
 			Msg:    friend.Remark,
+			Status: v1.RelationStatus(friend.Status),
 		})
 	}
 
