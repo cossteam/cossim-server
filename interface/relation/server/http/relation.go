@@ -156,6 +156,7 @@ func userRequestList(c *gin.Context) {
 		Avatar    string `json:"avatar"`
 		Msg       string `json:"msg"`
 		RequestAt string `json:"request_at"`
+		Status    uint32 `json:"status"`
 	}
 
 	var ids []string
@@ -165,6 +166,7 @@ func userRequestList(c *gin.Context) {
 		data = append(data, &requestListResponse{
 			UserID: v.UserId,
 			Msg:    v.Msg,
+			Status: uint32(v.Status),
 		})
 	}
 
@@ -322,6 +324,7 @@ func deleteFriend(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+
 	// 进行删除好友操作
 	if _, err = userRelationClient.DeleteFriend(context.Background(), &relationApi.DeleteFriendRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)

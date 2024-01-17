@@ -143,6 +143,8 @@ message FriendRequestList {
   string Avatar = 3;    // 用户头像
   // @inject_tag: json:"msg"
   string Msg = 4;       // 申请信息
+  // @inject_tag: json:"status"
+  RelationStatus Status = 5;
 }
 
 service UserRelationService {
