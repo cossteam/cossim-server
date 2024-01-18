@@ -1,23 +1,12 @@
 definitions:
-  http.ManageFriendRequest:
-    properties:
-      e2e_public_key:
-        type: string
-      status:
-        type: integer
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  http.addBlacklistRequest:
+  model.AddBlacklistRequest:
     properties:
       user_id:
         type: string
     required:
     - user_id
     type: object
-  http.addFriendRequest:
+  model.AddFriendRequest:
     properties:
       e2e_public_key:
         type: string
@@ -28,7 +17,39 @@ definitions:
     required:
     - user_id
     type: object
-  http.approveJoinGroupRequest:
+  model.DeleteBlacklistRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  model.DeleteFriendRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  model.JoinGroupRequest:
+    properties:
+      group_id:
+        type: integer
+    required:
+    - group_id
+    type: object
+  model.ManageFriendRequest:
+    properties:
+      e2e_public_key:
+        type: string
+      status:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  model.ManageJoinGroupRequest:
     properties:
       group_id:
         type: integer
@@ -40,35 +61,14 @@ definitions:
     - group_id
     - user_id
     type: object
-  http.deleteBlacklistRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  http.deleteFriendRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  http.joinGroupRequest:
+  model.QuitGroupRequest:
     properties:
       group_id:
         type: integer
     required:
     - group_id
     type: object
-  http.quitGroupRequest:
-    properties:
-      group_id:
-        type: integer
-    required:
-    - group_id
-    type: object
-  http.removeUserFromGroupRequest:
+  model.RemoveUserFromGroupRequest:
     properties:
       group_id:
         type: integer
@@ -78,22 +78,44 @@ definitions:
     - group_id
     - user_id
     type: object
-  http.requestListResponse:
+  model.RequestListResponse:
     properties:
-      avatar:
+      creator_id:
         type: string
+      group_avatar:
+        type: string
+      group_id:
+        type: integer
+      group_name:
+        type: string
+      group_status:
+        type: integer
+      group_type:
+        type: integer
+      max_members_limit:
+        type: integer
       msg:
-        type: string
-      nickname:
         type: string
       request_at:
-        type: integer
-      status:
-        type: integer
+        type: string
+      user_avatar:
+        type: string
       user_id:
         type: string
+      user_name:
+        type: string
+      user_status:
+        type: integer
     type: object
-  http.switchUserE2EPublicKeyRequest:
+  model.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  model.SwitchUserE2EPublicKeyRequest:
     properties:
       public_key:
         type: string
@@ -103,13 +125,18 @@ definitions:
     - public_key
     - user_id
     type: object
-  utils.Response:
+  usersorter.CustomGroupData:
     properties:
-      code:
-        type: integer
-      data: {}
-      msg:
+      avatar:
         type: string
+      dialog_id:
+        type: integer
+      group_id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: integer
     type: object
 info:
   contact: {}
@@ -126,14 +153,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.deleteBlacklistRequest'
+          $ref: '#/definitions/model.DeleteBlacklistRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 删除黑名单
   /relation/group/join:
     post:
@@ -146,15 +173,37 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.joinGroupRequest'
+          $ref: '#/definitions/model.JoinGroupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 加入群聊
+      tags:
+      - GroupRelation
+  /relation/group/list:
+    get:
+      description: 群聊列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status 0:正常状态；1:被封禁状态；2:被删除状态
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/usersorter.CustomGroupData'
+                  type: array
+              type: object
+      summary: 群聊列表
+      tags:
+      - GroupRelation
   /relation/group/manage_join_group:
     post:
       consumes:
@@ -166,15 +215,17 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.approveJoinGroupRequest'
+          $ref: '#/definitions/model.ManageJoinGroupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 管理加入群聊
+      tags:
+      - GroupRelation
   /relation/group/member:
     get:
       description: 群聊成员列表
@@ -190,8 +241,10 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 群聊成员列表
+      tags:
+      - GroupRelation
   /relation/group/quit:
     post:
       consumes:
@@ -203,15 +256,17 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.quitGroupRequest'
+          $ref: '#/definitions/model.QuitGroupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 退出群聊
+      tags:
+      - GroupRelation
   /relation/group/remove:
     post:
       consumes:
@@ -223,15 +278,17 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.removeUserFromGroupRequest'
+          $ref: '#/definitions/model.RemoveUserFromGroupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 将用户从群聊移除
+      tags:
+      - GroupRelation
   /relation/group/request_list:
     get:
       consumes:
@@ -250,10 +307,10 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/utils.Response'
+            - $ref: '#/definitions/model.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/http.requestListResponse'
+                  $ref: '#/definitions/model.RequestListResponse'
               type: object
       security:
       - Bearer: []
@@ -271,14 +328,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.addBlacklistRequest'
+          $ref: '#/definitions/model.AddBlacklistRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 添加黑名单
   /relation/user/add_friend:
     post:
@@ -291,14 +348,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.addFriendRequest'
+          $ref: '#/definitions/model.AddFriendRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 添加好友
   /relation/user/blacklist:
     get:
@@ -309,7 +366,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 黑名单
   /relation/user/delete_friend:
     post:
@@ -322,14 +379,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.deleteFriendRequest'
+          $ref: '#/definitions/model.DeleteFriendRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 删除好友
   /relation/user/friend_list:
     get:
@@ -340,7 +397,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 好友列表
   /relation/user/manage_friend:
     post:
@@ -353,14 +410,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.ManageFriendRequest'
+          $ref: '#/definitions/model.ManageFriendRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 管理好友请求
   /relation/user/request_list:
     get:
@@ -371,7 +428,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 好友申请列表
   /relation/user/switch/e2e/key:
     post:
@@ -384,14 +441,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.switchUserE2EPublicKeyRequest'
+          $ref: '#/definitions/model.SwitchUserE2EPublicKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       security:
       - BearerToken: []
       summary: 交换用户端到端公钥

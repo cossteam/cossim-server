@@ -75,7 +75,7 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 // @Description 更新群聊信息
 // @Accept  json
 // @Produce  json
-// @Param request body updateGroupRequest true "请求体"
+// @Param request body model.UpdateGroupRequest true "请求体"
 // @Success 200 {object} model.Response{}
 // @Router /group/update/{gid} [post]
 func updateGroup(c *gin.Context) {
@@ -136,7 +136,7 @@ func updateGroup(c *gin.Context) {
 // @Description 创建群聊
 // @Accept  json
 // @Produce  json
-// @Param request body createGroupRequest true "请求体"
+// @Param request body model.CreateGroupRequest true "请求体"
 // @Success 200 {object} model.Response{}
 // @Router /group/create [post]
 func createGroup(c *gin.Context) {

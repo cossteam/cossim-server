@@ -22,7 +22,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.deleteBlacklistRequest"
+                            "$ref": "#/definitions/model.DeleteBlacklistRequest"
                         }
                     }
                 ],
@@ -30,7 +30,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -45,6 +45,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "加入群聊",
                 "parameters": [
                     {
@@ -53,7 +56,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.joinGroupRequest"
+                            "$ref": "#/definitions/model.JoinGroupRequest"
                         }
                     }
                 ],
@@ -61,7 +64,42 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/list": {
+            "get": {
+                "description": "群聊列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "群聊列表",
+                "responses": {
+                    "200": {
+                        "description": "status 0:正常状态；1:被封禁状态；2:被删除状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/usersorter.CustomGroupData"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -76,6 +114,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "管理加入群聊",
                 "parameters": [
                     {
@@ -84,7 +125,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.approveJoinGroupRequest"
+                            "$ref": "#/definitions/model.ManageJoinGroupRequest"
                         }
                     }
                 ],
@@ -92,7 +133,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -103,6 +144,9 @@
                 "description": "群聊成员列表",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
                 ],
                 "summary": "群聊成员列表",
                 "parameters": [
@@ -118,7 +162,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -133,6 +177,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "退出群聊",
                 "parameters": [
                     {
@@ -141,7 +188,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.quitGroupRequest"
+                            "$ref": "#/definitions/model.QuitGroupRequest"
                         }
                     }
                 ],
@@ -149,7 +196,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -164,6 +211,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "将用户从群聊移除",
                 "parameters": [
                     {
@@ -172,7 +222,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.removeUserFromGroupRequest"
+                            "$ref": "#/definitions/model.RemoveUserFromGroupRequest"
                         }
                     }
                 ],
@@ -180,7 +230,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -219,13 +269,13 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/utils.Response"
+                                    "$ref": "#/definitions/model.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/http.requestListResponse"
+                                            "$ref": "#/definitions/model.RequestListResponse"
                                         }
                                     }
                                 }
@@ -252,7 +302,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.addBlacklistRequest"
+                            "$ref": "#/definitions/model.AddBlacklistRequest"
                         }
                     }
                 ],
@@ -260,7 +310,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -283,7 +333,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.addFriendRequest"
+                            "$ref": "#/definitions/model.AddFriendRequest"
                         }
                     }
                 ],
@@ -291,7 +341,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -308,7 +358,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -331,7 +381,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.deleteFriendRequest"
+                            "$ref": "#/definitions/model.DeleteFriendRequest"
                         }
                     }
                 ],
@@ -339,7 +389,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -356,7 +406,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -379,7 +429,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.ManageFriendRequest"
+                            "$ref": "#/definitions/model.ManageFriendRequest"
                         }
                     }
                 ],
@@ -387,7 +437,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -404,7 +454,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -432,7 +482,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.switchUserE2EPublicKeyRequest"
+                            "$ref": "#/definitions/model.SwitchUserE2EPublicKeyRequest"
                         }
                     }
                 ],
@@ -440,7 +490,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -448,24 +498,7 @@
         }
     },
     "definitions": {
-        "http.ManageFriendRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "e2e_public_key": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.addBlacklistRequest": {
+        "model.AddBlacklistRequest": {
             "type": "object",
             "required": [
                 "user_id"
@@ -476,7 +509,7 @@
                 }
             }
         },
-        "http.addFriendRequest": {
+        "model.AddFriendRequest": {
             "type": "object",
             "required": [
                 "user_id"
@@ -493,7 +526,57 @@
                 }
             }
         },
-        "http.approveJoinGroupRequest": {
+        "model.DeleteBlacklistRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.DeleteFriendRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.JoinGroupRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ManageFriendRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "e2e_public_key": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ManageJoinGroupRequest": {
             "type": "object",
             "required": [
                 "group_id",
@@ -511,29 +594,7 @@
                 }
             }
         },
-        "http.deleteBlacklistRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.deleteFriendRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.joinGroupRequest": {
+        "model.QuitGroupRequest": {
             "type": "object",
             "required": [
                 "group_id"
@@ -544,18 +605,7 @@
                 }
             }
         },
-        "http.quitGroupRequest": {
-            "type": "object",
-            "required": [
-                "group_id"
-            ],
-            "properties": {
-                "group_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "http.removeUserFromGroupRequest": {
+        "model.RemoveUserFromGroupRequest": {
             "type": "object",
             "required": [
                 "group_id",
@@ -570,30 +620,63 @@
                 }
             }
         },
-        "http.requestListResponse": {
+        "model.RequestListResponse": {
             "type": "object",
             "properties": {
-                "avatar": {
+                "creator_id": {
                     "type": "string"
+                },
+                "group_avatar": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "group_name": {
+                    "type": "string"
+                },
+                "group_status": {
+                    "type": "integer"
+                },
+                "group_type": {
+                    "type": "integer"
+                },
+                "max_members_limit": {
+                    "type": "integer"
                 },
                 "msg": {
-                    "type": "string"
-                },
-                "nickname": {
                     "type": "string"
                 },
                 "request_at": {
-                    "type": "integer"
+                    "type": "string"
                 },
-                "status": {
-                    "type": "integer"
+                "user_avatar": {
+                    "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                },
+                "user_status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
                     "type": "string"
                 }
             }
         },
-        "http.switchUserE2EPublicKeyRequest": {
+        "model.SwitchUserE2EPublicKeyRequest": {
             "type": "object",
             "required": [
                 "public_key",
@@ -608,15 +691,23 @@
                 }
             }
         },
-        "utils.Response": {
+        "usersorter.CustomGroupData": {
             "type": "object",
             "properties": {
-                "code": {
+                "avatar": {
+                    "type": "string"
+                },
+                "dialog_id": {
                     "type": "integer"
                 },
-                "data": {},
-                "msg": {
+                "group_id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "integer"
                 }
             }
         }

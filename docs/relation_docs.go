@@ -32,7 +32,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.deleteBlacklistRequest"
+                            "$ref": "#/definitions/model.DeleteBlacklistRequest"
                         }
                     }
                 ],
@@ -40,7 +40,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -55,6 +55,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "加入群聊",
                 "parameters": [
                     {
@@ -63,7 +66,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.joinGroupRequest"
+                            "$ref": "#/definitions/model.JoinGroupRequest"
                         }
                     }
                 ],
@@ -71,7 +74,42 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/list": {
+            "get": {
+                "description": "群聊列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "群聊列表",
+                "responses": {
+                    "200": {
+                        "description": "status 0:正常状态；1:被封禁状态；2:被删除状态",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/usersorter.CustomGroupData"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -86,6 +124,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "管理加入群聊",
                 "parameters": [
                     {
@@ -94,7 +135,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.approveJoinGroupRequest"
+                            "$ref": "#/definitions/model.ManageJoinGroupRequest"
                         }
                     }
                 ],
@@ -102,7 +143,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -113,6 +154,9 @@ const docTemplaterelation = `{
                 "description": "群聊成员列表",
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
                 ],
                 "summary": "群聊成员列表",
                 "parameters": [
@@ -128,7 +172,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -143,6 +187,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "退出群聊",
                 "parameters": [
                     {
@@ -151,7 +198,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.quitGroupRequest"
+                            "$ref": "#/definitions/model.QuitGroupRequest"
                         }
                     }
                 ],
@@ -159,7 +206,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -174,6 +221,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "GroupRelation"
+                ],
                 "summary": "将用户从群聊移除",
                 "parameters": [
                     {
@@ -182,7 +232,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.removeUserFromGroupRequest"
+                            "$ref": "#/definitions/model.RemoveUserFromGroupRequest"
                         }
                     }
                 ],
@@ -190,7 +240,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -229,13 +279,13 @@ const docTemplaterelation = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/utils.Response"
+                                    "$ref": "#/definitions/model.Response"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/http.requestListResponse"
+                                            "$ref": "#/definitions/model.RequestListResponse"
                                         }
                                     }
                                 }
@@ -262,7 +312,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.addBlacklistRequest"
+                            "$ref": "#/definitions/model.AddBlacklistRequest"
                         }
                     }
                 ],
@@ -270,7 +320,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -293,7 +343,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.addFriendRequest"
+                            "$ref": "#/definitions/model.AddFriendRequest"
                         }
                     }
                 ],
@@ -301,7 +351,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -318,7 +368,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -341,7 +391,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.deleteFriendRequest"
+                            "$ref": "#/definitions/model.DeleteFriendRequest"
                         }
                     }
                 ],
@@ -349,7 +399,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -366,7 +416,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -389,7 +439,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.ManageFriendRequest"
+                            "$ref": "#/definitions/model.ManageFriendRequest"
                         }
                     }
                 ],
@@ -397,7 +447,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -414,7 +464,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -442,7 +492,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.switchUserE2EPublicKeyRequest"
+                            "$ref": "#/definitions/model.SwitchUserE2EPublicKeyRequest"
                         }
                     }
                 ],
@@ -450,7 +500,7 @@ const docTemplaterelation = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -458,24 +508,7 @@ const docTemplaterelation = `{
         }
     },
     "definitions": {
-        "http.ManageFriendRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "e2e_public_key": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.addBlacklistRequest": {
+        "model.AddBlacklistRequest": {
             "type": "object",
             "required": [
                 "user_id"
@@ -486,7 +519,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "http.addFriendRequest": {
+        "model.AddFriendRequest": {
             "type": "object",
             "required": [
                 "user_id"
@@ -503,7 +536,57 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "http.approveJoinGroupRequest": {
+        "model.DeleteBlacklistRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.DeleteFriendRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.JoinGroupRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ManageFriendRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "e2e_public_key": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ManageJoinGroupRequest": {
             "type": "object",
             "required": [
                 "group_id",
@@ -521,29 +604,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "http.deleteBlacklistRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.deleteFriendRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "http.joinGroupRequest": {
+        "model.QuitGroupRequest": {
             "type": "object",
             "required": [
                 "group_id"
@@ -554,18 +615,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "http.quitGroupRequest": {
-            "type": "object",
-            "required": [
-                "group_id"
-            ],
-            "properties": {
-                "group_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "http.removeUserFromGroupRequest": {
+        "model.RemoveUserFromGroupRequest": {
             "type": "object",
             "required": [
                 "group_id",
@@ -580,30 +630,63 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "http.requestListResponse": {
+        "model.RequestListResponse": {
             "type": "object",
             "properties": {
-                "avatar": {
+                "creator_id": {
                     "type": "string"
+                },
+                "group_avatar": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "group_name": {
+                    "type": "string"
+                },
+                "group_status": {
+                    "type": "integer"
+                },
+                "group_type": {
+                    "type": "integer"
+                },
+                "max_members_limit": {
+                    "type": "integer"
                 },
                 "msg": {
-                    "type": "string"
-                },
-                "nickname": {
                     "type": "string"
                 },
                 "request_at": {
-                    "type": "integer"
+                    "type": "string"
                 },
-                "status": {
-                    "type": "integer"
+                "user_avatar": {
+                    "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                },
+                "user_status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
                     "type": "string"
                 }
             }
         },
-        "http.switchUserE2EPublicKeyRequest": {
+        "model.SwitchUserE2EPublicKeyRequest": {
             "type": "object",
             "required": [
                 "public_key",
@@ -618,15 +701,23 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "utils.Response": {
+        "usersorter.CustomGroupData": {
             "type": "object",
             "properties": {
-                "code": {
+                "avatar": {
+                    "type": "string"
+                },
+                "dialog_id": {
                     "type": "integer"
                 },
-                "data": {},
-                "msg": {
+                "group_id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "integer"
                 }
             }
         }

@@ -13,6 +13,8 @@ import (
 // User is an interface for user data
 type User interface{}
 
+type Group interface{}
+
 // CustomUserData Custom struct implementing the User interface
 type CustomUserData struct {
 	UserID    string `json:"user_id"`
@@ -23,6 +25,14 @@ type CustomUserData struct {
 	Signature string ` json:"signature"`
 	Status    uint   `json:"status"`
 	DialogId  uint32 `json:"dialog_id"`
+}
+
+type CustomGroupData struct {
+	GroupID  uint32 `json:"group_id"`
+	Name     string `json:"name"`
+	Avatar   string `json:"avatar"`
+	Status   uint   `json:"status"`
+	DialogId uint32 `json:"dialog_id"`
 }
 
 func ConvertToGinH(data map[string][]interface{}) gin.H {
@@ -40,26 +50,46 @@ func ConvertToGinH(data map[string][]interface{}) gin.H {
 }
 
 // SortAndGroupUsers sorts the user data based on a specified field and groups them by the first letter of the field values or special characters
-func SortAndGroupUsers(data []User, fieldName string) map[string][]interface{} {
+func SortAndGroupUsers(data interface{}, fieldName string) map[string][]interface{} {
 	groupedUsers := make(map[string][]interface{})
 	keyMap := make(map[string]bool)
 
-	for _, v := range data {
-		_ = reflect.ValueOf(v).FieldByName(fieldName)
-		fieldValue := fieldOf(v, fieldName)
-		name := fmt.Sprintf("%v", fieldValue.Interface())
+	if list, ok := data.([]User); ok {
+		for _, v := range list {
+			_ = reflect.ValueOf(v).FieldByName(fieldName)
+			fieldValue := fieldOf(v, fieldName)
+			name := fmt.Sprintf("%v", fieldValue.Interface())
 
-		if isChinese(name) {
-			pinyinSlice := pinyin.Pinyin(name, pinyin.NewArgs())
-			firstChar := getFirstChar(pinyinSlice)
-			name = strings.ToUpper(firstChar)
-		} else if isSpecialChar(name) {
-			name = "#"
+			if isChinese(name) {
+				pinyinSlice := pinyin.Pinyin(name, pinyin.NewArgs())
+				firstChar := getFirstChar(pinyinSlice)
+				name = strings.ToUpper(firstChar)
+			} else if isSpecialChar(name) {
+				name = "#"
+			}
+
+			k := strings.ToUpper(name[:1])
+			groupedUsers[k] = append(groupedUsers[k], v)
+			keyMap[k] = true
 		}
+	} else if list, ok := data.([]Group); ok {
+		for _, v := range list {
+			_ = reflect.ValueOf(v).FieldByName(fieldName)
+			fieldValue := fieldOf(v, fieldName)
+			name := fmt.Sprintf("%v", fieldValue.Interface())
 
-		k := strings.ToUpper(name[:1])
-		groupedUsers[k] = append(groupedUsers[k], v)
-		keyMap[k] = true
+			if isChinese(name) {
+				pinyinSlice := pinyin.Pinyin(name, pinyin.NewArgs())
+				firstChar := getFirstChar(pinyinSlice)
+				name = strings.ToUpper(firstChar)
+			} else if isSpecialChar(name) {
+				name = "#"
+			}
+
+			k := strings.ToUpper(name[:1])
+			groupedUsers[k] = append(groupedUsers[k], v)
+			keyMap[k] = true
+		}
 	}
 
 	var keys []string

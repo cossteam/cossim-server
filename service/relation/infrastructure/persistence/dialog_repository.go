@@ -105,3 +105,11 @@ func (g *DialogRepo) DeleteDialogUserByDialogID(dialogID uint) error {
 func (g *DialogRepo) DeleteDialogUserByDialogIDAndUserID(dialogID uint, userID string) error {
 	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Update("deleted_at", time.Now().Unix()).Error
 }
+
+func (g *DialogRepo) GetDialogByGroupIds(groupIds []uint) ([]*entity.Dialog, error) {
+	var dialogs []*entity.Dialog
+	if err := g.db.Model(&entity.Dialog{}).Where("group_id IN (?)", groupIds).Find(&dialogs).Error; err != nil {
+		return nil, err
+	}
+	return dialogs, nil
+}

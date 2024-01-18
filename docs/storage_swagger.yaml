@@ -1,5 +1,5 @@
 definitions:
-  utils.Response:
+  model.Response:
     properties:
       code:
         type: integer
@@ -30,7 +30,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 上传文件
   /storage/files/:id:
     delete:
@@ -47,7 +47,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 删除文件
     get:
       description: 获取文件信息
@@ -63,7 +63,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 获取文件信息
   /storage/files/download/:type/:id:
     get:
@@ -80,6 +80,6 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 下载文件
 swagger: "2.0"

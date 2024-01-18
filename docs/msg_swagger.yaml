@@ -1,5 +1,13 @@
 definitions:
-  http.SendGroupMsgRequest:
+  model.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  model.SendGroupMsgRequest:
     properties:
       content:
         type: string
@@ -21,7 +29,7 @@ definitions:
     - send_at
     - type
     type: object
-  http.SendUserMsgRequest:
+  model.SendUserMsgRequest:
     properties:
       content:
         type: string
@@ -39,14 +47,6 @@ definitions:
     - receiver_id
     - type
     type: object
-  utils.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      msg:
-        type: string
-    type: object
 info:
   contact: {}
   title: Swagger Example API
@@ -62,7 +62,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 获取用户对话列表
   /msg/list/user:
     get:
@@ -98,7 +98,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 获取私聊消息
   /msg/send/group:
     post:
@@ -111,14 +111,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.SendGroupMsgRequest'
+          $ref: '#/definitions/model.SendGroupMsgRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 发送群聊消息
   /msg/send/user:
     post:
@@ -131,14 +131,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.SendUserMsgRequest'
+          $ref: '#/definitions/model.SendUserMsgRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 发送私聊消息
   /msg/ws:
     get:

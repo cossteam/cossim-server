@@ -127,6 +127,66 @@ func friendList(c *gin.Context) {
 	response.Success(c, "获取好友列表成功", groupedUsers)
 }
 
+// @Summary 群聊列表
+// @Description 群聊列表
+// @Tags GroupRelation
+// @Produce  json
+// @Success		200 {object} model.Response{data=[]usersorter.CustomGroupData} "status 0:正常状态；1:被封禁状态；2:被删除状态"
+// @Router /relation/group/list [get]
+func getUserGroupList(c *gin.Context) {
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.Fail(c, "token解析失败", nil)
+		return
+	}
+	// 检查用户是否存在
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	if err != nil {
+		logger.Error("user service UserInfo", zap.Error(err))
+		c.Error(err)
+		return
+	}
+
+	// 获取用户群聊列表
+	ids, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationApi.GetUserGroupIDsRequest{UserId: userID})
+	if err != nil {
+		return
+	}
+
+	ds, err := groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
+	if err != nil {
+		return
+	}
+	//获取群聊对话信息
+	dialogs, err := dialogClient.GetDialogByGroupIds(context.Background(), &relationApi.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
+	if err != nil {
+		return
+	}
+
+	var data []usersorter.Group
+	for _, group := range ds.Groups {
+		for _, dialog := range dialogs.Dialogs {
+			if dialog.GroupId == group.Id {
+				data = append(data, usersorter.CustomGroupData{
+					GroupID:  group.Id,
+					Avatar:   group.Avatar,
+					Status:   uint(group.Status),
+					DialogId: dialog.DialogId,
+					Name:     group.Name,
+				})
+				break
+			}
+		}
+
+	}
+
+	// Sort and group by specified field
+	groupedUsers := usersorter.SortAndGroupUsers(data, "Name")
+
+	response.Success(c, "获取用户群聊成功", groupedUsers)
+}
+
 // @Summary 好友申请列表
 // @Description 好友申请列表
 // @Produce  json
@@ -232,7 +292,7 @@ func deleteBlacklist(c *gin.Context) {
 // @Description 添加黑名单
 // @Accept  json
 // @Produce  json
-// @param request body addBlacklistRequest true "request"
+// @param request body model.AddBlacklistRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/add_blacklist [post]
 func addBlacklist(c *gin.Context) {
@@ -482,6 +542,7 @@ func addFriend(c *gin.Context) {
 
 // @Summary 群聊成员列表
 // @Description 群聊成员列表
+// @Tags GroupRelation
 // @Param group_id query integer true "群聊ID"
 // @Produce  json
 // @Success		200 {object} model.Response{}
@@ -619,6 +680,7 @@ func groupRequestList(c *gin.Context) {
 
 // @Summary 加入群聊
 // @Description 加入群聊
+// @Tags GroupRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.JoinGroupRequest true "request"
@@ -692,6 +754,7 @@ func joinGroup(c *gin.Context) {
 
 // @Summary 管理加入群聊
 // @Description 管理加入群聊
+// @Tags GroupRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.ManageJoinGroupRequest true "Status (0: rejected, 1: joined)"
@@ -767,6 +830,7 @@ func manageJoinGroup(c *gin.Context) {
 
 // @Summary 将用户从群聊移除
 // @Description 将用户从群聊移除
+// @Tags GroupRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.RemoveUserFromGroupRequest true "request"
@@ -812,6 +876,7 @@ func removeUserFromGroup(c *gin.Context) {
 
 // @Summary 退出群聊
 // @Description 退出群聊
+// @Tags GroupRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.QuitGroupRequest true "request"

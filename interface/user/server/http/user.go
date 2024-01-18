@@ -151,7 +151,7 @@ func register(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param user_id query string true "用户id"
-// @Param type query GetType true "指定根据id还是邮箱类型查找"
+// @Param type query model.GetType true "指定根据id还是邮箱类型查找"
 // @Param email query string false "邮箱"
 // @Success		200 {object} model.Response{}
 // @Router /user/info [get]
@@ -234,7 +234,7 @@ func setUserPublicKey(c *gin.Context) {
 // @Description 获取系统pgp公钥
 // @Accept  json
 // @Produce  json
-// @Param type query GetType true "指定根据id还是邮箱类型查找"
+// @Param type query model.GetType true "指定根据id还是邮箱类型查找"
 // @Param email query string false "邮箱"
 // @Success		200 {object} model.Response{}
 // @Router /user/system/key/get [get]

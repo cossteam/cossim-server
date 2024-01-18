@@ -55,7 +55,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -83,7 +83,7 @@ const docTemplateuser = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.UserInfoRequest"
+                            "$ref": "#/definitions/model.UserInfoRequest"
                         }
                     }
                 ],
@@ -91,7 +91,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -119,7 +119,7 @@ const docTemplateuser = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SetPublicKeyRequest"
+                            "$ref": "#/definitions/model.SetPublicKeyRequest"
                         }
                     }
                 ],
@@ -127,7 +127,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -150,7 +150,7 @@ const docTemplateuser = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.LoginRequest"
+                            "$ref": "#/definitions/model.LoginRequest"
                         }
                     }
                 ],
@@ -158,7 +158,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -178,7 +178,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -206,7 +206,7 @@ const docTemplateuser = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.PasswordRequest"
+                            "$ref": "#/definitions/model.PasswordRequest"
                         }
                     }
                 ],
@@ -214,7 +214,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -237,7 +237,7 @@ const docTemplateuser = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.RegisterRequest"
+                            "$ref": "#/definitions/model.RegisterRequest"
                         }
                     }
                 ],
@@ -245,7 +245,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -284,7 +284,7 @@ const docTemplateuser = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -292,7 +292,7 @@ const docTemplateuser = `{
         }
     },
     "definitions": {
-        "http.LoginRequest": {
+        "model.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -307,7 +307,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "http.PasswordRequest": {
+        "model.PasswordRequest": {
             "type": "object",
             "required": [
                 "confirm_password",
@@ -326,7 +326,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "http.RegisterRequest": {
+        "model.RegisterRequest": {
             "type": "object",
             "required": [
                 "confirm_password",
@@ -352,7 +352,19 @@ const docTemplateuser = `{
                 }
             }
         },
-        "http.SetPublicKeyRequest": {
+        "model.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SetPublicKeyRequest": {
             "type": "object",
             "required": [
                 "public_key"
@@ -363,7 +375,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "http.UserInfoRequest": {
+        "model.UserInfoRequest": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -376,18 +388,6 @@ const docTemplateuser = `{
                     "type": "string"
                 },
                 "tel": {
-                    "type": "string"
-                }
-            }
-        },
-        "utils.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "msg": {
                     "type": "string"
                 }
             }

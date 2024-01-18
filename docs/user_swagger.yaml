@@ -1,5 +1,5 @@
 definitions:
-  http.LoginRequest:
+  model.LoginRequest:
     properties:
       email:
         type: string
@@ -9,7 +9,7 @@ definitions:
     - email
     - password
     type: object
-  http.PasswordRequest:
+  model.PasswordRequest:
     properties:
       confirm_password:
         type: string
@@ -22,7 +22,7 @@ definitions:
     - old_password
     - password
     type: object
-  http.RegisterRequest:
+  model.RegisterRequest:
     properties:
       confirm_password:
         type: string
@@ -40,14 +40,22 @@ definitions:
     - password
     - public_key
     type: object
-  http.SetPublicKeyRequest:
+  model.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  model.SetPublicKeyRequest:
     properties:
       public_key:
         type: string
     required:
     - public_key
     type: object
-  http.UserInfoRequest:
+  model.UserInfoRequest:
     properties:
       avatar:
         type: string
@@ -56,14 +64,6 @@ definitions:
       signature:
         type: string
       tel:
-        type: string
-    type: object
-  utils.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      msg:
         type: string
     type: object
 info:
@@ -99,7 +99,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 查询用户信息
   /user/info/modify:
     post:
@@ -112,14 +112,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.UserInfoRequest'
+          $ref: '#/definitions/model.UserInfoRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       security:
       - BearerToken: []
       summary: 修改用户信息
@@ -134,14 +134,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.SetPublicKeyRequest'
+          $ref: '#/definitions/model.SetPublicKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       security:
       - BearerToken: []
       summary: 设置用户公钥
@@ -156,14 +156,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.LoginRequest'
+          $ref: '#/definitions/model.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 用户登录
   /user/logout:
     post:
@@ -176,7 +176,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 退出登录
   /user/password/modify:
     post:
@@ -189,14 +189,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.PasswordRequest'
+          $ref: '#/definitions/model.PasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       security:
       - BearerToken: []
       summary: 修改用户密码
@@ -211,14 +211,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.RegisterRequest'
+          $ref: '#/definitions/model.RegisterRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 用户注册
   /user/system/key/get:
     get:
@@ -244,6 +244,6 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 获取系统pgp公钥
 swagger: "2.0"

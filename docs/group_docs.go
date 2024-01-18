@@ -32,7 +32,7 @@ const docTemplategroup = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.createGroupRequest"
+                            "$ref": "#/definitions/model.CreateGroupRequest"
                         }
                     }
                 ],
@@ -40,7 +40,7 @@ const docTemplategroup = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -69,7 +69,7 @@ const docTemplategroup = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -102,7 +102,7 @@ const docTemplategroup = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -131,7 +131,7 @@ const docTemplategroup = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -154,7 +154,7 @@ const docTemplategroup = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.updateGroupRequest"
+                            "$ref": "#/definitions/model.UpdateGroupRequest"
                         }
                     }
                 ],
@@ -162,7 +162,7 @@ const docTemplategroup = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -170,7 +170,7 @@ const docTemplategroup = `{
         }
     },
     "definitions": {
-        "http.createGroupRequest": {
+        "model.CreateGroupRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -190,7 +190,19 @@ const docTemplategroup = `{
                 }
             }
         },
-        "http.updateGroupRequest": {
+        "model.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UpdateGroupRequest": {
             "type": "object",
             "properties": {
                 "avatar": {
@@ -213,18 +225,6 @@ const docTemplategroup = `{
                 },
                 "type": {
                     "type": "integer"
-                }
-            }
-        },
-        "utils.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                    "type": "string"
                 }
             }
         }
