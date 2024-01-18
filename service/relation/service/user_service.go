@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+	"path/filepath"
+	"runtime"
 )
 
 func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (*v1.AddFriendResponse, error) {
@@ -77,43 +79,121 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 }
 
 func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
+	fmt.Println("ManageFriend req => ", request)
 	resp := &v1.ManageFriendResponse{}
 
-	userId := request.GetUserId()
-	friendId := request.GetFriendId()
-	relation1, err := s.urr.GetRelationByID(userId, friendId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		userId := request.GetUserId()
+		friendId := request.GetFriendId()
+
+		relation1, err := s.urr.GetRelationByID(userId, friendId)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+			}
+			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
 		}
-		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to get relation: %v", err))
-	}
 
-	if relation1.Status == entity.UserStatusAdded {
-		return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
-	}
+		if relation1.Status == entity.UserStatusAdded {
+			return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
+		}
 
-	relation1.Status = entity.UserRelationStatus(request.Status)
-	relation1.DialogId = uint(request.DialogId)
-	_, err = s.urr.UpdateRelation(relation1)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
-	}
-	relation2, err := s.urr.GetRelationByID(friendId, userId)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to get relation: %v", err))
-	}
+		relation1.Status = entity.UserRelationStatus(request.Status)
+		relation1.DialogId = uint(request.DialogId)
+		_, err = s.urr.UpdateRelation(relation1)
+		if err != nil {
+			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+			return status.Error(codes.Aborted, formatErrorMessage(err))
+		}
 
-	relation2.Status = entity.UserRelationStatus(request.Status)
-	relation2.DialogId = uint(request.DialogId)
-	_, err = s.urr.UpdateRelation(relation2)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
+		relation2, err := s.urr.GetRelationByID(friendId, userId)
+		if err != nil {
+			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+			return status.Error(codes.Aborted, formatErrorMessage(err))
+		}
+
+		//if relation2.Status == entity.UserStatusAdded {
+		//	return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
+		//}
+
+		relation2.Status = entity.UserRelationStatus(request.Status)
+		relation2.DialogId = uint(request.DialogId)
+		_, err = s.urr.UpdateRelation(relation2)
+		if err != nil {
+			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+			return status.Error(codes.Aborted, formatErrorMessage(err))
+		}
+
+		return nil
+	}); err != nil {
+		return resp, err
 	}
 
 	return resp, nil
 }
 
+func getFunctionName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	return runtime.FuncForPC(pc).Name()
+}
+
+func formatErrorMessage(err error) string {
+	funcName := getFunctionName()
+	_, file := filepath.Split(funcName)
+	return fmt.Sprintf("[%s] %s: %v", file, funcName, err)
+}
+
+func (s *Service) ManageFriendRevert(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
+	fmt.Println("ManageFriendRevert req => ", request)
+	resp := &v1.ManageFriendResponse{}
+
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		userId := request.GetUserId()
+		friendId := request.GetFriendId()
+
+		relation1, err := s.urr.GetRelationByID(userId, friendId)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+			}
+			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+		}
+
+		//if relation1.Status == entity.UserStatusAdded {
+		//	return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
+		//}
+
+		//relation1.Status = entity.UserRelationStatus(request.Status)
+		//relation1.Status = entity.UserRelationStatus(request.Status)
+		relation1.Status = entity.UserStatusPending
+		relation1.DialogId = uint(request.DialogId)
+		_, err = s.urr.UpdateRelation(relation1)
+		if err != nil {
+			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+		}
+
+		relation2, err := s.urr.GetRelationByID(friendId, userId)
+		if err != nil {
+			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+		}
+
+		//relation2.Status = entity.UserRelationStatus(request.Status)
+		relation2.Status = entity.UserStatusApplying
+		relation2.DialogId = uint(request.DialogId)
+		_, err = s.urr.UpdateRelation(relation2)
+		if err != nil {
+			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+		}
+
+		return nil
+	}); err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+	}
+
+	return resp, nil
+}
 func (s *Service) DeleteFriend(ctx context.Context, request *v1.DeleteFriendRequest) (*v1.DeleteFriendResponse, error) {
 	resp := &v1.DeleteFriendResponse{}
 
@@ -178,7 +258,7 @@ func (s *Service) DeleteBlacklist(ctx context.Context, request *v1.DeleteBlackli
 	//	return resp, code.RelationErrDeleteBlacklistFailed.Reason(fmt.Errorf("failed to retrieve relation: %w", err))
 	//}
 	//
-	//relation2.Status = entity.UserStatusAdded
+	//relation2.Action = entity.UserStatusAdded
 	//if _, err = s.urr.UpdateRelation(relation2); err != nil {
 	//	return resp, code.RelationErrDeleteBlacklistFailed.Reason(fmt.Errorf("failed to update relation: %w", err))
 	//}
@@ -229,6 +309,8 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), fmt.Sprintf("failed to get user relation: %v", err))
 	}
+
+	fmt.Println("GetUserRelation relation => ", relation)
 
 	resp.Status = v1.RelationStatus(relation.Status)
 	resp.DialogId = uint32(relation.DialogId)

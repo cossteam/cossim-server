@@ -2,7 +2,7 @@ package entity
 
 type UserRelation struct {
 	ID                 uint               `gorm:"primaryKey;autoIncrement;comment:好友关系ID" json:"id"`
-	Status             UserRelationStatus `gorm:"comment:好友关系状态" json:"status"`
+	Status             UserRelationStatus `gorm:"comment:好友关系状态 (0=申请中 1=待通过 2=已添加 3=已拒绝 4=拉黑 5=删除)" json:"status"`
 	UserID             string             `gorm:"type:varchar(64);comment:用户ID" json:"user_id"`
 	FriendID           string             `gorm:"type:varchar(64);comment:好友ID" json:"friend_id"`
 	DialogId           uint               `gorm:"comment:对话ID" json:"dialog_id"`

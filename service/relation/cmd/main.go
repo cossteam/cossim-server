@@ -36,7 +36,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	svc := service.NewService(infra)
+	svc := service.NewService(infra, dbConn)
 	api.RegisterUserRelationServiceServer(grpcServer, svc)
 	api.RegisterGroupRelationServiceServer(grpcServer, svc)
 	api.RegisterDialogServiceServer(grpcServer, svc)

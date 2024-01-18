@@ -50,7 +50,7 @@ func (s Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Upl
 		Content: request.Url,
 		Path:    request.Path,
 		Type:    entity.FileType(request.Type),
-		//Status:   entity.Pending,
+		//Action:   entity.Pending,
 		Provider: request.Provider,
 		Size:     request.Size,
 	}

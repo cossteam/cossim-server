@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
@@ -410,76 +409,83 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
-	var status relationApi.RelationStatus
-	var dialogId uint32 = 0
-	if req.Status == 1 {
-		status = relationApi.RelationStatus_RELATION_STATUS_ADDED
-		relation, err := userRelationClient.GetUserRelation(context.Background(), &relationApi.GetUserRelationRequest{UserId: userID, FriendId: req.UserID})
-		if err != nil {
-			c.Error(err)
-			return
-		}
-		if relation != nil && relation.DialogId != 0 {
-			fmt.Println("之前已经有关系，直接加入对话")
-			_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: relation.DialogId, UserId: req.UserID})
-			if err != nil {
-				c.Error(err)
-				return
-			}
-			dialogId = relation.DialogId
-		} else {
-			//创建对话
-			dialog, err := dialogClient.CreateDialog(context.Background(), &relationApi.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
-			if err != nil {
-				c.Error(err)
-				return
-			}
-			//加入对话
-			_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: userID})
-			if err != nil {
-				c.Error(err)
-				return
-			}
-			//确认添加好友之后加入对话
-			_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
-			if err != nil {
-				c.Error(err)
-				return
-			}
-			dialogId = dialog.Id
-		}
-	} else {
-		status = relationApi.RelationStatus_RELATION_STATUS_REJECTED
-	}
-	// 进行确认好友操作
-	if _, err = userRelationClient.ManageFriend(context.Background(), &relationApi.ManageFriendRequest{UserId: userID, FriendId: req.UserID, DialogId: dialogId, Status: status}); err != nil {
-		c.Error(err)
-		return
-	}
-	targetId := req.UserID
-	req.UserID = userID
-	targetInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: targetId})
+	responseData, err := svc.ManageFriend(c, userID, req.UserID, int32(req.Action))
 	if err != nil {
-		return
-	}
-	myInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	if err != nil {
-		return
-	}
-	wsMsgData := map[string]interface{}{"user_id": userID, "status": req.Status}
-	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.ManageFriendEvent, Data: wsMsgData}
-	var responseData interface{}
-	if req.Status == 1 {
-		wsMsgData["target_info"] = myInfo
-		wsMsgData["e2e_public_key"] = req.E2EPublicKey
-		responseData = targetInfo
-	}
-	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	if err != nil {
-		logger.Error("推送服务消息失败", zap.Error(err))
+		//c.Error(err)
 		response.Fail(c, "管理好友申请失败", nil)
 		return
 	}
+
+	//var status relationApi.RelationStatus
+	//var dialogId uint32 = 0
+	//if req.Action == 1 {
+	//	status = relationApi.RelationStatus_RELATION_STATUS_ADDED
+	//	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationApi.GetUserRelationRequest{UserId: userID, FriendId: req.UserID})
+	//	if err != nil {
+	//		c.Error(err)
+	//		return
+	//	}
+	//	if relation != nil && relation.DialogId != 0 {
+	//		fmt.Println("之前已经有关系，直接加入对话")
+	//		_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: relation.DialogId, UserId: req.UserID})
+	//		if err != nil {
+	//			c.Error(err)
+	//			return
+	//		}
+	//		dialogId = relation.DialogId
+	//	} else {
+	//		//创建对话
+	//		dialog, err := dialogClient.CreateDialog(context.Background(), &relationApi.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
+	//		if err != nil {
+	//			c.Error(err)
+	//			return
+	//		}
+	//		//加入对话
+	//		_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: userID})
+	//		if err != nil {
+	//			c.Error(err)
+	//			return
+	//		}
+	//		//确认添加好友之后加入对话
+	//		_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
+	//		if err != nil {
+	//			c.Error(err)
+	//			return
+	//		}
+	//		dialogId = dialog.Id
+	//	}
+	//} else {
+	//	status = relationApi.RelationStatus_RELATION_STATUS_REJECTED
+	//}
+	//// 进行确认好友操作
+	//if _, err = userRelationClient.ManageFriend(context.Background(), &relationApi.ManageFriendRequest{UserId: userID, FriendId: req.UserID, DialogId: dialogId, Action: status}); err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//targetId := req.UserID
+	//req.UserID = userID
+	//targetInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: targetId})
+	//if err != nil {
+	//	return
+	//}
+	//myInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	//if err != nil {
+	//	return
+	//}
+	//wsMsgData := map[string]interface{}{"user_id": userID, "status": req.Action}
+	//msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.ManageFriendEvent, Data: wsMsgData}
+	//var responseData interface{}
+	//if req.Action == 1 {
+	//	wsMsgData["target_info"] = myInfo
+	//	wsMsgData["e2e_public_key"] = req.E2EPublicKey
+	//	responseData = targetInfo
+	//}
+	//err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	//if err != nil {
+	//	logger.Error("推送服务消息失败", zap.Error(err))
+	//	response.Fail(c, "管理好友申请失败", nil)
+	//	return
+	//}
 
 	response.Success(c, "管理好友申请成功", responseData)
 }
@@ -757,7 +763,7 @@ func joinGroup(c *gin.Context) {
 // @Tags GroupRelation
 // @Accept  json
 // @Produce  json
-// @param request body model.ManageJoinGroupRequest true "Status (0: rejected, 1: joined)"
+// @param request body model.ManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/manage_join_group [post]
 func manageJoinGroup(c *gin.Context) {

@@ -141,24 +141,86 @@ message GetDialogByGroupIdsResponse {
   repeated GetDialogByGroupIdResponse Dialogs = 1;
 }
 
+message ConfirmFriendAndJoinDialogRequest {
+  //  @inject_tag: json:"owner_id"
+  string OwnerId = 1;  // 创建者id
+  //  @inject_tag: json:"user_id"
+  string UserId = 2;   // 对方用户id
+  //  @inject_tag: json:"type"
+  DialogType Type = 3; // 会话类型 (0:用户会话, 1:群组会话)
+  //  @inject_tag: json:"group_id"
+  uint32 GroupId = 4;  // 群组id
+}
+
+message ConfirmFriendAndJoinDialogResponse {
+  //  @inject_tag: json:"id"
+  uint32 Id = 1;        // 会话id
+  //  @inject_tag: json:"owner_id"
+  string OwnerId = 2;   // 创建者id
+  //  @inject_tag: json:"type"
+  DialogType Type = 3;  // 会话类型 (0:用户会话, 1:群组会话)
+  //  @inject_tag: json:"group_id"
+  uint32 GroupId = 4;   // 群组id
+}
+
+enum DialogType {
+  USER_DIALOG = 0;  // 用户会话
+  GROUP_DIALOG = 1; // 群组会话
+}
+
+message ConfirmFriendAndJoinDialogRevertRequest {
+  //  @inject_tag: json:"owner_id"
+  string OwnerId = 1;  // 创建者id
+  //  @inject_tag: json:"user_id"
+  string UserId = 2;   // 对方用户id
+  //  @inject_tag: json:"type"
+  DialogType Type = 3; // 会话类型 (0:用户会话, 1:群组会话)
+  //  @inject_tag: json:"group_id"
+  uint32 GroupId = 4;  // 群组id
+  //  @inject_tag: json:"dialog_id"
+  uint32 DialogId = 5;        // 会话id
+}
+
+message ConfirmFriendAndJoinDialogRevertResponse {}
 
 service DialogService {
-  //创建对话
+  // CreateDialog 创建对话
   rpc CreateDialog(CreateDialogRequest) returns (CreateDialogResponse) {}
-  //加入对话
+
+  // ConfirmFriendAndJoinDialog 确认好友并加入对话
+  rpc ConfirmFriendAndJoinDialog(ConfirmFriendAndJoinDialogRequest) returns (ConfirmFriendAndJoinDialogResponse) {}
+
+  // ConfirmFriendAndJoinDialogRevert ConfirmFriendAndJoinDialog回滚操作
+  rpc ConfirmFriendAndJoinDialogRevert(ConfirmFriendAndJoinDialogRevertRequest) returns (ConfirmFriendAndJoinDialogRevertResponse) {}
+
+  // JoinDialog 加入对话
   rpc JoinDialog(JoinDialogRequest) returns (JoinDialogResponse) {}
-  //获取用户对话列表
+
+  // GetUserDialogList 获取用户对话列表
   rpc GetUserDialogList(GetUserDialogListRequest) returns (GetUserDialogListResponse) {}
-  //根据多个对话id获取对话列表
+
+  // GetDialogByIds 根据对话ID获取对话信息
   rpc GetDialogByIds(GetDialogByIdsRequest) returns (GetDialogByIdsResponse) {}
-  //获取对话用户id
+
+  // GetDialogUsersByDialogID 根据对话ID获取对话成员列表
   rpc GetDialogUsersByDialogID(GetDialogUsersByDialogIDRequest) returns (GetDialogUsersByDialogIDResponse) {}
+
+  // GetDialogUserByDialogIDAndUserID 根据对话ID和用户ID获取对话成员信息
   rpc GetDialogUserByDialogIDAndUserID(GetDialogUserByDialogIDAndUserIdRequest) returns (GetDialogUserByDialogIDAndUserIdResponse) {}
+
+  // GetDialogByGroupId 根据群组ID获取对话信息
   rpc GetDialogByGroupId(GetDialogByGroupIdRequest) returns (GetDialogByGroupIdResponse) {}
   rpc GetDialogByGroupIds(GetDialogByGroupIdsRequest) returns (GetDialogByGroupIdsResponse) {}
 
+  // DeleteDialogByIds 根据对话ID列表删除对话
   rpc DeleteDialogByIds(DeleteDialogByIdsRequest) returns (DeleteDialogByIdsResponse) {}
+
+  // DeleteDialogById 根据对话ID删除对话
   rpc DeleteDialogById(DeleteDialogByIdRequest) returns (DeleteDialogByIdResponse) {}
+
+  // DeleteDialogUsersByDialogID 根据对话ID删除对话成员
   rpc DeleteDialogUsersByDialogID(DeleteDialogUsersByDialogIDRequest) returns (DeleteDialogUsersByDialogIDResponse) {}
+
+  // DeleteDialogUserByDialogIDAndUserID 根据对话ID和用户ID删除对话成员
   rpc DeleteDialogUserByDialogIDAndUserID(DeleteDialogUserByDialogIDAndUserIDRequest) returns (DeleteDialogUserByDialogIDAndUserIDResponse) {}
 }
