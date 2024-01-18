@@ -809,7 +809,7 @@ func manageJoinGroup(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: id.DialogId, UserId: userID})
+	_, err = dialogClient.JoinDialog(context.Background(), &relationApi.JoinDialogRequest{DialogId: id.DialogId, UserId: req.UserID})
 	if err != nil {
 		c.Error(err)
 		return
