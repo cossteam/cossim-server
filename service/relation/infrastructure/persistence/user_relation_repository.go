@@ -35,7 +35,7 @@ func (u *UserRelationRepo) DeleteRelationByID(userId, friendId string) error {
 
 func (u *UserRelationRepo) GetRelationByID(userId, friendId string) (*entity.UserRelation, error) {
 	var relation entity.UserRelation
-	if err := u.db.Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).First(&relation).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).Order("created_at DESC").First(&relation).Error; err != nil {
 		return nil, err
 	}
 	return &relation, nil
