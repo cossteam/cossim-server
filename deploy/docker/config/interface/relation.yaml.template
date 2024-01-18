@@ -14,6 +14,13 @@ mysql:
   execTimeout: "800ms"
   tranTimeout: "100ms"
 
+message_queue:
+  name: "rabbitmq"
+  username: ""
+  password: ""
+  addr: "rabbitmq:5672"
+  port: "5672"
+
 redis:
   name: "user-bff"
   proto: "tcp"
@@ -51,3 +58,6 @@ discovers:
     addr: "msg_service:10000"
     dial: "3000ms"
     timeout: "5000ms"
+  group:
+    name: "group_service"
+    addr: "group_service:10005"

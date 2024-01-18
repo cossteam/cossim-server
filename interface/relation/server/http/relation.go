@@ -158,9 +158,9 @@ func userRequestList(c *gin.Context) {
 	for _, v := range reqList.FriendRequestList {
 		ids = append(ids, v.UserId)
 		data = append(data, &model.RequestListResponse{
-			UserID: v.UserId,
-			Msg:    v.Msg,
-			Status: uint32(v.Status),
+			UserID:     v.UserId,
+			Msg:        v.Msg,
+			UserStatus: uint32(v.Status),
 		})
 	}
 
@@ -173,8 +173,8 @@ func userRequestList(c *gin.Context) {
 	for _, v := range data {
 		for _, u := range users.Users {
 			if v.UserID == u.UserId {
-				v.Nickname = u.NickName
-				v.Avatar = u.Avatar
+				v.UserName = u.NickName
+				v.UserAvatar = u.Avatar
 				break
 			}
 		}
@@ -549,6 +549,7 @@ func groupRequestList(c *gin.Context) {
 		response.Fail(c, "token解析失败", nil)
 		return
 	}
+
 	// 检查用户是否存在
 	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
 	if err != nil {
@@ -563,19 +564,41 @@ func groupRequestList(c *gin.Context) {
 		return
 	}
 
-	var ids []string
-	var data []*model.RequestListResponse
-	for _, v := range reqList.GroupJoinRequestList {
-		ids = append(ids, v.UserId)
-		data = append(data, &model.RequestListResponse{
-			UserID: v.UserId,
-			Msg:    v.Msg,
-			Status: uint32(v.Status),
-			//RequestAt: v.CreatedAt,
-		})
+	gids := make([]uint32, len(reqList.GroupJoinRequestList))
+	uids := make([]string, len(reqList.GroupJoinRequestList))
+	data := make([]*model.RequestListResponse, len(reqList.GroupJoinRequestList))
+
+	for i, v := range reqList.GroupJoinRequestList {
+		gids[i] = v.GroupId
+		uids[i] = v.UserId
+
+		data[i] = &model.RequestListResponse{
+			GroupId:     v.GroupId,
+			UserID:      v.UserId,
+			Msg:         v.Msg,
+			GroupStatus: uint32(v.Status),
+		}
 	}
 
-	users, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: ids})
+	ds, err := groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: gids})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	groupMap := make(map[uint32]*model.RequestListResponse)
+	for _, d := range data {
+		groupMap[d.GroupId] = d
+	}
+
+	for _, v := range ds.Groups {
+		if d, ok := groupMap[v.Id]; ok {
+			d.GroupName = v.Name
+			d.GroupAvatar = v.Avatar
+		}
+	}
+
+	users, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: uids})
 	if err != nil {
 		c.Error(err)
 		return
@@ -584,8 +607,8 @@ func groupRequestList(c *gin.Context) {
 	for _, v := range data {
 		for _, u := range users.Users {
 			if v.UserID == u.UserId {
-				v.Nickname = u.NickName
-				v.Avatar = u.Avatar
+				v.UserName = u.NickName
+				v.UserAvatar = u.Avatar
 				break
 			}
 		}
