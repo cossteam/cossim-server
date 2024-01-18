@@ -17,16 +17,12 @@ definitions:
         type: integer
       replay_id:
         type: integer
-      send_at:
-        type: integer
       type:
         type: integer
     required:
     - content
     - dialog_id
     - group_id
-    - replay_id
-    - send_at
     - type
     type: object
   model.SendUserMsgRequest:
