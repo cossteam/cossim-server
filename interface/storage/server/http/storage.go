@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	conf "github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/storage/minio"
@@ -58,14 +59,12 @@ func upload(c *gin.Context) {
 	}
 	// 文件大小限制 30MB
 	//c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileSize)
-
 	file, err := c.FormFile("file")
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
 		response.Fail(c, err.Error(), nil)
 		return
 	}
-
 	if file.Size > maxFileSize {
 		logger.Error("文件大小超过限制", zap.Error(err))
 		response.Fail(c, "文件大小超过限制", nil)
@@ -85,16 +84,22 @@ func upload(c *gin.Context) {
 		response.Fail(c, "上传失败", nil)
 		return
 	}
-
+	fileExtension := file.Filename[strings.LastIndex(file.Filename, "."):]
 	fileID := uuid.New().String()
-	key := minio.GenKey(bucket, fileID)
-
+	key := minio.GenKey(bucket, fileID+fileExtension)
 	headerUrl, err := sp.Upload(context.Background(), key, fileObj, file.Size)
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
 		response.Fail(c, "上传失败", nil)
 		return
 	}
+	u, err := sp.GetUrl(context.Background(), key)
+	if err != nil {
+		logger.Error("上传失败", zap.Error(err))
+		response.Fail(c, "上传失败", nil)
+		return
+	}
+	fmt.Println("url : ", u)
 
 	_, err = storageClient.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   "userID",

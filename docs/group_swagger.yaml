@@ -1,5 +1,5 @@
 definitions:
-  http.createGroupRequest:
+  model.CreateGroupRequest:
     properties:
       avatar:
         type: string
@@ -12,7 +12,15 @@ definitions:
     required:
     - name
     type: object
-  http.updateGroupRequest:
+  model.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  model.UpdateGroupRequest:
     properties:
       avatar:
         type: string
@@ -29,14 +37,6 @@ definitions:
       type:
         type: integer
     type: object
-  utils.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      msg:
-        type: string
-    type: object
 info:
   contact: {}
   title: coss-user服务
@@ -52,14 +52,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.createGroupRequest'
+          $ref: '#/definitions/model.CreateGroupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 创建群聊
   /group/delete:
     post:
@@ -78,7 +78,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 删除群聊
   /group/getBatch:
     get:
@@ -100,7 +100,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 批量获取群聊信息
   /group/info:
     get:
@@ -119,7 +119,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 获取群聊信息
   /group/update/{gid}:
     post:
@@ -132,13 +132,13 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http.updateGroupRequest'
+          $ref: '#/definitions/model.UpdateGroupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Response'
+            $ref: '#/definitions/model.Response'
       summary: 更新群聊信息
 swagger: "2.0"

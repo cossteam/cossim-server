@@ -29,7 +29,7 @@ const docTemplatemsg = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -83,7 +83,7 @@ const docTemplatemsg = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -106,7 +106,7 @@ const docTemplatemsg = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SendGroupMsgRequest"
+                            "$ref": "#/definitions/model.SendGroupMsgRequest"
                         }
                     }
                 ],
@@ -114,7 +114,7 @@ const docTemplatemsg = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -137,7 +137,7 @@ const docTemplatemsg = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.SendUserMsgRequest"
+                            "$ref": "#/definitions/model.SendUserMsgRequest"
                         }
                     }
                 ],
@@ -145,7 +145,7 @@ const docTemplatemsg = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -160,7 +160,19 @@ const docTemplatemsg = `{
         }
     },
     "definitions": {
-        "http.SendGroupMsgRequest": {
+        "model.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendGroupMsgRequest": {
             "type": "object",
             "required": [
                 "content",
@@ -191,7 +203,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "http.SendUserMsgRequest": {
+        "model.SendUserMsgRequest": {
             "type": "object",
             "required": [
                 "content",
@@ -214,18 +226,6 @@ const docTemplatemsg = `{
                 },
                 "type": {
                     "type": "integer"
-                }
-            }
-        },
-        "utils.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                    "type": "string"
                 }
             }
         }

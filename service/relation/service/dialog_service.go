@@ -153,3 +153,28 @@ func (s *Service) GetDialogByGroupId(ctx context.Context, in *v1.GetDialogByGrou
 	resp.GroupId = uint32(dialog.GroupId)
 	return resp, nil
 }
+
+func (s *Service) GetDialogByGroupIds(ctx context.Context, in *v1.GetDialogByGroupIdsRequest) (*v1.GetDialogByGroupIdsResponse, error) {
+	var resp = &v1.GetDialogByGroupIdsResponse{}
+	var idlist []uint
+	if len(in.GroupId) > 0 {
+		for _, id := range in.GroupId {
+			idlist = append(idlist, uint(id))
+		}
+	}
+
+	ids, err := s.dr.GetDialogByGroupIds(idlist)
+	if err != nil {
+		return resp, err
+	}
+
+	if len(ids) > 0 {
+		for _, id := range ids {
+			resp.Dialogs = append(resp.Dialogs, &v1.GetDialogByGroupIdResponse{
+				DialogId: uint32(id.ID),
+				GroupId:  uint32(id.GroupId),
+			})
+		}
+	}
+	return resp, nil
+}

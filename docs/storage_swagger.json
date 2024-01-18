@@ -31,7 +31,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -57,7 +57,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -81,7 +81,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -107,7 +107,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Response"
+                            "$ref": "#/definitions/model.Response"
                         }
                     }
                 }
@@ -115,7 +115,7 @@
         }
     },
     "definitions": {
-        "utils.Response": {
+        "model.Response": {
             "type": "object",
             "properties": {
                 "code": {

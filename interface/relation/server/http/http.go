@@ -184,7 +184,8 @@ func route(engine *gin.Engine) {
 	g.POST("/join", joinGroup)
 	// 管理加入群聊
 	g.POST("/manage_join_group", manageJoinGroup)
-
+	//获取用户群聊列表
+	g.GET("/list", getUserGroupList)
 	// 移出群聊
 	g.POST("/remove", removeUserFromGroup)
 	// 退出群聊

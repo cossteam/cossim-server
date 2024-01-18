@@ -123,6 +123,7 @@ message GetDialogByGroupIdRequest {
   //  @inject_tag: json:"group_id"
   uint32 GroupId = 1;
 }
+
 message GetDialogByGroupIdResponse {
   //  @inject_tag: json:"dialog_id"
   uint32 DialogId = 1;
@@ -130,15 +131,31 @@ message GetDialogByGroupIdResponse {
   uint32 GroupId = 2;
 }
 
+message GetDialogByGroupIdsRequest {
+  //  @inject_tag: json:"group_id"
+  repeated uint32 GroupId = 1;
+}
+
+message GetDialogByGroupIdsResponse {
+  //  @inject_tag: json:"dialogs"
+  repeated GetDialogByGroupIdResponse Dialogs = 1;
+}
+
 
 service DialogService {
+  //创建对话
   rpc CreateDialog(CreateDialogRequest) returns (CreateDialogResponse) {}
+  //加入对话
   rpc JoinDialog(JoinDialogRequest) returns (JoinDialogResponse) {}
+  //获取用户对话列表
   rpc GetUserDialogList(GetUserDialogListRequest) returns (GetUserDialogListResponse) {}
+  //根据多个对话id获取对话列表
   rpc GetDialogByIds(GetDialogByIdsRequest) returns (GetDialogByIdsResponse) {}
+  //获取对话用户id
   rpc GetDialogUsersByDialogID(GetDialogUsersByDialogIDRequest) returns (GetDialogUsersByDialogIDResponse) {}
   rpc GetDialogUserByDialogIDAndUserID(GetDialogUserByDialogIDAndUserIdRequest) returns (GetDialogUserByDialogIDAndUserIdResponse) {}
   rpc GetDialogByGroupId(GetDialogByGroupIdRequest) returns (GetDialogByGroupIdResponse) {}
+  rpc GetDialogByGroupIds(GetDialogByGroupIdsRequest) returns (GetDialogByGroupIdsResponse) {}
 
   rpc DeleteDialogByIds(DeleteDialogByIdsRequest) returns (DeleteDialogByIdsResponse) {}
   rpc DeleteDialogById(DeleteDialogByIdRequest) returns (DeleteDialogByIdResponse) {}
