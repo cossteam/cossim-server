@@ -105,7 +105,7 @@ message GetUserRelationRequest {
 
 
 enum RelationStatus {
-  RELATION_STATUS_Unknown = 0;
+  RELATION_STATUS_APPLYING = 0;
   RELATION_STATUS_PENDING = 1;
   RELATION_STATUS_ADDED = 2;
   RELATION_STATUS_REJECTED = 3;
