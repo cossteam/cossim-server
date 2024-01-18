@@ -82,14 +82,16 @@ message GroupJoinRequestListResponse {
 }
 
 message GroupJoinRequestList {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;   // 群聊id
   // @inject_tag: json:"user_id"
-  string UserId = 1;    // 用户id
+  string UserId = 2;    // 用户id
   // @inject_tag: json:"msg"
-  string Msg = 2;       // 申请信息
+  string Msg = 3;       // 申请信息
   // @inject_tag: json:"status"
-  GroupRelationStatus Status = 3;
+  GroupRelationStatus Status = 4;
   // @inject_tag: json:"created_at"
-  int64 CreatedAt = 4;
+  int64 CreatedAt = 5;
 }
 
 message GetGroupRelationRequest {

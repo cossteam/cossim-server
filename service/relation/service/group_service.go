@@ -56,6 +56,7 @@ func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUs
 			continue
 		}
 		resp.GroupJoinRequestList = append(resp.GroupJoinRequestList, &v1.GroupJoinRequestList{
+			GroupId:   uint32(v.GroupID),
 			UserId:    v.UserID,
 			Msg:       v.Remark,
 			Status:    v1.GroupRelationStatus(v.Status),
