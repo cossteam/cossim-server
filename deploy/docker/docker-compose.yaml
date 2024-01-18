@@ -65,6 +65,11 @@ services:
     ports:
       - 6379:6379
     command: redis-server --requirepass Hitosea@123..
+  dtm:
+    image: hub.hitosea.com/cossim/dtm
+    ports:
+      - '36789:36789'
+      - '36790:36790'
   gateway:
     container_name: cossim_gateway
     image: hub.hitosea.com/cossim/gateway-interface
