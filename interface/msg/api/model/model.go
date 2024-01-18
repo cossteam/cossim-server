@@ -19,8 +19,7 @@ type SendGroupMsgRequest struct {
 	GroupId  uint32 `json:"group_id" binding:"required"`
 	Content  string `json:"content" binding:"required"`
 	Type     uint32 `json:"type" binding:"required"`
-	ReplayId uint32 `json:"replay_id" binding:"required"`
-	SendAt   int64  `json:"send_at" binding:"required"`
+	ReplayId uint32 `json:"replay_id"`
 }
 
 type MsgListRequest struct {

@@ -178,8 +178,6 @@ const docTemplatemsg = `{
                 "content",
                 "dialog_id",
                 "group_id",
-                "replay_id",
-                "send_at",
                 "type"
             ],
             "properties": {
@@ -193,9 +191,6 @@ const docTemplatemsg = `{
                     "type": "integer"
                 },
                 "replay_id": {
-                    "type": "integer"
-                },
-                "send_at": {
                     "type": "integer"
                 },
                 "type": {
