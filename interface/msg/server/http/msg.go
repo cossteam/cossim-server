@@ -412,7 +412,8 @@ func getUserDialogList(c *gin.Context) {
 			re.DialogName = info.Name
 			re.DialogType = 1
 			re.DialogUnreadCount = 10
-			re.UserId = v.OwnerId
+			//re.UserId = v.OwnerId
+			re.GroupId = info.Id
 			re.DialogId = v.Id
 		}
 		// 匹配最后一条消息
