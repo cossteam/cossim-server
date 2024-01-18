@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/interface/relation/service"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/msg_queue"
@@ -28,10 +29,13 @@ var (
 	rabbitMQClient      *msg_queue.RabbitMQ
 	cfg                 *config.AppConfig
 	logger              *zap.Logger
+	svc                 *service.Service
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
+
+	svc = service.New(c)
 	setupLogger()
 	setupGroupGRPCClient()
 	setupRedis()

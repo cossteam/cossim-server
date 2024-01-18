@@ -125,7 +125,7 @@ type Group struct {
 	// @inject_tag: json:"type"
 	Type GroupType `protobuf:"varint,2,opt,name=Type,proto3,enum=v1.GroupType" json:"type"`
 	// @inject_tag: json:"status"
-	Status GroupStatus `protobuf:"varint,3,opt,name=Status,proto3,enum=v1.GroupStatus" json:"status"`
+	Status GroupStatus `protobuf:"varint,3,opt,name=Action,proto3,enum=v1.GroupStatus" json:"status"`
 	// @inject_tag: json:"max_members_limit"
 	MaxMembersLimit int32 `protobuf:"varint,4,opt,name=Max_members_limit,json=MaxMembersLimit,proto3" json:"max_members_limit"`
 	// @inject_tag: json:"creator_id"
@@ -645,7 +645,7 @@ var file_api_v1_group_proto_goTypes = []interface{}{
 }
 var file_api_v1_group_proto_depIdxs = []int32{
 	1,  // 0: v1.Group.Type:type_name -> v1.GroupType
-	0,  // 1: v1.Group.Status:type_name -> v1.GroupStatus
+	0,  // 1: v1.Group.Action:type_name -> v1.GroupStatus
 	2,  // 2: v1.GetBatchGroupInfoResponse.groups:type_name -> v1.Group
 	2,  // 3: v1.UpdateGroupRequest.group:type_name -> v1.Group
 	2,  // 4: v1.CreateGroupRequest.group:type_name -> v1.Group

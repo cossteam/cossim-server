@@ -130,7 +130,7 @@ const docTemplaterelation = `{
                 "summary": "管理加入群聊",
                 "parameters": [
                     {
-                        "description": "Status (0: rejected, 1: joined)",
+                        "description": "Action (0: rejected, 1: joined)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -558,6 +558,21 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "model.FriendRequestStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-comments": {
+                "FriendRequestStatusAccepted": "同意",
+                "FriendRequestStatusRejected": "拒绝"
+            },
+            "x-enum-varnames": [
+                "FriendRequestStatusRejected",
+                "FriendRequestStatusAccepted"
+            ]
+        },
         "model.JoinGroupRequest": {
             "type": "object",
             "required": [
@@ -575,11 +590,11 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
+                "action": {
+                    "$ref": "#/definitions/model.FriendRequestStatus"
+                },
                 "e2e_public_key": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "integer"
                 },
                 "user_id": {
                     "type": "string"

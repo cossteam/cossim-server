@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 func (s *Service) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) (*v1.CreateDialogResponse, error) {
@@ -22,6 +24,57 @@ func (s *Service) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) 
 		GroupId: uint32(dialog.ID),
 		Type:    uint32(dialog.Type),
 	}, nil
+}
+
+func (s *Service) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRequest) (*v1.ConfirmFriendAndJoinDialogResponse, error) {
+	resp := &v1.ConfirmFriendAndJoinDialogResponse{}
+
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		dialog, err := s.dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
+		if err != nil {
+			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+		}
+
+		_, err = s.JoinDialog(ctx, &v1.JoinDialogRequest{DialogId: uint32(dialog.ID), UserId: request.OwnerId})
+		if err != nil {
+			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+		}
+
+		_, err = s.JoinDialog(ctx, &v1.JoinDialogRequest{DialogId: uint32(dialog.ID), UserId: request.UserId})
+		if err != nil {
+			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+		}
+
+		resp.Id = uint32(dialog.ID)
+		resp.OwnerId = request.OwnerId
+		resp.Type = v1.DialogType(dialog.Type)
+		resp.GroupId = uint32(dialog.GroupId)
+
+		return nil
+	}); err != nil {
+		return resp, err
+	}
+
+	return resp, nil
+}
+
+func (s *Service) ConfirmFriendAndJoinDialogRevert(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRevertRequest) (*v1.ConfirmFriendAndJoinDialogRevertResponse, error) {
+	fmt.Println("ConfirmFriendAndJoinDialogRevert req => ", request)
+	resp := &v1.ConfirmFriendAndJoinDialogRevertResponse{}
+
+	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+	}
+
+	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.OwnerId); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+	}
+
+	if err := s.dr.DeleteDialogByDialogID(uint(request.DialogId)); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+	}
+
+	return resp, nil
 }
 
 func (s *Service) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {

@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	DialogService_CreateDialog_FullMethodName                        = "/v1.DialogService/CreateDialog"
+	DialogService_ConfirmFriendAndJoinDialog_FullMethodName          = "/v1.DialogService/ConfirmFriendAndJoinDialog"
+	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName    = "/v1.DialogService/ConfirmFriendAndJoinDialogRevert"
 	DialogService_JoinDialog_FullMethodName                          = "/v1.DialogService/JoinDialog"
 	DialogService_GetUserDialogList_FullMethodName                   = "/v1.DialogService/GetUserDialogList"
 	DialogService_GetDialogByIds_FullMethodName                      = "/v1.DialogService/GetDialogByIds"
@@ -37,22 +39,32 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DialogServiceClient interface {
-	// 创建对话
+	// CreateDialog 创建对话
 	CreateDialog(ctx context.Context, in *CreateDialogRequest, opts ...grpc.CallOption) (*CreateDialogResponse, error)
-	// 加入对话
+	// ConfirmFriendAndJoinDialog 确认好友并加入对话
+	ConfirmFriendAndJoinDialog(ctx context.Context, in *ConfirmFriendAndJoinDialogRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogResponse, error)
+	// ConfirmFriendAndJoinDialogRevert ConfirmFriendAndJoinDialog回滚操作
+	ConfirmFriendAndJoinDialogRevert(ctx context.Context, in *ConfirmFriendAndJoinDialogRevertRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogRevertResponse, error)
+	// JoinDialog 加入对话
 	JoinDialog(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
-	// 获取用户对话列表
+	// GetUserDialogList 获取用户对话列表
 	GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error)
-	// 根据多个对话id获取对话列表
+	// GetDialogByIds 根据对话ID获取对话信息
 	GetDialogByIds(ctx context.Context, in *GetDialogByIdsRequest, opts ...grpc.CallOption) (*GetDialogByIdsResponse, error)
-	// 获取对话用户id
+	// GetDialogUsersByDialogID 根据对话ID获取对话成员列表
 	GetDialogUsersByDialogID(ctx context.Context, in *GetDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*GetDialogUsersByDialogIDResponse, error)
+	// GetDialogUserByDialogIDAndUserID 根据对话ID和用户ID获取对话成员信息
 	GetDialogUserByDialogIDAndUserID(ctx context.Context, in *GetDialogUserByDialogIDAndUserIdRequest, opts ...grpc.CallOption) (*GetDialogUserByDialogIDAndUserIdResponse, error)
+	// GetDialogByGroupId 根据群组ID获取对话信息
 	GetDialogByGroupId(ctx context.Context, in *GetDialogByGroupIdRequest, opts ...grpc.CallOption) (*GetDialogByGroupIdResponse, error)
 	GetDialogByGroupIds(ctx context.Context, in *GetDialogByGroupIdsRequest, opts ...grpc.CallOption) (*GetDialogByGroupIdsResponse, error)
+	// DeleteDialogByIds 根据对话ID列表删除对话
 	DeleteDialogByIds(ctx context.Context, in *DeleteDialogByIdsRequest, opts ...grpc.CallOption) (*DeleteDialogByIdsResponse, error)
+	// DeleteDialogById 根据对话ID删除对话
 	DeleteDialogById(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error)
+	// DeleteDialogUsersByDialogID 根据对话ID删除对话成员
 	DeleteDialogUsersByDialogID(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
+	// DeleteDialogUserByDialogIDAndUserID 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 }
 
@@ -67,6 +79,24 @@ func NewDialogServiceClient(cc grpc.ClientConnInterface) DialogServiceClient {
 func (c *dialogServiceClient) CreateDialog(ctx context.Context, in *CreateDialogRequest, opts ...grpc.CallOption) (*CreateDialogResponse, error) {
 	out := new(CreateDialogResponse)
 	err := c.cc.Invoke(ctx, DialogService_CreateDialog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) ConfirmFriendAndJoinDialog(ctx context.Context, in *ConfirmFriendAndJoinDialogRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogResponse, error) {
+	out := new(ConfirmFriendAndJoinDialogResponse)
+	err := c.cc.Invoke(ctx, DialogService_ConfirmFriendAndJoinDialog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) ConfirmFriendAndJoinDialogRevert(ctx context.Context, in *ConfirmFriendAndJoinDialogRevertRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogRevertResponse, error) {
+	out := new(ConfirmFriendAndJoinDialogRevertResponse)
+	err := c.cc.Invoke(ctx, DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -176,22 +206,32 @@ func (c *dialogServiceClient) DeleteDialogUserByDialogIDAndUserID(ctx context.Co
 // All implementations must embed UnimplementedDialogServiceServer
 // for forward compatibility
 type DialogServiceServer interface {
-	// 创建对话
+	// CreateDialog 创建对话
 	CreateDialog(context.Context, *CreateDialogRequest) (*CreateDialogResponse, error)
-	// 加入对话
+	// ConfirmFriendAndJoinDialog 确认好友并加入对话
+	ConfirmFriendAndJoinDialog(context.Context, *ConfirmFriendAndJoinDialogRequest) (*ConfirmFriendAndJoinDialogResponse, error)
+	// ConfirmFriendAndJoinDialogRevert ConfirmFriendAndJoinDialog回滚操作
+	ConfirmFriendAndJoinDialogRevert(context.Context, *ConfirmFriendAndJoinDialogRevertRequest) (*ConfirmFriendAndJoinDialogRevertResponse, error)
+	// JoinDialog 加入对话
 	JoinDialog(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
-	// 获取用户对话列表
+	// GetUserDialogList 获取用户对话列表
 	GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error)
-	// 根据多个对话id获取对话列表
+	// GetDialogByIds 根据对话ID获取对话信息
 	GetDialogByIds(context.Context, *GetDialogByIdsRequest) (*GetDialogByIdsResponse, error)
-	// 获取对话用户id
+	// GetDialogUsersByDialogID 根据对话ID获取对话成员列表
 	GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error)
+	// GetDialogUserByDialogIDAndUserID 根据对话ID和用户ID获取对话成员信息
 	GetDialogUserByDialogIDAndUserID(context.Context, *GetDialogUserByDialogIDAndUserIdRequest) (*GetDialogUserByDialogIDAndUserIdResponse, error)
+	// GetDialogByGroupId 根据群组ID获取对话信息
 	GetDialogByGroupId(context.Context, *GetDialogByGroupIdRequest) (*GetDialogByGroupIdResponse, error)
 	GetDialogByGroupIds(context.Context, *GetDialogByGroupIdsRequest) (*GetDialogByGroupIdsResponse, error)
+	// DeleteDialogByIds 根据对话ID列表删除对话
 	DeleteDialogByIds(context.Context, *DeleteDialogByIdsRequest) (*DeleteDialogByIdsResponse, error)
+	// DeleteDialogById 根据对话ID删除对话
 	DeleteDialogById(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error)
+	// DeleteDialogUsersByDialogID 根据对话ID删除对话成员
 	DeleteDialogUsersByDialogID(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
+	// DeleteDialogUserByDialogIDAndUserID 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	mustEmbedUnimplementedDialogServiceServer()
 }
@@ -202,6 +242,12 @@ type UnimplementedDialogServiceServer struct {
 
 func (UnimplementedDialogServiceServer) CreateDialog(context.Context, *CreateDialogRequest) (*CreateDialogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDialog not implemented")
+}
+func (UnimplementedDialogServiceServer) ConfirmFriendAndJoinDialog(context.Context, *ConfirmFriendAndJoinDialogRequest) (*ConfirmFriendAndJoinDialogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfirmFriendAndJoinDialog not implemented")
+}
+func (UnimplementedDialogServiceServer) ConfirmFriendAndJoinDialogRevert(context.Context, *ConfirmFriendAndJoinDialogRevertRequest) (*ConfirmFriendAndJoinDialogRevertResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfirmFriendAndJoinDialogRevert not implemented")
 }
 func (UnimplementedDialogServiceServer) JoinDialog(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinDialog not implemented")
@@ -263,6 +309,42 @@ func _DialogService_CreateDialog_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DialogServiceServer).CreateDialog(ctx, req.(*CreateDialogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_ConfirmFriendAndJoinDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfirmFriendAndJoinDialogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_ConfirmFriendAndJoinDialog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialog(ctx, req.(*ConfirmFriendAndJoinDialogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_ConfirmFriendAndJoinDialogRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfirmFriendAndJoinDialogRevertRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialogRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialogRevert(ctx, req.(*ConfirmFriendAndJoinDialogRevertRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -475,6 +557,14 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateDialog",
 			Handler:    _DialogService_CreateDialog_Handler,
+		},
+		{
+			MethodName: "ConfirmFriendAndJoinDialog",
+			Handler:    _DialogService_ConfirmFriendAndJoinDialog_Handler,
+		},
+		{
+			MethodName: "ConfirmFriendAndJoinDialogRevert",
+			Handler:    _DialogService_ConfirmFriendAndJoinDialogRevert_Handler,
 		},
 		{
 			MethodName: "JoinDialog",

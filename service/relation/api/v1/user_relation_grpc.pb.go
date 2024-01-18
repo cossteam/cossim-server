@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	UserRelationService_AddFriend_FullMethodName            = "/v1.UserRelationService/AddFriend"
 	UserRelationService_ManageFriend_FullMethodName         = "/v1.UserRelationService/ManageFriend"
+	UserRelationService_ManageFriendRevert_FullMethodName   = "/v1.UserRelationService/ManageFriendRevert"
 	UserRelationService_DeleteFriend_FullMethodName         = "/v1.UserRelationService/DeleteFriend"
 	UserRelationService_AddBlacklist_FullMethodName         = "/v1.UserRelationService/AddBlacklist"
 	UserRelationService_DeleteBlacklist_FullMethodName      = "/v1.UserRelationService/DeleteBlacklist"
@@ -36,6 +37,7 @@ const (
 type UserRelationServiceClient interface {
 	AddFriend(ctx context.Context, in *AddFriendRequest, opts ...grpc.CallOption) (*AddFriendResponse, error)
 	ManageFriend(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error)
+	ManageFriendRevert(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error)
 	DeleteFriend(ctx context.Context, in *DeleteFriendRequest, opts ...grpc.CallOption) (*DeleteFriendResponse, error)
 	AddBlacklist(ctx context.Context, in *AddBlacklistRequest, opts ...grpc.CallOption) (*AddBlacklistResponse, error)
 	DeleteBlacklist(ctx context.Context, in *DeleteBlacklistRequest, opts ...grpc.CallOption) (*DeleteBlacklistResponse, error)
@@ -65,6 +67,15 @@ func (c *userRelationServiceClient) AddFriend(ctx context.Context, in *AddFriend
 func (c *userRelationServiceClient) ManageFriend(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error) {
 	out := new(ManageFriendResponse)
 	err := c.cc.Invoke(ctx, UserRelationService_ManageFriend_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userRelationServiceClient) ManageFriendRevert(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error) {
+	out := new(ManageFriendResponse)
+	err := c.cc.Invoke(ctx, UserRelationService_ManageFriendRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +151,7 @@ func (c *userRelationServiceClient) GetFriendRequestList(ctx context.Context, in
 type UserRelationServiceServer interface {
 	AddFriend(context.Context, *AddFriendRequest) (*AddFriendResponse, error)
 	ManageFriend(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error)
+	ManageFriendRevert(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error)
 	DeleteFriend(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error)
 	AddBlacklist(context.Context, *AddBlacklistRequest) (*AddBlacklistResponse, error)
 	DeleteBlacklist(context.Context, *DeleteBlacklistRequest) (*DeleteBlacklistResponse, error)
@@ -159,6 +171,9 @@ func (UnimplementedUserRelationServiceServer) AddFriend(context.Context, *AddFri
 }
 func (UnimplementedUserRelationServiceServer) ManageFriend(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ManageFriend not implemented")
+}
+func (UnimplementedUserRelationServiceServer) ManageFriendRevert(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ManageFriendRevert not implemented")
 }
 func (UnimplementedUserRelationServiceServer) DeleteFriend(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFriend not implemented")
@@ -226,6 +241,24 @@ func _UserRelationService_ManageFriend_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserRelationServiceServer).ManageFriend(ctx, req.(*ManageFriendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserRelationService_ManageFriendRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ManageFriendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserRelationServiceServer).ManageFriendRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserRelationService_ManageFriendRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserRelationServiceServer).ManageFriendRevert(ctx, req.(*ManageFriendRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -370,6 +403,10 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ManageFriend",
 			Handler:    _UserRelationService_ManageFriend_Handler,
+		},
+		{
+			MethodName: "ManageFriendRevert",
+			Handler:    _UserRelationService_ManageFriendRevert_Handler,
 		},
 		{
 			MethodName: "DeleteFriend",

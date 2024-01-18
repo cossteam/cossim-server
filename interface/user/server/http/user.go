@@ -271,7 +271,7 @@ func modifyUserInfo(c *gin.Context) {
 		Tel:       req.Tel,
 		Avatar:    req.Avatar,
 		Signature: req.Signature,
-		//Status:    user.UserStatus(req.Status),
+		//Action:    user.UserStatus(req.Action),
 	})
 	if err != nil {
 		c.Error(err)

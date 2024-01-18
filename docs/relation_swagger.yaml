@@ -31,6 +31,17 @@ definitions:
     required:
     - user_id
     type: object
+  model.FriendRequestStatus:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-comments:
+      FriendRequestStatusAccepted: 同意
+      FriendRequestStatusRejected: 拒绝
+    x-enum-varnames:
+    - FriendRequestStatusRejected
+    - FriendRequestStatusAccepted
   model.JoinGroupRequest:
     properties:
       group_id:
@@ -40,10 +51,10 @@ definitions:
     type: object
   model.ManageFriendRequest:
     properties:
+      action:
+        $ref: '#/definitions/model.FriendRequestStatus'
       e2e_public_key:
         type: string
-      status:
-        type: integer
       user_id:
         type: string
     required:
@@ -210,7 +221,7 @@ paths:
       - application/json
       description: 管理加入群聊
       parameters:
-      - description: 'Status (0: rejected, 1: joined)'
+      - description: 'Action (0: rejected, 1: joined)'
         in: body
         name: request
         required: true

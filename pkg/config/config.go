@@ -53,6 +53,11 @@ type MessageQueueConfig struct {
 	Port     string `mapstructure:"port"`
 }
 
+type DtmConfig struct {
+	Name string `mapstructure:"name"`
+	Addr string `mapstructure:"addr"`
+}
+
 type AppConfig struct {
 	Log          LogConfig          `mapstructure:"log"`
 	MySQL        MySQLConfig        `mapstructure:"mysql"`
@@ -63,6 +68,7 @@ type AppConfig struct {
 	Discovers    DiscoversConfig    `mapstructure:"discovers"`
 	Encryption   EncryptionConfig   `mapstructure:"encryption"`
 	MessageQueue MessageQueueConfig `mapstructure:"message_queue"`
+	Dtm          DtmConfig          `mapstructure:"dtm"`
 }
 
 type EncryptionConfig struct {

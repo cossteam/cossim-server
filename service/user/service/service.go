@@ -84,7 +84,7 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 		NickName:  request.NickName,
 		Avatar:    request.Avatar,
 		PublicKey: request.PublicKey,
-		//Status:   entity.UserStatusLock,
+		//Action:   entity.UserStatusLock,
 		Status: entity.UserStatusNormal,
 		ID:     utils.GenUUid(),
 	})

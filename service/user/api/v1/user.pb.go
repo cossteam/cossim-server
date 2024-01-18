@@ -433,7 +433,7 @@ type UserInfoResponse struct {
 	// @inject_tag: json:"signature"
 	Signature string `protobuf:"bytes,6,opt,name=Signature,proto3" json:"signature"`
 	// @inject_tag: json:"status"
-	Status UserStatus `protobuf:"varint,7,opt,name=Status,proto3,enum=v1.UserStatus" json:"status"`
+	Status UserStatus `protobuf:"varint,7,opt,name=Action,proto3,enum=v1.UserStatus" json:"status"`
 }
 
 func (x *UserInfoResponse) Reset() {
@@ -936,7 +936,7 @@ type User struct {
 	// @inject_tag: json:"signature"
 	Signature string `protobuf:"bytes,6,opt,name=Signature,proto3" json:"signature"`
 	// @inject_tag: json:"status"
-	Status UserStatus `protobuf:"varint,7,opt,name=Status,proto3,enum=v1.UserStatus" json:"status"`
+	Status UserStatus `protobuf:"varint,7,opt,name=Action,proto3,enum=v1.UserStatus" json:"status"`
 }
 
 func (x *User) Reset() {
@@ -1266,9 +1266,9 @@ var file_api_v1_user_proto_goTypes = []interface{}{
 	(*GetUserPasswordByUserIdResponse)(nil), // 16: v1.GetUserPasswordByUserIdResponse
 }
 var file_api_v1_user_proto_depIdxs = []int32{
-	0,  // 0: v1.UserInfoResponse.Status:type_name -> v1.UserStatus
+	0,  // 0: v1.UserInfoResponse.Action:type_name -> v1.UserStatus
 	6,  // 1: v1.GetBatchUserInfoResponse.Users:type_name -> v1.UserInfoResponse
-	0,  // 2: v1.User.Status:type_name -> v1.UserStatus
+	0,  // 2: v1.User.Action:type_name -> v1.UserStatus
 	1,  // 3: v1.UserService.UserLogin:input_type -> v1.UserLoginRequest
 	3,  // 4: v1.UserService.UserRegister:input_type -> v1.UserRegisterRequest
 	5,  // 5: v1.UserService.UserInfo:input_type -> v1.UserInfoRequest
