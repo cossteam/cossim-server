@@ -55,8 +55,11 @@ func HandleError(c *gin.Context, logger *zap.Logger, err error) {
 	if st, ok := status.FromError(err); ok {
 		ec = code.Code(int(st.Code()))
 	} else {
-		response.InternalServerError(c)
-		return
+		ec, ok = err.(code.Codes)
+		if !ok {
+			response.InternalServerError(c)
+			return
+		}
 	}
 	response.Fail(c, ec.Message(), nil)
 }

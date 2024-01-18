@@ -182,7 +182,7 @@ func createGroup(c *gin.Context) {
 		return
 	}
 	//创建对话
-	dialog, err := dialogClient.CreateDialog(context.Background(), &rapi.CreateDialogRequest{OwnerId: thisId, Type: 0, GroupId: createdGroup.Id})
+	dialog, err := dialogClient.CreateDialog(context.Background(), &rapi.CreateDialogRequest{OwnerId: thisId, Type: 1, GroupId: createdGroup.Id})
 	if err != nil {
 		c.Error(err)
 		return
