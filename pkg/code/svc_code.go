@@ -15,6 +15,7 @@ var (
 	UserErrPublicKeyNotExist       = New(10010, "用户公钥不存在")
 	UserErrGetUserPublicKeyFailed  = New(10011, "获取用户公钥失败，请重试")
 	UserErrSaveUserPublicKeyFailed = New(10012, "保存用户公钥失败，请重试")
+	UserErrNotExist                = New(10013, "用户不存在")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")

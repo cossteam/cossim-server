@@ -5,6 +5,7 @@ import (
 	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/relation/api/model"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/msg_queue"
@@ -445,13 +446,16 @@ func addFriend(c *gin.Context) {
 	// 检查用户是否存在
 	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
 	if err != nil {
+		//logger.Error("user service", zap.Error(err))
+		//response.Fail(c, "用户不存在", nil)
+		err = code.UserErrNotExist
 		c.Error(err)
 		return
 	}
-
 	// 检查添加的用户是否存在
 	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
 	if err != nil {
+		err = code.UserErrNotExist
 		c.Error(err)
 		return
 	}
