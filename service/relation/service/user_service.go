@@ -79,7 +79,6 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 }
 
 func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
-	fmt.Println("ManageFriend req => ", request)
 	resp := &v1.ManageFriendResponse{}
 
 	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
@@ -146,7 +145,6 @@ func formatErrorMessage(err error) string {
 }
 
 func (s *Service) ManageFriendRevert(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
-	fmt.Println("ManageFriendRevert req => ", request)
 	resp := &v1.ManageFriendResponse{}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -195,11 +193,7 @@ func (s *Service) ManageFriendRevert(ctx context.Context, request *v1.ManageFrie
 	return resp, nil
 }
 func (s *Service) DeleteFriend(ctx context.Context, request *v1.DeleteFriendRequest) (*v1.DeleteFriendResponse, error) {
-	fmt.Println("DeleteFriend req => ", request)
-
 	resp := &v1.DeleteFriendResponse{}
-
-	return resp, status.Error(codes.Aborted, fmt.Sprintf("DeleteFriend测试回滚 req => %v", request))
 
 	userId := request.GetUserId()
 	friendId := request.GetFriendId()
@@ -217,7 +211,6 @@ func (s *Service) DeleteFriend(ctx context.Context, request *v1.DeleteFriendRequ
 }
 
 func (s *Service) DeleteFriendRevert(ctx context.Context, request *v1.DeleteFriendRequest) (*v1.DeleteFriendResponse, error) {
-	fmt.Println("DeleteFriendRevert req => ", request)
 
 	resp := &v1.DeleteFriendResponse{}
 	if err := s.urr.UpdateRelationDeleteAtByID(request.UserId, request.FriendId, 0); err != nil {
@@ -325,8 +318,6 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), fmt.Sprintf("failed to get user relation: %v", err))
 	}
 
-	fmt.Println("GetUserRelation relation => ", relation)
-
 	resp.Status = v1.RelationStatus(relation.Status)
 	resp.DialogId = uint32(relation.DialogId)
 	resp.UserId = relation.UserID
@@ -343,7 +334,6 @@ func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 	}
 
 	for _, friend := range friends {
-		fmt.Println("GetFriendRequestList friend => ", friend)
 		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
 			UserId: friend.FriendID,
 			Msg:    friend.Remark,
