@@ -6,6 +6,7 @@ type GroupRelationRepository interface {
 	CreateRelation(ur *entity.GroupRelation) (*entity.GroupRelation, error)
 	UpdateRelation(ur *entity.GroupRelation) (*entity.GroupRelation, error)
 	DeleteRelationByID(gid uint32, uid string) error
+	UpdateRelationDeleteAtByID(gid uint32, uid string, deleteAt int64) error
 	GetGroupUserIDs(gid uint32) ([]string, error)
 	GetUserGroupIDs(uid string) ([]uint32, error)
 	GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error)

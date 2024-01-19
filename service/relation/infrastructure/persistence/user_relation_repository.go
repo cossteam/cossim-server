@@ -33,6 +33,10 @@ func (u *UserRelationRepo) DeleteRelationByID(userId, friendId string) error {
 	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", userId, friendId).Update("deleted_at", time.Now().Unix()).Error
 }
 
+func (u *UserRelationRepo) UpdateRelationDeleteAtByID(userId, friendId string, deleteAt int64) error {
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", userId, friendId).Update("deleted_at", deleteAt).Error
+}
+
 func (u *UserRelationRepo) GetRelationByID(userId, friendId string) (*entity.UserRelation, error) {
 	var relation entity.UserRelation
 	if err := u.db.Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).Order("created_at DESC").First(&relation).Error; err != nil {

@@ -19,20 +19,21 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DialogService_CreateDialog_FullMethodName                        = "/v1.DialogService/CreateDialog"
-	DialogService_ConfirmFriendAndJoinDialog_FullMethodName          = "/v1.DialogService/ConfirmFriendAndJoinDialog"
-	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName    = "/v1.DialogService/ConfirmFriendAndJoinDialogRevert"
-	DialogService_JoinDialog_FullMethodName                          = "/v1.DialogService/JoinDialog"
-	DialogService_GetUserDialogList_FullMethodName                   = "/v1.DialogService/GetUserDialogList"
-	DialogService_GetDialogByIds_FullMethodName                      = "/v1.DialogService/GetDialogByIds"
-	DialogService_GetDialogUsersByDialogID_FullMethodName            = "/v1.DialogService/GetDialogUsersByDialogID"
-	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName    = "/v1.DialogService/GetDialogUserByDialogIDAndUserID"
-	DialogService_GetDialogByGroupId_FullMethodName                  = "/v1.DialogService/GetDialogByGroupId"
-	DialogService_GetDialogByGroupIds_FullMethodName                 = "/v1.DialogService/GetDialogByGroupIds"
-	DialogService_DeleteDialogByIds_FullMethodName                   = "/v1.DialogService/DeleteDialogByIds"
-	DialogService_DeleteDialogById_FullMethodName                    = "/v1.DialogService/DeleteDialogById"
-	DialogService_DeleteDialogUsersByDialogID_FullMethodName         = "/v1.DialogService/DeleteDialogUsersByDialogID"
-	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
+	DialogService_CreateDialog_FullMethodName                              = "/v1.DialogService/CreateDialog"
+	DialogService_ConfirmFriendAndJoinDialog_FullMethodName                = "/v1.DialogService/ConfirmFriendAndJoinDialog"
+	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName          = "/v1.DialogService/ConfirmFriendAndJoinDialogRevert"
+	DialogService_JoinDialog_FullMethodName                                = "/v1.DialogService/JoinDialog"
+	DialogService_GetUserDialogList_FullMethodName                         = "/v1.DialogService/GetUserDialogList"
+	DialogService_GetDialogByIds_FullMethodName                            = "/v1.DialogService/GetDialogByIds"
+	DialogService_GetDialogUsersByDialogID_FullMethodName                  = "/v1.DialogService/GetDialogUsersByDialogID"
+	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName          = "/v1.DialogService/GetDialogUserByDialogIDAndUserID"
+	DialogService_GetDialogByGroupId_FullMethodName                        = "/v1.DialogService/GetDialogByGroupId"
+	DialogService_GetDialogByGroupIds_FullMethodName                       = "/v1.DialogService/GetDialogByGroupIds"
+	DialogService_DeleteDialogByIds_FullMethodName                         = "/v1.DialogService/DeleteDialogByIds"
+	DialogService_DeleteDialogById_FullMethodName                          = "/v1.DialogService/DeleteDialogById"
+	DialogService_DeleteDialogUsersByDialogID_FullMethodName               = "/v1.DialogService/DeleteDialogUsersByDialogID"
+	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName       = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
+	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
 )
 
 // DialogServiceClient is the client API for DialogService service.
@@ -66,6 +67,8 @@ type DialogServiceClient interface {
 	DeleteDialogUsersByDialogID(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
 	// DeleteDialogUserByDialogIDAndUserID 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
+	// DeleteDialogUserByDialogIDAndUserIDRevert DeleteDialogUserByDialogIDAndUserID回滚操作
+	DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 }
 
 type dialogServiceClient struct {
@@ -202,6 +205,15 @@ func (c *dialogServiceClient) DeleteDialogUserByDialogIDAndUserID(ctx context.Co
 	return out, nil
 }
 
+func (c *dialogServiceClient) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+	out := new(DeleteDialogUserByDialogIDAndUserIDResponse)
+	err := c.cc.Invoke(ctx, DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DialogServiceServer is the server API for DialogService service.
 // All implementations must embed UnimplementedDialogServiceServer
 // for forward compatibility
@@ -233,6 +245,8 @@ type DialogServiceServer interface {
 	DeleteDialogUsersByDialogID(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
 	// DeleteDialogUserByDialogIDAndUserID 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
+	// DeleteDialogUserByDialogIDAndUserIDRevert DeleteDialogUserByDialogIDAndUserID回滚操作
+	DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	mustEmbedUnimplementedDialogServiceServer()
 }
 
@@ -281,6 +295,9 @@ func (UnimplementedDialogServiceServer) DeleteDialogUsersByDialogID(context.Cont
 }
 func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUserByDialogIDAndUserID not implemented")
+}
+func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUserByDialogIDAndUserIDRevert not implemented")
 }
 func (UnimplementedDialogServiceServer) mustEmbedUnimplementedDialogServiceServer() {}
 
@@ -547,6 +564,24 @@ func _DialogService_DeleteDialogUserByDialogIDAndUserID_Handler(srv interface{},
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteDialogUserByDialogIDAndUserIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).DeleteDialogUserByDialogIDAndUserIDRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).DeleteDialogUserByDialogIDAndUserIDRevert(ctx, req.(*DeleteDialogUserByDialogIDAndUserIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DialogService_ServiceDesc is the grpc.ServiceDesc for DialogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -609,6 +644,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteDialogUserByDialogIDAndUserID",
 			Handler:    _DialogService_DeleteDialogUserByDialogIDAndUserID_Handler,
+		},
+		{
+			MethodName: "DeleteDialogUserByDialogIDAndUserIDRevert",
+			Handler:    _DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

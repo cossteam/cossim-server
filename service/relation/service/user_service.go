@@ -56,7 +56,6 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	relation1 := &entity.UserRelation{
 		UserID:   userId,
 		FriendID: friendId,
-		Remark:   request.Msg,
 		Status:   entity.UserStatusPending,
 	}
 	_, err = s.urr.CreateRelation(relation1)
@@ -67,6 +66,7 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	relation2 := &entity.UserRelation{
 		UserID:   friendId,
 		FriendID: userId,
+		Remark:   request.Msg,
 		Status:   entity.UserStatusApplying,
 	}
 
@@ -195,19 +195,34 @@ func (s *Service) ManageFriendRevert(ctx context.Context, request *v1.ManageFrie
 	return resp, nil
 }
 func (s *Service) DeleteFriend(ctx context.Context, request *v1.DeleteFriendRequest) (*v1.DeleteFriendResponse, error) {
+	fmt.Println("DeleteFriend req => ", request)
+
 	resp := &v1.DeleteFriendResponse{}
+
+	return resp, status.Error(codes.Aborted, fmt.Sprintf("DeleteFriend测试回滚 req => %v", request))
 
 	userId := request.GetUserId()
 	friendId := request.GetFriendId()
 	// Assuming urr is a UserRelationRepository instance in UserService
 	if err := s.urr.DeleteRelationByID(userId, friendId); err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrDeleteFriendFailed.Code()), fmt.Sprintf("failed to delete relation: %v", err))
+		//return resp, status.Error(codes.Code(code.RelationErrDeleteFriendFailed.Code()), fmt.Sprintf("failed to delete relation: %v", err))
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete relation: %v", err))
 	}
 
 	//if err := s.urr.DeleteRelationByID(friendId, userId); err != nil {
 	//	return resp, status.Error(codes.Code(code.RelationErrDeleteFriendFailed.Code()), fmt.Sprintf("failed to delete relation: %v", err))
 	//}
 
+	return resp, nil
+}
+
+func (s *Service) DeleteFriendRevert(ctx context.Context, request *v1.DeleteFriendRequest) (*v1.DeleteFriendResponse, error) {
+	fmt.Println("DeleteFriendRevert req => ", request)
+
+	resp := &v1.DeleteFriendResponse{}
+	if err := s.urr.UpdateRelationDeleteAtByID(request.UserId, request.FriendId, 0); err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrDeleteFriendFailed.Code()), fmt.Sprintf("DeleteFriendRevert failed to update relation: %v", err))
+	}
 	return resp, nil
 }
 
@@ -328,6 +343,7 @@ func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 	}
 
 	for _, friend := range friends {
+		fmt.Println("GetFriendRequestList friend => ", friend)
 		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
 			UserId: friend.FriendID,
 			Msg:    friend.Remark,

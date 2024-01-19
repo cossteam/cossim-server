@@ -3,6 +3,7 @@ package persistence
 import (
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"gorm.io/gorm"
+	"time"
 )
 
 type GroupRelationRepo struct {
@@ -52,7 +53,11 @@ func (repo *GroupRelationRepo) UpdateRelation(ur *entity.GroupRelation) (*entity
 }
 
 func (repo *GroupRelationRepo) DeleteRelationByID(gid uint32, uid string) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Delete(&entity.GroupRelation{}).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Update("deleted_at", time.Now().Unix()).Error
+}
+
+func (repo *GroupRelationRepo) UpdateRelationDeleteAtByID(gid uint32, uid string, deleteAt int64) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND user_id = ?", gid, uid).Update("deleted_at", deleteAt).Error
 }
 
 func (repo *GroupRelationRepo) GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error) {

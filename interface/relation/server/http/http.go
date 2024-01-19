@@ -45,6 +45,7 @@ func Init(c *config.AppConfig) {
 	setupRelationGRPCClient()
 	setupGin()
 }
+
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Redis.Addr,
@@ -54,6 +55,7 @@ func setupRedis() {
 	})
 	redisClient = rdb
 }
+
 func setupGroupGRPCClient() {
 	var err error
 	conn, err := grpc.Dial(cfg.Discovers["group"].Addr, grpc.WithInsecure())
@@ -74,6 +76,7 @@ func setupRelationGRPCClient() {
 	userRelationClient = relation.NewUserRelationServiceClient(relationConn)
 	groupRelationClient = relation.NewGroupRelationServiceClient(relationConn)
 }
+
 func setupDialogGRPCClient() {
 	var err error
 	msgConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
@@ -83,6 +86,7 @@ func setupDialogGRPCClient() {
 
 	dialogClient = relation.NewDialogServiceClient(msgConn)
 }
+
 func setRabbitMQProvider() {
 	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr))
 	if err != nil {
@@ -90,6 +94,7 @@ func setRabbitMQProvider() {
 	}
 	rabbitMQClient = rmq
 }
+
 func setupUserGRPCClient() {
 	var err error
 	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr, grpc.WithInsecure())

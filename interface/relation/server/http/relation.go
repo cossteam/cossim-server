@@ -347,35 +347,42 @@ func deleteFriend(c *gin.Context) {
 		return
 	}
 
+	friendID := req.UserID
 	// 检查删除的用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: friendID})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationApi.GetUserRelationRequest{UserId: userID, FriendId: req.UserID})
+	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationApi.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 	//
 	if relation.Status != relationApi.RelationStatus_RELATION_STATUS_ADDED {
-		response.Fail(c, "不是好友", nil)
-		return
-	}
-	//删除自己的对话用户
-	_, err = dialogClient.DeleteDialogUserByDialogIDAndUserID(context.Background(), &relationApi.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID})
-	if err != nil {
-		c.Error(err)
+		response.Fail(c, "好友关系不存在", nil)
 		return
 	}
 
-	// 进行删除好友操作
-	if _, err = userRelationClient.DeleteFriend(context.Background(), &relationApi.DeleteFriendRequest{UserId: userID, FriendId: req.UserID}); err != nil {
-		c.Error(err)
+	if err = svc.DeleteFriend(c, relation.DialogId, userID, friendID); err != nil {
+		response.Fail(c, "删除好友失败", nil)
 		return
 	}
+
+	//删除自己的对话用户
+	//_, err = dialogClient.DeleteDialogUserByDialogIDAndUserID(context.Background(), &relationApi.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//
+	//// 进行删除好友操作
+	//if _, err = userRelationClient.DeleteFriend(context.Background(), &relationApi.DeleteFriendRequest{UserId: userID, FriendId: req.UserID}); err != nil {
+	//	c.Error(err)
+	//	return
+	//}
 
 	response.Success(c, "删除好友成功", nil)
 }

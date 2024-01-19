@@ -28,6 +28,7 @@ const (
 	GroupRelationService_ManageJoinGroup_FullMethodName              = "/v1.GroupRelationService/ManageJoinGroup"
 	GroupRelationService_RemoveFromGroup_FullMethodName              = "/v1.GroupRelationService/RemoveFromGroup"
 	GroupRelationService_LeaveGroup_FullMethodName                   = "/v1.GroupRelationService/LeaveGroup"
+	GroupRelationService_LeaveGroupRevert_FullMethodName             = "/v1.GroupRelationService/LeaveGroupRevert"
 	GroupRelationService_GetGroupJoinRequestList_FullMethodName      = "/v1.GroupRelationService/GetGroupJoinRequestList"
 	GroupRelationService_GetGroupRelation_FullMethodName             = "/v1.GroupRelationService/GetGroupRelation"
 	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName = "/v1.GroupRelationService/DeleteGroupRelationByGroupId"
@@ -55,6 +56,8 @@ type GroupRelationServiceClient interface {
 	RemoveFromGroup(ctx context.Context, in *RemoveFromGroupRequest, opts ...grpc.CallOption) (*RemoveFromGroupResponse, error)
 	// 退出群聊
 	LeaveGroup(ctx context.Context, in *LeaveGroupRequest, opts ...grpc.CallOption) (*LeaveGroupResponse, error)
+	// 退出群聊回滚操作
+	LeaveGroupRevert(ctx context.Context, in *LeaveGroupRequest, opts ...grpc.CallOption) (*LeaveGroupResponse, error)
 	// 获取群聊加入申请列表
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
@@ -152,6 +155,15 @@ func (c *groupRelationServiceClient) LeaveGroup(ctx context.Context, in *LeaveGr
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) LeaveGroupRevert(ctx context.Context, in *LeaveGroupRequest, opts ...grpc.CallOption) (*LeaveGroupResponse, error) {
+	out := new(LeaveGroupResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_LeaveGroupRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *groupRelationServiceClient) GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error) {
 	out := new(GroupJoinRequestListResponse)
 	err := c.cc.Invoke(ctx, GroupRelationService_GetGroupJoinRequestList_FullMethodName, in, out, opts...)
@@ -201,6 +213,8 @@ type GroupRelationServiceServer interface {
 	RemoveFromGroup(context.Context, *RemoveFromGroupRequest) (*RemoveFromGroupResponse, error)
 	// 退出群聊
 	LeaveGroup(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error)
+	// 退出群聊回滚操作
+	LeaveGroupRevert(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error)
 	// 获取群聊加入申请列表
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
@@ -240,6 +254,9 @@ func (UnimplementedGroupRelationServiceServer) RemoveFromGroup(context.Context, 
 }
 func (UnimplementedGroupRelationServiceServer) LeaveGroup(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveGroup not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) LeaveGroupRevert(context.Context, *LeaveGroupRequest) (*LeaveGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LeaveGroupRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupJoinRequestList not implemented")
@@ -425,6 +442,24 @@ func _GroupRelationService_LeaveGroup_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_LeaveGroupRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LeaveGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).LeaveGroupRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_LeaveGroupRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).LeaveGroupRevert(ctx, req.(*LeaveGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GroupRelationService_GetGroupJoinRequestList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetGroupJoinRequestListRequest)
 	if err := dec(in); err != nil {
@@ -521,6 +556,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LeaveGroup",
 			Handler:    _GroupRelationService_LeaveGroup_Handler,
+		},
+		{
+			MethodName: "LeaveGroupRevert",
+			Handler:    _GroupRelationService_LeaveGroupRevert_Handler,
 		},
 		{
 			MethodName: "GetGroupJoinRequestList",
