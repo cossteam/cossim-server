@@ -554,7 +554,7 @@ func addFriend(c *gin.Context) {
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
-		return
+		logger.Error("添加好友申请通知推送失败", zap.Error(err))
 	}
 
 	response.Success(c, "发送好友请求成功", nil)
@@ -765,7 +765,7 @@ func joinGroup(c *gin.Context) {
 		//通知消息服务有消息需要发送
 		err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 		if err != nil {
-			return
+			logger.Error("加入群聊请求申请通知推送失败", zap.Error(err))
 		}
 	}
 
@@ -816,10 +816,7 @@ func manageJoinGroup(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	if relation == nil {
-		response.Fail(c, "没有加入群聊的申请", nil)
-		return
-	}
+
 	if relation.Status != relationApi.GroupRelationStatus_GroupStatusJoined {
 		response.Fail(c, "已经加入群聊", nil)
 		return
@@ -849,7 +846,7 @@ func manageJoinGroup(c *gin.Context) {
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
-		return
+		logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
 	}
 	response.Success(c, "管理群聊申请成功", nil)
 }
@@ -979,7 +976,7 @@ func switchUserE2EPublicKey(c *gin.Context) {
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
-		return
+		logger.Error("交换用户端到端公钥通知推送失败", zap.Error(err))
 	}
 
 	response.Success(c, "交换用户公钥成功", nil)
