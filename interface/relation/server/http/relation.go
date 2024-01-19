@@ -618,7 +618,7 @@ func getGroupMember(c *gin.Context) {
 
 // groupRequestList 获取群聊申请列表
 // @Summary 获取群聊申请列表
-// @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)
+// @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=已删除, 3=被拒绝 4=被封禁)
 // @Tags GroupRelation
 // @Accept json
 // @Produce json
