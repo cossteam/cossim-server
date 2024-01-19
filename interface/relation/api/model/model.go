@@ -36,7 +36,7 @@ type AddBlacklistRequest struct {
 
 type ManageFriendRequest struct {
 	UserID       string              `json:"user_id" binding:"required"`
-	Action       FriendRequestStatus `json:"action"`
+	Action       FriendRequestStatus `json:"action" binding:"required"`
 	E2EPublicKey string              `json:"e2e_public_key"`
 }
 
