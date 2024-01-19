@@ -62,9 +62,9 @@ definitions:
     type: object
   model.ManageJoinGroupRequest:
     properties:
+      action:
+        $ref: '#/definitions/model.FriendRequestStatus'
       group_id:
-        type: integer
-      status:
         type: integer
       user_id:
         type: string
@@ -219,7 +219,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 管理加入群聊
+      description: 管理加入群聊 action (0=拒绝, 1=同意)
       parameters:
       - description: 'Action (0: rejected, 1: joined)'
         in: body
@@ -414,7 +414,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 管理好友请求
+      description: 管理好友请求  action (0=拒绝, 1=同意)
       parameters:
       - description: request
         in: body
