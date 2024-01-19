@@ -117,7 +117,7 @@ const docTemplaterelation = `{
         },
         "/relation/group/manage_join_group": {
             "post": {
-                "description": "管理加入群聊",
+                "description": "管理加入群聊 action (0=拒绝, 1=同意)",
                 "consumes": [
                     "application/json"
                 ],
@@ -424,7 +424,7 @@ const docTemplaterelation = `{
         },
         "/relation/user/manage_friend": {
             "post": {
-                "description": "管理好友请求",
+                "description": "管理好友请求  action (0=拒绝, 1=同意)",
                 "consumes": [
                     "application/json"
                 ],
@@ -608,10 +608,10 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
-                "group_id": {
-                    "type": "integer"
+                "action": {
+                    "$ref": "#/definitions/model.FriendRequestStatus"
                 },
-                "status": {
+                "group_id": {
                     "type": "integer"
                 },
                 "user_id": {

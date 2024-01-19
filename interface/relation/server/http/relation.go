@@ -381,7 +381,7 @@ func deleteFriend(c *gin.Context) {
 }
 
 // @Summary 管理好友请求
-// @Description 管理好友请求
+// @Description 管理好友请求  action (0=拒绝, 1=同意)
 // @Accept  json
 // @Produce  json
 // @param request body model.ManageFriendRequest true "request"
@@ -759,7 +759,7 @@ func joinGroup(c *gin.Context) {
 }
 
 // @Summary 管理加入群聊
-// @Description 管理加入群聊
+// @Description 管理加入群聊 action (0=拒绝, 1=同意)
 // @Tags GroupRelation
 // @Accept  json
 // @Produce  json
@@ -815,7 +815,7 @@ func manageJoinGroup(c *gin.Context) {
 		return
 	}
 	var status relationApi.GroupRelationStatus
-	if req.Status == 1 {
+	if req.Action == model.FriendRequestStatusAccepted {
 		status = relationApi.GroupRelationStatus_GroupStatusJoined
 	} else {
 		status = relationApi.GroupRelationStatus_GroupStatusReject

@@ -58,9 +58,9 @@ type JoinGroupRequest struct {
 }
 
 type ManageJoinGroupRequest struct {
-	GroupID uint32 `json:"group_id" binding:"required"`
-	UserID  string `json:"user_id" binding:"required"`
-	Status  uint32 `json:"status"`
+	GroupID uint32              `json:"group_id" binding:"required"`
+	UserID  string              `json:"user_id" binding:"required"`
+	Action  FriendRequestStatus `json:"action"`
 }
 
 type RemoveUserFromGroupRequest struct {
