@@ -258,10 +258,8 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 		responseData = targetInfo
 	}
 
-	err = s.publishServiceMessage(ctx, msg)
-	if err != nil {
+	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("Failed to publish service message", zap.Error(err))
-		return nil, err
 	}
 
 	return responseData, nil
@@ -277,12 +275,7 @@ func (s *Service) getUserInfo(ctx context.Context, userID string) (*userApi.User
 }
 
 func (s *Service) publishServiceMessage(ctx context.Context, msg msgconfig.WsMsg) error {
-	err := s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	if err != nil {
-		s.logger.Error("Failed to publish service message", zap.Error(err))
-		return err
-	}
-	return nil
+	return s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 }
 
 func (s *Service) convertDialogType(_type uint32) (relationgrpcv1.DialogType, error) {
