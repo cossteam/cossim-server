@@ -3,3 +3,4 @@
 /deploy/docker/config/**/*.yaml
 /interface/**/*.yaml
 /service/**/*.yaml
+/interface/**/.cache

@@ -21,24 +21,24 @@ import (
 func GetGroupInfoByGid(c *gin.Context) {
 	gid := c.Query("gid")
 	if gid == "" {
-		response.Fail(c, "群聊ID不能为空", nil)
+		response.SetFail(c, "群聊ID不能为空", nil)
 		return
 	}
 	//转换类型
 	gidInt, err := strconv.Atoi(gid)
 	if err != nil {
-		response.Fail(c, "群聊ID错误", nil)
+		response.SetFail(c, "群聊ID错误", nil)
 		return
 	}
 	group, err := groupClient.GetGroupInfoByGid(c, &api.GetGroupInfoRequest{
 		Gid: uint32(gidInt),
 	})
 	if err != nil {
-		response.Fail(c, "获取群聊信息失败", nil)
+		response.SetFail(c, "获取群聊信息失败", nil)
 		return
 	}
 
-	response.Success(c, "获取群聊信息成功", group)
+	response.SetSuccess(c, "获取群聊信息成功", group)
 }
 
 // @Summary 批量获取群聊信息
@@ -55,7 +55,7 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 	for i, groupId := range groupIds {
 		id, err := strconv.Atoi(groupId)
 		if err != nil {
-			response.Fail(c, "群聊ID列表转换失败", nil)
+			response.SetFail(c, "群聊ID列表转换失败", nil)
 			return
 		}
 		ids[i] = uint32(id)
@@ -65,10 +65,10 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 		GroupIds: ids,
 	})
 	if err != nil {
-		response.Fail(c, "批量获取群聊信息失败", nil)
+		response.SetFail(c, "批量获取群聊信息失败", nil)
 		return
 	}
-	response.Success(c, "批量获取群聊信息成功", gin.H{"groups": groups})
+	response.SetSuccess(c, "批量获取群聊信息成功", gin.H{"groups": groups})
 }
 
 // @Summary 更新群聊信息
@@ -81,7 +81,7 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 func updateGroup(c *gin.Context) {
 	req := new(model.UpdateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
@@ -89,27 +89,27 @@ func updateGroup(c *gin.Context) {
 		Gid: req.GroupId,
 	})
 	if err != nil {
-		response.Fail(c, "未找到对应的群聊", nil)
+		response.SetFail(c, "未找到对应的群聊", nil)
 		return
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	if !model.IsValidGroupType(api.GroupType(req.Type)) {
-		response.Fail(c, "群聊类型错误", nil)
+		response.SetFail(c, "群聊类型错误", nil)
 	}
 	sf, err := userGroupClient.GetGroupRelation(context.Background(), &rapi.GetGroupRelationRequest{
 		UserId:  thisId,
 		GroupId: req.GroupId,
 	})
 	if err != nil {
-		response.Fail(c, "未找到对应的群聊", nil)
+		response.SetFail(c, "未找到对应的群聊", nil)
 		return
 	}
 	if sf.Identity != rapi.GroupIdentity_IDENTITY_ADMIN && sf.Identity != rapi.GroupIdentity_IDENTITY_OWNER {
-		response.Fail(c, "没有权限", nil)
+		response.SetFail(c, "没有权限", nil)
 		return
 	}
 
@@ -125,11 +125,11 @@ func updateGroup(c *gin.Context) {
 		Group: group,
 	})
 	if err != nil {
-		response.Fail(c, "更新群聊信息失败", nil)
+		response.SetFail(c, "更新群聊信息失败", nil)
 		return
 	}
 
-	response.Success(c, "更新群聊信息成功", gin.H{"group": updatedGroup})
+	response.SetSuccess(c, "更新群聊信息成功", gin.H{"group": updatedGroup})
 }
 
 // @Summary 创建群聊
@@ -142,18 +142,18 @@ func updateGroup(c *gin.Context) {
 func createGroup(c *gin.Context) {
 	req := new(model.CreateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	//判断参数如果不属于枚举定义的则返回错误
 	if !model.IsValidGroupType(api.GroupType(req.Type)) {
-		response.Fail(c, "群聊类型错误", nil)
+		response.SetFail(c, "群聊类型错误", nil)
 		return
 	}
 	group := &api.Group{
@@ -204,7 +204,7 @@ func createGroup(c *gin.Context) {
 		DialogId:        dialog.Id,
 	}
 
-	response.Success(c, "创建群聊成功", resp)
+	response.SetSuccess(c, "创建群聊成功", resp)
 }
 
 // @Summary 删除群聊
@@ -217,17 +217,17 @@ func createGroup(c *gin.Context) {
 func deleteGroup(c *gin.Context) {
 	gid := c.Query("gid")
 	if gid == "" {
-		response.Fail(c, "群聊ID不能为空", nil)
+		response.SetFail(c, "群聊ID不能为空", nil)
 		return
 	}
 	//转换类型
 	gidInt, err := strconv.Atoi(gid)
 	if gidInt == 0 {
-		response.Fail(c, "群聊ID错误", nil)
+		response.SetFail(c, "群聊ID错误", nil)
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	_, err = groupClient.GetGroupInfoByGid(context.Background(), &api.GetGroupInfoRequest{
@@ -282,5 +282,5 @@ func deleteGroup(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "删除群聊成功", gin.H{"gid": groupId})
+	response.SetSuccess(c, "删除群聊成功", gin.H{"gid": groupId})
 }

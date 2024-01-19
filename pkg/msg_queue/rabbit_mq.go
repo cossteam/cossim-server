@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/encryption"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -81,6 +82,44 @@ func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
 		false,
 		amqp.Publishing{
 			ContentType: "text/plain",
+			Body:        msg,
+		})
+}
+
+func (r *RabbitMQ) PublishEncryptedMessage(queueName string, body string) error {
+	q, err := r.channel.QueueDeclare(
+		queueName,
+		false,
+		true,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		fmt.Println("Failed to declare a queue :", err)
+		return err
+	}
+	var enMsg encryption.SecretResponse
+
+	var msg []byte
+	if body != "" {
+		//解析成json
+		err = json.Unmarshal([]byte(body), &enMsg)
+		if err != nil {
+			return err
+		}
+		msg, err = json.Marshal(enMsg)
+		if err != nil {
+			return err
+		}
+	}
+	return r.channel.PublishWithContext(context.Background(),
+		"",
+		q.Name,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
 			Body:        msg,
 		})
 }

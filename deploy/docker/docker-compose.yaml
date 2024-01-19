@@ -91,7 +91,8 @@ services:
     - "--config"
     - "/config/config.yaml"
     volumes:
-      - ./config/interface/msg.yaml:/config/config.yaml
+    - ./config/interface/msg.yaml:/config/config.yaml
+    - ./config/pgp:/.cache
     expose:
     - "8081"
     depends_on:
@@ -107,7 +108,8 @@ services:
     - "--config"
     - "/config/config.yaml"
     volumes:
-      - ./config/interface/relation.yaml:/config/config.yaml
+    - ./config/interface/relation.yaml:/config/config.yaml
+    - ./config/pgp:/.cache
     expose:
     - "8082"
     depends_on:
@@ -123,7 +125,8 @@ services:
     - "--config"
     - "/config/config.yaml"
     volumes:
-      - ./config/interface/user.yaml:/config/config.yaml
+    - ./config/interface/user.yaml:/config/config.yaml
+    - ./config/pgp:/.cache
     expose:
     - "8083"
     depends_on:
@@ -139,7 +142,8 @@ services:
       - "--config"
       - "/config/config.yaml"
     volumes:
-      - ./config/interface/group.yaml:/config/config.yaml
+    - ./config/interface/group.yaml:/config/config.yaml
+    - ./config/pgp:/.cache
     expose:
       - "8084"
     depends_on:
@@ -155,7 +159,8 @@ services:
       - "--config"
       - "/config/config.yaml"
     volumes:
-      - ./config/interface/storage.yaml:/config/config.yaml
+    - ./config/interface/storage.yaml:/config/config.yaml
+    - ./config/pgp:/.cache
     expose:
       - "8084"
     depends_on:

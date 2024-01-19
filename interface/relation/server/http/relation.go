@@ -29,7 +29,7 @@ func blackList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
@@ -70,7 +70,7 @@ func friendList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 	// 检查用户是否存在
@@ -136,7 +136,7 @@ func getUserGroupList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 	// 检查用户是否存在
@@ -150,19 +150,16 @@ func getUserGroupList(c *gin.Context) {
 	// 获取用户群聊列表
 	ids, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
 	if err != nil {
-		c.Error(err)
 		return
 	}
 
 	ds, err := groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
 	if err != nil {
-		c.Error(err)
 		return
 	}
 	//获取群聊对话信息
 	dialogs, err := dialogClient.GetDialogByGroupIds(context.Background(), &relationgrpcv1.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
 	if err != nil {
-		c.Error(err)
 		return
 	}
 
@@ -198,7 +195,7 @@ func userRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 	// 检查用户是否存在
@@ -256,14 +253,14 @@ func deleteBlacklist(c *gin.Context) {
 	req := new(model.DeleteBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
@@ -301,14 +298,14 @@ func addBlacklist(c *gin.Context) {
 	req := new(model.AddBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
@@ -339,14 +336,14 @@ func deleteFriend(c *gin.Context) {
 	req := new(model.DeleteFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
@@ -365,12 +362,12 @@ func deleteFriend(c *gin.Context) {
 	}
 	//
 	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-		response.Fail(c, "好友关系不存在", nil)
+		response.SetFail(c, "好友关系不存在", nil)
 		return
 	}
 
 	if err = svc.DeleteFriend(c, relation.DialogId, userID, friendID); err != nil {
-		response.Fail(c, "删除好友失败", nil)
+		response.SetFail(c, "删除好友失败", nil)
 		return
 	}
 
@@ -387,7 +384,7 @@ func deleteFriend(c *gin.Context) {
 	//	return
 	//}
 
-	response.Success(c, "删除好友成功", nil)
+	response.SetSuccess(c, "删除好友成功", nil)
 }
 
 // @Summary 管理好友请求
@@ -401,20 +398,20 @@ func manageFriend(c *gin.Context) {
 	req := new(model.ManageFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	if err := req.Validator(); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
@@ -429,7 +426,7 @@ func manageFriend(c *gin.Context) {
 	if err != nil {
 		logger.Error("管理好友申请失败", zap.Error(err))
 		//c.Error(err)
-		response.Fail(c, "管理好友申请失败", nil)
+		response.SetFail(c, "管理好友申请失败", nil)
 		return
 	}
 
@@ -500,11 +497,11 @@ func manageFriend(c *gin.Context) {
 	//err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	//if err != nil {
 	//	logger.Error("推送服务消息失败", zap.Error(err))
-	//	response.Fail(c, "管理好友申请失败", nil)
+	//	response.SetFail(c, "管理好友申请失败", nil)
 	//	return
 	//}
 
-	response.Success(c, "管理好友申请成功", responseData)
+	response.SetSuccess(c, "管理好友申请成功", responseData)
 }
 
 // @Summary 添加好友
@@ -518,19 +515,19 @@ func addFriend(c *gin.Context) {
 	req := new(model.AddFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	// 检查用户是否存在
 	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
 	if err != nil {
 		//logger.Error("user service", zap.Error(err))
-		//response.Fail(c, "用户不存在", nil)
+		//response.SetFail(c, "用户不存在", nil)
 		err = code.UserErrNotExist
 		c.Error(err)
 		return
@@ -560,7 +557,7 @@ func addFriend(c *gin.Context) {
 		logger.Error("添加好友申请通知推送失败", zap.Error(err))
 	}
 
-	response.Success(c, "发送好友请求成功", nil)
+	response.SetSuccess(c, "发送好友请求成功", nil)
 }
 
 // @Summary 群聊成员列表
@@ -574,19 +571,19 @@ func getGroupMember(c *gin.Context) {
 	// 从请求中获取群聊ID
 	groupID := c.Query("group_id")
 	if groupID == "" {
-		response.Fail(c, "群聊ID不能为空", nil)
+		response.SetFail(c, "群聊ID不能为空", nil)
 		return
 	}
 
 	gid, err := strconv.ParseUint(groupID, 10, 32)
 	if err != nil {
-		response.Fail(c, "群聊ID格式错误", nil)
+		response.SetFail(c, "群聊ID格式错误", nil)
 		return
 	}
 
 	groupRelation, err := groupRelationClient.GetGroupUserIDs(context.Background(), &relationgrpcv1.GroupIDRequest{GroupId: uint32(gid)})
 	if err != nil {
-		response.Fail(c, "获取群聊成员失败", nil)
+		response.SetFail(c, "获取群聊成员失败", nil)
 		return
 	}
 
@@ -613,7 +610,7 @@ func getGroupMember(c *gin.Context) {
 		})
 	}
 
-	response.Success(c, "获取群聊成员成功", data)
+	response.SetSuccess(c, "获取群聊成员成功", data)
 }
 
 // groupRequestList 获取群聊申请列表
@@ -630,7 +627,7 @@ func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
+		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
@@ -698,7 +695,7 @@ func groupRequestList(c *gin.Context) {
 		}
 	}
 
-	response.Success(c, "获取群聊申请列表成功", data)
+	response.SetSuccess(c, "获取群聊申请列表成功", data)
 }
 
 // @Summary 加入群聊
@@ -713,13 +710,13 @@ func joinGroup(c *gin.Context) {
 	req := new(model.JoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	uid, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
@@ -730,7 +727,7 @@ func joinGroup(c *gin.Context) {
 	}
 
 	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-		response.Fail(c, "群聊状态不可用", nil)
+		response.SetFail(c, "群聊状态不可用", nil)
 		return
 	}
 	//判断是否在群聊中
@@ -740,15 +737,15 @@ func joinGroup(c *gin.Context) {
 	})
 	if relation != nil {
 		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			response.Fail(c, "您已经在群聊中", nil)
+			response.SetFail(c, "您已经在群聊中", nil)
 			return
 		}
 		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusReject {
-			response.Fail(c, "拒绝加入群聊", nil)
+			response.SetFail(c, "拒绝加入群聊", nil)
 			return
 		}
 		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusBlocked {
-			response.Fail(c, "群聊状态不可用", nil)
+			response.SetFail(c, "群聊状态不可用", nil)
 			return
 		}
 	}
@@ -772,7 +769,7 @@ func joinGroup(c *gin.Context) {
 		}
 	}
 
-	response.Success(c, "发送加入群聊请求成功", nil)
+	response.SetSuccess(c, "发送加入群聊请求成功", nil)
 }
 
 // @Summary 管理加入群聊
@@ -787,19 +784,19 @@ func manageJoinGroup(c *gin.Context) {
 	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	if err := req.Validator(); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	adminID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
@@ -815,7 +812,7 @@ func manageJoinGroup(c *gin.Context) {
 
 	if err = svc.ManageJoinGroup(c, req.GroupID, adminID, req.UserID, status); err != nil {
 		logger.Error("ManageJoinGroup Failed", zap.Error(err))
-		response.Fail(c, msg+"失败", nil)
+		response.SetFail(c, msg+"失败", nil)
 		return
 	}
 
@@ -826,7 +823,7 @@ func manageJoinGroup(c *gin.Context) {
 	//}
 
 	//if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-	//	response.Fail(c, "群聊状态不可用", nil)
+	//	response.SetFail(c, "群聊状态不可用", nil)
 	//	return
 	//}
 	//
@@ -837,7 +834,7 @@ func manageJoinGroup(c *gin.Context) {
 	//}
 	//
 	//if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-	//	response.Fail(c, "已经加入群聊", nil)
+	//	response.SetFail(c, "已经加入群聊", nil)
 	//	return
 	//}
 	//id, err := dialogClient.GetDialogByGroupId(context.Background(), &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: req.GroupID})
@@ -882,24 +879,24 @@ func removeUserFromGroup(c *gin.Context) {
 	req := new(model.RemoveUserFromGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
 	if userID == req.UserID {
-		response.Fail(c, "不能将自己从群聊中移除", nil)
+		response.SetFail(c, "不能将自己从群聊中移除", nil)
 		return
 	}
 
 	if err = svc.RemoveUserFromGroup(c, req.GroupID, userID, req.UserID); err != nil {
 		logger.Error("RemoveUserFromGroup Failed", zap.Error(err))
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
@@ -910,7 +907,7 @@ func removeUserFromGroup(c *gin.Context) {
 	//}
 	//
 	//if gr.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
-	//	response.Fail(c, "没有权限操作", nil)
+	//	response.SetFail(c, "没有权限操作", nil)
 	//	return
 	//}
 	//
@@ -919,7 +916,7 @@ func removeUserFromGroup(c *gin.Context) {
 	//	return
 	//}
 
-	response.Success(c, "移出群聊成功", nil)
+	response.SetSuccess(c, "移出群聊成功", nil)
 }
 
 // @Summary 退出群聊
@@ -934,18 +931,18 @@ func quitGroup(c *gin.Context) {
 	req := new(model.QuitGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
 	if err = svc.QuitGroup(c, req.GroupID, userID); err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
@@ -968,7 +965,7 @@ func quitGroup(c *gin.Context) {
 	//	return
 	//}
 
-	response.Success(c, "退出群聊成功", nil)
+	response.SetSuccess(c, "退出群聊成功", nil)
 }
 
 // @Summary 交换用户端到端公钥
@@ -983,19 +980,19 @@ func switchUserE2EPublicKey(c *gin.Context) {
 	req := new(model.SwitchUserE2EPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserId})
 	if err != nil {
-		response.Fail(c, "用户不存在", nil)
+		response.SetFail(c, "用户不存在", nil)
 		return
 	}
 	reqm := model.SwitchUserE2EPublicKeyRequest{
@@ -1010,5 +1007,5 @@ func switchUserE2EPublicKey(c *gin.Context) {
 		logger.Error("交换用户端到端公钥通知推送失败", zap.Error(err))
 	}
 
-	response.Success(c, "交换用户公钥成功", nil)
+	response.SetSuccess(c, "交换用户公钥成功", nil)
 }

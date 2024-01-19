@@ -113,12 +113,12 @@ func sendUserMsg(c *gin.Context) {
 	req := new(model.SendUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
@@ -132,7 +132,7 @@ func sendUserMsg(c *gin.Context) {
 	}
 
 	if userRelationStatus.Status != relation.RelationStatus_RELATION_STATUS_ADDED {
-		response.Fail(c, "好友关系不正常", nil)
+		response.SetFail(c, "好友关系不正常", nil)
 		return
 	}
 	dialogs, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
@@ -143,7 +143,7 @@ func sendUserMsg(c *gin.Context) {
 		return
 	}
 	if len(dialogs.Dialogs) == 0 {
-		response.Fail(c, "对话不存在", nil)
+		response.SetFail(c, "对话不存在", nil)
 		return
 	}
 	_, err = dialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relation.GetDialogUserByDialogIDAndUserIdRequest{
@@ -169,7 +169,7 @@ func sendUserMsg(c *gin.Context) {
 	if _, ok := Pool[req.ReceiverId]; ok {
 		if len(Pool[req.ReceiverId]) > 0 {
 			sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId)
-			response.Success(c, "发送成功", nil)
+			response.SetSuccess(c, "发送成功", nil)
 			return
 		}
 	}
@@ -181,13 +181,33 @@ func sendUserMsg(c *gin.Context) {
 		MsgType:  req.Type,
 		ReplayId: req.ReplayId,
 	}}
+
+	if enc.IsEnable() {
+		marshal, err := json.Marshal(wsMsg)
+		if err != nil {
+			logger.Error("json解析失败", zap.Error(err))
+			return
+		}
+		message, err := enc.GetSecretMessage(string(marshal), req.ReceiverId)
+		if err != nil {
+			return
+		}
+		err = rabbitMQClient.PublishEncryptedMessage(req.ReceiverId, message)
+		if err != nil {
+			fmt.Println("发布消息失败：", err)
+			response.SetFail(c, "发送失败", nil)
+			return
+		}
+		response.SetSuccess(c, "发送成功", nil)
+		return
+	}
 	err = rabbitMQClient.PublishMessage(req.ReceiverId, wsMsg)
 	if err != nil {
 		fmt.Println("发布消息失败：", err)
-		response.Fail(c, "发送好友请求失败", nil)
+		response.SetFail(c, "发送失败", nil)
 		return
 	}
-	response.Success(c, "发送成功", nil)
+	response.SetSuccess(c, "发送成功", nil)
 }
 
 // @Summary 发送群聊消息
@@ -201,7 +221,7 @@ func sendGroupMsg(c *gin.Context) {
 	req := new(model.SendGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
-		response.Fail(c, "参数验证失败", nil)
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
@@ -210,17 +230,10 @@ func sendGroupMsg(c *gin.Context) {
 		return
 	}
 	if req.GroupId == 0 {
-		response.Fail(c, "群聊id不正确", nil)
+		response.SetFail(c, "群聊id不正确", nil)
 		return
 	}
-	_, err = userGroupClient.GetGroupRelation(context.Background(), &relation.GetGroupRelationRequest{
-		UserId:  thisId,
-		GroupId: req.GroupId,
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
+
 	groupRelation, err := userGroupClient.GetGroupRelation(context.Background(), &relation.GetGroupRelationRequest{
 		GroupId: req.GroupId,
 		UserId:  thisId,
@@ -230,11 +243,11 @@ func sendGroupMsg(c *gin.Context) {
 		return
 	}
 	if groupRelation.Status != relation.GroupRelationStatus_GroupStatusJoined {
-		response.Fail(c, "用户在群里中状态不正常", nil)
+		response.SetFail(c, "用户在群里中状态不正常", nil)
 		return
 	}
 	if groupRelation.MuteEndTime > time.Now().Unix() && groupRelation.MuteEndTime != 0 {
-		response.Fail(c, "用户禁言中", nil)
+		response.SetFail(c, "用户禁言中", nil)
 		return
 	}
 	dialogs, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
@@ -245,7 +258,7 @@ func sendGroupMsg(c *gin.Context) {
 		return
 	}
 	if len(dialogs.Dialogs) == 0 {
-		response.Fail(c, "对话不存在", nil)
+		response.SetFail(c, "对话不存在", nil)
 		return
 	}
 	_, err = dialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relation.GetDialogUserByDialogIDAndUserIdRequest{
@@ -273,7 +286,7 @@ func sendGroupMsg(c *gin.Context) {
 		GroupId: req.GroupId,
 	})
 	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId, req.DialogId)
-	response.Success(c, "发送成功", nil)
+	response.SetSuccess(c, "发送成功", nil)
 }
 
 // @Summary 获取私聊消息
@@ -295,19 +308,19 @@ func getUserMsgList(c *gin.Context) {
 	var content = c.Query("content")
 
 	if num == "" || size == "" || id == "" {
-		response.Fail(c, "参数错误", nil)
+		response.SetFail(c, "参数错误", nil)
 		return
 	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	pageNum, _ := strconv.Atoi(num)
 	pageSize, _ := strconv.Atoi(size)
 	mt, _ := strconv.Atoi(msgType)
 	if pageNum == 0 || pageSize == 0 {
-		response.Fail(c, "参数错误", nil)
+		response.SetFail(c, "参数错误", nil)
 		return
 	}
 
@@ -331,7 +344,7 @@ func getUserMsgList(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	response.Success(c, "获取成功", msg)
+	response.SetSuccess(c, "获取成功", msg)
 }
 
 // 获取用户对话列表
@@ -344,7 +357,7 @@ func getUserMsgList(c *gin.Context) {
 func getUserDialogList(c *gin.Context) {
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	//获取对话id
@@ -359,12 +372,16 @@ func getUserDialogList(c *gin.Context) {
 	infos, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	//获取最后一条消息
 	dialogIds, err := msgClient.GetLastMsgsByDialogIds(context.Background(), &msg.GetLastMsgsByDialogIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("获取消息失败", zap.Error(err))
 		return
 	}
 	//封装响应数据
@@ -436,7 +453,7 @@ func getUserDialogList(c *gin.Context) {
 	sort.Slice(responseList, func(i, j int) bool {
 		return responseList[i].LastMessage.SendTime > responseList[j].LastMessage.SendTime
 	})
-	response.Success(c, "获取成功", responseList)
+	response.SetSuccess(c, "获取成功", responseList)
 }
 
 // 推送私聊消息
@@ -445,7 +462,11 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 	for _, c := range Pool[receiverId] {
 		m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, SendAt: time.Now().Unix(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: time.Now().Unix(), DialogId: dialogId}}
 		js, _ := json.Marshal(m)
-		err := c.Conn.WriteMessage(websocket.TextMessage, js)
+		message, err := enc.GetSecretMessage(string(js), receiverId)
+		if err != nil {
+			return
+		}
+		err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 		if err != nil {
 			logger.Error("send msg err", zap.Error(err))
 			return
@@ -462,7 +483,11 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			for _, c := range Pool[uid] {
 				m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &model.WsGroupMsg{GroupId: int64(groupId), UserId: userId, Content: msg, MsgType: uint(msgType), ReplayId: uint(replayId), SendAt: time.Now().Unix(), DialogId: dialogId}}
 				js, _ := json.Marshal(m)
-				err := c.Conn.WriteMessage(websocket.TextMessage, js)
+				message, err := enc.GetSecretMessage(string(js), uid)
+				if err != nil {
+					return
+				}
+				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 				if err != nil {
 					fmt.Println("send ws msg err:", err)
 					continue
@@ -480,9 +505,27 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			SendAt:   time.Now().Unix(),
 			DialogId: dialogId,
 		}}
+		if enc.IsEnable() {
+			marshal, err := json.Marshal(msg)
+			if err != nil {
+				logger.Error("json解析失败", zap.Error(err))
+				return
+			}
+			message, err := enc.GetSecretMessage(string(marshal), uid)
+			if err != nil {
+				return
+			}
+			err = rabbitMQClient.PublishEncryptedMessage(uid, message)
+			if err != nil {
+				fmt.Println("发布消息失败：", err)
+				return
+			}
+			return
+		}
 		err := rabbitMQClient.PublishMessage(uid, msg)
 		if err != nil {
 			fmt.Println("发布消息失败：", err)
+			return
 		}
 	}
 }
@@ -525,8 +568,12 @@ func (c client) wsOnlineClients() {
 	//通知前端接收离线消息
 	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now().Unix()}
 	js, _ := json.Marshal(msg)
+	message, err := enc.GetSecretMessage(string(js), c.Uid)
+	if err != nil {
+		return
+	}
 	//上线推送消息
-	c.Conn.WriteMessage(websocket.TextMessage, js)
+	c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 	for {
 		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
 		if err != nil || !ok {
