@@ -395,6 +395,12 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
+	if err := req.Validator(); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.Fail(c, "参数验证失败", nil)
+		return
+	}
+
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
 		logger.Error("token解析失败", zap.Error(err))
@@ -774,6 +780,12 @@ func manageJoinGroup(c *gin.Context) {
 		return
 	}
 
+	if err := req.Validator(); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.Fail(c, "参数验证失败", nil)
+		return
+	}
+
 	userID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.Fail(c, err.Error(), nil)
@@ -815,7 +827,7 @@ func manageJoinGroup(c *gin.Context) {
 		return
 	}
 	var status relationApi.GroupRelationStatus
-	if req.Action == model.FriendRequestStatusAccepted {
+	if req.Action == model.ActionAccepted {
 		status = relationApi.GroupRelationStatus_GroupStatusJoined
 	} else {
 		status = relationApi.GroupRelationStatus_GroupStatusReject

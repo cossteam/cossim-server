@@ -1,5 +1,7 @@
 package model
 
+import "errors"
+
 type Response struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
@@ -35,17 +37,26 @@ type AddBlacklistRequest struct {
 }
 
 type ManageFriendRequest struct {
-	UserID       string              `json:"user_id" binding:"required"`
-	Action       FriendRequestStatus `json:"action" binding:"required"`
-	E2EPublicKey string              `json:"e2e_public_key"`
+	UserID       string     `json:"user_id" binding:"required"`
+	Action       ActionEnum `json:"action" binding:"required"`
+	E2EPublicKey string     `json:"e2e_public_key"`
 }
 
-type FriendRequestStatus int32
+type ActionEnum int
 
 const (
-	FriendRequestStatusRejected FriendRequestStatus = 0 // 拒绝
-	FriendRequestStatusAccepted FriendRequestStatus = 1 // 同意
+	ActionRejected ActionEnum = iota // 拒绝
+	ActionAccepted                   // 同意
 )
+
+func (m *ManageFriendRequest) Validator() error {
+	if m.Action != ActionRejected && m.Action != ActionAccepted {
+		return errors.New("invalid action")
+	}
+
+	// 添加其他验证逻辑...
+	return nil
+}
 
 type AddFriendRequest struct {
 	UserID       string `json:"user_id" binding:"required"`
@@ -58,9 +69,18 @@ type JoinGroupRequest struct {
 }
 
 type ManageJoinGroupRequest struct {
-	GroupID uint32              `json:"group_id" binding:"required"`
-	UserID  string              `json:"user_id" binding:"required"`
-	Action  FriendRequestStatus `json:"action"`
+	GroupID uint32     `json:"group_id" binding:"required"`
+	UserID  string     `json:"user_id" binding:"required"`
+	Action  ActionEnum `json:"action" binding:"required"`
+}
+
+func (m *ManageJoinGroupRequest) Validator() error {
+	if m.Action != ActionRejected && m.Action != ActionAccepted {
+		return errors.New("invalid action")
+	}
+
+	// 添加其他验证逻辑...
+	return nil
 }
 
 type RemoveUserFromGroupRequest struct {
