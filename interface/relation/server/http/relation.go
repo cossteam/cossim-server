@@ -187,9 +187,9 @@ func getUserGroupList(c *gin.Context) {
 }
 
 // @Summary 好友申请列表
-// @Description 好友申请列表
+// @Description 好友申请列表 UserStatus 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)
 // @Produce  json
-// @Success		200 {object} model.Response{}
+// @Success		200 {object} model.Response{data=[]*model.RequestListResponse}
 // @Router /relation/user/request_list [get]
 func userRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
