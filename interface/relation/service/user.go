@@ -13,11 +13,14 @@ import (
 	"github.com/dtm-labs/client/workflow"
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *Service) ManageFriend(ctx context.Context, userId, friendId string, action int32) (interface{}, error) {
 	var dialogId uint32
+
+	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
 
 	switch action {
 	case 1: // 同意好友申请
@@ -120,8 +123,8 @@ func (s *Service) DeleteFriend(ctx context.Context, dialogId uint32, userId, fri
 	gid := shortuuid.New()
 	// sage
 	//saga := dtmgrpc.NewSagaGrpc(s.dtmGrpcServer, gid).
-	//	Add(s.dialogServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, s.dialogServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r1).
-	//	Add(s.userRelationServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, s.userRelationServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r2)
+	//	Add(s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r1).
+	//	Add(s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r2)
 	//if err := saga.Submit(); err != nil {
 	//	s.logger.Error("DeleteFriend saga.Submit err => ", zap.Error(err))
 	//	return err
@@ -129,11 +132,11 @@ func (s *Service) DeleteFriend(ctx context.Context, dialogId uint32, userId, fri
 	// tcc
 	err := dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
 		r := &emptypb.Empty{}
-		err := tcc.CallBranch(r1, s.dialogServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.dialogServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r)
+		err := tcc.CallBranch(r1, s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r)
 		if err != nil {
 			return err
 		}
-		err = tcc.CallBranch(r2, s.userRelationServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, "", s.userRelationServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r)
+		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r)
 		return err
 	})
 	if err != nil {
@@ -148,7 +151,7 @@ func (s *Service) DeleteFriend(ctx context.Context, dialogId uint32, userId, fri
 func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus) (uint32, error) {
 	var dialogId uint32
 	// 创建 DTM 分布式事务工作流
-	// 执行 DTM 分布式事务工作流
+	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "manage_friend_workflow_2_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {

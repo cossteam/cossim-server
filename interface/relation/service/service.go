@@ -25,8 +25,8 @@ type Service struct {
 	logger              *zap.Logger
 
 	dtmGrpcServer      string
-	userRelationServer string
-	dialogServer       string
+	relationGrpcServer string
+	dialogGrpcServer   string
 }
 
 func New(c *config.AppConfig) *Service {
@@ -49,8 +49,8 @@ func New(c *config.AppConfig) *Service {
 		logger:              logger,
 
 		dtmGrpcServer:      c.Dtm.Addr,
-		userRelationServer: c.Discovers["relation"].Addr,
-		dialogServer:       c.Discovers["relation"].Addr,
+		relationGrpcServer: c.Discovers["relation"].Addr,
+		dialogGrpcServer:   c.Discovers["relation"].Addr,
 	}
 }
 
