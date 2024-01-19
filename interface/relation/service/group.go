@@ -64,15 +64,6 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, adminID, 
 		return err
 	}
 
-	//_, err = s.dialogClient.JoinDialog(context.Background(), &relationgrpcv1.JoinDialogRequest{DialogId: id.DialogId, UserId: userID})
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//if _, err = s.groupRelationClient.ManageJoinGroup(context.Background(), &relationgrpcv1.ManageJoinGroupRequest{UserId: userID, GroupId: groupID, Status: status}); err != nil {
-	//	return err
-	//}
-
 	msg := msgconfig.WsMsg{
 		Uid:    userID,
 		Event:  msgconfig.JoinGroupEvent,
@@ -83,6 +74,57 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, adminID, 
 	if err != nil {
 		s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
 	}
+
+	return nil
+}
+
+func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, adminID, userID string) error {
+	gr1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: adminID, GroupId: groupID})
+	if err != nil {
+		s.logger.Error("获取用户群组关系失败", zap.Error(err))
+		return errors.New("获取用户群组关系失败")
+	}
+
+	if gr1.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+		return errors.New("没有权限操作")
+	}
+
+	gr2, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
+	if err != nil {
+		s.logger.Error("获取用户群组关系失败", zap.Error(err))
+		return errors.New("获取用户群组关系失败")
+	}
+
+	dialog, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+	if err != nil {
+		return errors.New("获取群聊会话失败")
+	}
+
+	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: dialog.DialogId, UserId: userID}
+	r2 := &relationgrpcv1.DeleteGroupRelationByGroupIdAndUserIDRequest{GroupID: groupID, UserID: userID, Status: gr2.Status}
+
+	gid := shortuuid.New()
+	err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
+		r := &emptypb.Empty{}
+		if err = tcc.CallBranch(r1, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r); err != nil {
+			return err
+		}
+		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName, r)
+		return err
+	})
+	if err != nil {
+		return errors.New("移出群聊失败")
+	}
+
+	//id, err := s.dialogClient.DeleteDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: dialog.DialogId, UserId: userID})
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//_, err = s.groupRelationClient.DeleteGroupRelationByGroupIdAndUserID(ctx, &relationgrpcv1.DeleteGroupRelationByGroupIdAndUserIDRequest{GroupID: groupID, UserID: userID})
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }

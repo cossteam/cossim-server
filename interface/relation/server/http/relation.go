@@ -897,21 +897,27 @@ func removeUserFromGroup(c *gin.Context) {
 		return
 	}
 
-	gr, err := groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: req.GroupID})
-	if err != nil {
-		c.Error(err)
+	if err = svc.RemoveUserFromGroup(c, req.GroupID, userID, req.UserID); err != nil {
+		logger.Error("RemoveUserFromGroup Failed", zap.Error(err))
+		response.Fail(c, err.Error(), nil)
 		return
 	}
 
-	if gr.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
-		response.Fail(c, "没有权限操作", nil)
-		return
-	}
-
-	if _, err = groupRelationClient.RemoveFromGroup(context.Background(), &relationgrpcv1.RemoveFromGroupRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
-		c.Error(err)
-		return
-	}
+	//gr, err := groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: req.GroupID})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//
+	//if gr.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
+	//	response.Fail(c, "没有权限操作", nil)
+	//	return
+	//}
+	//
+	//if _, err = groupRelationClient.RemoveFromGroup(context.Background(), &relationgrpcv1.RemoveFromGroupRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
+	//	c.Error(err)
+	//	return
+	//}
 
 	response.Success(c, "移出群聊成功", nil)
 }

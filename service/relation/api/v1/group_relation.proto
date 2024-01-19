@@ -1,6 +1,7 @@
 syntax = "proto3";
 package v1;
 option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
+import "google/protobuf/empty.proto";
 
 message UserGroupRequest {
   // @inject_tag: json:"user_id"
@@ -125,14 +126,15 @@ message Empty {
 enum GroupIdentity {
   IDENTITY_USER = 0;  // 普通用户
   IDENTITY_ADMIN = 1; // 管理员
-  IDENTITY_OWNER = 2;
+  IDENTITY_OWNER = 2; // 群主
 }
 
 enum GroupRelationStatus {
     GroupStatusApplying  = 0; // 申请中
     GroupStatusJoined    = 1; // 已加入
-    GroupStatusReject    = 2; // 被拒绝
-    GroupStatusBlocked   = 3; // 被封禁
+    GroupStatusDeleted   = 2; // 已删除
+    GroupStatusReject    = 3; // 被拒绝
+    GroupStatusBlocked   = 4; // 被封禁
 }
 
 message GetUserManageGroupIDRequest {
@@ -162,6 +164,26 @@ message GetUserGroupRequestListRequest {
 message GetUserGroupRequestListResponse {
   repeated GroupJoinRequestList GroupJoinRequestList = 1;
 }
+
+message DeleteGroupRelationByGroupIdAndUserIDRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupID = 1; // 群聊ID
+  // @inject_tag: json:"user_id"
+  string UserID = 2;  // 用户ID
+  // @inject_tag: json:"status"
+  GroupRelationStatus Status = 3;
+}
+
+message DeleteGroupRelationByGroupIdAndUserIDRevertRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupID = 1; // 群聊ID
+  // @inject_tag: json:"user_id"
+  string UserID = 2;  // 用户ID
+  // @inject_tag: json:"status"
+  GroupRelationStatus Status = 3;
+}
+
+message DeleteGroupRelationByGroupIdAndUserIDResponse {}
 
 service GroupRelationService {
   // 加入群聊
@@ -203,6 +225,12 @@ service GroupRelationService {
   // 获取用户与群聊关系信息
   rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
 
-  // 根据群聊ID删除群聊关系
+  // 根据群聊ID删除群聊的所有关系
   rpc DeleteGroupRelationByGroupId (GroupIDRequest) returns (Empty);
+
+  // 根据群聊ID和用户ID删除用户的群聊关系
+  rpc DeleteGroupRelationByGroupIdAndUserID(DeleteGroupRelationByGroupIdAndUserIDRequest) returns (google.protobuf.Empty);
+
+  // DeleteGroupRelationByGroupIdAndUserID回滚操作
+  rpc DeleteGroupRelationByGroupIdAndUserIDRevert(DeleteGroupRelationByGroupIdAndUserIDRequest) returns (google.protobuf.Empty);
 }

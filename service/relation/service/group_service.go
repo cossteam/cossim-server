@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 )
 
@@ -242,5 +243,30 @@ func (s *Service) GetUserManageGroupID(ctx context.Context, request *v1.GetUserM
 		resp.GroupIDs = append(resp.GroupIDs, &v1.GroupIDRequest{GroupId: id})
 	}
 
+	return resp, nil
+}
+
+func (s *Service) DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
+	if err := s.grr.DeleteUserGroupRelationByGroupIDAndUserID(request.GroupID, request.UserID); err != nil {
+		//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
+		return resp, status.Error(codes.Aborted, fmt.Sprintf(code.GroupErrDeleteUserGroupRelationFailed.Message()+" : "+err.Error()))
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, request.UserID, "deleted_at", 0); err != nil {
+		//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationRevertFailed.Code()), err.Error())
+	}
+	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, request.UserID, "status", request.Status); err != nil {
+		//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationRevertFailed.Code()), err.Error())
+	}
 	return resp, nil
 }

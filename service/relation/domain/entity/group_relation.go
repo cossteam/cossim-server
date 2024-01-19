@@ -3,7 +3,7 @@ package entity
 type GroupRelation struct {
 	ID                 uint                `gorm:"primaryKey;autoIncrement;comment:群组关系ID" json:"id"`
 	GroupID            uint                `gorm:"comment:群组ID" json:"group_id"`
-	Status             GroupRelationStatus `gorm:"comment:状态（0:申请中 1:已加入 2:被拒绝 3:被封禁）" json:"status"`
+	Status             GroupRelationStatus `gorm:"comment:状态（0=申请中 1=已加入 2=已删除 3=被拒绝 4=被封禁）" json:"status"`
 	Identity           GroupIdentity       `gorm:"comment:身份（比如管理员、普通用户）" json:"identity"`
 	EntryMethod        EntryMethod         `gorm:"comment:入群方式" json:"entry_method"`
 	JoinedAt           int64               `gorm:"comment:加入时间" json:"joined_at"`
@@ -25,6 +25,7 @@ type GroupRelationStatus uint
 const (
 	GroupStatusApplying GroupRelationStatus = iota // 申请中
 	GroupStatusJoined                              // 已加入
+	GroupStatusDeleted                             // 已删除
 	GroupStatusReject                              // 被拒绝
 	GroupStatusBlocked                             // 被封禁
 )
