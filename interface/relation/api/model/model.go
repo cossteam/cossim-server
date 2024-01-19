@@ -38,7 +38,7 @@ type AddBlacklistRequest struct {
 
 type ManageFriendRequest struct {
 	UserID       string     `json:"user_id" binding:"required"`
-	Action       ActionEnum `json:"action" binding:"required"`
+	Action       ActionEnum `json:"action"`
 	E2EPublicKey string     `json:"e2e_public_key"`
 }
 
@@ -71,7 +71,7 @@ type JoinGroupRequest struct {
 type ManageJoinGroupRequest struct {
 	GroupID uint32     `json:"group_id" binding:"required"`
 	UserID  string     `json:"user_id" binding:"required"`
-	Action  ActionEnum `json:"action" binding:"required"`
+	Action  ActionEnum `json:"action"`
 }
 
 func (m *ManageJoinGroupRequest) Validator() error {
