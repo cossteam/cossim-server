@@ -424,6 +424,7 @@ func manageFriend(c *gin.Context) {
 
 	responseData, err := svc.ManageFriend(c, userID, req.UserID, int32(req.Action))
 	if err != nil {
+		logger.Error("管理好友申请失败", zap.Error(err))
 		//c.Error(err)
 		response.Fail(c, "管理好友申请失败", nil)
 		return
