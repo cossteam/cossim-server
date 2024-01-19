@@ -943,24 +943,30 @@ func quitGroup(c *gin.Context) {
 		response.Fail(c, err.Error(), nil)
 		return
 	}
+
+	if err = svc.QuitGroup(c, req.GroupID, userID); err != nil {
+		response.Fail(c, err.Error(), nil)
+		return
+	}
+
 	//查询用户是否在群聊中
-	if _, err = groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
-		c.Error(err)
-		return
-	}
-	//删除用户对话
-	if _, err = dialogClient.DeleteDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{
-		DialogId: req.GroupID,
-		UserId:   userID,
-	}); err != nil {
-		c.Error(err)
-		return
-	}
-	//退出群聊
-	if _, err = groupRelationClient.LeaveGroup(context.Background(), &relationgrpcv1.LeaveGroupRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
-		c.Error(err)
-		return
-	}
+	//if _, err = groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////删除用户对话
+	//if _, err = dialogClient.DeleteDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{
+	//	DialogId: req.GroupID,
+	//	UserId:   userID,
+	//}); err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////退出群聊
+	//if _, err = groupRelationClient.LeaveGroup(context.Background(), &relationgrpcv1.LeaveGroupRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
+	//	c.Error(err)
+	//	return
+	//}
 
 	response.Success(c, "退出群聊成功", nil)
 }

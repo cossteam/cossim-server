@@ -155,15 +155,14 @@ func (s *Service) RemoveFromGroup(ctx context.Context, request *v1.RemoveFromGro
 
 func (s *Service) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
 	resp := &v1.LeaveGroupResponse{}
-
 	if err := s.grr.DeleteRelationByID(request.GroupId, request.UserId); err != nil {
 		return resp, status.Error(codes.Aborted, err.Error())
 	}
-
 	return resp, nil
 }
 
 func (s *Service) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
+	fmt.Println("revert leave group req => ", request)
 	resp := &v1.LeaveGroupResponse{}
 
 	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupId, request.UserId, "deleted_at", 0); err != nil {

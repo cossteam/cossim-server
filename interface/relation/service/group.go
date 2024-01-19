@@ -129,6 +129,36 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 	return nil
 }
 
+func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) error {
+	//查询用户是否在群聊中
+	_, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
+	if err != nil {
+		return errors.New("用户群聊状态不可用")
+	}
+
+	dialog, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+	if err != nil {
+		return errors.New("获取群聊会话失败")
+	}
+
+	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: dialog.DialogId, UserId: userID}
+	r2 := &relationgrpcv1.LeaveGroupRequest{UserId: userID, GroupId: groupID}
+	gid := shortuuid.New()
+	err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
+		r := &emptypb.Empty{}
+		if err = tcc.CallBranch(r1, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r); err != nil {
+			return err
+		}
+		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.GroupRelationService_LeaveGroup_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_LeaveGroupRevert_FullMethodName, r)
+		return err
+	})
+	if err != nil {
+		return errors.New("退出群聊失败")
+	}
+
+	return nil
+}
+
 func (s *Service) validateGroupRelationStatus(relation *relationgrpcv1.GetGroupRelationResponse, status relationgrpcv1.GroupRelationStatus) error {
 	switch status {
 	case relationgrpcv1.GroupRelationStatus_GroupStatusJoined:
