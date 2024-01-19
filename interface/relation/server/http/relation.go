@@ -192,7 +192,7 @@ func getUserGroupList(c *gin.Context) {
 // @Summary 好友申请列表
 // @Description 好友申请列表 UserStatus 申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)
 // @Produce  json
-// @Success		200 {object} model.Response{data=[]*model.RequestListResponse}
+// @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "status (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"
 // @Router /relation/user/request_list [get]
 func userRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -624,7 +624,7 @@ func getGroupMember(c *gin.Context) {
 // @Produce json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @Success		200 {object} model.Response{data=model.RequestListResponse}
+// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=申请中, 1=已加入, 2=已删除, 3=被拒绝 4=被封禁)"
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -948,7 +948,6 @@ func quitGroup(c *gin.Context) {
 		response.Fail(c, err.Error(), nil)
 		return
 	}
-
 	//查询用户是否在群聊中
 	//if _, err = groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
 	//	c.Error(err)
