@@ -59,7 +59,6 @@ func (s *Service) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.Co
 }
 
 func (s *Service) ConfirmFriendAndJoinDialogRevert(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRevertRequest) (*v1.ConfirmFriendAndJoinDialogRevertResponse, error) {
-	fmt.Println("ConfirmFriendAndJoinDialogRevert req => ", request)
 	resp := &v1.ConfirmFriendAndJoinDialogRevertResponse{}
 
 	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId); err != nil {
@@ -81,6 +80,15 @@ func (s *Service) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1
 	resp := &v1.JoinDialogResponse{}
 	_, err := s.dr.JoinDialog(uint(in.DialogId), in.UserId)
 	if err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) JoinDialogRevert(ctx context.Context, request *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
+	fmt.Println("JoinDialogRevert req => ", request)
+	resp := &v1.JoinDialogResponse{}
+	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 	}
 	return resp, nil
@@ -188,7 +196,6 @@ func (s *Service) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.G
 }
 
 func (s *Service) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
-	fmt.Println("DeleteDialogUserByDialogIDAndUserID req => ", request)
 	var resp = &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
 
 	err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId)
@@ -199,7 +206,6 @@ func (s *Service) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, reque
 }
 
 func (s *Service) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
-	fmt.Println("DeleteDialogUserByDialogIDAndUserIDRevert req => ", request)
 	resp := &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
 
 	if err := s.dr.UpdateDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId, map[string]interface{}{

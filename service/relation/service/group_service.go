@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
@@ -27,7 +28,7 @@ func (s *Service) GetGroupUserIDs(ctx context.Context, id *v1.GroupIDRequest) (*
 func (s *Service) GetUserGroupIDs(ctx context.Context, request *v1.GetUserGroupIDsRequest) (*v1.GetUserGroupIDsResponse, error) {
 	resp := &v1.GetUserGroupIDsResponse{}
 
-	ds, err := s.grr.GetUserGroupIDs(request.UserId)
+	ds, err := s.grr.GetUserJoinedGroupIDs(request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrGetGroupIDsFailed.Code()), err.Error())
 	}
@@ -103,6 +104,8 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 func (s *Service) ManageJoinGroup(ctx context.Context, request *v1.ManageJoinGroupRequest) (*v1.ManageJoinGroupResponse, error) {
 	resp := &v1.ManageJoinGroupResponse{}
 
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
 	// 检查是否已经存在加入申请
 	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
 	if err != nil {
@@ -124,9 +127,18 @@ func (s *Service) ManageJoinGroup(ctx context.Context, request *v1.ManageJoinGro
 	// 插入加入申请
 	_, err = s.grr.UpdateRelation(relation)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		//return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("Failed to revert join request : %v", err))
 	}
 
+	return resp, nil
+}
+
+func (s *Service) ManageJoinGroupRevert(ctx context.Context, request *v1.ManageJoinGroupRequest) (*v1.ManageJoinGroupResponse, error) {
+	resp := &v1.ManageJoinGroupResponse{}
+	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupId, request.UserId, "status", request.Status); err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+	}
 	return resp, nil
 }
 
@@ -153,7 +165,7 @@ func (s *Service) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest)
 func (s *Service) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
 	resp := &v1.LeaveGroupResponse{}
 
-	if err := s.grr.UpdateRelationDeleteAtByID(request.GroupId, request.UserId, 0); err != nil {
+	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupId, request.UserId, "deleted_at", 0); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrLeaveGroupFailed.Code()), err.Error())
 	}
 
