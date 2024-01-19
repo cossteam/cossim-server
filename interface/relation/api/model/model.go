@@ -17,9 +17,9 @@ type RequestListResponse struct {
 	UserID          string `json:"user_id,omitempty" description:"用户ID"`
 	UserName        string `json:"user_name,omitempty" description:"用户昵称"`
 	UserAvatar      string `json:"user_avatar,omitempty" description:"用户头像"`
-	Msg             string `json:"msg,omitempty" description:"申请消息"`
-	RequestAt       string `json:"request_at,omitempty" description:"申请时间"`
-	UserStatus      uint32 `json:"user_status,omitempty" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
+	Msg             string `json:"msg" description:"申请消息"`
+	RequestAt       string `json:"request_at" description:"申请时间"`
+	UserStatus      uint32 `json:"user_status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
 }
 
 type DeleteFriendRequest struct {
