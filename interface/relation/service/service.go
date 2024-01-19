@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"time"
 )
 
 // Service struct
@@ -21,6 +20,7 @@ type Service struct {
 	groupRelationClient relation.GroupRelationServiceClient
 	userRelationClient  relation.UserRelationServiceClient
 	userClient          user.UserServiceClient
+	groupClient         group.GroupServiceClient
 	rabbitMQClient      *msg_queue.RabbitMQ
 	logger              *zap.Logger
 
@@ -36,6 +36,7 @@ func New(c *config.AppConfig) *Service {
 	groupRelationClient := setupGROUPRelationGRPCClient(c.Discovers["relation"].Addr)
 	userRelationClient := setupUserRelationGRPCClient(c.Discovers["relation"].Addr)
 	userClient := setupUserGRPCClient(c.Discovers["user"].Addr)
+	groupClient := setupGroupGRPCClient(c.Discovers["group"].Addr)
 	rabbitMQClient := setRabbitMQProvider(c)
 
 	workflow.InitGrpc(c.Dtm.Addr, c.Discovers["relation"].Addr, grpc.NewServer())
@@ -45,6 +46,7 @@ func New(c *config.AppConfig) *Service {
 		groupRelationClient: groupRelationClient,
 		userRelationClient:  userRelationClient,
 		userClient:          userClient,
+		groupClient:         groupClient,
 		rabbitMQClient:      rabbitMQClient,
 		logger:              logger,
 
@@ -84,15 +86,9 @@ func setupLogger(c *config.AppConfig) *zap.Logger {
 	var err error
 	logger, err := config.Build()
 	if err != nil {
-		panic(fmt.Sprintf("log 初始化失败: %v", err))
+		panic(fmt.Sprintf("logger 初始化失败: %v", err))
 	}
-	logger.Info("log 初始化成功")
-	logger.Info("无法获取网址",
-		zap.String("url", "http://www.baidu.com"),
-		zap.Int("attempt", 3),
-		zap.Duration("backoff", time.Second),
-	)
-
+	logger.Info("logger 初始化成功")
 	return logger
 }
 

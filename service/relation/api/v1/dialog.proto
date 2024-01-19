@@ -196,6 +196,9 @@ service DialogService {
   // JoinDialog 加入对话
   rpc JoinDialog(JoinDialogRequest) returns (JoinDialogResponse) {}
 
+  // JoinDialogRevert JoinDialog回滚操作
+  rpc JoinDialogRevert(JoinDialogRequest) returns (JoinDialogResponse) {}
+
   // GetUserDialogList 获取用户对话列表
   rpc GetUserDialogList(GetUserDialogListRequest) returns (GetUserDialogListResponse) {}
 

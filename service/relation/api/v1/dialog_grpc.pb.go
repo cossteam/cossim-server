@@ -23,6 +23,7 @@ const (
 	DialogService_ConfirmFriendAndJoinDialog_FullMethodName                = "/v1.DialogService/ConfirmFriendAndJoinDialog"
 	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName          = "/v1.DialogService/ConfirmFriendAndJoinDialogRevert"
 	DialogService_JoinDialog_FullMethodName                                = "/v1.DialogService/JoinDialog"
+	DialogService_JoinDialogRevert_FullMethodName                          = "/v1.DialogService/JoinDialogRevert"
 	DialogService_GetUserDialogList_FullMethodName                         = "/v1.DialogService/GetUserDialogList"
 	DialogService_GetDialogByIds_FullMethodName                            = "/v1.DialogService/GetDialogByIds"
 	DialogService_GetDialogUsersByDialogID_FullMethodName                  = "/v1.DialogService/GetDialogUsersByDialogID"
@@ -48,6 +49,8 @@ type DialogServiceClient interface {
 	ConfirmFriendAndJoinDialogRevert(ctx context.Context, in *ConfirmFriendAndJoinDialogRevertRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogRevertResponse, error)
 	// JoinDialog 加入对话
 	JoinDialog(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
+	// JoinDialogRevert JoinDialog回滚操作
+	JoinDialogRevert(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
 	// GetUserDialogList 获取用户对话列表
 	GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error)
 	// GetDialogByIds 根据对话ID获取对话信息
@@ -109,6 +112,15 @@ func (c *dialogServiceClient) ConfirmFriendAndJoinDialogRevert(ctx context.Conte
 func (c *dialogServiceClient) JoinDialog(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error) {
 	out := new(JoinDialogResponse)
 	err := c.cc.Invoke(ctx, DialogService_JoinDialog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) JoinDialogRevert(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error) {
+	out := new(JoinDialogResponse)
+	err := c.cc.Invoke(ctx, DialogService_JoinDialogRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -226,6 +238,8 @@ type DialogServiceServer interface {
 	ConfirmFriendAndJoinDialogRevert(context.Context, *ConfirmFriendAndJoinDialogRevertRequest) (*ConfirmFriendAndJoinDialogRevertResponse, error)
 	// JoinDialog 加入对话
 	JoinDialog(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
+	// JoinDialogRevert JoinDialog回滚操作
+	JoinDialogRevert(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
 	// GetUserDialogList 获取用户对话列表
 	GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error)
 	// GetDialogByIds 根据对话ID获取对话信息
@@ -265,6 +279,9 @@ func (UnimplementedDialogServiceServer) ConfirmFriendAndJoinDialogRevert(context
 }
 func (UnimplementedDialogServiceServer) JoinDialog(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinDialog not implemented")
+}
+func (UnimplementedDialogServiceServer) JoinDialogRevert(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinDialogRevert not implemented")
 }
 func (UnimplementedDialogServiceServer) GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserDialogList not implemented")
@@ -380,6 +397,24 @@ func _DialogService_JoinDialog_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DialogServiceServer).JoinDialog(ctx, req.(*JoinDialogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_JoinDialogRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinDialogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).JoinDialogRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_JoinDialogRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).JoinDialogRevert(ctx, req.(*JoinDialogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -604,6 +639,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JoinDialog",
 			Handler:    _DialogService_JoinDialog_Handler,
+		},
+		{
+			MethodName: "JoinDialogRevert",
+			Handler:    _DialogService_JoinDialogRevert_Handler,
 		},
 		{
 			MethodName: "GetUserDialogList",

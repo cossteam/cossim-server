@@ -8,20 +8,27 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
-type RequestListResponse struct {
-	GroupId         uint32 `json:"group_id,omitempty" description:"群组ID"`
-	GroupType       uint32 `json:"group_type,omitempty" description:"群组类型"`
-	GroupStatus     uint32 `json:"group_status,omitempty" description:"群组状态"`
+type GroupRequestListResponse struct {
+	GroupId         uint32 `json:"group_id" description:"群组ID"`
+	GroupType       uint32 `json:"group_type" description:"群组类型"`
+	GroupStatus     uint32 `json:"group_status" description:"群组状态"`
 	MaxMembersLimit int32  `json:"max_members_limit,omitempty" description:"最大成员限制"`
 	CreatorId       string `json:"creator_id,omitempty" description:"创建者ID"`
-	GroupName       string `json:"group_name,omitempty" description:"群组名称"`
-	GroupAvatar     string `json:"group_avatar,omitempty" description:"群组头像"`
-	UserID          string `json:"user_id,omitempty" description:"用户ID"`
-	UserName        string `json:"user_name,omitempty" description:"用户昵称"`
-	UserAvatar      string `json:"user_avatar,omitempty" description:"用户头像"`
+	GroupName       string `json:"group_name" description:"群组名称"`
+	GroupAvatar     string `json:"group_avatar" description:"群组头像"`
+	UserID          string `json:"user_id" description:"用户ID"`
+	UserName        string `json:"user_name" description:"用户昵称"`
+	UserAvatar      string `json:"user_avatar" description:"用户头像"`
 	Msg             string `json:"msg" description:"申请消息"`
-	RequestAt       string `json:"request_at" description:"申请时间"`
-	UserStatus      uint32 `json:"user_status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
+}
+
+type UserRequestListResponse struct {
+	UserID     string `json:"user_id" description:"用户ID"`
+	UserName   string `json:"user_name" description:"用户昵称"`
+	UserAvatar string `json:"user_avatar" description:"用户头像"`
+	Msg        string `json:"msg" description:"申请消息"`
+	RequestAt  string `json:"request_at" description:"申请时间"`
+	UserStatus uint32 `json:"user_status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
 }
 
 type DeleteFriendRequest struct {

@@ -14,6 +14,6 @@ type DialogUser struct {
 type ShowSession uint
 
 const (
-	NotShow ShowSession = iota // 已加入
-	IsShow                     // 申请中
+	NotShow ShowSession = iota // 不显示对话
+	IsShow                     // 显示对话
 )

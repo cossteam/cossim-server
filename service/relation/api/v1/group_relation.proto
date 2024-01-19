@@ -182,8 +182,11 @@ service GroupRelationService {
   // 获取用户管理的群聊ID列表
   rpc GetUserManageGroupID(GetUserManageGroupIDRequest) returns (GetUserManageGroupIDResponse);
 
-  // 管理群聊加入申请
+  // ManageJoinGroup 管理群聊加入申请
   rpc ManageJoinGroup (ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
+
+  // 管理群聊加入申请回滚操作
+  rpc ManageJoinGroupRevert(ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
 
   // 从群聊中移除成员
   rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);

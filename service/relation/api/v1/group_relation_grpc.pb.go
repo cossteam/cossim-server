@@ -26,6 +26,7 @@ const (
 	GroupRelationService_GetGroupAdminIds_FullMethodName             = "/v1.GroupRelationService/GetGroupAdminIds"
 	GroupRelationService_GetUserManageGroupID_FullMethodName         = "/v1.GroupRelationService/GetUserManageGroupID"
 	GroupRelationService_ManageJoinGroup_FullMethodName              = "/v1.GroupRelationService/ManageJoinGroup"
+	GroupRelationService_ManageJoinGroupRevert_FullMethodName        = "/v1.GroupRelationService/ManageJoinGroupRevert"
 	GroupRelationService_RemoveFromGroup_FullMethodName              = "/v1.GroupRelationService/RemoveFromGroup"
 	GroupRelationService_LeaveGroup_FullMethodName                   = "/v1.GroupRelationService/LeaveGroup"
 	GroupRelationService_LeaveGroupRevert_FullMethodName             = "/v1.GroupRelationService/LeaveGroupRevert"
@@ -50,8 +51,10 @@ type GroupRelationServiceClient interface {
 	GetGroupAdminIds(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
 	// 获取用户管理的群聊ID列表
 	GetUserManageGroupID(ctx context.Context, in *GetUserManageGroupIDRequest, opts ...grpc.CallOption) (*GetUserManageGroupIDResponse, error)
-	// 管理群聊加入申请
+	// ManageJoinGroup 管理群聊加入申请
 	ManageJoinGroup(ctx context.Context, in *ManageJoinGroupRequest, opts ...grpc.CallOption) (*ManageJoinGroupResponse, error)
+	// 管理群聊加入申请回滚操作
+	ManageJoinGroupRevert(ctx context.Context, in *ManageJoinGroupRequest, opts ...grpc.CallOption) (*ManageJoinGroupResponse, error)
 	// 从群聊中移除成员
 	RemoveFromGroup(ctx context.Context, in *RemoveFromGroupRequest, opts ...grpc.CallOption) (*RemoveFromGroupResponse, error)
 	// 退出群聊
@@ -137,6 +140,15 @@ func (c *groupRelationServiceClient) ManageJoinGroup(ctx context.Context, in *Ma
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) ManageJoinGroupRevert(ctx context.Context, in *ManageJoinGroupRequest, opts ...grpc.CallOption) (*ManageJoinGroupResponse, error) {
+	out := new(ManageJoinGroupResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_ManageJoinGroupRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *groupRelationServiceClient) RemoveFromGroup(ctx context.Context, in *RemoveFromGroupRequest, opts ...grpc.CallOption) (*RemoveFromGroupResponse, error) {
 	out := new(RemoveFromGroupResponse)
 	err := c.cc.Invoke(ctx, GroupRelationService_RemoveFromGroup_FullMethodName, in, out, opts...)
@@ -207,8 +219,10 @@ type GroupRelationServiceServer interface {
 	GetGroupAdminIds(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
 	// 获取用户管理的群聊ID列表
 	GetUserManageGroupID(context.Context, *GetUserManageGroupIDRequest) (*GetUserManageGroupIDResponse, error)
-	// 管理群聊加入申请
+	// ManageJoinGroup 管理群聊加入申请
 	ManageJoinGroup(context.Context, *ManageJoinGroupRequest) (*ManageJoinGroupResponse, error)
+	// 管理群聊加入申请回滚操作
+	ManageJoinGroupRevert(context.Context, *ManageJoinGroupRequest) (*ManageJoinGroupResponse, error)
 	// 从群聊中移除成员
 	RemoveFromGroup(context.Context, *RemoveFromGroupRequest) (*RemoveFromGroupResponse, error)
 	// 退出群聊
@@ -248,6 +262,9 @@ func (UnimplementedGroupRelationServiceServer) GetUserManageGroupID(context.Cont
 }
 func (UnimplementedGroupRelationServiceServer) ManageJoinGroup(context.Context, *ManageJoinGroupRequest) (*ManageJoinGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ManageJoinGroup not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) ManageJoinGroupRevert(context.Context, *ManageJoinGroupRequest) (*ManageJoinGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ManageJoinGroupRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) RemoveFromGroup(context.Context, *RemoveFromGroupRequest) (*RemoveFromGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveFromGroup not implemented")
@@ -406,6 +423,24 @@ func _GroupRelationService_ManageJoinGroup_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_ManageJoinGroupRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ManageJoinGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).ManageJoinGroupRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_ManageJoinGroupRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).ManageJoinGroupRevert(ctx, req.(*ManageJoinGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GroupRelationService_RemoveFromGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RemoveFromGroupRequest)
 	if err := dec(in); err != nil {
@@ -548,6 +583,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ManageJoinGroup",
 			Handler:    _GroupRelationService_ManageJoinGroup_Handler,
+		},
+		{
+			MethodName: "ManageJoinGroupRevert",
+			Handler:    _GroupRelationService_ManageJoinGroupRevert_Handler,
 		},
 		{
 			MethodName: "RemoveFromGroup",
