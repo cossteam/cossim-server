@@ -23,7 +23,7 @@ func (repo *GroupRelationRepo) CreateRelation(ur *entity.GroupRelation) (*entity
 
 func (repo *GroupRelationRepo) GetGroupUserIDs(gid uint32) ([]string, error) {
 	var userGroupIDs []string
-	if err := repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Pluck("user_id", &userGroupIDs).Error; err != nil {
+	if err := repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND status = ?", gid, entity.GroupStatusJoined).Pluck("user_id", &userGroupIDs).Error; err != nil {
 		return nil, err
 	}
 	return userGroupIDs, nil
@@ -88,9 +88,13 @@ func (repo *GroupRelationRepo) DeleteGroupRelationByID(gid uint32) error {
 	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Delete(&entity.GroupRelation{}).Error
 }
 
+func (repo *GroupRelationRepo) DeleteUserGroupRelationByGroupIDAndUserID(gid uint32, uid string) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND user_id = ?", gid, uid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now().Unix()).Error
+}
+
 func (repo *GroupRelationRepo) GetJoinRequestBatchListByID(gids []uint32) ([]*entity.GroupRelation, error) {
 	var joinRequests []*entity.GroupRelation
-	if err := repo.db.Where("group_id IN (?) AND status NOT IN ?", gids, []entity.GroupRelationStatus{entity.GroupStatusBlocked}).Find(&joinRequests).Error; err != nil {
+	if err := repo.db.Where("group_id IN (?) AND status NOT IN ?", gids, []entity.GroupRelationStatus{entity.GroupStatusBlocked, entity.GroupStatusDeleted}).Find(&joinRequests).Error; err != nil {
 		return joinRequests, err
 	}
 	return joinRequests, nil

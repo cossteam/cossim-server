@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,20 +20,22 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupRelationService_JoinGroup_FullMethodName                    = "/v1.GroupRelationService/JoinGroup"
-	GroupRelationService_GetGroupUserIDs_FullMethodName              = "/v1.GroupRelationService/GetGroupUserIDs"
-	GroupRelationService_GetUserGroupIDs_FullMethodName              = "/v1.GroupRelationService/GetUserGroupIDs"
-	GroupRelationService_GetUserGroupRequestList_FullMethodName      = "/v1.GroupRelationService/GetUserGroupRequestList"
-	GroupRelationService_GetGroupAdminIds_FullMethodName             = "/v1.GroupRelationService/GetGroupAdminIds"
-	GroupRelationService_GetUserManageGroupID_FullMethodName         = "/v1.GroupRelationService/GetUserManageGroupID"
-	GroupRelationService_ManageJoinGroup_FullMethodName              = "/v1.GroupRelationService/ManageJoinGroup"
-	GroupRelationService_ManageJoinGroupRevert_FullMethodName        = "/v1.GroupRelationService/ManageJoinGroupRevert"
-	GroupRelationService_RemoveFromGroup_FullMethodName              = "/v1.GroupRelationService/RemoveFromGroup"
-	GroupRelationService_LeaveGroup_FullMethodName                   = "/v1.GroupRelationService/LeaveGroup"
-	GroupRelationService_LeaveGroupRevert_FullMethodName             = "/v1.GroupRelationService/LeaveGroupRevert"
-	GroupRelationService_GetGroupJoinRequestList_FullMethodName      = "/v1.GroupRelationService/GetGroupJoinRequestList"
-	GroupRelationService_GetGroupRelation_FullMethodName             = "/v1.GroupRelationService/GetGroupRelation"
-	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName = "/v1.GroupRelationService/DeleteGroupRelationByGroupId"
+	GroupRelationService_JoinGroup_FullMethodName                                   = "/v1.GroupRelationService/JoinGroup"
+	GroupRelationService_GetGroupUserIDs_FullMethodName                             = "/v1.GroupRelationService/GetGroupUserIDs"
+	GroupRelationService_GetUserGroupIDs_FullMethodName                             = "/v1.GroupRelationService/GetUserGroupIDs"
+	GroupRelationService_GetUserGroupRequestList_FullMethodName                     = "/v1.GroupRelationService/GetUserGroupRequestList"
+	GroupRelationService_GetGroupAdminIds_FullMethodName                            = "/v1.GroupRelationService/GetGroupAdminIds"
+	GroupRelationService_GetUserManageGroupID_FullMethodName                        = "/v1.GroupRelationService/GetUserManageGroupID"
+	GroupRelationService_ManageJoinGroup_FullMethodName                             = "/v1.GroupRelationService/ManageJoinGroup"
+	GroupRelationService_ManageJoinGroupRevert_FullMethodName                       = "/v1.GroupRelationService/ManageJoinGroupRevert"
+	GroupRelationService_RemoveFromGroup_FullMethodName                             = "/v1.GroupRelationService/RemoveFromGroup"
+	GroupRelationService_LeaveGroup_FullMethodName                                  = "/v1.GroupRelationService/LeaveGroup"
+	GroupRelationService_LeaveGroupRevert_FullMethodName                            = "/v1.GroupRelationService/LeaveGroupRevert"
+	GroupRelationService_GetGroupJoinRequestList_FullMethodName                     = "/v1.GroupRelationService/GetGroupJoinRequestList"
+	GroupRelationService_GetGroupRelation_FullMethodName                            = "/v1.GroupRelationService/GetGroupRelation"
+	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName                = "/v1.GroupRelationService/DeleteGroupRelationByGroupId"
+	GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName       = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserID"
+	GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserIDRevert"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -65,8 +68,12 @@ type GroupRelationServiceClient interface {
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
 	GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error)
-	// 根据群聊ID删除群聊关系
+	// 根据群聊ID删除群聊的所有关系
 	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error)
+	// 根据群聊ID和用户ID删除用户的群聊关系
+	DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, in *DeleteGroupRelationByGroupIdAndUserIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// DeleteGroupRelationByGroupIdAndUserID回滚操作
+	DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, in *DeleteGroupRelationByGroupIdAndUserIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type groupRelationServiceClient struct {
@@ -203,6 +210,24 @@ func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Co
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, in *DeleteGroupRelationByGroupIdAndUserIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, in *DeleteGroupRelationByGroupIdAndUserIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupRelationServiceServer is the server API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
@@ -233,8 +258,12 @@ type GroupRelationServiceServer interface {
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
 	GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error)
-	// 根据群聊ID删除群聊关系
+	// 根据群聊ID删除群聊的所有关系
 	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error)
+	// 根据群聊ID和用户ID删除用户的群聊关系
+	DeleteGroupRelationByGroupIdAndUserID(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error)
+	// DeleteGroupRelationByGroupIdAndUserID回滚操作
+	DeleteGroupRelationByGroupIdAndUserIDRevert(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -283,6 +312,12 @@ func (UnimplementedGroupRelationServiceServer) GetGroupRelation(context.Context,
 }
 func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupId not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupIdAndUserID(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupIdAndUserID not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupIdAndUserIDRevert(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupIdAndUserIDRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
 
@@ -549,6 +584,42 @@ func _GroupRelationService_DeleteGroupRelationByGroupId_Handler(srv interface{},
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupRelationByGroupIdAndUserIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdAndUserID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdAndUserID(ctx, req.(*DeleteGroupRelationByGroupIdAndUserIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupRelationByGroupIdAndUserIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdAndUserIDRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdAndUserIDRevert(ctx, req.(*DeleteGroupRelationByGroupIdAndUserIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -611,6 +682,14 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroupRelationByGroupId",
 			Handler:    _GroupRelationService_DeleteGroupRelationByGroupId_Handler,
+		},
+		{
+			MethodName: "DeleteGroupRelationByGroupIdAndUserID",
+			Handler:    _GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_Handler,
+		},
+		{
+			MethodName: "DeleteGroupRelationByGroupIdAndUserIDRevert",
+			Handler:    _GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
