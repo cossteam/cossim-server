@@ -18,4 +18,6 @@ type DialogRepository interface {
 	DeleteDialogByDialogID(dialogID uint) error
 	DeleteDialogUserByDialogID(dialogID uint) error
 	DeleteDialogUserByDialogIDAndUserID(dialogID uint, userID string) error
+
+	UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error
 }

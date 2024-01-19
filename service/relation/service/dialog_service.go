@@ -187,12 +187,27 @@ func (s *Service) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.G
 	return resp, nil
 }
 
-func (s *Service) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+func (s *Service) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+	fmt.Println("DeleteDialogUserByDialogIDAndUserID req => ", request)
 	var resp = &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
-	err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(in.DialogId), in.UserId)
+
+	err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.DialogErrGetDialogUserByDialogIDAndUserIDFailed.Code()), err.Error())
 	}
+	return resp, nil
+}
+
+func (s *Service) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+	fmt.Println("DeleteDialogUserByDialogIDAndUserIDRevert req => ", request)
+	resp := &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
+
+	if err := s.dr.UpdateDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId, map[string]interface{}{
+		"deleted_at": 0,
+	}); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrGetDialogUserByDialogIDAndUserIDFailed.Code()), err.Error())
+	}
+
 	return resp, nil
 }
 

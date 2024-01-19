@@ -191,6 +191,9 @@ service GroupRelationService {
   // 退出群聊
   rpc LeaveGroup (LeaveGroupRequest) returns (LeaveGroupResponse);
 
+  // 退出群聊回滚操作
+  rpc LeaveGroupRevert(LeaveGroupRequest) returns (LeaveGroupResponse);
+
   // 获取群聊加入申请列表
   rpc GetGroupJoinRequestList (GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse);
 

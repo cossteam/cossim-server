@@ -144,6 +144,16 @@ func (s *Service) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest)
 	resp := &v1.LeaveGroupResponse{}
 
 	if err := s.grr.DeleteRelationByID(request.GroupId, request.UserId); err != nil {
+		return resp, status.Error(codes.Aborted, err.Error())
+	}
+
+	return resp, nil
+}
+
+func (s *Service) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
+	resp := &v1.LeaveGroupResponse{}
+
+	if err := s.grr.UpdateRelationDeleteAtByID(request.GroupId, request.UserId, 0); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrLeaveGroupFailed.Code()), err.Error())
 	}
 

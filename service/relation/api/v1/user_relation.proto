@@ -152,6 +152,7 @@ service UserRelationService {
   rpc ManageFriend(ManageFriendRequest) returns (ManageFriendResponse);
   rpc ManageFriendRevert(ManageFriendRequest) returns (ManageFriendResponse);
   rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
+  rpc DeleteFriendRevert(DeleteFriendRequest) returns (DeleteFriendResponse);
   rpc AddBlacklist(AddBlacklistRequest) returns (AddBlacklistResponse);
   rpc DeleteBlacklist(DeleteBlacklistRequest) returns (DeleteBlacklistResponse);
   rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);

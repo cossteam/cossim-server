@@ -17,29 +17,40 @@ import (
 
 // Service struct
 type Service struct {
-	dialogClient       relation.DialogServiceClient
-	userRelationClient relation.UserRelationServiceClient
-	userClient         user.UserServiceClient
-	rabbitMQClient     *msg_queue.RabbitMQ
-	logger             *zap.Logger
+	dialogClient        relation.DialogServiceClient
+	groupRelationClient relation.GroupRelationServiceClient
+	userRelationClient  relation.UserRelationServiceClient
+	userClient          user.UserServiceClient
+	rabbitMQClient      *msg_queue.RabbitMQ
+	logger              *zap.Logger
+
+	dtmGrpcServer      string
+	userRelationServer string
+	dialogServer       string
 }
 
 func New(c *config.AppConfig) *Service {
 	logger := setupLogger(c)
 
+	dialogClient := setupDialogGRPCClient(c.Discovers["relation"].Addr)
+	groupRelationClient := setupGROUPRelationGRPCClient(c.Discovers["relation"].Addr)
 	userRelationClient := setupUserRelationGRPCClient(c.Discovers["relation"].Addr)
 	userClient := setupUserGRPCClient(c.Discovers["user"].Addr)
-	dialogClient := setupDialogGRPCClient(c.Discovers["relation"].Addr)
 	rabbitMQClient := setRabbitMQProvider(c)
 
 	workflow.InitGrpc(c.Dtm.Addr, c.Discovers["relation"].Addr, grpc.NewServer())
 
 	return &Service{
-		dialogClient:       dialogClient,
-		userRelationClient: userRelationClient,
-		userClient:         userClient,
-		rabbitMQClient:     rabbitMQClient,
-		logger:             logger,
+		dialogClient:        dialogClient,
+		groupRelationClient: groupRelationClient,
+		userRelationClient:  userRelationClient,
+		userClient:          userClient,
+		rabbitMQClient:      rabbitMQClient,
+		logger:              logger,
+
+		dtmGrpcServer:      c.Dtm.Addr,
+		userRelationServer: c.Discovers["relation"].Addr,
+		dialogServer:       c.Discovers["relation"].Addr,
 	}
 }
 
