@@ -65,12 +65,12 @@ func (repo *GroupRelationRepo) UpdateRelationColumnByGroupAndUser(gid uint32, ui
 }
 
 func (repo *GroupRelationRepo) DeleteRelationByID(gid uint32, uid string) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Update("deleted_at", time.Now().Unix()).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Update("status", entity.UserStatusDeleted).Update("deleted_at", time.Now().Unix()).Error
 }
 
 func (repo *GroupRelationRepo) GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error) {
 	var ug entity.GroupRelation
-	if err := repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? and user_id = ?", gid, uid).First(&ug).Error; err != nil {
+	if err := repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? and user_id = ? AND deleted_at = 0", gid, uid).First(&ug).Error; err != nil {
 		return nil, err
 	}
 	return &ug, nil
