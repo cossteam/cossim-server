@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/interface/group/service"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -28,10 +29,12 @@ var (
 	cfg             *config.AppConfig
 	logger          *zap.Logger
 	enc             encryption.Encryptor
+	svc             *service.Service
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
+	svc = service.New(c)
 	setupLogger()
 	setupDialogGRPCClient()
 	setupRedis()

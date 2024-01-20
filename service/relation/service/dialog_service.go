@@ -26,6 +26,53 @@ func (s *Service) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) 
 	}, nil
 }
 
+func (s *Service) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.CreateAndJoinDialogWithGroupRequest) (*v1.CreateAndJoinDialogWithGroupResponse, error) {
+	resp := &v1.CreateAndJoinDialogWithGroupResponse{}
+
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		dialog, err := s.dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
+		if err != nil {
+			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
+		}
+
+		_, err = s.JoinDialog(ctx, &v1.JoinDialogRequest{DialogId: uint32(dialog.ID), UserId: request.OwnerId})
+		if err != nil {
+			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to create dialog: %s", err.Error()))
+	}
+
+	return resp, nil
+}
+
+func (s *Service) CreateAndJoinDialogWithGroupRevert(ctx context.Context, request *v1.CreateAndJoinDialogWithGroupRequest) (*v1.CreateAndJoinDialogWithGroupResponse, error) {
+	resp := &v1.CreateAndJoinDialogWithGroupResponse{}
+
+	fmt.Println("CreateAndJoinDialogWithGroupRevert req => ", request)
+
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.OwnerId); err != nil {
+			return status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), fmt.Sprintf("failed to delete dialog user revert : %s", err.Error()))
+		}
+		if err := s.dr.DeleteDialogByDialogID(uint(request.DialogId)); err != nil {
+			return status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), fmt.Sprintf("failed to delete dialog revert : %s", err.Error()))
+		}
+
+		return nil
+	}); err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to create dialog revert: %s", err.Error()))
+	}
+
+	return resp, nil
+}
+
 func (s *Service) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRequest) (*v1.ConfirmFriendAndJoinDialogResponse, error) {
 	resp := &v1.ConfirmFriendAndJoinDialogResponse{}
 

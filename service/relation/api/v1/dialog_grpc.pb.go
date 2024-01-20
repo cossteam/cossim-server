@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	DialogService_CreateDialog_FullMethodName                              = "/v1.DialogService/CreateDialog"
+	DialogService_CreateAndJoinDialogWithGroup_FullMethodName              = "/v1.DialogService/CreateAndJoinDialogWithGroup"
+	DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName        = "/v1.DialogService/CreateAndJoinDialogWithGroupRevert"
 	DialogService_ConfirmFriendAndJoinDialog_FullMethodName                = "/v1.DialogService/ConfirmFriendAndJoinDialog"
 	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName          = "/v1.DialogService/ConfirmFriendAndJoinDialogRevert"
 	DialogService_JoinDialog_FullMethodName                                = "/v1.DialogService/JoinDialog"
@@ -43,34 +45,38 @@ const (
 type DialogServiceClient interface {
 	// CreateDialog 创建对话
 	CreateDialog(ctx context.Context, in *CreateDialogRequest, opts ...grpc.CallOption) (*CreateDialogResponse, error)
-	// ConfirmFriendAndJoinDialog 确认好友并加入对话
+	// CreateAndJoinDialogWithGroup 创建群聊会话并加入
+	CreateAndJoinDialogWithGroup(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error)
+	// CreateAndJoinDialogWithGroup回滚操作
+	CreateAndJoinDialogWithGroupRevert(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error)
+	// 确认好友并加入对话
 	ConfirmFriendAndJoinDialog(ctx context.Context, in *ConfirmFriendAndJoinDialogRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogResponse, error)
-	// ConfirmFriendAndJoinDialogRevert ConfirmFriendAndJoinDialog回滚操作
+	// ConfirmFriendAndJoinDialog回滚操作
 	ConfirmFriendAndJoinDialogRevert(ctx context.Context, in *ConfirmFriendAndJoinDialogRevertRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogRevertResponse, error)
-	// JoinDialog 加入对话
+	// 加入对话
 	JoinDialog(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
-	// JoinDialogRevert JoinDialog回滚操作
+	// JoinDialog回滚操作
 	JoinDialogRevert(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
-	// GetUserDialogList 获取用户对话列表
+	// 获取用户对话列表
 	GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error)
-	// GetDialogByIds 根据对话ID获取对话信息
+	// 根据对话ID获取对话信息
 	GetDialogByIds(ctx context.Context, in *GetDialogByIdsRequest, opts ...grpc.CallOption) (*GetDialogByIdsResponse, error)
-	// GetDialogUsersByDialogID 根据对话ID获取对话成员列表
+	// 根据对话ID获取对话成员列表
 	GetDialogUsersByDialogID(ctx context.Context, in *GetDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*GetDialogUsersByDialogIDResponse, error)
-	// GetDialogUserByDialogIDAndUserID 根据对话ID和用户ID获取对话成员信息
+	// 根据对话ID和用户ID获取对话成员信息
 	GetDialogUserByDialogIDAndUserID(ctx context.Context, in *GetDialogUserByDialogIDAndUserIdRequest, opts ...grpc.CallOption) (*GetDialogUserByDialogIDAndUserIdResponse, error)
-	// GetDialogByGroupId 根据群组ID获取对话信息
+	// 根据群组ID获取对话信息
 	GetDialogByGroupId(ctx context.Context, in *GetDialogByGroupIdRequest, opts ...grpc.CallOption) (*GetDialogByGroupIdResponse, error)
 	GetDialogByGroupIds(ctx context.Context, in *GetDialogByGroupIdsRequest, opts ...grpc.CallOption) (*GetDialogByGroupIdsResponse, error)
-	// DeleteDialogByIds 根据对话ID列表删除对话
+	// 根据对话ID列表删除对话
 	DeleteDialogByIds(ctx context.Context, in *DeleteDialogByIdsRequest, opts ...grpc.CallOption) (*DeleteDialogByIdsResponse, error)
-	// DeleteDialogById 根据对话ID删除对话
+	// 根据对话ID删除对话
 	DeleteDialogById(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error)
-	// DeleteDialogUsersByDialogID 根据对话ID删除对话成员
+	// 根据对话ID删除对话成员
 	DeleteDialogUsersByDialogID(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
-	// DeleteDialogUserByDialogIDAndUserID 根据对话ID和用户ID删除对话成员
+	// 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
-	// DeleteDialogUserByDialogIDAndUserIDRevert DeleteDialogUserByDialogIDAndUserID回滚操作
+	// DeleteDialogUserByDialogIDAndUserID回滚操作
 	DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 }
 
@@ -85,6 +91,24 @@ func NewDialogServiceClient(cc grpc.ClientConnInterface) DialogServiceClient {
 func (c *dialogServiceClient) CreateDialog(ctx context.Context, in *CreateDialogRequest, opts ...grpc.CallOption) (*CreateDialogResponse, error) {
 	out := new(CreateDialogResponse)
 	err := c.cc.Invoke(ctx, DialogService_CreateDialog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) CreateAndJoinDialogWithGroup(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error) {
+	out := new(CreateAndJoinDialogWithGroupResponse)
+	err := c.cc.Invoke(ctx, DialogService_CreateAndJoinDialogWithGroup_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) CreateAndJoinDialogWithGroupRevert(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error) {
+	out := new(CreateAndJoinDialogWithGroupResponse)
+	err := c.cc.Invoke(ctx, DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -232,34 +256,38 @@ func (c *dialogServiceClient) DeleteDialogUserByDialogIDAndUserIDRevert(ctx cont
 type DialogServiceServer interface {
 	// CreateDialog 创建对话
 	CreateDialog(context.Context, *CreateDialogRequest) (*CreateDialogResponse, error)
-	// ConfirmFriendAndJoinDialog 确认好友并加入对话
+	// CreateAndJoinDialogWithGroup 创建群聊会话并加入
+	CreateAndJoinDialogWithGroup(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error)
+	// CreateAndJoinDialogWithGroup回滚操作
+	CreateAndJoinDialogWithGroupRevert(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error)
+	// 确认好友并加入对话
 	ConfirmFriendAndJoinDialog(context.Context, *ConfirmFriendAndJoinDialogRequest) (*ConfirmFriendAndJoinDialogResponse, error)
-	// ConfirmFriendAndJoinDialogRevert ConfirmFriendAndJoinDialog回滚操作
+	// ConfirmFriendAndJoinDialog回滚操作
 	ConfirmFriendAndJoinDialogRevert(context.Context, *ConfirmFriendAndJoinDialogRevertRequest) (*ConfirmFriendAndJoinDialogRevertResponse, error)
-	// JoinDialog 加入对话
+	// 加入对话
 	JoinDialog(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
-	// JoinDialogRevert JoinDialog回滚操作
+	// JoinDialog回滚操作
 	JoinDialogRevert(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
-	// GetUserDialogList 获取用户对话列表
+	// 获取用户对话列表
 	GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error)
-	// GetDialogByIds 根据对话ID获取对话信息
+	// 根据对话ID获取对话信息
 	GetDialogByIds(context.Context, *GetDialogByIdsRequest) (*GetDialogByIdsResponse, error)
-	// GetDialogUsersByDialogID 根据对话ID获取对话成员列表
+	// 根据对话ID获取对话成员列表
 	GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error)
-	// GetDialogUserByDialogIDAndUserID 根据对话ID和用户ID获取对话成员信息
+	// 根据对话ID和用户ID获取对话成员信息
 	GetDialogUserByDialogIDAndUserID(context.Context, *GetDialogUserByDialogIDAndUserIdRequest) (*GetDialogUserByDialogIDAndUserIdResponse, error)
-	// GetDialogByGroupId 根据群组ID获取对话信息
+	// 根据群组ID获取对话信息
 	GetDialogByGroupId(context.Context, *GetDialogByGroupIdRequest) (*GetDialogByGroupIdResponse, error)
 	GetDialogByGroupIds(context.Context, *GetDialogByGroupIdsRequest) (*GetDialogByGroupIdsResponse, error)
-	// DeleteDialogByIds 根据对话ID列表删除对话
+	// 根据对话ID列表删除对话
 	DeleteDialogByIds(context.Context, *DeleteDialogByIdsRequest) (*DeleteDialogByIdsResponse, error)
-	// DeleteDialogById 根据对话ID删除对话
+	// 根据对话ID删除对话
 	DeleteDialogById(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error)
-	// DeleteDialogUsersByDialogID 根据对话ID删除对话成员
+	// 根据对话ID删除对话成员
 	DeleteDialogUsersByDialogID(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
-	// DeleteDialogUserByDialogIDAndUserID 根据对话ID和用户ID删除对话成员
+	// 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
-	// DeleteDialogUserByDialogIDAndUserIDRevert DeleteDialogUserByDialogIDAndUserID回滚操作
+	// DeleteDialogUserByDialogIDAndUserID回滚操作
 	DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	mustEmbedUnimplementedDialogServiceServer()
 }
@@ -270,6 +298,12 @@ type UnimplementedDialogServiceServer struct {
 
 func (UnimplementedDialogServiceServer) CreateDialog(context.Context, *CreateDialogRequest) (*CreateDialogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDialog not implemented")
+}
+func (UnimplementedDialogServiceServer) CreateAndJoinDialogWithGroup(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAndJoinDialogWithGroup not implemented")
+}
+func (UnimplementedDialogServiceServer) CreateAndJoinDialogWithGroupRevert(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAndJoinDialogWithGroupRevert not implemented")
 }
 func (UnimplementedDialogServiceServer) ConfirmFriendAndJoinDialog(context.Context, *ConfirmFriendAndJoinDialogRequest) (*ConfirmFriendAndJoinDialogResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmFriendAndJoinDialog not implemented")
@@ -343,6 +377,42 @@ func _DialogService_CreateDialog_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DialogServiceServer).CreateDialog(ctx, req.(*CreateDialogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_CreateAndJoinDialogWithGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAndJoinDialogWithGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_CreateAndJoinDialogWithGroup_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroup(ctx, req.(*CreateAndJoinDialogWithGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_CreateAndJoinDialogWithGroupRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAndJoinDialogWithGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroupRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroupRevert(ctx, req.(*CreateAndJoinDialogWithGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -627,6 +697,14 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateDialog",
 			Handler:    _DialogService_CreateDialog_Handler,
+		},
+		{
+			MethodName: "CreateAndJoinDialogWithGroup",
+			Handler:    _DialogService_CreateAndJoinDialogWithGroup_Handler,
+		},
+		{
+			MethodName: "CreateAndJoinDialogWithGroupRevert",
+			Handler:    _DialogService_CreateAndJoinDialogWithGroupRevert_Handler,
 		},
 		{
 			MethodName: "ConfirmFriendAndJoinDialog",

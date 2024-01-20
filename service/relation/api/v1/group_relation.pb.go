@@ -1721,9 +1721,13 @@ var file_api_v1_group_relation_proto_rawDesc = []byte{
 	0x65, 0x74, 0x65, 0x64, 0x10, 0x02, 0x12, 0x15, 0x0a, 0x11, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x53,
 	0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x6a, 0x65, 0x63, 0x74, 0x10, 0x03, 0x12, 0x16, 0x0a,
 	0x12, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x42, 0x6c, 0x6f, 0x63,
-	0x6b, 0x65, 0x64, 0x10, 0x04, 0x32, 0x99, 0x0a, 0x0a, 0x14, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52,
+	0x6b, 0x65, 0x64, 0x10, 0x04, 0x32, 0xd9, 0x0a, 0x0a, 0x14, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52,
 	0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x38,
 	0x0a, 0x09, 0x4a, 0x6f, 0x69, 0x6e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x14, 0x2e, 0x76, 0x31,
+	0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x15, 0x2e, 0x76, 0x31, 0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3e, 0x0a, 0x0f, 0x4a, 0x6f, 0x69, 0x6e,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x76, 0x65, 0x72, 0x74, 0x12, 0x14, 0x2e, 0x76, 0x31,
 	0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x15, 0x2e, 0x76, 0x31, 0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x47, 0x72, 0x6f, 0x75, 0x70,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3a, 0x0a, 0x0f, 0x47, 0x65, 0x74, 0x47,
@@ -1869,39 +1873,41 @@ var file_api_v1_group_relation_proto_depIdxs = []int32{
 	1,  // 9: v1.DeleteGroupRelationByGroupIdAndUserIDRequest.Status:type_name -> v1.GroupRelationStatus
 	1,  // 10: v1.DeleteGroupRelationByGroupIdAndUserIDRevertRequest.Status:type_name -> v1.GroupRelationStatus
 	6,  // 11: v1.GroupRelationService.JoinGroup:input_type -> v1.JoinGroupRequest
-	4,  // 12: v1.GroupRelationService.GetGroupUserIDs:input_type -> v1.GroupIDRequest
-	22, // 13: v1.GroupRelationService.GetUserGroupIDs:input_type -> v1.GetUserGroupIDsRequest
-	24, // 14: v1.GroupRelationService.GetUserGroupRequestList:input_type -> v1.GetUserGroupRequestListRequest
-	4,  // 15: v1.GroupRelationService.GetGroupAdminIds:input_type -> v1.GroupIDRequest
-	20, // 16: v1.GroupRelationService.GetUserManageGroupID:input_type -> v1.GetUserManageGroupIDRequest
-	8,  // 17: v1.GroupRelationService.ManageJoinGroup:input_type -> v1.ManageJoinGroupRequest
-	8,  // 18: v1.GroupRelationService.ManageJoinGroupRevert:input_type -> v1.ManageJoinGroupRequest
-	10, // 19: v1.GroupRelationService.RemoveFromGroup:input_type -> v1.RemoveFromGroupRequest
-	12, // 20: v1.GroupRelationService.LeaveGroup:input_type -> v1.LeaveGroupRequest
-	12, // 21: v1.GroupRelationService.LeaveGroupRevert:input_type -> v1.LeaveGroupRequest
-	14, // 22: v1.GroupRelationService.GetGroupJoinRequestList:input_type -> v1.GetGroupJoinRequestListRequest
-	17, // 23: v1.GroupRelationService.GetGroupRelation:input_type -> v1.GetGroupRelationRequest
-	4,  // 24: v1.GroupRelationService.DeleteGroupRelationByGroupId:input_type -> v1.GroupIDRequest
-	26, // 25: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserID:input_type -> v1.DeleteGroupRelationByGroupIdAndUserIDRequest
-	26, // 26: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserIDRevert:input_type -> v1.DeleteGroupRelationByGroupIdAndUserIDRequest
-	7,  // 27: v1.GroupRelationService.JoinGroup:output_type -> v1.JoinGroupResponse
-	5,  // 28: v1.GroupRelationService.GetGroupUserIDs:output_type -> v1.UserIdsResponse
-	23, // 29: v1.GroupRelationService.GetUserGroupIDs:output_type -> v1.GetUserGroupIDsResponse
-	25, // 30: v1.GroupRelationService.GetUserGroupRequestList:output_type -> v1.GetUserGroupRequestListResponse
-	5,  // 31: v1.GroupRelationService.GetGroupAdminIds:output_type -> v1.UserIdsResponse
-	21, // 32: v1.GroupRelationService.GetUserManageGroupID:output_type -> v1.GetUserManageGroupIDResponse
-	9,  // 33: v1.GroupRelationService.ManageJoinGroup:output_type -> v1.ManageJoinGroupResponse
-	9,  // 34: v1.GroupRelationService.ManageJoinGroupRevert:output_type -> v1.ManageJoinGroupResponse
-	11, // 35: v1.GroupRelationService.RemoveFromGroup:output_type -> v1.RemoveFromGroupResponse
-	13, // 36: v1.GroupRelationService.LeaveGroup:output_type -> v1.LeaveGroupResponse
-	13, // 37: v1.GroupRelationService.LeaveGroupRevert:output_type -> v1.LeaveGroupResponse
-	15, // 38: v1.GroupRelationService.GetGroupJoinRequestList:output_type -> v1.GroupJoinRequestListResponse
-	18, // 39: v1.GroupRelationService.GetGroupRelation:output_type -> v1.GetGroupRelationResponse
-	19, // 40: v1.GroupRelationService.DeleteGroupRelationByGroupId:output_type -> v1.Empty
-	29, // 41: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserID:output_type -> google.protobuf.Empty
-	29, // 42: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserIDRevert:output_type -> google.protobuf.Empty
-	27, // [27:43] is the sub-list for method output_type
-	11, // [11:27] is the sub-list for method input_type
+	6,  // 12: v1.GroupRelationService.JoinGroupRevert:input_type -> v1.JoinGroupRequest
+	4,  // 13: v1.GroupRelationService.GetGroupUserIDs:input_type -> v1.GroupIDRequest
+	22, // 14: v1.GroupRelationService.GetUserGroupIDs:input_type -> v1.GetUserGroupIDsRequest
+	24, // 15: v1.GroupRelationService.GetUserGroupRequestList:input_type -> v1.GetUserGroupRequestListRequest
+	4,  // 16: v1.GroupRelationService.GetGroupAdminIds:input_type -> v1.GroupIDRequest
+	20, // 17: v1.GroupRelationService.GetUserManageGroupID:input_type -> v1.GetUserManageGroupIDRequest
+	8,  // 18: v1.GroupRelationService.ManageJoinGroup:input_type -> v1.ManageJoinGroupRequest
+	8,  // 19: v1.GroupRelationService.ManageJoinGroupRevert:input_type -> v1.ManageJoinGroupRequest
+	10, // 20: v1.GroupRelationService.RemoveFromGroup:input_type -> v1.RemoveFromGroupRequest
+	12, // 21: v1.GroupRelationService.LeaveGroup:input_type -> v1.LeaveGroupRequest
+	12, // 22: v1.GroupRelationService.LeaveGroupRevert:input_type -> v1.LeaveGroupRequest
+	14, // 23: v1.GroupRelationService.GetGroupJoinRequestList:input_type -> v1.GetGroupJoinRequestListRequest
+	17, // 24: v1.GroupRelationService.GetGroupRelation:input_type -> v1.GetGroupRelationRequest
+	4,  // 25: v1.GroupRelationService.DeleteGroupRelationByGroupId:input_type -> v1.GroupIDRequest
+	26, // 26: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserID:input_type -> v1.DeleteGroupRelationByGroupIdAndUserIDRequest
+	26, // 27: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserIDRevert:input_type -> v1.DeleteGroupRelationByGroupIdAndUserIDRequest
+	7,  // 28: v1.GroupRelationService.JoinGroup:output_type -> v1.JoinGroupResponse
+	7,  // 29: v1.GroupRelationService.JoinGroupRevert:output_type -> v1.JoinGroupResponse
+	5,  // 30: v1.GroupRelationService.GetGroupUserIDs:output_type -> v1.UserIdsResponse
+	23, // 31: v1.GroupRelationService.GetUserGroupIDs:output_type -> v1.GetUserGroupIDsResponse
+	25, // 32: v1.GroupRelationService.GetUserGroupRequestList:output_type -> v1.GetUserGroupRequestListResponse
+	5,  // 33: v1.GroupRelationService.GetGroupAdminIds:output_type -> v1.UserIdsResponse
+	21, // 34: v1.GroupRelationService.GetUserManageGroupID:output_type -> v1.GetUserManageGroupIDResponse
+	9,  // 35: v1.GroupRelationService.ManageJoinGroup:output_type -> v1.ManageJoinGroupResponse
+	9,  // 36: v1.GroupRelationService.ManageJoinGroupRevert:output_type -> v1.ManageJoinGroupResponse
+	11, // 37: v1.GroupRelationService.RemoveFromGroup:output_type -> v1.RemoveFromGroupResponse
+	13, // 38: v1.GroupRelationService.LeaveGroup:output_type -> v1.LeaveGroupResponse
+	13, // 39: v1.GroupRelationService.LeaveGroupRevert:output_type -> v1.LeaveGroupResponse
+	15, // 40: v1.GroupRelationService.GetGroupJoinRequestList:output_type -> v1.GroupJoinRequestListResponse
+	18, // 41: v1.GroupRelationService.GetGroupRelation:output_type -> v1.GetGroupRelationResponse
+	19, // 42: v1.GroupRelationService.DeleteGroupRelationByGroupId:output_type -> v1.Empty
+	29, // 43: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserID:output_type -> google.protobuf.Empty
+	29, // 44: v1.GroupRelationService.DeleteGroupRelationByGroupIdAndUserIDRevert:output_type -> google.protobuf.Empty
+	28, // [28:45] is the sub-list for method output_type
+	11, // [11:28] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
 	11, // [11:11] is the sub-list for extension extendee
 	0,  // [0:11] is the sub-list for field type_name
