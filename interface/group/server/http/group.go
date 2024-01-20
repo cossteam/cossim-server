@@ -8,6 +8,7 @@ import (
 	api "github.com/cossim/coss-server/service/group/api/v1"
 	rapi "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"strconv"
 )
 
@@ -163,47 +164,53 @@ func createGroup(c *gin.Context) {
 		Name:            req.Name,
 		Avatar:          req.Avatar,
 	}
+	//
+	//createdGroup, err := groupClient.CreateGroup(context.Background(), &api.CreateGroupRequest{
+	//	Group: group,
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//
+	//_, err = userGroupClient.JoinGroup(context.Background(), &rapi.JoinGroupRequest{
+	//	GroupId:  createdGroup.Id,
+	//	UserId:   thisId,
+	//	Identify: rapi.GroupIdentity_IDENTITY_OWNER,
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////创建对话
+	//dialog, err := dialogClient.CreateDialog(context.Background(), &rapi.CreateDialogRequest{OwnerId: thisId, Type: 1, GroupId: createdGroup.Id})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////加入对话
+	//_, err = dialogClient.JoinDialog(context.Background(), &rapi.JoinDialogRequest{DialogId: dialog.Id, UserId: thisId})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//resp := &model.CreateGroupResponse{
+	//	Id:              createdGroup.Id,
+	//	Avatar:          createdGroup.Avatar,
+	//	Name:            createdGroup.Name,
+	//	Type:            uint32(createdGroup.Type),
+	//	Status:          int32(createdGroup.Status),
+	//	MaxMembersLimit: createdGroup.MaxMembersLimit,
+	//	CreatorId:       createdGroup.CreatorId,
+	//	DialogId:        dialog.Id,
+	//}
 
-	createdGroup, err := groupClient.CreateGroup(context.Background(), &api.CreateGroupRequest{
-		Group: group,
-	})
+	resp, err := svc.CreateGroup(c, group)
 	if err != nil {
-		c.Error(err)
+		logger.Error("创建群聊失败", zap.Error(err))
+		response.Fail(c, "创建群聊失败", nil)
 		return
 	}
-
-	_, err = userGroupClient.JoinGroup(context.Background(), &rapi.JoinGroupRequest{
-		GroupId:  createdGroup.Id,
-		UserId:   thisId,
-		Identify: rapi.GroupIdentity_IDENTITY_OWNER,
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//创建对话
-	dialog, err := dialogClient.CreateDialog(context.Background(), &rapi.CreateDialogRequest{OwnerId: thisId, Type: 1, GroupId: createdGroup.Id})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//加入对话
-	_, err = dialogClient.JoinDialog(context.Background(), &rapi.JoinDialogRequest{DialogId: dialog.Id, UserId: thisId})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	resp := &model.CreateGroupResponse{
-		Id:              createdGroup.Id,
-		Avatar:          createdGroup.Avatar,
-		Name:            createdGroup.Name,
-		Type:            uint32(createdGroup.Type),
-		Status:          int32(createdGroup.Status),
-		MaxMembersLimit: createdGroup.MaxMembersLimit,
-		CreatorId:       createdGroup.CreatorId,
-		DialogId:        dialog.Id,
-	}
-
 	response.Success(c, "创建群聊成功", resp)
 }
 

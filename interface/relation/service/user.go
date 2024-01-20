@@ -20,8 +20,6 @@ import (
 func (s *Service) ManageFriend(ctx context.Context, userId, friendId string, action int32) (interface{}, error) {
 	var dialogId uint32
 
-	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
-
 	switch action {
 	case 1: // 同意好友申请
 		_, err := s.handleAction1(ctx, userId, friendId, relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED)
@@ -69,8 +67,8 @@ func (s *Service) handleAction1(ctx context.Context, userId, friendId string, st
 // manageFriend1 已经存在关系，修改关系状态
 func (s *Service) manageFriend1(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus, dialogId uint32) error {
 	var err error
-
 	// 创建 DTM 分布式事务工作流
+	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "manage_friend_workflow_1_" + gid
 	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {

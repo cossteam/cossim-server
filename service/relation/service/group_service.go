@@ -93,12 +93,23 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 		userGroup.Status = entity.GroupStatusJoined
 	}
 
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
 	// 插入加入申请
 	_, err = s.grr.CreateRelation(userGroup)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		//return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		return resp, status.Error(codes.Aborted, err.Error())
 	}
 
+	return resp, nil
+}
+
+func (s *Service) JoinGroupRevert(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
+	resp := &v1.JoinGroupResponse{}
+	if err := s.grr.DeleteRelationByID(request.GroupId, request.UserId); err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+	}
 	return resp, nil
 }
 

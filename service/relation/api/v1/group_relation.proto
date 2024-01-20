@@ -189,6 +189,9 @@ service GroupRelationService {
   // 加入群聊
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
 
+  // 加入群聊回滚操作
+  rpc JoinGroupRevert(JoinGroupRequest) returns (JoinGroupResponse);
+
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
 

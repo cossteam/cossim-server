@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/interface/group/service"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
@@ -26,10 +27,12 @@ var (
 	dialogClient    relationApi.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
+	svc             *service.Service
 )
 
 func Init(c *config.AppConfig) {
 	cfg = c
+	svc = service.New(c)
 	setupLogger()
 	setupDialogGRPCClient()
 	setupRedis()
