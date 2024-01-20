@@ -223,12 +223,24 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	return resp, nil
 }
 
-func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*v1.Empty, error) {
+func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*emptypb.Empty, error) {
 	err := s.grr.DeleteGroupRelationByID(in.GroupId)
 	if err != nil {
-		return &v1.Empty{}, err
+		return &emptypb.Empty{}, status.Error(codes.Aborted, err.Error())
 	}
-	return &v1.Empty{}, nil
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Service) DeleteGroupRelationByGroupIdRevert(ctx context.Context, request *v1.GroupIDRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	fmt.Println("DeleteGroupRelationByGroupIdRevert req => ", request)
+
+	if err := s.grr.UpdateGroupRelationByGroupID(request.GroupId, map[string]interface{}{
+		"deleted_at": 0,
+	}); err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
+	}
+	return resp, nil
 }
 
 func (s *Service) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {

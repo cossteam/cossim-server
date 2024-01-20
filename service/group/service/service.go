@@ -156,9 +156,20 @@ func (s *Service) CreateGroupRevert(ctx context.Context, request *v1.CreateGroup
 func (s *Service) DeleteGroup(ctx context.Context, request *v1.DeleteGroupRequest) (*v1.EmptyResponse, error) {
 	resp := &v1.EmptyResponse{}
 
+	//return resp, status.Error(codes.Aborted, errors.New("测试回滚").Error())
+
 	if err := s.gr.DeleteGroup(uint(request.GetGid())); err != nil {
+		return resp, status.Error(codes.Aborted, err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteGroupRevert(ctx context.Context, request *v1.DeleteGroupRequest) (*v1.EmptyResponse, error) {
+	resp := &v1.EmptyResponse{}
+	if err := s.gr.UpdateGroupByGroupID(uint(request.GetGid()), map[string]interface{}{
+		"deleted_at": nil,
+	}); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
 	}
-
 	return resp, nil
 }

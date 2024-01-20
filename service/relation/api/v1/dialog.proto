@@ -250,8 +250,14 @@ service DialogService {
   // 根据对话ID删除对话
   rpc DeleteDialogById(DeleteDialogByIdRequest) returns (DeleteDialogByIdResponse) {}
 
+  // DeleteDialogById回滚操作
+  rpc DeleteDialogByIdRevert(DeleteDialogByIdRequest) returns (DeleteDialogByIdResponse) {}
+
   // 根据对话ID删除对话成员
   rpc DeleteDialogUsersByDialogID(DeleteDialogUsersByDialogIDRequest) returns (DeleteDialogUsersByDialogIDResponse) {}
+
+  // DeleteDialogUsersByDialogID回滚操作
+  rpc DeleteDialogUsersByDialogIDRevert(DeleteDialogUsersByDialogIDRequest) returns (DeleteDialogUsersByDialogIDResponse) {}
 
   // 根据对话ID和用户ID删除对话成员
   rpc DeleteDialogUserByDialogIDAndUserID(DeleteDialogUserByDialogIDAndUserIDRequest) returns (DeleteDialogUserByDialogIDAndUserIDResponse) {}
