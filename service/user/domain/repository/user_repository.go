@@ -10,4 +10,6 @@ type UserRepository interface {
 	GetBatchGetUserInfoByIDs(userIds []string) ([]*entity.User, error)
 	SetUserPublicKey(userId, publicKey string) error
 	GetUserPublicKey(userId string) (string, error)
+	SetUserSecretBundle(userId, secretBundle string) error
+	GetUserSecretBundle(userId string) (string, error)
 }
