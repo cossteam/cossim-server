@@ -34,7 +34,9 @@ const (
 	DialogService_GetDialogByGroupIds_FullMethodName                       = "/v1.DialogService/GetDialogByGroupIds"
 	DialogService_DeleteDialogByIds_FullMethodName                         = "/v1.DialogService/DeleteDialogByIds"
 	DialogService_DeleteDialogById_FullMethodName                          = "/v1.DialogService/DeleteDialogById"
+	DialogService_DeleteDialogByIdRevert_FullMethodName                    = "/v1.DialogService/DeleteDialogByIdRevert"
 	DialogService_DeleteDialogUsersByDialogID_FullMethodName               = "/v1.DialogService/DeleteDialogUsersByDialogID"
+	DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName         = "/v1.DialogService/DeleteDialogUsersByDialogIDRevert"
 	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName       = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
 	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
 )
@@ -72,8 +74,12 @@ type DialogServiceClient interface {
 	DeleteDialogByIds(ctx context.Context, in *DeleteDialogByIdsRequest, opts ...grpc.CallOption) (*DeleteDialogByIdsResponse, error)
 	// 根据对话ID删除对话
 	DeleteDialogById(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error)
+	// DeleteDialogById回滚操作
+	DeleteDialogByIdRevert(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error)
 	// 根据对话ID删除对话成员
 	DeleteDialogUsersByDialogID(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
+	// DeleteDialogUsersByDialogID回滚操作
+	DeleteDialogUsersByDialogIDRevert(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
 	// 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// DeleteDialogUserByDialogIDAndUserID回滚操作
@@ -223,9 +229,27 @@ func (c *dialogServiceClient) DeleteDialogById(ctx context.Context, in *DeleteDi
 	return out, nil
 }
 
+func (c *dialogServiceClient) DeleteDialogByIdRevert(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error) {
+	out := new(DeleteDialogByIdResponse)
+	err := c.cc.Invoke(ctx, DialogService_DeleteDialogByIdRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dialogServiceClient) DeleteDialogUsersByDialogID(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error) {
 	out := new(DeleteDialogUsersByDialogIDResponse)
 	err := c.cc.Invoke(ctx, DialogService_DeleteDialogUsersByDialogID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) DeleteDialogUsersByDialogIDRevert(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error) {
+	out := new(DeleteDialogUsersByDialogIDResponse)
+	err := c.cc.Invoke(ctx, DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -283,8 +307,12 @@ type DialogServiceServer interface {
 	DeleteDialogByIds(context.Context, *DeleteDialogByIdsRequest) (*DeleteDialogByIdsResponse, error)
 	// 根据对话ID删除对话
 	DeleteDialogById(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error)
+	// DeleteDialogById回滚操作
+	DeleteDialogByIdRevert(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error)
 	// 根据对话ID删除对话成员
 	DeleteDialogUsersByDialogID(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
+	// DeleteDialogUsersByDialogID回滚操作
+	DeleteDialogUsersByDialogIDRevert(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
 	// 根据对话ID和用户ID删除对话成员
 	DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// DeleteDialogUserByDialogIDAndUserID回滚操作
@@ -341,8 +369,14 @@ func (UnimplementedDialogServiceServer) DeleteDialogByIds(context.Context, *Dele
 func (UnimplementedDialogServiceServer) DeleteDialogById(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogById not implemented")
 }
+func (UnimplementedDialogServiceServer) DeleteDialogByIdRevert(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogByIdRevert not implemented")
+}
 func (UnimplementedDialogServiceServer) DeleteDialogUsersByDialogID(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUsersByDialogID not implemented")
+}
+func (UnimplementedDialogServiceServer) DeleteDialogUsersByDialogIDRevert(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUsersByDialogIDRevert not implemented")
 }
 func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUserByDialogIDAndUserID not implemented")
@@ -633,6 +667,24 @@ func _DialogService_DeleteDialogById_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_DeleteDialogByIdRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteDialogByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).DeleteDialogByIdRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_DeleteDialogByIdRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).DeleteDialogByIdRevert(ctx, req.(*DeleteDialogByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DialogService_DeleteDialogUsersByDialogID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteDialogUsersByDialogIDRequest)
 	if err := dec(in); err != nil {
@@ -647,6 +699,24 @@ func _DialogService_DeleteDialogUsersByDialogID_Handler(srv interface{}, ctx con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DialogServiceServer).DeleteDialogUsersByDialogID(ctx, req.(*DeleteDialogUsersByDialogIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_DeleteDialogUsersByDialogIDRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteDialogUsersByDialogIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).DeleteDialogUsersByDialogIDRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).DeleteDialogUsersByDialogIDRevert(ctx, req.(*DeleteDialogUsersByDialogIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -755,8 +825,16 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DialogService_DeleteDialogById_Handler,
 		},
 		{
+			MethodName: "DeleteDialogByIdRevert",
+			Handler:    _DialogService_DeleteDialogByIdRevert_Handler,
+		},
+		{
 			MethodName: "DeleteDialogUsersByDialogID",
 			Handler:    _DialogService_DeleteDialogUsersByDialogID_Handler,
+		},
+		{
+			MethodName: "DeleteDialogUsersByDialogIDRevert",
+			Handler:    _DialogService_DeleteDialogUsersByDialogIDRevert_Handler,
 		},
 		{
 			MethodName: "DeleteDialogUserByDialogIDAndUserID",

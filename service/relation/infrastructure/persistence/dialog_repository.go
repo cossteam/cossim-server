@@ -118,6 +118,14 @@ func (g *DialogRepo) GetDialogByGroupIds(groupIds []uint) ([]*entity.Dialog, err
 	return dialogs, nil
 }
 
+func (g *DialogRepo) UpdateDialogByDialogID(dialogID uint, updateFields map[string]interface{}) error {
+	return g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).Unscoped().Updates(updateFields).Error
+}
+
+func (g *DialogRepo) UpdateDialogUserByDialogID(dialogID uint, updateFields map[string]interface{}) error {
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ?", dialogID).Unscoped().Updates(updateFields).Error
+}
+
 func (g *DialogRepo) UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error {
 	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Updates(updateFields).Error
 }

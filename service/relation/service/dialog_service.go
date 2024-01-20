@@ -213,8 +213,22 @@ func (s *Service) DeleteDialogByIds(ctx context.Context, in *v1.DeleteDialogById
 }
 
 func (s *Service) DeleteDialogById(ctx context.Context, in *v1.DeleteDialogByIdRequest) (*v1.DeleteDialogByIdResponse, error) {
-	var resp = &v1.DeleteDialogByIdResponse{}
+	resp := &v1.DeleteDialogByIdResponse{}
+
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
 	if err := s.dr.DeleteDialogByDialogID(uint(in.DialogId)); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteDialogByIdRevert(ctx context.Context, request *v1.DeleteDialogByIdRequest) (*v1.DeleteDialogByIdResponse, error) {
+	var resp = &v1.DeleteDialogByIdResponse{}
+	fmt.Println("DeleteDialogByIdRevert req => ", request)
+	if err := s.dr.UpdateDialogByDialogID(uint(request.DialogId), map[string]interface{}{
+		"deleted_at": nil,
+	}); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), err.Error())
 	}
 	return resp, nil
@@ -223,6 +237,16 @@ func (s *Service) DeleteDialogById(ctx context.Context, in *v1.DeleteDialogByIdR
 func (s *Service) DeleteDialogUsersByDialogID(ctx context.Context, in *v1.DeleteDialogUsersByDialogIDRequest) (*v1.DeleteDialogUsersByDialogIDResponse, error) {
 	var resp = &v1.DeleteDialogUsersByDialogIDResponse{}
 	if err := s.dr.DeleteDialogUserByDialogID(uint(in.DialogId)); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteDialogUsersByDialogIDRevert(ctx context.Context, request *v1.DeleteDialogUsersByDialogIDRequest) (*v1.DeleteDialogUsersByDialogIDResponse, error) {
+	var resp = &v1.DeleteDialogUsersByDialogIDResponse{}
+	if err := s.dr.UpdateDialogUserByDialogID(uint(request.DialogId), map[string]interface{}{
+		"deleted_at": 0,
+	}); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), err.Error())
 	}
 	return resp, nil

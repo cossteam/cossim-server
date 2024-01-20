@@ -35,6 +35,7 @@ const (
 	GroupRelationService_GetGroupJoinRequestList_FullMethodName                     = "/v1.GroupRelationService/GetGroupJoinRequestList"
 	GroupRelationService_GetGroupRelation_FullMethodName                            = "/v1.GroupRelationService/GetGroupRelation"
 	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName                = "/v1.GroupRelationService/DeleteGroupRelationByGroupId"
+	GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName          = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdRevert"
 	GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName       = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserID"
 	GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserIDRevert"
 )
@@ -72,7 +73,9 @@ type GroupRelationServiceClient interface {
 	// 获取用户与群聊关系信息
 	GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error)
 	// 根据群聊ID删除群聊的所有关系
-	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error)
+	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// DeleteGroupRelationByGroupId回滚操作
+	DeleteGroupRelationByGroupIdRevert(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 根据群聊ID和用户ID删除用户的群聊关系
 	DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, in *DeleteGroupRelationByGroupIdAndUserIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// DeleteGroupRelationByGroupIdAndUserID回滚操作
@@ -213,9 +216,18 @@ func (c *groupRelationServiceClient) GetGroupRelation(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) DeleteGroupRelationByGroupIdRevert(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +285,9 @@ type GroupRelationServiceServer interface {
 	// 获取用户与群聊关系信息
 	GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error)
 	// 根据群聊ID删除群聊的所有关系
-	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error)
+	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*emptypb.Empty, error)
+	// DeleteGroupRelationByGroupId回滚操作
+	DeleteGroupRelationByGroupIdRevert(context.Context, *GroupIDRequest) (*emptypb.Empty, error)
 	// 根据群聊ID和用户ID删除用户的群聊关系
 	DeleteGroupRelationByGroupIdAndUserID(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error)
 	// DeleteGroupRelationByGroupIdAndUserID回滚操作
@@ -327,8 +341,11 @@ func (UnimplementedGroupRelationServiceServer) GetGroupJoinRequestList(context.C
 func (UnimplementedGroupRelationServiceServer) GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupRelation not implemented")
 }
-func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error) {
+func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupId not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupIdRevert(context.Context, *GroupIDRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupIdRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupIdAndUserID(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupIdAndUserID not implemented")
@@ -619,6 +636,24 @@ func _GroupRelationService_DeleteGroupRelationByGroupId_Handler(srv interface{},
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_DeleteGroupRelationByGroupIdRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdRevert(ctx, req.(*GroupIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteGroupRelationByGroupIdAndUserIDRequest)
 	if err := dec(in); err != nil {
@@ -721,6 +756,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroupRelationByGroupId",
 			Handler:    _GroupRelationService_DeleteGroupRelationByGroupId_Handler,
+		},
+		{
+			MethodName: "DeleteGroupRelationByGroupIdRevert",
+			Handler:    _GroupRelationService_DeleteGroupRelationByGroupIdRevert_Handler,
 		},
 		{
 			MethodName: "DeleteGroupRelationByGroupIdAndUserID",

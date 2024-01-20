@@ -62,10 +62,24 @@ enum GroupType {
 }
 
 service GroupService {
+  // 通过群组ID获取群组信息
   rpc GetGroupInfoByGid (GetGroupInfoRequest) returns (Group);
+
+  // 批量通过群组ID获取群组信息
   rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
+
+  // 更新群组信息
   rpc UpdateGroup (UpdateGroupRequest) returns (Group);
+
+  // 创建群组
   rpc CreateGroup (CreateGroupRequest) returns (Group);
-  rpc CreateGroupRevert(CreateGroupRequest) returns (Group);
-  rpc DeleteGroup (DeleteGroupRequest) returns (EmptyResponse);
+
+  // CreateGroup回滚操作
+  rpc CreateGroupRevert (CreateGroupRequest) returns (Group);
+
+  // 删除群组
+  rpc DeleteGroup(DeleteGroupRequest) returns (EmptyResponse);
+
+  // 删除群组回滚操作
+  rpc DeleteGroupRevert(DeleteGroupRequest) returns (EmptyResponse);
 }

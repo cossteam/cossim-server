@@ -150,16 +150,19 @@ func getUserGroupList(c *gin.Context) {
 	// 获取用户群聊列表
 	ids, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 
 	ds, err := groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 	//获取群聊对话信息
 	dialogs, err := dialogClient.GetDialogByGroupIds(context.Background(), &relationgrpcv1.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 
@@ -581,9 +584,21 @@ func getGroupMember(c *gin.Context) {
 		return
 	}
 
+	group, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{Gid: uint32(gid)})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+		response.SetFail(c, "群聊状态不可用", nil)
+		return
+	}
+
 	groupRelation, err := groupRelationClient.GetGroupUserIDs(context.Background(), &relationgrpcv1.GroupIDRequest{GroupId: uint32(gid)})
 	if err != nil {
 		response.SetFail(c, "获取群聊成员失败", nil)
+		logger.Error("获取群聊成员失败", zap.Error(err))
 		return
 	}
 
