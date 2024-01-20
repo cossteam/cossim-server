@@ -71,3 +71,18 @@ func (ur *UserRepo) GetUserPublicKey(userId string) (string, error) {
 func (ur *UserRepo) SetUserPublicKey(userId, publicKey string) error {
 	return ur.db.Model(entity.User{}).Where("id = ?", userId).Update("public_key", publicKey).Error
 }
+
+// 设置用户密钥包
+func (ur *UserRepo) SetUserSecretBundle(userId, secretBundle string) error {
+	return ur.db.Model(entity.User{}).Where("id = ?", userId).Update("secret_bundle", secretBundle).Error
+}
+
+// 获取用户密钥包
+func (ur *UserRepo) GetUserSecretBundle(userId string) (string, error) {
+	var user entity.User
+	err := ur.db.Model(entity.User{}).Where("id = ?", userId).Select("secret_bundle").First(&user).Error
+	if err != nil {
+		return "", err
+	}
+	return user.SecretBundle, nil
+}

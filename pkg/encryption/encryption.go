@@ -2,12 +2,17 @@ package encryption
 
 import (
 	"crypto/rand"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/gopenpgp/v2/helper"
+	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"gorm.io/gorm"
+	"io/ioutil"
 	"math/big"
+	"os"
 	"strings"
 )
 
@@ -16,12 +21,14 @@ type Encryptor interface {
 	GenerateKeyPair() error
 	SecretMessage(message string, publicKey string, rkey []byte) (*SecretResponse, error)
 	DecryptMessage(message string) (string, error)
-	DecryptMessageWithKey(message, key string) (string, error)
+	DecryptMessageWithKey(key string, message string) (string, error)
 	GetPrivateKey() string
 	GetPublicKey() string
 	IsEnable() bool
 	SetPublicKey(publicKey string)
 	SetPrivateKey(privateKey string)
+	ReadKeyPair() error
+	GetSecretMessage(message string, userID string) (string, error)
 }
 
 // MyEncryptor 结构体实现了 Encryptor 接口
@@ -90,6 +97,49 @@ func (a *EncryptedAuthenticator) QueryUser(userID string) (entity.User, error) {
 	return user, nil
 }
 
+// 根据用户id返回加密后消息
+func (e *MyEncryptor) GetSecretMessage(message string, userID string) (string, error) {
+	if !e.enable {
+		return message, nil
+	}
+	conn, err := db.NewDefaultMysqlConn().GetConnection()
+	if err != nil {
+		return message, err
+	}
+	ea := NewEncryptedAuthenticator(conn)
+	userInfo, err := ea.QueryUser(userID)
+	if err != nil {
+		return message, err
+	}
+	if userInfo.PublicKey == "" {
+		return message, fmt.Errorf("publicKey is nil")
+	}
+	rkey, err := GenerateRandomKey(32)
+	if err != nil {
+		return message, err
+	}
+
+	data := new(SecretResponse)
+
+	armor, err := helper.EncryptMessageWithPassword([]byte(rkey), message)
+	if err != nil {
+		return message, err
+	}
+	data.Message = armor
+	marmor, err := helper.EncryptMessageArmored(userInfo.PublicKey, rkey)
+	if err != nil {
+		return message, err
+	}
+	data.Secret = marmor
+
+	marshal, err := json.Marshal(data)
+	if err != nil {
+		return message, err
+	}
+
+	return string(marshal), nil
+}
+
 // SecretMessage 根据公钥与随机对称秘钥加密消息
 func (e *MyEncryptor) SecretMessage(message string, publicKey string, rkey []byte) (*SecretResponse, error) {
 	if publicKey == "" {
@@ -109,7 +159,6 @@ func (e *MyEncryptor) SecretMessage(message string, publicKey string, rkey []byt
 		return nil, err
 	}
 	data.Secret = marmor
-
 	return data, nil
 }
 
@@ -122,6 +171,31 @@ func (e *MyEncryptor) GenerateKeyPair() error {
 	// 保存私钥到结构体
 	e.privateKey = rsaKey
 
+	cacheDir := ".cache"
+	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+		if err != nil {
+			return err
+		}
+	}
+	// 保存私钥到文件
+	privateKeyFile, err := os.Create(cacheDir + "/private_key")
+	if err != nil {
+		return err
+	}
+
+	_, err = privateKeyFile.WriteString(rsaKey)
+	if err != nil {
+		privateKeyFile.Close()
+		return err
+	}
+	privateKeyFile.Close()
+
+	// 保存公钥到文件
+	publicKeyFile, err := os.Create(cacheDir + "/public_key")
+	if err != nil {
+		return err
+	}
 	keyRing, err := crypto.NewKeyFromArmoredReader(strings.NewReader(rsaKey))
 	if err != nil {
 		return err
@@ -131,7 +205,57 @@ func (e *MyEncryptor) GenerateKeyPair() error {
 	if err != nil {
 		return err
 	}
+	_, err = publicKeyFile.WriteString(publicKey)
+	if err != nil {
+		publicKeyFile.Close()
+		return err
+	}
+	publicKeyFile.Close()
 	e.publicKey = publicKey
+	return nil
+}
+func (e *MyEncryptor) ReadKeyPair() error {
+	cacheDir := ".cache"
+
+	getwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	//输出当前工作目录
+	fmt.Println("ReadKeyPair pwd => ", getwd)
+
+	// 检查目录是否存在
+	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		return errors.New("缓存目录不存在")
+	}
+
+	// 读取私钥文件
+	privateKeyFile, err := os.Open(cacheDir + "/private_key")
+	if err != nil {
+		return err
+	}
+	defer privateKeyFile.Close()
+
+	privateKeyBytes, err := ioutil.ReadAll(privateKeyFile)
+	if err != nil {
+		return err
+	}
+	e.privateKey = string(privateKeyBytes)
+
+	// 读取公钥文件
+	publicKeyFile, err := os.Open(cacheDir + "/public_key")
+	if err != nil {
+		return err
+	}
+	defer publicKeyFile.Close()
+
+	publicKeyBytes, err := ioutil.ReadAll(publicKeyFile)
+	if err != nil {
+		return err
+	}
+	e.publicKey = string(publicKeyBytes)
+
 	return nil
 }
 
@@ -145,7 +269,7 @@ func (e *MyEncryptor) DecryptMessage(message string) (string, error) {
 }
 
 // DecryptMessageWithKey 使用对称密钥解密消息
-func (e *MyEncryptor) DecryptMessageWithKey(message, key string) (string, error) {
+func (e *MyEncryptor) DecryptMessageWithKey(key string, message string) (string, error) {
 	decrypted, err := helper.DecryptMessageWithPassword([]byte(key), message)
 	if err != nil {
 		return "", err
@@ -172,4 +296,8 @@ func (e *MyEncryptor) SetPrivateKey(privateKey string) {
 }
 func (e *MyEncryptor) SetPublicKey(publicKey string) {
 	e.publicKey = publicKey
+}
+
+func (e *MyEncryptor) SetEnable(en bool) {
+	e.enable = en
 }

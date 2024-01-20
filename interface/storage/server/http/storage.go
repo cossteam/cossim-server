@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	conf "github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/storage/minio"
@@ -28,7 +27,7 @@ func upload(c *gin.Context) {
 	//userID, err := http2.ParseTokenReUid(c)
 	//if err != nil {
 	//	logger.Error("token解析失败", zap.Error(err))
-	//	response.Fail(c, "token解析失败", nil)
+	//	response.SetFail(c, "token解析失败", nil)
 	//	return
 	//}
 
@@ -40,7 +39,7 @@ func upload(c *gin.Context) {
 	_Type, err := strconv.Atoi(value)
 	if err != nil {
 		logger.Error("type解析失败", zap.Error(err))
-		response.Fail(c, "文件类型解析失败", nil)
+		response.SetFail(c, "文件类型解析失败", nil)
 		return
 	}
 
@@ -62,26 +61,26 @@ func upload(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
-		response.Fail(c, err.Error(), nil)
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	if file.Size > maxFileSize {
 		logger.Error("文件大小超过限制", zap.Error(err))
-		response.Fail(c, "文件大小超过限制", nil)
+		response.SetFail(c, "文件大小超过限制", nil)
 		return
 	}
 
 	fileObj, err := file.Open()
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
-		response.Fail(c, "上传失败", nil)
+		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
 	bucket, err := minio.GetBucketName(_Type)
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
-		response.Fail(c, "上传失败", nil)
+		response.SetFail(c, "上传失败", nil)
 		return
 	}
 	fileExtension := file.Filename[strings.LastIndex(file.Filename, "."):]
@@ -90,16 +89,15 @@ func upload(c *gin.Context) {
 	headerUrl, err := sp.Upload(context.Background(), key, fileObj, file.Size)
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
-		response.Fail(c, "上传失败", nil)
+		response.SetFail(c, "上传失败", nil)
 		return
 	}
-	u, err := sp.GetUrl(context.Background(), key)
+	_, err = sp.GetUrl(context.Background(), key)
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
-		response.Fail(c, "上传失败", nil)
+		response.SetFail(c, "上传失败", nil)
 		return
 	}
-	fmt.Println("url : ", u)
 
 	_, err = storageClient.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   "userID",
@@ -111,13 +109,13 @@ func upload(c *gin.Context) {
 	})
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
-		response.Fail(c, "上传失败", nil)
+		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
 	headerUrl.Host = cfg.Discovers["gateway"].Addr
 	headerUrl.Path = downloadURL + headerUrl.Path
-	response.Success(c, "上传成功", gin.H{
+	response.SetSuccess(c, "上传成功", gin.H{
 		"url":     headerUrl.String(),
 		"file_id": fileID,
 	})
@@ -203,7 +201,7 @@ func getFileInfo(c *gin.Context) {
 	}
 	info.Url = URL
 
-	response.Success(c, "获取文件信息成功", info)
+	response.SetSuccess(c, "获取文件信息成功", info)
 }
 
 // deleteFile
@@ -228,24 +226,24 @@ func deleteFile(c *gin.Context) {
 	resp, err := storageClient.GetFileInfo(context.Background(), &storagev1.GetFileInfoRequest{FileID: fileID})
 	if err != nil {
 		logger.Error("获取文件信息失败", zap.Error(err))
-		response.Fail(c, "删除文件失败，请重试", nil)
+		response.SetFail(c, "删除文件失败，请重试", nil)
 		//c.Error(err)
 		return
 	}
 
 	if err = sp.Delete(context.Background(), resp.Path); err != nil {
 		logger.Error("oss删除文件失败", zap.Error(err))
-		response.Fail(c, "删除文件失败，请重试", nil)
+		response.SetFail(c, "删除文件失败，请重试", nil)
 		//c.Error(err)
 		return
 	}
 
 	_, err = storageClient.Delete(context.Background(), &storagev1.DeleteRequest{FileID: fileID})
 	if err != nil {
-		response.Fail(c, "删除文件失败，请重试", nil)
+		response.SetFail(c, "删除文件失败，请重试", nil)
 		//c.Error(err)
 		return
 	}
 
-	response.Success(c, "success", nil)
+	response.SetSuccess(c, "success", nil)
 }

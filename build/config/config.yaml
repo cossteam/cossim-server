@@ -1,0 +1,6 @@
+
+enabled: true
+name: coss-im
+email: max.mustermann@example.com
+passphrase: LongSecret
+rsaBits: 2048
