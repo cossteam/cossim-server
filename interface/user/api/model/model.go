@@ -42,3 +42,7 @@ type PasswordRequest struct {
 	Password    string `json:"password" binding:"required"`
 	ConfirmPass string `json:"confirm_password" binding:"required"`
 }
+
+type ModifyUserSecretBundleRequest struct {
+	SecretBundle string `json:"secret_bundle" binding:"required"`
+}

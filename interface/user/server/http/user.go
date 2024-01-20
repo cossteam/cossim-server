@@ -352,3 +352,75 @@ func modifyUserPassword(c *gin.Context) {
 
 	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
 }
+
+// @Summary 修改用户密钥包
+// @Description 修改用户密码
+// @Accept json
+// @Produce json
+// @param request body model.ModifyUserSecretBundleRequest true "request"
+// @Security BearerToken
+// @Success 200 {object} model.Response{}
+// @Router /user/bundle/modify [post]
+func modifyUserSecretBundle(c *gin.Context) {
+	req := new(model.ModifyUserSecretBundleRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = userClient.SetUserSecretBundle(context.Background(), &user.SetUserSecretBundleRequest{
+		UserId:       thisId,
+		SecretBundle: req.SecretBundle,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
+}
+
+// @Summary 获取用户密钥包
+// @Description 获取用户密钥包
+// @Accept  json
+// @Produce  json
+// @Param user_id query string true "用户id"
+// @Success		200 {object} model.Response{}
+// @Router /user/bundle/get [get]
+func getUserSecretBundle(c *gin.Context) {
+	userId := c.Query("user_id")
+	if userId == "" {
+		response.Fail(c, "参数错误", nil)
+		return
+	}
+	_, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = userClient.UserInfo(context.Background(), &user.UserInfoRequest{
+		UserId: userId,
+	})
+	if err != nil {
+		logger.Error("获取用户信息失败", zap.Error(err))
+		response.SetFail(c, "用户不存在", nil)
+		return
+	}
+
+	bundle, err := userClient.GetUserSecretBundle(context.Background(), &user.GetUserSecretBundleRequest{
+		UserId: userId,
+	})
+	if err != nil {
+		return
+	}
+	response.SetSuccess(c, "获取成功", bundle)
+}

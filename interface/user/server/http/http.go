@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -13,6 +14,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"os"
 	"time"
 )
 
@@ -46,26 +48,51 @@ func setupRedis() {
 
 func setupEncryption() {
 	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	err := enc.GenerateKeyPair()
+	//err := enc.GenerateKeyPair()
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	err := enc.ReadKeyPair()
 	if err != nil {
 		logger.Fatal("Failed to ", zap.Error(err))
+		return
 	}
 	ThisKey = enc.GetPublicKey()
 
 	fmt.Println("公钥：\n", enc.GetPublicKey())
-	//readString, err := encryption.GenerateRandomKey(32)
-	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	//resp, err := enc.SecretMessage("{\"email\":\"1233@qq.com\",\"password\":\"123123Aa\"}", enc.GetPublicKey(), readString)
-	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	//j, err := json.Marshal(resp)
-	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	//fmt.Println("加密后消息：", string(j))
+	readString, err := encryption.GenerateRandomKey(32)
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	resp, err := enc.SecretMessage("{\"email\":\"12345ddd@qq.com\",\"password\":\"123123a\"}", enc.GetPublicKey(), []byte(readString))
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	j, err := json.Marshal(resp)
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+
+	cacheDir := ".cache"
+	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+		if err != nil {
+			logger.Fatal("Failed to ", zap.Error(err))
+		}
+	}
+	// 保存私钥到文件
+	privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+
+	_, err = privateKeyFile.WriteString(string(j))
+	if err != nil {
+		privateKeyFile.Close()
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	privateKeyFile.Close()
+	fmt.Println("加密后消息：", string(j))
 }
 
 func setupUserGRPCClient() {
@@ -152,6 +179,8 @@ func route(engine *gin.Engine) {
 	u.POST("/info/modify", middleware.AuthMiddleware(redisClient), modifyUserInfo)
 	u.POST("/password/modify", middleware.AuthMiddleware(redisClient), modifyUserPassword)
 	u.POST("/key/set", middleware.AuthMiddleware(redisClient), setUserPublicKey)
+	u.POST("/bundle/modify", middleware.AuthMiddleware(redisClient), modifyUserSecretBundle)
+	u.GET("/bundle/get", middleware.AuthMiddleware(redisClient), getUserSecretBundle)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 	//u.POST("/logout", handleLogout)
 }

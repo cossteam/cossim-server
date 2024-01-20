@@ -9,6 +9,13 @@ definitions:
     - email
     - password
     type: object
+  model.ModifyUserSecretBundleRequest:
+    properties:
+      secret_bundle:
+        type: string
+    required:
+    - secret_bundle
+    type: object
   model.PasswordRequest:
     properties:
       confirm_password:
@@ -70,6 +77,47 @@ info:
   contact: {}
   title: coss-user服务
 paths:
+  /user/bundle/get:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户密钥包
+      parameters:
+      - description: 用户id
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 获取用户密钥包
+  /user/bundle/modify:
+    post:
+      consumes:
+      - application/json
+      description: 修改用户密码
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.ModifyUserSecretBundleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      security:
+      - BearerToken: []
+      summary: 修改用户密钥包
   /user/info:
     get:
       consumes:

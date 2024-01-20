@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/group/service"
 	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
@@ -27,6 +28,7 @@ var (
 	dialogClient    relationApi.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
+	enc             encryption.Encryptor
 	svc             *service.Service
 )
 
@@ -36,10 +38,12 @@ func Init(c *config.AppConfig) {
 	setupLogger()
 	setupDialogGRPCClient()
 	setupRedis()
+	setupEncryption()
 	setupRelationGRPCClient()
 	setupGroupGRPCClient()
 	setupGin()
 }
+
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Redis.Addr,
@@ -49,6 +53,7 @@ func setupRedis() {
 	})
 	redisClient = rdb
 }
+
 func setupDialogGRPCClient() {
 	var err error
 	msgConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
@@ -58,6 +63,7 @@ func setupDialogGRPCClient() {
 
 	dialogClient = relationApi.NewDialogServiceClient(msgConn)
 }
+
 func setupRelationGRPCClient() {
 	var err error
 	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
@@ -78,6 +84,51 @@ func setupUserGRPCClient() {
 
 	userClient = userApi.NewUserServiceClient(userConn)
 }
+
+func setupEncryption() {
+	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+
+	err := enc.ReadKeyPair()
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+		return
+	}
+	//
+	//readString, err := encryption.GenerateRandomKey(32)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//resp, err := enc.SecretMessage("{\n    \"name\": \"置手提织则表\",\n    \"type\": 1,\n    \"max_members_limit\": 75,\n    \"avatar\": \"http://dummyimage.com/100x100\"\n}", enc.GetPublicKey(), []byte(readString))
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//j, err := json.Marshal(resp)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	////保存成文件
+	//cacheDir := ".cache"
+	//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+	//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+	//	if err != nil {
+	//		logger.Fatal("Failed to ", zap.Error(err))
+	//	}
+	//}
+	//// 保存私钥到文件
+	//privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//
+	//_, err = privateKeyFile.WriteString(string(j))
+	//if err != nil {
+	//	privateKeyFile.Close()
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//privateKeyFile.Close()
+	//fmt.Println("加密后消息：", string(j))
+}
+
 func setupGroupGRPCClient() {
 	var err error
 	groupConn, err := grpc.Dial(cfg.Discovers["group"].Addr, grpc.WithInsecure())
@@ -137,7 +188,7 @@ func setupGin() {
 	engine := gin.New()
 
 	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
+	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.EncryptionMiddleware(enc), middleware.RecoveryMiddleware())
 
 	// 设置路由
 	route(engine)

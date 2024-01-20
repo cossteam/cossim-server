@@ -137,16 +137,49 @@ message GetUserPasswordByUserIdResponse {
   string Password = 2;
 }
 
+message SetUserSecretBundleRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"secret_bundle"
+  string SecretBundle = 2;
+}
+
+message SetUserSecretBundleResponse {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message GetUserSecretBundleRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message GetUserSecretBundleResponse {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"secret_bundle"
+  string SecretBundle = 2;
+}
+
 service UserService {
+  //用户登录
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
+  //用户注册
   rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
+  //获取用户信息
   rpc UserInfo(UserInfoRequest) returns(UserInfoResponse);
+  //批量获取用户信息
   rpc GetBatchUserInfo(GetBatchUserInfoRequest) returns (GetBatchUserInfoResponse);
+  //根据email获取用户信息
   rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
   rpc GetUserPublicKey (UserRequest) returns (GetUserPublicKeyResponse);
   rpc SetUserPublicKey (SetPublicKeyRequest) returns (UserResponse);
   rpc ModifyUserInfo(User) returns (UserResponse);
   rpc ModifyUserPassword(ModifyUserPasswordRequest) returns (UserResponse);
   rpc GetUserPasswordByUserId(UserRequest) returns (GetUserPasswordByUserIdResponse);
+  //设置用户密钥包
+  rpc SetUserSecretBundle (SetUserSecretBundleRequest) returns (SetUserSecretBundleResponse);
+  //获取用户密钥包
+  rpc GetUserSecretBundle (GetUserSecretBundleRequest) returns (GetUserSecretBundleResponse);
 }
 

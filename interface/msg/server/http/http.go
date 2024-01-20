@@ -1,8 +1,10 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
@@ -16,6 +18,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"os"
 	"time"
 )
 
@@ -30,6 +33,7 @@ var (
 	dialogClient    relationApi.DialogServiceClient
 	cfg             *config.AppConfig
 	logger          *zap.Logger
+	enc             encryption.Encryptor
 )
 
 func Init(c *config.AppConfig) {
@@ -38,12 +42,58 @@ func Init(c *config.AppConfig) {
 	setupDialogGRPCClient()
 	setupMsgGRPCClient()
 	setupUserGRPCClient()
+	//setupEncryption()
 	setupRedis()
 	setupGroupGRPCClient()
 	setRabbitMQProvider()
 	setupRelationGRPCClient()
 	setupGin()
 }
+
+func setupEncryption() {
+	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+
+	err := enc.ReadKeyPair()
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+		return
+	}
+
+	readString, err := encryption.GenerateRandomKey(32)
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	resp, err := enc.SecretMessage("{\n    \"content\": \"enim nostrud\",\n    \"receiver_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"type\": 1,\n    \"dialog_id\":82\n}", enc.GetPublicKey(), []byte(readString))
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	j, err := json.Marshal(resp)
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	//保存成文件
+	cacheDir := ".cache"
+	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+		if err != nil {
+			logger.Fatal("Failed to ", zap.Error(err))
+		}
+	}
+	// 保存私钥到文件
+	privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	if err != nil {
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+
+	_, err = privateKeyFile.WriteString(string(j))
+	if err != nil {
+		privateKeyFile.Close()
+		logger.Fatal("Failed to ", zap.Error(err))
+	}
+	privateKeyFile.Close()
+	fmt.Println("加密后消息：", string(j))
+}
+
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Redis.Addr,
@@ -53,6 +103,7 @@ func setupRedis() {
 	})
 	redisClient = rdb
 }
+
 func setRabbitMQProvider() {
 	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr))
 	fmt.Println("cfg.MessageQueue => ", cfg.MessageQueue)
@@ -159,7 +210,7 @@ func setupGin() {
 	engine := gin.New()
 
 	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.RecoveryMiddleware())
+	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.EncryptionMiddleware(enc), middleware.RecoveryMiddleware())
 
 	// 设置路由
 	route(engine)
