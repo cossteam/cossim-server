@@ -19,5 +19,10 @@ type DialogRepository interface {
 	DeleteDialogUserByDialogID(dialogID uint) error
 	DeleteDialogUserByDialogIDAndUserID(dialogID uint, userID string) error
 
+	// UpdateDialogByDialogID 根据会话ID更新会话信息
+	UpdateDialogByDialogID(dialogID uint, updateFields map[string]interface{}) error
+	// UpdateDialogUserByDialogID 根据会话ID更新会话所有用户信息
+	UpdateDialogUserByDialogID(dialogID uint, updateFields map[string]interface{}) error
+	// UpdateDialogUserByDialogIDAndUserID 根据会话ID和用户ID更新会话成员信息
 	UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error
 }

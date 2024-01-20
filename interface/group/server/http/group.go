@@ -237,57 +237,65 @@ func deleteGroup(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	_, err = groupClient.GetGroupInfoByGid(context.Background(), &api.GetGroupInfoRequest{
-		Gid: uint32(gidInt),
-	})
+
+	groupId, err := svc.DeleteGroup(c, uint32(gidInt), thisId)
 	if err != nil {
-		c.Error(err)
+		logger.Error("删除群聊失败", zap.Error(err))
+		response.SetFail(c, "删除群聊失败", nil)
 		return
 	}
-	sf, err := userGroupClient.GetGroupRelation(context.Background(), &rapi.GetGroupRelationRequest{
-		UserId:  thisId,
-		GroupId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	if sf.Identity != rapi.GroupIdentity_IDENTITY_ADMIN && sf.Identity != rapi.GroupIdentity_IDENTITY_OWNER {
-		c.Error(err)
-		return
-	}
-	//删除对话用户
-	_, err = dialogClient.DeleteDialogUsersByDialogID(context.Background(), &rapi.DeleteDialogUsersByDialogIDRequest{
-		DialogId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//删除对话
-	_, err = dialogClient.DeleteDialogById(context.Background(), &rapi.DeleteDialogByIdRequest{
-		DialogId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//1.删除群聊成员
-	_, err = userGroupClient.DeleteGroupRelationByGroupId(context.Background(), &rapi.GroupIDRequest{
-		GroupId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//2.删除群聊
-	groupId, err := groupClient.DeleteGroup(context.Background(), &api.DeleteGroupRequest{
-		Gid: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
+
+	//_, err = groupClient.GetGroupInfoByGid(context.Background(), &api.GetGroupInfoRequest{
+	//	Gid: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//sf, err := userGroupClient.GetGroupRelation(context.Background(), &rapi.GetGroupRelationRequest{
+	//	UserId:  thisId,
+	//	GroupId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//if sf.Identity != rapi.GroupIdentity_IDENTITY_ADMIN && sf.Identity != rapi.GroupIdentity_IDENTITY_OWNER {
+	//	c.Error(err)
+	//	return
+	//}
+	////删除对话用户
+	//_, err = dialogClient.DeleteDialogUsersByDialogID(context.Background(), &rapi.DeleteDialogUsersByDialogIDRequest{
+	//	DialogId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////删除对话
+	//_, err = dialogClient.DeleteDialogById(context.Background(), &rapi.DeleteDialogByIdRequest{
+	//	DialogId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////1.删除群聊成员
+	//_, err = userGroupClient.DeleteGroupRelationByGroupId(context.Background(), &rapi.GroupIDRequest{
+	//	GroupId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////2.删除群聊
+	//groupId, err := groupClient.DeleteGroup(context.Background(), &api.DeleteGroupRequest{
+	//	Gid: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
 
 	response.SetSuccess(c, "删除群聊成功", gin.H{"gid": groupId})
 }
