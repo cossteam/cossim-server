@@ -66,5 +66,6 @@ service GroupService {
   rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
   rpc UpdateGroup (UpdateGroupRequest) returns (Group);
   rpc CreateGroup (CreateGroupRequest) returns (Group);
+  rpc CreateGroupRevert(CreateGroupRequest) returns (Group);
   rpc DeleteGroup (DeleteGroupRequest) returns (EmptyResponse);
 }
