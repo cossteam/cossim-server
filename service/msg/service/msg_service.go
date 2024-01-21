@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
@@ -48,7 +49,7 @@ func (s *Service) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 			ReplayId:   uint64(m.ReplyId),
 			IsRead:     int32(m.IsRead),
 			ReadAt:     m.ReadAt,
-			CreatedAt:  m.CreatedAt.Unix(),
+			CreatedAt:  m.CreatedAt,
 		})
 	}
 	resp.Total = total
@@ -71,7 +72,7 @@ func (s *Service) GetLastMsgsForUserWithFriends(ctx context.Context, in *v1.User
 			Type:      uint32(m.Type),
 			ReplayId:  uint64(m.ReplyId),
 			ReadAt:    m.ReadAt,
-			CreatedAt: m.CreatedAt.Unix(),
+			CreatedAt: m.CreatedAt,
 		})
 	}
 	resp.UserMessages = nmsgs
@@ -99,7 +100,7 @@ func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, in *v1.GroupM
 			Type:      uint32(m.Type),
 			ReplyId:   uint32(m.ReplyId),
 			ReadCount: int32(m.ReadCount),
-			CreatedAt: m.CreatedAt.Unix(),
+			CreatedAt: m.CreatedAt,
 		})
 	}
 	resp.GroupMessages = nmsgs
@@ -116,6 +117,7 @@ func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, in *v1.GetLastMsgs
 		}
 	}
 	result, err := s.mr.GetLastMsgsByDialogIDs(ids)
+	fmt.Println("result", result)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())
 	}

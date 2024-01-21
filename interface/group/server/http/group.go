@@ -208,7 +208,7 @@ func createGroup(c *gin.Context) {
 	resp, err := svc.CreateGroup(c, group)
 	if err != nil {
 		logger.Error("创建群聊失败", zap.Error(err))
-		response.Fail(c, "创建群聊失败", nil)
+		response.SetFail(c, "创建群聊失败", nil)
 		return
 	}
 	response.Success(c, "创建群聊成功", resp)

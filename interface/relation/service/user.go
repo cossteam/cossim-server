@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Service) ManageFriend(ctx context.Context, userId, friendId string, action int32) (interface{}, error) {
+func (s *Service) ManageFriend(ctx context.Context, userId, friendId string, action int32, key string) (interface{}, error) {
 	var dialogId uint32
 
 	switch action {
@@ -34,7 +34,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId, friendId string, act
 	}
 
 	// 向用户推送通知
-	resp, err := s.sendFriendManagementNotification(ctx, userId, friendId, "", relationgrpcv1.RelationStatus(action))
+	resp, err := s.sendFriendManagementNotification(ctx, userId, friendId, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
 		return nil, err
 	}
@@ -255,6 +255,7 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 		wsMsgData["e2e_public_key"] = E2EPublicKey
 		responseData = targetInfo
 	}
+	fmt.Println("msg:=>", msg)
 
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("Failed to publish service message", zap.Error(err))

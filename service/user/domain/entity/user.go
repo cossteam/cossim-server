@@ -17,7 +17,7 @@ type User struct {
 	Status       UserStatus `gorm:"type:tinyint(4);default:0;comment:用户状态" json:"status"`
 	EmailVerity  uint       `gorm:"type:tinyint(1);default:0;comment:邮箱是否已验证" json:"email_verity"`
 	Bot          uint       `gorm:"type:tinyint(4);default:0;comment:是否机器人" json:"bot"`
-	SecretBundle string     `gorm:"type:varchar(255);comment:用户密钥" json:"secre_bundle,omitempty"`
+	SecretBundle string     `gorm:"type:longtext;comment:用户密钥" json:"secre_bundle,omitempty"`
 	CreatedAt    int64      `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt    int64      `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
 	DeletedAt    int64      `gorm:"default:null;comment:删除时间" json:"deleted_at"`

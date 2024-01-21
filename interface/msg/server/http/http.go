@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"os"
 	"time"
 )
@@ -42,7 +43,7 @@ func Init(c *config.AppConfig) {
 	setupDialogGRPCClient()
 	setupMsgGRPCClient()
 	setupUserGRPCClient()
-	//setupEncryption()
+	setupEncryption()
 	setupRedis()
 	setupGroupGRPCClient()
 	setRabbitMQProvider()
@@ -144,7 +145,7 @@ func setupRelationGRPCClient() {
 
 func setupMsgGRPCClient() {
 	var err error
-	msgConn, err := grpc.Dial(cfg.Discovers["msg"].Addr, grpc.WithInsecure())
+	msgConn, err := grpc.Dial(cfg.Discovers["msg"].Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}

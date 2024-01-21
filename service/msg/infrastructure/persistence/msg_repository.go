@@ -113,7 +113,7 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 	var groupMessages []*entity.GroupMessage
 	for _, dialogId := range dialogIds {
 		var lastMsg entity.GroupMessage
-		g.db.Where("dialog_id =?", dialogId).Select("id, dialog_id, content, type, uid as send_id, created_at").Order("created_at DESC").First(&lastMsg)
+		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, uid as send_id, created_at").Order("created_at DESC").First(&lastMsg)
 		if lastMsg.ID != 0 {
 			groupMessages = append(groupMessages, &lastMsg)
 		}
@@ -122,7 +122,7 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 	var userMessages []*entity.UserMessage
 	for _, dialogId := range dialogIds {
 		var lastMsg entity.UserMessage
-		g.db.Where("dialog_id =?", dialogId).Select("id, dialog_id, content, type, send_id, created_at").Order("created_at DESC").First(&lastMsg)
+		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, send_id, created_at").Order("created_at DESC").First(&lastMsg)
 		if lastMsg.ID != 0 {
 			userMessages = append(userMessages, &lastMsg)
 		}
@@ -137,7 +137,7 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 			Content:  groupMsg.Content,
 			Type:     uint(groupMsg.Type),
 			SenderId: groupMsg.UID,
-			CreateAt: groupMsg.CreatedAt.Unix(),
+			CreateAt: groupMsg.CreatedAt,
 		})
 	}
 	for _, userMsg := range userMessages {
@@ -147,7 +147,7 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 			Content:  userMsg.Content,
 			Type:     uint(userMsg.Type),
 			SenderId: userMsg.SendID,
-			CreateAt: userMsg.CreatedAt.Unix(),
+			CreateAt: userMsg.CreatedAt,
 		})
 	}
 	return result, nil
