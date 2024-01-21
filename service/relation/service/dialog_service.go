@@ -227,7 +227,7 @@ func (s *Service) DeleteDialogByIdRevert(ctx context.Context, request *v1.Delete
 	var resp = &v1.DeleteDialogByIdResponse{}
 	fmt.Println("DeleteDialogByIdRevert req => ", request)
 	if err := s.dr.UpdateDialogByDialogID(uint(request.DialogId), map[string]interface{}{
-		"deleted_at": nil,
+		"deleted_at": 0,
 	}); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), err.Error())
 	}
