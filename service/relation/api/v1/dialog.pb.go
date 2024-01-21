@@ -72,11 +72,11 @@ type CreateDialogRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"`
+	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"owner_id"`
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,2,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type uint32 `protobuf:"varint,2,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,3,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,3,opt,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *CreateDialogRequest) Reset() {
@@ -138,13 +138,13 @@ type CreateDialogResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"`
+	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"owner_id"`
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *CreateDialogResponse) Reset() {
@@ -213,9 +213,9 @@ type JoinDialogRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *JoinDialogRequest) Reset() {
@@ -308,7 +308,7 @@ type GetUserDialogListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *GetUserDialogListRequest) Reset() {
@@ -356,7 +356,7 @@ type GetUserDialogListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_ids"
-	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"DialogIds,omitempty"`
+	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"dialog_ids"`
 }
 
 func (x *GetUserDialogListResponse) Reset() {
@@ -404,7 +404,7 @@ type GetDialogByIdsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_ids"
-	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"DialogIds,omitempty"`
+	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"dialog_ids"`
 }
 
 func (x *GetDialogByIdsRequest) Reset() {
@@ -452,7 +452,7 @@ type GetDialogByIdsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialogs"
-	Dialogs []*Dialog `protobuf:"bytes,1,rep,name=Dialogs,proto3" json:"Dialogs,omitempty"`
+	Dialogs []*Dialog `protobuf:"bytes,1,rep,name=Dialogs,proto3" json:"dialogs"`
 }
 
 func (x *GetDialogByIdsResponse) Reset() {
@@ -500,13 +500,13 @@ type Dialog struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"`
+	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"owner_id"`
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *Dialog) Reset() {
@@ -575,7 +575,7 @@ type GetDialogUsersByDialogIDRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *GetDialogUsersByDialogIDRequest) Reset() {
@@ -623,7 +623,7 @@ type GetDialogUsersByDialogIDResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_ids"
-	UserIds []string `protobuf:"bytes,1,rep,name=UserIds,proto3" json:"UserIds,omitempty"`
+	UserIds []string `protobuf:"bytes,1,rep,name=UserIds,proto3" json:"user_ids"`
 }
 
 func (x *GetDialogUsersByDialogIDResponse) Reset() {
@@ -671,7 +671,7 @@ type DeleteDialogByIdsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_ids"
-	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"DialogIds,omitempty"`
+	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"dialog_ids"`
 }
 
 func (x *DeleteDialogByIdsRequest) Reset() {
@@ -757,7 +757,7 @@ type DeleteDialogByIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *DeleteDialogByIdRequest) Reset() {
@@ -843,7 +843,7 @@ type DeleteDialogUsersByDialogIDRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *DeleteDialogUsersByDialogIDRequest) Reset() {
@@ -929,9 +929,9 @@ type GetDialogUserByDialogIDAndUserIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *GetDialogUserByDialogIDAndUserIdRequest) Reset() {
@@ -986,13 +986,13 @@ type GetDialogUserByDialogIDAndUserIdResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"is_show"
-	IsShow uint32 `protobuf:"varint,3,opt,name=IsShow,proto3" json:"IsShow,omitempty"`
+	IsShow uint32 `protobuf:"varint,3,opt,name=IsShow,proto3" json:"is_show"`
 	// @inject_tag: json:"top_at"
-	TopAt uint64 `protobuf:"varint,4,opt,name=TopAt,proto3" json:"TopAt,omitempty"`
+	TopAt uint64 `protobuf:"varint,4,opt,name=TopAt,proto3" json:"top_at"`
 }
 
 func (x *GetDialogUserByDialogIDAndUserIdResponse) Reset() {
@@ -1061,9 +1061,9 @@ type DeleteDialogUserByDialogIDAndUserIDRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *DeleteDialogUserByDialogIDAndUserIDRequest) Reset() {
@@ -1156,7 +1156,7 @@ type GetDialogByGroupIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *GetDialogByGroupIdRequest) Reset() {
@@ -1204,9 +1204,9 @@ type GetDialogByGroupIdResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *GetDialogByGroupIdResponse) Reset() {
@@ -1261,7 +1261,7 @@ type GetDialogByGroupIdsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *GetDialogByGroupIdsRequest) Reset() {
@@ -1309,7 +1309,7 @@ type GetDialogByGroupIdsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialogs"
-	Dialogs []*GetDialogByGroupIdResponse `protobuf:"bytes,1,rep,name=Dialogs,proto3" json:"Dialogs,omitempty"`
+	Dialogs []*GetDialogByGroupIdResponse `protobuf:"bytes,1,rep,name=Dialogs,proto3" json:"dialogs"`
 }
 
 func (x *GetDialogByGroupIdsResponse) Reset() {
@@ -1357,13 +1357,13 @@ type ConfirmFriendAndJoinDialogRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"` // 创建者id
+	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"owner_id"` // 创建者id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"` // 对方用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 对方用户id
 	// @inject_tag: json:"type"
-	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=v1.DialogType" json:"Type,omitempty"` // 会话类型 (0:用户会话, 1:群组会话)
+	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=v1.DialogType" json:"type"` // 会话类型 (0:用户会话, 1:群组会话)
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群组id
+	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"group_id"` // 群组id
 }
 
 func (x *ConfirmFriendAndJoinDialogRequest) Reset() {
@@ -1432,13 +1432,13 @@ type ConfirmFriendAndJoinDialogResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"` // 会话id
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"` // 会话id
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"` // 创建者id
+	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"owner_id"` // 创建者id
 	// @inject_tag: json:"type"
-	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=v1.DialogType" json:"Type,omitempty"` // 会话类型 (0:用户会话, 1:群组会话)
+	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=v1.DialogType" json:"type"` // 会话类型 (0:用户会话, 1:群组会话)
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群组id
+	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"group_id"` // 群组id
 }
 
 func (x *ConfirmFriendAndJoinDialogResponse) Reset() {
@@ -1507,15 +1507,15 @@ type ConfirmFriendAndJoinDialogRevertRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"` // 创建者id
+	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"owner_id"` // 创建者id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"` // 对方用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 对方用户id
 	// @inject_tag: json:"type"
-	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=v1.DialogType" json:"Type,omitempty"` // 会话类型 (0:用户会话, 1:群组会话)
+	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=v1.DialogType" json:"type"` // 会话类型 (0:用户会话, 1:群组会话)
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群组id
+	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"group_id"` // 群组id
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,5,opt,name=DialogId,proto3" json:"DialogId,omitempty"` // 会话id
+	DialogId uint32 `protobuf:"varint,5,opt,name=DialogId,proto3" json:"dialog_id"` // 会话id
 }
 
 func (x *ConfirmFriendAndJoinDialogRevertRequest) Reset() {
@@ -1629,15 +1629,15 @@ type CreateAndJoinDialogWithGroupRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"` // 创建者id
+	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"owner_id"` // 创建者id
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,2,opt,name=Type,proto3" json:"Type,omitempty"` // 会话类型 (用户会话=0, 群组会话=1)
+	Type uint32 `protobuf:"varint,2,opt,name=Type,proto3" json:"type"` // 会话类型 (用户会话=0, 群组会话=1)
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,3,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群组id
+	GroupId uint32 `protobuf:"varint,3,opt,name=GroupId,proto3" json:"group_id"` // 群组id
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,4,opt,name=DialogId,proto3" json:"DialogId,omitempty"` // 会话id
+	DialogId uint32 `protobuf:"varint,4,opt,name=DialogId,proto3" json:"dialog_id"` // 会话id
 	// @inject_tag: json:"user_id"
-	UserIds []string `protobuf:"bytes,5,rep,name=UserIds,proto3" json:"UserIds,omitempty"` // 对方用户id列表
+	UserIds []string `protobuf:"bytes,5,rep,name=UserIds,proto3" json:"user_id"` // 对方用户id列表
 }
 
 func (x *CreateAndJoinDialogWithGroupRequest) Reset() {
@@ -1713,13 +1713,13 @@ type CreateAndJoinDialogWithGroupResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
 	// @inject_tag: json:"owner_id"
-	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"OwnerId,omitempty"` // 创建者id
+	OwnerId string `protobuf:"bytes,2,opt,name=OwnerId,proto3" json:"owner_id"` // 创建者id
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"Type,omitempty"` // 会话类型 (用户会话=0, 群组会话=1)
+	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type"` // 会话类型 (用户会话=0, 群组会话=1)
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群组id
+	GroupId uint32 `protobuf:"varint,4,opt,name=GroupId,proto3" json:"group_id"` // 群组id
 }
 
 func (x *CreateAndJoinDialogWithGroupResponse) Reset() {

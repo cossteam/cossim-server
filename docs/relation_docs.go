@@ -46,6 +46,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/group/invite": {
+            "post": {
+                "description": "邀请加入群聊",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "邀请加入群聊",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.InviteGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/join": {
             "post": {
                 "description": "加入群聊",
@@ -623,6 +657,24 @@ const docTemplaterelation = `{
                 },
                 "user_name": {
                     "type": "string"
+                }
+            }
+        },
+        "model.InviteGroupRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "member"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "integer"
+                },
+                "member": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

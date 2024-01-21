@@ -84,11 +84,11 @@ type AddFriendRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"` // 用户id
 	// @inject_tag: json:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"` // 好友id
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"` // 好友id
 	// @inject_tag: json:"msg"
-	Msg string `protobuf:"bytes,3,opt,name=Msg,proto3" json:"Msg,omitempty"` // 验证信息
+	Msg string `protobuf:"bytes,3,opt,name=Msg,proto3" json:"msg"` // 验证信息
 }
 
 func (x *AddFriendRequest) Reset() {
@@ -188,13 +188,13 @@ type ManageFriendRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
 	// @inject_tag: json:"dialog_id" form:"dialog_id"
-	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"dialog_id" form:"dialog_id"`
 	// @inject_tag: json:"status" form:"status"
-	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"Status,omitempty"`
+	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"status" form:"status"`
 }
 
 func (x *ManageFriendRequest) Reset() {
@@ -301,9 +301,9 @@ type DeleteFriendRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
 }
 
 func (x *DeleteFriendRequest) Reset() {
@@ -396,9 +396,9 @@ type AddBlacklistRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
 }
 
 func (x *AddBlacklistRequest) Reset() {
@@ -491,9 +491,9 @@ type DeleteBlacklistRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
 }
 
 func (x *DeleteBlacklistRequest) Reset() {
@@ -586,9 +586,9 @@ type Friend struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 	// @inject_tag: json:"dialog_id" form:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id" form:"dialog_id"`
 }
 
 func (x *Friend) Reset() {
@@ -643,7 +643,7 @@ type GetFriendListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 }
 
 func (x *GetFriendListRequest) Reset() {
@@ -691,7 +691,7 @@ type GetFriendListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"friend_list" form:"friend_list"
-	FriendList []*Friend `protobuf:"bytes,1,rep,name=FriendList,proto3" json:"FriendList,omitempty"`
+	FriendList []*Friend `protobuf:"bytes,1,rep,name=FriendList,proto3" json:"friend_list" form:"friend_list"`
 }
 
 func (x *GetFriendListResponse) Reset() {
@@ -739,7 +739,7 @@ type Blacklist struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 }
 
 func (x *Blacklist) Reset() {
@@ -787,7 +787,7 @@ type GetBlacklistRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
 }
 
 func (x *GetBlacklistRequest) Reset() {
@@ -835,7 +835,7 @@ type GetBlacklistResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"blacklist" form:"blacklist"
-	Blacklist []*Blacklist `protobuf:"bytes,1,rep,name=Blacklist,proto3" json:"Blacklist,omitempty"`
+	Blacklist []*Blacklist `protobuf:"bytes,1,rep,name=Blacklist,proto3" json:"blacklist" form:"blacklist"`
 }
 
 func (x *GetBlacklistResponse) Reset() {
@@ -883,9 +883,9 @@ type GetUserRelationRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"`
 }
 
 func (x *GetUserRelationRequest) Reset() {
@@ -940,13 +940,13 @@ type GetUserRelationResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"status"
-	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"Status,omitempty"`
+	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"status"`
 }
 
 func (x *GetUserRelationResponse) Reset() {
@@ -1015,7 +1015,7 @@ type GetFriendRequestListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *GetFriendRequestListRequest) Reset() {
@@ -1063,7 +1063,7 @@ type GetFriendRequestListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"friend_request_list"
-	FriendRequestList []*FriendRequestList `protobuf:"bytes,1,rep,name=FriendRequestList,proto3" json:"FriendRequestList,omitempty"`
+	FriendRequestList []*FriendRequestList `protobuf:"bytes,1,rep,name=FriendRequestList,proto3" json:"friend_request_list"`
 }
 
 func (x *GetFriendRequestListResponse) Reset() {
@@ -1111,15 +1111,15 @@ type FriendRequestList struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"` // 用户id
 	// @inject_tag: json:"nickname"
-	Nickname string `protobuf:"bytes,2,opt,name=Nickname,proto3" json:"Nickname,omitempty"` // 用户昵称
+	Nickname string `protobuf:"bytes,2,opt,name=Nickname,proto3" json:"nickname"` // 用户昵称
 	// @inject_tag: json:"avatar"
-	Avatar string `protobuf:"bytes,3,opt,name=Avatar,proto3" json:"Avatar,omitempty"` // 用户头像
+	Avatar string `protobuf:"bytes,3,opt,name=Avatar,proto3" json:"avatar"` // 用户头像
 	// @inject_tag: json:"msg"
-	Msg string `protobuf:"bytes,4,opt,name=Msg,proto3" json:"Msg,omitempty"` // 申请信息
+	Msg string `protobuf:"bytes,4,opt,name=Msg,proto3" json:"msg"` // 申请信息
 	// @inject_tag: json:"status"
-	Status RelationStatus `protobuf:"varint,5,opt,name=Status,proto3,enum=v1.RelationStatus" json:"Status,omitempty"`
+	Status RelationStatus `protobuf:"varint,5,opt,name=Status,proto3,enum=v1.RelationStatus" json:"status"`
 }
 
 func (x *FriendRequestList) Reset() {
@@ -1195,9 +1195,9 @@ type GetUserRelationByUserIdsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"` // 用户id
 	// @inject_tag: json:"friend_ids"
-	FriendIds []string `protobuf:"bytes,2,rep,name=FriendIds,proto3" json:"FriendIds,omitempty"` // 好友id列表
+	FriendIds []string `protobuf:"bytes,2,rep,name=FriendIds,proto3" json:"friend_ids"` // 好友id列表
 }
 
 func (x *GetUserRelationByUserIdsRequest) Reset() {

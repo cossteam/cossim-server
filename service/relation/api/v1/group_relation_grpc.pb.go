@@ -34,6 +34,7 @@ const (
 	GroupRelationService_LeaveGroupRevert_FullMethodName                            = "/v1.GroupRelationService/LeaveGroupRevert"
 	GroupRelationService_GetGroupJoinRequestList_FullMethodName                     = "/v1.GroupRelationService/GetGroupJoinRequestList"
 	GroupRelationService_GetGroupRelation_FullMethodName                            = "/v1.GroupRelationService/GetGroupRelation"
+	GroupRelationService_GetBatchGroupRelation_FullMethodName                       = "/v1.GroupRelationService/GetBatchGroupRelation"
 	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName                = "/v1.GroupRelationService/DeleteGroupRelationByGroupId"
 	GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName          = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdRevert"
 	GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName       = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserID"
@@ -74,6 +75,8 @@ type GroupRelationServiceClient interface {
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
 	GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error)
+	// 批量获取用户与群聊关系信息
+	GetBatchGroupRelation(ctx context.Context, in *GetBatchGroupRelationRequest, opts ...grpc.CallOption) (*GetBatchGroupRelationResponse, error)
 	// 根据群聊ID删除群聊的所有关系
 	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// DeleteGroupRelationByGroupId回滚操作
@@ -222,6 +225,15 @@ func (c *groupRelationServiceClient) GetGroupRelation(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) GetBatchGroupRelation(ctx context.Context, in *GetBatchGroupRelationRequest, opts ...grpc.CallOption) (*GetBatchGroupRelationResponse, error) {
+	out := new(GetBatchGroupRelationResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_GetBatchGroupRelation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, in, out, opts...)
@@ -308,6 +320,8 @@ type GroupRelationServiceServer interface {
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
 	GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error)
+	// 批量获取用户与群聊关系信息
+	GetBatchGroupRelation(context.Context, *GetBatchGroupRelationRequest) (*GetBatchGroupRelationResponse, error)
 	// 根据群聊ID删除群聊的所有关系
 	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*emptypb.Empty, error)
 	// DeleteGroupRelationByGroupId回滚操作
@@ -368,6 +382,9 @@ func (UnimplementedGroupRelationServiceServer) GetGroupJoinRequestList(context.C
 }
 func (UnimplementedGroupRelationServiceServer) GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupRelation not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) GetBatchGroupRelation(context.Context, *GetBatchGroupRelationRequest) (*GetBatchGroupRelationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBatchGroupRelation not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupId not implemented")
@@ -652,6 +669,24 @@ func _GroupRelationService_GetGroupRelation_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_GetBatchGroupRelation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBatchGroupRelationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).GetBatchGroupRelation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_GetBatchGroupRelation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).GetBatchGroupRelation(ctx, req.(*GetBatchGroupRelationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GroupRelationService_DeleteGroupRelationByGroupId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GroupIDRequest)
 	if err := dec(in); err != nil {
@@ -822,6 +857,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupRelation",
 			Handler:    _GroupRelationService_GetGroupRelation_Handler,
+		},
+		{
+			MethodName: "GetBatchGroupRelation",
+			Handler:    _GroupRelationService_GetBatchGroupRelation_Handler,
 		},
 		{
 			MethodName: "DeleteGroupRelationByGroupId",

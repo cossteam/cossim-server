@@ -12,6 +12,7 @@ type GroupRelationRepository interface {
 	GetGroupUserIDs(gid uint32) ([]string, error)
 	GetUserGroupIDs(uid string) ([]uint32, error)
 	GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error)
+	GetUserGroupByIDs(gid uint32, uids []string) ([]*entity.GroupRelation, error)
 	GetUserJoinedGroupIDs(uid string) ([]uint32, error) // 获取用户加入的所有群聊ID
 	GetUserManageGroupIDs(uid string) ([]uint32, error) // 获取用户管理的或创建的群聊ID
 	GetJoinRequestBatchListByID(gids []uint32) ([]*entity.GroupRelation, error)

@@ -223,6 +223,26 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	return resp, nil
 }
 
+func (s *Service) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatchGroupRelationRequest) (*v1.GetBatchGroupRelationResponse, error) {
+	resp := &v1.GetBatchGroupRelationResponse{}
+
+	grs, err := s.grr.GetUserGroupByIDs(request.GroupId, request.UserIds)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrGroupRelationFailed.Code()), err.Error())
+	}
+
+	for _, gr := range grs {
+		resp.GroupRelationResponses = append(resp.GroupRelationResponses, &v1.GetGroupRelationResponse{
+			UserId:      gr.UserID,
+			GroupId:     uint32(gr.GroupID),
+			Identity:    v1.GroupIdentity(uint32(gr.Identity)),
+			MuteEndTime: gr.MuteEndTime,
+			Status:      v1.GroupRelationStatus(uint32(gr.Status)),
+		})
+	}
+	return resp, nil
+}
+
 func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*emptypb.Empty, error) {
 	err := s.grr.DeleteGroupRelationByID(in.GroupId)
 	if err != nil {

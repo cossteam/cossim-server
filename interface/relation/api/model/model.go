@@ -75,6 +75,11 @@ type JoinGroupRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"`
 }
 
+type InviteGroupRequest struct {
+	GroupID uint32   `json:"group_id" binding:"required"`
+	Member  []string `json:"member"  binding:"required"`
+}
+
 type ManageJoinGroupRequest struct {
 	GroupID uint32     `json:"group_id" binding:"required"`
 	UserID  string     `json:"user_id" binding:"required"`

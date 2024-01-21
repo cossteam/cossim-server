@@ -3,7 +3,10 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/interface/relation/api/model"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
@@ -176,6 +179,68 @@ func (s *Service) validateGroupRelationStatus(relation *relationgrpcv1.GetGroupR
 		}
 	default:
 		return errors.New("用户状态异常")
+	}
+
+	return nil
+}
+
+func (s *Service) InviteGroup(ctx context.Context, adminID string, req *model.InviteGroupRequest) error {
+	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
+	if err != nil {
+		return err
+	}
+
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+		return errors.New("群聊状态不可用")
+	}
+
+	relation1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: adminID})
+	if err != nil {
+		s.logger.Error("获取用户群组关系失败", zap.Error(err))
+		return err
+	}
+
+	if relation1.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+		return errors.New("权限不足")
+	}
+
+	//relation2, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: req.UserID})
+	//if err != nil {
+	//	return err
+	//}
+
+	grs, err := s.groupRelationClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: req.GroupID, UserIds: req.Member})
+	fmt.Println("code => ", code.Cause(err).Code())
+	if err != nil && !(code.Cause(err).Code() == 13112) {
+		s.logger.Error("获取用户群组关系失败", zap.Error(err))
+		return err
+	}
+
+	for _, gr := range grs.GroupRelationResponses {
+		if gr.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
+			return errors.New("已经在群里了")
+		}
+	}
+
+	for _, gr := range grs.GroupRelationResponses {
+		//添加普通用户申请
+		_, err = s.groupRelationClient.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: gr.UserId, GroupId: req.GroupID, Identify: relationgrpcv1.GroupIdentity_IDENTITY_USER})
+		if err != nil {
+			return err
+		}
+	}
+
+	//查询所有管理员
+	adminIds, err := s.groupRelationClient.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
+		GroupId: req.GroupID,
+	})
+	for _, id := range adminIds.UserIds {
+		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": adminID}, SendAt: time.Now().Unix()}
+		//通知消息服务有消息需要发送
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		if err != nil {
+			s.logger.Error("加入群聊请求申请通知推送失败", zap.Error(err))
+		}
 	}
 
 	return nil
