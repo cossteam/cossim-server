@@ -1,11 +1,7 @@
 package entity
 
-import (
-	"gorm.io/gorm"
-)
-
 type UserMessage struct {
-	gorm.Model
+	BaseModel
 	Type      UserMessageType `gorm:";comment:消息类型" json:"type"`
 	DialogId  uint            `gorm:"default:0;comment:对话ID" json:"dialog_id"`
 	IsRead    uint            `gorm:"default:0;comment:是否已读" json:"is_read"`

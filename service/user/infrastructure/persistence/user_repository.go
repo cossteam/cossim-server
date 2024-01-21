@@ -17,7 +17,7 @@ func NewUserRepo(db *gorm.DB) *UserRepo {
 // 根据邮箱获取用户信息
 func (ur *UserRepo) GetUserInfoByEmail(email string) (*entity.User, error) {
 	var user entity.User
-	if err := ur.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := ur.db.Where("email = ? AND deleted_at = 0", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -26,7 +26,7 @@ func (ur *UserRepo) GetUserInfoByEmail(email string) (*entity.User, error) {
 // 根据uid获取用户信息
 func (ur *UserRepo) GetUserInfoByUid(id string) (*entity.User, error) {
 	var user entity.User
-	if err := ur.db.Where("id = ?", id).First(&user).Error; err != nil {
+	if err := ur.db.Where("id = ? AND deleted_at = 0", id).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
