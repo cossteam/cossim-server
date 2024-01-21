@@ -8,6 +8,7 @@ type UserRelationRepository interface {
 	DeleteRelationByID(userId, friendId string) error
 	UpdateRelationDeleteAtByID(userId, friendId string, deleteAt int64) error
 	GetRelationByID(userId, friendId string) (*entity.UserRelation, error)
+	GetRelationByIDs(userId string, friendIds []string) ([]*entity.UserRelation, error)
 	GetRelationsByUserID(userId string) ([]*entity.UserRelation, error)
 	GetBlacklistByUserID(userId string) ([]*entity.UserRelation, error)
 	GetFriendRequestListByUserID(userId string) ([]*entity.UserRelation, error)

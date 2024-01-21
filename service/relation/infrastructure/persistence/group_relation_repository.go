@@ -21,6 +21,10 @@ func (repo *GroupRelationRepo) CreateRelation(ur *entity.GroupRelation) (*entity
 	return ur, nil
 }
 
+func (repo *GroupRelationRepo) CreateRelations(urs []*entity.GroupRelation) ([]*entity.GroupRelation, error) {
+	return urs, repo.db.CreateInBatches(urs, len(urs)).Error
+}
+
 func (repo *GroupRelationRepo) GetGroupUserIDs(gid uint32) ([]string, error) {
 	var userGroupIDs []string
 	if err := repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND status = ? AND deleted_at = 0", gid, entity.GroupStatusJoined).Pluck("user_id", &userGroupIDs).Error; err != nil {
@@ -108,4 +112,8 @@ func (repo *GroupRelationRepo) GetGroupAdminIds(gid uint32) ([]string, error) {
 
 func (repo *GroupRelationRepo) UpdateGroupRelationByGroupID(groupID uint32, updateFields map[string]interface{}) error {
 	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", groupID).Updates(updateFields).Error
+}
+
+func (repo *GroupRelationRepo) DeleteRelationByGroupIDAndUserIDs(gid uint32, uid []string) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND status = ? AND deleted_at = 0", gid, entity.GroupStatusJoined).Delete(&entity.GroupRelation{}).Error
 }

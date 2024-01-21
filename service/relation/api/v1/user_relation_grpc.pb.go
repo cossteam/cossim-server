@@ -19,17 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserRelationService_AddFriend_FullMethodName            = "/v1.UserRelationService/AddFriend"
-	UserRelationService_ManageFriend_FullMethodName         = "/v1.UserRelationService/ManageFriend"
-	UserRelationService_ManageFriendRevert_FullMethodName   = "/v1.UserRelationService/ManageFriendRevert"
-	UserRelationService_DeleteFriend_FullMethodName         = "/v1.UserRelationService/DeleteFriend"
-	UserRelationService_DeleteFriendRevert_FullMethodName   = "/v1.UserRelationService/DeleteFriendRevert"
-	UserRelationService_AddBlacklist_FullMethodName         = "/v1.UserRelationService/AddBlacklist"
-	UserRelationService_DeleteBlacklist_FullMethodName      = "/v1.UserRelationService/DeleteBlacklist"
-	UserRelationService_GetFriendList_FullMethodName        = "/v1.UserRelationService/GetFriendList"
-	UserRelationService_GetBlacklist_FullMethodName         = "/v1.UserRelationService/GetBlacklist"
-	UserRelationService_GetUserRelation_FullMethodName      = "/v1.UserRelationService/GetUserRelation"
-	UserRelationService_GetFriendRequestList_FullMethodName = "/v1.UserRelationService/GetFriendRequestList"
+	UserRelationService_AddFriend_FullMethodName                = "/v1.UserRelationService/AddFriend"
+	UserRelationService_ManageFriend_FullMethodName             = "/v1.UserRelationService/ManageFriend"
+	UserRelationService_ManageFriendRevert_FullMethodName       = "/v1.UserRelationService/ManageFriendRevert"
+	UserRelationService_DeleteFriend_FullMethodName             = "/v1.UserRelationService/DeleteFriend"
+	UserRelationService_DeleteFriendRevert_FullMethodName       = "/v1.UserRelationService/DeleteFriendRevert"
+	UserRelationService_AddBlacklist_FullMethodName             = "/v1.UserRelationService/AddBlacklist"
+	UserRelationService_DeleteBlacklist_FullMethodName          = "/v1.UserRelationService/DeleteBlacklist"
+	UserRelationService_GetFriendList_FullMethodName            = "/v1.UserRelationService/GetFriendList"
+	UserRelationService_GetBlacklist_FullMethodName             = "/v1.UserRelationService/GetBlacklist"
+	UserRelationService_GetUserRelation_FullMethodName          = "/v1.UserRelationService/GetUserRelation"
+	UserRelationService_GetFriendRequestList_FullMethodName     = "/v1.UserRelationService/GetFriendRequestList"
+	UserRelationService_GetUserRelationByUserIds_FullMethodName = "/v1.UserRelationService/GetUserRelationByUserIds"
 )
 
 // UserRelationServiceClient is the client API for UserRelationService service.
@@ -47,6 +48,8 @@ type UserRelationServiceClient interface {
 	GetBlacklist(ctx context.Context, in *GetBlacklistRequest, opts ...grpc.CallOption) (*GetBlacklistResponse, error)
 	GetUserRelation(ctx context.Context, in *GetUserRelationRequest, opts ...grpc.CallOption) (*GetUserRelationResponse, error)
 	GetFriendRequestList(ctx context.Context, in *GetFriendRequestListRequest, opts ...grpc.CallOption) (*GetFriendRequestListResponse, error)
+	// 批量获取用户关系
+	GetUserRelationByUserIds(ctx context.Context, in *GetUserRelationByUserIdsRequest, opts ...grpc.CallOption) (*GetUserRelationByUserIdsResponse, error)
 }
 
 type userRelationServiceClient struct {
@@ -156,6 +159,15 @@ func (c *userRelationServiceClient) GetFriendRequestList(ctx context.Context, in
 	return out, nil
 }
 
+func (c *userRelationServiceClient) GetUserRelationByUserIds(ctx context.Context, in *GetUserRelationByUserIdsRequest, opts ...grpc.CallOption) (*GetUserRelationByUserIdsResponse, error) {
+	out := new(GetUserRelationByUserIdsResponse)
+	err := c.cc.Invoke(ctx, UserRelationService_GetUserRelationByUserIds_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserRelationServiceServer is the server API for UserRelationService service.
 // All implementations must embed UnimplementedUserRelationServiceServer
 // for forward compatibility
@@ -171,6 +183,8 @@ type UserRelationServiceServer interface {
 	GetBlacklist(context.Context, *GetBlacklistRequest) (*GetBlacklistResponse, error)
 	GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error)
 	GetFriendRequestList(context.Context, *GetFriendRequestListRequest) (*GetFriendRequestListResponse, error)
+	// 批量获取用户关系
+	GetUserRelationByUserIds(context.Context, *GetUserRelationByUserIdsRequest) (*GetUserRelationByUserIdsResponse, error)
 	mustEmbedUnimplementedUserRelationServiceServer()
 }
 
@@ -210,6 +224,9 @@ func (UnimplementedUserRelationServiceServer) GetUserRelation(context.Context, *
 }
 func (UnimplementedUserRelationServiceServer) GetFriendRequestList(context.Context, *GetFriendRequestListRequest) (*GetFriendRequestListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFriendRequestList not implemented")
+}
+func (UnimplementedUserRelationServiceServer) GetUserRelationByUserIds(context.Context, *GetUserRelationByUserIdsRequest) (*GetUserRelationByUserIdsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserRelationByUserIds not implemented")
 }
 func (UnimplementedUserRelationServiceServer) mustEmbedUnimplementedUserRelationServiceServer() {}
 
@@ -422,6 +439,24 @@ func _UserRelationService_GetFriendRequestList_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserRelationService_GetUserRelationByUserIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserRelationByUserIdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserRelationServiceServer).GetUserRelationByUserIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserRelationService_GetUserRelationByUserIds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserRelationServiceServer).GetUserRelationByUserIds(ctx, req.(*GetUserRelationByUserIdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserRelationService_ServiceDesc is the grpc.ServiceDesc for UserRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -472,6 +507,10 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFriendRequestList",
 			Handler:    _UserRelationService_GetFriendRequestList_Handler,
+		},
+		{
+			MethodName: "GetUserRelationByUserIds",
+			Handler:    _UserRelationService_GetUserRelationByUserIds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

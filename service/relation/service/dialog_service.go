@@ -37,7 +37,7 @@ func (s *Service) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.
 			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
 		}
 
-		_, err = s.JoinDialog(ctx, &v1.JoinDialogRequest{DialogId: uint32(dialog.ID), UserId: request.OwnerId})
+		_, err = s.dr.JoinBatchDialog(dialog.ID, request.UserIds)
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
 		}
@@ -57,8 +57,13 @@ func (s *Service) CreateAndJoinDialogWithGroupRevert(ctx context.Context, reques
 
 	fmt.Println("CreateAndJoinDialogWithGroupRevert req => ", request)
 
+	ids := []string{request.OwnerId}
+	for _, id := range request.UserIds {
+		ids = append(ids, id)
+	}
+
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.OwnerId); err != nil {
+		if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), ids); err != nil {
 			return status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), fmt.Sprintf("failed to delete dialog user revert : %s", err.Error()))
 		}
 		if err := s.dr.DeleteDialogByDialogID(uint(request.DialogId)); err != nil {
@@ -108,11 +113,11 @@ func (s *Service) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.Co
 func (s *Service) ConfirmFriendAndJoinDialogRevert(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRevertRequest) (*v1.ConfirmFriendAndJoinDialogRevertResponse, error) {
 	resp := &v1.ConfirmFriendAndJoinDialogRevertResponse{}
 
-	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId); err != nil {
+	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.UserId}); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
 	}
 
-	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.OwnerId); err != nil {
+	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.OwnerId}); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
 	}
 
@@ -135,7 +140,7 @@ func (s *Service) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1
 func (s *Service) JoinDialogRevert(ctx context.Context, request *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
 	fmt.Println("JoinDialogRevert req => ", request)
 	resp := &v1.JoinDialogResponse{}
-	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId); err != nil {
+	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.UserId}); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 	}
 	return resp, nil
@@ -269,7 +274,7 @@ func (s *Service) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.G
 func (s *Service) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
 	var resp = &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
 
-	err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId)
+	err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.UserId})
 	if err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrGetDialogUserByDialogIDAndUserIDFailed.Code()), err.Error())
 	}

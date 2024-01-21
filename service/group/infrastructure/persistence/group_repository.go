@@ -49,7 +49,7 @@ func (repo *GroupRepo) InsertGroup(group *entity.Group) (*entity.Group, error) {
 }
 
 func (repo *GroupRepo) DeleteGroup(gid uint) error {
-	result := repo.db.Model(&entity.Group{}).Where("id = ?", gid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now())
+	result := repo.db.Model(&entity.Group{}).Where("id = ?", gid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now().Unix())
 	return result.Error
 }
 

@@ -84,11 +84,11 @@ type AddFriendRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"` // 用户id
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
 	// @inject_tag: json:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"` // 好友id
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"` // 好友id
 	// @inject_tag: json:"msg"
-	Msg string `protobuf:"bytes,3,opt,name=Msg,proto3" json:"msg"` // 验证信息
+	Msg string `protobuf:"bytes,3,opt,name=Msg,proto3" json:"Msg,omitempty"` // 验证信息
 }
 
 func (x *AddFriendRequest) Reset() {
@@ -188,13 +188,13 @@ type ManageFriendRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
 	// @inject_tag: json:"dialog_id" form:"dialog_id"
-	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"dialog_id" form:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
 	// @inject_tag: json:"status" form:"status"
-	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"status" form:"status"`
+	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"Status,omitempty"`
 }
 
 func (x *ManageFriendRequest) Reset() {
@@ -301,9 +301,9 @@ type DeleteFriendRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
 }
 
 func (x *DeleteFriendRequest) Reset() {
@@ -396,9 +396,9 @@ type AddBlacklistRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
 }
 
 func (x *AddBlacklistRequest) Reset() {
@@ -491,9 +491,9 @@ type DeleteBlacklistRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 	// @inject_tag: json:"friend_id" form:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
 }
 
 func (x *DeleteBlacklistRequest) Reset() {
@@ -586,9 +586,9 @@ type Friend struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 	// @inject_tag: json:"dialog_id" form:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id" form:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
 }
 
 func (x *Friend) Reset() {
@@ -643,7 +643,7 @@ type GetFriendListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 }
 
 func (x *GetFriendListRequest) Reset() {
@@ -691,7 +691,7 @@ type GetFriendListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"friend_list" form:"friend_list"
-	FriendList []*Friend `protobuf:"bytes,1,rep,name=FriendList,proto3" json:"friend_list" form:"friend_list"`
+	FriendList []*Friend `protobuf:"bytes,1,rep,name=FriendList,proto3" json:"FriendList,omitempty"`
 }
 
 func (x *GetFriendListResponse) Reset() {
@@ -739,7 +739,7 @@ type Blacklist struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 }
 
 func (x *Blacklist) Reset() {
@@ -787,7 +787,7 @@ type GetBlacklistRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 }
 
 func (x *GetBlacklistRequest) Reset() {
@@ -835,7 +835,7 @@ type GetBlacklistResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"blacklist" form:"blacklist"
-	Blacklist []*Blacklist `protobuf:"bytes,1,rep,name=Blacklist,proto3" json:"blacklist" form:"blacklist"`
+	Blacklist []*Blacklist `protobuf:"bytes,1,rep,name=Blacklist,proto3" json:"Blacklist,omitempty"`
 }
 
 func (x *GetBlacklistResponse) Reset() {
@@ -883,9 +883,9 @@ type GetUserRelationRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 	// @inject_tag: json:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
 }
 
 func (x *GetUserRelationRequest) Reset() {
@@ -940,13 +940,13 @@ type GetUserRelationResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 	// @inject_tag: json:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,3,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
 	// @inject_tag: json:"status"
-	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"status"`
+	Status RelationStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=v1.RelationStatus" json:"Status,omitempty"`
 }
 
 func (x *GetUserRelationResponse) Reset() {
@@ -1015,7 +1015,7 @@ type GetFriendRequestListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
 }
 
 func (x *GetFriendRequestListRequest) Reset() {
@@ -1063,7 +1063,7 @@ type GetFriendRequestListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"friend_request_list"
-	FriendRequestList []*FriendRequestList `protobuf:"bytes,1,rep,name=FriendRequestList,proto3" json:"friend_request_list"`
+	FriendRequestList []*FriendRequestList `protobuf:"bytes,1,rep,name=FriendRequestList,proto3" json:"FriendRequestList,omitempty"`
 }
 
 func (x *GetFriendRequestListResponse) Reset() {
@@ -1111,15 +1111,15 @@ type FriendRequestList struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"` // 用户id
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
 	// @inject_tag: json:"nickname"
-	Nickname string `protobuf:"bytes,2,opt,name=Nickname,proto3" json:"nickname"` // 用户昵称
+	Nickname string `protobuf:"bytes,2,opt,name=Nickname,proto3" json:"Nickname,omitempty"` // 用户昵称
 	// @inject_tag: json:"avatar"
-	Avatar string `protobuf:"bytes,3,opt,name=Avatar,proto3" json:"avatar"` // 用户头像
+	Avatar string `protobuf:"bytes,3,opt,name=Avatar,proto3" json:"Avatar,omitempty"` // 用户头像
 	// @inject_tag: json:"msg"
-	Msg string `protobuf:"bytes,4,opt,name=Msg,proto3" json:"msg"` // 申请信息
+	Msg string `protobuf:"bytes,4,opt,name=Msg,proto3" json:"Msg,omitempty"` // 申请信息
 	// @inject_tag: json:"status"
-	Status RelationStatus `protobuf:"varint,5,opt,name=Status,proto3,enum=v1.RelationStatus" json:"status"`
+	Status RelationStatus `protobuf:"varint,5,opt,name=Status,proto3,enum=v1.RelationStatus" json:"Status,omitempty"`
 }
 
 func (x *FriendRequestList) Reset() {
@@ -1187,6 +1187,110 @@ func (x *FriendRequestList) GetStatus() RelationStatus {
 		return x.Status
 	}
 	return RelationStatus_RELATION_STATUS_APPLYING
+}
+
+type GetUserRelationByUserIdsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// @inject_tag: json:"user_id"
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
+	// @inject_tag: json:"friend_ids"
+	FriendIds []string `protobuf:"bytes,2,rep,name=FriendIds,proto3" json:"FriendIds,omitempty"` // 好友id列表
+}
+
+func (x *GetUserRelationByUserIdsRequest) Reset() {
+	*x = GetUserRelationByUserIdsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_v1_user_relation_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetUserRelationByUserIdsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserRelationByUserIdsRequest) ProtoMessage() {}
+
+func (x *GetUserRelationByUserIdsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_user_relation_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserRelationByUserIdsRequest.ProtoReflect.Descriptor instead.
+func (*GetUserRelationByUserIdsRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_user_relation_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *GetUserRelationByUserIdsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetUserRelationByUserIdsRequest) GetFriendIds() []string {
+	if x != nil {
+		return x.FriendIds
+	}
+	return nil
+}
+
+type GetUserRelationByUserIdsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Users []*GetUserRelationResponse `protobuf:"bytes,1,rep,name=Users,proto3" json:"Users,omitempty"`
+}
+
+func (x *GetUserRelationByUserIdsResponse) Reset() {
+	*x = GetUserRelationByUserIdsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_v1_user_relation_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetUserRelationByUserIdsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserRelationByUserIdsResponse) ProtoMessage() {}
+
+func (x *GetUserRelationByUserIdsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_user_relation_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserRelationByUserIdsResponse.ProtoReflect.Descriptor instead.
+func (*GetUserRelationByUserIdsResponse) Descriptor() ([]byte, []int) {
+	return file_api_v1_user_relation_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *GetUserRelationByUserIdsResponse) GetUsers() []*GetUserRelationResponse {
+	if x != nil {
+		return x.Users
+	}
+	return nil
 }
 
 var File_api_v1_user_relation_proto protoreflect.FileDescriptor
@@ -1285,7 +1389,18 @@ var file_api_v1_user_relation_proto_rawDesc = []byte{
 	0x67, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x2a, 0x0a, 0x06,
 	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x12, 0x2e, 0x76,
 	0x31, 0x2e, 0x52, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73,
-	0x52, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x2a, 0xbe, 0x01, 0x0a, 0x0e, 0x52, 0x65, 0x6c,
+	0x52, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22, 0x57, 0x0a, 0x1f, 0x47, 0x65, 0x74, 0x55,
+	0x73, 0x65, 0x72, 0x52, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x79, 0x55, 0x73, 0x65,
+	0x72, 0x49, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x55,
+	0x73, 0x65, 0x72, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x55, 0x73, 0x65,
+	0x72, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x49, 0x64, 0x73,
+	0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x49, 0x64,
+	0x73, 0x22, 0x55, 0x0a, 0x20, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x52, 0x65, 0x6c, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x42, 0x79, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x31, 0x0a, 0x05, 0x55, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65,
+	0x72, 0x52, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x52, 0x05, 0x55, 0x73, 0x65, 0x72, 0x73, 0x2a, 0xbe, 0x01, 0x0a, 0x0e, 0x52, 0x65, 0x6c,
 	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x1c, 0x0a, 0x18, 0x52,
 	0x45, 0x4c, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x41,
 	0x50, 0x50, 0x4c, 0x59, 0x49, 0x4e, 0x47, 0x10, 0x00, 0x12, 0x1b, 0x0a, 0x17, 0x52, 0x45, 0x4c,
@@ -1297,7 +1412,7 @@ var file_api_v1_user_relation_proto_rawDesc = []byte{
 	0x1b, 0x0a, 0x17, 0x52, 0x45, 0x4c, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x53, 0x54, 0x41, 0x54,
 	0x55, 0x53, 0x5f, 0x42, 0x4c, 0x4f, 0x43, 0x4b, 0x45, 0x44, 0x10, 0x04, 0x12, 0x1b, 0x0a, 0x17,
 	0x52, 0x45, 0x4c, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f,
-	0x44, 0x45, 0x4c, 0x45, 0x54, 0x45, 0x44, 0x10, 0x05, 0x32, 0xa6, 0x06, 0x0a, 0x13, 0x55, 0x73,
+	0x44, 0x45, 0x4c, 0x45, 0x54, 0x45, 0x44, 0x10, 0x05, 0x32, 0x8d, 0x07, 0x0a, 0x13, 0x55, 0x73,
 	0x65, 0x72, 0x52, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
 	0x65, 0x12, 0x38, 0x0a, 0x09, 0x41, 0x64, 0x64, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x12, 0x14,
 	0x2e, 0x76, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x71,
@@ -1348,11 +1463,17 @@ var file_api_v1_user_relation_proto_rawDesc = []byte{
 	0x71, 0x75, 0x65, 0x73, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x1a, 0x20, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x63, 0x6f, 0x73, 0x73, 0x69, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x73, 0x2d, 0x73, 0x65, 0x72,
-	0x76, 0x65, 0x72, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x72, 0x65, 0x6c, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x73, 0x65, 0x12, 0x65, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x52, 0x65, 0x6c,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x79, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x73, 0x12, 0x23,
+	0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x52, 0x65, 0x6c, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x42, 0x79, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72,
+	0x52, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x79, 0x55, 0x73, 0x65, 0x72, 0x49, 0x64,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69, 0x74,
+	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x73, 0x69, 0x6d, 0x2f, 0x63,
+	0x6f, 0x73, 0x73, 0x2d, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x2f, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1368,30 +1489,32 @@ func file_api_v1_user_relation_proto_rawDescGZIP() []byte {
 }
 
 var file_api_v1_user_relation_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_api_v1_user_relation_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_api_v1_user_relation_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_api_v1_user_relation_proto_goTypes = []interface{}{
-	(RelationStatus)(0),                  // 0: v1.RelationStatus
-	(*AddFriendRequest)(nil),             // 1: v1.AddFriendRequest
-	(*AddFriendResponse)(nil),            // 2: v1.AddFriendResponse
-	(*ManageFriendRequest)(nil),          // 3: v1.ManageFriendRequest
-	(*ManageFriendResponse)(nil),         // 4: v1.ManageFriendResponse
-	(*DeleteFriendRequest)(nil),          // 5: v1.DeleteFriendRequest
-	(*DeleteFriendResponse)(nil),         // 6: v1.DeleteFriendResponse
-	(*AddBlacklistRequest)(nil),          // 7: v1.AddBlacklistRequest
-	(*AddBlacklistResponse)(nil),         // 8: v1.AddBlacklistResponse
-	(*DeleteBlacklistRequest)(nil),       // 9: v1.DeleteBlacklistRequest
-	(*DeleteBlacklistResponse)(nil),      // 10: v1.DeleteBlacklistResponse
-	(*Friend)(nil),                       // 11: v1.Friend
-	(*GetFriendListRequest)(nil),         // 12: v1.GetFriendListRequest
-	(*GetFriendListResponse)(nil),        // 13: v1.GetFriendListResponse
-	(*Blacklist)(nil),                    // 14: v1.Blacklist
-	(*GetBlacklistRequest)(nil),          // 15: v1.GetBlacklistRequest
-	(*GetBlacklistResponse)(nil),         // 16: v1.GetBlacklistResponse
-	(*GetUserRelationRequest)(nil),       // 17: v1.GetUserRelationRequest
-	(*GetUserRelationResponse)(nil),      // 18: v1.GetUserRelationResponse
-	(*GetFriendRequestListRequest)(nil),  // 19: v1.GetFriendRequestListRequest
-	(*GetFriendRequestListResponse)(nil), // 20: v1.GetFriendRequestListResponse
-	(*FriendRequestList)(nil),            // 21: v1.FriendRequestList
+	(RelationStatus)(0),                      // 0: v1.RelationStatus
+	(*AddFriendRequest)(nil),                 // 1: v1.AddFriendRequest
+	(*AddFriendResponse)(nil),                // 2: v1.AddFriendResponse
+	(*ManageFriendRequest)(nil),              // 3: v1.ManageFriendRequest
+	(*ManageFriendResponse)(nil),             // 4: v1.ManageFriendResponse
+	(*DeleteFriendRequest)(nil),              // 5: v1.DeleteFriendRequest
+	(*DeleteFriendResponse)(nil),             // 6: v1.DeleteFriendResponse
+	(*AddBlacklistRequest)(nil),              // 7: v1.AddBlacklistRequest
+	(*AddBlacklistResponse)(nil),             // 8: v1.AddBlacklistResponse
+	(*DeleteBlacklistRequest)(nil),           // 9: v1.DeleteBlacklistRequest
+	(*DeleteBlacklistResponse)(nil),          // 10: v1.DeleteBlacklistResponse
+	(*Friend)(nil),                           // 11: v1.Friend
+	(*GetFriendListRequest)(nil),             // 12: v1.GetFriendListRequest
+	(*GetFriendListResponse)(nil),            // 13: v1.GetFriendListResponse
+	(*Blacklist)(nil),                        // 14: v1.Blacklist
+	(*GetBlacklistRequest)(nil),              // 15: v1.GetBlacklistRequest
+	(*GetBlacklistResponse)(nil),             // 16: v1.GetBlacklistResponse
+	(*GetUserRelationRequest)(nil),           // 17: v1.GetUserRelationRequest
+	(*GetUserRelationResponse)(nil),          // 18: v1.GetUserRelationResponse
+	(*GetFriendRequestListRequest)(nil),      // 19: v1.GetFriendRequestListRequest
+	(*GetFriendRequestListResponse)(nil),     // 20: v1.GetFriendRequestListResponse
+	(*FriendRequestList)(nil),                // 21: v1.FriendRequestList
+	(*GetUserRelationByUserIdsRequest)(nil),  // 22: v1.GetUserRelationByUserIdsRequest
+	(*GetUserRelationByUserIdsResponse)(nil), // 23: v1.GetUserRelationByUserIdsResponse
 }
 var file_api_v1_user_relation_proto_depIdxs = []int32{
 	0,  // 0: v1.ManageFriendRequest.Status:type_name -> v1.RelationStatus
@@ -1400,33 +1523,36 @@ var file_api_v1_user_relation_proto_depIdxs = []int32{
 	0,  // 3: v1.GetUserRelationResponse.Status:type_name -> v1.RelationStatus
 	21, // 4: v1.GetFriendRequestListResponse.FriendRequestList:type_name -> v1.FriendRequestList
 	0,  // 5: v1.FriendRequestList.Status:type_name -> v1.RelationStatus
-	1,  // 6: v1.UserRelationService.AddFriend:input_type -> v1.AddFriendRequest
-	3,  // 7: v1.UserRelationService.ManageFriend:input_type -> v1.ManageFriendRequest
-	3,  // 8: v1.UserRelationService.ManageFriendRevert:input_type -> v1.ManageFriendRequest
-	5,  // 9: v1.UserRelationService.DeleteFriend:input_type -> v1.DeleteFriendRequest
-	5,  // 10: v1.UserRelationService.DeleteFriendRevert:input_type -> v1.DeleteFriendRequest
-	7,  // 11: v1.UserRelationService.AddBlacklist:input_type -> v1.AddBlacklistRequest
-	9,  // 12: v1.UserRelationService.DeleteBlacklist:input_type -> v1.DeleteBlacklistRequest
-	12, // 13: v1.UserRelationService.GetFriendList:input_type -> v1.GetFriendListRequest
-	15, // 14: v1.UserRelationService.GetBlacklist:input_type -> v1.GetBlacklistRequest
-	17, // 15: v1.UserRelationService.GetUserRelation:input_type -> v1.GetUserRelationRequest
-	19, // 16: v1.UserRelationService.GetFriendRequestList:input_type -> v1.GetFriendRequestListRequest
-	2,  // 17: v1.UserRelationService.AddFriend:output_type -> v1.AddFriendResponse
-	4,  // 18: v1.UserRelationService.ManageFriend:output_type -> v1.ManageFriendResponse
-	4,  // 19: v1.UserRelationService.ManageFriendRevert:output_type -> v1.ManageFriendResponse
-	6,  // 20: v1.UserRelationService.DeleteFriend:output_type -> v1.DeleteFriendResponse
-	6,  // 21: v1.UserRelationService.DeleteFriendRevert:output_type -> v1.DeleteFriendResponse
-	8,  // 22: v1.UserRelationService.AddBlacklist:output_type -> v1.AddBlacklistResponse
-	10, // 23: v1.UserRelationService.DeleteBlacklist:output_type -> v1.DeleteBlacklistResponse
-	13, // 24: v1.UserRelationService.GetFriendList:output_type -> v1.GetFriendListResponse
-	16, // 25: v1.UserRelationService.GetBlacklist:output_type -> v1.GetBlacklistResponse
-	18, // 26: v1.UserRelationService.GetUserRelation:output_type -> v1.GetUserRelationResponse
-	20, // 27: v1.UserRelationService.GetFriendRequestList:output_type -> v1.GetFriendRequestListResponse
-	17, // [17:28] is the sub-list for method output_type
-	6,  // [6:17] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	18, // 6: v1.GetUserRelationByUserIdsResponse.Users:type_name -> v1.GetUserRelationResponse
+	1,  // 7: v1.UserRelationService.AddFriend:input_type -> v1.AddFriendRequest
+	3,  // 8: v1.UserRelationService.ManageFriend:input_type -> v1.ManageFriendRequest
+	3,  // 9: v1.UserRelationService.ManageFriendRevert:input_type -> v1.ManageFriendRequest
+	5,  // 10: v1.UserRelationService.DeleteFriend:input_type -> v1.DeleteFriendRequest
+	5,  // 11: v1.UserRelationService.DeleteFriendRevert:input_type -> v1.DeleteFriendRequest
+	7,  // 12: v1.UserRelationService.AddBlacklist:input_type -> v1.AddBlacklistRequest
+	9,  // 13: v1.UserRelationService.DeleteBlacklist:input_type -> v1.DeleteBlacklistRequest
+	12, // 14: v1.UserRelationService.GetFriendList:input_type -> v1.GetFriendListRequest
+	15, // 15: v1.UserRelationService.GetBlacklist:input_type -> v1.GetBlacklistRequest
+	17, // 16: v1.UserRelationService.GetUserRelation:input_type -> v1.GetUserRelationRequest
+	19, // 17: v1.UserRelationService.GetFriendRequestList:input_type -> v1.GetFriendRequestListRequest
+	22, // 18: v1.UserRelationService.GetUserRelationByUserIds:input_type -> v1.GetUserRelationByUserIdsRequest
+	2,  // 19: v1.UserRelationService.AddFriend:output_type -> v1.AddFriendResponse
+	4,  // 20: v1.UserRelationService.ManageFriend:output_type -> v1.ManageFriendResponse
+	4,  // 21: v1.UserRelationService.ManageFriendRevert:output_type -> v1.ManageFriendResponse
+	6,  // 22: v1.UserRelationService.DeleteFriend:output_type -> v1.DeleteFriendResponse
+	6,  // 23: v1.UserRelationService.DeleteFriendRevert:output_type -> v1.DeleteFriendResponse
+	8,  // 24: v1.UserRelationService.AddBlacklist:output_type -> v1.AddBlacklistResponse
+	10, // 25: v1.UserRelationService.DeleteBlacklist:output_type -> v1.DeleteBlacklistResponse
+	13, // 26: v1.UserRelationService.GetFriendList:output_type -> v1.GetFriendListResponse
+	16, // 27: v1.UserRelationService.GetBlacklist:output_type -> v1.GetBlacklistResponse
+	18, // 28: v1.UserRelationService.GetUserRelation:output_type -> v1.GetUserRelationResponse
+	20, // 29: v1.UserRelationService.GetFriendRequestList:output_type -> v1.GetFriendRequestListResponse
+	23, // 30: v1.UserRelationService.GetUserRelationByUserIds:output_type -> v1.GetUserRelationByUserIdsResponse
+	19, // [19:31] is the sub-list for method output_type
+	7,  // [7:19] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_user_relation_proto_init() }
@@ -1687,6 +1813,30 @@ func file_api_v1_user_relation_proto_init() {
 				return nil
 			}
 		}
+		file_api_v1_user_relation_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetUserRelationByUserIdsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_v1_user_relation_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetUserRelationByUserIdsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1694,7 +1844,7 @@ func file_api_v1_user_relation_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_v1_user_relation_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   21,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -4,6 +4,7 @@ import "github.com/cossim/coss-server/service/relation/domain/entity"
 
 type GroupRelationRepository interface {
 	CreateRelation(ur *entity.GroupRelation) (*entity.GroupRelation, error)
+	CreateRelations(urs []*entity.GroupRelation) ([]*entity.GroupRelation, error)
 	UpdateRelation(ur *entity.GroupRelation) (*entity.GroupRelation, error)
 	UpdateRelationColumnByGroupAndUser(gid uint32, uid string, column string, value interface{}) error
 	DeleteRelationByID(gid uint32, uid string) error
@@ -20,4 +21,6 @@ type GroupRelationRepository interface {
 
 	// UpdateGroupRelationByGroupID 根据群聊id更新群聊的所有用户信息
 	UpdateGroupRelationByGroupID(dialogID uint32, updateFields map[string]interface{}) error
+
+	DeleteRelationByGroupIDAndUserIDs(gid uint32, uid []string) error
 }

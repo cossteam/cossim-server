@@ -184,16 +184,16 @@ message ConfirmFriendAndJoinDialogRevertRequest {
 message ConfirmFriendAndJoinDialogRevertResponse {}
 
 message CreateAndJoinDialogWithGroupRequest {
-//  @inject_tag: json:"owner_id"
+    //  @inject_tag: json:"owner_id"
     string OwnerId = 1;   // 创建者id
-//  @inject_tag: json:"type"
+    //  @inject_tag: json:"type"
     uint32 Type = 2;      // 会话类型 (用户会话=0, 群组会话=1)
-//  @inject_tag: json:"group_id"
+    //  @inject_tag: json:"group_id"
     uint32 GroupId = 3;   // 群组id
-//  @inject_tag: json:"dialog_id"
+    //  @inject_tag: json:"dialog_id"
     uint32 DialogId = 4;  // 会话id
-//  @inject_tag: json:"user_id"
-    string UserId = 5;    // 对方用户id
+    //  @inject_tag: json:"user_id"
+    repeated string UserIds = 5;    // 对方用户id列表
 }
 
 message CreateAndJoinDialogWithGroupResponse {

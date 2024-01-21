@@ -179,6 +179,15 @@ message DeleteGroupRelationByGroupIdAndUserIDRevertRequest {
   GroupRelationStatus Status = 3;
 }
 
+message CreateGroupAndInviteUsersRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1; // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserID = 2;  // 用户ID
+  // @inject_tag: json:"member"
+  repeated string Member = 3;  // 邀请的好友
+}
+
 message DeleteGroupRelationByGroupIdAndUserIDResponse {}
 
 service GroupRelationService {
@@ -235,4 +244,10 @@ service GroupRelationService {
 
   // DeleteGroupRelationByGroupIdAndUserID回滚操作
   rpc DeleteGroupRelationByGroupIdAndUserIDRevert(DeleteGroupRelationByGroupIdAndUserIDRequest) returns (google.protobuf.Empty);
+
+  // 创建群聊并邀请多个用户进群（包括自己）
+  rpc CreateGroupAndInviteUsers(CreateGroupAndInviteUsersRequest) returns (google.protobuf.Empty);
+
+  // CreateGroupAndInviteUsers 回滚操作
+  rpc CreateGroupAndInviteUsersRevert(CreateGroupAndInviteUsersRequest) returns (google.protobuf.Empty);
 }
