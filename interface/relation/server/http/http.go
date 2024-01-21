@@ -239,6 +239,8 @@ func route(engine *gin.Engine) {
 	g := api.Group("/group")
 	g.GET("/member", getGroupMember)
 	g.GET("/request_list", groupRequestList)
+	// 邀请好友加入群聊
+	g.POST("/invite", inviteGroup)
 	// 申请加入群聊
 	g.POST("/join", joinGroup)
 	// 管理加入群聊

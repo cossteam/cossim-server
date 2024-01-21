@@ -188,6 +188,17 @@ message CreateGroupAndInviteUsersRequest {
   repeated string Member = 3;  // 邀请的好友
 }
 
+message GetBatchGroupRelationRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;         // 群聊id
+  // @inject_tag: json:"user_id"
+  repeated string UserIds = 2; // 用户id列表
+}
+
+message GetBatchGroupRelationResponse {
+  repeated GetGroupRelationResponse GroupRelationResponses = 1;
+}
+
 message DeleteGroupRelationByGroupIdAndUserIDResponse {}
 
 service GroupRelationService {
@@ -232,6 +243,9 @@ service GroupRelationService {
 
   // 获取用户与群聊关系信息
   rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
+
+  // 批量获取用户与群聊关系信息
+  rpc GetBatchGroupRelation (GetBatchGroupRelationRequest) returns (GetBatchGroupRelationResponse);
 
   // 根据群聊ID删除群聊的所有关系
   rpc DeleteGroupRelationByGroupId(GroupIDRequest) returns (google.protobuf.Empty);

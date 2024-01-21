@@ -80,6 +80,14 @@ func (repo *GroupRelationRepo) GetUserGroupByID(gid uint32, uid string) (*entity
 	return &ug, nil
 }
 
+func (repo *GroupRelationRepo) GetUserGroupByIDs(gid uint32, uids []string) ([]*entity.GroupRelation, error) {
+	var ugs []*entity.GroupRelation
+	if err := repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? and user_id IN (?) AND deleted_at = 0", gid, uids).Find(&ugs).Error; err != nil {
+		return nil, err
+	}
+	return ugs, nil
+}
+
 func (repo *GroupRelationRepo) GetJoinRequestListByID(gid uint32) ([]*entity.GroupRelation, error) {
 	var joinRequests []*entity.GroupRelation
 	if err := repo.db.Where("group_id = ? AND status = ?", gid, entity.GroupStatusApplying).Find(&joinRequests).Error; err != nil {

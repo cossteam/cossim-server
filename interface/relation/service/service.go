@@ -59,7 +59,7 @@ func setupLogger(c *config.AppConfig) *zap.Logger {
 		LevelKey:       "level",
 		NameKey:        "logger",
 		CallerKey:      "caller",
-		MessageKey:     "msg",
+		MessageKey:     "relation",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.LowercaseLevelEncoder, // 小写编码器
@@ -71,12 +71,12 @@ func setupLogger(c *config.AppConfig) *zap.Logger {
 	// 设置日志级别
 	atom := zap.NewAtomicLevelAt(zapcore.Level(c.Log.V))
 	config := zap.Config{
-		Level:            atom,                                                           // 日志级别
-		Development:      true,                                                           // 开发模式，堆栈跟踪
-		Encoding:         c.Log.Format,                                                   // 输出格式 console 或 json
-		EncoderConfig:    encoderConfig,                                                  // 编码器配置
-		InitialFields:    map[string]interface{}{"serviceName": "relation_bff_user_svc"}, // 初始化字段，如：添加一个服务器名称
-		OutputPaths:      []string{"stdout"},                                             // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
+		Level:            atom,                                                  // 日志级别
+		Development:      true,                                                  // 开发模式，堆栈跟踪
+		Encoding:         c.Log.Format,                                          // 输出格式 console 或 json
+		EncoderConfig:    encoderConfig,                                         // 编码器配置
+		InitialFields:    map[string]interface{}{"serviceName": "relation_bff"}, // 初始化字段，如：添加一个服务器名称
+		OutputPaths:      []string{"stdout"},                                    // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
 		ErrorOutputPaths: []string{"stderr"},
 	}
 	// 构建日志

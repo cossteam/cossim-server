@@ -121,21 +121,21 @@ type Group struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
 	// @inject_tag: json:"type"
-	Type GroupType `protobuf:"varint,2,opt,name=Type,proto3,enum=v1.GroupType" json:"Type,omitempty"`
+	Type GroupType `protobuf:"varint,2,opt,name=Type,proto3,enum=v1.GroupType" json:"type"`
 	// @inject_tag: json:"status"
-	Status GroupStatus `protobuf:"varint,3,opt,name=Status,proto3,enum=v1.GroupStatus" json:"Status,omitempty"`
+	Status GroupStatus `protobuf:"varint,3,opt,name=Status,proto3,enum=v1.GroupStatus" json:"status"`
 	// @inject_tag: json:"max_members_limit"
-	MaxMembersLimit int32 `protobuf:"varint,4,opt,name=Max_members_limit,json=MaxMembersLimit,proto3" json:"Max_members_limit,omitempty"`
+	MaxMembersLimit int32 `protobuf:"varint,4,opt,name=Max_members_limit,json=MaxMembersLimit,proto3" json:"max_members_limit"`
 	// @inject_tag: json:"creator_id"
-	CreatorId string `protobuf:"bytes,5,opt,name=Creator_id,json=CreatorId,proto3" json:"Creator_id,omitempty"`
+	CreatorId string `protobuf:"bytes,5,opt,name=Creator_id,json=CreatorId,proto3" json:"creator_id"`
 	// @inject_tag: json:"name"
-	Name string `protobuf:"bytes,6,opt,name=Name,proto3" json:"Name,omitempty"`
+	Name string `protobuf:"bytes,6,opt,name=Name,proto3" json:"name"`
 	// @inject_tag: json:"avatar"
-	Avatar string `protobuf:"bytes,7,opt,name=Avatar,proto3" json:"Avatar,omitempty"`
+	Avatar string `protobuf:"bytes,7,opt,name=Avatar,proto3" json:"avatar"`
 	// @inject_tag: json:"member"
-	Member []string `protobuf:"bytes,8,rep,name=Member,proto3" json:"Member,omitempty"` // 创建群聊的时候邀请的成员
+	Member []string `protobuf:"bytes,8,rep,name=Member,proto3" json:"member"` // 创建群聊的时候邀请的成员
 }
 
 func (x *Group) Reset() {
@@ -232,7 +232,7 @@ type GetGroupInfoRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"gid"
-	Gid uint32 `protobuf:"varint,1,opt,name=Gid,proto3" json:"Gid,omitempty"`
+	Gid uint32 `protobuf:"varint,1,opt,name=Gid,proto3" json:"gid"`
 }
 
 func (x *GetGroupInfoRequest) Reset() {
@@ -280,7 +280,7 @@ type GetBatchGroupInfoRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_ids"
-	GroupIds []uint32 `protobuf:"varint,1,rep,packed,name=Group_ids,json=GroupIds,proto3" json:"Group_ids,omitempty"`
+	GroupIds []uint32 `protobuf:"varint,1,rep,packed,name=Group_ids,json=GroupIds,proto3" json:"group_ids"`
 }
 
 func (x *GetBatchGroupInfoRequest) Reset() {
@@ -328,7 +328,7 @@ type GetBatchGroupInfoResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"groups"
-	Groups []*Group `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
+	Groups []*Group `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups"`
 }
 
 func (x *GetBatchGroupInfoResponse) Reset() {
@@ -376,7 +376,7 @@ type UpdateGroupRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group"
-	Group *Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group,omitempty"`
+	Group *Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group"`
 }
 
 func (x *UpdateGroupRequest) Reset() {
@@ -424,7 +424,7 @@ type CreateGroupRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group"
-	Group *Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group,omitempty"`
+	Group *Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group"`
 }
 
 func (x *CreateGroupRequest) Reset() {
@@ -472,7 +472,7 @@ type DeleteGroupRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"gid"
-	Gid uint32 `protobuf:"varint,1,opt,name=Gid,proto3" json:"Gid,omitempty"`
+	Gid uint32 `protobuf:"varint,1,opt,name=Gid,proto3" json:"gid"`
 }
 
 func (x *DeleteGroupRequest) Reset() {
