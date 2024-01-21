@@ -31,13 +31,18 @@ func (s *Service) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.
 
 	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
 
+	ids := []string{request.OwnerId}
+	for _, v := range request.UserIds {
+		ids = append(ids, v)
+	}
+
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		dialog, err := s.dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
 		}
 
-		_, err = s.dr.JoinBatchDialog(dialog.ID, request.UserIds)
+		_, err = s.dr.JoinBatchDialog(dialog.ID, ids)
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
 		}
