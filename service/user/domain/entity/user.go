@@ -20,7 +20,7 @@ type User struct {
 	SecretBundle string     `gorm:"type:longtext;comment:用户密钥" json:"secre_bundle,omitempty"`
 	CreatedAt    int64      `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt    int64      `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
-	DeletedAt    int64      `gorm:"default:null;comment:删除时间" json:"deleted_at"`
+	DeletedAt    int64      `gorm:"default:0;comment:删除时间" json:"deleted_at"`
 }
 
 type UserStatus uint
