@@ -292,3 +292,46 @@ func (s *Service) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Contex
 	}
 	return resp, nil
 }
+
+func (s *Service) CreateGroupAndInviteUsers(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
+	owner := &entity.GroupRelation{
+		UserID:   request.UserID,
+		GroupID:  uint(request.GroupId),
+		Status:   entity.GroupStatusJoined,
+		Identity: entity.IdentityOwner,
+	}
+	grs := []*entity.GroupRelation{owner}
+	for _, v := range request.Member {
+		gr := &entity.GroupRelation{
+			UserID:   v,
+			GroupID:  uint(request.GroupId),
+			Status:   entity.GroupStatusJoined,
+			Identity: entity.IdentityUser,
+		}
+		grs = append(grs, gr)
+	}
+
+	_, err := s.grr.CreateRelations(grs)
+	if err != nil {
+		//return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		return resp, status.Error(codes.Aborted, err.Error())
+	}
+
+	return resp, nil
+}
+
+func (s *Service) CreateGroupAndInviteUsersRevert(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	ids := []string{request.UserID}
+	for _, v := range request.Member {
+		ids = append(ids, v)
+	}
+	if err := s.grr.DeleteRelationByGroupIDAndUserIDs(request.GroupId, ids); err != nil {
+		return resp, status.Error(codes.Aborted, err.Error())
+	}
+	return resp, nil
+}

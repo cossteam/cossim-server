@@ -5,6 +5,7 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -16,6 +17,8 @@ type Service struct {
 	groupClient          groupgrpcv1.GroupServiceClient
 	relationDialogClient relationgrpcv1.DialogServiceClient
 	relationGroupClient  relationgrpcv1.GroupRelationServiceClient
+	relationUserClient   relationgrpcv1.UserRelationServiceClient
+	userClient           usergrpcv1.UserServiceClient
 
 	logger *zap.Logger
 
@@ -30,13 +33,18 @@ func New(c *config.AppConfig) (s *Service) {
 
 	relationGroupClient := setupRelationGroupGRPCClient(c.Discovers["relation"].Addr)
 	relationDialogClient := setupRelationDialogGRPCClient(c.Discovers["relation"].Addr)
+	relationUserClient := setupRelationUserGRPCClient(c.Discovers["relation"].Addr)
 	groupClient := setupGroupGRPCClient(c.Discovers["group"].Addr)
+	userClient := setupUserGRPCClient(c.Discovers["user"].Addr)
 
 	return &Service{
 		relationGroupClient:  relationGroupClient,
 		relationDialogClient: relationDialogClient,
+		relationUserClient:   relationUserClient,
 		groupClient:          groupClient,
-		logger:               logger,
+		userClient:           userClient,
+
+		logger: logger,
 
 		dtmGrpcServer:      c.Dtm.Addr,
 		relationGrpcServer: c.Discovers["relation"].Addr,
@@ -95,6 +103,22 @@ func setupGroupGRPCClient(addr string) groupgrpcv1.GroupServiceClient {
 		panic(err)
 	}
 	return groupgrpcv1.NewGroupServiceClient(conn)
+}
+
+func setupRelationUserGRPCClient(addr string) relationgrpcv1.UserRelationServiceClient {
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	return relationgrpcv1.NewUserRelationServiceClient(conn)
+}
+
+func setupUserGRPCClient(addr string) usergrpcv1.UserServiceClient {
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	return usergrpcv1.NewUserServiceClient(conn)
 }
 
 func setupRelationDialogGRPCClient(addr string) relationgrpcv1.DialogServiceClient {

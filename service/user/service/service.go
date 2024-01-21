@@ -243,5 +243,4 @@ func (g *Service) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecret
 	resp.SecretBundle = secretBundle
 	resp.UserId = in.UserId
 	return resp, nil
-
 }

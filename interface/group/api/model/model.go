@@ -19,10 +19,11 @@ type UpdateGroupRequest struct {
 }
 
 type CreateGroupRequest struct {
-	Type            uint32 `json:"type"`
-	MaxMembersLimit uint32 `json:"max_members_limit"`
-	Name            string `json:"name" binding:"required"`
-	Avatar          string `json:"avatar"`
+	Type            uint32   `json:"type"`
+	MaxMembersLimit uint32   `json:"max_members_limit"`
+	Name            string   `json:"name" binding:"required"`
+	Avatar          string   `json:"avatar"`
+	Member          []string `json:"member"`
 }
 
 type CreateGroupResponse struct {
