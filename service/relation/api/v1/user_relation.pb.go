@@ -23,12 +23,12 @@ const (
 type RelationStatus int32
 
 const (
-	RelationStatus_RELATION_STATUS_APPLYING RelationStatus = 0
-	RelationStatus_RELATION_STATUS_PENDING  RelationStatus = 1
-	RelationStatus_RELATION_STATUS_ADDED    RelationStatus = 2
-	RelationStatus_RELATION_STATUS_REJECTED RelationStatus = 3
-	RelationStatus_RELATION_STATUS_BLOCKED  RelationStatus = 4
-	RelationStatus_RELATION_STATUS_DELETED  RelationStatus = 5
+	RelationStatus_RELATION_STATUS_APPLYING RelationStatus = 0 // 申请中
+	RelationStatus_RELATION_STATUS_PENDING  RelationStatus = 1 // 待通过
+	RelationStatus_RELATION_STATUS_ADDED    RelationStatus = 2 // 已添加
+	RelationStatus_RELATION_STATUS_REJECTED RelationStatus = 3 // 已拒绝
+	RelationStatus_RELATION_STATUS_BLOCKED  RelationStatus = 4 // 已拉黑
+	RelationStatus_RELATION_STATUS_DELETED  RelationStatus = 5 // 已删除
 )
 
 // Enum value maps for RelationStatus.
