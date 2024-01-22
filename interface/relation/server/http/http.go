@@ -243,14 +243,18 @@ func route(engine *gin.Engine) {
 	g.POST("/invite", inviteGroup)
 	// 申请加入群聊
 	g.POST("/join", joinGroup)
-	// 管理加入群聊
-	g.POST("/manage_join_group", manageJoinGroup)
+	// 用户加入或拒绝群聊
+	g.POST("/manage_join", manageJoinGroup)
 	//获取用户群聊列表
 	g.GET("/list", getUserGroupList)
-	// 移出群聊
-	g.POST("/remove", removeUserFromGroup)
 	// 退出群聊
 	g.POST("quit", quitGroup)
+
+	gg := api.Group("/group/admin")
+	// 管理员管理群聊申请
+	gg.POST("/manage/join", adminManageJoinGroup)
+	// 管理员移除群聊成员
+	gg.POST("/manage/remove", removeUserFromGroup)
 
 	// 为Swagger路径添加不需要身份验证的中间件
 	swagger := engine.Group("/api/v1/relation/swagger")

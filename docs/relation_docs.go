@@ -46,6 +46,74 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/group/admin/manage/join": {
+            "post": {
+                "description": "管理员管理加入群聊 action (0=拒绝, 1=同意)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "管理员管理加入群聊",
+                "parameters": [
+                    {
+                        "description": "Action (0: rejected, 1: joined)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AdminManageJoinGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/admin/manage/remove": {
+            "post": {
+                "description": "将用户从群聊移除",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "将用户从群聊移除",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RemoveUserFromGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/invite": {
             "post": {
                 "description": "邀请加入群聊",
@@ -149,9 +217,9 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/manage_join_group": {
+        "/relation/group/manage_join": {
             "post": {
-                "description": "管理加入群聊 action (0=拒绝, 1=同意)",
+                "description": "用户管理加入群聊 action (0=拒绝, 1=同意)",
                 "consumes": [
                     "application/json"
                 ],
@@ -161,7 +229,7 @@ const docTemplaterelation = `{
                 "tags": [
                     "GroupRelation"
                 ],
-                "summary": "管理加入群聊",
+                "summary": "用户管理加入群聊",
                 "parameters": [
                     {
                         "description": "Action (0: rejected, 1: joined)",
@@ -246,40 +314,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/remove": {
-            "post": {
-                "description": "将用户从群聊移除",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "GroupRelation"
-                ],
-                "summary": "将用户从群聊移除",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.RemoveUserFromGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/relation/group/request_list": {
             "get": {
                 "security": [
@@ -287,7 +321,7 @@ const docTemplaterelation = `{
                         "Bearer": []
                     }
                 ],
-                "description": "获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=已删除, 3=被拒绝 4=被封禁)",
+                "description": "获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=待通过, 2=已加入, 3=已删除, 4=拒绝, 5=被封禁)",
                 "consumes": [
                     "application/json"
                 ],
@@ -309,7 +343,7 @@ const docTemplaterelation = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "status (0=申请中, 1=已加入, 2=已删除, 3=被拒绝 4=被封禁)",
+                        "description": "status (0=申请中, 1=已加入, 2=已删除, 3=被拒绝, 4=被封禁, 5=待通过)",
                         "schema": {
                             "allOf": [
                                 {
@@ -496,7 +530,7 @@ const docTemplaterelation = `{
                 "summary": "好友申请列表",
                 "responses": {
                     "200": {
-                        "description": "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已拉黑, 5=已删除)",
+                        "description": "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝)",
                         "schema": {
                             "allOf": [
                                 {
@@ -594,6 +628,24 @@ const docTemplaterelation = `{
                 },
                 "msg": {
                     "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.AdminManageJoinGroupRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "user_id"
+            ],
+            "properties": {
+                "action": {
+                    "$ref": "#/definitions/model.ActionEnum"
+                },
+                "group_id": {
+                    "type": "integer"
                 },
                 "user_id": {
                     "type": "string"
@@ -710,7 +762,7 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "group_id",
-                "user_id"
+                "inviter_id"
             ],
             "properties": {
                 "action": {
@@ -719,7 +771,7 @@ const docTemplaterelation = `{
                 "group_id": {
                     "type": "integer"
                 },
-                "user_id": {
+                "inviter_id": {
                     "type": "string"
                 }
             }

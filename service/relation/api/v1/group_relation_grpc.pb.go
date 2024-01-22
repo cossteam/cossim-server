@@ -22,6 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	GroupRelationService_JoinGroup_FullMethodName                                   = "/v1.GroupRelationService/JoinGroup"
 	GroupRelationService_JoinGroupRevert_FullMethodName                             = "/v1.GroupRelationService/JoinGroupRevert"
+	GroupRelationService_InviteJoinGroup_FullMethodName                             = "/v1.GroupRelationService/InviteJoinGroup"
+	GroupRelationService_InviteJoinGroupRevert_FullMethodName                       = "/v1.GroupRelationService/InviteJoinGroupRevert"
 	GroupRelationService_GetGroupUserIDs_FullMethodName                             = "/v1.GroupRelationService/GetGroupUserIDs"
 	GroupRelationService_GetUserGroupIDs_FullMethodName                             = "/v1.GroupRelationService/GetUserGroupIDs"
 	GroupRelationService_GetUserGroupRequestList_FullMethodName                     = "/v1.GroupRelationService/GetUserGroupRequestList"
@@ -51,6 +53,10 @@ type GroupRelationServiceClient interface {
 	JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
 	// 加入群聊回滚操作
 	JoinGroupRevert(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
+	// 邀请好友加入群聊
+	InviteJoinGroup(ctx context.Context, in *InviteJoinGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// InviteJoinGroup回滚操作
+	InviteJoinGroupRevert(ctx context.Context, in *InviteJoinGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取群聊成员ID列表
 	GetGroupUserIDs(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
 	// 获取用户的所有群聊ID列表
@@ -111,6 +117,24 @@ func (c *groupRelationServiceClient) JoinGroup(ctx context.Context, in *JoinGrou
 func (c *groupRelationServiceClient) JoinGroupRevert(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error) {
 	out := new(JoinGroupResponse)
 	err := c.cc.Invoke(ctx, GroupRelationService_JoinGroupRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) InviteJoinGroup(ctx context.Context, in *InviteJoinGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_InviteJoinGroup_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) InviteJoinGroupRevert(ctx context.Context, in *InviteJoinGroupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_InviteJoinGroupRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -296,6 +320,10 @@ type GroupRelationServiceServer interface {
 	JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
 	// 加入群聊回滚操作
 	JoinGroupRevert(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
+	// 邀请好友加入群聊
+	InviteJoinGroup(context.Context, *InviteJoinGroupRequest) (*emptypb.Empty, error)
+	// InviteJoinGroup回滚操作
+	InviteJoinGroupRevert(context.Context, *InviteJoinGroupRequest) (*emptypb.Empty, error)
 	// 获取群聊成员ID列表
 	GetGroupUserIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
 	// 获取用户的所有群聊ID列表
@@ -346,6 +374,12 @@ func (UnimplementedGroupRelationServiceServer) JoinGroup(context.Context, *JoinG
 }
 func (UnimplementedGroupRelationServiceServer) JoinGroupRevert(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinGroupRevert not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) InviteJoinGroup(context.Context, *InviteJoinGroupRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InviteJoinGroup not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) InviteJoinGroupRevert(context.Context, *InviteJoinGroupRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InviteJoinGroupRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) GetGroupUserIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupUserIDs not implemented")
@@ -449,6 +483,42 @@ func _GroupRelationService_JoinGroupRevert_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GroupRelationServiceServer).JoinGroupRevert(ctx, req.(*JoinGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_InviteJoinGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InviteJoinGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).InviteJoinGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_InviteJoinGroup_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).InviteJoinGroup(ctx, req.(*InviteJoinGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_InviteJoinGroupRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InviteJoinGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).InviteJoinGroupRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_InviteJoinGroupRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).InviteJoinGroupRevert(ctx, req.(*InviteJoinGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -809,6 +879,14 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JoinGroupRevert",
 			Handler:    _GroupRelationService_JoinGroupRevert_Handler,
+		},
+		{
+			MethodName: "InviteJoinGroup",
+			Handler:    _GroupRelationService_InviteJoinGroup_Handler,
+		},
+		{
+			MethodName: "InviteJoinGroupRevert",
+			Handler:    _GroupRelationService_InviteJoinGroupRevert_Handler,
 		},
 		{
 			MethodName: "GetGroupUserIDs",

@@ -126,11 +126,12 @@ enum GroupIdentity {
 }
 
 enum GroupRelationStatus {
-    GroupStatusApplying  = 0; // 申请中
-    GroupStatusJoined    = 1; // 已加入
-    GroupStatusDeleted   = 2; // 已删除
-    GroupStatusReject    = 3; // 被拒绝
-    GroupStatusBlocked   = 4; // 被封禁
+    GroupStatusApplying  = 0; // 申请
+    GroupStatusPending   = 1; // 待通过
+    GroupStatusJoined    = 2; // 加入
+    GroupStatusDeleted   = 3; // 已删除
+    GroupStatusReject    = 4; // 拒绝
+    GroupStatusBlocked   = 5; // 被封禁
 }
 
 message GetUserManageGroupIDRequest {
@@ -158,7 +159,22 @@ message GetUserGroupRequestListRequest {
 }
 
 message GetUserGroupRequestListResponse {
-  repeated GroupJoinRequestList GroupJoinRequestList = 1;
+  repeated UserGroupRequestList UserGroupRequestList = 1;
+}
+
+message UserGroupRequestList {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;   // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;    // 用户id
+  // @inject_tag: json:"msg"
+  string Msg = 3;       // 申请信息
+  // @inject_tag: json:"status"
+  GroupRelationStatus Status = 4;
+  // @inject_tag: json:"created_at"
+  int64 CreatedAt = 5;
+  // @inject_tag: json:"inviter_id"
+  string InviterId = 6;       // 邀请人id
 }
 
 message DeleteGroupRelationByGroupIdAndUserIDRequest {
@@ -201,12 +217,27 @@ message GetBatchGroupRelationResponse {
 
 message DeleteGroupRelationByGroupIdAndUserIDResponse {}
 
+message InviteJoinGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+  // @inject_tag: json:"inviter_id"
+  string InviterId = 2;
+  // @inject_tag: json:"member"
+  repeated string Member = 3;
+}
+
 service GroupRelationService {
   // 加入群聊
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
 
   // 加入群聊回滚操作
   rpc JoinGroupRevert(JoinGroupRequest) returns (JoinGroupResponse);
+
+  // 邀请好友加入群聊
+  rpc InviteJoinGroup(InviteJoinGroupRequest) returns (google.protobuf.Empty);
+
+  // InviteJoinGroup回滚操作
+  rpc InviteJoinGroupRevert(InviteJoinGroupRequest) returns (google.protobuf.Empty);
 
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
