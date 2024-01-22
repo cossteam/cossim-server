@@ -5,6 +5,10 @@ definitions:
         type: string
       max_members_limit:
         type: integer
+      member:
+        items:
+          type: string
+        type: array
       name:
         type: string
       type:

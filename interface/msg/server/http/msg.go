@@ -457,6 +457,120 @@ func getUserDialogList(c *gin.Context) {
 	response.SetSuccess(c, "获取成功", responseList)
 }
 
+// @Summary 编辑用户消息
+// @Description 编辑用户消息
+// @Accept  json
+// @Produce  json
+// @param request body model.EditUserMsgRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/edit/user [post]
+func editUserMsg(c *gin.Context) {
+	req := new(model.EditUserMsgRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 调用相应的 gRPC 客户端方法来编辑用户消息
+	_, err := msgClient.EditUserMessage(context.Background(), &msg.EditUserMsgRequest{
+		UserMessage: &msg.UserMessage{
+			Id:      uint32(req.MsgId),
+			Content: req.Content,
+		},
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "编辑成功", nil)
+}
+
+// @Summary 编辑群消息
+// @Description 编辑群消息
+// @Accept  json
+// @Produce  json
+// @param request body model.EditGroupMsgRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/edit/group [post]
+func editGroupMsg(c *gin.Context) {
+	req := new(model.EditGroupMsgRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 调用相应的 gRPC 客户端方法来编辑群消息
+	_, err := msgClient.EditGroupMessage(context.Background(), &msg.EditGroupMsgRequest{
+		GroupMessage: &msg.GroupMessage{
+			Id:      uint32(req.MsgId),
+			Content: req.Content,
+		},
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "编辑成功", nil)
+}
+
+// @Summary 撤回用户消息
+// @Description 撤回用户消息
+// @Accept  json
+// @Produce  json
+// @param request body model.RecallUserMsgRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/recall/user [post]
+func recallUserMsg(c *gin.Context) {
+	req := new(model.RecallUserMsgRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 调用相应的 gRPC 客户端方法来撤回用户消息
+	msg, err := msgClient.DeleteUserMessage(context.Background(), &msg.DeleteUserMsgRequest{
+		MsgId: req.MsgId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "撤回成功", gin.H{"msg_id": msg.Id})
+}
+
+// @Summary 撤回群消息
+// @Description 撤回群消息
+// @Accept  json
+// @Produce  json
+// @param request body model.RecallGroupMsgRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/recall/group [post]
+func recallGroupMsg(c *gin.Context) {
+	req := new(model.RecallGroupMsgRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	// 调用相应的 gRPC 客户端方法来撤回群消息
+	msg, err := msgClient.DeleteGroupMessage(context.Background(), &msg.DeleteGroupMsgRequest{
+		MsgId: req.MsgId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "撤回成功", gin.H{"msg_id": msg.Id})
+}
+
 // 推送私聊消息
 func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
 	//遍历该用户所有客户端

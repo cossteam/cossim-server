@@ -45,7 +45,6 @@ definitions:
     - confirm_password
     - email
     - password
-    - public_key
     type: object
   model.Response:
     properties:

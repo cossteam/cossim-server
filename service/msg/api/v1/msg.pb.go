@@ -26,17 +26,17 @@ type SendUserMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"sender_id"
-	SenderId string `protobuf:"bytes,1,opt,name=SenderId,proto3" json:"SenderId,omitempty"`
+	SenderId string `protobuf:"bytes,1,opt,name=SenderId,proto3" json:"sender_id"`
 	// @inject_tag: json:"receiver_id"
-	ReceiverId string `protobuf:"bytes,2,opt,name=ReceiverId,proto3" json:"ReceiverId,omitempty"`
+	ReceiverId string `protobuf:"bytes,2,opt,name=ReceiverId,proto3" json:"receiver_id"`
 	// @inject_tag: json:"content"
-	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"Content,omitempty"`
+	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"type"
-	Type int32 `protobuf:"varint,4,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type int32 `protobuf:"varint,4,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"replay_id"
-	ReplayId uint64 `protobuf:"varint,5,opt,name=ReplayId,proto3" json:"ReplayId,omitempty"`
+	ReplayId uint64 `protobuf:"varint,5,opt,name=ReplayId,proto3" json:"replay_id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *SendUserMsgRequest) Reset() {
@@ -119,17 +119,17 @@ type SendGroupMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
 	// @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id" form:"group_id" uri:"group_id"`
 	// @inject_tag: json:"content" form:"content" uri:"content"
-	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"Content,omitempty"`
+	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"content" form:"content" uri:"content"`
 	// @inject_tag: json:"type" form:"type" uri:"type"
-	Type uint32 `protobuf:"varint,4,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type uint32 `protobuf:"varint,4,opt,name=Type,proto3" json:"type" form:"type" uri:"type"`
 	// @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
-	ReplayId uint32 `protobuf:"varint,5,opt,name=ReplayId,proto3" json:"ReplayId,omitempty"`
+	ReplayId uint32 `protobuf:"varint,5,opt,name=ReplayId,proto3" json:"replay_id" form:"replay_id" uri:"replay_id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *SendGroupMsgRequest) Reset() {
@@ -212,17 +212,17 @@ type GetUserMsgListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
 	// @inject_tag: json:"friend_id" form:"friend_id" uri:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"FriendId,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id" form:"friend_id" uri:"friend_id"`
 	// @inject_tag: json:"type" form:"type" uri:"type"
-	Type int32 `protobuf:"varint,3,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type int32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type" form:"type" uri:"type"`
 	// @inject_tag: json:"content" form:"content" uri:"content"
-	Content string `protobuf:"bytes,4,opt,name=Content,proto3" json:"Content,omitempty"`
+	Content string `protobuf:"bytes,4,opt,name=Content,proto3" json:"content" form:"content" uri:"content"`
 	// @inject_tag: json:"page_size" form:"page_size" uri:"page_size"
-	PageSize int32 `protobuf:"varint,5,opt,name=PageSize,proto3" json:"PageSize,omitempty"`
+	PageSize int32 `protobuf:"varint,5,opt,name=PageSize,proto3" json:"page_size" form:"page_size" uri:"page_size"`
 	// @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
-	PageNum int32 `protobuf:"varint,6,opt,name=PageNum,proto3" json:"PageNum,omitempty"`
+	PageNum int32 `protobuf:"varint,6,opt,name=PageNum,proto3" json:"page_number" form:"page_number" uri:"page_number"`
 }
 
 func (x *GetUserMsgListRequest) Reset() {
@@ -305,27 +305,27 @@ type UserMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
 	// @inject_tag: json:"sender_id"
-	SenderId string `protobuf:"bytes,2,opt,name=SenderId,proto3" json:"SenderId,omitempty"`
+	SenderId string `protobuf:"bytes,2,opt,name=SenderId,proto3" json:"sender_id"`
 	// @inject_tag: json:"receiver_id"
-	ReceiverId string `protobuf:"bytes,3,opt,name=ReceiverId,proto3" json:"ReceiverId,omitempty"`
+	ReceiverId string `protobuf:"bytes,3,opt,name=ReceiverId,proto3" json:"receiver_id"`
 	// @inject_tag: json:"content"
-	Content string `protobuf:"bytes,4,opt,name=Content,proto3" json:"Content,omitempty"`
+	Content string `protobuf:"bytes,4,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,5,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type uint32 `protobuf:"varint,5,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"replay_id"
-	ReplayId uint64 `protobuf:"varint,6,opt,name=ReplayId,proto3" json:"ReplayId,omitempty"`
+	ReplayId uint64 `protobuf:"varint,6,opt,name=ReplayId,proto3" json:"replay_id"`
 	// @inject_tag: json:"is_read"
-	IsRead int32 `protobuf:"varint,7,opt,name=IsRead,proto3" json:"IsRead,omitempty"`
+	IsRead int32 `protobuf:"varint,7,opt,name=IsRead,proto3" json:"is_read"`
 	// @inject_tag: json:"read_at"
-	ReadAt int64 `protobuf:"varint,8,opt,name=ReadAt,proto3" json:"ReadAt,omitempty"`
+	ReadAt int64 `protobuf:"varint,8,opt,name=ReadAt,proto3" json:"read_at"`
 	// @inject_tag: json:"receive_id"
-	ReceiveId string `protobuf:"bytes,9,opt,name=ReceiveId,proto3" json:"ReceiveId,omitempty"`
+	ReceiveId string `protobuf:"bytes,9,opt,name=ReceiveId,proto3" json:"receive_id"`
 	// @inject_tag: json:"created_at"
-	CreatedAt int64 `protobuf:"varint,10,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
+	CreatedAt int64 `protobuf:"varint,10,opt,name=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,11,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,11,opt,name=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *UserMessage) Reset() {
@@ -443,23 +443,23 @@ type GroupMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=Group_id,json=GroupId,proto3" json:"Group_id,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=Group_id,json=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"reply_id"
-	ReplyId uint32 `protobuf:"varint,4,opt,name=Reply_id,json=ReplyId,proto3" json:"Reply_id,omitempty"`
+	ReplyId uint32 `protobuf:"varint,4,opt,name=Reply_id,json=ReplyId,proto3" json:"reply_id"`
 	// @inject_tag: json:"read_count"
-	ReadCount int32 `protobuf:"varint,5,opt,name=Read_count,json=ReadCount,proto3" json:"Read_count,omitempty"`
+	ReadCount int32 `protobuf:"varint,5,opt,name=Read_count,json=ReadCount,proto3" json:"read_count"`
 	// @inject_tag: json:"uid"
-	Uid string `protobuf:"bytes,6,opt,name=Uid,proto3" json:"Uid,omitempty"`
+	Uid string `protobuf:"bytes,6,opt,name=Uid,proto3" json:"uid"`
 	// @inject_tag: json:"content"
-	Content string `protobuf:"bytes,7,opt,name=Content,proto3" json:"Content,omitempty"`
+	Content string `protobuf:"bytes,7,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"created_at"
-	CreatedAt int64 `protobuf:"varint,8,opt,name=Created_at,json=CreatedAt,proto3" json:"Created_at,omitempty"`
+	CreatedAt int64 `protobuf:"varint,8,opt,name=Created_at,json=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,9,opt,name=Dialog_id,json=DialogId,proto3" json:"Dialog_id,omitempty"`
+	DialogId uint32 `protobuf:"varint,9,opt,name=Dialog_id,json=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *GroupMessage) Reset() {
@@ -563,11 +563,11 @@ type GetUserMsgListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_messages" form:"user_messages" uri:"user_messages"
-	UserMessages []*UserMessage `protobuf:"bytes,1,rep,name=UserMessages,proto3" json:"UserMessages,omitempty"`
+	UserMessages []*UserMessage `protobuf:"bytes,1,rep,name=UserMessages,proto3" json:"user_messages" form:"user_messages" uri:"user_messages"`
 	// @inject_tag: json:"total" form:"total" uri:"total"
-	Total int32 `protobuf:"varint,2,opt,name=Total,proto3" json:"Total,omitempty"`
+	Total int32 `protobuf:"varint,2,opt,name=Total,proto3" json:"total" form:"total" uri:"total"`
 	// @inject_tag: json:"current_page" form:"current_page" uri:"current_page"
-	CurrentPage int32 `protobuf:"varint,3,opt,name=CurrentPage,proto3" json:"CurrentPage,omitempty"`
+	CurrentPage int32 `protobuf:"varint,3,opt,name=CurrentPage,proto3" json:"current_page" form:"current_page" uri:"current_page"`
 }
 
 func (x *GetUserMsgListResponse) Reset() {
@@ -667,9 +667,9 @@ type SendGroupMsgResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"msg_id" form:"msg_id" uri:"msg_id"
-	MsgId uint32 `protobuf:"varint,1,opt,name=msgId,proto3" json:"msgId,omitempty"`
+	MsgId uint32 `protobuf:"varint,1,opt,name=msgId,proto3" json:"msg_id" form:"msg_id" uri:"msg_id"`
 	// @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=groupId,proto3" json:"groupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=groupId,proto3" json:"group_id" form:"group_id" uri:"group_id"`
 }
 
 func (x *SendGroupMsgResponse) Reset() {
@@ -724,9 +724,9 @@ type UserMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
-	FriendId string `protobuf:"bytes,2,opt,name=friend_id,json=friendId,proto3" json:"friend_id,omitempty"`
+	FriendId string `protobuf:"bytes,2,opt,name=friend_id,json=friendId,proto3" json:"friend_id"`
 }
 
 func (x *UserMsgRequest) Reset() {
@@ -781,7 +781,7 @@ type GroupMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"user_id"`
 }
 
 func (x *GroupMsgRequest) Reset() {
@@ -829,7 +829,7 @@ type UserMessages struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_messages"
-	UserMessages []*UserMessage `protobuf:"bytes,1,rep,name=UserMessages,proto3" json:"UserMessages,omitempty"`
+	UserMessages []*UserMessage `protobuf:"bytes,1,rep,name=UserMessages,proto3" json:"user_messages"`
 }
 
 func (x *UserMessages) Reset() {
@@ -877,7 +877,7 @@ type GroupMessages struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_messages"
-	GroupMessages []*GroupMessage `protobuf:"bytes,1,rep,name=GroupMessages,proto3" json:"GroupMessages,omitempty"`
+	GroupMessages []*GroupMessage `protobuf:"bytes,1,rep,name=GroupMessages,proto3" json:"group_messages"`
 }
 
 func (x *GroupMessages) Reset() {
@@ -925,9 +925,9 @@ type UserMsgsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
-	FriendId []string `protobuf:"bytes,2,rep,name=friend_id,json=friendId,proto3" json:"friend_id,omitempty"`
+	FriendId []string `protobuf:"bytes,2,rep,name=friend_id,json=friendId,proto3" json:"friend_id"`
 }
 
 func (x *UserMsgsRequest) Reset() {
@@ -982,7 +982,7 @@ type GroupMsgsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=group_id,json=groupId,proto3" json:"group_id"`
 }
 
 func (x *GroupMsgsRequest) Reset() {
@@ -1030,17 +1030,17 @@ type LastMsg struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"type"
-	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"Type,omitempty"`
+	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"content"
-	Content string `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	Content string `protobuf:"bytes,4,opt,name=content,proto3" json:"content"`
 	// @inject_tag: json:"created_at"
-	CreatedAt int64 `protobuf:"varint,5,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
+	CreatedAt int64 `protobuf:"varint,5,opt,name=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"sender_id"
-	SenderId string `protobuf:"bytes,6,opt,name=SenderId,proto3" json:"SenderId,omitempty"`
+	SenderId string `protobuf:"bytes,6,opt,name=SenderId,proto3" json:"sender_id"`
 }
 
 func (x *LastMsg) Reset() {
@@ -1170,7 +1170,7 @@ type GetLastMsgsByDialogIdsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_ids"
-	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"DialogIds,omitempty"`
+	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"dialog_ids"`
 }
 
 func (x *GetLastMsgsByDialogIdsRequest) Reset() {
@@ -1210,6 +1210,198 @@ func (x *GetLastMsgsByDialogIdsRequest) GetDialogIds() []uint32 {
 		return x.DialogIds
 	}
 	return nil
+}
+
+type EditUserMsgRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// @inject_tag: json:"user_message"
+	UserMessage *UserMessage `protobuf:"bytes,1,opt,name=UserMessage,proto3" json:"user_message"`
+}
+
+func (x *EditUserMsgRequest) Reset() {
+	*x = EditUserMsgRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_v1_msg_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EditUserMsgRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EditUserMsgRequest) ProtoMessage() {}
+
+func (x *EditUserMsgRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_msg_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EditUserMsgRequest.ProtoReflect.Descriptor instead.
+func (*EditUserMsgRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_msg_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *EditUserMsgRequest) GetUserMessage() *UserMessage {
+	if x != nil {
+		return x.UserMessage
+	}
+	return nil
+}
+
+type DeleteUserMsgRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// @inject_tag: json:"msg_id"
+	MsgId uint32 `protobuf:"varint,1,opt,name=msgId,proto3" json:"msg_id"`
+}
+
+func (x *DeleteUserMsgRequest) Reset() {
+	*x = DeleteUserMsgRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_v1_msg_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeleteUserMsgRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteUserMsgRequest) ProtoMessage() {}
+
+func (x *DeleteUserMsgRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_msg_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteUserMsgRequest.ProtoReflect.Descriptor instead.
+func (*DeleteUserMsgRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_msg_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DeleteUserMsgRequest) GetMsgId() uint32 {
+	if x != nil {
+		return x.MsgId
+	}
+	return 0
+}
+
+type EditGroupMsgRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// @inject_tag: json:"group_message"
+	GroupMessage *GroupMessage `protobuf:"bytes,1,opt,name=GroupMessage,proto3" json:"group_message"`
+}
+
+func (x *EditGroupMsgRequest) Reset() {
+	*x = EditGroupMsgRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_v1_msg_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EditGroupMsgRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EditGroupMsgRequest) ProtoMessage() {}
+
+func (x *EditGroupMsgRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_msg_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EditGroupMsgRequest.ProtoReflect.Descriptor instead.
+func (*EditGroupMsgRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_msg_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *EditGroupMsgRequest) GetGroupMessage() *GroupMessage {
+	if x != nil {
+		return x.GroupMessage
+	}
+	return nil
+}
+
+type DeleteGroupMsgRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// @inject_tag: json:"msg_id"
+	MsgId uint32 `protobuf:"varint,1,opt,name=msgId,proto3" json:"msg_id"`
+}
+
+func (x *DeleteGroupMsgRequest) Reset() {
+	*x = DeleteGroupMsgRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_v1_msg_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeleteGroupMsgRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGroupMsgRequest) ProtoMessage() {}
+
+func (x *DeleteGroupMsgRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_msg_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGroupMsgRequest.ProtoReflect.Descriptor instead.
+func (*DeleteGroupMsgRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_msg_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *DeleteGroupMsgRequest) GetMsgId() uint32 {
+	if x != nil {
+		return x.MsgId
+	}
+	return 0
 }
 
 var File_api_v1_msg_proto protoreflect.FileDescriptor
@@ -1340,39 +1532,70 @@ var file_api_v1_msg_proto_rawDesc = []byte{
 	0x73, 0x67, 0x73, 0x42, 0x79, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x64, 0x73, 0x52, 0x65,
 	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49,
 	0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0d, 0x52, 0x09, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67,
-	0x49, 0x64, 0x73, 0x32, 0xca, 0x03, 0x0a, 0x0a, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x72, 0x76, 0x69,
-	0x63, 0x65, 0x12, 0x42, 0x0a, 0x0f, 0x53, 0x65, 0x6e, 0x64, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x16, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x65, 0x6e, 0x64, 0x55,
-	0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17, 0x2e,
-	0x76, 0x31, 0x2e, 0x53, 0x65, 0x6e, 0x64, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x45, 0x0a, 0x10, 0x53, 0x65, 0x6e, 0x64, 0x47, 0x72,
-	0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x17, 0x2e, 0x76, 0x31, 0x2e,
-	0x53, 0x65, 0x6e, 0x64, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x65, 0x6e, 0x64, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4b, 0x0a,
-	0x12, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4c,
-	0x69, 0x73, 0x74, 0x12, 0x19, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72,
-	0x4d, 0x73, 0x67, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a,
-	0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x4c, 0x69,
-	0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x46, 0x0a, 0x1d, 0x47, 0x65,
-	0x74, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x46, 0x6f, 0x72, 0x55, 0x73, 0x65, 0x72,
-	0x57, 0x69, 0x74, 0x68, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x73, 0x12, 0x13, 0x2e, 0x76, 0x31,
-	0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x10, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
-	0x65, 0x73, 0x12, 0x46, 0x0a, 0x1b, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67,
-	0x73, 0x46, 0x6f, 0x72, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x57, 0x69, 0x74, 0x68, 0x49, 0x44,
-	0x73, 0x12, 0x14, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x72, 0x6f,
-	0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x54, 0x0a, 0x16, 0x47, 0x65,
-	0x74, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x42, 0x79, 0x44, 0x69, 0x61, 0x6c, 0x6f,
-	0x67, 0x49, 0x64, 0x73, 0x12, 0x21, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x73,
-	0x74, 0x4d, 0x73, 0x67, 0x73, 0x42, 0x79, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67, 0x49, 0x64, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74,
-	0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x42, 0x32, 0x5a, 0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63,
-	0x6f, 0x73, 0x73, 0x69, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x73, 0x2d, 0x73, 0x65, 0x72, 0x76, 0x65,
-	0x72, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x6d, 0x73, 0x67, 0x2f, 0x61, 0x70,
-	0x69, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x49, 0x64, 0x73, 0x22, 0x47, 0x0a, 0x12, 0x45, 0x64, 0x69, 0x74, 0x55, 0x73, 0x65, 0x72, 0x4d,
+	0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x31, 0x0a, 0x0b, 0x55, 0x73, 0x65,
+	0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f,
+	0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52,
+	0x0b, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x2c, 0x0a, 0x14,
+	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6d, 0x73, 0x67, 0x49, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0d, 0x52, 0x05, 0x6d, 0x73, 0x67, 0x49, 0x64, 0x22, 0x4b, 0x0a, 0x13, 0x45, 0x64,
+	0x69, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x34, 0x0a, 0x0c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x0c, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x2d, 0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x14, 0x0a, 0x05, 0x6d, 0x73, 0x67, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x05, 0x6d, 0x73, 0x67, 0x49, 0x64, 0x32, 0xc8, 0x05, 0x0a, 0x0a, 0x4d, 0x73, 0x67, 0x53, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x42, 0x0a, 0x0f, 0x53, 0x65, 0x6e, 0x64, 0x55, 0x73, 0x65,
+	0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x16, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x65,
+	0x6e, 0x64, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x17, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x65, 0x6e, 0x64, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73,
+	0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x45, 0x0a, 0x10, 0x53, 0x65, 0x6e,
+	0x64, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x17, 0x2e,
+	0x76, 0x31, 0x2e, 0x53, 0x65, 0x6e, 0x64, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x65, 0x6e, 0x64,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x4b, 0x0a, 0x12, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x19, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55,
+	0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x1a, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73,
+	0x67, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x46, 0x0a,
+	0x1d, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x46, 0x6f, 0x72, 0x55,
+	0x73, 0x65, 0x72, 0x57, 0x69, 0x74, 0x68, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x73, 0x12, 0x13,
+	0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x10, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x46, 0x0a, 0x1b, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x73, 0x74,
+	0x4d, 0x73, 0x67, 0x73, 0x46, 0x6f, 0x72, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x57, 0x69, 0x74,
+	0x68, 0x49, 0x44, 0x73, 0x12, 0x14, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d,
+	0x73, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x76, 0x31, 0x2e,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x54, 0x0a,
+	0x16, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x42, 0x79, 0x44, 0x69,
+	0x61, 0x6c, 0x6f, 0x67, 0x49, 0x64, 0x73, 0x12, 0x21, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74,
+	0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x42, 0x79, 0x44, 0x69, 0x61, 0x6c, 0x6f, 0x67,
+	0x49, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17, 0x2e, 0x76, 0x31, 0x2e,
+	0x47, 0x65, 0x74, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x3a, 0x0a, 0x0f, 0x45, 0x64, 0x69, 0x74, 0x55, 0x73, 0x65, 0x72, 0x4d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x16, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x64, 0x69, 0x74,
+	0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0f,
+	0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
+	0x3e, 0x0a, 0x11, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x12, 0x18, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
+	0x55, 0x73, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0f,
+	0x2e, 0x76, 0x31, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
+	0x3d, 0x0a, 0x10, 0x45, 0x64, 0x69, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x12, 0x17, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x64, 0x69, 0x74, 0x47, 0x72, 0x6f,
+	0x75, 0x70, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x10, 0x2e, 0x76,
+	0x31, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x41,
+	0x0a, 0x12, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x12, 0x19, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
+	0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x10, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x42, 0x32, 0x5a, 0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x63, 0x6f, 0x73, 0x73, 0x69, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x73, 0x2d, 0x73, 0x65, 0x72, 0x76,
+	0x65, 0x72, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x6d, 0x73, 0x67, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1387,7 +1610,7 @@ func file_api_v1_msg_proto_rawDescGZIP() []byte {
 	return file_api_v1_msg_proto_rawDescData
 }
 
-var file_api_v1_msg_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_api_v1_msg_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_api_v1_msg_proto_goTypes = []interface{}{
 	(*SendUserMsgRequest)(nil),            // 0: v1.SendUserMsgRequest
 	(*SendGroupMsgRequest)(nil),           // 1: v1.SendGroupMsgRequest
@@ -1406,29 +1629,43 @@ var file_api_v1_msg_proto_goTypes = []interface{}{
 	(*LastMsg)(nil),                       // 14: v1.LastMsg
 	(*GetLastMsgsResponse)(nil),           // 15: v1.GetLastMsgsResponse
 	(*GetLastMsgsByDialogIdsRequest)(nil), // 16: v1.GetLastMsgsByDialogIdsRequest
+	(*EditUserMsgRequest)(nil),            // 17: v1.EditUserMsgRequest
+	(*DeleteUserMsgRequest)(nil),          // 18: v1.DeleteUserMsgRequest
+	(*EditGroupMsgRequest)(nil),           // 19: v1.EditGroupMsgRequest
+	(*DeleteGroupMsgRequest)(nil),         // 20: v1.DeleteGroupMsgRequest
 }
 var file_api_v1_msg_proto_depIdxs = []int32{
 	3,  // 0: v1.GetUserMsgListResponse.UserMessages:type_name -> v1.UserMessage
 	3,  // 1: v1.UserMessages.UserMessages:type_name -> v1.UserMessage
 	4,  // 2: v1.GroupMessages.GroupMessages:type_name -> v1.GroupMessage
 	14, // 3: v1.GetLastMsgsResponse.LastMsgs:type_name -> v1.LastMsg
-	0,  // 4: v1.MsgService.SendUserMessage:input_type -> v1.SendUserMsgRequest
-	1,  // 5: v1.MsgService.SendGroupMessage:input_type -> v1.SendGroupMsgRequest
-	2,  // 6: v1.MsgService.GetUserMessageList:input_type -> v1.GetUserMsgListRequest
-	12, // 7: v1.MsgService.GetLastMsgsForUserWithFriends:input_type -> v1.UserMsgsRequest
-	13, // 8: v1.MsgService.GetLastMsgsForGroupsWithIDs:input_type -> v1.GroupMsgsRequest
-	16, // 9: v1.MsgService.GetLastMsgsByDialogIds:input_type -> v1.GetLastMsgsByDialogIdsRequest
-	6,  // 10: v1.MsgService.SendUserMessage:output_type -> v1.SendUserMsgResponse
-	7,  // 11: v1.MsgService.SendGroupMessage:output_type -> v1.SendGroupMsgResponse
-	5,  // 12: v1.MsgService.GetUserMessageList:output_type -> v1.GetUserMsgListResponse
-	10, // 13: v1.MsgService.GetLastMsgsForUserWithFriends:output_type -> v1.UserMessages
-	11, // 14: v1.MsgService.GetLastMsgsForGroupsWithIDs:output_type -> v1.GroupMessages
-	15, // 15: v1.MsgService.GetLastMsgsByDialogIds:output_type -> v1.GetLastMsgsResponse
-	10, // [10:16] is the sub-list for method output_type
-	4,  // [4:10] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	3,  // 4: v1.EditUserMsgRequest.UserMessage:type_name -> v1.UserMessage
+	4,  // 5: v1.EditGroupMsgRequest.GroupMessage:type_name -> v1.GroupMessage
+	0,  // 6: v1.MsgService.SendUserMessage:input_type -> v1.SendUserMsgRequest
+	1,  // 7: v1.MsgService.SendGroupMessage:input_type -> v1.SendGroupMsgRequest
+	2,  // 8: v1.MsgService.GetUserMessageList:input_type -> v1.GetUserMsgListRequest
+	12, // 9: v1.MsgService.GetLastMsgsForUserWithFriends:input_type -> v1.UserMsgsRequest
+	13, // 10: v1.MsgService.GetLastMsgsForGroupsWithIDs:input_type -> v1.GroupMsgsRequest
+	16, // 11: v1.MsgService.GetLastMsgsByDialogIds:input_type -> v1.GetLastMsgsByDialogIdsRequest
+	17, // 12: v1.MsgService.EditUserMessage:input_type -> v1.EditUserMsgRequest
+	18, // 13: v1.MsgService.DeleteUserMessage:input_type -> v1.DeleteUserMsgRequest
+	19, // 14: v1.MsgService.EditGroupMessage:input_type -> v1.EditGroupMsgRequest
+	20, // 15: v1.MsgService.DeleteGroupMessage:input_type -> v1.DeleteGroupMsgRequest
+	6,  // 16: v1.MsgService.SendUserMessage:output_type -> v1.SendUserMsgResponse
+	7,  // 17: v1.MsgService.SendGroupMessage:output_type -> v1.SendGroupMsgResponse
+	5,  // 18: v1.MsgService.GetUserMessageList:output_type -> v1.GetUserMsgListResponse
+	10, // 19: v1.MsgService.GetLastMsgsForUserWithFriends:output_type -> v1.UserMessages
+	11, // 20: v1.MsgService.GetLastMsgsForGroupsWithIDs:output_type -> v1.GroupMessages
+	15, // 21: v1.MsgService.GetLastMsgsByDialogIds:output_type -> v1.GetLastMsgsResponse
+	3,  // 22: v1.MsgService.EditUserMessage:output_type -> v1.UserMessage
+	3,  // 23: v1.MsgService.DeleteUserMessage:output_type -> v1.UserMessage
+	4,  // 24: v1.MsgService.EditGroupMessage:output_type -> v1.GroupMessage
+	4,  // 25: v1.MsgService.DeleteGroupMessage:output_type -> v1.GroupMessage
+	16, // [16:26] is the sub-list for method output_type
+	6,  // [6:16] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_msg_proto_init() }
@@ -1641,6 +1878,54 @@ func file_api_v1_msg_proto_init() {
 				return nil
 			}
 		}
+		file_api_v1_msg_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EditUserMsgRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_v1_msg_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteUserMsgRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_v1_msg_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EditGroupMsgRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_v1_msg_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteGroupMsgRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1648,7 +1933,7 @@ func file_api_v1_msg_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_v1_msg_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

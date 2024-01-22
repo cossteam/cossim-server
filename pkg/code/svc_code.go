@@ -68,6 +68,11 @@ var (
 	DialogErrDeleteDialogFailed                     = New(14103, "删除对话失败")
 	DialogErrDeleteDialogUsersFailed                = New(14104, "删除对话用户失败")
 	DialogErrGetDialogUserByDialogIDAndUserIDFailed = New(14105, "获取对话用户失败")
+	MsgErrEditUserMessageFailed                     = New(14006, "编辑用户消息失败")
+	MsgErrEditGroupMessageFailed                    = New(14007, "编辑群聊消息失败")
+	MsgErrDeleteUserMessageFailed                   = New(14008, "撤回用户消息失败")
+	MsgErrDeleteGroupMessageFailed                  = New(14009, "撤回群聊消息失败")
+
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed             = New(15000, "获取群聊信息失败")
 	GroupErrGetBatchGroupInfoByIDsFailed        = New(15001, "获取群聊列表信息失败")

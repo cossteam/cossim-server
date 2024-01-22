@@ -4,6 +4,7 @@ import (
 	"github.com/cossim/coss-server/service/msg/api/dataTransformers"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
 	"gorm.io/gorm"
+	"time"
 )
 
 type MsgRepo struct {
@@ -151,4 +152,34 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 		})
 	}
 	return result, nil
+}
+
+func (g *MsgRepo) UpdateUserMessage(msg entity.UserMessage) error {
+	err := g.db.Model(&msg).Updates(msg).Error
+	return err
+}
+
+func (g *MsgRepo) UpdateGroupMessage(msg entity.GroupMessage) error {
+	err := g.db.Model(&msg).Updates(msg).Error
+	return err
+}
+
+func (g *MsgRepo) LogicalDeleteUserMessage(msgId uint64) error {
+	err := g.db.Model(&entity.UserMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now().Unix()).Error
+	return err
+}
+
+func (g *MsgRepo) LogicalDeleteGroupMessage(msgId uint64) error {
+	err := g.db.Model(&entity.GroupMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now().Unix()).Error
+	return err
+}
+
+func (g *MsgRepo) PhysicalDeleteUserMessage(msgId uint64) error {
+	err := g.db.Delete(&entity.UserMessage{}, msgId).Error
+	return err
+}
+
+func (g *MsgRepo) PhysicalDeleteGroupMessage(msgId uint64) error {
+	err := g.db.Delete(&entity.GroupMessage{}, msgId).Error
+	return err
 }
