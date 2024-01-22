@@ -31,7 +31,6 @@ const (
 	UserService_GetUserPasswordByUserId_FullMethodName = "/v1.UserService/GetUserPasswordByUserId"
 	UserService_SetUserSecretBundle_FullMethodName     = "/v1.UserService/SetUserSecretBundle"
 	UserService_GetUserSecretBundle_FullMethodName     = "/v1.UserService/GetUserSecretBundle"
-	UserService_GetUserFriendByUserIds_FullMethodName  = "/v1.UserService/GetUserFriendByUserIds"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -57,8 +56,6 @@ type UserServiceClient interface {
 	SetUserSecretBundle(ctx context.Context, in *SetUserSecretBundleRequest, opts ...grpc.CallOption) (*SetUserSecretBundleResponse, error)
 	// 获取用户密钥包
 	GetUserSecretBundle(ctx context.Context, in *GetUserSecretBundleRequest, opts ...grpc.CallOption) (*GetUserSecretBundleResponse, error)
-	// 根据好友ID列表获取好友列表信息
-	GetUserFriendByUserIds(ctx context.Context, in *GetUserFriendByUserIdsRequest, opts ...grpc.CallOption) (*GetUserFriendByUserIdsResponse, error)
 }
 
 type userServiceClient struct {
@@ -177,15 +174,6 @@ func (c *userServiceClient) GetUserSecretBundle(ctx context.Context, in *GetUser
 	return out, nil
 }
 
-func (c *userServiceClient) GetUserFriendByUserIds(ctx context.Context, in *GetUserFriendByUserIdsRequest, opts ...grpc.CallOption) (*GetUserFriendByUserIdsResponse, error) {
-	out := new(GetUserFriendByUserIdsResponse)
-	err := c.cc.Invoke(ctx, UserService_GetUserFriendByUserIds_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -209,8 +197,6 @@ type UserServiceServer interface {
 	SetUserSecretBundle(context.Context, *SetUserSecretBundleRequest) (*SetUserSecretBundleResponse, error)
 	// 获取用户密钥包
 	GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error)
-	// 根据好友ID列表获取好友列表信息
-	GetUserFriendByUserIds(context.Context, *GetUserFriendByUserIdsRequest) (*GetUserFriendByUserIdsResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -253,9 +239,6 @@ func (UnimplementedUserServiceServer) SetUserSecretBundle(context.Context, *SetU
 }
 func (UnimplementedUserServiceServer) GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserSecretBundle not implemented")
-}
-func (UnimplementedUserServiceServer) GetUserFriendByUserIds(context.Context, *GetUserFriendByUserIdsRequest) (*GetUserFriendByUserIdsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserFriendByUserIds not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -486,24 +469,6 @@ func _UserService_GetUserSecretBundle_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetUserFriendByUserIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserFriendByUserIdsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserFriendByUserIds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_GetUserFriendByUserIds_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserFriendByUserIds(ctx, req.(*GetUserFriendByUserIdsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -558,10 +523,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserSecretBundle",
 			Handler:    _UserService_GetUserSecretBundle_Handler,
-		},
-		{
-			MethodName: "GetUserFriendByUserIds",
-			Handler:    _UserService_GetUserFriendByUserIds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
