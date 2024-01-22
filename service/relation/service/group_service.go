@@ -59,6 +59,7 @@ func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUs
 		}
 
 		for _, v := range reqList {
+			fmt.Println("id => ", v.UserID)
 			// 判断用户是否为群组管理员
 			gr, err := s.grr.GetUserGroupByID(gid, v.UserID)
 			if err != nil {
@@ -74,10 +75,11 @@ func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUs
 				isAdmin = false
 			}
 
-			if isAdmin && v.Status == entity.GroupStatusPending {
+			if isAdmin && (v.Status == entity.GroupStatusPending || v.Status == entity.GroupStatusApplying) {
 				resp.UserGroupRequestList = append(resp.UserGroupRequestList, &v1.UserGroupRequestList{
-					GroupId:   gid,
-					UserId:    v.UserID,
+					GroupId: gid,
+					UserId:  v.UserID,
+
 					Msg:       v.Remark,
 					Status:    v1.GroupRelationStatus(v.Status),
 					CreatedAt: v.CreatedAt,
@@ -87,7 +89,7 @@ func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUs
 					GroupId:   gid,
 					UserId:    v.Inviter,
 					Msg:       v.Remark,
-					Status:    v1.GroupRelationStatus(entity.GroupStatusApplying),
+					Status:    v1.GroupRelationStatus(v.Status),
 					CreatedAt: v.CreatedAt,
 				})
 			}

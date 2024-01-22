@@ -81,6 +81,8 @@ func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, request *v1.GetBat
 	}
 
 	resp.Groups = groupAPIs
+
+	fmt.Println("len => ", len(resp.Groups))
 	return resp, nil
 }
 

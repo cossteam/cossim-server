@@ -41,10 +41,10 @@ func (s *Service) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
 		}
-		_, err = s.dr.JoinBatchDialog(dialog.ID, ids)
-		if err != nil {
-			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
-		}
+		//_, err = s.dr.JoinBatchDialog(dialog.ID, ids)
+		//if err != nil {
+		//	return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
+		//}
 		resp.Id = uint32(dialog.ID)
 		resp.OwnerId = dialog.OwnerId
 		resp.GroupId = uint32(dialog.ID)

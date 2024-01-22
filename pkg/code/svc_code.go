@@ -46,7 +46,7 @@ var (
 	RelationErrCreateGroupFailed              = New(13101, "创建群聊失败")
 	RelationErrGetGroupIDsFailed              = New(13102, "获取群聊成员")
 	RelationGroupErrRequestFailed             = New(13103, "申请加入群聊失败")
-	RelationGroupErrRequestAlreadyPending     = New(13104, "已申请加入群聊，等待确认")
+	RelationGroupErrRequestAlreadyPending     = New(13104, "等待同意申请")
 	RelationGroupErrAlreadyInGroup            = New(13105, "已经在群聊中")
 	RelationGroupErrApproveJoinGroupFailed    = New(13106, "同意加入群聊失败")
 	RelationGroupErrNoJoinRequestRecords      = New(13107, "没有申请加入群聊记录")
