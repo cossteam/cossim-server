@@ -47,7 +47,7 @@ func (u *UserRelationRepo) GetRelationByID(userId, friendId string) (*entity.Use
 
 func (u *UserRelationRepo) GetRelationByIDs(userId string, friendIds []string) ([]*entity.UserRelation, error) {
 	var relations []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND friend_id IN ? AND status = ? AND deleted_at = 0", userId, friendIds, entity.UserStatusAdded).Find(&relations).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND friend_id IN (?) AND status = ? AND deleted_at = 0", userId, friendIds, entity.UserStatusAdded).Find(&relations).Error; err != nil {
 		return nil, err
 	}
 	return relations, nil

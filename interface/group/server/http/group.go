@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"github.com/cossim/coss-server/interface/group/api/model"
+	"github.com/cossim/coss-server/pkg/code"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	api "github.com/cossim/coss-server/service/group/api/v1"
@@ -165,51 +166,11 @@ func createGroup(c *gin.Context) {
 		Avatar:          req.Avatar,
 		Member:          req.Member,
 	}
-	//
-	//createdGroup, err := groupClient.CreateGroup(context.Background(), &api.CreateGroupRequest{
-	//	Group: group,
-	//})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//
-	//_, err = userGroupClient.JoinGroup(context.Background(), &rapi.JoinGroupRequest{
-	//	GroupId:  createdGroup.Id,
-	//	UserId:   thisId,
-	//	Identify: rapi.GroupIdentity_IDENTITY_OWNER,
-	//})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	////创建对话
-	//dialog, err := dialogClient.CreateDialog(context.Background(), &rapi.CreateDialogRequest{OwnerId: thisId, Type: 1, GroupId: createdGroup.Id})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	////加入对话
-	//_, err = dialogClient.JoinDialog(context.Background(), &rapi.JoinDialogRequest{DialogId: dialog.Id, UserId: thisId})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//resp := &model.CreateGroupResponse{
-	//	Id:              createdGroup.Id,
-	//	Avatar:          createdGroup.Avatar,
-	//	Name:            createdGroup.Name,
-	//	Type:            uint32(createdGroup.Type),
-	//	Status:          int32(createdGroup.Status),
-	//	MaxMembersLimit: createdGroup.MaxMembersLimit,
-	//	CreatorId:       createdGroup.CreatorId,
-	//	DialogId:        dialog.Id,
-	//}
 
 	resp, err := svc.CreateGroup(c, group)
 	if err != nil {
 		logger.Error("创建群聊失败", zap.Error(err))
-		response.SetFail(c, "创建群聊失败", nil)
+		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
 	response.Success(c, "创建群聊成功", resp)
