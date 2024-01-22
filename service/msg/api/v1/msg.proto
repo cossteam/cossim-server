@@ -83,8 +83,8 @@ message GroupMessage {
   uint32 Reply_id = 4;
   // @inject_tag: json:"read_count"
   int32 Read_count = 5;
-  // @inject_tag: json:"uid"
-  string Uid = 6;
+  // @inject_tag: json:"user_id"
+  string UserId = 6;
   // @inject_tag: json:"content"
   string Content = 7;
   // @inject_tag: json:"created_at"
@@ -103,7 +103,8 @@ message GetUserMsgListResponse{
 }
 
 message SendUserMsgResponse{
-
+  // @inject_tag: json:"msg_id" form:"msg_id" uri:"msg_id"
+  uint32 msgId = 1;
 }
 
 message SendGroupMsgResponse{
@@ -187,6 +188,16 @@ message DeleteGroupMsgRequest {
   uint32 msgId = 1;
 }
 
+message GetUserMsgByIDRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+}
+
+message GetGroupMsgByIDRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+}
+
 service MsgService{
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
@@ -208,4 +219,8 @@ service MsgService{
   rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
   //撤回群消息
   rpc DeleteGroupMessage(DeleteGroupMsgRequest) returns (GroupMessage);
+  //根据消息id获取私聊消息
+  rpc GetUserMessageById(GetUserMsgByIDRequest) returns (UserMessage);
+  //根据消息id获取群消息
+  rpc GetGroupMessageById(GetGroupMsgByIDRequest) returns (GroupMessage);
 }

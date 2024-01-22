@@ -153,7 +153,7 @@ func sendUserMsg(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	_, err = msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
+	message, err := msgClient.SendUserMessage(context.Background(), &msg.SendUserMsgRequest{
 		DialogId:   req.DialogId,
 		SenderId:   thisId,
 		ReceiverId: req.ReceiverId,
@@ -206,7 +206,7 @@ func sendUserMsg(c *gin.Context) {
 		response.SetFail(c, "发送失败", nil)
 		return
 	}
-	response.SetSuccess(c, "发送成功", nil)
+	response.SetSuccess(c, "发送成功", message)
 }
 
 // @Summary 发送群聊消息
@@ -268,9 +268,10 @@ func sendGroupMsg(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	_, err = msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
+	message, err := msgClient.SendGroupMessage(context.Background(), &msg.SendGroupMsgRequest{
 		DialogId: req.DialogId,
 		GroupId:  req.GroupId,
+		UserId:   thisId,
 		Content:  req.Content,
 		Type:     req.Type,
 		ReplayId: req.ReplayId,
@@ -285,7 +286,7 @@ func sendGroupMsg(c *gin.Context) {
 		GroupId: req.GroupId,
 	})
 	sendWsGroupMsg(uids.UserIds, thisId, req.GroupId, req.Content, req.Type, req.ReplayId, req.DialogId)
-	response.SetSuccess(c, "发送成功", nil)
+	response.SetSuccess(c, "发送成功", gin.H{"msg_id": message.MsgId})
 }
 
 // @Summary 获取私聊消息
@@ -472,10 +473,29 @@ func editUserMsg(c *gin.Context) {
 		return
 	}
 
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	//获取消息
+	msginfo, err := msgClient.GetUserMessageById(context.Background(), &msg.GetUserMsgByIDRequest{
+		MsgId: req.MsgId,
+	})
+	if err != nil {
+		logger.Error("获取消息失败", zap.Error(err))
+		c.Error(err)
+		return
+	}
+	if msginfo.SenderId != thisId {
+		response.SetFail(c, "不是你发送的消息", nil)
+		return
+	}
 	// 调用相应的 gRPC 客户端方法来编辑用户消息
-	_, err := msgClient.EditUserMessage(context.Background(), &msg.EditUserMsgRequest{
+	_, err = msgClient.EditUserMessage(context.Background(), &msg.EditUserMsgRequest{
 		UserMessage: &msg.UserMessage{
-			Id:      uint32(req.MsgId),
+			Id:      req.MsgId,
 			Content: req.Content,
 		},
 	})
@@ -484,7 +504,7 @@ func editUserMsg(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "编辑成功", nil)
+	response.SetSuccess(c, "编辑成功", gin.H{"msg_id": req.MsgId})
 }
 
 // @Summary 编辑群消息
@@ -502,10 +522,29 @@ func editGroupMsg(c *gin.Context) {
 		return
 	}
 
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	//获取消息
+	msginfo, err := msgClient.GetGroupMessageById(context.Background(), &msg.GetGroupMsgByIDRequest{
+		MsgId: req.MsgId,
+	})
+	if err != nil {
+		logger.Error("获取消息失败", zap.Error(err))
+		c.Error(err)
+		return
+	}
+	if msginfo.UserId != thisId {
+		response.SetFail(c, "不是你发送的消息", nil)
+		return
+	}
 	// 调用相应的 gRPC 客户端方法来编辑群消息
-	_, err := msgClient.EditGroupMessage(context.Background(), &msg.EditGroupMsgRequest{
+	_, err = msgClient.EditGroupMessage(context.Background(), &msg.EditGroupMsgRequest{
 		GroupMessage: &msg.GroupMessage{
-			Id:      uint32(req.MsgId),
+			Id:      req.MsgId,
 			Content: req.Content,
 		},
 	})
@@ -514,7 +553,7 @@ func editGroupMsg(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "编辑成功", nil)
+	response.SetSuccess(c, "编辑成功", gin.H{"msg_id": req.MsgId})
 }
 
 // @Summary 撤回用户消息
@@ -529,6 +568,31 @@ func recallUserMsg(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	//获取消息
+	msginfo, err := msgClient.GetUserMessageById(context.Background(), &msg.GetUserMsgByIDRequest{
+		MsgId: req.MsgId,
+	})
+	if err != nil {
+		logger.Error("获取消息失败", zap.Error(err))
+		c.Error(err)
+		return
+	}
+	if msginfo.SenderId != thisId {
+		response.SetFail(c, "不是你发送的消息", nil)
+		return
+	}
+	//判断发送时间是否超过两分钟
+	if time.Now().Unix()-msginfo.CreatedAt > 120 {
+		response.SetFail(c, "该条消息发送时间已经超过两分钟，不能撤回", nil)
 		return
 	}
 
@@ -556,6 +620,31 @@ func recallGroupMsg(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	//获取消息
+	msginfo, err := msgClient.GetGroupMessageById(context.Background(), &msg.GetGroupMsgByIDRequest{
+		MsgId: req.MsgId,
+	})
+	if err != nil {
+		logger.Error("获取消息失败", zap.Error(err))
+		c.Error(err)
+		return
+	}
+	if msginfo.UserId != thisId {
+		response.SetFail(c, "不是你发送的消息", nil)
+		return
+	}
+	//判断发送时间是否超过两分钟
+	if time.Now().Unix()-msginfo.CreatedAt > 120 {
+		response.SetFail(c, "该条消息发送时间已经超过两分钟，不能撤回", nil)
 		return
 	}
 
