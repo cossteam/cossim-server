@@ -590,22 +590,25 @@ func groupRequestList(c *gin.Context) {
 		}
 	}
 
-	ds, err := groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: gids})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
 	groupMap := make(map[uint32]*model.GroupRequestListResponse)
 	for _, d := range data {
 		groupMap[d.GroupId] = d
 	}
 
-	for _, v := range ds.Groups {
-		if d, ok := groupMap[v.Id]; ok {
-			d.GroupName = v.Name
-			d.GroupAvatar = v.Avatar
+	groupIDs := make([]uint32, 0, len(groupMap))
+	for groupID := range groupMap {
+		groupIDs = append(groupIDs, groupID)
+	}
+
+	groupInfoMap := make(map[uint32]*groupApi.Group)
+	for _, groupID := range groupIDs {
+		groupInfo, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{Gid: groupID})
+		if err != nil {
+			c.Error(err)
+			return
 		}
+
+		groupInfoMap[groupID] = groupInfo
 	}
 
 	users, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: uids})
@@ -615,6 +618,12 @@ func groupRequestList(c *gin.Context) {
 	}
 
 	for _, v := range data {
+		groupID := v.GroupId
+		if groupInfo, ok := groupInfoMap[groupID]; ok {
+			v.GroupName = groupInfo.Name
+			v.GroupAvatar = groupInfo.Avatar
+		}
+
 		for _, u := range users.Users {
 			if v.UserID == u.UserId {
 				v.UserName = u.NickName

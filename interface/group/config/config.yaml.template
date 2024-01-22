@@ -20,6 +20,13 @@ redis:
   password: "Hitosea@123.."
 #  protocol: 3
 
+message_queue:
+  name: "rabbitmq"
+  username: "root"
+  password: "Hitosea@123.."
+  addr: "rabbitmq:5672"
+  port: "5672"
+
 dtm:
   name: "dtm"
   addr: "dtm:36790"
