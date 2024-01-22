@@ -374,19 +374,6 @@ func deleteFriend(c *gin.Context) {
 		return
 	}
 
-	//删除自己的对话用户
-	//_, err = dialogClient.DeleteDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//
-	//// 进行删除好友操作
-	//if _, err = userRelationClient.DeleteFriend(context.Background(), &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: req.UserID}); err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-
 	response.SetSuccess(c, "删除好友成功", nil)
 }
 
@@ -432,77 +419,6 @@ func manageFriend(c *gin.Context) {
 		response.SetFail(c, "管理好友申请失败", nil)
 		return
 	}
-
-	//var status relationgrpcv1.RelationStatus
-	//var dialogId uint32 = 0
-	//if req.Action == 1 {
-	//	status = relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED
-	//	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserID})
-	//	if err != nil {
-	//		c.Error(err)
-	//		return
-	//	}
-	//	if relation != nil && relation.DialogId != 0 {
-	//		fmt.Println("之前已经有关系，直接加入对话")
-	//		_, err = dialogClient.JoinDialog(context.Background(), &relationgrpcv1.JoinDialogRequest{DialogId: relation.DialogId, UserId: req.UserID})
-	//		if err != nil {
-	//			c.Error(err)
-	//			return
-	//		}
-	//		dialogId = relation.DialogId
-	//	} else {
-	//		//创建对话
-	//		dialog, err := dialogClient.CreateDialog(context.Background(), &relationgrpcv1.CreateDialogRequest{OwnerId: userID, Type: 0, GroupId: 0})
-	//		if err != nil {
-	//			c.Error(err)
-	//			return
-	//		}
-	//		//加入对话
-	//		_, err = dialogClient.JoinDialog(context.Background(), &relationgrpcv1.JoinDialogRequest{DialogId: dialog.Id, UserId: userID})
-	//		if err != nil {
-	//			c.Error(err)
-	//			return
-	//		}
-	//		//确认添加好友之后加入对话
-	//		_, err = dialogClient.JoinDialog(context.Background(), &relationgrpcv1.JoinDialogRequest{DialogId: dialog.Id, UserId: req.UserID})
-	//		if err != nil {
-	//			c.Error(err)
-	//			return
-	//		}
-	//		dialogId = dialog.Id
-	//	}
-	//} else {
-	//	status = relationgrpcv1.RelationStatus_RELATION_STATUS_REJECTED
-	//}
-	//// 进行确认好友操作
-	//if _, err = userRelationClient.ManageFriend(context.Background(), &relationgrpcv1.ManageFriendRequest{UserId: userID, FriendId: req.UserID, DialogId: dialogId, Action: status}); err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//targetId := req.UserID
-	//req.UserID = userID
-	//targetInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: targetId})
-	//if err != nil {
-	//	return
-	//}
-	//myInfo, err := userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	//if err != nil {
-	//	return
-	//}
-	//wsMsgData := map[string]interface{}{"user_id": userID, "status": req.Action}
-	//msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.ManageFriendEvent, Data: wsMsgData}
-	//var responseData interface{}
-	//if req.Action == 1 {
-	//	wsMsgData["target_info"] = myInfo
-	//	wsMsgData["e2e_public_key"] = req.E2EPublicKey
-	//	responseData = targetInfo
-	//}
-	//err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	//if err != nil {
-	//	logger.Error("推送服务消息失败", zap.Error(err))
-	//	response.SetFail(c, "管理好友申请失败", nil)
-	//	return
-	//}
 
 	response.SetSuccess(c, "管理好友申请成功", responseData)
 }
@@ -858,58 +774,10 @@ func manageJoinGroup(c *gin.Context) {
 
 	if err = svc.ManageJoinGroup(c, req.GroupID, adminID, req.UserID, status); err != nil {
 		logger.Error("ManageJoinGroup Failed", zap.Error(err))
-		response.SetFail(c, msg+"失败", nil)
+		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
 
-	//group, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-
-	//if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-	//	response.SetFail(c, "群聊状态不可用", nil)
-	//	return
-	//}
-	//
-	//relation, err := groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: userID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//
-	//if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-	//	response.SetFail(c, "已经加入群聊", nil)
-	//	return
-	//}
-	//id, err := dialogClient.GetDialogByGroupId(context.Background(), &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: req.GroupID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//_, err = dialogClient.JoinDialog(context.Background(), &relationgrpcv1.JoinDialogRequest{DialogId: id.DialogId, UserId: req.UserID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//var status relationgrpcv1.GroupRelationStatus
-	//if req.Action == model.ActionAccepted {
-	//	status = relationgrpcv1.GroupRelationStatus_GroupStatusJoined
-	//} else {
-	//	status = relationgrpcv1.GroupRelationStatus_GroupStatusReject
-	//}
-	//// 执行同意加入群聊操作
-	//if _, err = groupRelationClient.ManageJoinGroup(context.Background(), &relationgrpcv1.ManageJoinGroupRequest{UserId: req.UserID, GroupId: req.GroupID, Status: status}); err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//msg := msgconfig.WsMsg{Uid: req.UserID, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "status": status}, SendAt: time.Now().Unix()}
-	////通知消息服务有消息需要发送
-	//err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	//if err != nil {
-	//	logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
-	//}
 	response.Success(c, msg+"成功", nil)
 }
 
@@ -946,22 +814,6 @@ func removeUserFromGroup(c *gin.Context) {
 		return
 	}
 
-	//gr, err := groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: req.GroupID})
-	//if err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	//
-	//if gr.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
-	//	response.SetFail(c, "没有权限操作", nil)
-	//	return
-	//}
-	//
-	//if _, err = groupRelationClient.RemoveFromGroup(context.Background(), &relationgrpcv1.RemoveFromGroupRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-
 	response.SetSuccess(c, "移出群聊成功", nil)
 }
 
@@ -991,24 +843,6 @@ func quitGroup(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	//查询用户是否在群聊中
-	//if _, err = groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	////删除用户对话
-	//if _, err = dialogClient.DeleteDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{
-	//	DialogId: req.GroupID,
-	//	UserId:   userID,
-	//}); err != nil {
-	//	c.Error(err)
-	//	return
-	//}
-	////退出群聊
-	//if _, err = groupRelationClient.LeaveGroup(context.Background(), &relationgrpcv1.LeaveGroupRequest{UserId: userID, GroupId: req.GroupID}); err != nil {
-	//	c.Error(err)
-	//	return
-	//}
 
 	response.SetSuccess(c, "退出群聊成功", nil)
 }
