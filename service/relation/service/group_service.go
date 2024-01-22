@@ -74,7 +74,7 @@ func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUs
 				isAdmin = false
 			}
 
-			if isAdmin && v.Status == entity.GroupStatusApplying {
+			if isAdmin && v.Status == entity.GroupStatusPending {
 				fmt.Println(111111)
 				resp.UserGroupRequestList = append(resp.UserGroupRequestList, &v1.UserGroupRequestList{
 					GroupId:   gid,
@@ -83,7 +83,7 @@ func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUs
 					Status:    v1.GroupRelationStatus(v.Status),
 					CreatedAt: v.CreatedAt,
 				})
-			} else if !isAdmin && v.Status == entity.GroupStatusPending && v.Inviter != "" && v.UserID == request.UserId {
+			} else if !isAdmin && v.Status == entity.GroupStatusApplying && v.Inviter != "" && v.UserID == request.UserId {
 				fmt.Println(2222)
 				resp.UserGroupRequestList = append(resp.UserGroupRequestList, &v1.UserGroupRequestList{
 					GroupId:   gid,

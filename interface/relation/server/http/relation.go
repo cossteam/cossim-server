@@ -190,9 +190,9 @@ func getUserGroupList(c *gin.Context) {
 }
 
 // @Summary 好友申请列表
-// @Description 好友申请列表 UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=已拒绝, 4=已拉黑, 5=已删除)
+// @Description 好友申请列表
 // @Produce  json
-// @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝)"
+// @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
 // @Router /relation/user/request_list [get]
 func userRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -544,13 +544,13 @@ func getGroupMember(c *gin.Context) {
 
 // groupRequestList 获取群聊申请列表
 // @Summary 获取群聊申请列表
-// @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=待通过, 2=已加入, 3=已删除, 4=拒绝, 5=被封禁)
+// @Description 获取用户的群聊申请列表
 // @Tags GroupRelation
 // @Accept json
 // @Produce json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=申请中, 1=已加入, 2=已删除, 3=被拒绝, 4=被封禁, 5=待通过)"
+// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=申请中, 1=待通过, 2=已加入, 3=已删除, 4=被拒绝, 5=被封禁)"
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
