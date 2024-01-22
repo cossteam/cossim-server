@@ -19,25 +19,28 @@ import (
 func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, adminID, userID string, status relationgrpcv1.GroupRelationStatus) error {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 	if err != nil {
-		return err
+		s.logger.Error("get group info failed", zap.Error(err))
+		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
 	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-		return errors.New("群聊状态不可用")
+		return code.GroupErrGroupStatusNotAvailable
 	}
 
 	relation1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: adminID})
 	if err != nil {
-		return err
+		s.logger.Error("get group relation failed", zap.Error(err))
+		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
 	if relation1.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
-		return errors.New("权限不足")
+		return code.Unauthorized
 	}
 
 	relation2, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
 	if err != nil {
-		return err
+		s.logger.Error("get group relation failed", zap.Error(err))
+		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
 	if err = s.validateGroupRelationStatus(relation2, status); err != nil {
@@ -46,7 +49,8 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, adminID, 
 
 	id, err := s.dialogClient.GetDialogByGroupId(context.Background(), &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 	if err != nil {
-		return err
+		s.logger.Error("get group relation failed", zap.Error(err))
+		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
 	r1 := &relationgrpcv1.JoinDialogRequest{DialogId: id.DialogId, UserId: userID}
@@ -63,7 +67,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, adminID, 
 		return err
 	}); err != nil {
 		s.logger.Error("TCC ManageJoinGroup Failed", zap.Error(err))
-		return err
+		return code.RelationGroupErrManageJoinFailed
 	}
 
 	msg := msgconfig.WsMsg{
@@ -216,7 +220,7 @@ func (s *Service) InviteGroup(ctx context.Context, adminID string, req *model.In
 
 	for _, gr := range grs.GroupRelationResponses {
 		if gr.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			return errors.New("已经在群里了")
+			return code.RelationGroupErrAlreadyInGroup
 		}
 	}
 
