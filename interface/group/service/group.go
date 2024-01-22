@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/cossim/coss-server/interface/group/api/model"
+	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/msg_queue"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
@@ -14,6 +16,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"time"
 )
 
 func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*model.CreateGroupResponse, error) {
@@ -57,6 +60,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	}
 	resp1 := &groupgrpcv1.Group{}
 	resp2 := &relationgrpcv1.CreateAndJoinDialogWithGroupResponse{}
+	var groupID uint32
 
 	// 创建 DTM 分布式事务工作流
 	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
@@ -74,6 +78,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 			}})
 			return err
 		})
+		groupID = resp1.Id
 
 		// 加入群聊
 		//r2.GroupId = resp1.Id
@@ -86,7 +91,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		//	return err
 		//})
 
-		r22.GroupId = resp1.Id
+		r22.GroupId = groupID
 		_, err = s.relationGroupClient.CreateGroupAndInviteUsers(ctx, r22)
 		if err != nil {
 			return err
@@ -97,7 +102,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		})
 
 		// 创建群聊会话并加入
-		r3.GroupId = resp1.Id
+		r3.GroupId = groupID
 		resp2, err = s.relationDialogClient.CreateAndJoinDialogWithGroup(ctx, r3)
 		if err != nil {
 			return err
@@ -115,6 +120,13 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	if err = workflow.Execute(wfName, gid, nil); err != nil {
 		s.logger.Error("WorkFlow CreateGroup", zap.Error(err))
 		return nil, code.RelationErrCreateGroupFailed
+	}
+
+	// 给被邀请的用户推送
+	for _, id := range req.Member {
+		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": groupID, "inviter_id": req.CreatorId}, SendAt: time.Now().Unix()}
+		//通知消息服务有消息需要发送
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	}
 
 	return &model.CreateGroupResponse{
