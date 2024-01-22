@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
@@ -187,21 +186,21 @@ func (s *Service) validateGroupRelationStatus(relation *relationgrpcv1.GetGroupR
 func (s *Service) InviteGroup(ctx context.Context, adminID string, req *model.InviteGroupRequest) error {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
 	if err != nil {
-		return err
+		return code.GroupErrGetGroupInfoByGidFailed
 	}
 
 	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-		return errors.New("群聊状态不可用")
+		return code.GroupErrGroupStatusNotAvailable
 	}
 
 	relation1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: adminID})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
-		return err
+		return code.RelationGroupErrGroupRelationFailed
 	}
 
 	if relation1.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
-		return errors.New("权限不足")
+		return code.Unauthorized
 	}
 
 	//relation2, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: req.UserID})
@@ -210,10 +209,9 @@ func (s *Service) InviteGroup(ctx context.Context, adminID string, req *model.In
 	//}
 
 	grs, err := s.groupRelationClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: req.GroupID, UserIds: req.Member})
-	fmt.Println("code => ", code.Cause(err).Code())
-	if err != nil && !(code.Cause(err).Code() == 13112) {
+	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
-		return err
+		return code.RelationGroupErrGroupRelationFailed
 	}
 
 	for _, gr := range grs.GroupRelationResponses {
@@ -226,7 +224,7 @@ func (s *Service) InviteGroup(ctx context.Context, adminID string, req *model.In
 		//添加普通用户申请
 		_, err = s.groupRelationClient.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: gr.UserId, GroupId: req.GroupID, Identify: relationgrpcv1.GroupIdentity_IDENTITY_USER})
 		if err != nil {
-			return err
+			return code.Cause(err)
 		}
 	}
 

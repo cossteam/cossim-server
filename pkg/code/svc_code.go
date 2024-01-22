@@ -77,4 +77,5 @@ var (
 	GroupErrGroupNotFound                       = New(15005, "群聊不存在")
 	GroupErrDeleteUserGroupRelationFailed       = New(15006, "删除用户群聊关系失败")
 	GroupErrDeleteUserGroupRelationRevertFailed = New(15007, "删除用户群聊关系回滚失败")
+	GroupErrGroupStatusNotAvailable             = New(15008, "群聊状态不可用")
 )
