@@ -86,7 +86,7 @@ func Cause(e error) Codes {
 	if ok {
 		return ec
 	}
-	return ServerErr
+	return InternalServerError
 }
 
 // Code 通过错误码获取对应的 Codes 接口对象
@@ -95,6 +95,6 @@ func Code(code int) Codes {
 		return cm
 	}
 
-	// 如果找不到对应的错误码，返回一个默认的 ServerErr
-	return ServerErr.Reason(fmt.Errorf("unknown error code: %d", code))
+	// 如果找不到对应的错误码，返回一个默认的 InternalServerError
+	return InternalServerError.Reason(fmt.Errorf("unknown error code: %d", code))
 }
