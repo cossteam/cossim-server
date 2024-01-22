@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/cossim/coss-server/interface/group/api/model"
+	"github.com/cossim/coss-server/pkg/code"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
@@ -20,15 +21,16 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 
 	friends, err := s.relationUserClient.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: req.CreatorId, FriendIds: req.Member})
 	if err != nil {
-		return nil, err
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return nil, code.RelationErrCreateGroupFailed
 	}
 
 	if len(req.Member) != len(friends.Users) {
-		return nil, errors.New("user not in group")
+		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 	for _, friend := range friends.Users {
 		if friend.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-			return nil, errors.New("好友状态不可用")
+			return nil, code.StatusNotAvailable
 		}
 	}
 
@@ -96,7 +98,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 
 		// 创建群聊会话并加入
 		r3.GroupId = resp1.Id
-		_, err = s.relationDialogClient.CreateAndJoinDialogWithGroup(ctx, r3)
+		resp2, err = s.relationDialogClient.CreateAndJoinDialogWithGroup(ctx, r3)
 		if err != nil {
 			return err
 		}
@@ -108,11 +110,11 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		return err
 	}); err != nil {
 		s.logger.Error("WorkFlow CreateGroup", zap.Error(err))
-		return nil, err
+		return nil, code.RelationErrCreateGroupFailed
 	}
 	if err = workflow.Execute(wfName, gid, nil); err != nil {
 		s.logger.Error("WorkFlow CreateGroup", zap.Error(err))
-		return nil, err
+		return nil, code.RelationErrCreateGroupFailed
 	}
 
 	return &model.CreateGroupResponse{

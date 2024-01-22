@@ -43,28 +43,59 @@ func (s *Service) GetUserGroupIDs(ctx context.Context, request *v1.GetUserGroupI
 func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUserGroupRequestListRequest) (*v1.GetUserGroupRequestListResponse, error) {
 	resp := &v1.GetUserGroupRequestListResponse{}
 
-	ids, err := s.grr.GetUserGroupIDs(request.UserId)
+	isAdmin := false
+
+	// 获取用户所属群组的ID列表
+	groupIDs, err := s.grr.GetUserGroupIDs(request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
 	}
 
-	reqList, err := s.grr.GetJoinRequestBatchListByID(ids)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
+	for _, gid := range groupIDs {
+		// 获取群组的申请记录
+		reqList, err := s.grr.GetJoinRequestBatchListByID([]uint32{gid})
+		if err != nil {
+			return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
+		}
+
+		for _, v := range reqList {
+			// 判断用户是否为群组管理员
+			gr, err := s.grr.GetUserGroupByID(gid, v.UserID)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					continue
+				}
+				return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
+			}
+
+			if gr.Identity != entity.IdentityUser {
+				isAdmin = true
+			} else {
+				isAdmin = false
+			}
+
+			if isAdmin && v.Status == entity.GroupStatusApplying {
+				fmt.Println(111111)
+				resp.UserGroupRequestList = append(resp.UserGroupRequestList, &v1.UserGroupRequestList{
+					GroupId:   gid,
+					UserId:    v.UserID,
+					Msg:       v.Remark,
+					Status:    v1.GroupRelationStatus(v.Status),
+					CreatedAt: v.CreatedAt,
+				})
+			} else if !isAdmin && v.Status == entity.GroupStatusPending && v.Inviter != "" && v.UserID == request.UserId {
+				fmt.Println(2222)
+				resp.UserGroupRequestList = append(resp.UserGroupRequestList, &v1.UserGroupRequestList{
+					GroupId:   gid,
+					UserId:    v.Inviter,
+					Msg:       v.Remark,
+					Status:    v1.GroupRelationStatus(v.Status),
+					CreatedAt: v.CreatedAt,
+				})
+			}
+		}
 	}
 
-	for _, v := range reqList {
-		if v.UserID == request.UserId {
-			continue
-		}
-		resp.GroupJoinRequestList = append(resp.GroupJoinRequestList, &v1.GroupJoinRequestList{
-			GroupId:   uint32(v.GroupID),
-			UserId:    v.UserID,
-			Msg:       v.Remark,
-			Status:    v1.GroupRelationStatus(v.Status),
-			CreatedAt: v.CreatedAt,
-		})
-	}
 	return resp, nil
 }
 
@@ -111,6 +142,37 @@ func (s *Service) JoinGroupRevert(ctx context.Context, request *v1.JoinGroupRequ
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
 	}
 	return resp, nil
+}
+
+func (s *Service) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGroupRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	inviterID := request.InviterId
+	fmt.Println("inviteJoinGroup => ", request)
+	relations := make([]*entity.GroupRelation, 0)
+
+	for _, userID := range request.Member {
+		userGroup := &entity.GroupRelation{
+			UserID:      userID,
+			GroupID:     uint(request.GroupId),
+			Status:      entity.GroupStatusPending,
+			Identity:    entity.IdentityUser,
+			Inviter:     inviterID,
+			EntryMethod: entity.EntryInvitation,
+		}
+
+		relations = append(relations, userGroup)
+	}
+
+	_, err := s.grr.CreateRelations(relations)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) InviteJoinGroupRevert(ctx context.Context, request *v1.InviteJoinGroupRequest) (*emptypb.Empty, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (s *Service) ManageJoinGroup(ctx context.Context, request *v1.ManageJoinGroupRequest) (*v1.ManageJoinGroupResponse, error) {
@@ -228,6 +290,9 @@ func (s *Service) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatc
 
 	grs, err := s.grr.GetUserGroupByIDs(request.GroupId, request.UserIds)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.RelationGroupErrRelationNotFound.Code()), code.RelationGroupErrRelationNotFound.Message())
+		}
 		return resp, status.Error(codes.Code(code.RelationGroupErrGroupRelationFailed.Code()), err.Error())
 	}
 
@@ -329,8 +394,9 @@ func (s *Service) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 		gr := &entity.GroupRelation{
 			UserID:   v,
 			GroupID:  uint(request.GroupId),
-			Status:   entity.GroupStatusJoined,
+			Status:   entity.GroupStatusPending,
 			Identity: entity.IdentityUser,
+			Inviter:  owner.UserID,
 		}
 		grs = append(grs, gr)
 	}

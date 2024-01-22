@@ -57,6 +57,8 @@ var (
 	RelationGroupErrGroupRelationFailed       = New(13112, "获取用户群组关系失败")
 	RelationGroupErrGetGroupInfoFailed        = New(13113, "获取群聊信息失败")
 	RelationGroupErrManageJoinFailed          = New(13114, "管理群聊申请失败")
+	RelationGroupErrInviteFailed              = New(13115, "邀请入群失败")
+	RelationGroupErrRelationNotFound          = New(13116, "关系不存在")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

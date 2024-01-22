@@ -36,21 +36,21 @@ func (s *Service) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.
 		ids = append(ids, v)
 	}
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		dialog, err := s.dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
 		}
-
 		_, err = s.dr.JoinBatchDialog(dialog.ID, ids)
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
 		}
-
+		resp.Id = uint32(dialog.ID)
+		resp.OwnerId = dialog.OwnerId
+		resp.GroupId = uint32(dialog.ID)
+		resp.Type = uint32(dialog.Type)
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to create dialog: %s", err.Error()))
 	}
 

@@ -186,7 +186,7 @@ func getUserGroupList(c *gin.Context) {
 	// Sort and group by specified field
 	groupedUsers := usersorter.SortAndGroupUsers(data, "Name")
 
-	response.Success(c, "获取用户群聊成功", groupedUsers)
+	response.Success(c, "获取用户群聊列表成功", groupedUsers)
 }
 
 // @Summary 好友申请列表
@@ -544,13 +544,13 @@ func getGroupMember(c *gin.Context) {
 
 // groupRequestList 获取群聊申请列表
 // @Summary 获取群聊申请列表
-// @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=已加入, 2=已删除, 3=被拒绝 4=被封禁)
+// @Description 获取用户的群聊申请列表 status 申请状态 (0=申请中, 1=待通过, 2=已加入, 3=已删除, 4=拒绝, 5=被封禁)
 // @Tags GroupRelation
 // @Accept json
 // @Produce json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=申请中, 1=已加入, 2=已删除, 3=被拒绝 4=被封禁)"
+// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=申请中, 1=已加入, 2=已删除, 3=被拒绝, 4=被封禁, 5=待通过)"
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
@@ -574,11 +574,11 @@ func groupRequestList(c *gin.Context) {
 		return
 	}
 
-	gids := make([]uint32, len(reqList.GroupJoinRequestList))
-	uids := make([]string, len(reqList.GroupJoinRequestList))
-	data := make([]*model.GroupRequestListResponse, len(reqList.GroupJoinRequestList))
+	gids := make([]uint32, len(reqList.UserGroupRequestList))
+	uids := make([]string, len(reqList.UserGroupRequestList))
+	data := make([]*model.GroupRequestListResponse, len(reqList.UserGroupRequestList))
 
-	for i, v := range reqList.GroupJoinRequestList {
+	for i, v := range reqList.UserGroupRequestList {
 		gids[i] = v.GroupId
 		uids[i] = v.UserId
 
@@ -732,14 +732,14 @@ func joinGroup(c *gin.Context) {
 	response.SetSuccess(c, "发送加入群聊请求成功", nil)
 }
 
-// @Summary 管理加入群聊
-// @Description 管理加入群聊 action (0=拒绝, 1=同意)
+// @Summary 用户管理加入群聊
+// @Description 用户管理加入群聊 action (0=拒绝, 1=同意)
 // @Tags GroupRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.ManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/manage_join_group [post]
+// @Router /relation/group/manage_join [post]
 func manageJoinGroup(c *gin.Context) {
 	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -750,7 +750,54 @@ func manageJoinGroup(c *gin.Context) {
 
 	if err := req.Validator(); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	userID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	var status relationgrpcv1.GroupRelationStatus
+	var msg string
+	if req.Action == model.ActionAccepted {
+		status = relationgrpcv1.GroupRelationStatus_GroupStatusJoined
+		msg = "同意加入群聊"
+	} else {
+		status = relationgrpcv1.GroupRelationStatus_GroupStatusReject
+		msg = "拒绝加入群聊"
+	}
+
+	if err = svc.ManageJoinGroup(c, req.GroupID, req.InviterId, userID, status); err != nil {
+		logger.Error("用户管理群聊申请", zap.Error(err))
+		response.SetFail(c, code.Cause(err).Message(), nil)
+		return
+	}
+
+	response.Success(c, msg+"成功", nil)
+}
+
+// @Summary 管理员管理加入群聊
+// @Description 管理员管理加入群聊 action (0=拒绝, 1=同意)
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.AdminManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
+// @Success		200 {object} model.Response{}
+// @Router /relation/group/admin/manage/join [post]
+func adminManageJoinGroup(c *gin.Context) {
+	req := new(model.AdminManageJoinGroupRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	if err := req.Validator(); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
@@ -770,8 +817,8 @@ func manageJoinGroup(c *gin.Context) {
 		msg = "拒绝加入群聊"
 	}
 
-	if err = svc.ManageJoinGroup(c, req.GroupID, adminID, req.UserID, status); err != nil {
-		logger.Error("ManageJoinGroup Failed", zap.Error(err))
+	if err = svc.AdminManageJoinGroup(c, req.GroupID, adminID, req.UserID, status); err != nil {
+		logger.Error("管理员管理群聊申请", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
@@ -786,7 +833,7 @@ func manageJoinGroup(c *gin.Context) {
 // @Produce  json
 // @param request body model.RemoveUserFromGroupRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/remove [post]
+// @Router /relation/group/admin/manage/remove [post]
 func removeUserFromGroup(c *gin.Context) {
 	req := new(model.RemoveUserFromGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
