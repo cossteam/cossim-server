@@ -102,8 +102,6 @@ message GetUserRelationRequest {
   string FriendId = 2;
 }
 
-
-
 enum RelationStatus {
   RELATION_STATUS_APPLYING = 0;
   RELATION_STATUS_PENDING = 1;
@@ -147,6 +145,17 @@ message FriendRequestList {
   RelationStatus Status = 5;
 }
 
+message GetUserRelationByUserIdsRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;    // 用户id
+  // @inject_tag: json:"friend_ids"
+  repeated string FriendIds = 2; // 好友id列表
+}
+
+message GetUserRelationByUserIdsResponse {
+  repeated GetUserRelationResponse Users = 1;
+}
+
 service UserRelationService {
   rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
   rpc ManageFriend(ManageFriendRequest) returns (ManageFriendResponse);
@@ -159,4 +168,6 @@ service UserRelationService {
   rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
   rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
   rpc GetFriendRequestList(GetFriendRequestListRequest) returns (GetFriendRequestListResponse);
+  // 批量获取用户关系
+  rpc GetUserRelationByUserIds(GetUserRelationByUserIdsRequest) returns (GetUserRelationByUserIdsResponse);
 }

@@ -67,6 +67,18 @@ definitions:
       user_name:
         type: string
     type: object
+  model.InviteGroupRequest:
+    properties:
+      group_id:
+        type: integer
+      member:
+        items:
+          type: string
+        type: array
+    required:
+    - group_id
+    - member
+    type: object
   model.JoinGroupRequest:
     properties:
       group_id:
@@ -184,6 +196,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 删除黑名单
+  /relation/group/invite:
+    post:
+      consumes:
+      - application/json
+      description: 邀请加入群聊
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.InviteGroupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 邀请加入群聊
+      tags:
+      - GroupRelation
   /relation/group/join:
     post:
       consumes:

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/service/group/api/v1"
 	"github.com/cossim/coss-server/service/group/domain/entity"
@@ -143,12 +144,32 @@ func (s *Service) CreateGroup(ctx context.Context, request *v1.CreateGroupReques
 	return resp, nil
 }
 
+func (s *Service) CreateGroupRevert(ctx context.Context, request *v1.CreateGroupRequest) (*v1.Group, error) {
+	fmt.Println("CreateGroupRevert req => ", request)
+	resp := &v1.Group{}
+	if err := s.gr.DeleteGroup(uint(request.Group.Id)); err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
 func (s *Service) DeleteGroup(ctx context.Context, request *v1.DeleteGroupRequest) (*v1.EmptyResponse, error) {
 	resp := &v1.EmptyResponse{}
 
+	//return resp, status.Error(codes.Aborted, errors.New("测试回滚").Error())
+
 	if err := s.gr.DeleteGroup(uint(request.GetGid())); err != nil {
+		return resp, status.Error(codes.Aborted, err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteGroupRevert(ctx context.Context, request *v1.DeleteGroupRequest) (*v1.EmptyResponse, error) {
+	resp := &v1.EmptyResponse{}
+	if err := s.gr.UpdateGroupByGroupID(uint(request.GetGid()), map[string]interface{}{
+		"deleted_at": 0,
+	}); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
 	}
-
 	return resp, nil
 }

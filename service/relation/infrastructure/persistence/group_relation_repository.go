@@ -21,9 +21,13 @@ func (repo *GroupRelationRepo) CreateRelation(ur *entity.GroupRelation) (*entity
 	return ur, nil
 }
 
+func (repo *GroupRelationRepo) CreateRelations(urs []*entity.GroupRelation) ([]*entity.GroupRelation, error) {
+	return urs, repo.db.CreateInBatches(urs, len(urs)).Error
+}
+
 func (repo *GroupRelationRepo) GetGroupUserIDs(gid uint32) ([]string, error) {
 	var userGroupIDs []string
-	if err := repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND status = ?", gid, entity.GroupStatusJoined).Pluck("user_id", &userGroupIDs).Error; err != nil {
+	if err := repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND status = ? AND deleted_at = 0", gid, entity.GroupStatusJoined).Pluck("user_id", &userGroupIDs).Error; err != nil {
 		return nil, err
 	}
 	return userGroupIDs, nil
@@ -76,6 +80,14 @@ func (repo *GroupRelationRepo) GetUserGroupByID(gid uint32, uid string) (*entity
 	return &ug, nil
 }
 
+func (repo *GroupRelationRepo) GetUserGroupByIDs(gid uint32, uids []string) ([]*entity.GroupRelation, error) {
+	var ugs []*entity.GroupRelation
+	if err := repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? and user_id IN (?) AND deleted_at = 0", gid, uids).Find(&ugs).Error; err != nil {
+		return nil, err
+	}
+	return ugs, nil
+}
+
 func (repo *GroupRelationRepo) GetJoinRequestListByID(gid uint32) ([]*entity.GroupRelation, error) {
 	var joinRequests []*entity.GroupRelation
 	if err := repo.db.Where("group_id = ? AND status = ?", gid, entity.GroupStatusApplying).Find(&joinRequests).Error; err != nil {
@@ -85,7 +97,7 @@ func (repo *GroupRelationRepo) GetJoinRequestListByID(gid uint32) ([]*entity.Gro
 }
 
 func (repo *GroupRelationRepo) DeleteGroupRelationByID(gid uint32) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Delete(&entity.GroupRelation{}).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now().Unix()).Error
 }
 
 func (repo *GroupRelationRepo) DeleteUserGroupRelationByGroupIDAndUserID(gid uint32, uid string) error {
@@ -104,4 +116,12 @@ func (repo *GroupRelationRepo) GetGroupAdminIds(gid uint32) ([]string, error) {
 	var adminIds []string
 	repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND status = ? AND deleted_at = 0", gid, entity.IdentityAdmin).Pluck("user_id", &adminIds)
 	return adminIds, nil
+}
+
+func (repo *GroupRelationRepo) UpdateGroupRelationByGroupID(groupID uint32, updateFields map[string]interface{}) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", groupID).Updates(updateFields).Error
+}
+
+func (repo *GroupRelationRepo) DeleteRelationByGroupIDAndUserIDs(gid uint32, uid []string) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND status = ? AND deleted_at = 0", gid, entity.GroupStatusJoined).Delete(&entity.GroupRelation{}).Error
 }

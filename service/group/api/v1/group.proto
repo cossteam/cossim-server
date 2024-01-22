@@ -17,6 +17,8 @@ message Group {
   string Name = 6;
   // @inject_tag: json:"avatar"
   string Avatar = 7;
+  // @inject_tag: json:"member"
+  repeated string Member = 8; // 创建群聊的时候邀请的成员
 }
 
 message GetGroupInfoRequest {
@@ -62,9 +64,24 @@ enum GroupType {
 }
 
 service GroupService {
+  // 通过群组ID获取群组信息
   rpc GetGroupInfoByGid (GetGroupInfoRequest) returns (Group);
+
+  // 批量通过群组ID获取群组信息
   rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
+
+  // 更新群组信息
   rpc UpdateGroup (UpdateGroupRequest) returns (Group);
+
+  // 创建群组
   rpc CreateGroup (CreateGroupRequest) returns (Group);
-  rpc DeleteGroup (DeleteGroupRequest) returns (EmptyResponse);
+
+  // CreateGroup回滚操作
+  rpc CreateGroupRevert (CreateGroupRequest) returns (Group);
+
+  // 删除群组
+  rpc DeleteGroup(DeleteGroupRequest) returns (EmptyResponse);
+
+  // 删除群组回滚操作
+  rpc DeleteGroupRevert(DeleteGroupRequest) returns (EmptyResponse);
 }

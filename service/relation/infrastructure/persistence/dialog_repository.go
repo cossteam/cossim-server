@@ -45,6 +45,23 @@ func (g *DialogRepo) JoinDialog(dialogID uint, userID string) (*entity.DialogUse
 	return dialogUser, nil
 }
 
+func (g *DialogRepo) JoinBatchDialog(dialogID uint, userIDs []string) ([]*entity.DialogUser, error) {
+	dialogUsers := make([]*entity.DialogUser, len(userIDs))
+	for i, userID := range userIDs {
+		dialogUsers[i] = &entity.DialogUser{
+			DialogId: dialogID,
+			UserId:   userID,
+			IsShow:   int(entity.IsShow), // 默认已加入
+		}
+	}
+
+	if err := g.db.CreateInBatches(dialogUsers, len(userIDs)).Error; err != nil {
+		return nil, err
+	}
+
+	return dialogUsers, nil
+}
+
 // 查询用户对话列表
 func (g *DialogRepo) GetUserDialogs(userID string) ([]uint, error) {
 	var dialogs []uint
@@ -92,12 +109,12 @@ func (g *DialogRepo) GetDialogByGroupId(groupId uint) (*entity.Dialog, error) {
 
 func (g *DialogRepo) DeleteDialogByIds(dialogIDs []uint) error {
 	//return g.db.Model(&entity.Dialog{}).Where("id IN (?)", dialogIDs).Update("deleted_at", time.Unix(time.Now().Unix(), 0).Format(time.DateTime)).Error
-	return g.db.Model(&entity.Dialog{}).Where("id IN (?)", dialogIDs).Update("deleted_at", time.Unix(time.Now().Unix(), 0).Format(time.DateTime)).Error
+	return g.db.Model(&entity.Dialog{}).Where("id IN (?)", dialogIDs).Update("deleted_at", time.Now().Unix()).Error
 }
 
 func (g *DialogRepo) DeleteDialogByDialogID(dialogID uint) error {
 	//return g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).Update("deleted_at", time.Unix(time.Now().Unix(), 0).Format(time.DateTime)).Error
-	return g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).Update("deleted_at", time.Unix(time.Now().Unix(), 0).Format(time.DateTime)).Error
+	return g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).Update("deleted_at", time.Now().Unix()).Error
 }
 
 func (g *DialogRepo) DeleteDialogUserByDialogID(dialogID uint) error {
@@ -105,9 +122,9 @@ func (g *DialogRepo) DeleteDialogUserByDialogID(dialogID uint) error {
 	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ?", dialogID).Unscoped().Update("deleted_at", time.Now().Unix()).Error
 }
 
-func (g *DialogRepo) DeleteDialogUserByDialogIDAndUserID(dialogID uint, userID string) error {
+func (g *DialogRepo) DeleteDialogUserByDialogIDAndUserID(dialogID uint, userIDs []string) error {
 	//return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Update("deleted_at", time.Now().Unix()).Error
-	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Update("deleted_at", time.Now().Unix()).Error
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id IN (?)", dialogID, userIDs).Update("deleted_at", time.Now().Unix()).Error
 }
 
 func (g *DialogRepo) GetDialogByGroupIds(groupIds []uint) ([]*entity.Dialog, error) {
@@ -116,6 +133,14 @@ func (g *DialogRepo) GetDialogByGroupIds(groupIds []uint) ([]*entity.Dialog, err
 		return nil, err
 	}
 	return dialogs, nil
+}
+
+func (g *DialogRepo) UpdateDialogByDialogID(dialogID uint, updateFields map[string]interface{}) error {
+	return g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).Unscoped().Updates(updateFields).Error
+}
+
+func (g *DialogRepo) UpdateDialogUserByDialogID(dialogID uint, updateFields map[string]interface{}) error {
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ?", dialogID).Unscoped().Updates(updateFields).Error
 }
 
 func (g *DialogRepo) UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error {

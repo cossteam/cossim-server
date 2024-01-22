@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	GroupRelationService_JoinGroup_FullMethodName                                   = "/v1.GroupRelationService/JoinGroup"
+	GroupRelationService_JoinGroupRevert_FullMethodName                             = "/v1.GroupRelationService/JoinGroupRevert"
 	GroupRelationService_GetGroupUserIDs_FullMethodName                             = "/v1.GroupRelationService/GetGroupUserIDs"
 	GroupRelationService_GetUserGroupIDs_FullMethodName                             = "/v1.GroupRelationService/GetUserGroupIDs"
 	GroupRelationService_GetUserGroupRequestList_FullMethodName                     = "/v1.GroupRelationService/GetUserGroupRequestList"
@@ -33,9 +34,13 @@ const (
 	GroupRelationService_LeaveGroupRevert_FullMethodName                            = "/v1.GroupRelationService/LeaveGroupRevert"
 	GroupRelationService_GetGroupJoinRequestList_FullMethodName                     = "/v1.GroupRelationService/GetGroupJoinRequestList"
 	GroupRelationService_GetGroupRelation_FullMethodName                            = "/v1.GroupRelationService/GetGroupRelation"
+	GroupRelationService_GetBatchGroupRelation_FullMethodName                       = "/v1.GroupRelationService/GetBatchGroupRelation"
 	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName                = "/v1.GroupRelationService/DeleteGroupRelationByGroupId"
+	GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName          = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdRevert"
 	GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName       = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserID"
 	GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserIDRevert"
+	GroupRelationService_CreateGroupAndInviteUsers_FullMethodName                   = "/v1.GroupRelationService/CreateGroupAndInviteUsers"
+	GroupRelationService_CreateGroupAndInviteUsersRevert_FullMethodName             = "/v1.GroupRelationService/CreateGroupAndInviteUsersRevert"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -44,6 +49,8 @@ const (
 type GroupRelationServiceClient interface {
 	// 加入群聊
 	JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
+	// 加入群聊回滚操作
+	JoinGroupRevert(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
 	// 获取群聊成员ID列表
 	GetGroupUserIDs(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*UserIdsResponse, error)
 	// 获取用户的所有群聊ID列表
@@ -68,12 +75,20 @@ type GroupRelationServiceClient interface {
 	GetGroupJoinRequestList(ctx context.Context, in *GetGroupJoinRequestListRequest, opts ...grpc.CallOption) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
 	GetGroupRelation(ctx context.Context, in *GetGroupRelationRequest, opts ...grpc.CallOption) (*GetGroupRelationResponse, error)
+	// 批量获取用户与群聊关系信息
+	GetBatchGroupRelation(ctx context.Context, in *GetBatchGroupRelationRequest, opts ...grpc.CallOption) (*GetBatchGroupRelationResponse, error)
 	// 根据群聊ID删除群聊的所有关系
-	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error)
+	DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// DeleteGroupRelationByGroupId回滚操作
+	DeleteGroupRelationByGroupIdRevert(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 根据群聊ID和用户ID删除用户的群聊关系
 	DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, in *DeleteGroupRelationByGroupIdAndUserIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// DeleteGroupRelationByGroupIdAndUserID回滚操作
 	DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, in *DeleteGroupRelationByGroupIdAndUserIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 创建群聊并邀请多个用户进群（包括自己）
+	CreateGroupAndInviteUsers(ctx context.Context, in *CreateGroupAndInviteUsersRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// CreateGroupAndInviteUsers 回滚操作
+	CreateGroupAndInviteUsersRevert(ctx context.Context, in *CreateGroupAndInviteUsersRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type groupRelationServiceClient struct {
@@ -87,6 +102,15 @@ func NewGroupRelationServiceClient(cc grpc.ClientConnInterface) GroupRelationSer
 func (c *groupRelationServiceClient) JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error) {
 	out := new(JoinGroupResponse)
 	err := c.cc.Invoke(ctx, GroupRelationService_JoinGroup_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) JoinGroupRevert(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error) {
+	out := new(JoinGroupResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_JoinGroupRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -201,9 +225,27 @@ func (c *groupRelationServiceClient) GetGroupRelation(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *groupRelationServiceClient) GetBatchGroupRelation(ctx context.Context, in *GetBatchGroupRelationRequest, opts ...grpc.CallOption) (*GetBatchGroupRelationResponse, error) {
+	out := new(GetBatchGroupRelationResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_GetBatchGroupRelation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) DeleteGroupRelationByGroupId(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) DeleteGroupRelationByGroupIdRevert(ctx context.Context, in *GroupIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -228,12 +270,32 @@ func (c *groupRelationServiceClient) DeleteGroupRelationByGroupIdAndUserIDRevert
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) CreateGroupAndInviteUsers(ctx context.Context, in *CreateGroupAndInviteUsersRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_CreateGroupAndInviteUsers_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupRelationServiceClient) CreateGroupAndInviteUsersRevert(ctx context.Context, in *CreateGroupAndInviteUsersRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_CreateGroupAndInviteUsersRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupRelationServiceServer is the server API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
 type GroupRelationServiceServer interface {
 	// 加入群聊
 	JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
+	// 加入群聊回滚操作
+	JoinGroupRevert(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
 	// 获取群聊成员ID列表
 	GetGroupUserIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error)
 	// 获取用户的所有群聊ID列表
@@ -258,12 +320,20 @@ type GroupRelationServiceServer interface {
 	GetGroupJoinRequestList(context.Context, *GetGroupJoinRequestListRequest) (*GroupJoinRequestListResponse, error)
 	// 获取用户与群聊关系信息
 	GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error)
+	// 批量获取用户与群聊关系信息
+	GetBatchGroupRelation(context.Context, *GetBatchGroupRelationRequest) (*GetBatchGroupRelationResponse, error)
 	// 根据群聊ID删除群聊的所有关系
-	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error)
+	DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*emptypb.Empty, error)
+	// DeleteGroupRelationByGroupId回滚操作
+	DeleteGroupRelationByGroupIdRevert(context.Context, *GroupIDRequest) (*emptypb.Empty, error)
 	// 根据群聊ID和用户ID删除用户的群聊关系
 	DeleteGroupRelationByGroupIdAndUserID(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error)
 	// DeleteGroupRelationByGroupIdAndUserID回滚操作
 	DeleteGroupRelationByGroupIdAndUserIDRevert(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error)
+	// 创建群聊并邀请多个用户进群（包括自己）
+	CreateGroupAndInviteUsers(context.Context, *CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error)
+	// CreateGroupAndInviteUsers 回滚操作
+	CreateGroupAndInviteUsersRevert(context.Context, *CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -273,6 +343,9 @@ type UnimplementedGroupRelationServiceServer struct {
 
 func (UnimplementedGroupRelationServiceServer) JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinGroup not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) JoinGroupRevert(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinGroupRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) GetGroupUserIDs(context.Context, *GroupIDRequest) (*UserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupUserIDs not implemented")
@@ -310,14 +383,26 @@ func (UnimplementedGroupRelationServiceServer) GetGroupJoinRequestList(context.C
 func (UnimplementedGroupRelationServiceServer) GetGroupRelation(context.Context, *GetGroupRelationRequest) (*GetGroupRelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupRelation not implemented")
 }
-func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*Empty, error) {
+func (UnimplementedGroupRelationServiceServer) GetBatchGroupRelation(context.Context, *GetBatchGroupRelationRequest) (*GetBatchGroupRelationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBatchGroupRelation not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupId(context.Context, *GroupIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupId not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupIdRevert(context.Context, *GroupIDRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupIdRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupIdAndUserID(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupIdAndUserID not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) DeleteGroupRelationByGroupIdAndUserIDRevert(context.Context, *DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRelationByGroupIdAndUserIDRevert not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) CreateGroupAndInviteUsers(context.Context, *CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupAndInviteUsers not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) CreateGroupAndInviteUsersRevert(context.Context, *CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupAndInviteUsersRevert not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
 
@@ -346,6 +431,24 @@ func _GroupRelationService_JoinGroup_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GroupRelationServiceServer).JoinGroup(ctx, req.(*JoinGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_JoinGroupRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).JoinGroupRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_JoinGroupRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).JoinGroupRevert(ctx, req.(*JoinGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -566,6 +669,24 @@ func _GroupRelationService_GetGroupRelation_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_GetBatchGroupRelation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBatchGroupRelationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).GetBatchGroupRelation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_GetBatchGroupRelation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).GetBatchGroupRelation(ctx, req.(*GetBatchGroupRelationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GroupRelationService_DeleteGroupRelationByGroupId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GroupIDRequest)
 	if err := dec(in); err != nil {
@@ -580,6 +701,24 @@ func _GroupRelationService_DeleteGroupRelationByGroupId_Handler(srv interface{},
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupId(ctx, req.(*GroupIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_DeleteGroupRelationByGroupIdRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).DeleteGroupRelationByGroupIdRevert(ctx, req.(*GroupIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -620,6 +759,42 @@ func _GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_Handler(s
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_CreateGroupAndInviteUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGroupAndInviteUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).CreateGroupAndInviteUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_CreateGroupAndInviteUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).CreateGroupAndInviteUsers(ctx, req.(*CreateGroupAndInviteUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupRelationService_CreateGroupAndInviteUsersRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateGroupAndInviteUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).CreateGroupAndInviteUsersRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_CreateGroupAndInviteUsersRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).CreateGroupAndInviteUsersRevert(ctx, req.(*CreateGroupAndInviteUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -630,6 +805,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JoinGroup",
 			Handler:    _GroupRelationService_JoinGroup_Handler,
+		},
+		{
+			MethodName: "JoinGroupRevert",
+			Handler:    _GroupRelationService_JoinGroupRevert_Handler,
 		},
 		{
 			MethodName: "GetGroupUserIDs",
@@ -680,8 +859,16 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GroupRelationService_GetGroupRelation_Handler,
 		},
 		{
+			MethodName: "GetBatchGroupRelation",
+			Handler:    _GroupRelationService_GetBatchGroupRelation_Handler,
+		},
+		{
 			MethodName: "DeleteGroupRelationByGroupId",
 			Handler:    _GroupRelationService_DeleteGroupRelationByGroupId_Handler,
+		},
+		{
+			MethodName: "DeleteGroupRelationByGroupIdRevert",
+			Handler:    _GroupRelationService_DeleteGroupRelationByGroupIdRevert_Handler,
 		},
 		{
 			MethodName: "DeleteGroupRelationByGroupIdAndUserID",
@@ -690,6 +877,14 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroupRelationByGroupIdAndUserIDRevert",
 			Handler:    _GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_Handler,
+		},
+		{
+			MethodName: "CreateGroupAndInviteUsers",
+			Handler:    _GroupRelationService_CreateGroupAndInviteUsers_Handler,
+		},
+		{
+			MethodName: "CreateGroupAndInviteUsersRevert",
+			Handler:    _GroupRelationService_CreateGroupAndInviteUsersRevert_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

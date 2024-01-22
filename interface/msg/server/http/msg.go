@@ -58,7 +58,6 @@ func ws(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
-
 	if token == "" {
 		id, err := pkghttp.ParseTokenReUid(c)
 		if err != nil {
@@ -372,6 +371,7 @@ func getUserDialogList(c *gin.Context) {
 	infos, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
+	fmt.Println("获取对话信息", zap.Any("infos", infos))
 	if err != nil {
 		c.Error(err)
 		return
@@ -387,6 +387,7 @@ func getUserDialogList(c *gin.Context) {
 	//封装响应数据
 	var responseList = make([]model.UserDialogListResponse, 0)
 	for _, v := range infos.Dialogs {
+		fmt.Println("获取最后一条消息", zap.Any("v", v))
 		var re model.UserDialogListResponse
 		//用户
 		if v.Type == 0 {
@@ -568,8 +569,13 @@ func (c client) wsOnlineClients() {
 	//通知前端接收离线消息
 	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now().Unix()}
 	js, _ := json.Marshal(msg)
+	if enc == nil {
+		logger.Error("加密客户端错误", zap.Error(nil))
+		return
+	}
 	message, err := enc.GetSecretMessage(string(js), c.Uid)
 	if err != nil {
+		fmt.Println("加密失败：", err)
 		return
 	}
 	//上线推送消息

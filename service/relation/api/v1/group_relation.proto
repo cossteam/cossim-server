@@ -118,10 +118,6 @@ message GetGroupRelationResponse {
   int64 MuteEndTime = 7;
 }
 
-message Empty {
-}
-
-
 // 添加 GroupIdentity 枚举定义
 enum GroupIdentity {
   IDENTITY_USER = 0;  // 普通用户
@@ -183,11 +179,34 @@ message DeleteGroupRelationByGroupIdAndUserIDRevertRequest {
   GroupRelationStatus Status = 3;
 }
 
+message CreateGroupAndInviteUsersRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1; // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserID = 2;  // 用户ID
+  // @inject_tag: json:"member"
+  repeated string Member = 3;  // 邀请的好友
+}
+
+message GetBatchGroupRelationRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;         // 群聊id
+  // @inject_tag: json:"user_id"
+  repeated string UserIds = 2; // 用户id列表
+}
+
+message GetBatchGroupRelationResponse {
+  repeated GetGroupRelationResponse GroupRelationResponses = 1;
+}
+
 message DeleteGroupRelationByGroupIdAndUserIDResponse {}
 
 service GroupRelationService {
   // 加入群聊
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
+
+  // 加入群聊回滚操作
+  rpc JoinGroupRevert(JoinGroupRequest) returns (JoinGroupResponse);
 
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
@@ -225,12 +244,24 @@ service GroupRelationService {
   // 获取用户与群聊关系信息
   rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
 
+  // 批量获取用户与群聊关系信息
+  rpc GetBatchGroupRelation (GetBatchGroupRelationRequest) returns (GetBatchGroupRelationResponse);
+
   // 根据群聊ID删除群聊的所有关系
-  rpc DeleteGroupRelationByGroupId (GroupIDRequest) returns (Empty);
+  rpc DeleteGroupRelationByGroupId(GroupIDRequest) returns (google.protobuf.Empty);
+
+  // DeleteGroupRelationByGroupId回滚操作
+  rpc DeleteGroupRelationByGroupIdRevert(GroupIDRequest) returns (google.protobuf.Empty);
 
   // 根据群聊ID和用户ID删除用户的群聊关系
   rpc DeleteGroupRelationByGroupIdAndUserID(DeleteGroupRelationByGroupIdAndUserIDRequest) returns (google.protobuf.Empty);
 
   // DeleteGroupRelationByGroupIdAndUserID回滚操作
   rpc DeleteGroupRelationByGroupIdAndUserIDRevert(DeleteGroupRelationByGroupIdAndUserIDRequest) returns (google.protobuf.Empty);
+
+  // 创建群聊并邀请多个用户进群（包括自己）
+  rpc CreateGroupAndInviteUsers(CreateGroupAndInviteUsersRequest) returns (google.protobuf.Empty);
+
+  // CreateGroupAndInviteUsers 回滚操作
+  rpc CreateGroupAndInviteUsersRevert(CreateGroupAndInviteUsersRequest) returns (google.protobuf.Empty);
 }

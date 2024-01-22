@@ -343,3 +343,22 @@ func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 
 	return resp, nil
 }
+
+func (s *Service) GetUserRelationByUserIds(ctx context.Context, request *v1.GetUserRelationByUserIdsRequest) (*v1.GetUserRelationByUserIdsResponse, error) {
+	resp := &v1.GetUserRelationByUserIdsResponse{}
+
+	relations, err := s.urr.GetRelationByIDs(request.UserId, request.FriendIds)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), fmt.Sprintf("failed to get user relation: %v", err))
+	}
+
+	for _, relation := range relations {
+		resp.Users = append(resp.Users, &v1.GetUserRelationResponse{
+			UserId:   relation.UserID,
+			FriendId: relation.FriendID,
+			Status:   v1.RelationStatus(relation.Status),
+			DialogId: uint32(relation.DialogId),
+		})
+	}
+	return resp, nil
+}

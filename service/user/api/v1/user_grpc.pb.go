@@ -29,22 +29,36 @@ const (
 	UserService_ModifyUserInfo_FullMethodName          = "/v1.UserService/ModifyUserInfo"
 	UserService_ModifyUserPassword_FullMethodName      = "/v1.UserService/ModifyUserPassword"
 	UserService_GetUserPasswordByUserId_FullMethodName = "/v1.UserService/GetUserPasswordByUserId"
+	UserService_SetUserSecretBundle_FullMethodName     = "/v1.UserService/SetUserSecretBundle"
+	UserService_GetUserSecretBundle_FullMethodName     = "/v1.UserService/GetUserSecretBundle"
+	UserService_GetUserFriendByUserIds_FullMethodName  = "/v1.UserService/GetUserFriendByUserIds"
 )
 
 // UserServiceClient is the client API for UserService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
+	// 用户登录
 	UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*UserLoginResponse, error)
+	// 用户注册
 	UserRegister(ctx context.Context, in *UserRegisterRequest, opts ...grpc.CallOption) (*UserRegisterResponse, error)
+	// 获取用户信息
 	UserInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
+	// 批量获取用户信息
 	GetBatchUserInfo(ctx context.Context, in *GetBatchUserInfoRequest, opts ...grpc.CallOption) (*GetBatchUserInfoResponse, error)
+	// 根据email获取用户信息
 	GetUserInfoByEmail(ctx context.Context, in *GetUserInfoByEmailRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
 	GetUserPublicKey(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*GetUserPublicKeyResponse, error)
 	SetUserPublicKey(ctx context.Context, in *SetPublicKeyRequest, opts ...grpc.CallOption) (*UserResponse, error)
 	ModifyUserInfo(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
 	ModifyUserPassword(ctx context.Context, in *ModifyUserPasswordRequest, opts ...grpc.CallOption) (*UserResponse, error)
 	GetUserPasswordByUserId(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*GetUserPasswordByUserIdResponse, error)
+	// 设置用户密钥包
+	SetUserSecretBundle(ctx context.Context, in *SetUserSecretBundleRequest, opts ...grpc.CallOption) (*SetUserSecretBundleResponse, error)
+	// 获取用户密钥包
+	GetUserSecretBundle(ctx context.Context, in *GetUserSecretBundleRequest, opts ...grpc.CallOption) (*GetUserSecretBundleResponse, error)
+	// 根据好友ID列表获取好友列表信息
+	GetUserFriendByUserIds(ctx context.Context, in *GetUserFriendByUserIdsRequest, opts ...grpc.CallOption) (*GetUserFriendByUserIdsResponse, error)
 }
 
 type userServiceClient struct {
@@ -145,20 +159,58 @@ func (c *userServiceClient) GetUserPasswordByUserId(ctx context.Context, in *Use
 	return out, nil
 }
 
+func (c *userServiceClient) SetUserSecretBundle(ctx context.Context, in *SetUserSecretBundleRequest, opts ...grpc.CallOption) (*SetUserSecretBundleResponse, error) {
+	out := new(SetUserSecretBundleResponse)
+	err := c.cc.Invoke(ctx, UserService_SetUserSecretBundle_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUserSecretBundle(ctx context.Context, in *GetUserSecretBundleRequest, opts ...grpc.CallOption) (*GetUserSecretBundleResponse, error) {
+	out := new(GetUserSecretBundleResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserSecretBundle_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUserFriendByUserIds(ctx context.Context, in *GetUserFriendByUserIdsRequest, opts ...grpc.CallOption) (*GetUserFriendByUserIdsResponse, error) {
+	out := new(GetUserFriendByUserIdsResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserFriendByUserIds_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
+	// 用户登录
 	UserLogin(context.Context, *UserLoginRequest) (*UserLoginResponse, error)
+	// 用户注册
 	UserRegister(context.Context, *UserRegisterRequest) (*UserRegisterResponse, error)
+	// 获取用户信息
 	UserInfo(context.Context, *UserInfoRequest) (*UserInfoResponse, error)
+	// 批量获取用户信息
 	GetBatchUserInfo(context.Context, *GetBatchUserInfoRequest) (*GetBatchUserInfoResponse, error)
+	// 根据email获取用户信息
 	GetUserInfoByEmail(context.Context, *GetUserInfoByEmailRequest) (*UserInfoResponse, error)
 	GetUserPublicKey(context.Context, *UserRequest) (*GetUserPublicKeyResponse, error)
 	SetUserPublicKey(context.Context, *SetPublicKeyRequest) (*UserResponse, error)
 	ModifyUserInfo(context.Context, *User) (*UserResponse, error)
 	ModifyUserPassword(context.Context, *ModifyUserPasswordRequest) (*UserResponse, error)
 	GetUserPasswordByUserId(context.Context, *UserRequest) (*GetUserPasswordByUserIdResponse, error)
+	// 设置用户密钥包
+	SetUserSecretBundle(context.Context, *SetUserSecretBundleRequest) (*SetUserSecretBundleResponse, error)
+	// 获取用户密钥包
+	GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error)
+	// 根据好友ID列表获取好友列表信息
+	GetUserFriendByUserIds(context.Context, *GetUserFriendByUserIdsRequest) (*GetUserFriendByUserIdsResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -195,6 +247,15 @@ func (UnimplementedUserServiceServer) ModifyUserPassword(context.Context, *Modif
 }
 func (UnimplementedUserServiceServer) GetUserPasswordByUserId(context.Context, *UserRequest) (*GetUserPasswordByUserIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserPasswordByUserId not implemented")
+}
+func (UnimplementedUserServiceServer) SetUserSecretBundle(context.Context, *SetUserSecretBundleRequest) (*SetUserSecretBundleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUserSecretBundle not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserSecretBundle not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserFriendByUserIds(context.Context, *GetUserFriendByUserIdsRequest) (*GetUserFriendByUserIdsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserFriendByUserIds not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -389,6 +450,60 @@ func _UserService_GetUserPasswordByUserId_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_SetUserSecretBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserSecretBundleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).SetUserSecretBundle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_SetUserSecretBundle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).SetUserSecretBundle(ctx, req.(*SetUserSecretBundleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetUserSecretBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserSecretBundleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserSecretBundle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserSecretBundle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserSecretBundle(ctx, req.(*GetUserSecretBundleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetUserFriendByUserIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserFriendByUserIdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserFriendByUserIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserFriendByUserIds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserFriendByUserIds(ctx, req.(*GetUserFriendByUserIdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -435,6 +550,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserPasswordByUserId",
 			Handler:    _UserService_GetUserPasswordByUserId_Handler,
+		},
+		{
+			MethodName: "SetUserSecretBundle",
+			Handler:    _UserService_SetUserSecretBundle_Handler,
+		},
+		{
+			MethodName: "GetUserSecretBundle",
+			Handler:    _UserService_GetUserSecretBundle_Handler,
+		},
+		{
+			MethodName: "GetUserFriendByUserIds",
+			Handler:    _UserService_GetUserFriendByUserIds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

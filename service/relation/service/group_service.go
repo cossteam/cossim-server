@@ -93,12 +93,23 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 		userGroup.Status = entity.GroupStatusJoined
 	}
 
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
 	// 插入加入申请
 	_, err = s.grr.CreateRelation(userGroup)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		//return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		return resp, status.Error(codes.Aborted, err.Error())
 	}
 
+	return resp, nil
+}
+
+func (s *Service) JoinGroupRevert(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
+	resp := &v1.JoinGroupResponse{}
+	if err := s.grr.DeleteRelationByID(request.GroupId, request.UserId); err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+	}
 	return resp, nil
 }
 
@@ -212,12 +223,44 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	return resp, nil
 }
 
-func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*v1.Empty, error) {
+func (s *Service) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatchGroupRelationRequest) (*v1.GetBatchGroupRelationResponse, error) {
+	resp := &v1.GetBatchGroupRelationResponse{}
+
+	grs, err := s.grr.GetUserGroupByIDs(request.GroupId, request.UserIds)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrGroupRelationFailed.Code()), err.Error())
+	}
+
+	for _, gr := range grs {
+		resp.GroupRelationResponses = append(resp.GroupRelationResponses, &v1.GetGroupRelationResponse{
+			UserId:      gr.UserID,
+			GroupId:     uint32(gr.GroupID),
+			Identity:    v1.GroupIdentity(uint32(gr.Identity)),
+			MuteEndTime: gr.MuteEndTime,
+			Status:      v1.GroupRelationStatus(uint32(gr.Status)),
+		})
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*emptypb.Empty, error) {
 	err := s.grr.DeleteGroupRelationByID(in.GroupId)
 	if err != nil {
-		return &v1.Empty{}, err
+		return &emptypb.Empty{}, status.Error(codes.Aborted, err.Error())
 	}
-	return &v1.Empty{}, nil
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Service) DeleteGroupRelationByGroupIdRevert(ctx context.Context, request *v1.GroupIDRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	fmt.Println("DeleteGroupRelationByGroupIdRevert req => ", request)
+
+	if err := s.grr.UpdateGroupRelationByGroupID(request.GroupId, map[string]interface{}{
+		"deleted_at": 0,
+	}); err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
+	}
+	return resp, nil
 }
 
 func (s *Service) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
@@ -266,6 +309,49 @@ func (s *Service) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Contex
 	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, request.UserID, "status", request.Status); err != nil {
 		//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
 		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationRevertFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) CreateGroupAndInviteUsers(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+
+	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
+
+	owner := &entity.GroupRelation{
+		UserID:   request.UserID,
+		GroupID:  uint(request.GroupId),
+		Status:   entity.GroupStatusJoined,
+		Identity: entity.IdentityOwner,
+	}
+	grs := []*entity.GroupRelation{owner}
+	for _, v := range request.Member {
+		gr := &entity.GroupRelation{
+			UserID:   v,
+			GroupID:  uint(request.GroupId),
+			Status:   entity.GroupStatusJoined,
+			Identity: entity.IdentityUser,
+		}
+		grs = append(grs, gr)
+	}
+
+	_, err := s.grr.CreateRelations(grs)
+	if err != nil {
+		//return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		return resp, status.Error(codes.Aborted, err.Error())
+	}
+
+	return resp, nil
+}
+
+func (s *Service) CreateGroupAndInviteUsersRevert(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	ids := []string{request.UserID}
+	for _, v := range request.Member {
+		ids = append(ids, v)
+	}
+	if err := s.grr.DeleteRelationByGroupIDAndUserIDs(request.GroupId, ids); err != nil {
+		return resp, status.Error(codes.Aborted, err.Error())
 	}
 	return resp, nil
 }

@@ -16,7 +16,7 @@ type RegisterRequest struct {
 	Password    string `json:"password" binding:"required"`
 	ConfirmPass string `json:"confirm_password" binding:"required"`
 	Nickname    string `json:"nickname"`
-	PublicKey   string `json:"public_key" binding:"required"`
+	PublicKey   string `json:"public_key"`
 }
 
 type GetType int
@@ -41,4 +41,8 @@ type PasswordRequest struct {
 	OldPasswprd string `json:"old_password" binding:"required"`
 	Password    string `json:"password" binding:"required"`
 	ConfirmPass string `json:"confirm_password" binding:"required"`
+}
+
+type ModifyUserSecretBundleRequest struct {
+	SecretBundle string `json:"secret_bundle" binding:"required"`
 }

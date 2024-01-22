@@ -8,6 +8,7 @@ import (
 	api "github.com/cossim/coss-server/service/group/api/v1"
 	rapi "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"strconv"
 )
 
@@ -162,49 +163,56 @@ func createGroup(c *gin.Context) {
 		CreatorId:       thisId,
 		Name:            req.Name,
 		Avatar:          req.Avatar,
+		Member:          req.Member,
 	}
+	//
+	//createdGroup, err := groupClient.CreateGroup(context.Background(), &api.CreateGroupRequest{
+	//	Group: group,
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//
+	//_, err = userGroupClient.JoinGroup(context.Background(), &rapi.JoinGroupRequest{
+	//	GroupId:  createdGroup.Id,
+	//	UserId:   thisId,
+	//	Identify: rapi.GroupIdentity_IDENTITY_OWNER,
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////创建对话
+	//dialog, err := dialogClient.CreateDialog(context.Background(), &rapi.CreateDialogRequest{OwnerId: thisId, Type: 1, GroupId: createdGroup.Id})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////加入对话
+	//_, err = dialogClient.JoinDialog(context.Background(), &rapi.JoinDialogRequest{DialogId: dialog.Id, UserId: thisId})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//resp := &model.CreateGroupResponse{
+	//	Id:              createdGroup.Id,
+	//	Avatar:          createdGroup.Avatar,
+	//	Name:            createdGroup.Name,
+	//	Type:            uint32(createdGroup.Type),
+	//	Status:          int32(createdGroup.Status),
+	//	MaxMembersLimit: createdGroup.MaxMembersLimit,
+	//	CreatorId:       createdGroup.CreatorId,
+	//	DialogId:        dialog.Id,
+	//}
 
-	createdGroup, err := groupClient.CreateGroup(context.Background(), &api.CreateGroupRequest{
-		Group: group,
-	})
+	resp, err := svc.CreateGroup(c, group)
 	if err != nil {
-		c.Error(err)
+		logger.Error("创建群聊失败", zap.Error(err))
+		response.SetFail(c, "创建群聊失败", nil)
 		return
 	}
-
-	_, err = userGroupClient.JoinGroup(context.Background(), &rapi.JoinGroupRequest{
-		GroupId:  createdGroup.Id,
-		UserId:   thisId,
-		Identify: rapi.GroupIdentity_IDENTITY_OWNER,
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//创建对话
-	dialog, err := dialogClient.CreateDialog(context.Background(), &rapi.CreateDialogRequest{OwnerId: thisId, Type: 1, GroupId: createdGroup.Id})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//加入对话
-	_, err = dialogClient.JoinDialog(context.Background(), &rapi.JoinDialogRequest{DialogId: dialog.Id, UserId: thisId})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	resp := &model.CreateGroupResponse{
-		Id:              createdGroup.Id,
-		Avatar:          createdGroup.Avatar,
-		Name:            createdGroup.Name,
-		Type:            uint32(createdGroup.Type),
-		Status:          int32(createdGroup.Status),
-		MaxMembersLimit: createdGroup.MaxMembersLimit,
-		CreatorId:       createdGroup.CreatorId,
-		DialogId:        dialog.Id,
-	}
-
-	response.SetSuccess(c, "创建群聊成功", resp)
+	response.Success(c, "创建群聊成功", resp)
 }
 
 // @Summary 删除群聊
@@ -230,57 +238,65 @@ func deleteGroup(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	_, err = groupClient.GetGroupInfoByGid(context.Background(), &api.GetGroupInfoRequest{
-		Gid: uint32(gidInt),
-	})
+
+	groupId, err := svc.DeleteGroup(c, uint32(gidInt), thisId)
 	if err != nil {
-		c.Error(err)
+		logger.Error("删除群聊失败", zap.Error(err))
+		response.SetFail(c, "删除群聊失败", nil)
 		return
 	}
-	sf, err := userGroupClient.GetGroupRelation(context.Background(), &rapi.GetGroupRelationRequest{
-		UserId:  thisId,
-		GroupId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	if sf.Identity != rapi.GroupIdentity_IDENTITY_ADMIN && sf.Identity != rapi.GroupIdentity_IDENTITY_OWNER {
-		c.Error(err)
-		return
-	}
-	//删除对话用户
-	_, err = dialogClient.DeleteDialogUsersByDialogID(context.Background(), &rapi.DeleteDialogUsersByDialogIDRequest{
-		DialogId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//删除对话
-	_, err = dialogClient.DeleteDialogById(context.Background(), &rapi.DeleteDialogByIdRequest{
-		DialogId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//1.删除群聊成员
-	_, err = userGroupClient.DeleteGroupRelationByGroupId(context.Background(), &rapi.GroupIDRequest{
-		GroupId: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//2.删除群聊
-	groupId, err := groupClient.DeleteGroup(context.Background(), &api.DeleteGroupRequest{
-		Gid: uint32(gidInt),
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
+
+	//_, err = groupClient.GetGroupInfoByGid(context.Background(), &api.GetGroupInfoRequest{
+	//	Gid: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//sf, err := userGroupClient.GetGroupRelation(context.Background(), &rapi.GetGroupRelationRequest{
+	//	UserId:  thisId,
+	//	GroupId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//if sf.Identity != rapi.GroupIdentity_IDENTITY_ADMIN && sf.Identity != rapi.GroupIdentity_IDENTITY_OWNER {
+	//	c.Error(err)
+	//	return
+	//}
+	////删除对话用户
+	//_, err = dialogClient.DeleteDialogUsersByDialogID(context.Background(), &rapi.DeleteDialogUsersByDialogIDRequest{
+	//	DialogId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////删除对话
+	//_, err = dialogClient.DeleteDialogById(context.Background(), &rapi.DeleteDialogByIdRequest{
+	//	DialogId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////1.删除群聊成员
+	//_, err = userGroupClient.DeleteGroupRelationByGroupId(context.Background(), &rapi.GroupIDRequest{
+	//	GroupId: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	////2.删除群聊
+	//groupId, err := groupClient.DeleteGroup(context.Background(), &api.DeleteGroupRequest{
+	//	Gid: uint32(gidInt),
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
 
 	response.SetSuccess(c, "删除群聊成功", gin.H{"gid": groupId})
 }

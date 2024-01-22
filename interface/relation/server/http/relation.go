@@ -150,16 +150,19 @@ func getUserGroupList(c *gin.Context) {
 	// 获取用户群聊列表
 	ids, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 
 	ds, err := groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 	//获取群聊对话信息
 	dialogs, err := dialogClient.GetDialogByGroupIds(context.Background(), &relationgrpcv1.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
 	if err != nil {
+		c.Error(err)
 		return
 	}
 
@@ -422,7 +425,7 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
-	responseData, err := svc.ManageFriend(c, userID, req.UserID, int32(req.Action))
+	responseData, err := svc.ManageFriend(c, userID, req.UserID, int32(req.Action), req.E2EPublicKey)
 	if err != nil {
 		logger.Error("管理好友申请失败", zap.Error(err))
 		//c.Error(err)
@@ -581,9 +584,21 @@ func getGroupMember(c *gin.Context) {
 		return
 	}
 
+	group, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{Gid: uint32(gid)})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+		response.SetFail(c, "群聊状态不可用", nil)
+		return
+	}
+
 	groupRelation, err := groupRelationClient.GetGroupUserIDs(context.Background(), &relationgrpcv1.GroupIDRequest{GroupId: uint32(gid)})
 	if err != nil {
 		response.SetFail(c, "获取群聊成员失败", nil)
+		logger.Error("获取群聊成员失败", zap.Error(err))
 		return
 	}
 
@@ -696,6 +711,37 @@ func groupRequestList(c *gin.Context) {
 	}
 
 	response.SetSuccess(c, "获取群聊申请列表成功", data)
+}
+
+// @Summary 邀请加入群聊
+// @Description 邀请加入群聊
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.InviteGroupRequest true "request"
+// @Success		200 {object} model.Response{}
+// @Router /relation/group/invite [post]
+func inviteGroup(c *gin.Context) {
+	req := new(model.InviteGroupRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	uid, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if err = svc.InviteGroup(c, uid, req); err != nil {
+		logger.Error("邀请好友加入群聊失败", zap.Error(err))
+		response.SetFail(c, "邀请好友加入群聊失败", nil)
+		return
+	}
+
+	response.SetSuccess(c, "邀请好友加入群聊成功", nil)
 }
 
 // @Summary 加入群聊

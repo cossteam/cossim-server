@@ -17,7 +17,7 @@ func NewUserRepo(db *gorm.DB) *UserRepo {
 // 根据邮箱获取用户信息
 func (ur *UserRepo) GetUserInfoByEmail(email string) (*entity.User, error) {
 	var user entity.User
-	if err := ur.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := ur.db.Where("email = ? AND deleted_at = 0", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -26,7 +26,7 @@ func (ur *UserRepo) GetUserInfoByEmail(email string) (*entity.User, error) {
 // 根据uid获取用户信息
 func (ur *UserRepo) GetUserInfoByUid(id string) (*entity.User, error) {
 	var user entity.User
-	if err := ur.db.Where("id = ?", id).First(&user).Error; err != nil {
+	if err := ur.db.Where("id = ? AND deleted_at = 0", id).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -70,4 +70,19 @@ func (ur *UserRepo) GetUserPublicKey(userId string) (string, error) {
 // SetUserPublicKey 设置用户公钥
 func (ur *UserRepo) SetUserPublicKey(userId, publicKey string) error {
 	return ur.db.Model(entity.User{}).Where("id = ?", userId).Update("public_key", publicKey).Error
+}
+
+// 设置用户密钥包
+func (ur *UserRepo) SetUserSecretBundle(userId, secretBundle string) error {
+	return ur.db.Model(entity.User{}).Where("id = ?", userId).Update("secret_bundle", secretBundle).Error
+}
+
+// 获取用户密钥包
+func (ur *UserRepo) GetUserSecretBundle(userId string) (string, error) {
+	var user entity.User
+	err := ur.db.Model(entity.User{}).Where("id = ?", userId).Select("secret_bundle").First(&user).Error
+	if err != nil {
+		return "", err
+	}
+	return user.SecretBundle, nil
 }

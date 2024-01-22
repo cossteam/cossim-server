@@ -222,3 +222,25 @@ func (g *Service) GetUserPasswordByUserId(ctx context.Context, in *api.UserReque
 	}
 	return resp, nil
 }
+
+func (g *Service) SetUserSecretBundle(ctx context.Context, in *api.SetUserSecretBundleRequest) (*api.SetUserSecretBundleResponse, error) {
+	var resp = &api.SetUserSecretBundleResponse{}
+	if err := g.ur.SetUserSecretBundle(in.UserId, in.SecretBundle); err != nil {
+		return resp, status.Error(codes.Code(code.UserErrSetUserSecretBundleFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (g *Service) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecretBundleRequest) (*api.GetUserSecretBundleResponse, error) {
+	var resp = &api.GetUserSecretBundleResponse{}
+	secretBundle, err := g.ur.GetUserSecretBundle(in.UserId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
+		}
+		return resp, status.Error(codes.Code(code.UserErrGetUserSecretBundleFailed.Code()), err.Error())
+	}
+	resp.SecretBundle = secretBundle
+	resp.UserId = in.UserId
+	return resp, nil
+}

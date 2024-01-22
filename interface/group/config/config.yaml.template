@@ -20,6 +20,10 @@ redis:
   password: "Hitosea@123.."
 #  protocol: 3
 
+dtm:
+  name: "dtm"
+  addr: "dtm:36790"
+
 http:
   addr: "0.0.0.0:8084"
 
