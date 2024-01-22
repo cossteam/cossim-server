@@ -8,15 +8,17 @@ import (
 	"github.com/cossim/coss-server/service/msg/domain/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 func (s *Service) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRequest) (*v1.SendUserMsgResponse, error) {
 	resp := &v1.SendUserMsgResponse{}
 
-	_, err := s.mr.InsertUserMessage(request.GetSenderId(), request.GetReceiverId(), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()))
+	msg, err := s.mr.InsertUserMessage(request.GetSenderId(), request.GetReceiverId(), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()))
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrInsertUserMessageFailed.Code()), err.Error())
 	}
+	resp.MsgId = uint32(msg.ID)
 	return resp, err
 }
 
@@ -95,7 +97,7 @@ func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, request *v1.G
 	for _, m := range msgs {
 		nmsgs = append(nmsgs, &v1.GroupMessage{
 			Id:        uint32(m.ID),
-			Uid:       m.UID,
+			UserId:    m.UID,
 			Content:   m.Content,
 			Type:      uint32(m.Type),
 			ReplyId:   uint32(m.ReplyId),
@@ -157,9 +159,9 @@ func (s *Service) EditUserMessage(ctx context.Context, request *v1.EditUserMsgRe
 
 func (s *Service) DeleteUserMessage(ctx context.Context, request *v1.DeleteUserMsgRequest) (*v1.UserMessage, error) {
 	var resp = &v1.UserMessage{}
-	err := s.mr.LogicalDeleteUserMessage(uint64(request.MsgId))
+	err := s.mr.LogicalDeleteUserMessage(request.MsgId)
 	if err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
 	}
 	return &v1.UserMessage{
 		Id: request.MsgId,
@@ -174,7 +176,7 @@ func (s *Service) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsg
 		},
 		Content: request.GroupMessage.Content,
 		ReplyId: uint(request.GroupMessage.ReplyId),
-		UID:     request.GroupMessage.Uid,
+		UID:     request.GroupMessage.UserId,
 		GroupID: uint(request.GroupMessage.GroupId),
 		Type:    entity.UserMessageType(request.GroupMessage.Type),
 	}
@@ -183,7 +185,7 @@ func (s *Service) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsg
 	}
 	resp = &v1.GroupMessage{
 		Id:        uint32(msg.ID),
-		Uid:       msg.UID,
+		UserId:    msg.UID,
 		Content:   msg.Content,
 		Type:      uint32(int32(msg.Type)),
 		ReplyId:   uint32(msg.ReplyId),
@@ -195,10 +197,54 @@ func (s *Service) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsg
 
 func (s *Service) DeleteGroupMessage(ctx context.Context, request *v1.DeleteGroupMsgRequest) (*v1.GroupMessage, error) {
 	var resp = &v1.GroupMessage{}
-	if err := s.mr.LogicalDeleteGroupMessage(uint64(request.MsgId)); err != nil {
-		return resp, err
+	if err := s.mr.LogicalDeleteGroupMessage(request.MsgId); err != nil {
+		return resp, status.Error(codes.Code(code.MsgErrDeleteGroupMessageFailed.Code()), err.Error())
 	}
 	return &v1.GroupMessage{
 		Id: request.MsgId,
+	}, nil
+}
+
+// MsgErrDeleteUserMessageFailed                   = New(14008, "撤回用户消息失败")
+// MsgErrDeleteGroupMessageFailed                  = New(14009, "撤回群聊消息失败")
+// GetMsgErrGetGroupMsgByIDFailed                  = New(14010, "获取群聊消息失败")
+// GetMsgErrGetUserMsgByIDFailed
+func (s *Service) GetUserMessageById(ctx context.Context, in *v1.GetUserMsgByIDRequest) (*v1.UserMessage, error) {
+	var resp = &v1.UserMessage{}
+	msg, err := s.mr.GetUserMsgByID(in.MsgId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GetMsgErrGetUserMsgByIDFailed.Code()), err.Error())
+	}
+
+	resp = &v1.UserMessage{
+		Id:         uint32(msg.ID),
+		Content:    msg.Content,
+		Type:       uint32(int32(msg.Type)),
+		ReplayId:   uint64(msg.ReplyId),
+		SenderId:   msg.SendID,
+		ReceiverId: msg.ReceiveID,
+		CreatedAt:  msg.CreatedAt,
+	}
+	return resp, nil
+}
+
+func (s *Service) GetGroupMessageById(ctx context.Context, in *v1.GetGroupMsgByIDRequest) (*v1.GroupMessage, error) {
+	var resp = &v1.GroupMessage{}
+	msg, err := s.mr.GetGroupMsgByID(in.MsgId)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return resp, status.Error(codes.Code(code.GetMsgErrGetGroupMsgByIDFailed.Code()), err.Error())
+		}
+		return resp, err
+	}
+	return &v1.GroupMessage{
+		Id:        uint32(msg.ID),
+		UserId:    msg.UID,
+		Content:   msg.Content,
+		Type:      uint32(int32(msg.Type)),
+		ReplyId:   uint32(msg.ReplyId),
+		GroupId:   uint32(msg.GroupID),
+		ReadCount: int32(msg.ReadCount),
+		CreatedAt: msg.CreatedAt,
 	}, nil
 }

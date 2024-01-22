@@ -77,6 +77,8 @@ var (
 	MsgErrEditGroupMessageFailed                    = New(14007, "编辑群聊消息失败")
 	MsgErrDeleteUserMessageFailed                   = New(14008, "撤回用户消息失败")
 	MsgErrDeleteGroupMessageFailed                  = New(14009, "撤回群聊消息失败")
+	GetMsgErrGetGroupMsgByIDFailed                  = New(14010, "获取群聊消息失败")
+	GetMsgErrGetUserMsgByIDFailed                   = New(14011, "获取用户消息失败")
 
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed             = New(15000, "获取群聊信息失败")

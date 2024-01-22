@@ -14,8 +14,10 @@ type MsgRepository interface {
 	GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.LastMessage, error)
 	UpdateUserMessage(msg entity.UserMessage) error
 	UpdateGroupMessage(msg entity.GroupMessage) error
-	PhysicalDeleteGroupMessage(msgId uint64) error
-	PhysicalDeleteUserMessage(msgId uint64) error
-	LogicalDeleteGroupMessage(msgId uint64) error
-	LogicalDeleteUserMessage(msgId uint64) error
+	PhysicalDeleteGroupMessage(msgId uint32) error
+	PhysicalDeleteUserMessage(msgId uint32) error
+	LogicalDeleteGroupMessage(msgId uint32) error
+	LogicalDeleteUserMessage(msgId uint32) error
+	GetUserMsgByID(msgId uint32) (*entity.UserMessage, error)
+	GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error)
 }

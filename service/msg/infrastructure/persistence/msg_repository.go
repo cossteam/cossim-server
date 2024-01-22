@@ -164,22 +164,38 @@ func (g *MsgRepo) UpdateGroupMessage(msg entity.GroupMessage) error {
 	return err
 }
 
-func (g *MsgRepo) LogicalDeleteUserMessage(msgId uint64) error {
+func (g *MsgRepo) LogicalDeleteUserMessage(msgId uint32) error {
 	err := g.db.Model(&entity.UserMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now().Unix()).Error
 	return err
 }
 
-func (g *MsgRepo) LogicalDeleteGroupMessage(msgId uint64) error {
+func (g *MsgRepo) LogicalDeleteGroupMessage(msgId uint32) error {
 	err := g.db.Model(&entity.GroupMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now().Unix()).Error
 	return err
 }
 
-func (g *MsgRepo) PhysicalDeleteUserMessage(msgId uint64) error {
+func (g *MsgRepo) PhysicalDeleteUserMessage(msgId uint32) error {
 	err := g.db.Delete(&entity.UserMessage{}, msgId).Error
 	return err
 }
 
-func (g *MsgRepo) PhysicalDeleteGroupMessage(msgId uint64) error {
+func (g *MsgRepo) PhysicalDeleteGroupMessage(msgId uint32) error {
 	err := g.db.Delete(&entity.GroupMessage{}, msgId).Error
 	return err
+}
+
+func (g *MsgRepo) GetUserMsgByID(msgId uint32) (*entity.UserMessage, error) {
+	msg := &entity.UserMessage{}
+	if err := g.db.Model(&entity.UserMessage{}).Where("id = ? AND deleted_at = 0", msgId).First(msg).Error; err != nil {
+		return nil, err
+	}
+	return msg, nil
+}
+
+func (g *MsgRepo) GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error) {
+	msg := &entity.GroupMessage{}
+	if err := g.db.Model(&entity.GroupMessage{}).Where("id = ? AND deleted_at = 0", msgId).First(msg).Error; err != nil {
+		return nil, err
+	}
+	return msg, nil
 }
