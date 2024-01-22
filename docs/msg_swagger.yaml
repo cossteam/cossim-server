@@ -1,4 +1,51 @@
 definitions:
+  model.EditGroupMsgRequest:
+    properties:
+      content:
+        description: New content of the message
+        type: string
+      msg_id:
+        description: Message ID
+        type: integer
+      msg_type:
+        type: integer
+    required:
+    - content
+    - msg_id
+    - msg_type
+    type: object
+  model.EditUserMsgRequest:
+    properties:
+      content:
+        description: 消息内容
+        type: string
+      msg_id:
+        description: Message ID
+        type: integer
+      msg_type:
+        description: 消息类型
+        type: integer
+    required:
+    - content
+    - msg_id
+    - msg_type
+    type: object
+  model.RecallGroupMsgRequest:
+    properties:
+      msg_id:
+        description: Message ID
+        type: integer
+    required:
+    - msg_id
+    type: object
+  model.RecallUserMsgRequest:
+    properties:
+      msg_id:
+        description: Message ID
+        type: integer
+    required:
+    - msg_id
+    type: object
   model.Response:
     properties:
       code:
@@ -60,6 +107,46 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 获取用户对话列表
+  /msg/edit/group:
+    post:
+      consumes:
+      - application/json
+      description: 编辑群消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.EditGroupMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 编辑群消息
+  /msg/edit/user:
+    post:
+      consumes:
+      - application/json
+      description: 编辑用户消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.EditUserMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 编辑用户消息
   /msg/list/user:
     get:
       consumes:
@@ -96,6 +183,46 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 获取私聊消息
+  /msg/recall/group:
+    post:
+      consumes:
+      - application/json
+      description: 撤回群消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.RecallGroupMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 撤回群消息
+  /msg/recall/user:
+    post:
+      consumes:
+      - application/json
+      description: 撤回用户消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.RecallUserMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 撤回用户消息
   /msg/send/group:
     post:
       consumes:

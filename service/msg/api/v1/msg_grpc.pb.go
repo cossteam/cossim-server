@@ -25,18 +25,36 @@ const (
 	MsgService_GetLastMsgsForUserWithFriends_FullMethodName = "/v1.MsgService/GetLastMsgsForUserWithFriends"
 	MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName   = "/v1.MsgService/GetLastMsgsForGroupsWithIDs"
 	MsgService_GetLastMsgsByDialogIds_FullMethodName        = "/v1.MsgService/GetLastMsgsByDialogIds"
+	MsgService_EditUserMessage_FullMethodName               = "/v1.MsgService/EditUserMessage"
+	MsgService_DeleteUserMessage_FullMethodName             = "/v1.MsgService/DeleteUserMessage"
+	MsgService_EditGroupMessage_FullMethodName              = "/v1.MsgService/EditGroupMessage"
+	MsgService_DeleteGroupMessage_FullMethodName            = "/v1.MsgService/DeleteGroupMessage"
 )
 
 // MsgServiceClient is the client API for MsgService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgServiceClient interface {
+	// 发送私聊消息
 	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
+	// 发送群消息
 	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
+	// 获取用户消息列表
 	GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error)
+	// 根据好友id获取最后一条消息
 	GetLastMsgsForUserWithFriends(ctx context.Context, in *UserMsgsRequest, opts ...grpc.CallOption) (*UserMessages, error)
+	// 根据群组id获取最后一条消息
 	GetLastMsgsForGroupsWithIDs(ctx context.Context, in *GroupMsgsRequest, opts ...grpc.CallOption) (*GroupMessages, error)
+	// 根据对话id获取最后一条消息
 	GetLastMsgsByDialogIds(ctx context.Context, in *GetLastMsgsByDialogIdsRequest, opts ...grpc.CallOption) (*GetLastMsgsResponse, error)
+	// 编辑私聊消息
+	EditUserMessage(ctx context.Context, in *EditUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error)
+	// 撤回私聊消息
+	DeleteUserMessage(ctx context.Context, in *DeleteUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error)
+	// 编辑群消息
+	EditGroupMessage(ctx context.Context, in *EditGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error)
+	// 撤回群消息
+	DeleteGroupMessage(ctx context.Context, in *DeleteGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error)
 }
 
 type msgServiceClient struct {
@@ -101,16 +119,66 @@ func (c *msgServiceClient) GetLastMsgsByDialogIds(ctx context.Context, in *GetLa
 	return out, nil
 }
 
+func (c *msgServiceClient) EditUserMessage(ctx context.Context, in *EditUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error) {
+	out := new(UserMessage)
+	err := c.cc.Invoke(ctx, MsgService_EditUserMessage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) DeleteUserMessage(ctx context.Context, in *DeleteUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error) {
+	out := new(UserMessage)
+	err := c.cc.Invoke(ctx, MsgService_DeleteUserMessage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) EditGroupMessage(ctx context.Context, in *EditGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error) {
+	out := new(GroupMessage)
+	err := c.cc.Invoke(ctx, MsgService_EditGroupMessage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) DeleteGroupMessage(ctx context.Context, in *DeleteGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error) {
+	out := new(GroupMessage)
+	err := c.cc.Invoke(ctx, MsgService_DeleteGroupMessage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
 type MsgServiceServer interface {
+	// 发送私聊消息
 	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
+	// 发送群消息
 	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
+	// 获取用户消息列表
 	GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error)
+	// 根据好友id获取最后一条消息
 	GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error)
+	// 根据群组id获取最后一条消息
 	GetLastMsgsForGroupsWithIDs(context.Context, *GroupMsgsRequest) (*GroupMessages, error)
+	// 根据对话id获取最后一条消息
 	GetLastMsgsByDialogIds(context.Context, *GetLastMsgsByDialogIdsRequest) (*GetLastMsgsResponse, error)
+	// 编辑私聊消息
+	EditUserMessage(context.Context, *EditUserMsgRequest) (*UserMessage, error)
+	// 撤回私聊消息
+	DeleteUserMessage(context.Context, *DeleteUserMsgRequest) (*UserMessage, error)
+	// 编辑群消息
+	EditGroupMessage(context.Context, *EditGroupMsgRequest) (*GroupMessage, error)
+	// 撤回群消息
+	DeleteGroupMessage(context.Context, *DeleteGroupMsgRequest) (*GroupMessage, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -135,6 +203,18 @@ func (UnimplementedMsgServiceServer) GetLastMsgsForGroupsWithIDs(context.Context
 }
 func (UnimplementedMsgServiceServer) GetLastMsgsByDialogIds(context.Context, *GetLastMsgsByDialogIdsRequest) (*GetLastMsgsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsByDialogIds not implemented")
+}
+func (UnimplementedMsgServiceServer) EditUserMessage(context.Context, *EditUserMsgRequest) (*UserMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EditUserMessage not implemented")
+}
+func (UnimplementedMsgServiceServer) DeleteUserMessage(context.Context, *DeleteUserMsgRequest) (*UserMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessage not implemented")
+}
+func (UnimplementedMsgServiceServer) EditGroupMessage(context.Context, *EditGroupMsgRequest) (*GroupMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EditGroupMessage not implemented")
+}
+func (UnimplementedMsgServiceServer) DeleteGroupMessage(context.Context, *DeleteGroupMsgRequest) (*GroupMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessage not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
@@ -257,6 +337,78 @@ func _MsgService_GetLastMsgsByDialogIds_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_EditUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditUserMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).EditUserMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_EditUserMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).EditUserMessage(ctx, req.(*EditUserMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_DeleteUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).DeleteUserMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_DeleteUserMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).DeleteUserMessage(ctx, req.(*DeleteUserMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_EditGroupMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditGroupMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).EditGroupMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_EditGroupMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).EditGroupMessage(ctx, req.(*EditGroupMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_DeleteGroupMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).DeleteGroupMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_DeleteGroupMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).DeleteGroupMessage(ctx, req.(*DeleteGroupMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -287,6 +439,22 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLastMsgsByDialogIds",
 			Handler:    _MsgService_GetLastMsgsByDialogIds_Handler,
+		},
+		{
+			MethodName: "EditUserMessage",
+			Handler:    _MsgService_EditUserMessage_Handler,
+		},
+		{
+			MethodName: "DeleteUserMessage",
+			Handler:    _MsgService_DeleteUserMessage_Handler,
+		},
+		{
+			MethodName: "EditGroupMessage",
+			Handler:    _MsgService_EditGroupMessage_Handler,
+		},
+		{
+			MethodName: "DeleteGroupMessage",
+			Handler:    _MsgService_DeleteGroupMessage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

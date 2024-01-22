@@ -25,6 +25,68 @@
                 }
             }
         },
+        "/msg/edit/group": {
+            "post": {
+                "description": "编辑群消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "编辑群消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EditGroupMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/edit/user": {
+            "post": {
+                "description": "编辑用户消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "编辑用户消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EditUserMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/list/user": {
             "get": {
                 "description": "获取私聊消息",
@@ -67,6 +129,68 @@
                         "description": "页大小",
                         "name": "page_size",
                         "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/recall/group": {
+            "post": {
+                "description": "撤回群消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "撤回群消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RecallGroupMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/recall/user": {
+            "post": {
+                "description": "撤回用户消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "撤回用户消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RecallUserMsgRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -150,6 +274,73 @@
         }
     },
     "definitions": {
+        "model.EditGroupMsgRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "msg_id",
+                "msg_type"
+            ],
+            "properties": {
+                "content": {
+                    "description": "New content of the message",
+                    "type": "string"
+                },
+                "msg_id": {
+                    "description": "Message ID",
+                    "type": "integer"
+                },
+                "msg_type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.EditUserMsgRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "msg_id",
+                "msg_type"
+            ],
+            "properties": {
+                "content": {
+                    "description": "消息内容",
+                    "type": "string"
+                },
+                "msg_id": {
+                    "description": "Message ID",
+                    "type": "integer"
+                },
+                "msg_type": {
+                    "description": "消息类型",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.RecallGroupMsgRequest": {
+            "type": "object",
+            "required": [
+                "msg_id"
+            ],
+            "properties": {
+                "msg_id": {
+                    "description": "Message ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.RecallUserMsgRequest": {
+            "type": "object",
+            "required": [
+                "msg_id"
+            ],
+            "properties": {
+                "msg_id": {
+                    "description": "Message ID",
+                    "type": "integer"
+                }
+            }
+        },
         "model.Response": {
             "type": "object",
             "properties": {

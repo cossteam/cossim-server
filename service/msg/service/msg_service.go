@@ -58,9 +58,9 @@ func (s *Service) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 	return resp, nil
 }
 
-func (s *Service) GetLastMsgsForUserWithFriends(ctx context.Context, in *v1.UserMsgsRequest) (*v1.UserMessages, error) {
+func (s *Service) GetLastMsgsForUserWithFriends(ctx context.Context, request *v1.UserMsgsRequest) (*v1.UserMessages, error) {
 	resp := &v1.UserMessages{}
-	msgs, err := s.mr.GetLastMsgsForUserWithFriends(in.UserId, in.FriendId)
+	msgs, err := s.mr.GetLastMsgsForUserWithFriends(request.UserId, request.FriendId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsForUserWithFriends.Code()), err.Error())
 	}
@@ -79,11 +79,11 @@ func (s *Service) GetLastMsgsForUserWithFriends(ctx context.Context, in *v1.User
 	return resp, nil
 }
 
-func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, in *v1.GroupMsgsRequest) (*v1.GroupMessages, error) {
+func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, request *v1.GroupMsgsRequest) (*v1.GroupMessages, error) {
 	resp := &v1.GroupMessages{}
 	ids := make([]uint, 0)
-	if len(in.GroupId) > 0 {
-		for _, id := range in.GroupId {
+	if len(request.GroupId) > 0 {
+		for _, id := range request.GroupId {
 			ids = append(ids, uint(id))
 		}
 	}
@@ -107,12 +107,12 @@ func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, in *v1.GroupM
 	return resp, nil
 }
 
-func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, in *v1.GetLastMsgsByDialogIdsRequest) (*v1.GetLastMsgsResponse, error) {
+func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLastMsgsByDialogIdsRequest) (*v1.GetLastMsgsResponse, error) {
 	resp := &v1.GetLastMsgsResponse{}
 
 	ids := make([]uint, 0)
-	if len(in.DialogIds) > 0 {
-		for _, id := range in.DialogIds {
+	if len(request.DialogIds) > 0 {
+		for _, id := range request.DialogIds {
 			ids = append(ids, uint(id))
 		}
 	}
@@ -134,4 +134,71 @@ func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, in *v1.GetLastMsgs
 		}
 	}
 	return resp, nil
+}
+
+func (s *Service) EditUserMessage(ctx context.Context, request *v1.EditUserMsgRequest) (*v1.UserMessage, error) {
+	var resp = &v1.UserMessage{}
+	msg := entity.UserMessage{
+		BaseModel: entity.BaseModel{
+			ID: uint(request.UserMessage.Id),
+		},
+		Content:   request.UserMessage.Content,
+		ReplyId:   uint(request.UserMessage.ReplayId),
+		SendID:    request.UserMessage.SenderId,
+		ReceiveID: request.UserMessage.ReceiverId,
+		Type:      entity.UserMessageType(request.UserMessage.Type),
+	}
+	if err := s.mr.UpdateUserMessage(msg); err != nil {
+		return resp, status.Error(codes.Code(code.MsgErrEditUserMessageFailed.Code()), err.Error())
+	}
+
+	return resp, nil
+}
+
+func (s *Service) DeleteUserMessage(ctx context.Context, request *v1.DeleteUserMsgRequest) (*v1.UserMessage, error) {
+	var resp = &v1.UserMessage{}
+	err := s.mr.LogicalDeleteUserMessage(uint64(request.MsgId))
+	if err != nil {
+		return resp, err
+	}
+	return &v1.UserMessage{
+		Id: request.MsgId,
+	}, nil
+}
+
+func (s *Service) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsgRequest) (*v1.GroupMessage, error) {
+	var resp = &v1.GroupMessage{}
+	msg := entity.GroupMessage{
+		BaseModel: entity.BaseModel{
+			ID: uint(request.GroupMessage.Id),
+		},
+		Content: request.GroupMessage.Content,
+		ReplyId: uint(request.GroupMessage.ReplyId),
+		UID:     request.GroupMessage.Uid,
+		GroupID: uint(request.GroupMessage.GroupId),
+		Type:    entity.UserMessageType(request.GroupMessage.Type),
+	}
+	if err := s.mr.UpdateGroupMessage(msg); err != nil {
+		return resp, status.Error(codes.Code(code.MsgErrEditGroupMessageFailed.Code()), err.Error())
+	}
+	resp = &v1.GroupMessage{
+		Id:        uint32(msg.ID),
+		Uid:       msg.UID,
+		Content:   msg.Content,
+		Type:      uint32(int32(msg.Type)),
+		ReplyId:   uint32(msg.ReplyId),
+		GroupId:   uint32(msg.GroupID),
+		ReadCount: int32(msg.ReadCount),
+	}
+	return resp, nil
+}
+
+func (s *Service) DeleteGroupMessage(ctx context.Context, request *v1.DeleteGroupMsgRequest) (*v1.GroupMessage, error) {
+	var resp = &v1.GroupMessage{}
+	if err := s.mr.LogicalDeleteGroupMessage(uint64(request.MsgId)); err != nil {
+		return resp, err
+	}
+	return &v1.GroupMessage{
+		Id: request.MsgId,
+	}, nil
 }

@@ -496,7 +496,7 @@ const docTemplaterelation = `{
                 "summary": "好友申请列表",
                 "responses": {
                     "200": {
-                        "description": "status (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)",
+                        "description": "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已拉黑, 5=已删除)",
                         "schema": {
                             "allOf": [
                                 {

@@ -20,6 +20,7 @@ type SendGroupMsgRequest struct {
 	Content  string `json:"content" binding:"required"`
 	Type     uint32 `json:"type" binding:"required"`
 	ReplayId uint32 `json:"replay_id"`
+	//AtUserIds []string `json:"at_user_ids"`
 }
 
 type MsgListRequest struct {
@@ -64,4 +65,30 @@ type Message struct {
 	SendTime int64 `json:"send_time"`
 	// 消息id
 	MsgId uint64 `json:"msg_id"`
+}
+
+// EditUserMsgRequest represents the request structure for editing user message.
+type EditUserMsgRequest struct {
+	MsgId uint64 `json:"msg_id" binding:"required"` // Message ID
+	// 消息类型
+	MsgType uint `json:"msg_type" binding:"required"`
+	// 消息内容
+	Content string `json:"content" binding:"required"`
+}
+
+// EditGroupMsgRequest represents the request structure for editing group message.
+type EditGroupMsgRequest struct {
+	MsgId   uint64 `json:"msg_id" binding:"required"` // Message ID
+	MsgType uint   `json:"msg_type" binding:"required"`
+	Content string `json:"content" binding:"required"` // New content of the message
+}
+
+// RecallUserMsgRequest represents the request structure for recalling user message.
+type RecallUserMsgRequest struct {
+	MsgId uint32 `json:"msg_id" binding:"required"` // Message ID
+}
+
+// RecallGroupMsgRequest represents the request structure for recalling group message.
+type RecallGroupMsgRequest struct {
+	MsgId uint32 `json:"msg_id" binding:"required"` // Message ID
 }

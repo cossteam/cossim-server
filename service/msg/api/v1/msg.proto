@@ -167,11 +167,45 @@ message GetLastMsgsByDialogIdsRequest {
   repeated uint32 DialogIds = 1;
 }
 
+message EditUserMsgRequest {
+  // @inject_tag: json:"user_message"
+  UserMessage UserMessage = 1;
+}
+
+message DeleteUserMsgRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+}
+
+message EditGroupMsgRequest {
+  // @inject_tag: json:"group_message"
+  GroupMessage GroupMessage = 1;
+}
+
+message DeleteGroupMsgRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+}
+
 service MsgService{
+  //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
+  //发送群消息
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
+  //获取用户消息列表
   rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
+  //根据好友id获取最后一条消息
   rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
+  //根据群组id获取最后一条消息
   rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
+  //根据对话id获取最后一条消息
   rpc GetLastMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
+  //编辑私聊消息
+  rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
+  //撤回私聊消息
+  rpc DeleteUserMessage(DeleteUserMsgRequest) returns (UserMessage);
+  //编辑群消息
+  rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
+  //撤回群消息
+  rpc DeleteGroupMessage(DeleteGroupMsgRequest) returns (GroupMessage);
 }

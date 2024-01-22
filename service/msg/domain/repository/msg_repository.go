@@ -12,4 +12,10 @@ type MsgRepository interface {
 	GetLastMsgsForUserWithFriends(userID string, friendIDs []string) ([]*entity.UserMessage, error)
 	GetLastMsgsForGroupsWithIDs(groupIDs []uint) ([]*entity.GroupMessage, error)
 	GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.LastMessage, error)
+	UpdateUserMessage(msg entity.UserMessage) error
+	UpdateGroupMessage(msg entity.GroupMessage) error
+	PhysicalDeleteGroupMessage(msgId uint64) error
+	PhysicalDeleteUserMessage(msgId uint64) error
+	LogicalDeleteGroupMessage(msgId uint64) error
+	LogicalDeleteUserMessage(msgId uint64) error
 }
