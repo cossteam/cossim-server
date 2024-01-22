@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
@@ -36,7 +37,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId, friendId string, act
 	// 向用户推送通知
 	resp, err := s.sendFriendManagementNotification(ctx, userId, friendId, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送好友管理通知失败", zap.Error(err))
 	}
 
 	return resp, nil
@@ -46,17 +47,20 @@ func (s *Service) handleAction1(ctx context.Context, userId, friendId string, st
 	var dialogId uint32
 	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userId, FriendId: friendId})
 	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return 0, err
 	}
 
 	if relation != nil && relation.DialogId != 0 {
 		err = s.manageFriend1(ctx, userId, friendId, status, relation.DialogId)
 		if err != nil {
+			s.logger.Error("修改好友关系失败", zap.Error(err))
 			return 0, err
 		}
 	} else {
 		dialogId, err = s.manageFriend2(ctx, userId, friendId, status)
 		if err != nil {
+			s.logger.Error("添加好友关系失败", zap.Error(err))
 			return 0, err
 		}
 	}
@@ -76,12 +80,14 @@ func (s *Service) manageFriend1(ctx context.Context, userId, friendId string, st
 			r1 := &relationgrpcv1.DeleteDialogByIdRequest{DialogId: dialogId}
 			_, err = s.dialogClient.DeleteDialogById(ctx, r1)
 			if err != nil {
+				s.logger.Error("删除对话失败", zap.Error(err))
 				return err
 			}
 			return nil
 		})
 		_, err = s.dialogClient.JoinDialog(context.Background(), &relationgrpcv1.JoinDialogRequest{DialogId: dialogId, UserId: userId})
 		if err != nil {
+			s.logger.Error("加入对话失败", zap.Error(err))
 			return err
 		}
 
@@ -105,11 +111,12 @@ func (s *Service) manageFriend1(ctx context.Context, userId, friendId string, st
 
 		return nil
 	}); err != nil {
-		return err
+		s.logger.Error("workflow.Register err => ", zap.Error(err))
+		return code.RelationErrConfirmFriendFailed
 	}
 	// 执行 DTM 分布式事务工作流
 	if err = workflow.Execute(wfName, gid, nil); err != nil {
-		return err
+		return code.RelationErrConfirmFriendFailed
 	}
 
 	return nil
@@ -187,18 +194,18 @@ func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, st
 
 		return nil
 	}); err != nil {
-		fmt.Printf("manageFriend2 1 err: %v", err)
-		return 0, err
+		s.logger.Error("workflow Register manageFriend2", zap.Error(err))
+		return 0, code.RelationErrConfirmFriendFailed
 	}
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		fmt.Printf("manageFriend2 2 err: %v", err)
-		return 0, err
+		s.logger.Error("workflow manageFriend2", zap.Error(err))
+		return 0, code.RelationErrConfirmFriendFailed
 	}
 
 	return dialogId, nil
 }
 
-// manageFriend3 只修改关系状态
+// manageFriend3 只修改关系状态 现在只是拒绝操作
 func (s *Service) manageFriend3(ctx context.Context, userId, friendId string, dialogId uint32, status relationgrpcv1.RelationStatus) error {
 	// 创建 DTM 分布式事务工作流
 	gid := shortuuid.New()
@@ -224,12 +231,14 @@ func (s *Service) manageFriend3(ctx context.Context, userId, friendId string, di
 
 		return nil
 	}); err != nil {
-		return err
+		s.logger.Error("workflow Register manageFriend3", zap.Error(err))
+		return code.RelationErrRejectFriendFailed
 	}
 
 	// 执行 DTM 分布式事务工作流
 	if err = workflow.Execute(wfName, gid, nil); err != nil {
-		return err
+		s.logger.Error("workflow manageFriend3", zap.Error(err))
+		return code.RelationErrRejectFriendFailed
 	}
 
 	return nil

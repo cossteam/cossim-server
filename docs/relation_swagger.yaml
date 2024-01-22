@@ -477,12 +477,12 @@ paths:
       summary: 管理好友请求
   /relation/user/request_list:
     get:
-      description: 好友申请列表 UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝)
+      description: 好友申请列表 UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=已拒绝, 4=已拉黑, 5=已删除)
       produces:
       - application/json
       responses:
         "200":
-          description: UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝)
+          description: status (0=申请中, 1=待通过, 2=已添加, 3=已拒绝, 4=已拉黑, 5=已删除)
           schema:
             allOf:
             - $ref: '#/definitions/model.Response'
