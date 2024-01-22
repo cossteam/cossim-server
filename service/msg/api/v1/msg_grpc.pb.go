@@ -31,6 +31,8 @@ const (
 	MsgService_DeleteGroupMessage_FullMethodName            = "/v1.MsgService/DeleteGroupMessage"
 	MsgService_GetUserMessageById_FullMethodName            = "/v1.MsgService/GetUserMessageById"
 	MsgService_GetGroupMessageById_FullMethodName           = "/v1.MsgService/GetGroupMessageById"
+	MsgService_SetUserMsgLabel_FullMethodName               = "/v1.MsgService/SetUserMsgLabel"
+	MsgService_SetGroupMsgLabel_FullMethodName              = "/v1.MsgService/SetGroupMsgLabel"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -61,6 +63,10 @@ type MsgServiceClient interface {
 	GetUserMessageById(ctx context.Context, in *GetUserMsgByIDRequest, opts ...grpc.CallOption) (*UserMessage, error)
 	// 根据消息id获取群消息
 	GetGroupMessageById(ctx context.Context, in *GetGroupMsgByIDRequest, opts ...grpc.CallOption) (*GroupMessage, error)
+	// 设置私聊消息标注状态
+	SetUserMsgLabel(ctx context.Context, in *SetUserMsgLabelRequest, opts ...grpc.CallOption) (*SetUserMsgLabelResponse, error)
+	// 设置群消息标注状态
+	SetGroupMsgLabel(ctx context.Context, in *SetGroupMsgLabelRequest, opts ...grpc.CallOption) (*SetGroupMsgLabelResponse, error)
 }
 
 type msgServiceClient struct {
@@ -179,6 +185,24 @@ func (c *msgServiceClient) GetGroupMessageById(ctx context.Context, in *GetGroup
 	return out, nil
 }
 
+func (c *msgServiceClient) SetUserMsgLabel(ctx context.Context, in *SetUserMsgLabelRequest, opts ...grpc.CallOption) (*SetUserMsgLabelResponse, error) {
+	out := new(SetUserMsgLabelResponse)
+	err := c.cc.Invoke(ctx, MsgService_SetUserMsgLabel_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) SetGroupMsgLabel(ctx context.Context, in *SetGroupMsgLabelRequest, opts ...grpc.CallOption) (*SetGroupMsgLabelResponse, error) {
+	out := new(SetGroupMsgLabelResponse)
+	err := c.cc.Invoke(ctx, MsgService_SetGroupMsgLabel_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
@@ -207,6 +231,10 @@ type MsgServiceServer interface {
 	GetUserMessageById(context.Context, *GetUserMsgByIDRequest) (*UserMessage, error)
 	// 根据消息id获取群消息
 	GetGroupMessageById(context.Context, *GetGroupMsgByIDRequest) (*GroupMessage, error)
+	// 设置私聊消息标注状态
+	SetUserMsgLabel(context.Context, *SetUserMsgLabelRequest) (*SetUserMsgLabelResponse, error)
+	// 设置群消息标注状态
+	SetGroupMsgLabel(context.Context, *SetGroupMsgLabelRequest) (*SetGroupMsgLabelResponse, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -249,6 +277,12 @@ func (UnimplementedMsgServiceServer) GetUserMessageById(context.Context, *GetUse
 }
 func (UnimplementedMsgServiceServer) GetGroupMessageById(context.Context, *GetGroupMsgByIDRequest) (*GroupMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessageById not implemented")
+}
+func (UnimplementedMsgServiceServer) SetUserMsgLabel(context.Context, *SetUserMsgLabelRequest) (*SetUserMsgLabelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUserMsgLabel not implemented")
+}
+func (UnimplementedMsgServiceServer) SetGroupMsgLabel(context.Context, *SetGroupMsgLabelRequest) (*SetGroupMsgLabelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetGroupMsgLabel not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
@@ -479,6 +513,42 @@ func _MsgService_GetGroupMessageById_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_SetUserMsgLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserMsgLabelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).SetUserMsgLabel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_SetUserMsgLabel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).SetUserMsgLabel(ctx, req.(*SetUserMsgLabelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_SetGroupMsgLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetGroupMsgLabelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).SetGroupMsgLabel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_SetGroupMsgLabel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).SetGroupMsgLabel(ctx, req.(*SetGroupMsgLabelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -533,6 +603,14 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupMessageById",
 			Handler:    _MsgService_GetGroupMessageById_Handler,
+		},
+		{
+			MethodName: "SetUserMsgLabel",
+			Handler:    _MsgService_SetUserMsgLabel_Handler,
+		},
+		{
+			MethodName: "SetGroupMsgLabel",
+			Handler:    _MsgService_SetGroupMsgLabel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -237,5 +237,7 @@ func route(engine *gin.Engine) {
 	u.POST("/recall/user", middleware.AuthMiddleware(redisClient), recallUserMsg)
 	u.POST("/edit/group", middleware.AuthMiddleware(redisClient), editGroupMsg)
 	u.POST("/edit/user", middleware.AuthMiddleware(redisClient), editUserMsg)
+	u.POST("/label/group", middleware.AuthMiddleware(redisClient), labelGroupMessage)
+	u.POST("/label/user", middleware.AuthMiddleware(redisClient), labelUserMessage)
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

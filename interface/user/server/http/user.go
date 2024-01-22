@@ -124,7 +124,7 @@ func register(c *gin.Context) {
 		return
 	}
 
-	req.Nickname = strings.TrimSpace(req.Email)
+	req.Nickname = strings.TrimSpace(req.Nickname)
 	if req.Nickname == "" {
 		req.Nickname = req.Email
 	}

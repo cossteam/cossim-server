@@ -97,6 +97,68 @@ const docTemplatemsg = `{
                 }
             }
         },
+        "/msg/label/group": {
+            "post": {
+                "description": "标注群聊消息状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "标注群聊消息状态",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LabelGroupMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/label/user": {
+            "post": {
+                "description": "标注用户消息状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "标注用户消息状态",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LabelUserMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/list/user": {
             "get": {
                 "description": "获取私聊消息",
@@ -323,6 +385,63 @@ const docTemplatemsg = `{
                 },
                 "msg_type": {
                     "description": "消息类型",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.LabelGroupMessageRequest": {
+            "type": "object",
+            "required": [
+                "is_label",
+                "msg_id"
+            ],
+            "properties": {
+                "is_label": {
+                    "description": "是否标注",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.LabelMsgType"
+                        }
+                    ]
+                },
+                "msg_id": {
+                    "description": "消息ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.LabelMsgType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-comments": {
+                "IsLabel": "标注",
+                "NotLabel": "不标注"
+            },
+            "x-enum-varnames": [
+                "NotLabel",
+                "IsLabel"
+            ]
+        },
+        "model.LabelUserMessageRequest": {
+            "type": "object",
+            "required": [
+                "is_label",
+                "msg_id"
+            ],
+            "properties": {
+                "is_label": {
+                    "description": "是否标注",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.LabelMsgType"
+                        }
+                    ]
+                },
+                "msg_id": {
+                    "description": "消息ID",
                     "type": "integer"
                 }
             }

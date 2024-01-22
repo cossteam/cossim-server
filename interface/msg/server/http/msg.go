@@ -121,7 +121,7 @@ func sendUserMsg(c *gin.Context) {
 		return
 	}
 
-	userRelationStatus, err := relationClient.GetUserRelation(context.Background(), &relation.GetUserRelationRequest{
+	userRelationStatus1, err := relationClient.GetUserRelation(context.Background(), &relation.GetUserRelationRequest{
 		UserId:   thisId,
 		FriendId: req.ReceiverId,
 	})
@@ -130,10 +130,25 @@ func sendUserMsg(c *gin.Context) {
 		return
 	}
 
-	if userRelationStatus.Status != relation.RelationStatus_RELATION_STATUS_ADDED {
+	if userRelationStatus1.Status != relation.RelationStatus_RELATION_STATUS_ADDED {
 		response.SetFail(c, "好友关系不正常", nil)
 		return
 	}
+
+	userRelationStatus2, err := relationClient.GetUserRelation(context.Background(), &relation.GetUserRelationRequest{
+		UserId:   req.ReceiverId,
+		FriendId: thisId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	if userRelationStatus2.Status != relation.RelationStatus_RELATION_STATUS_ADDED {
+		response.SetFail(c, "好友关系不正常", nil)
+		return
+	}
+
 	dialogs, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
 		DialogIds: []uint32{req.DialogId},
 	})
@@ -660,6 +675,145 @@ func recallGroupMsg(c *gin.Context) {
 	response.SetSuccess(c, "撤回成功", gin.H{"msg_id": msg.Id})
 }
 
+// @Summary 标注用户消息状态
+// @Description 标注用户消息状态
+// @Accept  json
+// @Produce  json
+// @param request body model.LabelUserMessageRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/label/user [post]
+func labelUserMessage(c *gin.Context) {
+	req := new(model.LabelUserMessageRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if !model.IsValidLabelMsgType(req.IsLabel) {
+		response.SetFail(c, "设置消息标注状态失败", nil)
+		return
+	}
+
+	// 获取用户消息
+	msginfo, err := msgClient.GetUserMessageById(context.Background(), &msg.GetUserMsgByIDRequest{
+		MsgId: req.MsgID,
+	})
+	if err != nil {
+		logger.Error("获取用户消息失败", zap.Error(err))
+		c.Error(err)
+		return
+	}
+	//判断是否在对话内
+	userIds, err := dialogClient.GetDialogUsersByDialogID(context.Background(), &relation.GetDialogUsersByDialogIDRequest{
+		DialogId: msginfo.DialogId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	found := false
+	for _, v := range userIds.UserIds {
+		if v == thisId {
+			found = true
+			break
+		}
+	}
+	if !found {
+		response.SetFail(c, "不在对话内", nil)
+		return
+	}
+
+	// 调用 gRPC 客户端方法将用户消息设置为标注状态
+	_, err = msgClient.SetUserMsgLabel(context.Background(), &msg.SetUserMsgLabelRequest{
+		MsgId:   req.MsgID,
+		IsLabel: msg.MsgLabel(req.IsLabel),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "用户消息标注成功", nil)
+}
+
+// @Summary 标注群聊消息状态
+// @Description 标注群聊消息状态
+// @Accept  json
+// @Produce  json
+// @param request body model.LabelGroupMessageRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/label/group [post]
+func labelGroupMessage(c *gin.Context) {
+	req := new(model.LabelGroupMessageRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if !model.IsValidLabelMsgType(req.IsLabel) {
+		response.SetFail(c, "设置消息标注状态失败", nil)
+		return
+	}
+
+	// 获取群聊消息
+	msginfo, err := msgClient.GetGroupMessageById(context.Background(), &msg.GetGroupMsgByIDRequest{
+		MsgId: req.MsgID,
+	})
+	if err != nil {
+		logger.Error("获取群聊消息失败", zap.Error(err))
+		c.Error(err)
+		return
+	}
+
+	//判断是否在对话内
+	userIds, err := dialogClient.GetDialogUsersByDialogID(context.Background(), &relation.GetDialogUsersByDialogIDRequest{
+		DialogId: msginfo.DialogId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	found := false
+	for _, v := range userIds.UserIds {
+		if v == thisId {
+			found = true
+			break
+		}
+	}
+	if !found {
+		response.SetFail(c, "不在对话内", nil)
+		return
+	}
+
+	// 调用 gRPC 客户端方法将群聊消息设置为标注状态
+	_, err = msgClient.SetGroupMsgLabel(context.Background(), &msg.SetGroupMsgLabelRequest{
+		MsgId:   req.MsgID,
+		IsLabel: msg.MsgLabel(req.IsLabel),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "群聊消息标注成功", nil)
+}
+
 // 推送私聊消息
 func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
 	//遍历该用户所有客户端
@@ -691,13 +845,13 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 				if err != nil {
 					return
 				}
+				fmt.Println("推送ws消息给", uid, ":", message)
 				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 				if err != nil {
 					fmt.Println("send ws msg err:", err)
 					continue
 				}
 			}
-			return
 		}
 		//否则推送到消息队列
 		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &model.WsGroupMsg{

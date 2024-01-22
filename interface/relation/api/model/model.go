@@ -84,7 +84,7 @@ type InviteGroupRequest struct {
 
 type ManageJoinGroupRequest struct {
 	GroupID   uint32     `json:"group_id" binding:"required"`
-	InviterId string     `json:"inviter_id" binding:"required"`
+	InviterId string     `json:"inviter_id"`
 	Action    ActionEnum `json:"action"`
 }
 

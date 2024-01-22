@@ -10,6 +10,7 @@ type UserMessage struct {
 	ReceiveID string          `gorm:"default:0;comment:接收用户id" json:"receive_id"`
 	SendID    string          `gorm:"default:0;comment:发送用户id" json:"send_id"`
 	Content   string          `gorm:"longtext;comment:详细消息" json:"content"`
+	IsLabel   uint            `gorm:"default:0;comment:是否标注" json:"is_label"`
 }
 
 type UserMessageType uint
@@ -24,6 +25,8 @@ const (
 	MessageTypeSticker                              // 表情包
 	MessageTypeVoiceCall                            // 语音通话
 	MessageTypeVideoCall                            // 视频通话
+	MessageTypeDelete                               //阅后即焚消息
+
 )
 
 // IsValidMessageType 判断是否是有效的消息类型
