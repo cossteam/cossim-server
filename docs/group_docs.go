@@ -182,6 +182,12 @@ const docTemplategroup = `{
                 "max_members_limit": {
                     "type": "integer"
                 },
+                "member": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "name": {
                     "type": "string"
                 },
