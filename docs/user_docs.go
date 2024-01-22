@@ -407,8 +407,7 @@ const docTemplateuser = `{
             "required": [
                 "confirm_password",
                 "email",
-                "password",
-                "public_key"
+                "password"
             ],
             "properties": {
                 "confirm_password": {
