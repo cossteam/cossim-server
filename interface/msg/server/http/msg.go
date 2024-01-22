@@ -845,13 +845,13 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 				if err != nil {
 					return
 				}
+				fmt.Println("推送ws消息给", uid, ":", message)
 				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 				if err != nil {
 					fmt.Println("send ws msg err:", err)
 					continue
 				}
 			}
-			return
 		}
 		//否则推送到消息队列
 		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &model.WsGroupMsg{

@@ -55,8 +55,8 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	}
 	r3 := &relationgrpcv1.CreateAndJoinDialogWithGroupRequest{
 		OwnerId: req.CreatorId,
-		UserIds: req.Member,
-		Type:    uint32(relationgrpcv1.DialogType_GROUP_DIALOG),
+		//UserIds: req.Member,
+		Type: uint32(relationgrpcv1.DialogType_GROUP_DIALOG),
 	}
 	resp1 := &groupgrpcv1.Group{}
 	resp2 := &relationgrpcv1.CreateAndJoinDialogWithGroupResponse{}
