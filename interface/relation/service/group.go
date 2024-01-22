@@ -278,14 +278,21 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	}
 
 	grs, err := s.groupRelationClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: req.GroupID, UserIds: req.Member})
-	if err != nil || !errors.Is(code.Cause(err), code.RelationGroupErrRelationNotFound) {
+	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
+		//if !errors.Is(code.Cause(err), code.RelationGroupErrRelationNotFound) {
+		//	return code.RelationGroupErrInviteFailed
+		//}
 		return code.RelationGroupErrInviteFailed
 	}
 
 	for _, gr := range grs.GroupRelationResponses {
+		fmt.Println("gr => ", gr)
 		if gr.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
 			return code.RelationGroupErrAlreadyInGroup
+		}
+		if gr.Status == relationgrpcv1.GroupRelationStatus_GroupStatusPending {
+			return code.RelationGroupErrRequestAlreadyPending
 		}
 	}
 
