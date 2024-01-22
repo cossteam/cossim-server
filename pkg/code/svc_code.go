@@ -41,6 +41,7 @@ var (
 	RelationErrGetUserRelationFailed       = New(13012, "获取用户关系失败")
 	RelationUserErrGetRequestListFailed    = New(13013, "获取用户申请列表失败")
 	RelationUserErrNoFriendRequestRecords  = New(13014, "未找到好友申请记录")
+	RelationErrRejectFriendFailed          = New(13015, "拒绝好友申请失败")
 
 	RelationErrCreateGroupFailed              = New(13101, "创建群聊失败")
 	RelationErrGetGroupIDsFailed              = New(13102, "获取群聊成员")
