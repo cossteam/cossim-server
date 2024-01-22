@@ -199,3 +199,11 @@ func (g *MsgRepo) GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error) {
 	}
 	return msg, nil
 }
+
+func (g *MsgRepo) UpdateUserMsgColumn(msgId uint32, column string, value interface{}) error {
+	return g.db.Model(&entity.UserMessage{}).Where("id = ?", msgId).Update(column, value).Error
+}
+
+func (g *MsgRepo) UpdateGroupMsgColumn(msgId uint32, column string, value interface{}) error {
+	return g.db.Model(&entity.GroupMessage{}).Where("id = ?", msgId).Update(column, value).Error
+}

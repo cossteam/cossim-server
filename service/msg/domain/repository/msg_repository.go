@@ -20,4 +20,6 @@ type MsgRepository interface {
 	LogicalDeleteUserMessage(msgId uint32) error
 	GetUserMsgByID(msgId uint32) (*entity.UserMessage, error)
 	GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error)
+	UpdateUserMsgColumn(msgId uint32, column string, value interface{}) error
+	UpdateGroupMsgColumn(msgId uint32, column string, value interface{}) error
 }

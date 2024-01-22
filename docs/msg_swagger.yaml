@@ -30,6 +30,43 @@ definitions:
     - msg_id
     - msg_type
     type: object
+  model.LabelGroupMessageRequest:
+    properties:
+      is_label:
+        allOf:
+        - $ref: '#/definitions/model.LabelMsgType'
+        description: 是否标注
+      msg_id:
+        description: 消息ID
+        type: integer
+    required:
+    - is_label
+    - msg_id
+    type: object
+  model.LabelMsgType:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-comments:
+      IsLabel: 标注
+      NotLabel: 不标注
+    x-enum-varnames:
+    - NotLabel
+    - IsLabel
+  model.LabelUserMessageRequest:
+    properties:
+      is_label:
+        allOf:
+        - $ref: '#/definitions/model.LabelMsgType'
+        description: 是否标注
+      msg_id:
+        description: 消息ID
+        type: integer
+    required:
+    - is_label
+    - msg_id
+    type: object
   model.RecallGroupMsgRequest:
     properties:
       msg_id:
@@ -147,6 +184,46 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 编辑用户消息
+  /msg/label/group:
+    post:
+      consumes:
+      - application/json
+      description: 标注群聊消息状态
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.LabelGroupMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 标注群聊消息状态
+  /msg/label/user:
+    post:
+      consumes:
+      - application/json
+      description: 标注用户消息状态
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.LabelUserMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 标注用户消息状态
   /msg/list/user:
     get:
       consumes:

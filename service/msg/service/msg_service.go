@@ -149,6 +149,7 @@ func (s *Service) EditUserMessage(ctx context.Context, request *v1.EditUserMsgRe
 		SendID:    request.UserMessage.SenderId,
 		ReceiveID: request.UserMessage.ReceiverId,
 		Type:      entity.UserMessageType(request.UserMessage.Type),
+		IsLabel:   uint(request.UserMessage.IsLabel),
 	}
 	if err := s.mr.UpdateUserMessage(msg); err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrEditUserMessageFailed.Code()), err.Error())
@@ -179,6 +180,7 @@ func (s *Service) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsg
 		UID:     request.GroupMessage.UserId,
 		GroupID: uint(request.GroupMessage.GroupId),
 		Type:    entity.UserMessageType(request.GroupMessage.Type),
+		IsLabel: uint(request.GroupMessage.IsLabel),
 	}
 	if err := s.mr.UpdateGroupMessage(msg); err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrEditGroupMessageFailed.Code()), err.Error())
@@ -247,4 +249,22 @@ func (s *Service) GetGroupMessageById(ctx context.Context, in *v1.GetGroupMsgByI
 		ReadCount: int32(msg.ReadCount),
 		CreatedAt: msg.CreatedAt,
 	}, nil
+}
+
+func (s *Service) SetUserMsgLabel(ctx context.Context, in *v1.SetUserMsgLabelRequest) (*v1.SetUserMsgLabelResponse, error) {
+	var resp = &v1.SetUserMsgLabelResponse{}
+	if err := s.mr.UpdateUserMsgColumn(in.MsgId, "is_label", in.IsLabel); err != nil {
+		return resp, status.Error(codes.Code(code.SetMsgErrSetUserMsgLabelFailed.Code()), err.Error())
+	}
+	resp.MsgId = in.MsgId
+	return resp, nil
+}
+
+func (s *Service) SetGroupMsgLabel(ctx context.Context, in *v1.SetGroupMsgLabelRequest) (*v1.SetGroupMsgLabelResponse, error) {
+	var resp = &v1.SetGroupMsgLabelResponse{}
+	if err := s.mr.UpdateGroupMsgColumn(in.MsgId, "is_label", in.IsLabel); err != nil {
+		return resp, status.Error(codes.Code(code.SetMsgErrSetGroupMsgLabelFailed.Code()), err.Error())
+	}
+	resp.MsgId = in.MsgId
+	return resp, nil
 }

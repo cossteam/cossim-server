@@ -19,11 +19,14 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 
 	userId := request.GetUserId()
 	friendId := request.GetFriendId()
+	//获取关系信息
 	relation, err := s.urr.GetRelationByID(userId, friendId)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		//不是未找到关系的错误
 		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
 	}
 	if relation != nil {
+		//已经有关系
 		if relation.Status == entity.UserStatusPending {
 			return resp, status.Error(codes.Code(code.RelationErrFriendRequestAlreadyPending.Code()), "好友状态处于申请中")
 		} else if relation.Status == entity.UserStatusAdded && relation.DeletedAt == 0 {

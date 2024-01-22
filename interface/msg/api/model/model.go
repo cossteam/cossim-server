@@ -92,3 +92,27 @@ type RecallUserMsgRequest struct {
 type RecallGroupMsgRequest struct {
 	MsgId uint32 `json:"msg_id" binding:"required"` // Message ID
 }
+
+// MarkUserMessageRequest 用于标注用户消息状态的请求结构体
+type LabelUserMessageRequest struct {
+	MsgID   uint32       `json:"msg_id" binding:"required"` // 消息ID
+	IsLabel LabelMsgType `json:"is_label"`                  // 是否标注
+}
+
+// MarkGroupMessageRequest 用于标注群聊消息状态的请求结构体
+type LabelGroupMessageRequest struct {
+	MsgID   uint32       `json:"msg_id" binding:"required"` // 消息ID
+	IsLabel LabelMsgType `json:"is_label"`                  // 是否标注
+}
+
+// IsValidLabelMsgType 用于验证消息标注类型是否为正常类型
+func IsValidLabelMsgType(label LabelMsgType) bool {
+	return label == NotLabel || label == IsLabel
+}
+
+type LabelMsgType uint
+
+const (
+	NotLabel LabelMsgType = iota //不标注
+	IsLabel                      //标注
+)

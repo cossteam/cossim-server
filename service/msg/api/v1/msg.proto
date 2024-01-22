@@ -71,7 +71,15 @@ message UserMessage{
   int64 CreatedAt=10;
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 11;
+  // @inject_tag: json:"is_label"
+  MsgLabel IsLabel = 12;
 }
+
+enum MsgLabel {
+  NotLabel = 0; //未标注
+  IsLabel = 1; //标注
+}
+
 message GroupMessage {
   // @inject_tag: json:"id"
   uint32 Id = 1;
@@ -91,6 +99,8 @@ message GroupMessage {
   int64 Created_at = 8;
   // @inject_tag: json:"dialog_id"
   uint32 Dialog_id = 9;
+  // @inject_tag: json:"is_label"
+  MsgLabel IsLabel = 10;
 }
 
 message GetUserMsgListResponse{
@@ -198,6 +208,27 @@ message GetGroupMsgByIDRequest {
   uint32 msgId = 1;
 }
 
+message SetUserMsgLabelRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+  // @inject_tag: json:"is_label"
+  MsgLabel isLabel = 2;
+}
+message SetGroupMsgLabelRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+  // @inject_tag: json:"is_label"
+  MsgLabel isLabel = 2;
+}
+message SetUserMsgLabelResponse {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+}
+message SetGroupMsgLabelResponse {
+  // @inject_tag: json:"msg_id"
+  uint32 msgId = 1;
+}
+
 service MsgService{
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
@@ -223,4 +254,8 @@ service MsgService{
   rpc GetUserMessageById(GetUserMsgByIDRequest) returns (UserMessage);
   //根据消息id获取群消息
   rpc GetGroupMessageById(GetGroupMsgByIDRequest) returns (GroupMessage);
+  //设置私聊消息标注状态
+  rpc SetUserMsgLabel(SetUserMsgLabelRequest) returns (SetUserMsgLabelResponse);
+  // 设置群消息标注状态
+  rpc SetGroupMsgLabel(SetGroupMsgLabelRequest) returns (SetGroupMsgLabelResponse);
 }
