@@ -1,6 +1,7 @@
 syntax = "proto3";
 package v1;
 option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
+import "google/protobuf/empty.proto";
 
 message AddFriendRequest {
   // @inject_tag: json:"user_id"
@@ -120,6 +121,8 @@ message GetUserRelationResponse {
   uint32 DialogId = 3;
   // @inject_tag: json:"status"
   RelationStatus Status = 4;
+  // @inject_tag: json:"is_silent"
+  UserSilentNotificationType IsSilent = 5;
 }
 
 message GetFriendRequestListRequest {
@@ -156,18 +159,50 @@ message GetUserRelationByUserIdsResponse {
   repeated GetUserRelationResponse Users = 1;
 }
 
+
+
+enum UserSilentNotificationType {
+  // @inject_tag: json:"not_silent"
+  UserNotSilent = 0;
+  // @inject_tag: json:"silent"
+  UserSilent = 1;
+}
+
+message SetFriendSilentNotificationRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"is_silent"
+  UserSilentNotificationType IsSilent = 3;
+}
+
 service UserRelationService {
+  // 添加好友
   rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
+  // 管理好友
   rpc ManageFriend(ManageFriendRequest) returns (ManageFriendResponse);
+  // 管理好友回滚
   rpc ManageFriendRevert(ManageFriendRequest) returns (ManageFriendResponse);
+  // 删除好友
   rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
+  // 删除好友回滚
   rpc DeleteFriendRevert(DeleteFriendRequest) returns (DeleteFriendResponse);
+  // 添加黑名单
   rpc AddBlacklist(AddBlacklistRequest) returns (AddBlacklistResponse);
+  // 移出黑名单
   rpc DeleteBlacklist(DeleteBlacklistRequest) returns (DeleteBlacklistResponse);
+  // 获取好友列表
   rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
+  // 获取黑名单列表
   rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
+  // 获取用户关系
   rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
+  // 获取好友请求列表
   rpc GetFriendRequestList(GetFriendRequestListRequest) returns (GetFriendRequestListResponse);
   // 批量获取用户关系
   rpc GetUserRelationByUserIds(GetUserRelationByUserIdsRequest) returns (GetUserRelationByUserIdsResponse);
+  // 设置好友静默通知
+  rpc SetFriendSilentNotification(SetFriendSilentNotificationRequest) returns (google.protobuf.Empty);
+
 }

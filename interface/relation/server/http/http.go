@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/interface/relation/service"
 	"github.com/cossim/coss-server/pkg/config"
@@ -18,7 +17,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
-	"os"
 	"time"
 )
 
@@ -61,39 +59,39 @@ func setupEncryption() {
 		return
 	}
 
-	readString, err := encryption.GenerateRandomKey(32)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	resp, err := enc.SecretMessage("{\n    \"user_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"action\": 0,\n    \"e2e_public_key\": \"ex Ut ad incididunt occaecat\"\n}", enc.GetPublicKey(), []byte(readString))
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	j, err := json.Marshal(resp)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	//保存成文件
-	cacheDir := ".cache"
-	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
-		err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
-		if err != nil {
-			logger.Fatal("Failed to ", zap.Error(err))
-		}
-	}
-	// 保存私钥到文件
-	privateKeyFile, err := os.Create(cacheDir + "/data.json")
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-
-	_, err = privateKeyFile.WriteString(string(j))
-	if err != nil {
-		privateKeyFile.Close()
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	privateKeyFile.Close()
-	fmt.Println("加密后消息：", string(j))
+	//readString, err := encryption.GenerateRandomKey(32)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//resp, err := enc.SecretMessage("{\n    \"user_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"action\": 0,\n    \"e2e_public_key\": \"ex Ut ad incididunt occaecat\"\n}", enc.GetPublicKey(), []byte(readString))
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//j, err := json.Marshal(resp)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	////保存成文件
+	//cacheDir := ".cache"
+	//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+	//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+	//	if err != nil {
+	//		logger.Fatal("Failed to ", zap.Error(err))
+	//	}
+	//}
+	//// 保存私钥到文件
+	//privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//
+	//_, err = privateKeyFile.WriteString(string(j))
+	//if err != nil {
+	//	privateKeyFile.Close()
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//privateKeyFile.Close()
+	//fmt.Println("加密后消息：", string(j))
 }
 
 func setupRedis() {
@@ -235,6 +233,8 @@ func route(engine *gin.Engine) {
 	u.POST("/add_blacklist", addBlacklist)
 	u.POST("/delete_blacklist", deleteBlacklist)
 	u.POST("/switch/e2e/key", switchUserE2EPublicKey)
+	//设置用户静默通知
+	u.POST("/silent", setUserSilentNotification)
 
 	g := api.Group("/group")
 	g.GET("/member", getGroupMember)
@@ -249,6 +249,8 @@ func route(engine *gin.Engine) {
 	g.GET("/list", getUserGroupList)
 	// 退出群聊
 	g.POST("quit", quitGroup)
+	//群聊设置消息静默
+	g.POST("/silent", setGroupSilentNotification)
 
 	gg := api.Group("/group/admin")
 	// 管理员管理群聊申请

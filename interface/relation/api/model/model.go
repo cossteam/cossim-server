@@ -121,3 +121,24 @@ type SwitchUserE2EPublicKeyRequest struct {
 	UserId    string `json:"user_id" binding:"required"`
 	PublicKey string `json:"public_key" binding:"required"`
 }
+
+type SetGroupSilentNotificationRequest struct {
+	GroupId  uint32                 `json:"group_id" binding:"required"` // 群ID
+	IsSilent SilentNotificationType `json:"is_silent" `                  // 是否开启静默通知
+}
+
+type SetUserSilentNotificationRequest struct {
+	UserId   string                 `json:"user_id" binding:"required"` // 用户ID
+	IsSilent SilentNotificationType `json:"is_silent" `                 // 是否开启静默通知
+}
+
+type SilentNotificationType uint
+
+const (
+	NotSilent SilentNotificationType = iota //静默通知关闭
+	IsSilent                                //开启静默通知
+)
+
+func IsValidSilentNotificationType(isSilent SilentNotificationType) bool {
+	return isSilent == NotSilent || isSilent == IsSilent
+}

@@ -22,6 +22,7 @@ import (
 
 // @Summary 黑名单
 // @Description 黑名单
+// @Tags UserRelation
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/blacklist [get]
@@ -63,6 +64,7 @@ func blackList(c *gin.Context) {
 
 // @Summary 好友列表
 // @Description 好友列表
+// @Tags UserRelation
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/friend_list [get]
@@ -191,6 +193,7 @@ func getUserGroupList(c *gin.Context) {
 
 // @Summary 好友申请列表
 // @Description 好友申请列表
+// @Tags UserRelation
 // @Produce  json
 // @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
 // @Router /relation/user/request_list [get]
@@ -247,6 +250,7 @@ func userRequestList(c *gin.Context) {
 
 // @Summary 删除黑名单
 // @Description 删除黑名单
+// @Tags UserRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.DeleteBlacklistRequest true "request"
@@ -292,6 +296,7 @@ func deleteBlacklist(c *gin.Context) {
 
 // @Summary 添加黑名单
 // @Description 添加黑名单
+// @Tags UserRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.AddBlacklistRequest true "request"
@@ -330,6 +335,7 @@ func addBlacklist(c *gin.Context) {
 
 // @Summary 删除好友
 // @Description 删除好友
+// @Tags UserRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.DeleteFriendRequest true "request"
@@ -379,6 +385,7 @@ func deleteFriend(c *gin.Context) {
 
 // @Summary 管理好友请求
 // @Description 管理好友请求  action (0=拒绝, 1=同意)
+// @Tags UserRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.ManageFriendRequest true "request"
@@ -423,6 +430,7 @@ func manageFriend(c *gin.Context) {
 
 // @Summary 添加好友
 // @Description 添加好友
+// @Tags UserRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.AddFriendRequest true "request"
@@ -903,6 +911,7 @@ func quitGroup(c *gin.Context) {
 
 // @Summary 交换用户端到端公钥
 // @Description 交换用户端到端公钥
+// @Tags UserRelation
 // @Accept json
 // @Produce json
 // @param request body model.SwitchUserE2EPublicKeyRequest true "request"
@@ -941,4 +950,111 @@ func switchUserE2EPublicKey(c *gin.Context) {
 	}
 
 	response.SetSuccess(c, "交换用户公钥成功", nil)
+}
+
+// @Summary 设置群聊静默通知
+// @Description 设置群聊静默通知
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.SetGroupSilentNotificationRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/silent [post]
+func setGroupSilentNotification(c *gin.Context) {
+	req := new(model.SetGroupSilentNotificationRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if !model.IsValidSilentNotificationType(req.IsSilent) {
+		response.SetFail(c, "设置消息标注状态失败", nil)
+		return
+	}
+
+	groupRelation, err := groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: req.GroupId,
+		UserId:  thisId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if groupRelation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
+		response.SetFail(c, "不在群聊内", nil)
+		return
+	}
+
+	_, err = groupRelationClient.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
+		GroupId:  req.GroupId,
+		UserId:   thisId,
+		IsSilent: relationgrpcv1.GroupSilentNotificationType(req.IsSilent),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", gin.H{"group_id": req.GroupId})
+}
+
+// @Summary 设置私聊静默通知
+// @Description 设置私聊静默通知
+// @Tags UserRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.SetUserSilentNotificationRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/user/silent [post]
+func setUserSilentNotification(c *gin.Context) {
+	req := new(model.SetUserSilentNotificationRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if !model.IsValidSilentNotificationType(req.IsSilent) {
+		response.SetFail(c, "设置消息标注状态失败", nil)
+		return
+	}
+
+	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+		UserId:   thisId,
+		FriendId: req.UserId,
+	})
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+		response.SetFail(c, "不是好友", nil)
+		return
+	}
+
+	_, err = userRelationClient.SetFriendSilentNotification(context.Background(), &relationgrpcv1.SetFriendSilentNotificationRequest{
+		UserId:   thisId,
+		FriendId: req.UserId,
+		IsSilent: relationgrpcv1.UserSilentNotificationType(req.IsSilent),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", gin.H{"user_id": req.UserId})
 }

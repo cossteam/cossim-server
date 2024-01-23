@@ -80,3 +80,7 @@ func (u *UserRelationRepo) GetFriendRequestListByUserID(userId string) ([]*entit
 func (u *UserRelationRepo) UpdateRelationColumn(id uint, column string, value interface{}) error {
 	return u.db.Model(&entity.UserRelation{}).Where("id = ?", id).Update(column, value).Error
 }
+
+func (u *UserRelationRepo) SetUserFriendSilentNotification(uid, friendId string, silentNotification entity.SilentNotification) error {
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", uid, friendId).Update("silent_notification", silentNotification).Error
+}

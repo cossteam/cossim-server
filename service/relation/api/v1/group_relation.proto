@@ -108,14 +108,17 @@ message GetGroupRelationResponse {
   // @inject_tag: json:"user_id"
   string UserId = 2;  // 用户ID
   // @inject_tag: json:"status"
-  GroupRelationStatus Status = 3;
+  GroupRelationStatus Status = 3; //状态
   // @inject_tag: json:"identity"
   GroupIdentity Identity = 4;  // 群聊身份
   // @inject_tag: json:"join_method"
-  uint32 JoinMethod = 5;
+  uint32 JoinMethod = 5; // 加入方式
   // @inject_tag: json:"join_time"
-  int64 JoinTime = 6;
-  int64 MuteEndTime = 7;
+  int64 JoinTime = 6; //加入时间
+  //  @inject_tag: json:"mute_end_time"
+  int64 MuteEndTime = 7; //禁言结束时间
+  // @inject_tag: json:"is_silent"
+  GroupSilentNotificationType IsSilent = 8; //是否静默通知
 }
 
 // 添加 GroupIdentity 枚举定义
@@ -226,6 +229,23 @@ message InviteJoinGroupRequest {
   repeated string Member = 3;
 }
 
+enum GroupSilentNotificationType {
+  // @inject_tag: json:"not_silent"
+  GroupNotSilent = 0;
+  // @inject_tag: json:"silent"
+  GroupSilent = 1;
+}
+
+message SetGroupSilentNotificationRequest{
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"is_silent"
+  GroupSilentNotificationType IsSilent = 3;
+}
+
+
 service GroupRelationService {
   // 加入群聊
   rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
@@ -295,4 +315,7 @@ service GroupRelationService {
 
   // CreateGroupAndInviteUsers 回滚操作
   rpc CreateGroupAndInviteUsersRevert(CreateGroupAndInviteUsersRequest) returns (google.protobuf.Empty);
+
+  // 设置群聊为静默通知状态
+  rpc SetGroupSilentNotification(SetGroupSilentNotificationRequest) returns (google.protobuf.Empty);
 }

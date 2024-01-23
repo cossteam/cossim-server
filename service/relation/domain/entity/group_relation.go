@@ -13,7 +13,7 @@ type GroupRelation struct {
 	Inviter            string              `gorm:"type:varchar(64);comment:邀请人id" json:"inviter"`
 	Remark             string              `gorm:"type:varchar(255);comment:添加群聊备注" json:"remark"`
 	Label              []string            `gorm:"type:varchar(255);comment:标签" json:"label"`
-	SilentNotification bool                `gorm:"comment:静默通知" json:"silent_notification"`
+	SilentNotification SilentNotification  `gorm:"comment:是否开启静默通知" json:"silent_notification"`
 	PrivacyMode        bool                `gorm:"comment:隐私模式" json:"privacy_mode"`
 }
 

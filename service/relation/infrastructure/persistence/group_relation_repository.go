@@ -125,3 +125,7 @@ func (repo *GroupRelationRepo) UpdateGroupRelationByGroupID(groupID uint32, upda
 func (repo *GroupRelationRepo) DeleteRelationByGroupIDAndUserIDs(gid uint32, uid []string) error {
 	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND status = ? AND deleted_at = 0", gid, entity.GroupStatusJoined).Delete(&entity.GroupRelation{}).Error
 }
+
+func (repo *GroupRelationRepo) SetUserGroupSilentNotification(gid uint32, uid string, silentNotification entity.SilentNotification) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND user_id = ?", gid, uid).Update("silent_notification", silentNotification).Error
+}
