@@ -12,7 +12,7 @@ message UserLoginRequest {
 message UserLoginResponse {
   // @inject_tag: json:"user_id"
   string UserId=1;
-  // @inject_tag: json:"nick_name"
+  // @inject_tag: json:"nickname"
   string NickName=2;
   // @inject_tag: json:"email"
   string Email=3;
@@ -27,7 +27,7 @@ message UserLoginResponse {
 message UserRegisterRequest {
   // @inject_tag: json:"email"
   string Email=1;
-  // @inject_tag: json:"nick_name"
+  // @inject_tag: json:"nickname"
   string NickName=2;
   // @inject_tag: json:"password"
   string Password=3;
@@ -61,7 +61,7 @@ enum UserStatus {
 message UserInfoResponse {
   // @inject_tag: json:"user_id"
   string UserId=1;
-  // @inject_tag: json:"nick_name"
+  // @inject_tag: json:"nickname"
   string NickName=2;
   // @inject_tag: json:"email"
   string Email=3;
@@ -117,7 +117,7 @@ message ModifyUserPasswordRequest {
 message User {
   // @inject_tag: json:"user_id"
   string UserId=1;
-  // @inject_tag: json:"nick_name"
+  // @inject_tag: json:"nickname"
   string NickName=2;
   // @inject_tag: json:"email"
   string Email=3;

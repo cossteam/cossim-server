@@ -140,8 +140,8 @@ type UserLoginResponse struct {
 
 	// @inject_tag: json:"user_id"
 	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
-	// @inject_tag: json:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name"`
+	// @inject_tag: json:"nickname"
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"email"
 	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email"`
 	// @inject_tag: json:"tel"
@@ -233,8 +233,8 @@ type UserRegisterRequest struct {
 
 	// @inject_tag: json:"email"
 	Email string `protobuf:"bytes,1,opt,name=Email,proto3" json:"email"`
-	// @inject_tag: json:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name"`
+	// @inject_tag: json:"nickname"
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"password"
 	Password string `protobuf:"bytes,3,opt,name=Password,proto3" json:"password"`
 	// @inject_tag: json:"confirm_password"
@@ -422,8 +422,8 @@ type UserInfoResponse struct {
 
 	// @inject_tag: json:"user_id"
 	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
-	// @inject_tag: json:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name"`
+	// @inject_tag: json:"nickname"
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"email"
 	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email"`
 	// @inject_tag: json:"tel"
@@ -925,8 +925,8 @@ type User struct {
 
 	// @inject_tag: json:"user_id"
 	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
-	// @inject_tag: json:"nick_name"
-	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nick_name"`
+	// @inject_tag: json:"nickname"
+	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"email"
 	Email string `protobuf:"bytes,3,opt,name=Email,proto3" json:"email"`
 	// @inject_tag: json:"tel"
