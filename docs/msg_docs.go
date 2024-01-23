@@ -267,6 +267,37 @@ const docTemplatemsg = `{
                 }
             }
         },
+        "/msg/read/user": {
+            "post": {
+                "description": "批量设置私聊消息状态为已读",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "批量设置私聊消息状态为已读",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ReadUserMsgsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/recall/group": {
             "post": {
                 "description": "撤回群消息",
@@ -495,6 +526,26 @@ const docTemplatemsg = `{
                 "msg_id": {
                     "description": "消息ID",
                     "type": "integer"
+                }
+            }
+        },
+        "model.ReadUserMsgsRequest": {
+            "type": "object",
+            "required": [
+                "dialog_id",
+                "msg_ids"
+            ],
+            "properties": {
+                "dialog_id": {
+                    "description": "会话ID",
+                    "type": "integer"
+                },
+                "msg_ids": {
+                    "description": "消息id",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

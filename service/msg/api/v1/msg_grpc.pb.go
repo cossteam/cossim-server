@@ -35,6 +35,9 @@ const (
 	MsgService_SetGroupMsgLabel_FullMethodName              = "/v1.MsgService/SetGroupMsgLabel"
 	MsgService_GetUserMsgLabelByDialogId_FullMethodName     = "/v1.MsgService/GetUserMsgLabelByDialogId"
 	MsgService_GetGroupMsgLabelByDialogId_FullMethodName    = "/v1.MsgService/GetGroupMsgLabelByDialogId"
+	MsgService_SetUserMsgsReadStatus_FullMethodName         = "/v1.MsgService/SetUserMsgsReadStatus"
+	MsgService_SetUserMsgReadStatus_FullMethodName          = "/v1.MsgService/SetUserMsgReadStatus"
+	MsgService_GetUnreadUserMsgs_FullMethodName             = "/v1.MsgService/GetUnreadUserMsgs"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -73,6 +76,12 @@ type MsgServiceClient interface {
 	GetUserMsgLabelByDialogId(ctx context.Context, in *GetUserMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetUserMsgLabelByDialogIdResponse, error)
 	// 根据对话id获取群消息标注信息
 	GetGroupMsgLabelByDialogId(ctx context.Context, in *GetGroupMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetGroupMsgLabelByDialogIdResponse, error)
+	// 批量设置私聊消息id为已读
+	SetUserMsgsReadStatus(ctx context.Context, in *SetUserMsgsReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgsReadStatusResponse, error)
+	// 修改指定私聊消息的已读状态
+	SetUserMsgReadStatus(ctx context.Context, in *SetUserMsgReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgReadStatusResponse, error)
+	// 获取私聊对话未读消息
+	GetUnreadUserMsgs(ctx context.Context, in *GetUnreadUserMsgsRequest, opts ...grpc.CallOption) (*GetUnreadUserMsgsResponse, error)
 }
 
 type msgServiceClient struct {
@@ -227,6 +236,33 @@ func (c *msgServiceClient) GetGroupMsgLabelByDialogId(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *msgServiceClient) SetUserMsgsReadStatus(ctx context.Context, in *SetUserMsgsReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgsReadStatusResponse, error) {
+	out := new(SetUserMsgsReadStatusResponse)
+	err := c.cc.Invoke(ctx, MsgService_SetUserMsgsReadStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) SetUserMsgReadStatus(ctx context.Context, in *SetUserMsgReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgReadStatusResponse, error) {
+	out := new(SetUserMsgReadStatusResponse)
+	err := c.cc.Invoke(ctx, MsgService_SetUserMsgReadStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) GetUnreadUserMsgs(ctx context.Context, in *GetUnreadUserMsgsRequest, opts ...grpc.CallOption) (*GetUnreadUserMsgsResponse, error) {
+	out := new(GetUnreadUserMsgsResponse)
+	err := c.cc.Invoke(ctx, MsgService_GetUnreadUserMsgs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
@@ -263,6 +299,12 @@ type MsgServiceServer interface {
 	GetUserMsgLabelByDialogId(context.Context, *GetUserMsgLabelByDialogIdRequest) (*GetUserMsgLabelByDialogIdResponse, error)
 	// 根据对话id获取群消息标注信息
 	GetGroupMsgLabelByDialogId(context.Context, *GetGroupMsgLabelByDialogIdRequest) (*GetGroupMsgLabelByDialogIdResponse, error)
+	// 批量设置私聊消息id为已读
+	SetUserMsgsReadStatus(context.Context, *SetUserMsgsReadStatusRequest) (*SetUserMsgsReadStatusResponse, error)
+	// 修改指定私聊消息的已读状态
+	SetUserMsgReadStatus(context.Context, *SetUserMsgReadStatusRequest) (*SetUserMsgReadStatusResponse, error)
+	// 获取私聊对话未读消息
+	GetUnreadUserMsgs(context.Context, *GetUnreadUserMsgsRequest) (*GetUnreadUserMsgsResponse, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -317,6 +359,15 @@ func (UnimplementedMsgServiceServer) GetUserMsgLabelByDialogId(context.Context, 
 }
 func (UnimplementedMsgServiceServer) GetGroupMsgLabelByDialogId(context.Context, *GetGroupMsgLabelByDialogIdRequest) (*GetGroupMsgLabelByDialogIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMsgLabelByDialogId not implemented")
+}
+func (UnimplementedMsgServiceServer) SetUserMsgsReadStatus(context.Context, *SetUserMsgsReadStatusRequest) (*SetUserMsgsReadStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUserMsgsReadStatus not implemented")
+}
+func (UnimplementedMsgServiceServer) SetUserMsgReadStatus(context.Context, *SetUserMsgReadStatusRequest) (*SetUserMsgReadStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUserMsgReadStatus not implemented")
+}
+func (UnimplementedMsgServiceServer) GetUnreadUserMsgs(context.Context, *GetUnreadUserMsgsRequest) (*GetUnreadUserMsgsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUnreadUserMsgs not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
@@ -619,6 +670,60 @@ func _MsgService_GetGroupMsgLabelByDialogId_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_SetUserMsgsReadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserMsgsReadStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).SetUserMsgsReadStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_SetUserMsgsReadStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).SetUserMsgsReadStatus(ctx, req.(*SetUserMsgsReadStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_SetUserMsgReadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserMsgReadStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).SetUserMsgReadStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_SetUserMsgReadStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).SetUserMsgReadStatus(ctx, req.(*SetUserMsgReadStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_GetUnreadUserMsgs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUnreadUserMsgsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetUnreadUserMsgs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetUnreadUserMsgs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetUnreadUserMsgs(ctx, req.(*GetUnreadUserMsgsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -689,6 +794,18 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupMsgLabelByDialogId",
 			Handler:    _MsgService_GetGroupMsgLabelByDialogId_Handler,
+		},
+		{
+			MethodName: "SetUserMsgsReadStatus",
+			Handler:    _MsgService_SetUserMsgsReadStatus_Handler,
+		},
+		{
+			MethodName: "SetUserMsgReadStatus",
+			Handler:    _MsgService_SetUserMsgReadStatus_Handler,
+		},
+		{
+			MethodName: "GetUnreadUserMsgs",
+			Handler:    _MsgService_GetUnreadUserMsgs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

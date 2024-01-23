@@ -237,6 +237,7 @@ func route(engine *gin.Engine) {
 	u.POST("/recall/user", middleware.AuthMiddleware(redisClient), recallUserMsg)
 	u.POST("/edit/group", middleware.AuthMiddleware(redisClient), editGroupMsg)
 	u.POST("/edit/user", middleware.AuthMiddleware(redisClient), editUserMsg)
+	u.POST("/read/user", middleware.AuthMiddleware(redisClient), readUserMsgs)
 
 	//群聊标注消息
 	u.POST("/label/group", middleware.AuthMiddleware(redisClient), labelGroupMessage)

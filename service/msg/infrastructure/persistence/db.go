@@ -19,5 +19,5 @@ func NewRepositories(db *gorm.DB) *Repositories {
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.GroupMessage{}, &entity.UserMessage{})
+	return s.db.AutoMigrate(&entity.GroupMessage{}, &entity.UserMessage{}, &entity.GroupMessageRead{})
 }

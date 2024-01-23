@@ -107,6 +107,11 @@ type LabelGroupMessageRequest struct {
 	IsLabel LabelMsgType `json:"is_label"`                  // 是否标注
 }
 
+type ReadUserMsgsRequest struct {
+	MsgIds   []uint32 `json:"msg_ids" binding:"required"`   //消息id
+	DialogId uint32   `json:"dialog_id" binding:"required"` // 会话ID
+}
+
 // IsValidLabelMsgType 用于验证消息标注类型是否为正常类型
 func IsValidLabelMsgType(label LabelMsgType) bool {
 	return label == NotLabel || label == IsLabel
