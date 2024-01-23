@@ -72,6 +72,47 @@ definitions:
       tel:
         type: string
     type: object
+  model.UserInfoResponse:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      nickname:
+        type: string
+      relation_status:
+        $ref: '#/definitions/model.UserRelationStatus'
+      signature:
+        type: string
+      status:
+        $ref: '#/definitions/model.UserStatus'
+      tel:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.UserRelationStatus:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-comments:
+      UserRelationStatusBlacked: 黑名单 拉黑对方了
+      UserRelationStatusFriend: 好友关系
+      UserRelationStatusUnknown: 不是好友
+    x-enum-varnames:
+    - UserRelationStatusUnknown
+    - UserRelationStatusFriend
+    - UserRelationStatusBlacked
+  model.UserStatus:
+    enum:
+    - 0
+    type: integer
+    x-enum-comments:
+      UserStatusUnknown: 未知状态
+    x-enum-varnames:
+    - UserStatusUnknown
 info:
   contact: {}
   title: coss-user服务
@@ -123,30 +164,31 @@ paths:
       - application/json
       description: 查询用户信息
       parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: 用户id
         in: query
         name: user_id
         required: true
         type: string
-      - description: 指定根据id还是邮箱类型查找
-        enum:
-        - 0
-        - 1
-        in: query
-        name: type
-        required: true
-        type: integer
-      - description: 邮箱
-        in: query
-        name: email
-        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus
+            用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)
           schema:
-            $ref: '#/definitions/model.Response'
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserInfoResponse'
+              type: object
+      security:
+      - Bearer: []
       summary: 查询用户信息
   /user/info/modify:
     post:
