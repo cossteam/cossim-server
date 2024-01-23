@@ -36,8 +36,9 @@ discovers:
   user:
     name: "user_service"
     addr: "user_service:10002"
-    dial: "3000ms"
-    timeout: "5000ms"
+  relation:
+    name: "relation_service"
+    addr: "relation_service:10001"
 
 encryption:
   enabled: true

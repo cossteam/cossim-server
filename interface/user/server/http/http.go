@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -19,11 +20,12 @@ import (
 )
 
 var (
-	userClient  user.UserServiceClient
-	redisClient *redis.Client
-	cfg         *config.AppConfig
-	logger      *zap.Logger
-	enc         encryption.Encryptor
+	userClient         user.UserServiceClient
+	RelationUserClient relationgrpcv1.UserRelationServiceClient
+	redisClient        *redis.Client
+	cfg                *config.AppConfig
+	logger             *zap.Logger
+	enc                encryption.Encryptor
 )
 
 var ThisKey string
@@ -34,7 +36,16 @@ func Init(c *config.AppConfig) {
 	setupEncryption()
 	setupRedis()
 	setupUserGRPCClient()
+	setupRelationUserGRPCClient()
 	setupGin()
+}
+
+func setupRelationUserGRPCClient() {
+	conn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
+	}
+	RelationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 }
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
@@ -173,7 +184,7 @@ func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/user")
 	u.POST("/login", login)
 	u.POST("/register", register)
-	u.GET("/info", middleware.AuthMiddleware(redisClient), GetUserInfo)
+	u.GET("/info", middleware.AuthMiddleware(redisClient), getUserInfo)
 	u.POST("/logout", middleware.AuthMiddleware(redisClient), logout)
 	u.GET("/system/key/get", GetSystemPublicKey)
 	u.POST("/info/modify", middleware.AuthMiddleware(redisClient), modifyUserInfo)

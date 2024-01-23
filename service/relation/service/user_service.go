@@ -318,6 +318,9 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 
 	relation, err := s.urr.GetRelationByID(request.GetUserId(), request.GetFriendId())
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.RelationUserErrFriendRelationNotFound.Code()), err.Error())
+		}
 		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), fmt.Sprintf("failed to get user relation: %v", err))
 	}
 
