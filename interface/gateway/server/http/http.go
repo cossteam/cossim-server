@@ -78,12 +78,12 @@ func setupURLs() {
 		panic("Config not initialized")
 	}
 
-	userServiceURL = "http://" + cfg.Discovers["user"].Addr
-	relationServiceURL = "http://" + cfg.Discovers["relation"].Addr
-	messageServiceURL = "http://" + cfg.Discovers["msg"].Addr
-	messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Addr + "/api/v1/msg/ws"
-	groupServiceURL = "http://" + cfg.Discovers["group"].Addr
-	storageServiceURL = "http://" + cfg.Discovers["storage"].Addr
+	userServiceURL = "http://" + cfg.Discovers["user"].Address
+	relationServiceURL = "http://" + cfg.Discovers["relation"].Address
+	messageServiceURL = "http://" + cfg.Discovers["msg"].Address
+	messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Address + "/api/v1/msg/ws"
+	groupServiceURL = "http://" + cfg.Discovers["group"].Address
+	storageServiceURL = "http://" + cfg.Discovers["storage"].Address
 }
 
 func setupGin() {
@@ -102,7 +102,7 @@ func setupGin() {
 
 	// 启动 Gin 服务器
 	go func() {
-		if err := engine.Run(cfg.HTTP.Addr); err != nil {
+		if err := engine.Run(cfg.HTTP.Address); err != nil {
 			logger.Fatal("Failed to start Gin server", zap.Error(err))
 		}
 	}()

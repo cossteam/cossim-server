@@ -31,11 +31,11 @@ type Service struct {
 func New(c *config.AppConfig) *Service {
 	logger := setupLogger(c)
 
-	dialogClient := setupDialogGRPCClient(c.Discovers["relation"].Addr)
-	groupRelationClient := setupGROUPRelationGRPCClient(c.Discovers["relation"].Addr)
-	userRelationClient := setupUserRelationGRPCClient(c.Discovers["relation"].Addr)
-	userClient := setupUserGRPCClient(c.Discovers["user"].Addr)
-	groupClient := setupGroupGRPCClient(c.Discovers["group"].Addr)
+	dialogClient := setupDialogGRPCClient(c.Discovers["relation"].Addr())
+	groupRelationClient := setupGROUPRelationGRPCClient(c.Discovers["relation"].Addr())
+	userRelationClient := setupUserRelationGRPCClient(c.Discovers["relation"].Addr())
+	userClient := setupUserGRPCClient(c.Discovers["user"].Addr())
+	groupClient := setupGroupGRPCClient(c.Discovers["group"].Addr())
 	rabbitMQClient := setRabbitMQProvider(c)
 
 	return &Service{
@@ -47,9 +47,9 @@ func New(c *config.AppConfig) *Service {
 		rabbitMQClient:      rabbitMQClient,
 		logger:              logger,
 
-		dtmGrpcServer:      c.Dtm.Addr,
-		relationGrpcServer: c.Discovers["relation"].Addr,
-		dialogGrpcServer:   c.Discovers["relation"].Addr,
+		dtmGrpcServer:      c.Dtm.Addr(),
+		relationGrpcServer: c.Discovers["relation"].Addr(),
+		dialogGrpcServer:   c.Discovers["relation"].Addr(),
 	}
 }
 
@@ -122,7 +122,7 @@ func setupDialogGRPCClient(addr string) relation.DialogServiceClient {
 }
 
 func setRabbitMQProvider(c *config.AppConfig) *msg_queue.RabbitMQ {
-	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Addr))
+	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Addr()))
 	if err != nil {
 		panic(err)
 	}
