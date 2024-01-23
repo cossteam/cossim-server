@@ -72,6 +72,11 @@
         },
         "/user/info": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "查询用户信息",
                 "consumes": [
                     "application/json"
@@ -83,34 +88,36 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "用户id",
-                        "name": "user_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            0,
-                            1
-                        ],
-                        "type": "integer",
-                        "description": "指定根据id还是邮箱类型查找",
-                        "name": "type",
-                        "in": "query",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "邮箱",
-                        "name": "email",
-                        "in": "query"
+                        "description": "用户id",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)",
                         "schema": {
-                            "$ref": "#/definitions/model.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -456,6 +463,65 @@
                     "type": "string"
                 }
             }
+        },
+        "model.UserInfoResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "relation_status": {
+                    "$ref": "#/definitions/model.UserRelationStatus"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/model.UserStatus"
+                },
+                "tel": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UserRelationStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2
+            ],
+            "x-enum-comments": {
+                "UserRelationStatusBlacked": "黑名单 拉黑对方了",
+                "UserRelationStatusFriend": "好友关系",
+                "UserRelationStatusUnknown": "不是好友"
+            },
+            "x-enum-varnames": [
+                "UserRelationStatusUnknown",
+                "UserRelationStatusFriend",
+                "UserRelationStatusBlacked"
+            ]
+        },
+        "model.UserStatus": {
+            "type": "integer",
+            "enum": [
+                0
+            ],
+            "x-enum-comments": {
+                "UserStatusUnknown": "未知状态"
+            },
+            "x-enum-varnames": [
+                "UserStatusUnknown"
+            ]
         }
     }
 }
