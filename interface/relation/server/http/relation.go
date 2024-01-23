@@ -8,9 +8,9 @@ import (
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	"github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	"strconv"
-	"time"
 
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
@@ -467,7 +467,7 @@ func addFriend(c *gin.Context) {
 	}
 	targetId := req.UserID
 	req.UserID = thisId
-	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now().Unix()}
+	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now()}
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	if err != nil {
@@ -730,7 +730,7 @@ func joinGroup(c *gin.Context) {
 		GroupId: req.GroupID,
 	})
 	for _, id := range adminIds.UserIds {
-		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now().Unix()}
+		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now()}
 		//通知消息服务有消息需要发送
 		err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 		if err != nil {
@@ -932,7 +932,7 @@ func switchUserE2EPublicKey(c *gin.Context) {
 		UserId:    thisId,
 		PublicKey: req.PublicKey,
 	}
-	msg := msgconfig.WsMsg{Uid: req.UserId, Event: msgconfig.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now().Unix()}
+	msg := msgconfig.WsMsg{Uid: req.UserId, Event: msgconfig.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now()}
 
 	//通知消息服务有消息需要发送
 	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)

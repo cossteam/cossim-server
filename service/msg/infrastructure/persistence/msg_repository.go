@@ -1,10 +1,10 @@
 package persistence
 
 import (
+	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/service/msg/api/dataTransformers"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
 	"gorm.io/gorm"
-	"time"
 )
 
 type MsgRepo struct {
@@ -165,12 +165,12 @@ func (g *MsgRepo) UpdateGroupMessage(msg entity.GroupMessage) error {
 }
 
 func (g *MsgRepo) LogicalDeleteUserMessage(msgId uint32) error {
-	err := g.db.Model(&entity.UserMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now().Unix()).Error
+	err := g.db.Model(&entity.UserMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now()).Error
 	return err
 }
 
 func (g *MsgRepo) LogicalDeleteGroupMessage(msgId uint32) error {
-	err := g.db.Model(&entity.GroupMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now().Unix()).Error
+	err := g.db.Model(&entity.GroupMessage{}).Where("id = ?", msgId).Update("deleted_at", time.Now()).Error
 	return err
 }
 
@@ -206,4 +206,20 @@ func (g *MsgRepo) UpdateUserMsgColumn(msgId uint32, column string, value interfa
 
 func (g *MsgRepo) UpdateGroupMsgColumn(msgId uint32, column string, value interface{}) error {
 	return g.db.Model(&entity.GroupMessage{}).Where("id = ?", msgId).Update(column, value).Error
+}
+
+func (g *MsgRepo) GetUserMsgLabelByDialogId(dialogId uint32) ([]*entity.UserMessage, error) {
+	var userMessages []*entity.UserMessage
+	if err := g.db.Model(&entity.UserMessage{}).Where("dialog_id = ? AND is_label = ? AND deleted_at = 0", dialogId, entity.IsLabel).Find(&userMessages).Error; err != nil {
+		return nil, err
+	}
+	return userMessages, nil
+}
+
+func (g *MsgRepo) GetGroupMsgLabelByDialogId(dialogId uint32) ([]*entity.GroupMessage, error) {
+	var groupMessages []*entity.GroupMessage
+	if err := g.db.Model(&entity.GroupMessage{}).Where("dialog_id = ? AND is_label = ? AND deleted_at = 0", dialogId, entity.IsLabel).Find(&groupMessages).Error; err != nil {
+		return nil, err
+	}
+	return groupMessages, nil
 }

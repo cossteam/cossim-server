@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"github.com/cossim/coss-server/service/user/domain/repository"
 	"github.com/cossim/coss-server/service/user/utils"
 	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	"time"
 
 	api "github.com/cossim/coss-server/service/user/api/v1"
 )
@@ -43,7 +43,7 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 		return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), code.UserErrNotExistOrPassword.Message())
 	}
 	//修改登录时间
-	userInfo.LastAt = time.Now().Unix()
+	userInfo.LastAt = time.Now()
 	_, err = g.ur.UpdateUser(userInfo)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())

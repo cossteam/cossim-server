@@ -29,6 +29,13 @@ const (
 
 )
 
+type MessageLabelType uint
+
+const (
+	NotLabel MessageLabelType = iota // 不标记消息
+	IsLabel                          // 标记消息
+)
+
 // IsValidMessageType 判断是否是有效的消息类型
 func IsValidMessageType(msgType UserMessageType) bool {
 	validTypes := map[UserMessageType]struct{}{

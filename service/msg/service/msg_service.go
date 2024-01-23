@@ -268,3 +268,52 @@ func (s *Service) SetGroupMsgLabel(ctx context.Context, in *v1.SetGroupMsgLabelR
 	resp.MsgId = in.MsgId
 	return resp, nil
 }
+
+func (s *Service) GetUserMsgLabelByDialogId(ctx context.Context, in *v1.GetUserMsgLabelByDialogIdRequest) (*v1.GetUserMsgLabelByDialogIdResponse, error) {
+	var resp = &v1.GetUserMsgLabelByDialogIdResponse{}
+
+	msgs, err := s.mr.GetUserMsgLabelByDialogId(in.DialogId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GetMsgErrGetUserMsgLabelByDialogIdFailed.Code()), err.Error())
+	}
+
+	var msglist = make([]*v1.UserMessage, 0)
+	for _, msg := range msgs {
+		msglist = append(msglist, &v1.UserMessage{
+			Id:         uint32(msg.ID),
+			Content:    msg.Content,
+			Type:       uint32(msg.Type),
+			ReplayId:   uint64(msg.ReplyId),
+			SenderId:   msg.SendID,
+			ReceiverId: msg.ReceiveID,
+			CreatedAt:  msg.CreatedAt,
+		})
+	}
+	resp.MsgList = msglist
+	resp.DialogId = in.DialogId
+	return resp, nil
+}
+
+func (s *Service) GetGroupMsgLabelByDialogId(ctx context.Context, in *v1.GetGroupMsgLabelByDialogIdRequest) (*v1.GetGroupMsgLabelByDialogIdResponse, error) {
+	var resp = &v1.GetGroupMsgLabelByDialogIdResponse{}
+	msgs, err := s.mr.GetGroupMsgLabelByDialogId(in.DialogId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GetMsgErrGetGroupMsgLabelByDialogIdFailed.Code()), err.Error())
+	}
+
+	var msglist = make([]*v1.GroupMessage, 0)
+	for _, msg := range msgs {
+		msglist = append(msglist, &v1.GroupMessage{
+			Id:        uint32(msg.ID),
+			UserId:    msg.UID,
+			Content:   msg.Content,
+			Type:      uint32(int32(msg.Type)),
+			ReplyId:   uint32(msg.ReplyId),
+			GroupId:   uint32(msg.GroupID),
+			ReadCount: int32(msg.ReadCount),
+		})
+	}
+	resp.DialogId = in.DialogId
+	resp.MsgList = msglist
+	return resp, nil
+}

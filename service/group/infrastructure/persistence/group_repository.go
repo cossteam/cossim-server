@@ -1,9 +1,9 @@
 package persistence
 
 import (
+	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/service/group/domain/entity"
 	"gorm.io/gorm"
-	"time"
 )
 
 type GroupRepo struct {
@@ -49,7 +49,7 @@ func (repo *GroupRepo) InsertGroup(group *entity.Group) (*entity.Group, error) {
 }
 
 func (repo *GroupRepo) DeleteGroup(gid uint) error {
-	result := repo.db.Model(&entity.Group{}).Where("id = ?", gid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now().Unix())
+	result := repo.db.Model(&entity.Group{}).Where("id = ?", gid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now())
 	return result.Error
 }
 

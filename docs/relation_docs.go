@@ -761,8 +761,7 @@ const docTemplaterelation = `{
         "model.ManageJoinGroupRequest": {
             "type": "object",
             "required": [
-                "group_id",
-                "inviter_id"
+                "group_id"
             ],
             "properties": {
                 "action": {
