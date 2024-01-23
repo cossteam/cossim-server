@@ -4,60 +4,39 @@ log:
   file: "logs/app.log"
   format: "console" # console、json
 
-mysql:
-  addr: "172.16.38.91:3306"
-  dsn: "root:888888@tcp(0.0.0.0:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
-  readDSN:
-    - "root:123456@tcp(172.16.38.91:3306)/bbq?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
-  idleTimeout: "4h"
-  queryTimeout: "800ms"
-  execTimeout: "800ms"
-  tranTimeout: "100ms"
-
-redis:
-  name: "user-bff"
-  proto: "tcp"
-  addr: "172.16.38.91:6379"
-  dialTimeout: "1s"
-  readTimeout: "1s"
-  writeTimeout: "1s"
-  idleTimeout: "10s"
-
 http:
-  addr: "0.0.0.0:8080"
+  address: "0.0.0.0"
+  port: 8080
 
 grpc:
-  addr: "127.0.0.1:10002"
+  address: "0.0.0.0"
+  port:
 
 # 注册本服务
 register:
   name: "gateway"
-  addr: "注册中心地址"
-  tags: ["网关服务", "gateway"]
+  address: "registry"   # 注册中心地址
+  port: 8500            # 注册中心端口
+  tags: ["gateway", "api", "网关服务"]
 
 discovers:
   user:
     name: "user_bff"
-    addr: "user_bff:8083"
-    dial: "3000ms"
-    timeout: "5000ms"
+    address: "user_bff"
+    port: 8083
   relation:
     name: "relation_bff"
-    addr: "relation_bff:8082"
-    dial: "3000ms"
-    timeout: "5000ms"
+    address: "relation_bff"
+    port: 8082
   msg:
     name: "msg_bff"
-    addr: "msg_bff:8081"
-    dial: "3000ms"
-    timeout: "5000ms"
+    address: "msg_bff"
+    port: 8081
   group:
     name: "group_bff"
-    addr: "group_bff:8084"
-    dial: "3000ms"
-    timeout: "5000ms"
+    address: "group_bff"
+    port: 8084
   storage:
     name: "storage_bff"
-    addr: "storage_bff:8085"
-    dial: "3000ms"
-    timeout: "5000ms"
+    address: "storage_bff"
+    port: 8085
