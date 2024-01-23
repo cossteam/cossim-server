@@ -15,7 +15,7 @@ type Service struct {
 }
 
 func New(c *config.AppConfig) (s *Service) {
-	mqClient, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Addr))
+	mqClient, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Address))
 	if err != nil {
 		panic(err)
 	}

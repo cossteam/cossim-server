@@ -83,6 +83,11 @@ func upload(c *gin.Context) {
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
+	lastDotIndex := strings.LastIndex(file.Filename, ".")
+	if lastDotIndex == -1 || lastDotIndex == len(file.Filename)-1 {
+		response.SetFail(c, "没有文件后缀", nil)
+		return
+	}
 	fileExtension := file.Filename[strings.LastIndex(file.Filename, "."):]
 	fileID := uuid.New().String()
 	key := minio.GenKey(bucket, fileID+fileExtension)
@@ -113,7 +118,7 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	headerUrl.Host = cfg.Discovers["gateway"].Addr
+	headerUrl.Host = cfg.Discovers["gateway"].Address
 	headerUrl.Path = downloadURL + headerUrl.Path
 	response.SetSuccess(c, "上传成功", gin.H{
 		"url":     headerUrl.String(),

@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// 启动 gRPC 服务器
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s", config.Conf.GRPC.Addr))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s", config.Conf.GRPC.Addr()))
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +39,7 @@ func main() {
 	svc := service.NewService(infra)
 	api.RegisterMsgServiceServer(grpcServer, svc)
 
-	fmt.Printf("gRPC server is running on addr: %s\n", config.Conf.GRPC.Addr)
+	fmt.Printf("gRPC server is running on addr: %s\n", config.Conf.GRPC.Addr())
 
 	go func() {
 		if err = grpcServer.Serve(lis); err != nil {

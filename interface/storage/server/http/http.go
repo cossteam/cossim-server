@@ -86,7 +86,7 @@ func setupEncryption() {
 
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr,
+		Addr:     cfg.Redis.Addr(),
 		Password: cfg.Redis.Password, // no password set
 		DB:       0,                  // use default DB
 		//Protocol: cfg,
@@ -95,13 +95,12 @@ func setupRedis() {
 }
 
 func setupStorageClient() {
-	var err error
-	storageConn, err := grpc.Dial(cfg.Discovers["storage"].Addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(cfg.Discovers["storage"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 
-	storageClient = storagev1.NewStorageServiceClient(storageConn)
+	storageClient = storagev1.NewStorageServiceClient(conn)
 }
 
 func setMinIOProvider() {
@@ -163,7 +162,7 @@ func setupGin() {
 
 	// 启动 Gin 服务器
 	go func() {
-		if err := engine.Run(cfg.HTTP.Addr); err != nil {
+		if err := engine.Run(cfg.HTTP.Addr()); err != nil {
 			logger.Fatal("Failed to start Gin server", zap.Error(err))
 		}
 	}()

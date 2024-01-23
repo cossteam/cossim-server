@@ -16,7 +16,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"os"
-	"time"
 )
 
 var (
@@ -41,15 +40,17 @@ func Init(c *config.AppConfig) {
 }
 
 func setupRelationUserGRPCClient() {
-	conn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
+	fmt.Println("cfg.Discovers[\"relation\"].Addr() => ", cfg.Discovers["relation"].Addr())
+	conn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
 	RelationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 }
 func setupRedis() {
+	fmt.Println("cfg.Redis.Addr() => ", cfg.Redis.Addr())
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr,
+		Addr:     cfg.Redis.Addr(),
 		Password: cfg.Redis.Password, // no password set
 		DB:       0,                  // use default DB
 		//Protocol: cfg,
@@ -107,8 +108,8 @@ func setupEncryption() {
 }
 
 func setupUserGRPCClient() {
-	var err error
-	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr, grpc.WithInsecure())
+	fmt.Println("cfg.Discovers[\"user\"].Addr() => ", cfg.Discovers["user"].Addr())
+	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
@@ -122,7 +123,7 @@ func setupLogger() {
 		LevelKey:       "level",
 		NameKey:        "logger",
 		CallerKey:      "caller",
-		MessageKey:     "msg",
+		MessageKey:     "user",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.LowercaseLevelEncoder, // 小写编码器
@@ -149,11 +150,6 @@ func setupLogger() {
 		panic(fmt.Sprintf("log 初始化失败: %v", err))
 	}
 	logger.Info("log 初始化成功")
-	logger.Info("无法获取网址",
-		zap.String("url", "http://www.baidu.com"),
-		zap.Int("attempt", 3),
-		zap.Duration("backoff", time.Second),
-	)
 }
 
 func setupGin() {
@@ -172,7 +168,7 @@ func setupGin() {
 
 	// 启动 Gin 服务器
 	go func() {
-		if err := engine.Run(cfg.HTTP.Addr); err != nil {
+		if err := engine.Run(cfg.HTTP.Addr()); err != nil {
 			logger.Fatal("Failed to start Gin server", zap.Error(err))
 		}
 	}()
