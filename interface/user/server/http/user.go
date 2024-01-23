@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"github.com/cossim/coss-server/interface/user/api/model"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -147,9 +146,73 @@ func register(c *gin.Context) {
 	response.SetSuccess(c, "注册成功", gin.H{"user_id": resp.UserId})
 }
 
+// @Summary 搜索用户
+// @Description 搜索用户
+// @Produce  json
+// @Security Bearer
+// @Param Authorization header string true "Bearer JWT"
+// @Param email query string true "用户邮箱"
+// @Success		200 {object} model.Response{data=model.UserInfoResponse} "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)"
+// @Router /user/search [get]
+func search(c *gin.Context) {
+	email := c.Query("email")
+	if email == "" {
+		response.Fail(c, "参数错误", nil)
+		return
+	}
+
+	// 正则表达式匹配邮箱格式
+	emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
+	if isMatch, _ := emailRegex.MatchString(email); !isMatch {
+		response.SetFail(c, "邮箱格式不正确", nil)
+		return
+	}
+
+	userID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.SetFail(c, "token解析失败", nil)
+		return
+	}
+
+	r, err := userClient.GetUserInfoByEmail(c, &user.GetUserInfoByEmailRequest{
+		Email: email,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	resp := &model.UserInfoResponse{
+		UserId:    r.UserId,
+		Nickname:  r.NickName,
+		Email:     r.Email,
+		Avatar:    r.Avatar,
+		Signature: r.Signature,
+		Status:    model.UserStatus(r.Status),
+	}
+
+	relation, err := RelationUserClient.GetUserRelation(c, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userID,
+		FriendId: r.UserId,
+	})
+	if err != nil {
+		logger.Error("获取用户关系失败", zap.Error(err))
+	} else {
+		if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+			resp.RelationStatus = model.UserRelationStatusFriend
+		} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
+			resp.RelationStatus = model.UserRelationStatusBlacked
+		} else {
+			resp.RelationStatus = model.UserRelationStatusUnknown
+		}
+	}
+
+	response.SetSuccess(c, "查询用户信息成功", resp)
+}
+
 // @Summary 查询用户信息
 // @Description 查询用户信息
-// @Accept  json
 // @Produce  json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
@@ -192,7 +255,6 @@ func getUserInfo(c *gin.Context) {
 		FriendId: userId,
 	})
 	if err != nil {
-		fmt.Printf("错误类型：%T\n", err)
 		logger.Error("获取用户关系失败", zap.Error(err))
 	} else {
 		if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {

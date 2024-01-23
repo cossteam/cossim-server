@@ -10,4 +10,5 @@ var (
 	ServiceUnavailable  = add(503, "服务不可用")
 	StatusNotAvailable  = add(1001, "状态不可用")
 	StatusException     = add(1002, "状态异常")
+	InvalidParameter    = add(422, "参数无效")
 )
