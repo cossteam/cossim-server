@@ -18,7 +18,7 @@ type Group interface{}
 // CustomUserData Custom struct implementing the User interface
 type CustomUserData struct {
 	UserID    string `json:"user_id"`
-	NickName  string `json:"nick_name"`
+	NickName  string `json:"nickname"`
 	Email     string `json:"email"`
 	Tel       string `json:"tel"`
 	Avatar    string `json:"avatar"`
