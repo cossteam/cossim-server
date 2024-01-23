@@ -13,4 +13,5 @@ type UserRelationRepository interface {
 	GetBlacklistByUserID(userId string) ([]*entity.UserRelation, error)
 	GetFriendRequestListByUserID(userId string) ([]*entity.UserRelation, error)
 	UpdateRelationColumn(id uint, column string, value interface{}) error
+	SetUserFriendSilentNotification(uid, friendId string, silentNotification entity.SilentNotification) error
 }

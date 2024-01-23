@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 	"path/filepath"
 	"runtime"
@@ -328,6 +329,7 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	resp.DialogId = uint32(relation.DialogId)
 	resp.UserId = relation.UserID
 	resp.FriendId = relation.FriendID
+	resp.IsSilent = v1.UserSilentNotificationType(relation.SilentNotification)
 	return resp, nil
 }
 
@@ -355,7 +357,7 @@ func (s *Service) GetUserRelationByUserIds(ctx context.Context, request *v1.GetU
 
 	relations, err := s.urr.GetRelationByIDs(request.UserId, request.FriendIds)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), fmt.Sprintf("failed to get user relation: %v", err))
+		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), err.Error())
 	}
 
 	for _, relation := range relations {
@@ -365,6 +367,14 @@ func (s *Service) GetUserRelationByUserIds(ctx context.Context, request *v1.GetU
 			Status:   v1.RelationStatus(relation.Status),
 			DialogId: uint32(relation.DialogId),
 		})
+	}
+	return resp, nil
+}
+
+func (s *Service) SetFriendSilentNotification(ctx context.Context, in *v1.SetFriendSilentNotificationRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	if err := s.urr.SetUserFriendSilentNotification(in.UserId, in.FriendId, entity.SilentNotification(in.IsSilent)); err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrSetUserFriendSilentNotificationFailed.Code()), err.Error())
 	}
 	return resp, nil
 }

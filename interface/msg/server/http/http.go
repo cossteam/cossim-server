@@ -241,7 +241,6 @@ func route(engine *gin.Engine) {
 	//群聊标注消息
 	u.POST("/label/group", middleware.AuthMiddleware(redisClient), labelGroupMessage)
 	u.GET("/label/group", middleware.AuthMiddleware(redisClient), getGroupLabelMsgList)
-
 	//私聊标注消息
 	u.POST("/label/user", middleware.AuthMiddleware(redisClient), labelUserMessage)
 	u.GET("/label/user", middleware.AuthMiddleware(redisClient), getUserLabelMsgList)

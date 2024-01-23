@@ -1,5 +1,10 @@
 package entity
 
+import (
+	"github.com/cossim/coss-server/pkg/utils/time"
+	"gorm.io/gorm"
+)
+
 type User struct {
 	ID           string     `gorm:"type:varchar(64);primary_key;comment:用户id" json:"id"`
 	Email        string     `gorm:"type:varchar(100);uniqueIndex;comment:邮箱" json:"email"`
@@ -21,6 +26,18 @@ type User struct {
 	CreatedAt    int64      `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt    int64      `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
 	DeletedAt    int64      `gorm:"default:0;comment:删除时间" json:"deleted_at"`
+}
+
+func (bm *User) BeforeCreate(tx *gorm.DB) error {
+	now := time.Now()
+	bm.CreatedAt = now
+	bm.UpdatedAt = now
+	return nil
+}
+
+func (bm *User) BeforeUpdate(tx *gorm.DB) error {
+	bm.UpdatedAt = time.Now()
+	return nil
 }
 
 type UserStatus uint

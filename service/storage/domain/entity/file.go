@@ -1,5 +1,10 @@
 package entity
 
+import (
+	"github.com/cossim/coss-server/pkg/utils/time"
+	"gorm.io/gorm"
+)
+
 // File 文件实体
 type File struct {
 	ID        string     `gorm:"type:char(64);primary_key;comment:文件id" json:"id"`
@@ -15,6 +20,18 @@ type File struct {
 	CreatedAt int64      `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt int64      `gorm:"autoUpdateTime;comment:更新时间" json:"updated_at"`
 	DeletedAt int64      `gorm:"default:0;comment:删除时间" json:"deleted_at"`
+}
+
+func (bm *File) BeforeCreate(tx *gorm.DB) error {
+	now := time.Now()
+	bm.CreatedAt = now
+	bm.UpdatedAt = now
+	return nil
+}
+
+func (bm *File) BeforeUpdate(tx *gorm.DB) error {
+	bm.UpdatedAt = time.Now()
+	return nil
 }
 
 type FileType int

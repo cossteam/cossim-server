@@ -24,6 +24,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "UserRelation"
+                ],
                 "summary": "删除黑名单",
                 "parameters": [
                     {
@@ -363,6 +366,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/group/silent": {
+            "post": {
+                "description": "设置群聊静默通知",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "设置群聊静默通知",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetGroupSilentNotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/user/add_blacklist": {
             "post": {
                 "description": "添加黑名单",
@@ -371,6 +408,9 @@ const docTemplaterelation = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
                 ],
                 "summary": "添加黑名单",
                 "parameters": [
@@ -403,6 +443,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "UserRelation"
+                ],
                 "summary": "添加好友",
                 "parameters": [
                     {
@@ -431,6 +474,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "UserRelation"
+                ],
                 "summary": "黑名单",
                 "responses": {
                     "200": {
@@ -450,6 +496,9 @@ const docTemplaterelation = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
                 ],
                 "summary": "删除好友",
                 "parameters": [
@@ -479,6 +528,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "UserRelation"
+                ],
                 "summary": "好友列表",
                 "responses": {
                     "200": {
@@ -498,6 +550,9 @@ const docTemplaterelation = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
                 ],
                 "summary": "管理好友请求",
                 "parameters": [
@@ -527,6 +582,9 @@ const docTemplaterelation = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "UserRelation"
+                ],
                 "summary": "好友申请列表",
                 "responses": {
                     "200": {
@@ -553,6 +611,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/user/silent": {
+            "post": {
+                "description": "设置私聊静默通知",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
+                ],
+                "summary": "设置私聊静默通知",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetUserSilentNotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/user/switch/e2e/key": {
             "post": {
                 "security": [
@@ -566,6 +658,9 @@ const docTemplaterelation = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
                 ],
                 "summary": "交换用户端到端公钥",
                 "parameters": [
@@ -812,6 +907,61 @@ const docTemplaterelation = `{
                     "type": "string"
                 }
             }
+        },
+        "model.SetGroupSilentNotificationRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "group_id": {
+                    "description": "群ID",
+                    "type": "integer"
+                },
+                "is_silent": {
+                    "description": "是否开启静默通知",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.SilentNotificationType"
+                        }
+                    ]
+                }
+            }
+        },
+        "model.SetUserSilentNotificationRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "is_silent": {
+                    "description": "是否开启静默通知",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.SilentNotificationType"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "string"
+                }
+            }
+        },
+        "model.SilentNotificationType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-comments": {
+                "IsSilent": "开启静默通知",
+                "NotSilent": "静默通知关闭"
+            },
+            "x-enum-varnames": [
+                "NotSilent",
+                "IsSilent"
+            ]
         },
         "model.SwitchUserE2EPublicKeyRequest": {
             "type": "object",

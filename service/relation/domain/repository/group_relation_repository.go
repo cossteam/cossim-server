@@ -22,6 +22,7 @@ type GroupRelationRepository interface {
 
 	// UpdateGroupRelationByGroupID 根据群聊id更新群聊的所有用户信息
 	UpdateGroupRelationByGroupID(dialogID uint32, updateFields map[string]interface{}) error
-
 	DeleteRelationByGroupIDAndUserIDs(gid uint32, uid []string) error
+
+	SetUserGroupSilentNotification(gid uint32, uid string, silentNotification entity.SilentNotification) error
 }

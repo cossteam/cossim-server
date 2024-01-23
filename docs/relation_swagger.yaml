@@ -145,6 +145,41 @@ definitions:
       msg:
         type: string
     type: object
+  model.SetGroupSilentNotificationRequest:
+    properties:
+      group_id:
+        description: 群ID
+        type: integer
+      is_silent:
+        allOf:
+        - $ref: '#/definitions/model.SilentNotificationType'
+        description: 是否开启静默通知
+    required:
+    - group_id
+    type: object
+  model.SetUserSilentNotificationRequest:
+    properties:
+      is_silent:
+        allOf:
+        - $ref: '#/definitions/model.SilentNotificationType'
+        description: 是否开启静默通知
+      user_id:
+        description: 用户ID
+        type: string
+    required:
+    - user_id
+    type: object
+  model.SilentNotificationType:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-comments:
+      IsSilent: 开启静默通知
+      NotSilent: 静默通知关闭
+    x-enum-varnames:
+    - NotSilent
+    - IsSilent
   model.SwitchUserE2EPublicKeyRequest:
     properties:
       public_key:
@@ -207,6 +242,8 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 删除黑名单
+      tags:
+      - UserRelation
   /relation/group/admin/manage/join:
     post:
       consumes:
@@ -406,6 +443,28 @@ paths:
       summary: 获取群聊申请列表
       tags:
       - GroupRelation
+  /relation/group/silent:
+    post:
+      consumes:
+      - application/json
+      description: 设置群聊静默通知
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetGroupSilentNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 设置群聊静默通知
+      tags:
+      - GroupRelation
   /relation/user/add_blacklist:
     post:
       consumes:
@@ -426,6 +485,8 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 添加黑名单
+      tags:
+      - UserRelation
   /relation/user/add_friend:
     post:
       consumes:
@@ -446,6 +507,8 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 添加好友
+      tags:
+      - UserRelation
   /relation/user/blacklist:
     get:
       description: 黑名单
@@ -457,6 +520,8 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 黑名单
+      tags:
+      - UserRelation
   /relation/user/delete_friend:
     post:
       consumes:
@@ -477,6 +542,8 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 删除好友
+      tags:
+      - UserRelation
   /relation/user/friend_list:
     get:
       description: 好友列表
@@ -488,6 +555,8 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 好友列表
+      tags:
+      - UserRelation
   /relation/user/manage_friend:
     post:
       consumes:
@@ -508,6 +577,8 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 管理好友请求
+      tags:
+      - UserRelation
   /relation/user/request_list:
     get:
       description: 好友申请列表
@@ -526,6 +597,30 @@ paths:
                   type: array
               type: object
       summary: 好友申请列表
+      tags:
+      - UserRelation
+  /relation/user/silent:
+    post:
+      consumes:
+      - application/json
+      description: 设置私聊静默通知
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetUserSilentNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 设置私聊静默通知
+      tags:
+      - UserRelation
   /relation/user/switch/e2e/key:
     post:
       consumes:
@@ -548,4 +643,6 @@ paths:
       security:
       - BearerToken: []
       summary: 交换用户端到端公钥
+      tags:
+      - UserRelation
 swagger: "2.0"

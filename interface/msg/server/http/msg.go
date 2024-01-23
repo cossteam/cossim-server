@@ -180,47 +180,9 @@ func sendUserMsg(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	if _, ok := Pool[req.ReceiverId]; ok {
-		if len(Pool[req.ReceiverId]) > 0 {
-			sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId)
-			response.SetSuccess(c, "发送成功", nil)
-			return
-		}
-	}
-	wsMsg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now(), Data: &model.WsUserMsg{
-		SendAt:   time.Now(),
-		DialogId: req.DialogId,
-		SenderId: thisId,
-		Content:  req.Content,
-		MsgType:  req.Type,
-		ReplayId: req.ReplayId,
-	}}
 
-	if enc.IsEnable() {
-		marshal, err := json.Marshal(wsMsg)
-		if err != nil {
-			logger.Error("json解析失败", zap.Error(err))
-			return
-		}
-		message, err := enc.GetSecretMessage(string(marshal), req.ReceiverId)
-		if err != nil {
-			return
-		}
-		err = rabbitMQClient.PublishEncryptedMessage(req.ReceiverId, message)
-		if err != nil {
-			fmt.Println("发布消息失败：", err)
-			response.SetFail(c, "发送失败", nil)
-			return
-		}
-		response.SetSuccess(c, "发送成功", nil)
-		return
-	}
-	err = rabbitMQClient.PublishMessage(req.ReceiverId, wsMsg)
-	if err != nil {
-		fmt.Println("发布消息失败：", err)
-		response.SetFail(c, "发送失败", nil)
-		return
-	}
+	sendWsUserMsg(thisId, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId)
+
 	response.SetSuccess(c, "发送成功", message)
 }
 
@@ -910,19 +872,64 @@ func getGroupLabelMsgList(c *gin.Context) {
 
 // 推送私聊消息
 func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
+	m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, SendAt: time.Now(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: time.Now(), DialogId: dialogId}}
+
+	userRelation, err := relationClient.GetUserRelation(context.Background(), &relation.GetUserRelationRequest{UserId: receiverId, FriendId: senderId})
+	if err != nil {
+		logger.Error("获取用户关系失败", zap.Error(err))
+		return
+	}
+
+	if userRelation.Status != relation.RelationStatus_RELATION_STATUS_ADDED {
+		logger.Error("不是好友")
+		return
+	}
+
+	//是否静默通知
+	if userRelation.IsSilent == relation.UserSilentNotificationType_UserSilent {
+		m.Event = config.SendSilentUserMessageEvent
+	}
+
 	//遍历该用户所有客户端
-	for _, c := range Pool[receiverId] {
-		m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, SendAt: time.Now(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: time.Now(), DialogId: dialogId}}
-		js, _ := json.Marshal(m)
-		message, err := enc.GetSecretMessage(string(js), receiverId)
+	if _, ok := Pool[receiverId]; ok {
+		if len(Pool[receiverId]) > 0 {
+			for _, c := range Pool[receiverId] {
+				m.Rid = c.Rid
+				js, _ := json.Marshal(m)
+				message, err := enc.GetSecretMessage(string(js), receiverId)
+				if err != nil {
+					return
+				}
+				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+				if err != nil {
+					logger.Error("send msg err", zap.Error(err))
+					return
+				}
+			}
+			return
+		}
+	}
+	if enc.IsEnable() {
+		marshal, err := json.Marshal(m)
+		if err != nil {
+			logger.Error("json解析失败", zap.Error(err))
+			return
+		}
+		message, err := enc.GetSecretMessage(string(marshal), receiverId)
 		if err != nil {
 			return
 		}
-		err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+		err = rabbitMQClient.PublishEncryptedMessage(receiverId, message)
 		if err != nil {
-			logger.Error("send msg err", zap.Error(err))
+			logger.Error("发布消息失败", zap.Error(err))
 			return
 		}
+		return
+	}
+	err = rabbitMQClient.PublishMessage(receiverId, m)
+	if err != nil {
+		logger.Error("发布消息失败", zap.Error(err))
+		return
 	}
 }
 
@@ -930,25 +937,7 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, msgType uint32, replayId uint32, dialogId uint32) {
 	//发送群聊消息
 	for _, uid := range uIds {
-		//在线则推送ws
-		if _, ok := Pool[uid]; ok {
-			for _, c := range Pool[uid] {
-				m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &model.WsGroupMsg{GroupId: int64(groupId), UserId: userId, Content: msg, MsgType: uint(msgType), ReplayId: uint(replayId), SendAt: time.Now(), DialogId: dialogId}}
-				js, _ := json.Marshal(m)
-				message, err := enc.GetSecretMessage(string(js), uid)
-				if err != nil {
-					return
-				}
-				fmt.Println("推送ws消息给", uid, ":", message)
-				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-				if err != nil {
-					fmt.Println("send ws msg err:", err)
-					continue
-				}
-			}
-		}
-		//否则推送到消息队列
-		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now(), Data: &model.WsGroupMsg{
+		m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now(), Data: &model.WsGroupMsg{
 			GroupId:  int64(groupId),
 			UserId:   userId,
 			Content:  msg,
@@ -957,8 +946,46 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			SendAt:   time.Now(),
 			DialogId: dialogId,
 		}}
+		//查询是否静默通知
+		groupRelation, err := userGroupClient.GetGroupRelation(context.Background(), &relation.GetGroupRelationRequest{
+			GroupId: groupId,
+			UserId:  uid,
+		})
+		if err != nil {
+			logger.Error("获取群聊关系失败", zap.Error(err))
+			continue
+		}
+
+		if groupRelation.Status != relation.GroupRelationStatus_GroupStatusJoined {
+			logger.Error("不是群聊成员", zap.String("uid", uid))
+			continue
+		}
+
+		//判断是否静默通知
+		if groupRelation.IsSilent == relation.GroupSilentNotificationType_GroupSilent {
+			m.Event = config.SendSilentGroupMessageEvent
+		}
+		//在线则推送ws
+		if _, ok := Pool[uid]; ok {
+			for _, c := range Pool[uid] {
+				m.Rid = c.Rid
+				js, _ := json.Marshal(m)
+				message, err := enc.GetSecretMessage(string(js), uid)
+				if err != nil {
+					return
+				}
+				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+				if err != nil {
+					logger.Error("发布ws消息失败", zap.Error(err))
+					continue
+				}
+			}
+			continue
+		}
+		//否则推送到消息队列
+		//是否传输加密
 		if enc.IsEnable() {
-			marshal, err := json.Marshal(msg)
+			marshal, err := json.Marshal(m)
 			if err != nil {
 				logger.Error("json解析失败", zap.Error(err))
 				return
@@ -969,14 +996,14 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			}
 			err = rabbitMQClient.PublishEncryptedMessage(uid, message)
 			if err != nil {
-				fmt.Println("发布消息失败：", err)
+				logger.Error("发布消息失败", zap.Error(err))
 				return
 			}
 			return
 		}
-		err := rabbitMQClient.PublishMessage(uid, msg)
+		err = rabbitMQClient.PublishMessage(uid, m)
 		if err != nil {
-			fmt.Println("发布消息失败：", err)
+			logger.Error("发布消息失败", zap.Error(err))
 			return
 		}
 	}

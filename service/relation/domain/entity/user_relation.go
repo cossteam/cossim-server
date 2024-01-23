@@ -8,8 +8,15 @@ type UserRelation struct {
 	DialogId           uint               `gorm:"comment:对话ID" json:"dialog_id"`
 	Remark             string             `gorm:"type:varchar(255);comment:备注" json:"remark"`
 	Label              []string           `gorm:"type:varchar(255);comment:标签" json:"label"`
-	SilentNotification bool               `gorm:"comment:静默通知" json:"silent_notification"`
+	SilentNotification SilentNotification `gorm:"comment:是否开启静默通知" json:"silent_notification"`
 }
+
+type SilentNotification uint
+
+const (
+	NotSilentNotification SilentNotification = iota //不开启静默通知
+	IsSilentNotification                            //开启静默通知
+)
 
 type UserRelationStatus uint
 

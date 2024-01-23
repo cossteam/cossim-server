@@ -282,6 +282,7 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	resp.Identity = v1.GroupIdentity(uint32(relation.Identity))
 	resp.MuteEndTime = relation.MuteEndTime
 	resp.Status = v1.GroupRelationStatus(uint32(relation.Status))
+	resp.IsSilent = v1.GroupSilentNotificationType(relation.SilentNotification)
 	return resp, nil
 }
 
@@ -418,6 +419,14 @@ func (s *Service) CreateGroupAndInviteUsersRevert(ctx context.Context, request *
 	}
 	if err := s.grr.DeleteRelationByGroupIDAndUserIDs(request.GroupId, ids); err != nil {
 		return resp, status.Error(codes.Aborted, err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) SetGroupSilentNotification(ctx context.Context, in *v1.SetGroupSilentNotificationRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	if err := s.grr.SetUserGroupSilentNotification(in.GroupId, in.UserId, entity.SilentNotification(in.IsSilent)); err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrSetUserGroupSilentNotificationFailed.Code()), err.Error())
 	}
 	return resp, nil
 }

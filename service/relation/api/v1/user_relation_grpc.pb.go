@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,37 +20,51 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserRelationService_AddFriend_FullMethodName                = "/v1.UserRelationService/AddFriend"
-	UserRelationService_ManageFriend_FullMethodName             = "/v1.UserRelationService/ManageFriend"
-	UserRelationService_ManageFriendRevert_FullMethodName       = "/v1.UserRelationService/ManageFriendRevert"
-	UserRelationService_DeleteFriend_FullMethodName             = "/v1.UserRelationService/DeleteFriend"
-	UserRelationService_DeleteFriendRevert_FullMethodName       = "/v1.UserRelationService/DeleteFriendRevert"
-	UserRelationService_AddBlacklist_FullMethodName             = "/v1.UserRelationService/AddBlacklist"
-	UserRelationService_DeleteBlacklist_FullMethodName          = "/v1.UserRelationService/DeleteBlacklist"
-	UserRelationService_GetFriendList_FullMethodName            = "/v1.UserRelationService/GetFriendList"
-	UserRelationService_GetBlacklist_FullMethodName             = "/v1.UserRelationService/GetBlacklist"
-	UserRelationService_GetUserRelation_FullMethodName          = "/v1.UserRelationService/GetUserRelation"
-	UserRelationService_GetFriendRequestList_FullMethodName     = "/v1.UserRelationService/GetFriendRequestList"
-	UserRelationService_GetUserRelationByUserIds_FullMethodName = "/v1.UserRelationService/GetUserRelationByUserIds"
+	UserRelationService_AddFriend_FullMethodName                   = "/v1.UserRelationService/AddFriend"
+	UserRelationService_ManageFriend_FullMethodName                = "/v1.UserRelationService/ManageFriend"
+	UserRelationService_ManageFriendRevert_FullMethodName          = "/v1.UserRelationService/ManageFriendRevert"
+	UserRelationService_DeleteFriend_FullMethodName                = "/v1.UserRelationService/DeleteFriend"
+	UserRelationService_DeleteFriendRevert_FullMethodName          = "/v1.UserRelationService/DeleteFriendRevert"
+	UserRelationService_AddBlacklist_FullMethodName                = "/v1.UserRelationService/AddBlacklist"
+	UserRelationService_DeleteBlacklist_FullMethodName             = "/v1.UserRelationService/DeleteBlacklist"
+	UserRelationService_GetFriendList_FullMethodName               = "/v1.UserRelationService/GetFriendList"
+	UserRelationService_GetBlacklist_FullMethodName                = "/v1.UserRelationService/GetBlacklist"
+	UserRelationService_GetUserRelation_FullMethodName             = "/v1.UserRelationService/GetUserRelation"
+	UserRelationService_GetFriendRequestList_FullMethodName        = "/v1.UserRelationService/GetFriendRequestList"
+	UserRelationService_GetUserRelationByUserIds_FullMethodName    = "/v1.UserRelationService/GetUserRelationByUserIds"
+	UserRelationService_SetFriendSilentNotification_FullMethodName = "/v1.UserRelationService/SetFriendSilentNotification"
 )
 
 // UserRelationServiceClient is the client API for UserRelationService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserRelationServiceClient interface {
+	// 添加好友
 	AddFriend(ctx context.Context, in *AddFriendRequest, opts ...grpc.CallOption) (*AddFriendResponse, error)
+	// 管理好友
 	ManageFriend(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error)
+	// 管理好友回滚
 	ManageFriendRevert(ctx context.Context, in *ManageFriendRequest, opts ...grpc.CallOption) (*ManageFriendResponse, error)
+	// 删除好友
 	DeleteFriend(ctx context.Context, in *DeleteFriendRequest, opts ...grpc.CallOption) (*DeleteFriendResponse, error)
+	// 删除好友回滚
 	DeleteFriendRevert(ctx context.Context, in *DeleteFriendRequest, opts ...grpc.CallOption) (*DeleteFriendResponse, error)
+	// 添加黑名单
 	AddBlacklist(ctx context.Context, in *AddBlacklistRequest, opts ...grpc.CallOption) (*AddBlacklistResponse, error)
+	// 移出黑名单
 	DeleteBlacklist(ctx context.Context, in *DeleteBlacklistRequest, opts ...grpc.CallOption) (*DeleteBlacklistResponse, error)
+	// 获取好友列表
 	GetFriendList(ctx context.Context, in *GetFriendListRequest, opts ...grpc.CallOption) (*GetFriendListResponse, error)
+	// 获取黑名单列表
 	GetBlacklist(ctx context.Context, in *GetBlacklistRequest, opts ...grpc.CallOption) (*GetBlacklistResponse, error)
+	// 获取用户关系
 	GetUserRelation(ctx context.Context, in *GetUserRelationRequest, opts ...grpc.CallOption) (*GetUserRelationResponse, error)
+	// 获取好友请求列表
 	GetFriendRequestList(ctx context.Context, in *GetFriendRequestListRequest, opts ...grpc.CallOption) (*GetFriendRequestListResponse, error)
 	// 批量获取用户关系
 	GetUserRelationByUserIds(ctx context.Context, in *GetUserRelationByUserIdsRequest, opts ...grpc.CallOption) (*GetUserRelationByUserIdsResponse, error)
+	// 设置好友静默通知
+	SetFriendSilentNotification(ctx context.Context, in *SetFriendSilentNotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userRelationServiceClient struct {
@@ -168,23 +183,45 @@ func (c *userRelationServiceClient) GetUserRelationByUserIds(ctx context.Context
 	return out, nil
 }
 
+func (c *userRelationServiceClient) SetFriendSilentNotification(ctx context.Context, in *SetFriendSilentNotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserRelationService_SetFriendSilentNotification_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserRelationServiceServer is the server API for UserRelationService service.
 // All implementations must embed UnimplementedUserRelationServiceServer
 // for forward compatibility
 type UserRelationServiceServer interface {
+	// 添加好友
 	AddFriend(context.Context, *AddFriendRequest) (*AddFriendResponse, error)
+	// 管理好友
 	ManageFriend(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error)
+	// 管理好友回滚
 	ManageFriendRevert(context.Context, *ManageFriendRequest) (*ManageFriendResponse, error)
+	// 删除好友
 	DeleteFriend(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error)
+	// 删除好友回滚
 	DeleteFriendRevert(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error)
+	// 添加黑名单
 	AddBlacklist(context.Context, *AddBlacklistRequest) (*AddBlacklistResponse, error)
+	// 移出黑名单
 	DeleteBlacklist(context.Context, *DeleteBlacklistRequest) (*DeleteBlacklistResponse, error)
+	// 获取好友列表
 	GetFriendList(context.Context, *GetFriendListRequest) (*GetFriendListResponse, error)
+	// 获取黑名单列表
 	GetBlacklist(context.Context, *GetBlacklistRequest) (*GetBlacklistResponse, error)
+	// 获取用户关系
 	GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error)
+	// 获取好友请求列表
 	GetFriendRequestList(context.Context, *GetFriendRequestListRequest) (*GetFriendRequestListResponse, error)
 	// 批量获取用户关系
 	GetUserRelationByUserIds(context.Context, *GetUserRelationByUserIdsRequest) (*GetUserRelationByUserIdsResponse, error)
+	// 设置好友静默通知
+	SetFriendSilentNotification(context.Context, *SetFriendSilentNotificationRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserRelationServiceServer()
 }
 
@@ -227,6 +264,9 @@ func (UnimplementedUserRelationServiceServer) GetFriendRequestList(context.Conte
 }
 func (UnimplementedUserRelationServiceServer) GetUserRelationByUserIds(context.Context, *GetUserRelationByUserIdsRequest) (*GetUserRelationByUserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserRelationByUserIds not implemented")
+}
+func (UnimplementedUserRelationServiceServer) SetFriendSilentNotification(context.Context, *SetFriendSilentNotificationRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetFriendSilentNotification not implemented")
 }
 func (UnimplementedUserRelationServiceServer) mustEmbedUnimplementedUserRelationServiceServer() {}
 
@@ -457,6 +497,24 @@ func _UserRelationService_GetUserRelationByUserIds_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserRelationService_SetFriendSilentNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetFriendSilentNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserRelationServiceServer).SetFriendSilentNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserRelationService_SetFriendSilentNotification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserRelationServiceServer).SetFriendSilentNotification(ctx, req.(*SetFriendSilentNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserRelationService_ServiceDesc is the grpc.ServiceDesc for UserRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -511,6 +569,10 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserRelationByUserIds",
 			Handler:    _UserRelationService_GetUserRelationByUserIds_Handler,
+		},
+		{
+			MethodName: "SetFriendSilentNotification",
+			Handler:    _UserRelationService_SetFriendSilentNotification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
