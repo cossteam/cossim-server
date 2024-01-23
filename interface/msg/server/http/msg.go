@@ -10,6 +10,7 @@ import (
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils"
+	"github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msg "github.com/cossim/coss-server/service/msg/api/v1"
 	relation "github.com/cossim/coss-server/service/relation/api/v1"
@@ -23,7 +24,6 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-	"time"
 )
 
 var (
@@ -187,8 +187,8 @@ func sendUserMsg(c *gin.Context) {
 			return
 		}
 	}
-	wsMsg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now().Unix(), Data: &model.WsUserMsg{
-		SendAt:   time.Now().Unix(),
+	wsMsg := config.WsMsg{Uid: req.ReceiverId, Event: config.SendUserMessageEvent, SendAt: time.Now(), Data: &model.WsUserMsg{
+		SendAt:   time.Now(),
 		DialogId: req.DialogId,
 		SenderId: thisId,
 		Content:  req.Content,
@@ -260,7 +260,7 @@ func sendGroupMsg(c *gin.Context) {
 		response.SetFail(c, "用户在群里中状态不正常", nil)
 		return
 	}
-	if groupRelation.MuteEndTime > time.Now().Unix() && groupRelation.MuteEndTime != 0 {
+	if groupRelation.MuteEndTime > time.Now() && groupRelation.MuteEndTime != 0 {
 		response.SetFail(c, "用户禁言中", nil)
 		return
 	}
@@ -606,7 +606,7 @@ func recallUserMsg(c *gin.Context) {
 		return
 	}
 	//判断发送时间是否超过两分钟
-	if time.Now().Unix()-msginfo.CreatedAt > 120 {
+	if time.Now()-msginfo.CreatedAt > 120 {
 		response.SetFail(c, "该条消息发送时间已经超过两分钟，不能撤回", nil)
 		return
 	}
@@ -658,7 +658,7 @@ func recallGroupMsg(c *gin.Context) {
 		return
 	}
 	//判断发送时间是否超过两分钟
-	if time.Now().Unix()-msginfo.CreatedAt > 120 {
+	if time.Now()-msginfo.CreatedAt > 120 {
 		response.SetFail(c, "该条消息发送时间已经超过两分钟，不能撤回", nil)
 		return
 	}
@@ -814,11 +814,105 @@ func labelGroupMessage(c *gin.Context) {
 	response.SetSuccess(c, "群聊消息标注成功", nil)
 }
 
+// 获取私聊标注信息
+// @Summary 获取私聊标注信息
+// @Description 获取私聊标注信息
+// @Accept  json
+// @Produce  json
+// @Param dialog_id query string true "对话id"
+// @Success		200 {object} model.Response{}
+// @Router /msg/label/user [get]
+func getUserLabelMsgList(c *gin.Context) {
+	var id = c.Query("dialog_id")
+
+	if id == "" {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	dialogId, err := strconv.Atoi(id)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = dialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relation.GetDialogUserByDialogIDAndUserIdRequest{
+		UserId:   thisId,
+		DialogId: uint32(dialogId),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	msgs, err := msgClient.GetUserMsgLabelByDialogId(context.Background(), &msg.GetUserMsgLabelByDialogIdRequest{
+		DialogId: uint32(dialogId),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取成功", msgs)
+}
+
+// 获取群聊标注信息
+// @Summary 获取群聊标注信息
+// @Description 获取群聊标注信息
+// @Accept  json
+// @Produce  json
+// @Param dialog_id query string true "对话id"
+// @Success		200 {object} model.Response{}
+// @Router /msg/label/group [get]
+func getGroupLabelMsgList(c *gin.Context) {
+	var id = c.Query("dialog_id")
+
+	if id == "" {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	dialogId, err := strconv.Atoi(id)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = dialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relation.GetDialogUserByDialogIDAndUserIdRequest{
+		UserId:   thisId,
+		DialogId: uint32(dialogId),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	msgs, err := msgClient.GetGroupMsgLabelByDialogId(context.Background(), &msg.GetGroupMsgLabelByDialogIdRequest{
+		DialogId: uint32(dialogId),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取成功", msgs)
+}
+
 // 推送私聊消息
 func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
 	//遍历该用户所有客户端
 	for _, c := range Pool[receiverId] {
-		m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, SendAt: time.Now().Unix(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: time.Now().Unix(), DialogId: dialogId}}
+		m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, Rid: c.Rid, SendAt: time.Now(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: time.Now(), DialogId: dialogId}}
 		js, _ := json.Marshal(m)
 		message, err := enc.GetSecretMessage(string(js), receiverId)
 		if err != nil {
@@ -839,7 +933,7 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 		//在线则推送ws
 		if _, ok := Pool[uid]; ok {
 			for _, c := range Pool[uid] {
-				m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &model.WsGroupMsg{GroupId: int64(groupId), UserId: userId, Content: msg, MsgType: uint(msgType), ReplayId: uint(replayId), SendAt: time.Now().Unix(), DialogId: dialogId}}
+				m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, Rid: c.Rid, Data: &model.WsGroupMsg{GroupId: int64(groupId), UserId: userId, Content: msg, MsgType: uint(msgType), ReplayId: uint(replayId), SendAt: time.Now(), DialogId: dialogId}}
 				js, _ := json.Marshal(m)
 				message, err := enc.GetSecretMessage(string(js), uid)
 				if err != nil {
@@ -854,13 +948,13 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 			}
 		}
 		//否则推送到消息队列
-		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now().Unix(), Data: &model.WsGroupMsg{
+		msg := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: time.Now(), Data: &model.WsGroupMsg{
 			GroupId:  int64(groupId),
 			UserId:   userId,
 			Content:  msg,
 			MsgType:  uint(msgType),
 			ReplayId: uint(replayId),
-			SendAt:   time.Now().Unix(),
+			SendAt:   time.Now(),
 			DialogId: dialogId,
 		}}
 		if enc.IsEnable() {
@@ -890,7 +984,7 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 
 // SendMsg 推送消息
 func SendMsg(uid string, event config.WSEventType, data interface{}) {
-	m := config.WsMsg{Uid: uid, Event: event, Rid: 0, Data: data, SendAt: time.Now().Unix()}
+	m := config.WsMsg{Uid: uid, Event: event, Rid: 0, Data: data, SendAt: time.Now()}
 	if _, ok := Pool[uid]; !ok {
 		//不在线则推送到消息队列
 		err := rabbitMQClient.PublishMessage(uid, m)
@@ -924,7 +1018,7 @@ func (c client) wsOnlineClients() {
 	Pool[c.Uid] = append(Pool[c.Uid], &c)
 	wsMutex.Unlock()
 	//通知前端接收离线消息
-	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now().Unix()}
+	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now()}
 	js, _ := json.Marshal(msg)
 	if enc == nil {
 		logger.Error("加密客户端错误", zap.Error(nil))

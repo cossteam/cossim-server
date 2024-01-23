@@ -98,6 +98,33 @@ const docTemplatemsg = `{
             }
         },
         "/msg/label/group": {
+            "get": {
+                "description": "获取群聊标注信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取群聊标注信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对话id",
+                        "name": "dialog_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "标注群聊消息状态",
                 "consumes": [
@@ -129,6 +156,33 @@ const docTemplatemsg = `{
             }
         },
         "/msg/label/user": {
+            "get": {
+                "description": "获取私聊标注信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取私聊标注信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对话id",
+                        "name": "dialog_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "标注用户消息状态",
                 "consumes": [
@@ -392,7 +446,6 @@ const docTemplatemsg = `{
         "model.LabelGroupMessageRequest": {
             "type": "object",
             "required": [
-                "is_label",
                 "msg_id"
             ],
             "properties": {
@@ -428,7 +481,6 @@ const docTemplatemsg = `{
         "model.LabelUserMessageRequest": {
             "type": "object",
             "required": [
-                "is_label",
                 "msg_id"
             ],
             "properties": {

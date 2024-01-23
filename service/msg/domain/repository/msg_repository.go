@@ -22,4 +22,6 @@ type MsgRepository interface {
 	GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error)
 	UpdateUserMsgColumn(msgId uint32, column string, value interface{}) error
 	UpdateGroupMsgColumn(msgId uint32, column string, value interface{}) error
+	GetUserMsgLabelByDialogId(dialogId uint32) ([]*entity.UserMessage, error)
+	GetGroupMsgLabelByDialogId(dialogId uint32) ([]*entity.GroupMessage, error)
 }

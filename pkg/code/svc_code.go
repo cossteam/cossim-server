@@ -81,6 +81,8 @@ var (
 	GetMsgErrGetUserMsgByIDFailed                   = New(14011, "获取用户消息失败")
 	SetMsgErrSetUserMsgLabelFailed                  = New(14012, "设置用户消息标注失败")
 	SetMsgErrSetGroupMsgLabelFailed                 = New(14013, "设置群聊消息标注失败")
+	GetMsgErrGetUserMsgLabelByDialogIdFailed        = New(14014, "获取用户消息标注失败")
+	GetMsgErrGetGroupMsgLabelByDialogIdFailed       = New(14015, "获取群聊消息标注失败")
 
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed             = New(15000, "获取群聊信息失败")

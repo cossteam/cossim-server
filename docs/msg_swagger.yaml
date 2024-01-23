@@ -40,7 +40,6 @@ definitions:
         description: 消息ID
         type: integer
     required:
-    - is_label
     - msg_id
     type: object
   model.LabelMsgType:
@@ -64,7 +63,6 @@ definitions:
         description: 消息ID
         type: integer
     required:
-    - is_label
     - msg_id
     type: object
   model.RecallGroupMsgRequest:
@@ -185,6 +183,24 @@ paths:
             $ref: '#/definitions/model.Response'
       summary: 编辑用户消息
   /msg/label/group:
+    get:
+      consumes:
+      - application/json
+      description: 获取群聊标注信息
+      parameters:
+      - description: 对话id
+        in: query
+        name: dialog_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 获取群聊标注信息
     post:
       consumes:
       - application/json
@@ -205,6 +221,24 @@ paths:
             $ref: '#/definitions/model.Response'
       summary: 标注群聊消息状态
   /msg/label/user:
+    get:
+      consumes:
+      - application/json
+      description: 获取私聊标注信息
+      parameters:
+      - description: 对话id
+        in: query
+        name: dialog_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 获取私聊标注信息
     post:
       consumes:
       - application/json

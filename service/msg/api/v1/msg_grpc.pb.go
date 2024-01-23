@@ -33,6 +33,8 @@ const (
 	MsgService_GetGroupMessageById_FullMethodName           = "/v1.MsgService/GetGroupMessageById"
 	MsgService_SetUserMsgLabel_FullMethodName               = "/v1.MsgService/SetUserMsgLabel"
 	MsgService_SetGroupMsgLabel_FullMethodName              = "/v1.MsgService/SetGroupMsgLabel"
+	MsgService_GetUserMsgLabelByDialogId_FullMethodName     = "/v1.MsgService/GetUserMsgLabelByDialogId"
+	MsgService_GetGroupMsgLabelByDialogId_FullMethodName    = "/v1.MsgService/GetGroupMsgLabelByDialogId"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -67,6 +69,10 @@ type MsgServiceClient interface {
 	SetUserMsgLabel(ctx context.Context, in *SetUserMsgLabelRequest, opts ...grpc.CallOption) (*SetUserMsgLabelResponse, error)
 	// 设置群消息标注状态
 	SetGroupMsgLabel(ctx context.Context, in *SetGroupMsgLabelRequest, opts ...grpc.CallOption) (*SetGroupMsgLabelResponse, error)
+	// 根据对话id获取私聊标注信息
+	GetUserMsgLabelByDialogId(ctx context.Context, in *GetUserMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetUserMsgLabelByDialogIdResponse, error)
+	// 根据对话id获取群消息标注信息
+	GetGroupMsgLabelByDialogId(ctx context.Context, in *GetGroupMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetGroupMsgLabelByDialogIdResponse, error)
 }
 
 type msgServiceClient struct {
@@ -203,6 +209,24 @@ func (c *msgServiceClient) SetGroupMsgLabel(ctx context.Context, in *SetGroupMsg
 	return out, nil
 }
 
+func (c *msgServiceClient) GetUserMsgLabelByDialogId(ctx context.Context, in *GetUserMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetUserMsgLabelByDialogIdResponse, error) {
+	out := new(GetUserMsgLabelByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_GetUserMsgLabelByDialogId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) GetGroupMsgLabelByDialogId(ctx context.Context, in *GetGroupMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetGroupMsgLabelByDialogIdResponse, error) {
+	out := new(GetGroupMsgLabelByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_GetGroupMsgLabelByDialogId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
@@ -235,6 +259,10 @@ type MsgServiceServer interface {
 	SetUserMsgLabel(context.Context, *SetUserMsgLabelRequest) (*SetUserMsgLabelResponse, error)
 	// 设置群消息标注状态
 	SetGroupMsgLabel(context.Context, *SetGroupMsgLabelRequest) (*SetGroupMsgLabelResponse, error)
+	// 根据对话id获取私聊标注信息
+	GetUserMsgLabelByDialogId(context.Context, *GetUserMsgLabelByDialogIdRequest) (*GetUserMsgLabelByDialogIdResponse, error)
+	// 根据对话id获取群消息标注信息
+	GetGroupMsgLabelByDialogId(context.Context, *GetGroupMsgLabelByDialogIdRequest) (*GetGroupMsgLabelByDialogIdResponse, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -283,6 +311,12 @@ func (UnimplementedMsgServiceServer) SetUserMsgLabel(context.Context, *SetUserMs
 }
 func (UnimplementedMsgServiceServer) SetGroupMsgLabel(context.Context, *SetGroupMsgLabelRequest) (*SetGroupMsgLabelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGroupMsgLabel not implemented")
+}
+func (UnimplementedMsgServiceServer) GetUserMsgLabelByDialogId(context.Context, *GetUserMsgLabelByDialogIdRequest) (*GetUserMsgLabelByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserMsgLabelByDialogId not implemented")
+}
+func (UnimplementedMsgServiceServer) GetGroupMsgLabelByDialogId(context.Context, *GetGroupMsgLabelByDialogIdRequest) (*GetGroupMsgLabelByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMsgLabelByDialogId not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
@@ -549,6 +583,42 @@ func _MsgService_SetGroupMsgLabel_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_GetUserMsgLabelByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserMsgLabelByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetUserMsgLabelByDialogId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetUserMsgLabelByDialogId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetUserMsgLabelByDialogId(ctx, req.(*GetUserMsgLabelByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_GetGroupMsgLabelByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupMsgLabelByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetGroupMsgLabelByDialogId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetGroupMsgLabelByDialogId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetGroupMsgLabelByDialogId(ctx, req.(*GetGroupMsgLabelByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -611,6 +681,14 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetGroupMsgLabel",
 			Handler:    _MsgService_SetGroupMsgLabel_Handler,
+		},
+		{
+			MethodName: "GetUserMsgLabelByDialogId",
+			Handler:    _MsgService_GetUserMsgLabelByDialogId_Handler,
+		},
+		{
+			MethodName: "GetGroupMsgLabelByDialogId",
+			Handler:    _MsgService_GetGroupMsgLabelByDialogId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

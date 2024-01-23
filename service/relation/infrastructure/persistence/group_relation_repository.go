@@ -1,9 +1,9 @@
 package persistence
 
 import (
+	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"gorm.io/gorm"
-	"time"
 )
 
 type GroupRelationRepo struct {
@@ -69,7 +69,7 @@ func (repo *GroupRelationRepo) UpdateRelationColumnByGroupAndUser(gid uint32, ui
 }
 
 func (repo *GroupRelationRepo) DeleteRelationByID(gid uint32, uid string) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Update("status", entity.UserStatusDeleted).Update("deleted_at", time.Now().Unix()).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Update("status", entity.UserStatusDeleted).Update("deleted_at", time.Now()).Error
 }
 
 func (repo *GroupRelationRepo) GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error) {
@@ -97,11 +97,11 @@ func (repo *GroupRelationRepo) GetJoinRequestListByID(gid uint32) ([]*entity.Gro
 }
 
 func (repo *GroupRelationRepo) DeleteGroupRelationByID(gid uint32) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now().Unix()).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ?", gid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now()).Error
 }
 
 func (repo *GroupRelationRepo) DeleteUserGroupRelationByGroupIDAndUserID(gid uint32, uid string) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND user_id = ?", gid, uid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now().Unix()).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? AND user_id = ?", gid, uid).Update("status", entity.GroupStatusDeleted).Update("deleted_at", time.Now()).Error
 }
 
 func (repo *GroupRelationRepo) GetJoinRequestBatchListByID(gids []uint32) ([]*entity.GroupRelation, error) {
