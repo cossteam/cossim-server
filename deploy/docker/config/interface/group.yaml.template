@@ -14,14 +14,18 @@ mysql:
   execTimeout: "800ms"
   tranTimeout: "100ms"
 
+message_queue:
+  name: "rabbitmq"
+  username: "root"
+  password: "Hitosea@123.."
+  addr: "rabbitmq:5672"
+  port: "5672"
+
 redis:
-  name: "user-bff"
   proto: "tcp"
-  addr: "172.16.38.91:6379"
-  dialTimeout: "1s"
-  readTimeout: "1s"
-  writeTimeout: "1s"
-  idleTimeout: "10s"
+  addr: "redis:6379"
+  password: "Hitosea@123.."
+#  protocol: 3
 
 http:
   addr: "0.0.0.0:8084"

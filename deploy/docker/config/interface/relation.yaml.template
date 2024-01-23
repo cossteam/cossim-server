@@ -21,14 +21,15 @@ message_queue:
   addr: "rabbitmq:5672"
   port: "5672"
 
+dtm:
+  name: "dtm"
+  addr: "dtm:36790"
+
 redis:
-  name: "user-bff"
   proto: "tcp"
-  addr: "172.16.38.91:6379"
-  dialTimeout: "1s"
-  readTimeout: "1s"
-  writeTimeout: "1s"
-  idleTimeout: "10s"
+  addr: "redis:6379"
+  password: "Hitosea@123.."
+#  protocol: 3
 
 http:
   addr: "0.0.0.0:8082"
