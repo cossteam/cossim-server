@@ -5,11 +5,13 @@ log:
   format: "console" # console、json
 
 mysql:
-  addr: "mysql:3306"
+  address: "mysql"
+  port: 3306
   dsn: "root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
 
 http:
-  addr: "0.0.0.0:8085"
+  address: "0.0.0.0"
+  port: 8085
 
 oss:
   minio:
@@ -18,28 +20,28 @@ oss:
     accessKey: ""
     secretKey: ""
     ssl: false
-    presignedExpires: ""
-    dial: "3000ms"
-    timeout: "5000ms"
+#    presignedExpires: ""
 
 redis:
   proto: "tcp"
-  addr: "redis:6379"
+  address: "redis"
+  port: 6379
   password: "Hitosea@123.."
 #  protocol: 3
 
 # 注册本服务
 register:
-  name: "upload_bff"
-  addr: "注册中心地址"
-  tags: ["上传服务", "upload_bff"]
+  name: "storage_bff"
+  address: "registry"   # 注册中心地址
+  port: 8500            # 注册中心端口
+  tags: ["storage", "bff"]
 
 discovers:
   storage:
     name: "storage_service"
-    addr: "storage_service:10006"
-    dial: "3000ms"
-    timeout: "5000ms"
+    address: "storage_service"
+    port: 10006
   gateway:
     name: "gateway"
-    addr: "gateway:8080"
+    address: "gateway"
+    port: 8080

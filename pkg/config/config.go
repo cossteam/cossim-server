@@ -1,5 +1,9 @@
 package config
 
+import (
+	"fmt"
+)
+
 type LogConfig struct {
 	Stdout bool   `mapstructure:"stdout"`
 	V      int    `mapstructure:"v"`
@@ -7,55 +11,91 @@ type LogConfig struct {
 }
 
 type MySQLConfig struct {
-	Addr         string `mapstructure:"addr"`
 	DSN          string `mapstructure:"dsn"`
 	RootPassword string `mapstructure:"root_password"`
 	Database     string `mapstructure:"database"`
 	User         string `mapstructure:"user"`
 	Password     string `mapstructure:"password"`
+	Address      string `mapstructure:"address"`
+	Port         int    `mapstructure:"port"`
+}
+
+func (c MySQLConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type RedisConfig struct {
 	Name     string `mapstructure:"name"`
 	Proto    string `mapstructure:"proto"`
 	Password string `mapstructure:"password"`
-	Addr     string `mapstructure:"addr"`
+	Address  string `mapstructure:"address"`
+	Port     int    `mapstructure:"port"`
+}
+
+func (c RedisConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type HTTPConfig struct {
-	Port string `mapstructure:"port"`
-	Addr string `mapstructure:"addr"`
+	Address string `mapstructure:"address"`
+	Port    int    `mapstructure:"port"`
+}
+
+func (c HTTPConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type GRPCConfig struct {
-	Port string `mapstructure:"port"`
-	Addr string `mapstructure:"addr"`
+	Address string `mapstructure:"address"`
+	Port    int    `mapstructure:"port"`
+}
+
+func (c GRPCConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type RegisterConfig struct {
-	Name string   `mapstructure:"name"`
-	Addr string   `mapstructure:"addr"`
-	Tags []string `mapstructure:"tags"`
+	Name    string   `mapstructure:"name"`
+	Tags    []string `mapstructure:"tags"`
+	Address string   `mapstructure:"address"`
+	Port    int      `mapstructure:"port"`
+}
+
+func (c RegisterConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type DiscoversConfig map[string]ServiceConfig
 
 type ServiceConfig struct {
-	Name string `mapstructure:"name"`
-	Addr string `mapstructure:"addr"`
+	Address string `mapstructure:"address"`
+	Port    int    `mapstructure:"port"`
+}
+
+func (c ServiceConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type MessageQueueConfig struct {
 	Name     string `mapstructure:"name"`
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
-	Addr     string `mapstructure:"addr"`
-	Port     string `mapstructure:"port"`
+	Address  string `mapstructure:"address"`
+	Port     int    `mapstructure:"port"`
+}
+
+func (c MessageQueueConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type DtmConfig struct {
-	Name string `mapstructure:"name"`
-	Addr string `mapstructure:"addr"`
+	Name    string `mapstructure:"name"`
+	Address string `mapstructure:"address"`
+	Port    int    `mapstructure:"port"`
+}
+
+func (c DtmConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
 type AppConfig struct {

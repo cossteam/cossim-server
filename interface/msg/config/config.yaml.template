@@ -5,48 +5,53 @@ log:
   format: "console" # console、json
 
 mysql:
-  addr: "mysql:3306"
+  address: "mysql"
+  port: 3306
   dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4"
-  root_password: "888888"
-  database: "coss"
-  user: "coss"
-  password: "888888"
 
 message_queue:
   name: "rabbitmq"
   username: ""
   password: ""
-  addr: "rabbitmq:5672"
+  address: "rabbitmq"
   port: "5672"
 
 redis:
   proto: "tcp"
-  addr: "redis:6379"
+  address: "redis"
+  port: 6379
   password: "Hitosea@123.."
 #  protocol: 3
 
 http:
-  addr: "0.0.0.0:8081"
+  address: "0.0.0.0"
+  port: "8082"
 
 grpc:
-  addr: "127.0.0.1:10002"
+  address: "0.0.0.0"
+  port:
 
 # 注册本服务
 register:
-  name: "user-bff"
-  addr: "注册中心地址"
-  tags: ["消息服务", "message_service"]
+  name: "msg_bff"
+  address: "registry"   # 注册中心地址
+  port: 8500            # 注册中心端口
+  tags: ["msg", "bff", "消息服务"]
 
 discovers:
   msg:
     name: "msg_service"
-    addr: "msg_service:10000"
+    address: "msg_service"
+    port: "10000"
   relation:
     name: "relation_service"
-    addr: "relation_service:10001"
+    address: "group_service"
+    port: "10001"
   user:
     name: "user_service"
-    addr: "user_service:10002"
+    address: "user_service"
+    port: "10002"
   group:
     name: "group_service"
-    addr: "group_service:10005"
+    address: "group_service"
+    port: "10005"

@@ -142,7 +142,7 @@ func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 }
 
 func NewMysqlFromConfig(c *config.MySQLConfig, opts ...Option) *MySQL {
-	mysqlC := NewMySQLFromDSN(fmt.Sprintf(GenerateMysqlDSN("root", c.RootPassword, c.Addr, c.Database)))
+	mysqlC := NewMySQLFromDSN(fmt.Sprintf(GenerateMysqlDSN("root", c.RootPassword, c.Address, c.Database)))
 
 	return mysqlC
 }

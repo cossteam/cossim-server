@@ -46,7 +46,7 @@ func Init(c *config.AppConfig) {
 
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr,
+		Addr:     cfg.Redis.Addr(),
 		Password: cfg.Redis.Password, // no password set
 		DB:       0,                  // use default DB
 		//Protocol: cfg,
@@ -56,7 +56,7 @@ func setupRedis() {
 
 func setupDialogGRPCClient() {
 	var err error
-	msgConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
+	msgConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
@@ -66,7 +66,7 @@ func setupDialogGRPCClient() {
 
 func setupRelationGRPCClient() {
 	var err error
-	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr, grpc.WithInsecure())
+	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
@@ -77,7 +77,7 @@ func setupRelationGRPCClient() {
 
 func setupUserGRPCClient() {
 	var err error
-	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr, grpc.WithInsecure())
+	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
@@ -131,7 +131,7 @@ func setupEncryption() {
 
 func setupGroupGRPCClient() {
 	var err error
-	groupConn, err := grpc.Dial(cfg.Discovers["group"].Addr, grpc.WithInsecure())
+	groupConn, err := grpc.Dial(cfg.Discovers["group"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
@@ -195,7 +195,7 @@ func setupGin() {
 
 	// 启动 Gin 服务器
 	go func() {
-		if err := engine.Run(cfg.HTTP.Addr); err != nil {
+		if err := engine.Run(cfg.HTTP.Addr()); err != nil {
 			logger.Fatal("Failed to start Gin server", zap.Error(err))
 		}
 	}()
