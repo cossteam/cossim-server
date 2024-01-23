@@ -15,14 +15,10 @@ mysql:
   tranTimeout: "100ms"
 
 redis:
-  name: "user-bff"
   proto: "tcp"
-  addr: "172.16.38.91:6379"
-  dialTimeout: "1s"
-  readTimeout: "1s"
-  writeTimeout: "1s"
-  idleTimeout: "10s"
-
+  addr: "redis:6379"
+  password: "Hitosea@123.."
+#  protocol: 3
 http:
   addr: "0.0.0.0:8083"
 
@@ -39,8 +35,9 @@ discovers:
   user:
     name: "user_service"
     addr: "user_service:10002"
-    dial: "3000ms"
-    timeout: "5000ms"
+  relation:
+    name: "relation_service"
+    addr: "relation_service:10001"
 
 encryption:
   enabled: true

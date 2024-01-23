@@ -22,6 +22,12 @@ oss:
     dial: "3000ms"
     timeout: "5000ms"
 
+redis:
+  proto: "tcp"
+  addr: "redis:6379"
+  password: "Hitosea@123.."
+#  protocol: 3
+
 # 注册本服务
 register:
   name: "upload_bff"
