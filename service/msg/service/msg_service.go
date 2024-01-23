@@ -317,3 +317,68 @@ func (s *Service) GetGroupMsgLabelByDialogId(ctx context.Context, in *v1.GetGrou
 	resp.MsgList = msglist
 	return resp, nil
 }
+
+func (s *Service) SetUserMsgsReadStatus(ctx context.Context, in *v1.SetUserMsgsReadStatusRequest) (*v1.SetUserMsgsReadStatusResponse, error) {
+	var resp = &v1.SetUserMsgsReadStatusResponse{}
+	//获取阅后即焚消息id
+	messages, err := s.mr.GetBatchUserMsgsBurnAfterReadingMessages(in.MsgIds, in.DialogId)
+	if err != nil {
+		return nil, err
+	}
+	rids := make([]uint32, 0)
+	if len(messages) > 0 {
+		for _, msg := range messages {
+			rids = append(rids, uint32(msg.ID))
+		}
+	}
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.mr.SetUserMsgsReadStatus(in.MsgIds, in.DialogId); err != nil {
+			return err
+		}
+		if len(rids) > 0 {
+			err := s.mr.LogicalDeleteUserMessages(rids)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return resp, status.Error(codes.Code(code.SetMsgErrSetUserMsgsReadStatusFailed.Code()), err.Error())
+	}
+
+	//删除消息
+	return resp, nil
+}
+
+// 修改用户消息的已读状态
+func (s *Service) SetUserMsgReadStatus(ctx context.Context, in *v1.SetUserMsgReadStatusRequest) (*v1.SetUserMsgReadStatusResponse, error) {
+	var resp = &v1.SetUserMsgReadStatusResponse{}
+	if err := s.mr.SetUserMsgReadStatus(in.MsgId, entity.ReadType(in.IsRead)); err != nil {
+		return resp, status.Error(codes.Code(code.SetMsgErrSetUserMsgReadStatusFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) GetUnreadUserMsgs(ctx context.Context, in *v1.GetUnreadUserMsgsRequest) (*v1.GetUnreadUserMsgsResponse, error) {
+	var resp = &v1.GetUnreadUserMsgsResponse{}
+	msgs, err := s.mr.GetUnreadUserMsgs(in.UserId, in.DialogId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GetMsgErrGetUnreadUserMsgsFailed.Code()), err.Error())
+	}
+	var list []*v1.UserMessage
+	for _, msg := range msgs {
+		list = append(list, &v1.UserMessage{
+			Id:         uint32(msg.ID),
+			Content:    msg.Content,
+			Type:       uint32(msg.Type),
+			ReplayId:   uint64(msg.ReplyId),
+			SenderId:   msg.SendID,
+			ReceiverId: msg.ReceiveID,
+			CreatedAt:  msg.CreatedAt,
+		})
+	}
+	resp.UserMessages = list
+	return resp, nil
+}

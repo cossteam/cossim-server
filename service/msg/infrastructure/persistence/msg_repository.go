@@ -223,3 +223,66 @@ func (g *MsgRepo) GetGroupMsgLabelByDialogId(dialogId uint32) ([]*entity.GroupMe
 	}
 	return groupMessages, nil
 }
+
+func (g *MsgRepo) SetUserMsgsReadStatus(msgIds []uint32, dialogId uint32) error {
+	return g.db.Model(&entity.UserMessage{}).
+		Where("id IN (?) AND dialog_id = ? AND deleted_at = 0", msgIds, dialogId).
+		Updates(map[string]interface{}{
+			"is_read": entity.IsRead,
+			"read_at": time.Now(),
+		}).Error
+}
+
+func (g *MsgRepo) SetUserMsgReadStatus(msgId uint32, isRead entity.ReadType) error {
+	dd := g.db.Model(&entity.UserMessage{}).Where("id = ? AND deleted_at = 0", msgId)
+	if isRead == entity.IsRead {
+		return dd.Updates(map[string]interface{}{
+			"is_read": entity.IsRead,
+			"read_at": time.Now(),
+		}).Error
+	} else {
+		return dd.Updates(map[string]interface{}{
+			"is_read": entity.IsRead,
+			"read_at": 0,
+		}).Error
+	}
+}
+
+func (g *MsgRepo) GetUnreadUserMsgs(uid string, dialogId uint32) ([]*entity.UserMessage, error) {
+	var userMessages []*entity.UserMessage
+	if err := g.db.Model(&entity.UserMessage{}).Where("dialog_id = ? AND is_read = ? AND receive_id = ? AND deleted_at = 0", dialogId, entity.NotRead, uid).Find(&userMessages).Error; err != nil {
+		return nil, err
+	}
+	return userMessages, nil
+}
+
+func (g *MsgRepo) GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogID uint32) ([]*entity.UserMessage, error) {
+	var userMessages []*entity.UserMessage
+	err := g.db.Model(&entity.UserMessage{}).
+		Where("dialog_id = ? AND id IN (?) AND type = ?", dialogID, msgIds, entity.MessageTypeBurnAfterReading).
+		Find(&userMessages).Error
+	if err != nil {
+		return nil, err
+	}
+	return userMessages, nil
+}
+
+func (g *MsgRepo) PhysicalDeleteUserMessages(msgIds []uint32) error {
+	return g.db.Delete(&entity.UserMessage{}, msgIds).Error
+}
+
+func (g *MsgRepo) PhysicalDeleteGroupMessages(msgIds []uint32) error {
+	return g.db.Delete(&entity.GroupMessage{}, msgIds).Error
+}
+
+func (g *MsgRepo) LogicalDeleteUserMessages(msgIds []uint32) error {
+	return g.db.Model(&entity.UserMessage{}).
+		Where("id IN (?)", msgIds).
+		Update("deleted_at", time.Now()).Error
+}
+
+func (g *MsgRepo) LogicalDeleteGroupMessages(msgIds []uint32) error {
+	return g.db.Model(&entity.GroupMessage{}).
+		Where("id IN (?)", msgIds).
+		Update("deleted_at", time.Now()).Error
+}

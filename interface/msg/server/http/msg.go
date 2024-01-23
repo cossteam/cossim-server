@@ -870,6 +870,56 @@ func getGroupLabelMsgList(c *gin.Context) {
 	response.SetSuccess(c, "获取成功", msgs)
 }
 
+// @Summary 批量设置私聊消息状态为已读
+// @Description 批量设置私聊消息状态为已读
+// @Accept  json
+// @Produce  json
+// @param request body model.ReadUserMsgsRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/read/user [post]
+func readUserMsgs(c *gin.Context) {
+	req := new(model.ReadUserMsgsRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+	ids, err := dialogClient.GetDialogUsersByDialogID(context.Background(), &relation.GetDialogUsersByDialogIDRequest{
+		DialogId: req.DialogId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	found := false
+	for _, v := range ids.UserIds {
+		if v == thisId {
+			found = true
+			break
+		}
+	}
+	if !found {
+		response.SetFail(c, "不在对话内", nil)
+		return
+	}
+	_, err = msgClient.SetUserMsgsReadStatus(context.Background(), &msg.SetUserMsgsReadStatusRequest{
+		MsgIds:   req.MsgIds,
+		DialogId: req.DialogId,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", nil)
+}
+
 // 推送私聊消息
 func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32) {
 	m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, SendAt: time.Now(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: time.Now(), DialogId: dialogId}}

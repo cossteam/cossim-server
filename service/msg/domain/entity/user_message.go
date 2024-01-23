@@ -4,7 +4,7 @@ type UserMessage struct {
 	BaseModel
 	Type      UserMessageType `gorm:";comment:消息类型" json:"type"`
 	DialogId  uint            `gorm:"default:0;comment:对话ID" json:"dialog_id"`
-	IsRead    uint            `gorm:"default:0;comment:是否已读" json:"is_read"`
+	IsRead    ReadType        `gorm:"default:0;comment:是否已读" json:"is_read"`
 	ReplyId   uint            `gorm:"default:0;comment:回复ID" json:"reply_id"`
 	ReadAt    int64           `gorm:"comment:阅读时间" json:"read_at"`
 	ReceiveID string          `gorm:"default:0;comment:接收用户id" json:"receive_id"`
@@ -16,17 +16,16 @@ type UserMessage struct {
 type UserMessageType uint
 
 const (
-	MessageTypeText      UserMessageType = iota + 1 // 文本消息
-	MessageTypeVoice                                // 语音消息
-	MessageTypeImage                                // 图片消息
-	MessageTypeFile                                 // 文件消息
-	MessageTypeVideo                                // 视频消息
-	MessageTypeEmoji                                // Emoji表情
-	MessageTypeSticker                              // 表情包
-	MessageTypeVoiceCall                            // 语音通话
-	MessageTypeVideoCall                            // 视频通话
-	MessageTypeDelete                               //阅后即焚消息
-
+	MessageTypeText             UserMessageType = iota + 1 // 文本消息
+	MessageTypeVoice                                       // 语音消息
+	MessageTypeImage                                       // 图片消息
+	MessageTypeFile                                        // 文件消息
+	MessageTypeVideo                                       // 视频消息
+	MessageTypeEmoji                                       // Emoji表情
+	MessageTypeSticker                                     // 表情包
+	MessageTypeVoiceCall                                   // 语音通话
+	MessageTypeVideoCall                                   // 视频通话
+	MessageTypeBurnAfterReading                            //阅后即焚消息
 )
 
 type MessageLabelType uint
@@ -39,17 +38,25 @@ const (
 // IsValidMessageType 判断是否是有效的消息类型
 func IsValidMessageType(msgType UserMessageType) bool {
 	validTypes := map[UserMessageType]struct{}{
-		MessageTypeText:      {},
-		MessageTypeVoice:     {},
-		MessageTypeImage:     {},
-		MessageTypeFile:      {},
-		MessageTypeVideo:     {},
-		MessageTypeEmoji:     {},
-		MessageTypeSticker:   {},
-		MessageTypeVoiceCall: {},
-		MessageTypeVideoCall: {},
+		MessageTypeText:             {},
+		MessageTypeVoice:            {},
+		MessageTypeImage:            {},
+		MessageTypeFile:             {},
+		MessageTypeVideo:            {},
+		MessageTypeEmoji:            {},
+		MessageTypeSticker:          {},
+		MessageTypeVoiceCall:        {},
+		MessageTypeVideoCall:        {},
+		MessageTypeBurnAfterReading: {},
 	}
 
 	_, isValid := validTypes[msgType]
 	return isValid
 }
+
+type ReadType uint
+
+const (
+	NotRead ReadType = iota
+	IsRead
+)
