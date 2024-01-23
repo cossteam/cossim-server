@@ -349,7 +349,6 @@ func getUserDialogList(c *gin.Context) {
 	infos, err := dialogClient.GetDialogByIds(context.Background(), &relation.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
-	fmt.Println("获取对话信息", zap.Any("infos", infos))
 	if err != nil {
 		c.Error(err)
 		return
@@ -365,7 +364,6 @@ func getUserDialogList(c *gin.Context) {
 	//封装响应数据
 	var responseList = make([]model.UserDialogListResponse, 0)
 	for _, v := range infos.Dialogs {
-		fmt.Println("获取最后一条消息", zap.Any("v", v))
 		var re model.UserDialogListResponse
 		//用户
 		if v.Type == 0 {
@@ -392,6 +390,7 @@ func getUserDialogList(c *gin.Context) {
 				re.DialogType = 0
 				re.DialogUnreadCount = 10
 				re.UserId = info.UserId
+				re.DialogCreateAt = v.CreateAt
 				break
 			}
 
@@ -411,6 +410,7 @@ func getUserDialogList(c *gin.Context) {
 			//re.UserId = v.OwnerId
 			re.GroupId = info.Id
 			re.DialogId = v.Id
+			re.DialogCreateAt = v.CreateAt
 		}
 		// 匹配最后一条消息
 		for _, msg := range dialogIds.LastMsgs {

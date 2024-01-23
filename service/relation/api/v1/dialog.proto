@@ -60,6 +60,8 @@ message Dialog {
   uint32 Type = 3;
   //  @inject_tag: json:"group_id"
   uint32 GroupId = 4;
+  //  @inject_tag: json:"create_at"
+  int64 CreateAt = 5;
 }
 
 

@@ -52,6 +52,8 @@ type UserDialogListResponse struct {
 	// 会话未读消息数
 	DialogUnreadCount int     `json:"dialog_unread_count"`
 	LastMessage       Message `json:"last_message"`
+
+	DialogCreateAt int64 `json:"dialog_create_at"`
 }
 
 type Message struct {
