@@ -160,8 +160,6 @@ paths:
       summary: 修改用户密钥包
   /user/info:
     get:
-      consumes:
-      - application/json
       description: 查询用户信息
       parameters:
       - description: Bearer JWT
@@ -309,6 +307,36 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 用户注册
+  /user/search:
+    get:
+      description: 搜索用户
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 用户邮箱
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus
+            用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserInfoResponse'
+              type: object
+      security:
+      - Bearer: []
+      summary: 搜索用户
   /user/system/key/get:
     get:
       consumes:

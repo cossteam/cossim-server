@@ -78,9 +78,6 @@
                     }
                 ],
                 "description": "查询用户信息",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -308,6 +305,56 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/search": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "搜索用户",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "搜索用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户邮箱",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
