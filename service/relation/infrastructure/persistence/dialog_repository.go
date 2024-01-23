@@ -78,9 +78,6 @@ func (g *DialogRepo) GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
 	if err := g.db.Model(&entity.Dialog{}).Where("id IN (?)", dialogIDs).Find(&dialogUsers).Error; err != nil {
 		return nil, err
 	}
-	//for _, dialogUser := range dialogUsers {
-	//	fmt.Println(dialogUser.GroupId)
-	//}
 	return dialogUsers, nil
 }
 

@@ -183,10 +183,11 @@ func (s *Service) GetDialogByIds(ctx context.Context, in *v1.GetDialogByIdsReque
 	if len(infos) > 0 {
 		for _, info := range infos {
 			dialogInfos = append(dialogInfos, &v1.Dialog{
-				Id:      uint32(info.ID),
-				OwnerId: info.OwnerId,
-				GroupId: uint32(info.GroupId),
-				Type:    uint32(info.Type),
+				Id:       uint32(info.ID),
+				OwnerId:  info.OwnerId,
+				GroupId:  uint32(info.GroupId),
+				Type:     uint32(info.Type),
+				CreateAt: info.CreatedAt,
 			})
 		}
 	}
