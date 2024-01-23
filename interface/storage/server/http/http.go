@@ -170,7 +170,6 @@ func setupGin() {
 }
 
 // @title coss-storage-bff服务
-
 func route(engine *gin.Engine) {
 	// 添加不同的中间件给不同的路由组
 	// 比如除了swagger路径外其他的路径添加了身份验证中间件

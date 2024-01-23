@@ -3,6 +3,7 @@ package code
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/status"
 	"sync/atomic"
 )
 
@@ -82,9 +83,13 @@ func Cause(e error) Codes {
 	if e == nil {
 		return OK
 	}
-	ec, ok := errors.Cause(e).(Codes)
-	if ok {
-		return ec
+	if st, ok := status.FromError(e); ok {
+		return Code(int(st.Code()))
+	} else {
+		ec, ok := errors.Cause(e).(Codes)
+		if ok {
+			return ec
+		}
 	}
 	return InternalServerError
 }
