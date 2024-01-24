@@ -68,6 +68,7 @@ func (c RegisterConfig) Addr() string {
 type DiscoversConfig map[string]ServiceConfig
 
 type ServiceConfig struct {
+	Name    string `mapstructure:"name"`
 	Address string `mapstructure:"address"`
 	Port    int    `mapstructure:"port"`
 }

@@ -105,3 +105,8 @@ type PasswordRequest struct {
 type ModifyUserSecretBundleRequest struct {
 	SecretBundle string `json:"secret_bundle" binding:"required"`
 }
+
+type UserSecretBundleResponse struct {
+	UserId       string `json:"user_id"`
+	SecretBundle string `json:"secret_bundle"`
+}

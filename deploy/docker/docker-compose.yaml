@@ -40,7 +40,7 @@ services:
       MINIO_ROOT_USER: root
       MINIO_ROOT_PASSWORD: Hitosea@123..
     volumes:
-      - ./data/var/lib/minio:/data
+    - ./data/var/lib/minio:/data
     command: server /data --console-address ":9001"
   rabbitmq:
     image: "rabbitmq:management"
@@ -69,8 +69,21 @@ services:
     container_name: cossim_dtm
     image: hub.hitosea.com/cossim/dtm
     ports:
-      - '36789:36789'
-      - '36790:36790'
+    - '36789:36789'
+    - '36790:36790'
+  consul:
+    image: consul:latest
+    container_name: cossim_consul
+    volumes:
+    - ./data/var/lib:/bitnami
+    command: agent -server -bootstrap-expect=1 -client=0.0.0.0 -ui
+    ports:
+    - '8300:8300'
+    - '8301:8301'
+    - '8301:8301/udp'
+    - '8500:8500'
+    - '8600:8600'
+    - '8600:8600/udp'
   gateway:
     container_name: cossim_gateway
     image: hub.hitosea.com/cossim/gateway-interface
@@ -124,6 +137,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--direct"
     volumes:
     - ./config/interface/user.yaml:/config/config.yaml
     - ./config/pgp:/.cache
@@ -139,13 +153,13 @@ services:
     container_name: cossim_group_bff
     image: hub.hitosea.com/cossim/group-interface
     command:
-      - "--config"
-      - "/config/config.yaml"
+    - "--config"
+    - "/config/config.yaml"
     volumes:
     - ./config/interface/group.yaml:/config/config.yaml
     - ./config/pgp:/.cache
     expose:
-      - "8084"
+    - "8084"
     depends_on:
       mysql:
         condition: service_healthy
@@ -156,13 +170,13 @@ services:
     container_name: cossim_storgae_bff
     image: hub.hitosea.com/cossim/storage-interface
     command:
-      - "--config"
-      - "/config/config.yaml"
+    - "--config"
+    - "/config/config.yaml"
     volumes:
     - ./config/interface/storage.yaml:/config/config.yaml
     - ./config/pgp:/.cache
     expose:
-      - "8084"
+    - "8084"
     depends_on:
       mysql:
         condition: service_healthy
@@ -205,12 +219,13 @@ services:
     container_name: cossim_user_service
     image: hub.hitosea.com/cossim/user-service
     command:
-      - "--config"
-      - "/config/config.yaml"
+    - "--config"
+    - "/config/config.yaml"
+    - "--direct"
     volumes:
-      - ./config/service/user.yaml:/config/config.yaml
+    - ./config/service/user.yaml:/config/config.yaml
     expose:
-      - "10002"
+    - "10002"
     depends_on:
       mysql:
         condition: service_healthy
@@ -221,12 +236,12 @@ services:
     container_name: cossim_group_service
     image: hub.hitosea.com/cossim/group-service
     command:
-      - "--config"
-      - "/config/config.yaml"
+    - "--config"
+    - "/config/config.yaml"
     volumes:
-      - ./config/service/group.yaml:/config/config.yaml
+    - ./config/service/group.yaml:/config/config.yaml
     expose:
-      - "10005"
+    - "10005"
     depends_on:
       mysql:
         condition: service_healthy
@@ -237,12 +252,12 @@ services:
     container_name: cossim_storage_service
     image: hub.hitosea.com/cossim/storage-service
     command:
-      - "--config"
-      - "/config/config.yaml"
+    - "--config"
+    - "/config/config.yaml"
     volumes:
-      - ./config/service/storage.yaml:/config/config.yaml
+    - ./config/service/storage.yaml:/config/config.yaml
     expose:
-      - "10006"
+    - "10006"
     depends_on:
       mysql:
         condition: service_healthy

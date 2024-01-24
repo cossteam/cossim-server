@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/db"
 	api "github.com/cossim/coss-server/service/user/api/v1"
@@ -8,11 +9,19 @@ import (
 	"github.com/cossim/coss-server/service/user/infrastructure/persistence"
 	"github.com/cossim/coss-server/service/user/service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 )
+
+func init() {
+	flag.StringVar(&config.ConfigFile, "config", "config/config.yaml", "Path to configuration file")
+	flag.BoolVar(&config.Direct, "direct", false, "Enable direct connection")
+	flag.Parse()
+}
 
 func main() {
 	if err := config.Init(); err != nil {
@@ -36,8 +45,10 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	svc := service.NewService(infra.UR)
+	svc := service.NewService(infra.UR, config.Conf)
 	api.RegisterUserServiceServer(grpcServer, svc)
+	// 注册服务开启健康检查
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
 	fmt.Printf("gRPC server is running on addr: %s\n", config.Conf.GRPC.Addr())
 
@@ -47,6 +58,7 @@ func main() {
 		}
 	}()
 
+	svc.Start()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
@@ -54,6 +66,7 @@ func main() {
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
 			grpcServer.Stop()
+			svc.Close()
 			return
 		case syscall.SIGHUP:
 		default:
