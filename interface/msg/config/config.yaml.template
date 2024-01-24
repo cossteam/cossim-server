@@ -45,7 +45,7 @@ discovers:
     port: "10000"
   relation:
     name: "relation_service"
-    address: "group_service"
+    address: "relation_service"
     port: "10001"
   user:
     name: "user_service"
