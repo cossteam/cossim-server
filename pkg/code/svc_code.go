@@ -20,6 +20,7 @@ var (
 	UserErrSetUserSecretBundleFailed = New(10015, "设置用户秘钥包失败，请重试")
 	UserErrErrLogoutFailed           = New(10016, "退出登录失败，请重试")
 	UserErrOldPassword               = New(10017, "旧密码错误")
+	UserErrSwapPublicKeyFailed       = New(10018, "用户交换公钥失败")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")
@@ -45,6 +46,7 @@ var (
 	RelationUserErrNoFriendRequestRecords            = New(13014, "未找到好友申请记录")
 	RelationErrRejectFriendFailed                    = New(13015, "拒绝好友申请失败")
 	RelationErrSetUserFriendSilentNotificationFailed = New(13016, "设置用户好友静默通知失败")
+	RelationErrNotInBlacklist                        = New(13017, "没有在黑名单")
 
 	RelationErrCreateGroupFailed                         = New(13101, "创建群聊失败")
 	RelationErrGetGroupIDsFailed                         = New(13102, "获取群聊成员")
@@ -53,7 +55,7 @@ var (
 	RelationGroupErrAlreadyInGroup                       = New(13105, "已经在群聊中")
 	RelationGroupErrApproveJoinGroupFailed               = New(13106, "同意加入群聊失败")
 	RelationGroupErrNoJoinRequestRecords                 = New(13107, "没有申请加入群聊记录")
-	RelationGroupErrRejectJoinGroupFailed                = New(13108, "拒绝加入群聊失败")
+	RelationGroupErrRejectJoinGroup                      = New(13108, "拒绝加入群聊")
 	RelationGroupErrRemoveUserFromGroupFailed            = New(13109, "将用户移除群聊失败")
 	RelationGroupErrLeaveGroupFailed                     = New(13110, "退出群聊失败")
 	RelationGroupErrGetJoinRequestListFailed             = New(13111, "获取群聊申请列表失败")
@@ -63,6 +65,7 @@ var (
 	RelationGroupErrInviteFailed                         = New(13115, "邀请入群失败")
 	RelationGroupErrRelationNotFound                     = New(13116, "关系不存在")
 	RelationGroupErrSetUserGroupSilentNotificationFailed = New(13117, "设置群聊消息静默通知失败")
+	RelationGroupErrNotInGroup                           = New(13118, "没有在群聊中")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

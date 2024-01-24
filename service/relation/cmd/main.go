@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/db"
 	api "github.com/cossim/coss-server/service/relation/api/v1"
@@ -15,6 +16,12 @@ import (
 	"os/signal"
 	"syscall"
 )
+
+func init() {
+	flag.StringVar(&config.ConfigFile, "config", "config/config.yaml", "Path to configuration file")
+	flag.BoolVar(&config.Direct, "direct", false, "Enable direct connection")
+	flag.Parse()
+}
 
 func main() {
 	if err := config.Init(); err != nil {

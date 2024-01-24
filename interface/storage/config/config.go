@@ -3,11 +3,11 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/spf13/viper"
 )
 
-var Conf config.AppConfig
+var Conf pkgconfig.AppConfig
 var MinioConf *MinioConfig
 var configFile string
 
@@ -25,7 +25,7 @@ func init() {
 }
 
 func Init() error {
-	c, err := config.LoadFile(configFile)
+	c, err := pkgconfig.LoadFile(configFile)
 	if err != nil {
 		return err
 	}

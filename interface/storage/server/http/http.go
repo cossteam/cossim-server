@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	conf "github.com/cossim/coss-server/interface/storage/config"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/storage"
@@ -24,13 +24,13 @@ var (
 	sp            storage.StorageProvider
 	storageClient storagev1.StorageServiceClient
 	redisClient   *redis.Client
-	cfg           *config.AppConfig
+	cfg           *pkgconfig.AppConfig
 	logger        *zap.Logger
 	downloadURL   = "/api/v1/storage/files/download"
 	enc           encryption.Encryptor
 )
 
-func Init(c *config.AppConfig) {
+func Init(c *pkgconfig.AppConfig) {
 	cfg = c
 	setupRedis()
 	setupLogger()

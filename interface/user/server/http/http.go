@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/interface/user/service"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ import (
 
 var (
 	redisClient *redis.Client
-	cfg         *config.AppConfig
+	cfg         *pkgconfig.AppConfig
 	logger      *zap.Logger
 	enc         encryption.Encryptor
 	svc         *service.Service
@@ -26,7 +26,7 @@ var (
 
 var ThisKey string
 
-func Init(c *config.AppConfig, service *service.Service) {
+func Init(c *pkgconfig.AppConfig, service *service.Service) {
 	cfg = c
 	svc = service
 

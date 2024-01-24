@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	api "github.com/cossim/coss-server/service/user/api/v1"
@@ -20,7 +20,7 @@ import (
 	"log"
 )
 
-func NewService(ur repository.UserRepository, c config.AppConfig) *Service {
+func NewService(ur repository.UserRepository, c pkgconfig.AppConfig) *Service {
 	return &Service{
 		c:  c,
 		ur: ur,
@@ -28,7 +28,7 @@ func NewService(ur repository.UserRepository, c config.AppConfig) *Service {
 }
 
 type Service struct {
-	c         config.AppConfig
+	c         pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string
 	ur        repository.UserRepository

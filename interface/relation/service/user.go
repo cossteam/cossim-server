@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	"github.com/cossim/coss-server/pkg/utils/time"
+	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
@@ -18,24 +21,161 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Service) ManageFriend(ctx context.Context, userId, friendId string, action int32, key string) (interface{}, error) {
+func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, error) {
+	// 获取好友列表
+	friendListResp, err := s.userRelationClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: userID})
+	if err != nil {
+		s.logger.Error("user service GetFriendList", zap.Error(err))
+		return nil, err
+	}
+
+	var users []string
+	for _, user := range friendListResp.FriendList {
+		users = append(users, user.UserId)
+	}
+
+	userInfos, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
+	if err != nil {
+		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
+		return nil, err
+	}
+
+	var data []usersorter.User
+	for _, v := range userInfos.Users {
+		for _, friend := range friendListResp.FriendList {
+			if friend.UserId == v.UserId {
+				data = append(data, usersorter.CustomUserData{
+					UserID:   v.UserId,
+					NickName: v.NickName,
+					Email:    v.Email,
+					Tel:      v.Tel,
+					Avatar:   v.Avatar,
+					Status:   uint(v.Status),
+					DialogId: friend.DialogId,
+				})
+				break
+			}
+		}
+
+	}
+
+	// Sort and group by specified field
+	groupedUsers := usersorter.SortAndGroupUsers(data, "NickName")
+	return groupedUsers, nil
+}
+
+func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, error) {
+	// 获取黑名单列表
+	blacklistResp, err := s.userRelationClient.GetBlacklist(ctx, &relationgrpcv1.GetBlacklistRequest{UserId: userID})
+	if err != nil {
+		s.logger.Error("user service GetBlacklist", zap.Error(err))
+		return nil, err
+	}
+
+	var users []string
+	for _, user := range blacklistResp.Blacklist {
+		users = append(users, user.UserId)
+	}
+
+	blacklist, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
+	if err != nil {
+		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
+		return nil, err
+	}
+
+	return blacklist, nil
+}
+
+func (s *Service) UserRequestList(ctx context.Context, userID string) (interface{}, error) {
+
+	reqList, err := s.userRelationClient.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
+	if err != nil {
+		s.logger.Error("user service GetFriendRequestList", zap.Error(err))
+		return nil, err
+	}
+
+	var ids []string
+	var data []*model.UserRequestListResponse
+	for _, v := range reqList.FriendRequestList {
+		ids = append(ids, v.UserId)
+		data = append(data, &model.UserRequestListResponse{
+			UserID:     v.UserId,
+			Msg:        v.Msg,
+			UserStatus: uint32(v.Status),
+		})
+	}
+
+	users, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: ids})
+	if err != nil {
+		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
+		return nil, err
+	}
+
+	for _, v := range data {
+		for _, u := range users.Users {
+			if v.UserID == u.UserId {
+				v.UserName = u.NickName
+				v.UserAvatar = u.Avatar
+				break
+			}
+		}
+	}
+	return data, nil
+}
+
+func (s *Service) AddFriend(ctx context.Context, userID string, req *model.AddFriendRequest) (interface{}, error) {
+	// 检查添加的用户是否存在
+	_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: req.UserID})
+	if err != nil {
+		err = code.UserErrNotExist
+		return nil, err
+	}
+
+	_, err = s.userRelationClient.AddFriend(ctx, &relationgrpcv1.AddFriendRequest{
+		UserId:   userID,
+		FriendId: req.UserID,
+		Msg:      req.Msg,
+	})
+	if err != nil {
+		s.logger.Error("添加好友失败", zap.Error(err))
+		return nil, err
+	}
+
+	targetId := req.UserID
+	req.UserID = userID
+	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now()}
+	//通知消息服务有消息需要发送
+	if err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {
+		s.logger.Error("添加好友申请通知推送失败", zap.Error(err))
+	}
+
+	return nil, nil
+}
+
+func (s *Service) ManageFriend(ctx context.Context, userID, friendID string, action int32, key string) (interface{}, error) {
 	var dialogId uint32
+
+	// 检查要操作的用户是否存在
+	_, err := s.userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: friendID})
+	if err != nil {
+		return nil, err
+	}
 
 	switch action {
 	case 1: // 同意好友申请
-		_, err := s.handleAction1(ctx, userId, friendId, relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED)
+		_, err = s.handleAction1(ctx, userID, friendID, relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED)
 		if err != nil {
 			return nil, err
 		}
 
 	default: // 同意申请之外的操作，修改状态
-		if err := s.manageFriend3(ctx, userId, friendId, dialogId, relationgrpcv1.RelationStatus_RELATION_STATUS_REJECTED); err != nil {
+		if err = s.manageFriend3(ctx, userID, friendID, dialogId, relationgrpcv1.RelationStatus_RELATION_STATUS_REJECTED); err != nil {
 			return nil, err
 		}
 	}
 
 	// 向用户推送通知
-	resp, err := s.sendFriendManagementNotification(ctx, userId, friendId, key, relationgrpcv1.RelationStatus(action))
+	resp, err := s.sendFriendManagementNotification(ctx, userID, friendID, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
 		s.logger.Error("发送好友管理通知失败", zap.Error(err))
 	}
@@ -122,34 +262,123 @@ func (s *Service) manageFriend1(ctx context.Context, userId, friendId string, st
 	return nil
 }
 
-func (s *Service) DeleteFriend(ctx context.Context, dialogId uint32, userId, friendId string) error {
-	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: dialogId, UserId: userId}
-	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userId, FriendId: friendId}
-	gid := shortuuid.New()
-	// sage
-	//saga := dtmgrpc.NewSagaGrpc(s.dtmGrpcServer, gid).
-	//	Add(s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r1).
-	//	Add(s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r2)
-	//if err := saga.Submit(); err != nil {
-	//	s.logger.Error("DeleteFriend saga.Submit err => ", zap.Error(err))
+func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) error {
+	// 检查删除的用户是否存在
+	//_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: friendID})
+	//if err != nil {
+	//	s.logger.Error("获取用户信息失败", zap.Error(err))
 	//	return err
 	//}
+
+	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return err
+	}
+
+	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+		return code.RelationUserErrFriendRelationNotFound
+	}
+
+	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID}
+	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: friendID}
+	gid := shortuuid.New()
 	// tcc
-	err := dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
+	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
 		r := &emptypb.Empty{}
-		err := tcc.CallBranch(r1, s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r)
+		err = tcc.CallBranch(r1, s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r)
 		if err != nil {
 			return err
 		}
 		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r)
 		return err
-	})
-	if err != nil {
+	}); err != nil {
 		s.logger.Error("TCC DeleteFriend", zap.Error(err))
 		return err
 	}
 
 	return nil
+}
+
+func (s *Service) AddBlacklist(ctx context.Context, userID, friendID string) (interface{}, error) {
+	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
+
+	// 进行添加黑名单操作
+	_, err = s.userRelationClient.AddBlacklist(ctx, &relationgrpcv1.AddBlacklistRequest{UserId: userID, FriendId: friendID})
+	if err != nil {
+		s.logger.Error("添加黑名单失败", zap.Error(err))
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (s *Service) DeleteBlacklist(ctx context.Context, userID, friendID string) (interface{}, error) {
+	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
+		return nil, code.RelationErrNotInBlacklist
+	}
+
+	// 进行删除黑名单操作
+	_, err = s.userRelationClient.DeleteBlacklist(context.Background(), &relationgrpcv1.DeleteBlacklistRequest{UserId: userID, FriendId: friendID})
+	if err != nil {
+		s.logger.Error("删除黑名单失败", zap.Error(err))
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (s *Service) SwitchUserE2EPublicKey(ctx context.Context, userID string, friendID string, publicKey string) (interface{}, error) {
+	reqm := model.SwitchUserE2EPublicKeyRequest{
+		UserId:    userID,
+		PublicKey: publicKey,
+	}
+	msg := msgconfig.WsMsg{Uid: friendID, Event: msgconfig.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now()}
+
+	//通知消息服务有消息需要发送
+	if err := s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {
+		s.logger.Error("交换用户端到端公钥通知推送失败", zap.Error(err))
+		return nil, code.UserErrSwapPublicKeyFailed
+	}
+	return nil, nil
+}
+
+func (s *Service) UserSilentNotification(ctx context.Context, userID string, friendID string, silent model.SilentNotificationType) (interface{}, error) {
+	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userID,
+		FriendId: friendID,
+	})
+	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
+
+	_, err = s.userRelationClient.SetFriendSilentNotification(ctx, &relationgrpcv1.SetFriendSilentNotificationRequest{
+		UserId:   userID,
+		FriendId: friendID,
+		IsSilent: relationgrpcv1.UserSilentNotificationType(silent),
+	})
+	if err != nil {
+		s.logger.Error("设置好友静音通知失败", zap.Error(err))
+		return nil, err
+	}
+	return nil, nil
 }
 
 // manageFriend2 不存在好友关系，创建新的关系
