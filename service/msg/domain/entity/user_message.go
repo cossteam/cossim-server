@@ -2,15 +2,16 @@ package entity
 
 type UserMessage struct {
 	BaseModel
-	Type      UserMessageType `gorm:";comment:消息类型" json:"type"`
-	DialogId  uint            `gorm:"default:0;comment:对话ID" json:"dialog_id"`
-	IsRead    ReadType        `gorm:"default:0;comment:是否已读" json:"is_read"`
-	ReplyId   uint            `gorm:"default:0;comment:回复ID" json:"reply_id"`
-	ReadAt    int64           `gorm:"comment:阅读时间" json:"read_at"`
-	ReceiveID string          `gorm:"default:0;comment:接收用户id" json:"receive_id"`
-	SendID    string          `gorm:"default:0;comment:发送用户id" json:"send_id"`
-	Content   string          `gorm:"longtext;comment:详细消息" json:"content"`
-	IsLabel   uint            `gorm:"default:0;comment:是否标注" json:"is_label"`
+	Type       UserMessageType `gorm:";comment:消息类型" json:"type"`
+	DialogId   uint            `gorm:"default:0;comment:对话ID" json:"dialog_id"`
+	IsRead     ReadType        `gorm:"default:0;comment:是否已读" json:"is_read"`
+	ReplyId    uint            `gorm:"default:0;comment:回复ID" json:"reply_id"`
+	ReadAt     int64           `gorm:"comment:阅读时间" json:"read_at"`
+	ReceiveID  string          `gorm:"default:0;comment:接收用户id" json:"receive_id"`
+	SendID     string          `gorm:"default:0;comment:发送用户id" json:"send_id"`
+	Content    string          `gorm:"longtext;comment:详细消息" json:"content"`
+	IsLabel    uint            `gorm:"default:0;comment:是否标注" json:"is_label"`
+	ReplyEmoji string          `gorm:"comment:回复时使用的 Emoji" json:"reply_emoji"`
 }
 
 type UserMessageType uint
@@ -26,6 +27,7 @@ const (
 	MessageTypeVoiceCall                                   // 语音通话
 	MessageTypeVideoCall                                   // 视频通话
 	MessageTypeBurnAfterReading                            //阅后即焚消息
+	MessageTypeEmojiReply                                  //emoji回复
 )
 
 type MessageLabelType uint
