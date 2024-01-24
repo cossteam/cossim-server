@@ -1,11 +1,11 @@
 package config
 
 import (
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/spf13/viper"
 )
 
-var C config.AppConfig
+var C pkgconfig.AppConfig
 
 func Init() error {
 	viper.SetConfigFile("./config/config.yaml")

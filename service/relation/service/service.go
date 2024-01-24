@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/service/relation/api/v1"
+	"github.com/cossim/coss-server/service/relation/config"
 	"github.com/cossim/coss-server/service/relation/domain/repository"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"github.com/rs/xid"
@@ -11,7 +12,7 @@ import (
 	"log"
 )
 
-func NewService(repo *persistence.Repositories, db *gorm.DB, ac config.AppConfig) *Service {
+func NewService(repo *persistence.Repositories, db *gorm.DB, ac pkgconfig.AppConfig) *Service {
 	return &Service{
 		urr: repo.Urr,
 		grr: repo.Grr,
@@ -31,12 +32,15 @@ type Service struct {
 	v1.UnimplementedGroupRelationServiceServer
 	v1.UnimplementedDialogServiceServer
 
-	ac        config.AppConfig
+	ac        pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string
 }
 
 func (s *Service) Start() {
+	if config.Direct {
+		return
+	}
 	d, err := discovery.NewConsulRegistry(s.ac.Register.Addr())
 	if err != nil {
 		panic(err)
@@ -49,6 +53,9 @@ func (s *Service) Start() {
 }
 
 func (s *Service) Close() error {
+	if config.Direct {
+		return nil
+	}
 	if err := s.discovery.Cancel(s.sid); err != nil {
 		log.Printf("Failed to cancel service registration: %v", err)
 		return err

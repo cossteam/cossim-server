@@ -3,50 +3,34 @@ package http
 import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/relation/service"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	"github.com/cossim/coss-server/pkg/msg_queue"
-	group "github.com/cossim/coss-server/service/group/api/v1"
-	relation "github.com/cossim/coss-server/service/relation/api/v1"
-	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
 	"time"
 )
 
 var (
-	groupClient         group.GroupServiceClient
-	userClient          user.UserServiceClient
-	redisClient         *redis.Client
-	userRelationClient  relation.UserRelationServiceClient
-	groupRelationClient relation.GroupRelationServiceClient
-	dialogClient        relation.DialogServiceClient
-	rabbitMQClient      *msg_queue.RabbitMQ
-	cfg                 *config.AppConfig
-	logger              *zap.Logger
-	svc                 *service.Service
-	enc                 encryption.Encryptor
+	redisClient *redis.Client
+
+	cfg    *pkgconfig.AppConfig
+	logger *zap.Logger
+	svc    *service.Service
+	enc    encryption.Encryptor
 )
 
-func Init(c *config.AppConfig) {
+func Init(c *pkgconfig.AppConfig, service *service.Service) {
 	cfg = c
+	svc = service
 
-	svc = service.New(c)
 	setupLogger()
-	setupGroupGRPCClient()
 	setupRedis()
 	setupEncryption()
-
-	setupDialogGRPCClient()
-	setupUserGRPCClient()
-	setRabbitMQProvider()
-	setupRelationGRPCClient()
 	setupGin()
 }
 
@@ -102,55 +86,6 @@ func setupRedis() {
 		//Protocol: cfg,
 	})
 	redisClient = rdb
-}
-
-func setupGroupGRPCClient() {
-	var err error
-	conn, err := grpc.Dial(cfg.Discovers["group"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	groupClient = group.NewGroupServiceClient(conn)
-}
-
-func setupRelationGRPCClient() {
-	var err error
-	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	userRelationClient = relation.NewUserRelationServiceClient(relationConn)
-	groupRelationClient = relation.NewGroupRelationServiceClient(relationConn)
-}
-
-func setupDialogGRPCClient() {
-	var err error
-	msgConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	dialogClient = relation.NewDialogServiceClient(msgConn)
-}
-
-func setRabbitMQProvider() {
-	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr()))
-	if err != nil {
-		logger.Fatal("Failed to connect to RabbitMQ", zap.Error(err))
-	}
-	rabbitMQClient = rmq
-}
-
-func setupUserGRPCClient() {
-	var err error
-	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	userClient = user.NewUserServiceClient(userConn)
 }
 
 func setupLogger() {

@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
@@ -30,7 +30,7 @@ type Service struct {
 	groupGrpcServer    string
 }
 
-func New(c *config.AppConfig) (s *Service) {
+func New(c *pkgconfig.AppConfig) (s *Service) {
 	logger := setupLogger(c)
 
 	relationGroupClient := setupRelationGroupGRPCClient(c.Discovers["relation"].Address)
@@ -57,7 +57,7 @@ func New(c *config.AppConfig) (s *Service) {
 	}
 }
 
-func setupLogger(c *config.AppConfig) *zap.Logger {
+func setupLogger(c *pkgconfig.AppConfig) *zap.Logger {
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -125,7 +125,7 @@ func setupUserGRPCClient(addr string) usergrpcv1.UserServiceClient {
 	return usergrpcv1.NewUserServiceClient(conn)
 }
 
-func setRabbitMQProvider(c *config.AppConfig) *msg_queue.RabbitMQ {
+func setRabbitMQProvider(c *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Address))
 	if err != nil {
 		panic(err)

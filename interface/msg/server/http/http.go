@@ -3,7 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/msg_queue"
@@ -32,12 +32,12 @@ var (
 	rabbitMQClient  *msg_queue.RabbitMQ
 	userClient      userApi.UserServiceClient
 	dialogClient    relationApi.DialogServiceClient
-	cfg             *config.AppConfig
+	cfg             *pkgconfig.AppConfig
 	logger          *zap.Logger
 	enc             encryption.Encryptor
 )
 
-func Init(c *config.AppConfig) {
+func Init(c *pkgconfig.AppConfig) {
 	cfg = c
 	setupLogger()
 	setupDialogGRPCClient()
