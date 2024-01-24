@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cossim/coss-server/interface/user/service"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -25,6 +26,7 @@ var (
 	cfg                *config.AppConfig
 	logger             *zap.Logger
 	enc                encryption.Encryptor
+	svc                service.Service
 )
 
 var ThisKey string

@@ -5,33 +5,69 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/utils/time"
+	"github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/discovery"
+	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
+	api "github.com/cossim/coss-server/service/user/api/v1"
+	conf "github.com/cossim/coss-server/service/user/config"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"github.com/cossim/coss-server/service/user/domain/repository"
 	"github.com/cossim/coss-server/service/user/utils"
+	"github.com/rs/xid"
 	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-
-	api "github.com/cossim/coss-server/service/user/api/v1"
+	"log"
 )
 
-func NewService(ur repository.UserRepository) *Service {
+func NewService(ur repository.UserRepository, c config.AppConfig) *Service {
 	return &Service{
+		c:  c,
 		ur: ur,
 	}
 }
 
 type Service struct {
-	ur repository.UserRepository
+	c         config.AppConfig
+	discovery discovery.Discovery
+	sid       string
+	ur        repository.UserRepository
 	api.UnimplementedUserServiceServer
 }
 
+func (s *Service) Start() {
+	if conf.Direct {
+		return
+	}
+	d, err := discovery.NewConsulRegistry(s.c.Register.Addr())
+	if err != nil {
+		panic(err)
+	}
+	s.discovery = d
+	s.sid = xid.New().String()
+	if err = s.discovery.Register(s.c.Register.Name, s.c.GRPC.Addr(), s.sid); err != nil {
+		panic(err)
+	}
+	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.c.Register.Name, s.c.GRPC.Addr(), s.sid)
+}
+
+func (s *Service) Close() error {
+	if conf.Direct {
+		return nil
+	}
+	if err := s.discovery.Cancel(s.sid); err != nil {
+		log.Printf("Failed to cancel service registration: %v", err)
+		return err
+	}
+	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.c.Register.Name, s.c.GRPC.Addr(), s.sid)
+	return nil
+}
+
 // 用户登录
-func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
+func (s *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	resp := &api.UserLoginResponse{}
 
-	userInfo, err := g.ur.GetUserInfoByEmail(request.Email)
+	userInfo, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
@@ -43,8 +79,8 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 		return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), code.UserErrNotExistOrPassword.Message())
 	}
 	//修改登录时间
-	userInfo.LastAt = time.Now()
-	_, err = g.ur.UpdateUser(userInfo)
+	userInfo.LastAt = pkgtime.Now()
+	_, err = s.ur.UpdateUser(userInfo)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
@@ -71,14 +107,14 @@ func (g *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 }
 
 // 用户注册
-func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
+func (s *Service) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
 	resp := &api.UserRegisterResponse{}
 	//添加用户
-	_, err := g.ur.GetUserInfoByEmail(request.Email)
+	_, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err == nil {
 		return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), code.UserErrEmailAlreadyRegistered.Message())
 	}
-	userInfo, err := g.ur.InsertUser(&entity.User{
+	userInfo, err := s.ur.InsertUser(&entity.User{
 		Email:     request.Email,
 		Password:  request.Password,
 		NickName:  request.NickName,
@@ -95,9 +131,9 @@ func (g *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 	return resp, nil
 }
 
-func (g *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
+func (s *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
-	userInfo, err := g.ur.GetUserInfoByUid(request.UserId)
+	userInfo, err := s.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
@@ -116,9 +152,9 @@ func (g *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*
 	return resp, nil
 }
 
-func (g *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
+func (s *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
 	resp := &api.GetBatchUserInfoResponse{}
-	users, err := g.ur.GetBatchGetUserInfoByIDs(request.UserIds)
+	users, err := s.ur.GetBatchGetUserInfoByIDs(request.UserIds)
 	if err != nil {
 		fmt.Printf("无法获取用户列表信息: %v\n", err)
 		return nil, status.Error(codes.Code(code.UserErrUnableToGetUserListInfo.Code()), err.Error())
@@ -138,9 +174,9 @@ func (g *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUse
 	return resp, nil
 }
 
-func (g *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
+func (s *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
-	userInfo, err := g.ur.GetUserInfoByEmail(request.Email)
+	userInfo, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
@@ -159,8 +195,8 @@ func (g *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserIn
 	return resp, nil
 }
 
-func (g *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
-	key, err := g.ur.GetUserPublicKey(in.UserId)
+func (s *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
+	key, err := s.ur.GetUserPublicKey(in.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &api.GetUserPublicKeyResponse{}, status.Error(codes.Code(code.UserErrPublicKeyNotExist.Code()), err.Error())
@@ -170,16 +206,16 @@ func (g *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*a
 	return &api.GetUserPublicKeyResponse{PublicKey: key}, nil
 }
 
-func (g *Service) SetUserPublicKey(ctx context.Context, in *api.SetPublicKeyRequest) (*api.UserResponse, error) {
-	if err := g.ur.SetUserPublicKey(in.UserId, in.PublicKey); err != nil {
+func (s *Service) SetUserPublicKey(ctx context.Context, in *api.SetPublicKeyRequest) (*api.UserResponse, error) {
+	if err := s.ur.SetUserPublicKey(in.UserId, in.PublicKey); err != nil {
 		return &api.UserResponse{}, status.Error(codes.Code(code.UserErrSaveUserPublicKeyFailed.Code()), err.Error())
 	}
 	return &api.UserResponse{UserId: in.UserId}, nil
 }
 
-func (g *Service) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserResponse, error) {
+func (s *Service) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserResponse, error) {
 	resp := &api.UserResponse{}
-	user, err := g.ur.UpdateUser(&entity.User{
+	user, err := s.ur.UpdateUser(&entity.User{
 		ID:        in.UserId,
 		NickName:  in.NickName,
 		Avatar:    in.Avatar,
@@ -194,9 +230,9 @@ func (g *Service) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserRe
 	return resp, nil
 }
 
-func (g *Service) ModifyUserPassword(ctx context.Context, in *api.ModifyUserPasswordRequest) (*api.UserResponse, error) {
+func (s *Service) ModifyUserPassword(ctx context.Context, in *api.ModifyUserPasswordRequest) (*api.UserResponse, error) {
 	resp := &api.UserResponse{}
-	user, err := g.ur.UpdateUser(&entity.User{
+	user, err := s.ur.UpdateUser(&entity.User{
 		ID:       in.UserId,
 		Password: in.Password,
 	})
@@ -207,9 +243,9 @@ func (g *Service) ModifyUserPassword(ctx context.Context, in *api.ModifyUserPass
 	return resp, nil
 }
 
-func (g *Service) GetUserPasswordByUserId(ctx context.Context, in *api.UserRequest) (*api.GetUserPasswordByUserIdResponse, error) {
+func (s *Service) GetUserPasswordByUserId(ctx context.Context, in *api.UserRequest) (*api.GetUserPasswordByUserIdResponse, error) {
 	resp := &api.GetUserPasswordByUserIdResponse{}
-	userInfo, err := g.ur.GetUserInfoByUid(in.UserId)
+	userInfo, err := s.ur.GetUserInfoByUid(in.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
@@ -223,17 +259,17 @@ func (g *Service) GetUserPasswordByUserId(ctx context.Context, in *api.UserReque
 	return resp, nil
 }
 
-func (g *Service) SetUserSecretBundle(ctx context.Context, in *api.SetUserSecretBundleRequest) (*api.SetUserSecretBundleResponse, error) {
+func (s *Service) SetUserSecretBundle(ctx context.Context, in *api.SetUserSecretBundleRequest) (*api.SetUserSecretBundleResponse, error) {
 	var resp = &api.SetUserSecretBundleResponse{}
-	if err := g.ur.SetUserSecretBundle(in.UserId, in.SecretBundle); err != nil {
+	if err := s.ur.SetUserSecretBundle(in.UserId, in.SecretBundle); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrSetUserSecretBundleFailed.Code()), err.Error())
 	}
 	return resp, nil
 }
 
-func (g *Service) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecretBundleRequest) (*api.GetUserSecretBundleResponse, error) {
+func (s *Service) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecretBundleRequest) (*api.GetUserSecretBundleResponse, error) {
 	var resp = &api.GetUserSecretBundleResponse{}
-	secretBundle, err := g.ur.GetUserSecretBundle(in.UserId)
+	secretBundle, err := s.ur.GetUserSecretBundle(in.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())

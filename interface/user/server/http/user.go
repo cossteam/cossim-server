@@ -1,19 +1,14 @@
 package http
 
 import (
-	"context"
 	"github.com/cossim/coss-server/interface/user/api/model"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
-	"github.com/cossim/coss-server/pkg/utils"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
-	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // @Summary 用户登录
@@ -37,29 +32,12 @@ func login(c *gin.Context) {
 		return
 	}
 
-	resp, err := userClient.UserLogin(context.Background(), &user.UserLoginRequest{
-		Email:    req.Email,
-		Password: utils.HashString(req.Password),
-	})
+	resp, token, err := svc.Login(c, req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-
-	token, err := utils.GenerateToken(resp.UserId, resp.Email)
-	if err != nil {
-		logger.Error("failed to generate user token", zap.Error(err))
-		response.SetFail(c, "token验证失败", nil)
-		return
-	}
-	err = redisClient.Set(context.Background(), resp.UserId, token, 60*60*24*3*time.Second).Err()
-	if err != nil {
-		logger.Error("failed to set user token", zap.Error(err))
-		response.SetFail(c, "token验证失败", nil)
-		return
-	}
 	c.Set("user_id", resp.UserId)
-
 	response.SetSuccess(c, "登录成功", gin.H{"token": token, "user_info": resp})
 }
 
@@ -70,21 +48,17 @@ func login(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /user/logout [post]
 func logout(c *gin.Context) {
-
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
-	err = redisClient.Del(context.Background(), thisId).Err()
-	if err != nil {
-		logger.Error("failed to set user token", zap.Error(err))
-		response.SetFail(c, err.Error(), nil)
+	if err = svc.Logout(c, thisId); err != nil {
+		c.Error(err)
 		return
 	}
 	c.Set("user_id", thisId)
-
 	response.SetSuccess(c, "退出登录成功", nil)
 }
 
@@ -124,26 +98,14 @@ func register(c *gin.Context) {
 		return
 	}
 
-	req.Nickname = strings.TrimSpace(req.Nickname)
-	if req.Nickname == "" {
-		req.Nickname = req.Email
-	}
-
-	resp, err := userClient.UserRegister(context.Background(), &user.UserRegisterRequest{
-		Email:           req.Email,
-		NickName:        req.Nickname,
-		Password:        utils.HashString(req.Password),
-		ConfirmPassword: req.ConfirmPass,
-		PublicKey:       req.PublicKey,
-		Avatar:          "https://fastly.picsum.photos/id/1036/200/200.jpg?hmac=Yb5E0WTltIYlUDPDqT-d0Llaaq0mJnwiCUtxx8RrtVE",
-	})
+	userId, err := svc.Register(c, req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.Set("user_id", resp.UserId)
 
-	response.SetSuccess(c, "注册成功", gin.H{"user_id": resp.UserId})
+	c.Set("user_id", userId)
+	response.SetSuccess(c, "注册成功", gin.H{"user_id": userId})
 }
 
 // @Summary 搜索用户
@@ -175,37 +137,10 @@ func search(c *gin.Context) {
 		return
 	}
 
-	r, err := userClient.GetUserInfoByEmail(c, &user.GetUserInfoByEmailRequest{
-		Email: email,
-	})
+	resp, err := svc.Search(c, userID, email)
 	if err != nil {
 		c.Error(err)
 		return
-	}
-
-	resp := &model.UserInfoResponse{
-		UserId:    r.UserId,
-		Nickname:  r.NickName,
-		Email:     r.Email,
-		Avatar:    r.Avatar,
-		Signature: r.Signature,
-		Status:    model.UserStatus(r.Status),
-	}
-
-	relation, err := RelationUserClient.GetUserRelation(c, &relationgrpcv1.GetUserRelationRequest{
-		UserId:   userID,
-		FriendId: r.UserId,
-	})
-	if err != nil {
-		logger.Error("获取用户关系失败", zap.Error(err))
-	} else {
-		if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-			resp.RelationStatus = model.UserRelationStatusFriend
-		} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
-			resp.RelationStatus = model.UserRelationStatusBlacked
-		} else {
-			resp.RelationStatus = model.UserRelationStatusUnknown
-		}
 	}
 
 	response.SetSuccess(c, "查询用户信息成功", resp)
@@ -233,37 +168,10 @@ func getUserInfo(c *gin.Context) {
 		return
 	}
 
-	resp := &model.UserInfoResponse{}
-	r, err := userClient.UserInfo(context.Background(), &user.UserInfoRequest{
-		UserId: userId,
-	})
+	resp, err := svc.GetUserInfo(c, thisID, userId)
 	if err != nil {
 		c.Error(err)
 		return
-	}
-	resp = &model.UserInfoResponse{
-		UserId:    r.UserId,
-		Nickname:  r.NickName,
-		Email:     r.Email,
-		Avatar:    r.Avatar,
-		Signature: r.Signature,
-		Status:    model.UserStatus(r.Status),
-	}
-
-	relation, err := RelationUserClient.GetUserRelation(c, &relationgrpcv1.GetUserRelationRequest{
-		UserId:   thisID,
-		FriendId: userId,
-	})
-	if err != nil {
-		logger.Error("获取用户关系失败", zap.Error(err))
-	} else {
-		if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-			resp.RelationStatus = model.UserRelationStatusFriend
-		} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
-			resp.RelationStatus = model.UserRelationStatusBlacked
-		} else {
-			resp.RelationStatus = model.UserRelationStatusUnknown
-		}
 	}
 
 	response.SetSuccess(c, "查询成功", resp)
@@ -291,11 +199,8 @@ func setUserPublicKey(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	// 调用服务端设置用户公钥的方法
-	_, err = userClient.SetUserPublicKey(context.Background(), &user.SetPublicKeyRequest{
-		UserId:    thisId,
-		PublicKey: req.PublicKey,
-	})
+
+	_, err = svc.SetUserPublicKey(c, thisId, req.PublicKey)
 	if err != nil {
 		c.Error(err)
 		return
@@ -338,16 +243,8 @@ func modifyUserInfo(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	// 调用服务端设置用户公钥的方法
-	_, err = userClient.ModifyUserInfo(context.Background(), &user.User{
-		UserId:    thisId,
-		NickName:  req.NickName,
-		Tel:       req.Tel,
-		Avatar:    req.Avatar,
-		Signature: req.Signature,
-		//Action:    user.UserStatus(req.Action),
-	})
-	if err != nil {
+
+	if err = svc.ModifyUserInfo(c, thisId, req); err != nil {
 		c.Error(err)
 		return
 	}
@@ -402,24 +299,8 @@ func modifyUserPassword(c *gin.Context) {
 		response.SetFail(c, "密码格式不正确", nil)
 		return
 	}
-	//查询用户旧密码
-	info, err := userClient.GetUserPasswordByUserId(context.Background(), &user.UserRequest{
-		UserId: thisId,
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	if info.Password != utils.HashString(req.OldPasswprd) {
-		response.SetFail(c, "旧密码不正确", nil)
-		return
-	}
-	// 调用服务端设置用户公钥的方法
-	_, err = userClient.ModifyUserPassword(context.Background(), &user.ModifyUserPasswordRequest{
-		UserId:   thisId,
-		Password: utils.HashString(req.Password),
-	})
-	if err != nil {
+
+	if err = svc.ModifyUserPassword(c, thisId, req); err != nil {
 		c.Error(err)
 		return
 	}
@@ -450,10 +331,7 @@ func modifyUserSecretBundle(c *gin.Context) {
 		return
 	}
 
-	_, err = userClient.SetUserSecretBundle(context.Background(), &user.SetUserSecretBundleRequest{
-		UserId:       thisId,
-		SecretBundle: req.SecretBundle,
-	})
+	_, err = svc.ModifyUserSecretBundle(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -481,20 +359,11 @@ func getUserSecretBundle(c *gin.Context) {
 		return
 	}
 
-	_, err = userClient.UserInfo(context.Background(), &user.UserInfoRequest{
-		UserId: userId,
-	})
+	bundle, err := svc.GetUserSecretBundle(c, userId)
 	if err != nil {
-		logger.Error("获取用户信息失败", zap.Error(err))
-		response.SetFail(c, "用户不存在", nil)
+		c.Error(err)
 		return
 	}
 
-	bundle, err := userClient.GetUserSecretBundle(context.Background(), &user.GetUserSecretBundleRequest{
-		UserId: userId,
-	})
-	if err != nil {
-		return
-	}
 	response.SetSuccess(c, "获取成功", bundle)
 }

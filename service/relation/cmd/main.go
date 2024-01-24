@@ -8,6 +8,8 @@ import (
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"github.com/cossim/coss-server/service/relation/service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"net"
 	"os"
 	"os/signal"
@@ -36,11 +38,12 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	svc := service.NewService(infra, dbConn)
+	svc := service.NewService(infra, dbConn, config.Conf)
 	api.RegisterUserRelationServiceServer(grpcServer, svc)
 	api.RegisterGroupRelationServiceServer(grpcServer, svc)
 	api.RegisterDialogServiceServer(grpcServer, svc)
-
+	// 注册服务开启健康检查
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	fmt.Printf("gRPC server is running on addr: %s\n", config.Conf.GRPC.Addr())
 
 	go func() {
@@ -49,12 +52,14 @@ func main() {
 		}
 	}()
 
+	svc.Start()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
+			svc.Close()
 			grpcServer.Stop()
 			return
 		case syscall.SIGHUP:

@@ -1,20 +1,15 @@
 package config
 
 import (
-	"flag"
 	"github.com/cossim/coss-server/pkg/config"
 )
 
 var Conf config.AppConfig
-var configFile string
-
-func init() {
-	flag.StringVar(&configFile, "config", "", "Path to configuration file")
-	flag.Parse()
-}
+var ConfigFile string
+var Direct bool
 
 func Init() error {
-	c, err := config.LoadFile(configFile)
+	c, err := config.LoadFile(ConfigFile)
 	if err != nil {
 		return err
 	}

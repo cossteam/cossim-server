@@ -23,7 +23,7 @@ dtm:
 
 http:
   address: "0.0.0.0"
-  port: 8082
+  port: 8083
 
 grpc:
   address: "0.0.0.0"
@@ -32,9 +32,9 @@ grpc:
 # 注册本服务
 register:
   name: "user_bff"
-  address: "user"   # 注册中心地址
+  address: "registry"   # 注册中心地址
   port: 8500            # 注册中心端口
-  tags: ["relation", "bff", "用户服务"]
+  tags: ["user", "bff", "用户服务"]
 
 discovers:
   user:
@@ -47,7 +47,7 @@ discovers:
     port: "10001"
 
 encryption:
-  enabled: false
+  enabled: true
   name: coss-im
   email: max.mustermann@example.com
   passphrase: LongSecret
