@@ -161,10 +161,10 @@ func (c client) wsOfflineClients() {
 	defer wsMutex.Unlock()
 
 	if _, ok := Pool[c.Uid][c.ClientType]; ok {
-		for _, c2 := range Pool[c.Uid][c.ClientType] {
+		for i, c2 := range Pool[c.Uid][c.ClientType] {
 			if c2.Rid == c.Rid {
 				fmt.Println("关闭客户端", Pool[c.Uid][c.ClientType])
-				Pool[c.Uid][c.ClientType] = append(Pool[c.Uid][c.ClientType][:c2.Rid], Pool[c.Uid][c.ClientType][c2.Rid+1:]...)
+				Pool[c.Uid][c.ClientType] = append(Pool[c.Uid][c.ClientType][:i], Pool[c.Uid][c.ClientType][i+1:]...)
 				fmt.Println("关闭客户端后", Pool[c.Uid][c.ClientType])
 				break
 			}
