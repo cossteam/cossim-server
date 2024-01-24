@@ -1,8 +1,8 @@
 package http
 
 import (
-	"fmt"
 	"github.com/cossim/coss-server/interface/user/api/model"
+	"github.com/cossim/coss-server/pkg/constants"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/dlclark/regexp2"
@@ -32,9 +32,10 @@ func login(c *gin.Context) {
 		response.SetFail(c, "邮箱格式不正确", nil)
 		return
 	}
+	deviceType := c.Request.Header.Get("X-Device-Type")
+	deviceType = constants.DetermineClientType(deviceType)
 
-	fmt.Println(1111)
-	resp, token, err := svc.Login(c, req)
+	resp, token, err := svc.Login(c, req, deviceType)
 	if err != nil {
 		c.Error(err)
 		return
@@ -55,8 +56,9 @@ func logout(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-
-	if err = svc.Logout(c, thisId); err != nil {
+	deviceType := c.Request.Header.Get("X-Device-Type")
+	deviceType = constants.DetermineClientType(deviceType)
+	if err = svc.Logout(c, thisId, deviceType); err != nil {
 		c.Error(err)
 		return
 	}

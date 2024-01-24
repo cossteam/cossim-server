@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/msg/api/model"
 	"github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/pkg/constants"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/msg_queue"
@@ -34,14 +35,15 @@ var (
 			return true
 		},
 	}
-	Pool = make(map[string][]*client)
+	Pool = make(map[string]map[string][]*client)
 )
 
 type client struct {
-	Conn  *websocket.Conn
-	Uid   string //客户端所有者
-	Rid   int64  //客户端id
-	queue *amqp091.Channel
+	Conn       *websocket.Conn
+	Uid        string //客户端所有者
+	Rid        int64  //客户端id
+	ClientType string //客户端类型
+	queue      *amqp091.Channel
 }
 
 // @Summary websocket请求
@@ -58,6 +60,11 @@ func ws(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
+
+	//判断设备类型
+	deviceType := c.Request.Header.Get("X-Device-Type")
+	deviceType = constants.DetermineClientType(deviceType)
+
 	if token == "" {
 		id, err := pkghttp.ParseTokenReUid(c)
 		if err != nil {
@@ -80,23 +87,87 @@ func ws(c *gin.Context) {
 	if messages.IsClosed() {
 		log.Fatal("Channel is Closed")
 	}
-	client := &client{
-		Conn:  conn,
-		Uid:   "",
-		Rid:   wsRid,
-		queue: messages,
+	cli := &client{
+		ClientType: deviceType,
+		Conn:       conn,
+		Uid:        uid,
+		Rid:        wsRid,
+		queue:      messages,
 	}
-
-	client.Uid = uid
+	if _, ok := Pool[uid]; !ok {
+		Pool[uid] = make(map[string][]*client)
+	}
+	if _, ok := Pool[uid][deviceType]; ok {
+		if len(Pool[uid][deviceType]) == 2 {
+			fmt.Println("达到限制客户端数")
+		}
+	}
 	//保存到线程池
-	client.wsOnlineClients()
+	cli.wsOnlineClients()
 	//读取客户端消息
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
 			//用户下线
-			client.wsOfflineClients()
+			cli.wsOfflineClients()
 			return
+		}
+	}
+}
+
+// 用户上线
+func (c client) wsOnlineClients() {
+	wsMutex.Lock()
+
+	Pool[c.Uid][c.ClientType] = append(Pool[c.Uid][c.ClientType], &c)
+
+	wsMutex.Unlock()
+	//通知前端接收离线消息
+	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now()}
+	js, _ := json.Marshal(msg)
+	if enc == nil {
+		logger.Error("加密客户端错误", zap.Error(nil))
+		return
+	}
+	message, err := enc.GetSecretMessage(string(js), c.Uid)
+	if err != nil {
+		fmt.Println("加密失败：", err)
+		return
+	}
+	//上线推送消息
+	c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+	for {
+		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
+		if err != nil || !ok {
+			//c.queue.Close()
+			//拉取完之后删除队列
+			_ = rabbitMQClient.DeleteEmptyQueue(c.Uid)
+			return
+		}
+		c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
+	}
+}
+
+// 用户离线
+//func (c client) wsOfflineClients() {
+//	wsMutex.Lock()
+//	defer wsMutex.Unlock()
+//
+//	delete(Pool, c.Uid)
+//}
+
+func (c client) wsOfflineClients() {
+	wsMutex.Lock()
+	defer wsMutex.Unlock()
+
+	if _, ok := Pool[c.Uid][c.ClientType]; ok {
+		for _, c2 := range Pool[c.Uid][c.ClientType] {
+			if c2.Rid == c.Rid {
+				fmt.Println("关闭客户端", Pool[c.Uid][c.ClientType])
+				Pool[c.Uid][c.ClientType] = append(Pool[c.Uid][c.ClientType][:c2.Rid], Pool[c.Uid][c.ClientType][c2.Rid+1:]...)
+				fmt.Println("关闭客户端后", Pool[c.Uid][c.ClientType])
+				break
+			}
 		}
 	}
 }
@@ -944,16 +1015,18 @@ func sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replay
 	if _, ok := Pool[receiverId]; ok {
 		if len(Pool[receiverId]) > 0 {
 			for _, c := range Pool[receiverId] {
-				m.Rid = c.Rid
-				js, _ := json.Marshal(m)
-				message, err := enc.GetSecretMessage(string(js), receiverId)
-				if err != nil {
-					return
-				}
-				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-				if err != nil {
-					logger.Error("send msg err", zap.Error(err))
-					return
+				for _, c2 := range c {
+					m.Rid = c2.Rid
+					js, _ := json.Marshal(m)
+					message, err := enc.GetSecretMessage(string(js), receiverId)
+					if err != nil {
+						return
+					}
+					err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+					if err != nil {
+						logger.Error("send msg err", zap.Error(err))
+						return
+					}
 				}
 			}
 			return
@@ -1018,16 +1091,18 @@ func sendWsGroupMsg(uIds []string, userId string, groupId uint32, msg string, ms
 		//在线则推送ws
 		if _, ok := Pool[uid]; ok {
 			for _, c := range Pool[uid] {
-				m.Rid = c.Rid
-				js, _ := json.Marshal(m)
-				message, err := enc.GetSecretMessage(string(js), uid)
-				if err != nil {
-					return
-				}
-				err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-				if err != nil {
-					logger.Error("发布ws消息失败", zap.Error(err))
-					continue
+				for _, c2 := range c {
+					m.Rid = c2.Rid
+					js, _ := json.Marshal(m)
+					message, err := enc.GetSecretMessage(string(js), uid)
+					if err != nil {
+						return
+					}
+					err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+					if err != nil {
+						logger.Error("发布ws消息失败", zap.Error(err))
+						continue
+					}
 				}
 			}
 			continue
@@ -1071,13 +1146,16 @@ func SendMsg(uid string, event config.WSEventType, data interface{}) {
 		}
 		return
 	}
-	for _, c := range Pool[uid] {
-		m.Rid = c.Rid
-		js, _ := json.Marshal(m)
-		err := c.Conn.WriteMessage(websocket.TextMessage, js)
-		if err != nil {
-			logger.Error("send msg err", zap.Error(err))
-			return
+	for _, v := range Pool[uid] {
+		for _, c := range v {
+			fmt.Println("6666", c.Rid)
+			m.Rid = c.Rid
+			js, _ := json.Marshal(m)
+			err := c.Conn.WriteMessage(websocket.TextMessage, js)
+			if err != nil {
+				logger.Error("send msg err", zap.Error(err))
+				return
+			}
 		}
 	}
 }
@@ -1087,43 +1165,4 @@ func SendMsgToUsers(uids []string, event config.WSEventType, data interface{}) {
 	for _, uid := range uids {
 		SendMsg(uid, event, data)
 	}
-}
-
-// 用户上线
-func (c client) wsOnlineClients() {
-	wsMutex.Lock()
-	Pool[c.Uid] = append(Pool[c.Uid], &c)
-	wsMutex.Unlock()
-	//通知前端接收离线消息
-	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now()}
-	js, _ := json.Marshal(msg)
-	if enc == nil {
-		logger.Error("加密客户端错误", zap.Error(nil))
-		return
-	}
-	message, err := enc.GetSecretMessage(string(js), c.Uid)
-	if err != nil {
-		fmt.Println("加密失败：", err)
-		return
-	}
-	//上线推送消息
-	c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-	for {
-		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
-		if err != nil || !ok {
-			//c.queue.Close()
-			//拉取完之后删除队列
-			_ = rabbitMQClient.DeleteEmptyQueue(c.Uid)
-			return
-		}
-		c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
-	}
-}
-
-// 用户离线
-func (c client) wsOfflineClients() {
-	wsMutex.Lock()
-	defer wsMutex.Unlock()
-	// 删除用户
-	delete(Pool, c.Uid)
 }

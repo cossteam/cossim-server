@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
@@ -27,7 +27,7 @@ type Authenticator struct {
 
 const _queryUser = "SELECT * FROM users WHERE id = ?"
 
-func (a *Authenticator) ValidateToken(tokenString string) (bool, error) {
+func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bool, error) {
 	token, claims, err := utils.ParseToken(tokenString)
 	if err != nil || !token.Valid {
 		return false, fmt.Errorf("token validation failed: %s", err.Error())
@@ -36,11 +36,12 @@ func (a *Authenticator) ValidateToken(tokenString string) (bool, error) {
 		ID     string `json:"id"`
 		Status int64  `json:"status"`
 	}
-	val, err := a.RDB.Get(context.Background(), claims.UserId).Result()
+	data, err := cache.GetKey(a.RDB, claims.UserId)
 	if err != nil {
-		return false, fmt.Errorf("token validation failed: %s", err.Error())
+		return false, err
 	}
-	if val != tokenString {
+
+	if data[driverType] != tokenString {
 		return false, errors.New("token expired")
 	}
 	var user User
