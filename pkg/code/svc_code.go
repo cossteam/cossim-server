@@ -18,8 +18,8 @@ var (
 	UserErrNotExist                  = New(10013, "用户不存在")
 	UserErrGetUserSecretBundleFailed = New(10014, "获取用户秘钥包失败，请重试")
 	UserErrSetUserSecretBundleFailed = New(10015, "设置用户秘钥包失败，请重试")
-	UserErrErrLogoutFailed           = New(13016, "退出登录失败，请重试")
-	UserErrOldPassword               = New(13017, "旧密码错误")
+	UserErrErrLogoutFailed           = New(10016, "退出登录失败，请重试")
+	UserErrOldPassword               = New(10017, "旧密码错误")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")
