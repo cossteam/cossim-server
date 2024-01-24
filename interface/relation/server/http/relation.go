@@ -1,21 +1,14 @@
 package http
 
 import (
-	"context"
-	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/http"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
-	"github.com/cossim/coss-server/pkg/msg_queue"
-	"github.com/cossim/coss-server/pkg/utils/time"
-	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	"strconv"
 
 	"github.com/cossim/coss-server/pkg/http/response"
-	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
-	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -34,32 +27,13 @@ func blackList(c *gin.Context) {
 		return
 	}
 
-	// 检查用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	resp, err := svc.BlackList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	// 获取黑名单列表
-	blacklistResp, err := userRelationClient.GetBlacklist(context.Background(), &relationgrpcv1.GetBlacklistRequest{UserId: userID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	var users []string
-	for _, user := range blacklistResp.Blacklist {
-		users = append(users, user.UserId)
-	}
-
-	blacklist, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: users})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, "获取黑名单列表成功", blacklist)
+	response.Success(c, "获取黑名单列表成功", resp)
 }
 
 // @Summary 好友列表
@@ -75,57 +49,14 @@ func friendList(c *gin.Context) {
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
-	// 检查用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+
+	resp, err := svc.FriendList(c, userID)
 	if err != nil {
-		logger.Error("user service UserInfo", zap.Error(err))
 		c.Error(err)
 		return
 	}
 
-	// 获取好友列表
-	friendListResp, err := userRelationClient.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: userID})
-	if err != nil {
-		logger.Error("user service GetFriendList", zap.Error(err))
-		c.Error(err)
-		return
-	}
-
-	var users []string
-	for _, user := range friendListResp.FriendList {
-		users = append(users, user.UserId)
-	}
-
-	userInfos, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: users})
-	if err != nil {
-		logger.Error("user service GetBatchUserInfo", zap.Error(err))
-		c.Error(err)
-		return
-	}
-
-	var data []usersorter.User
-	for _, v := range userInfos.Users {
-		for _, friend := range friendListResp.FriendList {
-			if friend.UserId == v.UserId {
-				data = append(data, usersorter.CustomUserData{
-					UserID:   v.UserId,
-					NickName: v.NickName,
-					Email:    v.Email,
-					Tel:      v.Tel,
-					Avatar:   v.Avatar,
-					Status:   uint(v.Status),
-					DialogId: friend.DialogId,
-				})
-				break
-			}
-		}
-
-	}
-
-	// Sort and group by specified field
-	groupedUsers := usersorter.SortAndGroupUsers(data, "NickName")
-
-	response.Success(c, "获取好友列表成功", groupedUsers)
+	response.Success(c, "获取好友列表成功", resp)
 }
 
 // @Summary 群聊列表
@@ -141,54 +72,14 @@ func getUserGroupList(c *gin.Context) {
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
-	// 检查用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	if err != nil {
-		logger.Error("user service UserInfo", zap.Error(err))
-		c.Error(err)
-		return
-	}
 
-	// 获取用户群聊列表
-	ids, err := groupRelationClient.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
+	resp, err := svc.GetUserGroupList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	ds, err := groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//获取群聊对话信息
-	dialogs, err := dialogClient.GetDialogByGroupIds(context.Background(), &relationgrpcv1.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	var data []usersorter.Group
-	for _, group := range ds.Groups {
-		for _, dialog := range dialogs.Dialogs {
-			if dialog.GroupId == group.Id {
-				data = append(data, usersorter.CustomGroupData{
-					GroupID:  group.Id,
-					Avatar:   group.Avatar,
-					Status:   uint(group.Status),
-					DialogId: dialog.DialogId,
-					Name:     group.Name,
-				})
-				break
-			}
-		}
-
-	}
-
-	// Sort and group by specified field
-	groupedUsers := usersorter.SortAndGroupUsers(data, "Name")
-
-	response.Success(c, "获取用户群聊列表成功", groupedUsers)
+	response.Success(c, "获取用户群聊列表成功", resp)
 }
 
 // @Summary 好友申请列表
@@ -204,48 +95,14 @@ func userRequestList(c *gin.Context) {
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
-	// 检查用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	if err != nil {
-		logger.Error("Failed to get user information", zap.Error(err))
-		c.Error(err)
-		return
-	}
 
-	reqList, err := userRelationClient.GetFriendRequestList(context.Background(), &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
+	resp, err := svc.UserRequestList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	var ids []string
-	var data []*model.UserRequestListResponse
-	for _, v := range reqList.FriendRequestList {
-		ids = append(ids, v.UserId)
-		data = append(data, &model.UserRequestListResponse{
-			UserID:     v.UserId,
-			Msg:        v.Msg,
-			UserStatus: uint32(v.Status),
-		})
-	}
-
-	users, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: ids})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	for _, v := range data {
-		for _, u := range users.Users {
-			if v.UserID == u.UserId {
-				v.UserName = u.NickName
-				v.UserAvatar = u.Avatar
-				break
-			}
-		}
-	}
-
-	response.Success(c, "获取好友申请列表成功", data)
+	response.Success(c, "获取好友申请列表成功", resp)
 }
 
 // @Summary 删除黑名单
@@ -271,22 +128,8 @@ func deleteBlacklist(c *gin.Context) {
 		return
 	}
 
-	// 检查用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
+	_, err = svc.DeleteBlacklist(c, userID, req.UserID)
 	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	// 检查要删除的黑名单用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	// 进行删除黑名单操作
-	if _, err = userRelationClient.DeleteBlacklist(context.Background(), &relationgrpcv1.DeleteBlacklistRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
@@ -317,15 +160,8 @@ func addBlacklist(c *gin.Context) {
 		return
 	}
 
-	// 检查添加黑名单的用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
+	_, err = svc.AddBlacklist(c, userID, req.UserID)
 	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	// 进行添加黑名单操作
-	if _, err = userRelationClient.AddBlacklist(context.Background(), &relationgrpcv1.AddBlacklistRequest{UserId: userID, FriendId: req.UserID}); err != nil {
 		c.Error(err)
 		return
 	}
@@ -356,26 +192,7 @@ func deleteFriend(c *gin.Context) {
 		return
 	}
 
-	friendID := req.UserID
-	// 检查删除的用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: friendID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//
-	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-		response.SetFail(c, "好友关系不存在", nil)
-		return
-	}
-
-	if err = svc.DeleteFriend(c, relation.DialogId, userID, friendID); err != nil {
+	if err = svc.DeleteFriend(c, userID, req.UserID); err != nil {
 		response.SetFail(c, "删除好友失败", nil)
 		return
 	}
@@ -412,13 +229,6 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
-	// 检查要添加的用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
 	responseData, err := svc.ManageFriend(c, userID, req.UserID, int32(req.Action), req.E2EPublicKey)
 	if err != nil {
 		response.SetFail(c, code.Cause(err).Message(), nil)
@@ -448,38 +258,11 @@ func addFriend(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	// 检查用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: thisId})
-	if err != nil {
-		//logger.Error("user service", zap.Error(err))
-		//response.SetFail(c, "用户不存在", nil)
-		err = code.UserErrNotExist
-		c.Error(err)
-		return
-	}
-	// 检查添加的用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserID})
-	if err != nil {
-		err = code.UserErrNotExist
-		c.Error(err)
-		return
-	}
 
-	if _, err = userRelationClient.AddFriend(context.Background(), &relationgrpcv1.AddFriendRequest{
-		UserId:   thisId,
-		FriendId: req.UserID,
-		Msg:      req.Msg,
-	}); err != nil {
+	_, err = svc.AddFriend(c, thisId, req)
+	if err != nil {
 		c.Error(err)
 		return
-	}
-	targetId := req.UserID
-	req.UserID = thisId
-	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now()}
-	//通知消息服务有消息需要发送
-	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	if err != nil {
-		logger.Error("添加好友申请通知推送失败", zap.Error(err))
 	}
 
 	response.SetSuccess(c, "发送好友请求成功", nil)
@@ -506,48 +289,13 @@ func getGroupMember(c *gin.Context) {
 		return
 	}
 
-	group, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{Gid: uint32(gid)})
+	resp, err := svc.GetGroupMember(c, uint32(gid))
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-		response.SetFail(c, "群聊状态不可用", nil)
-		return
-	}
-
-	groupRelation, err := groupRelationClient.GetGroupUserIDs(context.Background(), &relationgrpcv1.GroupIDRequest{GroupId: uint32(gid)})
-	if err != nil {
-		response.SetFail(c, "获取群聊成员失败", nil)
-		logger.Error("获取群聊成员失败", zap.Error(err))
-		return
-	}
-
-	resp, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: groupRelation.UserIds})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	type requestListResponse struct {
-		UserID   string `json:"user_id"`
-		Nickname string `json:"nickname"`
-		Avatar   string `json:"avatar"`
-	}
-
-	var ids []string
-	var data []*requestListResponse
-	for _, v := range resp.Users {
-		ids = append(ids, v.UserId)
-		data = append(data, &requestListResponse{
-			UserID:   v.UserId,
-			Nickname: v.NickName,
-			Avatar:   v.Avatar,
-		})
-	}
-
-	response.SetSuccess(c, "获取群聊成员成功", data)
+	response.SetSuccess(c, "获取群聊成员成功", resp)
 }
 
 // groupRequestList 获取群聊申请列表
@@ -568,80 +316,13 @@ func groupRequestList(c *gin.Context) {
 		return
 	}
 
-	// 检查用户是否存在
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: userID})
-	if err != nil {
-		logger.Error("Failed to get user information", zap.Error(err))
-		c.Error(err)
-		return
-	}
-
-	reqList, err := groupRelationClient.GetUserGroupRequestList(context.Background(), &relationgrpcv1.GetUserGroupRequestListRequest{UserId: userID})
+	resp, err := svc.GroupRequestList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	gids := make([]uint32, len(reqList.UserGroupRequestList))
-	uids := make([]string, len(reqList.UserGroupRequestList))
-	data := make([]*model.GroupRequestListResponse, len(reqList.UserGroupRequestList))
-
-	for i, v := range reqList.UserGroupRequestList {
-		gids[i] = v.GroupId
-		uids[i] = v.UserId
-
-		data[i] = &model.GroupRequestListResponse{
-			GroupId:     v.GroupId,
-			UserID:      v.UserId,
-			Msg:         v.Msg,
-			GroupStatus: uint32(v.Status),
-		}
-	}
-
-	groupMap := make(map[uint32]*model.GroupRequestListResponse)
-	for _, d := range data {
-		groupMap[d.GroupId] = d
-	}
-
-	groupIDs := make([]uint32, 0, len(groupMap))
-	for groupID := range groupMap {
-		groupIDs = append(groupIDs, groupID)
-	}
-
-	groupInfoMap := make(map[uint32]*groupApi.Group)
-	for _, groupID := range groupIDs {
-		groupInfo, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{Gid: groupID})
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		groupInfoMap[groupID] = groupInfo
-	}
-
-	users, err := userClient.GetBatchUserInfo(context.Background(), &userApi.GetBatchUserInfoRequest{UserIds: uids})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	for _, v := range data {
-		groupID := v.GroupId
-		if groupInfo, ok := groupInfoMap[groupID]; ok {
-			v.GroupName = groupInfo.Name
-			v.GroupAvatar = groupInfo.Avatar
-		}
-
-		for _, u := range users.Users {
-			if v.UserID == u.UserId {
-				v.UserName = u.NickName
-				v.UserAvatar = u.Avatar
-				break
-			}
-		}
-	}
-
-	response.SetSuccess(c, "获取群聊申请列表成功", data)
+	response.SetSuccess(c, "获取群聊申请列表成功", resp)
 }
 
 // @Summary 邀请加入群聊
@@ -697,53 +378,10 @@ func joinGroup(c *gin.Context) {
 		return
 	}
 
-	group, err := groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
+	_, err = svc.JoinGroup(c, uid, req)
 	if err != nil {
 		c.Error(err)
 		return
-	}
-
-	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-		response.SetFail(c, "群聊状态不可用", nil)
-		return
-	}
-	//判断是否在群聊中
-	relation, err := groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
-		GroupId: req.GroupID,
-		UserId:  uid,
-	})
-	if relation != nil {
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			response.SetFail(c, "您已经在群聊中", nil)
-			return
-		}
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusReject {
-			response.SetFail(c, "拒绝加入群聊", nil)
-			return
-		}
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusBlocked {
-			response.SetFail(c, "群聊状态不可用", nil)
-			return
-		}
-	}
-
-	//添加普通用户申请
-	_, err = groupRelationClient.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID, Identify: relationgrpcv1.GroupIdentity_IDENTITY_USER})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	//查询所有管理员
-	adminIds, err := groupRelationClient.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
-		GroupId: req.GroupID,
-	})
-	for _, id := range adminIds.UserIds {
-		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now()}
-		//通知消息服务有消息需要发送
-		err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-		if err != nil {
-			logger.Error("加入群聊请求申请通知推送失败", zap.Error(err))
-		}
 	}
 
 	response.SetSuccess(c, "发送加入群聊请求成功", nil)
@@ -932,21 +570,11 @@ func switchUserE2EPublicKey(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	_, err = userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: req.UserId})
-	if err != nil {
-		response.SetFail(c, "用户不存在", nil)
-		return
-	}
-	reqm := model.SwitchUserE2EPublicKeyRequest{
-		UserId:    thisId,
-		PublicKey: req.PublicKey,
-	}
-	msg := msgconfig.WsMsg{Uid: req.UserId, Event: msgconfig.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now()}
 
-	//通知消息服务有消息需要发送
-	err = rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	_, err = svc.SwitchUserE2EPublicKey(c, thisId, req.UserId, req.PublicKey)
 	if err != nil {
-		logger.Error("交换用户端到端公钥通知推送失败", zap.Error(err))
+		c.Error(err)
+		return
 	}
 
 	response.SetSuccess(c, "交换用户公钥成功", nil)
@@ -979,24 +607,7 @@ func setGroupSilentNotification(c *gin.Context) {
 		return
 	}
 
-	groupRelation, err := groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
-		GroupId: req.GroupId,
-		UserId:  thisId,
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	if groupRelation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-		response.SetFail(c, "不在群聊内", nil)
-		return
-	}
-
-	_, err = groupRelationClient.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
-		GroupId:  req.GroupId,
-		UserId:   thisId,
-		IsSilent: relationgrpcv1.GroupSilentNotificationType(req.IsSilent),
-	})
+	_, err = svc.SetGroupSilentNotification(c, req.GroupId, thisId, req.IsSilent)
 	if err != nil {
 		c.Error(err)
 		return
@@ -1032,25 +643,7 @@ func setUserSilentNotification(c *gin.Context) {
 		return
 	}
 
-	relation, err := userRelationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
-		UserId:   thisId,
-		FriendId: req.UserId,
-	})
-
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-		response.SetFail(c, "不是好友", nil)
-		return
-	}
-
-	_, err = userRelationClient.SetFriendSilentNotification(context.Background(), &relationgrpcv1.SetFriendSilentNotificationRequest{
-		UserId:   thisId,
-		FriendId: req.UserId,
-		IsSilent: relationgrpcv1.UserSilentNotificationType(req.IsSilent),
-	})
+	_, err = svc.UserSilentNotification(c, thisId, req.UserId, req.IsSilent)
 	if err != nil {
 		c.Error(err)
 		return

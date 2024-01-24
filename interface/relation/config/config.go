@@ -1,29 +1,23 @@
 package config
 
 import (
-	"flag"
 	"fmt"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/spf13/viper"
 )
 
-var Conf config.AppConfig
-var configFile string
+var Conf pkgconfig.AppConfig
+var ConfigFile string
 var RabbitMqConf *rabbitMqConf
 
-func init() {
-	flag.StringVar(&configFile, "config", "", "Path to configuration file")
-	flag.Parse()
-}
-
 func Init() error {
-	c, err := config.LoadFile(configFile)
+	c, err := pkgconfig.LoadFile(ConfigFile)
 	if err != nil {
 		return err
 	}
 	Conf = *c
-	if configFile != "" {
-		viper.SetConfigFile(configFile)
+	if ConfigFile != "" {
+		viper.SetConfigFile(ConfigFile)
 		if err = viper.ReadInConfig(); err != nil {
 			panic(fmt.Errorf("fatal error config file: %s", err))
 		}

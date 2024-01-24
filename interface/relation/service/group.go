@@ -9,13 +9,241 @@ import (
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils/time"
+	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dtm-labs/client/dtmgrpc"
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+func (s *Service) GetGroupMember(ctx context.Context, gid uint32) (interface{}, error) {
+	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: gid})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+		return nil, code.GroupErrGroupStatusNotAvailable
+	}
+
+	groupRelation, err := s.groupRelationClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: gid})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	resp, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: groupRelation.UserIds})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	type requestListResponse struct {
+		UserID   string `json:"user_id"`
+		Nickname string `json:"nickname"`
+		Avatar   string `json:"avatar"`
+	}
+
+	var ids []string
+	var data []*requestListResponse
+	for _, v := range resp.Users {
+		ids = append(ids, v.UserId)
+		data = append(data, &requestListResponse{
+			UserID:   v.UserId,
+			Nickname: v.NickName,
+			Avatar:   v.Avatar,
+		})
+	}
+	return resp, nil
+}
+
+func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGroupRequest) (interface{}, error) {
+	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+		return nil, code.GroupErrGroupStatusNotAvailable
+	}
+	//判断是否在群聊中
+	relation, err := s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: req.GroupID,
+		UserId:  uid,
+	})
+	if relation != nil {
+		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
+			return nil, code.RelationGroupErrAlreadyInGroup
+		}
+		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusReject {
+			return nil, code.RelationGroupErrRejectJoinGroup
+		}
+		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusBlocked {
+			return nil, code.GroupErrGroupStatusNotAvailable
+		}
+	}
+
+	//添加普通用户申请
+	_, err = s.groupRelationClient.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID, Identify: relationgrpcv1.GroupIdentity_IDENTITY_USER})
+	if err != nil {
+		s.logger.Error("添加群聊申请失败", zap.Error(err))
+		return nil, err
+	}
+	//查询所有管理员
+	adminIds, err := s.groupRelationClient.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
+		GroupId: req.GroupID,
+	})
+	for _, id := range adminIds.UserIds {
+		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now()}
+		//通知消息服务有消息需要发送
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		if err != nil {
+			s.logger.Error("加入群聊请求申请通知推送失败", zap.Error(err))
+		}
+	}
+	return nil, nil
+}
+
+func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interface{}, error) {
+	// 获取用户群聊列表
+	ids, err := s.groupRelationClient.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
+	if err != nil {
+		s.logger.Error("获取用户群聊列表失败", zap.Error(err))
+		return nil, err
+	}
+
+	ds, err := s.groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
+	if err != nil {
+		s.logger.Error("获取群聊列表失败", zap.Error(err))
+		return nil, err
+	}
+	//获取群聊对话信息
+	dialogs, err := s.dialogClient.GetDialogByGroupIds(context.Background(), &relationgrpcv1.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
+	if err != nil {
+		s.logger.Error("获取群聊对话列表失败", zap.Error(err))
+		return nil, err
+	}
+
+	var data []usersorter.Group
+	for _, group := range ds.Groups {
+		for _, dialog := range dialogs.Dialogs {
+			if dialog.GroupId == group.Id {
+				data = append(data, usersorter.CustomGroupData{
+					GroupID:  group.Id,
+					Avatar:   group.Avatar,
+					Status:   uint(group.Status),
+					DialogId: dialog.DialogId,
+					Name:     group.Name,
+				})
+				break
+			}
+		}
+
+	}
+
+	return usersorter.SortAndGroupUsers(data, "Name"), nil
+}
+
+func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, uid string, silent model.SilentNotificationType) (interface{}, error) {
+	groupRelation, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: gid,
+		UserId:  uid,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	if groupRelation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
+		return nil, code.RelationGroupErrNotInGroup
+
+	}
+
+	_, err = s.groupRelationClient.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
+		GroupId:  gid,
+		UserId:   uid,
+		IsSilent: relationgrpcv1.GroupSilentNotificationType(silent),
+	})
+	if err != nil {
+		s.logger.Error("设置群聊静默通知失败", zap.Error(err))
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (s *Service) GroupRequestList(ctx context.Context, userID string) (interface{}, error) {
+	reqList, err := s.groupRelationClient.GetUserGroupRequestList(ctx, &relationgrpcv1.GetUserGroupRequestListRequest{UserId: userID})
+	if err != nil {
+		s.logger.Error("获取群聊申请列表失败", zap.Error(err))
+		return nil, err
+	}
+
+	gids := make([]uint32, len(reqList.UserGroupRequestList))
+	uids := make([]string, len(reqList.UserGroupRequestList))
+	data := make([]*model.GroupRequestListResponse, len(reqList.UserGroupRequestList))
+
+	for i, v := range reqList.UserGroupRequestList {
+		gids[i] = v.GroupId
+		uids[i] = v.UserId
+
+		data[i] = &model.GroupRequestListResponse{
+			GroupId:     v.GroupId,
+			UserID:      v.UserId,
+			Msg:         v.Msg,
+			GroupStatus: uint32(v.Status),
+		}
+	}
+
+	groupMap := make(map[uint32]*model.GroupRequestListResponse)
+	for _, d := range data {
+		groupMap[d.GroupId] = d
+	}
+
+	groupIDs := make([]uint32, 0, len(groupMap))
+	for groupID := range groupMap {
+		groupIDs = append(groupIDs, groupID)
+	}
+
+	groupInfoMap := make(map[uint32]*groupApi.Group)
+	for _, groupID := range groupIDs {
+		groupInfo, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+		if err != nil {
+			s.logger.Error("获取群聊信息失败", zap.Error(err))
+			return nil, err
+		}
+
+		groupInfoMap[groupID] = groupInfo
+	}
+
+	users, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	for _, v := range data {
+		groupID := v.GroupId
+		if groupInfo, ok := groupInfoMap[groupID]; ok {
+			v.GroupName = groupInfo.Name
+			v.GroupAvatar = groupInfo.Avatar
+		}
+
+		for _, u := range users.Users {
+			if v.UserID == u.UserId {
+				v.UserName = u.NickName
+				v.UserAvatar = u.Avatar
+				break
+			}
+		}
+	}
+	return data, nil
+}
 
 func (s *Service) AdminManageJoinGroup(ctx context.Context, groupID uint32, adminID, userID string, status relationgrpcv1.GroupRelationStatus) error {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})

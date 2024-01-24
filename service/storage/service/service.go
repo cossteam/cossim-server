@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/cossim/coss-server/service/storage/domain/entity"
@@ -18,11 +18,11 @@ import (
 )
 
 var (
-	cfg    *config.AppConfig
+	cfg    *pkgconfig.AppConfig
 	logger *zap.Logger
 )
 
-func NewService(c *config.AppConfig, repo *persistence.Repositories) *Service {
+func NewService(c *pkgconfig.AppConfig, repo *persistence.Repositories) *Service {
 	cfg = c
 	setupLogger()
 

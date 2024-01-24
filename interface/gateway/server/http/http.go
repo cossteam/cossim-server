@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/pretty66/websocketproxy"
@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	cfg    *config.AppConfig
+	cfg    *pkgconfig.AppConfig
 	logger *zap.Logger
 
 	userServiceURL      string
@@ -25,7 +25,7 @@ var (
 	storageServiceURL   string
 )
 
-func Init(c *config.AppConfig) {
+func Init(c *pkgconfig.AppConfig) {
 	cfg = c
 
 	setupLogger()

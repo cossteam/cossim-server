@@ -2,50 +2,52 @@ package service
 
 import (
 	"fmt"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/msg_queue"
-	group "github.com/cossim/coss-server/service/group/api/v1"
-	relation "github.com/cossim/coss-server/service/relation/api/v1"
+	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"log"
+	"sync"
+	"time"
 )
 
 // Service struct
 type Service struct {
-	dialogClient        relation.DialogServiceClient
-	groupRelationClient relation.GroupRelationServiceClient
-	userRelationClient  relation.UserRelationServiceClient
+	dialogClient        relationgrpcv1.DialogServiceClient
+	groupRelationClient relationgrpcv1.GroupRelationServiceClient
+	userRelationClient  relationgrpcv1.UserRelationServiceClient
 	userClient          user.UserServiceClient
-	groupClient         group.GroupServiceClient
+	groupClient         groupgrpcv1.GroupServiceClient
 	rabbitMQClient      *msg_queue.RabbitMQ
-	logger              *zap.Logger
+
+	logger    *zap.Logger
+	discovery discovery.Discovery
+	conf      *pkgconfig.AppConfig
 
 	dtmGrpcServer      string
 	relationGrpcServer string
 	dialogGrpcServer   string
 }
 
-func New(c *config.AppConfig) *Service {
+func New(c *pkgconfig.AppConfig) *Service {
 	logger := setupLogger(c)
-
-	dialogClient := setupDialogGRPCClient(c.Discovers["relation"].Addr())
-	groupRelationClient := setupGROUPRelationGRPCClient(c.Discovers["relation"].Addr())
-	userRelationClient := setupUserRelationGRPCClient(c.Discovers["relation"].Addr())
-	userClient := setupUserGRPCClient(c.Discovers["user"].Addr())
-	groupClient := setupGroupGRPCClient(c.Discovers["group"].Addr())
 	rabbitMQClient := setRabbitMQProvider(c)
 
 	return &Service{
-		dialogClient:        dialogClient,
-		groupRelationClient: groupRelationClient,
-		userRelationClient:  userRelationClient,
-		userClient:          userClient,
-		groupClient:         groupClient,
-		rabbitMQClient:      rabbitMQClient,
-		logger:              logger,
+		//dialogClient:        dialogClient,
+		//groupRelationClient: groupRelationClient,
+		//userRelationClient:  userRelationClient,
+		//userClient:          userClient,
+		//groupClient:         groupClient,
+		rabbitMQClient: rabbitMQClient,
+		logger:         logger,
+		conf:           c,
 
 		dtmGrpcServer:      c.Dtm.Addr(),
 		relationGrpcServer: c.Discovers["relation"].Addr(),
@@ -53,7 +55,97 @@ func New(c *config.AppConfig) *Service {
 	}
 }
 
-func setupLogger(c *config.AppConfig) *zap.Logger {
+func (s *Service) Start(direct bool) {
+	if direct {
+		s.direct()
+	} else {
+		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
+		if err != nil {
+			panic(err)
+		}
+		s.discovery = d
+		go s.discover()
+	}
+}
+
+func (s *Service) discover() {
+	var wg sync.WaitGroup
+	type serviceInfo struct {
+		ServiceName string
+		Addr        string
+	}
+	ch := make(chan serviceInfo)
+
+	for serviceName, c := range s.conf.Discovers {
+		wg.Add(1)
+		go func(serviceName string, c pkgconfig.ServiceConfig) {
+			defer wg.Done()
+			for {
+				addr, err := s.discovery.Discover(c.Name)
+				if err != nil {
+					log.Printf("Service discovery failed ServiceName: %s %v\n", c.Name, err)
+					time.Sleep(5 * time.Second)
+					continue
+				}
+				log.Printf("Service discovery successful ServiceName: %s  Addr: %s\n", c.Name, addr)
+
+				ch <- serviceInfo{ServiceName: serviceName, Addr: addr}
+				break
+			}
+		}(serviceName, c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	for info := range ch {
+		if err := s.handlerGrpcClient(info.ServiceName, info.Addr); err != nil {
+			log.Printf("Failed to initialize gRPC client for service: %s, Error: %v\n", info.ServiceName, err)
+		}
+	}
+}
+
+func (s *Service) direct() {
+	for serviceName, _ := range s.conf.Discovers {
+		if err := s.handlerGrpcClient(serviceName, s.conf.Discovers[serviceName].Addr()); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+	switch serviceName {
+	case "user":
+		s.userClient = user.NewUserServiceClient(conn)
+		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
+	case "relation":
+		s.userRelationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
+
+		s.groupRelationClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
+
+		s.dialogClient = relationgrpcv1.NewDialogServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
+	case "group":
+		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
+		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
+	}
+
+	return nil
+}
+
+func (s *Service) Close() {
+
+}
+
+func setupLogger(c *pkgconfig.AppConfig) *zap.Logger {
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -89,50 +181,10 @@ func setupLogger(c *config.AppConfig) *zap.Logger {
 	return logger
 }
 
-func setupGroupGRPCClient(addr string) group.GroupServiceClient {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		panic(err)
-	}
-	return group.NewGroupServiceClient(conn)
-}
-
-func setupUserRelationGRPCClient(addr string) relation.UserRelationServiceClient {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		panic(err)
-	}
-	return relation.NewUserRelationServiceClient(conn)
-}
-
-func setupGROUPRelationGRPCClient(addr string) relation.GroupRelationServiceClient {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		panic(err)
-	}
-	return relation.NewGroupRelationServiceClient(conn)
-}
-
-func setupDialogGRPCClient(addr string) relation.DialogServiceClient {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		panic(err)
-	}
-	return relation.NewDialogServiceClient(conn)
-}
-
-func setRabbitMQProvider(c *config.AppConfig) *msg_queue.RabbitMQ {
+func setRabbitMQProvider(c *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Addr()))
 	if err != nil {
 		panic(err)
 	}
 	return rmq
-}
-
-func setupUserGRPCClient(addr string) user.UserServiceClient {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		panic(err)
-	}
-	return user.NewUserServiceClient(conn)
 }

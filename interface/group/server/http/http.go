@@ -3,7 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/group/service"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
@@ -26,13 +26,13 @@ var (
 	redisClient     *redis.Client
 	userGroupClient relationApi.GroupRelationServiceClient
 	dialogClient    relationApi.DialogServiceClient
-	cfg             *config.AppConfig
+	cfg             *pkgconfig.AppConfig
 	logger          *zap.Logger
 	enc             encryption.Encryptor
 	svc             *service.Service
 )
 
-func Init(c *config.AppConfig) {
+func Init(c *pkgconfig.AppConfig) {
 	cfg = c
 	svc = service.New(c)
 	setupLogger()

@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 	conf "github.com/cossim/coss-server/interface/user/config"
-	"github.com/cossim/coss-server/pkg/config"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
@@ -19,7 +19,7 @@ import (
 
 // Service struct
 type Service struct {
-	conf   *config.AppConfig
+	conf   *pkgconfig.AppConfig
 	logger *zap.Logger
 
 	discovery   discovery.Discovery
@@ -30,7 +30,7 @@ type Service struct {
 	tokenExpiration time.Duration
 }
 
-func New(c *config.AppConfig) (s *Service) {
+func New(c *pkgconfig.AppConfig) (s *Service) {
 	s = &Service{
 		conf:            c,
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
@@ -64,7 +64,7 @@ func (s *Service) discover() {
 
 	for serviceName, c := range s.conf.Discovers {
 		wg.Add(1)
-		go func(serviceName string, c config.ServiceConfig) {
+		go func(serviceName string, c pkgconfig.ServiceConfig) {
 			defer wg.Done()
 			for {
 				addr, err := s.discovery.Discover(c.Name)
