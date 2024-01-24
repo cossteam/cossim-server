@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
+	"github.com/cossim/coss-server/service/msg/infrastructure/persistence"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -332,11 +333,12 @@ func (s *Service) SetUserMsgsReadStatus(ctx context.Context, in *v1.SetUserMsgsR
 		}
 	}
 	err = s.db.Transaction(func(tx *gorm.DB) error {
-		if err := s.mr.SetUserMsgsReadStatus(in.MsgIds, in.DialogId); err != nil {
+		npo := persistence.NewRepositories(tx)
+		if err := npo.Mr.SetUserMsgsReadStatus(in.MsgIds, in.DialogId); err != nil {
 			return err
 		}
 		if len(rids) > 0 {
-			err := s.mr.LogicalDeleteUserMessages(rids)
+			err := npo.Mr.LogicalDeleteUserMessages(rids)
 			if err != nil {
 				return err
 			}

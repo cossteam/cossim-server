@@ -16,31 +16,38 @@ redis:
   password: "Hitosea@123.."
 #  protocol: 3
 
+dtm:
+  name: "dtm"
+  address: "dtm"
+  port: 36790
+
 http:
   address: "0.0.0.0"
-  port: 8083
+  port: 8082
 
 grpc:
   address: "0.0.0.0"
-  port: 10003
+  port:
 
 # 注册本服务
 register:
   name: "user_bff"
-  address: "registry"   # 注册中心地址
+  address: "user"   # 注册中心地址
   port: 8500            # 注册中心端口
-  tags: ["user", "bff"]
+  tags: ["relation", "bff", "用户服务"]
 
 discovers:
   user:
     name: "user_service"
-    addr: "user_service:10002"
+    address: "user_service"
+    port: "10002"
   relation:
     name: "relation_service"
-    addr: "relation_service:10001"
+    address: "relation_service"
+    port: "10001"
 
 encryption:
-  enabled: true
+  enabled: false
   name: coss-im
   email: max.mustermann@example.com
   passphrase: LongSecret

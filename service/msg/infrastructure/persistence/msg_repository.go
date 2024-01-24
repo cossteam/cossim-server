@@ -14,6 +14,7 @@ type MsgRepo struct {
 func NewMsgRepo(db *gorm.DB) *MsgRepo {
 	return &MsgRepo{db: db}
 }
+
 func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.UserMessage, error) {
 	content := &entity.UserMessage{
 		SendID:    senderId,

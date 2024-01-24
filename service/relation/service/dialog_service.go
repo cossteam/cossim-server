@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/pkg/code"
 	v1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
+	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -37,11 +38,12 @@ func (s *Service) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		dialog, err := s.dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
+		npo := persistence.NewRepositories(tx)
+		dialog, err := npo.Dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
 		}
-		_, err = s.dr.JoinBatchDialog(dialog.ID, ids)
+		_, err = npo.Dr.JoinBatchDialog(dialog.ID, ids)
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
 		}
@@ -68,10 +70,11 @@ func (s *Service) CreateAndJoinDialogWithGroupRevert(ctx context.Context, reques
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), ids); err != nil {
+		npo := persistence.NewRepositories(tx)
+		if err := npo.Dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), ids); err != nil {
 			return status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), fmt.Sprintf("failed to delete dialog user revert : %s", err.Error()))
 		}
-		if err := s.dr.DeleteDialogByDialogID(uint(request.DialogId)); err != nil {
+		if err := npo.Dr.DeleteDialogByDialogID(uint(request.DialogId)); err != nil {
 			return status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), fmt.Sprintf("failed to delete dialog revert : %s", err.Error()))
 		}
 
@@ -87,21 +90,21 @@ func (s *Service) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.Co
 	resp := &v1.ConfirmFriendAndJoinDialogResponse{}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		dialog, err := s.dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
+		npo := persistence.NewRepositories(tx)
+		dialog, err := npo.Dr.CreateDialog(request.OwnerId, entity.DialogType(request.Type), uint(request.GroupId))
 		if err != nil {
 			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
 		}
 
-		_, err = s.JoinDialog(ctx, &v1.JoinDialogRequest{DialogId: uint32(dialog.ID), UserId: request.OwnerId})
+		_, err = npo.Dr.JoinDialog(dialog.ID, request.OwnerId)
 		if err != nil {
-			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 		}
 
-		_, err = s.JoinDialog(ctx, &v1.JoinDialogRequest{DialogId: uint32(dialog.ID), UserId: request.UserId})
+		_, err = s.dr.JoinDialog(dialog.ID, request.UserId)
 		if err != nil {
-			return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
+			return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 		}
-
 		resp.Id = uint32(dialog.ID)
 		resp.OwnerId = request.OwnerId
 		resp.Type = v1.DialogType(dialog.Type)

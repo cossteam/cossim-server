@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
+	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -90,8 +91,9 @@ func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequ
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		userId := request.GetUserId()
 		friendId := request.GetFriendId()
+		npo := persistence.NewRepositories(tx)
 
-		relation1, err := s.urr.GetRelationByID(userId, friendId)
+		relation1, err := npo.Urr.GetRelationByID(userId, friendId)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
@@ -105,13 +107,13 @@ func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequ
 
 		relation1.Status = entity.UserRelationStatus(request.Status)
 		relation1.DialogId = uint(request.DialogId)
-		_, err = s.urr.UpdateRelation(relation1)
+		_, err = npo.Urr.UpdateRelation(relation1)
 		if err != nil {
 			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
 			return status.Error(codes.Aborted, formatErrorMessage(err))
 		}
 
-		relation2, err := s.urr.GetRelationByID(friendId, userId)
+		relation2, err := npo.Urr.GetRelationByID(friendId, userId)
 		if err != nil {
 			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
 			return status.Error(codes.Aborted, formatErrorMessage(err))
@@ -123,7 +125,7 @@ func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequ
 
 		relation2.Status = entity.UserRelationStatus(request.Status)
 		relation2.DialogId = uint(request.DialogId)
-		_, err = s.urr.UpdateRelation(relation2)
+		_, err = npo.Urr.UpdateRelation(relation2)
 		if err != nil {
 			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
 			return status.Error(codes.Aborted, formatErrorMessage(err))
