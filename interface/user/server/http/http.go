@@ -7,48 +7,35 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
-	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
 	"os"
 )
 
 var (
-	userClient         user.UserServiceClient
-	RelationUserClient relationgrpcv1.UserRelationServiceClient
-	redisClient        *redis.Client
-	cfg                *config.AppConfig
-	logger             *zap.Logger
-	enc                encryption.Encryptor
-	svc                service.Service
+	redisClient *redis.Client
+	cfg         *config.AppConfig
+	logger      *zap.Logger
+	enc         encryption.Encryptor
+	svc         *service.Service
 )
 
 var ThisKey string
 
-func Init(c *config.AppConfig) {
+func Init(c *config.AppConfig, service *service.Service) {
 	cfg = c
+	svc = service
+
 	setupLogger()
 	setupEncryption()
 	setupRedis()
-	setupUserGRPCClient()
-	setupRelationUserGRPCClient()
 	setupGin()
 }
 
-func setupRelationUserGRPCClient() {
-	fmt.Println("cfg.Discovers[\"relation\"].Addr() => ", cfg.Discovers["relation"].Addr())
-	conn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-	RelationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
-}
 func setupRedis() {
 	fmt.Println("cfg.Redis.Addr() => ", cfg.Redis.Addr())
 	rdb := redis.NewClient(&redis.Options{
@@ -107,16 +94,6 @@ func setupEncryption() {
 	}
 	privateKeyFile.Close()
 	fmt.Println("加密后消息：", string(j))
-}
-
-func setupUserGRPCClient() {
-	fmt.Println("cfg.Discovers[\"user\"].Addr() => ", cfg.Discovers["user"].Addr())
-	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	userClient = user.NewUserServiceClient(userConn)
 }
 
 func setupLogger() {

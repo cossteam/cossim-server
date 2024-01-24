@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/cossim/coss-server/interface/user/api/model"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -32,6 +33,7 @@ func login(c *gin.Context) {
 		return
 	}
 
+	fmt.Println(1111)
 	resp, token, err := svc.Login(c, req)
 	if err != nil {
 		c.Error(err)

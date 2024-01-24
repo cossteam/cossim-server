@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	flag.StringVar(&config.ConfigFile, "config", "config/config.yaml", "Path to configuration file")
+	flag.StringVar(&config.ConfigFile, "config", "/config/config.yaml", "Path to configuration file")
 	flag.BoolVar(&config.Direct, "direct", false, "Enable direct connection")
 	flag.Parse()
 }
@@ -23,10 +23,9 @@ func main() {
 		panic(err)
 	}
 
-	http.Init(&config.Conf)
-
 	svc := service.New(&config.Conf)
 	svc.Start()
+	http.Init(&config.Conf, svc)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)

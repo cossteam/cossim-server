@@ -35,20 +35,22 @@ func New(c *config.AppConfig) (s *Service) {
 		conf:            c,
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
 	}
+
 	s.setupLogger()
+	s.setupRedis()
 	return s
 }
 
 func (s *Service) Start() {
-	if !conf.Direct {
+	if conf.Direct {
+		s.direct()
+	} else {
 		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
 		if err != nil {
 			panic(err)
 		}
 		s.discovery = d
 		go s.discover()
-	} else {
-		s.direct()
 	}
 }
 
@@ -153,6 +155,15 @@ func (s *Service) setupLogger() {
 		panic(fmt.Sprintf("log 初始化失败: %v", err))
 	}
 	s.logger.Info("log 初始化成功")
+}
+
+func (s *Service) setupRedis() {
+	s.redisClient = redis.NewClient(&redis.Options{
+		Addr:     s.conf.Redis.Addr(),
+		Password: s.conf.Redis.Password, // no password set
+		DB:       0,                     // use default DB
+		//Protocol: cfg,
+	})
 }
 
 func (s *Service) Close() error {
