@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/cossim/coss-server/interface/user/api/model"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
@@ -11,7 +12,7 @@ import (
 	"strings"
 )
 
-func (s *Service) Login(ctx context.Context, req *model.LoginRequest) (*model.UserInfoResponse, string, error) {
+func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string) (*model.UserInfoResponse, string, error) {
 	resp, err := s.userClient.UserLogin(ctx, &usergrpcv1.UserLoginRequest{
 		Email:    req.Email,
 		Password: utils.HashString(req.Password),
@@ -27,11 +28,13 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest) (*model.Us
 		return nil, "", code.UserErrLoginFailed
 	}
 
-	if err = s.redisClient.Set(ctx, resp.UserId, token, s.tokenExpiration).Err(); err != nil {
-		s.logger.Error("failed to set user token", zap.Error(err))
+	err = cache.SetKey(s.redisClient, resp.UserId, map[string]string{
+		driveType: token,
+	})
+	if err != nil {
+		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
-
 	return &model.UserInfoResponse{
 		Email:     resp.Email,
 		UserId:    resp.UserId,
@@ -41,9 +44,9 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest) (*model.Us
 	}, token, nil
 }
 
-func (s *Service) Logout(ctx context.Context, userID string) error {
-	if err := s.redisClient.Del(ctx, userID).Err(); err != nil {
-		s.logger.Error("failed to set user token", zap.Error(err))
+func (s *Service) Logout(ctx context.Context, userID string, driveType string) error {
+	err := cache.DeleteKeyField(s.redisClient, userID, driveType)
+	if err != nil {
 		return code.UserErrErrLogoutFailed
 	}
 	return nil
