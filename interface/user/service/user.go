@@ -19,7 +19,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	})
 	if err != nil {
 		s.logger.Error("user login failed", zap.Error(err))
-		return nil, "", code.UserErrLoginFailed
+		return nil, "", code.UserErrNotExistOrPassword
 	}
 
 	token, err := utils.GenerateToken(resp.UserId, resp.Email)
