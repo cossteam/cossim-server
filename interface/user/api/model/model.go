@@ -115,3 +115,10 @@ type UserSecretBundleResponse struct {
 	UserId       string `json:"user_id"`
 	SecretBundle string `json:"secret_bundle"`
 }
+
+type GetUserLoginClientsResponse struct {
+	ClientIP    string `json:"client_ip"`
+	DriverType  string `json:"driver_type"`
+	LoginNumber uint   `json:"login_number"`
+	LoginAt     int64  `json:"login_at"`
+}
