@@ -4,6 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"sort"
+	"strconv"
+	"sync"
+
 	"github.com/cossim/coss-server/interface/msg/api/model"
 	"github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/cache"
@@ -21,11 +27,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
-	"log"
-	"net/http"
-	"sort"
-	"strconv"
-	"sync"
 )
 
 var (
