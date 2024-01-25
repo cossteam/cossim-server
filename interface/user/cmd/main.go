@@ -4,7 +4,6 @@ import (
 	"flag"
 	_ "github.com/cossim/coss-server/docs"
 	"github.com/cossim/coss-server/interface/user/config"
-	_ "github.com/cossim/coss-server/interface/user/config"
 	"github.com/cossim/coss-server/interface/user/server/http"
 	"github.com/cossim/coss-server/interface/user/service"
 	"os"
@@ -12,9 +11,11 @@ import (
 	"syscall"
 )
 
+var discover bool
+
 func init() {
 	flag.StringVar(&config.ConfigFile, "config", "/config/config.yaml", "Path to configuration file")
-	flag.BoolVar(&config.Direct, "direct", false, "Enable direct connection")
+	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
 	flag.Parse()
 }
 
@@ -24,7 +25,7 @@ func main() {
 	}
 
 	svc := service.New(&config.Conf)
-	svc.Start()
+	svc.Start(discover)
 	http.Init(&config.Conf, svc)
 
 	c := make(chan os.Signal, 1)
@@ -33,7 +34,7 @@ func main() {
 		s := <-c
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
-			svc.Close()
+			svc.Close(discover)
 			return
 		case syscall.SIGHUP:
 		default:

@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/cossim/coss-server/service/storage/domain/entity"
 	"github.com/cossim/coss-server/service/storage/domain/repository"
 	"github.com/cossim/coss-server/service/storage/infrastructure/persistence"
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log"
 	"strconv"
 )
 
@@ -27,13 +30,46 @@ func NewService(c *pkgconfig.AppConfig, repo *persistence.Repositories) *Service
 	setupLogger()
 
 	return &Service{
-		fr: repo.FR,
+		fr:  repo.FR,
+		ac:  c,
+		sid: xid.New().String(),
 	}
 }
 
 type Service struct {
 	fr repository.FileRepository
 	v1.UnimplementedStorageServiceServer
+
+	ac        *pkgconfig.AppConfig
+	discovery discovery.Discovery
+	sid       string
+}
+
+func (s *Service) Start(discover bool) {
+	if !discover {
+		return
+	}
+	d, err := discovery.NewConsulRegistry(s.ac.Register.Addr())
+	if err != nil {
+		panic(err)
+	}
+	s.discovery = d
+	if err = s.discovery.Register(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid); err != nil {
+		panic(err)
+	}
+	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+}
+
+func (s *Service) Close(discover bool) error {
+	if !discover {
+		return nil
+	}
+	if err := s.discovery.Cancel(s.sid); err != nil {
+		log.Printf("Failed to cancel service registration: %v", err)
+		return err
+	}
+	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+	return nil
 }
 
 func (s Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.UploadResponse, error) {

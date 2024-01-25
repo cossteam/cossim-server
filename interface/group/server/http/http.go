@@ -6,83 +6,29 @@ import (
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	groupApi "github.com/cossim/coss-server/service/group/api/v1"
-	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
-	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	"time"
 )
 
 var (
-	userClient      userApi.UserServiceClient
-	groupClient     groupApi.GroupServiceClient
-	relationClient  relationApi.UserRelationServiceClient
-	redisClient     *redis.Client
-	userGroupClient relationApi.GroupRelationServiceClient
-	dialogClient    relationApi.DialogServiceClient
-	cfg             *pkgconfig.AppConfig
-	logger          *zap.Logger
-	enc             encryption.Encryptor
-	svc             *service.Service
+	redisClient *redis.Client
+	cfg         *pkgconfig.AppConfig
+	logger      *zap.Logger
+	enc         encryption.Encryptor
+	svc         *service.Service
 )
 
-func Init(c *pkgconfig.AppConfig) {
+func Init(c *pkgconfig.AppConfig, service *service.Service) {
 	cfg = c
-	svc = service.New(c)
+	svc = service
+
 	setupLogger()
-	setupDialogGRPCClient()
-	setupRedis()
 	setupEncryption()
-	setupRelationGRPCClient()
-	setupGroupGRPCClient()
 	setupGin()
-}
-
-func setupRedis() {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr(),
-		Password: cfg.Redis.Password, // no password set
-		DB:       0,                  // use default DB
-		//Protocol: cfg,
-	})
-	redisClient = rdb
-}
-
-func setupDialogGRPCClient() {
-	var err error
-	msgConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	dialogClient = relationApi.NewDialogServiceClient(msgConn)
-}
-
-func setupRelationGRPCClient() {
-	var err error
-	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	relationClient = relationApi.NewUserRelationServiceClient(relationConn)
-	userGroupClient = relationApi.NewGroupRelationServiceClient(relationConn)
-}
-
-func setupUserGRPCClient() {
-	var err error
-	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	userClient = userApi.NewUserServiceClient(userConn)
 }
 
 func setupEncryption() {
@@ -129,14 +75,14 @@ func setupEncryption() {
 	//fmt.Println("加密后消息：", string(j))
 }
 
-func setupGroupGRPCClient() {
-	var err error
-	groupConn, err := grpc.Dial(cfg.Discovers["group"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	groupClient = groupApi.NewGroupServiceClient(groupConn)
+func setupRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr(),
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
+		//Protocol: cfg,
+	})
+	redisClient = rdb
 }
 
 func setupLogger() {
@@ -157,26 +103,21 @@ func setupLogger() {
 	// 设置日志级别
 	atom := zap.NewAtomicLevelAt(zapcore.Level(cfg.Log.V))
 	config := zap.Config{
-		Level:            atom,                                              // 日志级别
-		Development:      true,                                              // 开发模式，堆栈跟踪
-		Encoding:         cfg.Log.Format,                                    // 输出格式 console 或 json
-		EncoderConfig:    encoderConfig,                                     // 编码器配置
-		InitialFields:    map[string]interface{}{"serviceName": "user-bff"}, // 初始化字段，如：添加一个服务器名称
-		OutputPaths:      []string{"stdout"},                                // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
+		Level:            atom,                                             // 日志级别
+		Development:      true,                                             // 开发模式，堆栈跟踪
+		Encoding:         cfg.Log.Format,                                   // 输出格式 console 或 json
+		EncoderConfig:    encoderConfig,                                    // 编码器配置
+		InitialFields:    map[string]interface{}{"serviceName": "msg_bff"}, // 初始化字段，如：添加一个服务器名称
+		OutputPaths:      []string{"stdout"},                               // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
 		ErrorOutputPaths: []string{"stderr"},
 	}
 	// 构建日志
 	var err error
 	logger, err = config.Build()
 	if err != nil {
-		panic(fmt.Sprintf("log 初始化失败: %v", err))
+		panic(fmt.Sprintf("logger 初始化失败: %v", err))
 	}
-	logger.Info("log 初始化成功")
-	logger.Info("无法获取网址",
-		zap.String("url", "http://www.baidu.com"),
-		zap.Int("attempt", 3),
-		zap.Duration("backoff", time.Second),
-	)
+	logger.Info("logger 初始化成功")
 }
 
 func setupGin() {
@@ -204,9 +145,12 @@ func setupGin() {
 // @title coss-user服务
 
 func route(engine *gin.Engine) {
+	engine.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 	g := engine.Group("/api/v1/group")
 	// 获取群聊信息
-	g.GET("/info", middleware.AuthMiddleware(redisClient), GetGroupInfoByGid)
+	g.GET("/info", middleware.AuthMiddleware(redisClient), getGroupInfoByGid)
 	// 创建群聊
 	g.POST("/create", middleware.AuthMiddleware(redisClient), createGroup)
 	// 删除群聊

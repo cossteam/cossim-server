@@ -2,13 +2,13 @@ package service
 
 import (
 	"fmt"
-	conf "github.com/cossim/coss-server/interface/user/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -23,20 +23,22 @@ type Service struct {
 	conf   *pkgconfig.AppConfig
 	logger *zap.Logger
 
-	discovery      discovery.Discovery
-	userClient     user.UserServiceClient
-	relClient      relationgrpcv1.UserRelationServiceClient
-	redisClient    *redis.Client
-	rabbitMQClient *msg_queue.RabbitMQ
+	discovery   discovery.Discovery
+	userClient  user.UserServiceClient
+	relClient   relationgrpcv1.UserRelationServiceClient
+	redisClient *redis.Client
+	//rabbitMQClient *msg_queue.RabbitMQ
 
+	sid             string
 	tokenExpiration time.Duration
 }
 
 func New(c *pkgconfig.AppConfig) (s *Service) {
 	s = &Service{
 		conf:            c,
+		sid:             xid.New().String(),
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
-		rabbitMQClient:  setRabbitMQProvider(c),
+		//rabbitMQClient:  setRabbitMQProvider(c),
 	}
 
 	s.setupLogger()
@@ -44,16 +46,20 @@ func New(c *pkgconfig.AppConfig) (s *Service) {
 	return s
 }
 
-func (s *Service) Start() {
-	if conf.Direct {
-		s.direct()
-	} else {
+func (s *Service) Start(discover bool) {
+	if discover {
 		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
 		if err != nil {
 			panic(err)
 		}
 		s.discovery = d
+		if err = s.discovery.RegisterHTTP(s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid); err != nil {
+			panic(err)
+		}
+		log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid)
 		go s.discover()
+	} else {
+		s.direct()
 	}
 }
 
@@ -169,7 +175,15 @@ func (s *Service) setupRedis() {
 	})
 }
 
-func (s *Service) Close() error {
+func (s *Service) Close(discover bool) error {
+	if !discover {
+		return nil
+	}
+	if err := s.discovery.Cancel(s.sid); err != nil {
+		log.Printf("Failed to cancel service registration: %v", err)
+		return err
+	}
+	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.conf.Register.Name, s.conf.GRPC.Addr(), s.sid)
 	return nil
 }
 

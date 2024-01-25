@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -15,6 +16,46 @@ import (
 type ConsulRegistry struct {
 	client        *api.Client
 	keepAliveSync time.Duration // 心跳同步间隔
+}
+
+func (c *ConsulRegistry) RegisterHTTP(serviceName, addr string, serviceID string) error {
+	address, portStr, err := net.SplitHostPort(addr)
+	if err != nil {
+		return err
+	}
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return err
+	}
+
+	// 生成对应grpc的检查对象
+	check := &api.AgentServiceCheck{
+		HTTP:                           "http://" + addr + "/health",
+		Method:                         http.MethodGet,
+		Timeout:                        "5s",
+		Interval:                       "5s",
+		DeregisterCriticalServiceAfter: "15s",
+	}
+
+	// 创建服务实例
+	service := &api.AgentServiceRegistration{
+		ID:      serviceID,
+		Name:    serviceName,
+		Address: address,
+		Port:    port,
+		Check:   check,
+	}
+
+	// 注册服务
+	if err = c.client.Agent().ServiceRegister(service); err != nil {
+		return err
+	}
+
+	// 定期检查Consul的可用性，并在Consul重新启动后重新注册服务
+	go c.keepAlive(service)
+
+	return nil
 }
 
 type Option func(*ConsulRegistry)

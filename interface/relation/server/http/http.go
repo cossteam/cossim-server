@@ -12,7 +12,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"time"
 )
 
 var (
@@ -110,7 +109,7 @@ func setupLogger() {
 		Development:      true,                                                  // 开发模式，堆栈跟踪
 		Encoding:         cfg.Log.Format,                                        // 输出格式 console 或 json
 		EncoderConfig:    encoderConfig,                                         // 编码器配置
-		InitialFields:    map[string]interface{}{"serviceName": "relation-bff"}, // 初始化字段，如：添加一个服务器名称
+		InitialFields:    map[string]interface{}{"serviceName": "relation_bff"}, // 初始化字段，如：添加一个服务器名称
 		OutputPaths:      []string{"stdout"},                                    // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
 		ErrorOutputPaths: []string{"stderr"},
 	}
@@ -118,14 +117,9 @@ func setupLogger() {
 	var err error
 	logger, err = config.Build()
 	if err != nil {
-		panic(fmt.Sprintf("log 初始化失败: %v", err))
+		panic(fmt.Sprintf("logger 初始化失败: %v", err))
 	}
-	logger.Info("log 初始化成功")
-	logger.Info("无法获取网址",
-		zap.String("url", "http://www.baidu.com"),
-		zap.Int("attempt", 3),
-		zap.Duration("backoff", time.Second),
-	)
+	logger.Info("logger 初始化成功")
 }
 
 func setupGin() {
@@ -153,6 +147,9 @@ func setupGin() {
 // @title coss-relation-bff服务
 
 func route(engine *gin.Engine) {
+	engine.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 	// 添加不同的中间件给不同的路由组
 	// 比如除了swagger路径外其他的路径添加了身份验证中间件
 	api := engine.Group("/api/v1/relation")

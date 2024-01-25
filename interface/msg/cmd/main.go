@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	_ "github.com/cossim/coss-server/docs"
 	"github.com/cossim/coss-server/interface/msg/config"
-	_ "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/msg/server/http"
 	"github.com/cossim/coss-server/interface/msg/service"
 	"os"
@@ -11,21 +11,30 @@ import (
 	"syscall"
 )
 
+var discover bool
+
+func init() {
+	flag.StringVar(&config.ConfigFile, "config", "/config/config.yaml", "Path to configuration file")
+	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
+	flag.Parse()
+}
+
 func main() {
 	if err := config.Init(); err != nil {
 		panic(err)
 	}
 
-	http.Init(&config.Conf)
-	service := service.New(&config.Conf)
-	service.Start()
+	svc := service.New(&config.Conf)
+	http.Init(&config.Conf, svc)
+	svc.Start(discover)
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
-			service.Stop()
+			svc.Stop(discover)
 			return
 		case syscall.SIGHUP:
 		default:

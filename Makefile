@@ -32,13 +32,27 @@ ifeq ($(BUILD_PATH),)
     $(error Invalid ACTION. Use 'make build ACTION=interface' or 'make build ACTION=service')
 endif
 
-.PHONY: dep test build-service build-interface docker-build docker-push
+.PHONY: build-service build-interface docker-build docker-push
 
+.PHONY: dep
 dep: ## Get the dependencies
 	@go mod tidy
 
-test: ## Run unittests
-	@go test -short ${PKG_LIST}
+.PHONY: lint
+lint: ## Lint Golang files
+	@golint -set_exit_status ${PKG_LIST}
+
+.PHONY: vet
+vet: ## Run go vet
+	go vet ./...
+
+.PHONY: fmt
+fmt: ## Run go fmt against code.
+	go fmt ./...
+
+.PHONY: fmt
+test: fmt vet## Run unittests
+	@go test -short ./...
 
 SERVICE_DIR := ./service
 INTERFACE_DIR := ./interface
@@ -126,7 +140,7 @@ endif
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
-docker-build: ## Build docker image with the manager.
+docker-build: dep test ## Build docker image with the manager.
 	#docker build -t ${IMG} .
 	# 根据传入的 ACTION 参数设置 BUILD_PATH
 	docker build --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \

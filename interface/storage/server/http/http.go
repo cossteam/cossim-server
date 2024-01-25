@@ -5,6 +5,7 @@ import (
 	"fmt"
 	conf "github.com/cossim/coss-server/interface/storage/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/storage"
@@ -12,11 +13,13 @@ import (
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/xid"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"log"
 	"os"
 )
 
@@ -28,9 +31,12 @@ var (
 	logger        *zap.Logger
 	downloadURL   = "/api/v1/storage/files/download"
 	enc           encryption.Encryptor
+
+	discover discovery.Discovery
+	sid      = xid.New().String()
 )
 
-func Init(c *pkgconfig.AppConfig) {
+func Init(c *pkgconfig.AppConfig, dis bool) {
 	cfg = c
 	setupRedis()
 	setupLogger()
@@ -38,6 +44,31 @@ func Init(c *pkgconfig.AppConfig) {
 	setupStorageClient()
 	setMinIOProvider()
 	setupGin()
+	if dis {
+		setupDiscovery()
+	}
+}
+
+func setupDiscovery() {
+	d, err := discovery.NewConsulRegistry(cfg.Register.Addr())
+	if err != nil {
+		panic(err)
+	}
+	discover = d
+	if err = d.RegisterHTTP(cfg.Register.Name, cfg.HTTP.Addr(), sid); err != nil {
+		panic(err)
+	}
+	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", cfg.Register.Name, cfg.HTTP.Addr(), sid)
+}
+
+func Close(dis bool) {
+	if dis {
+		if err := discover.Cancel(sid); err != nil {
+			log.Printf("Failed to cancel service registration: %v", err)
+			return
+		}
+		log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", cfg.Register.Name, cfg.GRPC.Addr(), sid)
+	}
 }
 
 func setupEncryption() {
@@ -170,6 +201,9 @@ func setupGin() {
 
 // @title coss-storage-bff服务
 func route(engine *gin.Engine) {
+	engine.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 	// 添加不同的中间件给不同的路由组
 	// 比如除了swagger路径外其他的路径添加了身份验证中间件
 	api := engine.Group("/api/v1/storage")

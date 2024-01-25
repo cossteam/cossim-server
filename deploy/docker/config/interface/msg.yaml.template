@@ -24,7 +24,7 @@ redis:
 #  protocol: 3
 
 http:
-  address: "0.0.0.0"
+  address: "msg_bff"
   port: 8081
 
 grpc:
@@ -34,7 +34,7 @@ grpc:
 # 注册本服务
 register:
   name: "msg_bff"
-  address: "registry"   # 注册中心地址
+  address: "consul"   # 注册中心地址
   port: 8500            # 注册中心端口
   tags: ["msg", "bff", "消息服务"]
 

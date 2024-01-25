@@ -29,17 +29,17 @@ dtm:
   port: 36790
 
 http:
-  address: "0.0.0.0"
+  address: "group_bff"
   port: 8084
 
 grpc:
-  address: "0.0.0.0"
-  port: 10002
+  address: "group_bff"
+  port:
 
 # 注册本服务
 register:
   name: "group_bff"
-  address: "registry"   # 注册中心地址
+  address: "consul"   # 注册中心地址
   port: 8500            # 注册中心端口
   tags: ["group", "bff", "群组服务"]
 
