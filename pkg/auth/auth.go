@@ -47,7 +47,7 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 	}
 	var found = false
 	for _, user := range users {
-		if user.UserId == claims.UserId {
+		if user.Token == tokenString {
 			found = true
 		}
 	}

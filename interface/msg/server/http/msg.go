@@ -127,7 +127,11 @@ func ws(c *gin.Context) {
 		if info.Token == token {
 			info.Rid = cli.Rid
 			nlist := cache.GetUserInfoListToInterfaces(list)
-			err := cache.AddToList(redisClient, cli.Uid, nlist)
+			err := cache.DeleteList(redisClient, cli.Uid)
+			if err != nil {
+				return
+			}
+			err = cache.AddToList(redisClient, cli.Uid, nlist)
 			if err != nil {
 				return
 			}
