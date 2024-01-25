@@ -14,8 +14,9 @@ const (
 type ServiceActionType uint
 
 const (
-	Notice = iota
-	SendMessage
+	Notice             = iota //系统通知事件
+	SendMessage               //推送消息时间
+	UserWebsocketClose        //通知用户下线事件
 )
 
 type ServiceQueueMsg struct {
