@@ -228,7 +228,7 @@ func setupGin() {
 func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/msg")
 	//u.Use(middleware.AuthMiddleware())
-	u.GET("/ws", ws)
+	u.GET("/ws", middleware.AuthMiddleware(redisClient), ws)
 	u.POST("/send/user", middleware.AuthMiddleware(redisClient), sendUserMsg)
 	u.POST("/send/group", middleware.AuthMiddleware(redisClient), sendGroupMsg)
 	u.GET("/list/user", middleware.AuthMiddleware(redisClient), getUserMsgList)
