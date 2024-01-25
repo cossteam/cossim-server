@@ -80,6 +80,26 @@ const docTemplateuser = `{
                 }
             }
         },
+        "/user/clients/get": {
+            "get": {
+                "description": "获取该用户当前登录的所有客户端",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取该用户当前登录的所有客户端",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/info": {
             "get": {
                 "security": [

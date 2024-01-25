@@ -387,11 +387,12 @@ func getUserSecretBundle(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /user/clients/get [get]
 func getUserLoginClients(c *gin.Context) {
-	_, err := pkghttp.ParseTokenReUid(c)
+	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
+	clients, err := svc.GetUserLoginClients(c, thisId)
 
-	response.SetSuccess(c, "获取成功", nil)
+	response.SetSuccess(c, "获取成功", clients)
 }

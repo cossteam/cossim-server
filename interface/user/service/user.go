@@ -289,3 +289,27 @@ func (s *Service) GetUserSecretBundle(ctx context.Context, userID string) (*mode
 		SecretBundle: bundle.SecretBundle,
 	}, nil
 }
+
+func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*model.GetUserLoginClientsResponse, error) {
+
+	values, err := cache.GetAllListValues(s.redisClient, userID)
+	if err != nil {
+		s.logger.Error("获取用户登录客户端失败：", zap.Error(err))
+		return nil, code.UserErrGetUserLoginClientsFailed
+	}
+	users, err := cache.GetUserInfoList(values)
+	if err != nil {
+		s.logger.Error("获取用户登录客户端失败：", zap.Error(err))
+		return nil, code.UserErrGetUserLoginClientsFailed
+	}
+	var clients []*model.GetUserLoginClientsResponse
+	for _, user := range users {
+		clients = append(clients, &model.GetUserLoginClientsResponse{
+			ClientIP:    user.ClientIP,
+			DriverType:  user.DriverType,
+			LoginNumber: user.ID,
+			LoginAt:     user.CreateAt,
+		})
+	}
+	return clients, nil
+}

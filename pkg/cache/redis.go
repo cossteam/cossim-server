@@ -118,7 +118,7 @@ func SetKeyExpirationAt(client *redis.Client, key string, expiration time.Time) 
 
 // 解析用户登录信息列表
 func GetUserInfoList(data []string) ([]UserInfo, error) {
-	list := make([]UserInfo, len(data))
+	list := make([]UserInfo, 0)
 	for _, datum := range data {
 		var user UserInfo
 		err := json.Unmarshal([]byte(datum), &user)
