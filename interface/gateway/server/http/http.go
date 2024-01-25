@@ -2,20 +2,26 @@ package http
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/pretty66/websocketproxy"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io"
+	"log"
 	"net/http"
+	"sync"
 	"time"
 )
 
 var (
 	cfg    *pkgconfig.AppConfig
 	logger *zap.Logger
+
+	dis discovery.Discovery
 
 	userServiceURL      string
 	relationServiceURL  string
@@ -25,12 +31,24 @@ var (
 	storageServiceURL   string
 )
 
-func Init(c *pkgconfig.AppConfig) {
+func Init(c *pkgconfig.AppConfig, discover bool) {
 	cfg = c
 
 	setupLogger()
-	setupURLs()
+	setDiscovery(discover)
+	setupURLs(discover)
 	setupGin()
+}
+
+func setDiscovery(f bool) {
+	if !f {
+		return
+	}
+	d, err := discovery.NewConsulRegistry(cfg.Register.Addr())
+	if err != nil {
+		panic(err)
+	}
+	dis = d
 }
 
 func setupLogger() {
@@ -73,17 +91,91 @@ func setupLogger() {
 	)
 }
 
-func setupURLs() {
+func setupURLs(d bool) {
 	if cfg == nil {
 		panic("Config not initialized")
 	}
+	if d {
+		discover()
+	} else {
+		direct()
+	}
+	//userServiceURL = "http://" + cfg.Discovers["user"].Addr()
+	//relationServiceURL = "http://" + cfg.Discovers["relation"].Addr()
+	//messageServiceURL = "http://" + cfg.Discovers["msg"].Addr()
+	//messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Addr() + "/api/v1/msg/ws"
+	//groupServiceURL = "http://" + cfg.Discovers["group"].Addr()
+	//storageServiceURL = "http://" + cfg.Discovers["storage"].Addr()
+}
 
-	userServiceURL = "http://" + cfg.Discovers["user"].Addr()
-	relationServiceURL = "http://" + cfg.Discovers["relation"].Addr()
-	messageServiceURL = "http://" + cfg.Discovers["msg"].Addr()
-	messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Addr() + "/api/v1/msg/ws"
-	groupServiceURL = "http://" + cfg.Discovers["group"].Addr()
-	storageServiceURL = "http://" + cfg.Discovers["storage"].Addr()
+func discover() {
+	var wg sync.WaitGroup
+	type serviceInfo struct {
+		ServiceName string
+		Addr        string
+	}
+	ch := make(chan serviceInfo)
+
+	for serviceName, c := range cfg.Discovers {
+		wg.Add(1)
+		go func(serviceName string, c pkgconfig.ServiceConfig) {
+			defer wg.Done()
+			for {
+				addr, err := dis.Discover(c.Name)
+				if err != nil {
+					log.Printf("Service discovery failed ServiceName: %s %v\n", c.Name, err)
+					time.Sleep(5 * time.Second)
+					continue
+				}
+				log.Printf("Service discovery successful ServiceName: %s  Addr: %s\n", c.Name, addr)
+
+				ch <- serviceInfo{ServiceName: serviceName, Addr: addr}
+				break
+			}
+		}(serviceName, c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	for info := range ch {
+		if err := handlerGrpcClient(info.ServiceName, info.Addr); err != nil {
+			log.Printf("Failed to initialize gRPC client for service: %s, Error: %v\n", info.ServiceName, err)
+		}
+	}
+}
+
+func direct() {
+	for serviceName, _ := range cfg.Discovers {
+		if err := handlerGrpcClient(serviceName, cfg.Discovers[serviceName].Addr()); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func handlerGrpcClient(serviceName string, addr string) error {
+	switch serviceName {
+	case "user":
+		userServiceURL = "http://" + addr
+		logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", addr))
+	case "relation":
+		relationServiceURL = "http://" + addr
+		logger.Info("gRPC client for relation service initialized", zap.String("service", "relation"), zap.String("addr", addr))
+	case "group":
+		groupServiceURL = "http://" + addr
+		logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", addr))
+	case "msg":
+		messageServiceURL = "http://" + addr
+		messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
+		logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", addr))
+	case "storage":
+		storageServiceURL = "http://" + addr
+		logger.Info("gRPC client for group service initialized", zap.String("service", "storage"), zap.String("addr", addr))
+	}
+
+	return nil
 }
 
 func setupGin() {
@@ -140,7 +232,11 @@ func proxyToService(targetURL string) gin.HandlerFunc {
 		proxyReq, err := http.NewRequest(c.Request.Method, targetURL+c.Request.URL.Path, c.Request.Body)
 		if err != nil {
 			logger.Error("Failed to create proxy request", zap.Error(err))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create proxy request"})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  code.InternalServerError,
+				"data": nil,
+			})
 			return
 		}
 

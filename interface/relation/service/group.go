@@ -58,7 +58,7 @@ func (s *Service) GetGroupMember(ctx context.Context, gid uint32) (interface{}, 
 			Avatar:   v.Avatar,
 		})
 	}
-	return resp, nil
+	return data, nil
 }
 
 func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGroupRequest) (interface{}, error) {

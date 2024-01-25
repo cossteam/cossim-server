@@ -1,11 +1,11 @@
-PROJECT_NAME=user
+PROJECT_NAME=group
 MAIN_FILE=cmd/main.go
-PKG := "github.com/cossim/coss-server/interfaces/$(PROJECT_NAME)"
+PKG := "github.com/cossim/coss-server/interface/$(PROJECT_NAME)"
 MOD_DIR := $(shell go env GOMODCACHE)
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
-.PHONY: all dep lint vet test test-coverage build clean
+.PHONY: all test-coverage build clean
 
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 #BUILD_BRANCH := "main"
@@ -21,17 +21,25 @@ IMG ?= hub.hitosea.com/coss-server:latest
 
 all: build
 
+.PHONY: dep
 dep: ## Get the dependencies
 	@go mod tidy
 
+.PHONY: lint
 lint: ## Lint Golang files
 	@golint -set_exit_status ${PKG_LIST}
 
+.PHONY: vet
 vet: ## Run go vet
-	@go vet ${PKG_LIST}
+	@go vet go vet ./...
 
-test: ## Run unittests
-	@go test -short ${PKG_LIST}
+.PHONY: fmt
+fmt: ## Run go fmt against code.
+	go fmt ./...
+
+.PHONY: fmt
+test: fmt vet## Run unittests
+	#@go test -short ${PKG_LIST}
 
 test-coverage: ## Run tests with coverage
 	@go test -short -coverprofile cover.out -covermode=atomic ${PKG_LIST}

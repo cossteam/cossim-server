@@ -94,6 +94,7 @@ var (
 	SetMsgErrSetUserMsgsReadStatusFailed            = New(14016, "批量已读消息失败")
 	SetMsgErrSetUserMsgReadStatusFailed             = New(14017, "修改消息已读状态失败")
 	GetMsgErrGetUnreadUserMsgsFailed                = New(14018, "获取未读消息失败")
+	MsgErrTimeoutExceededCannotRevoke               = New(14019, "超过时间限制不能撤回")
 
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed             = New(15000, "获取群聊信息失败")
@@ -105,4 +106,5 @@ var (
 	GroupErrDeleteUserGroupRelationFailed       = New(15006, "删除用户群聊关系失败")
 	GroupErrDeleteUserGroupRelationRevertFailed = New(15007, "删除用户群聊关系回滚失败")
 	GroupErrGroupStatusNotAvailable             = New(15008, "群聊状态不可用")
+	GroupErrUserIsMuted                         = New(15009, "用户禁言中")
 )

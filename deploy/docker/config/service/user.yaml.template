@@ -17,7 +17,7 @@ redis:
 #  protocol: 3
 
 grpc:
-  address: "0.0.0.0"
+  address: "user_service"
   port: 10002
 
 # 注册本服务
