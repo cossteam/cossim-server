@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/msg/api/model"
 	"github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
@@ -424,7 +425,7 @@ func (s *Service) GetUserLabelMsgList(ctx context.Context, userID string, dialog
 	return msgs, nil
 }
 
-func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType string) {
+func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string) {
 	//用户上线
 	wsRid++
 	messages := rabbitMQClient.GetChannel()
@@ -441,13 +442,42 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType string) {
 	if _, ok := pool[uid]; !ok {
 		pool[uid] = make(map[string][]*client)
 	}
-	if _, ok := pool[uid][deviceType]; ok {
-		if len(pool[uid][deviceType]) == 2 {
-			fmt.Println("达到限制客户端数")
+
+	if s.conf.MultipleDeviceLimit.Enable {
+		if _, ok := pool[uid][deviceType]; ok {
+			if len(pool[uid][deviceType]) == s.conf.MultipleDeviceLimit.Max {
+				return
+			}
 		}
 	}
 	//保存到线程池
 	cli.wsOnlineClients()
+
+	//todo 加锁
+	//更新登录信息
+	values, err := cache.GetAllListValues(s.redisClient, cli.Uid)
+	if err != nil {
+		return
+	}
+	list, err := cache.GetUserInfoList(values)
+	if err != nil {
+		return
+	}
+	for _, info := range list {
+		if info.Token == token {
+			info.Rid = cli.Rid
+			nlist := cache.GetUserInfoListToInterfaces(list)
+			err := cache.DeleteList(s.redisClient, cli.Uid)
+			if err != nil {
+				return
+			}
+			err = cache.AddToList(s.redisClient, cli.Uid, nlist)
+			if err != nil {
+				return
+			}
+			break
+		}
+	}
 	//读取客户端消息
 	for {
 		_, _, err := conn.ReadMessage()

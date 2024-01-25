@@ -12,6 +12,7 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/goccy/go-json"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -39,6 +40,7 @@ type Service struct {
 	userClient           usergrpcv1.UserServiceClient
 	groupClient          groupgrpcv1.GroupServiceClient
 	msgClient            msggrpcv1.MsgServiceClient
+	redisClient          *redis.Client
 
 	//mqClient *msg_queue.RabbitMQ
 
@@ -58,9 +60,10 @@ func New(c *pkgconfig.AppConfig) (s *Service) {
 	}
 	rabbitMQClient = mqClient
 	return &Service{
-		conf:   c,
-		logger: setupLogger(c),
-		sid:    xid.New().String(),
+		conf:        c,
+		logger:      setupLogger(c),
+		sid:         xid.New().String(),
+		redisClient: setupRedis(c),
 		//Enc:       setupEncryption(),
 		//rabbitMQClient: mqClient,
 		//pool:     make(map[string]map[string][]*client),
@@ -253,4 +256,13 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 	}
 
 	return nil
+}
+
+func setupRedis(cfg *pkgconfig.AppConfig) *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr(),
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
+		//Protocol: cfg,
+	})
 }

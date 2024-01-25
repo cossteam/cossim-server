@@ -72,7 +72,7 @@ func ws(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	svc.Ws(conn, uid, deviceType)
+	svc.Ws(conn, uid, deviceType, token)
 }
 
 // @Summary 发送私聊消息
