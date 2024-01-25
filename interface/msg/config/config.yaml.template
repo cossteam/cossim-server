@@ -23,6 +23,14 @@ redis:
   password: "Hitosea@123.."
 #  protocol: 3
 
+message_queue:
+  name: "rabbitmq"
+  username: "root"
+  password: "Hitosea@123.."
+  address: "rabbitmq"
+  port: "5672"
+
+
 http:
   address: "0.0.0.0"
   port: 8081
@@ -55,3 +63,14 @@ discovers:
     name: "group_service"
     address: "group_service"
     port: "10005"
+
+encryption:
+  enable: false
+  name: coss-im
+  email: max.mustermann@example.com
+  passphrase: LongSecret
+  rsaBits: 2048
+
+multiple_device_limit:
+  enable: false
+  max: 1

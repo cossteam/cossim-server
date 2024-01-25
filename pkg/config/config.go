@@ -100,16 +100,17 @@ func (c DtmConfig) Addr() string {
 }
 
 type AppConfig struct {
-	Log          LogConfig          `mapstructure:"log"`
-	MySQL        MySQLConfig        `mapstructure:"mysql"`
-	Redis        RedisConfig        `mapstructure:"redis"`
-	HTTP         HTTPConfig         `mapstructure:"http"`
-	GRPC         GRPCConfig         `mapstructure:"grpc"`
-	Register     RegisterConfig     `mapstructure:"register"`
-	Discovers    DiscoversConfig    `mapstructure:"discovers"`
-	Encryption   EncryptionConfig   `mapstructure:"encryption"`
-	MessageQueue MessageQueueConfig `mapstructure:"message_queue"`
-	Dtm          DtmConfig          `mapstructure:"dtm"`
+	Log                 LogConfig                 `mapstructure:"log"`
+	MySQL               MySQLConfig               `mapstructure:"mysql"`
+	Redis               RedisConfig               `mapstructure:"redis"`
+	HTTP                HTTPConfig                `mapstructure:"http"`
+	GRPC                GRPCConfig                `mapstructure:"grpc"`
+	Register            RegisterConfig            `mapstructure:"register"`
+	Discovers           DiscoversConfig           `mapstructure:"discovers"`
+	Encryption          EncryptionConfig          `mapstructure:"encryption"`
+	MessageQueue        MessageQueueConfig        `mapstructure:"message_queue"`
+	MultipleDeviceLimit MultipleDeviceLimitConfig `mapstructure:"multiple_device_limit"`
+	Dtm                 DtmConfig                 `mapstructure:"dtm"`
 }
 
 type EncryptionConfig struct {
@@ -118,4 +119,9 @@ type EncryptionConfig struct {
 	Email      string `mapstructure:"email"`
 	RsaBits    int    `mapstructure:"rsaBits"`
 	Passphrase string `mapstructure:"passphrase"`
+}
+
+type MultipleDeviceLimitConfig struct {
+	Enable bool `mapstructure:"enable"`
+	Max    int  `mapstructure:"max"`
 }

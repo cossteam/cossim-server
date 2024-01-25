@@ -9,6 +9,11 @@ definitions:
     - email
     - password
     type: object
+  model.LogoutRequest:
+    properties:
+      login_number:
+        type: integer
+    type: object
   model.ModifyUserSecretBundleRequest:
     properties:
       secret_bundle:
@@ -78,6 +83,8 @@ definitions:
         type: string
       email:
         type: string
+      login_number:
+        type: integer
       nickname:
         type: string
       relation_status:
@@ -257,6 +264,13 @@ paths:
       consumes:
       - application/json
       description: 退出登录
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.LogoutRequest'
       produces:
       - application/json
       responses:

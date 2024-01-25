@@ -2,17 +2,19 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/interface/user/api/model"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
+	"github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"go.uber.org/zap"
 	"strings"
 )
 
-func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string) (*model.UserInfoResponse, string, error) {
+func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string, clientIp string) (*model.UserInfoResponse, string, error) {
 	resp, err := s.userClient.UserLogin(ctx, &usergrpcv1.UserLoginRequest{
 		Email:    req.Email,
 		Password: utils.HashString(req.Password),
@@ -28,25 +30,76 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", code.UserErrLoginFailed
 	}
 
-	err = cache.SetKey(s.redisClient, resp.UserId, map[string]string{
-		driveType: token,
-	})
+	values, err := cache.GetAllListValues(s.redisClient, resp.UserId)
 	if err != nil {
-		s.logger.Error("failed to generate user token", zap.Error(err))
+		s.logger.Error("login :redis get key err =>", zap.Error(err))
+
 		return nil, "", code.UserErrLoginFailed
 	}
+
+	//多端设备登录限制
+	if s.conf.MultipleDeviceLimit.Enable {
+		list, err := cache.GetUserInfoList(values)
+		if err != nil {
+			return nil, "", err
+		}
+
+		typeMap := cache.CategorizeByDriveType(list)
+		if _, ok := typeMap[driveType]; ok {
+			if len(typeMap[driveType]) >= s.conf.MultipleDeviceLimit.Max {
+				fmt.Println("登录设备达到限制")
+				return nil, "", code.UserErrLoginFailed
+			}
+		}
+	}
+
+	data := cache.UserInfo{
+		ID:         uint(len(values)),
+		UserId:     resp.UserId,
+		Token:      token,
+		DriverType: driveType,
+		CreateAt:   time.Now(),
+		ClientIP:   clientIp,
+	}
+
+	list := []interface{}{data}
+	err = cache.AddToList(s.redisClient, resp.UserId, list)
+	if err != nil {
+		s.logger.Error("Redis error:", zap.Error(err))
+		return nil, "", code.UserErrLoginFailed
+	}
+
 	return &model.UserInfoResponse{
-		Email:     resp.Email,
-		UserId:    resp.UserId,
-		Nickname:  resp.NickName,
-		Avatar:    resp.Avatar,
-		Signature: resp.Signature,
+		LoginNumber: data.ID,
+		Email:       resp.Email,
+		UserId:      resp.UserId,
+		Nickname:    resp.NickName,
+		Avatar:      resp.Avatar,
+		Signature:   resp.Signature,
 	}, token, nil
 }
 
-func (s *Service) Logout(ctx context.Context, userID string, driveType string) error {
-	err := cache.DeleteKeyField(s.redisClient, userID, driveType)
+func (s *Service) Logout(ctx context.Context, userID string, request *model.LogoutRequest) error {
+	values, err := cache.GetAllListValues(s.redisClient, userID)
 	if err != nil {
+		return code.UserErrErrLogoutFailed
+	}
+	if len(values)-1 < int(request.LoginNumber) {
+		s.logger.Error("logout : len(values) < int(request.LoginNumber)")
+		return code.UserErrErrLogoutFailed
+	}
+	//todo 关闭websocket
+	//list, err := cache.GetUserInfoList(values)
+	//if err != nil {
+	//	s.logger.Error("failed to get user info list", zap.Error(err))
+	//	return code.UserErrErrLogoutFailed
+	//}
+	//rid := list[request.LoginNumber].Rid
+	//s.rabbitMQClient.PublishServiceMessage()
+
+	err = cache.RemoveFromList(s.redisClient, userID, 0, values[request.LoginNumber])
+	if err != nil {
+		s.logger.Error("failed to logout user", zap.Error(err))
 		return code.UserErrErrLogoutFailed
 	}
 	return nil

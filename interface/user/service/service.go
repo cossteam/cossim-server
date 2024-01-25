@@ -5,6 +5,7 @@ import (
 	conf "github.com/cossim/coss-server/interface/user/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
+	"github.com/cossim/coss-server/pkg/msg_queue"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/redis/go-redis/v9"
@@ -22,10 +23,11 @@ type Service struct {
 	conf   *pkgconfig.AppConfig
 	logger *zap.Logger
 
-	discovery   discovery.Discovery
-	userClient  user.UserServiceClient
-	relClient   relationgrpcv1.UserRelationServiceClient
-	redisClient *redis.Client
+	discovery      discovery.Discovery
+	userClient     user.UserServiceClient
+	relClient      relationgrpcv1.UserRelationServiceClient
+	redisClient    *redis.Client
+	rabbitMQClient *msg_queue.RabbitMQ
 
 	tokenExpiration time.Duration
 }
@@ -34,6 +36,7 @@ func New(c *pkgconfig.AppConfig) (s *Service) {
 	s = &Service{
 		conf:            c,
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
+		rabbitMQClient:  setRabbitMQProvider(c),
 	}
 
 	s.setupLogger()
@@ -171,4 +174,12 @@ func (s *Service) Close() error {
 }
 
 func (s *Service) Ping() {
+}
+
+func setRabbitMQProvider(c *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
+	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Addr()))
+	if err != nil {
+		panic(err)
+	}
+	return rmq
 }

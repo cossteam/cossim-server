@@ -243,6 +243,17 @@ const docTemplateuser = `{
                     "application/json"
                 ],
                 "summary": "退出登录",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LogoutRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -426,6 +437,14 @@ const docTemplateuser = `{
                 }
             }
         },
+        "model.LogoutRequest": {
+            "type": "object",
+            "properties": {
+                "login_number": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.ModifyUserSecretBundleRequest": {
             "type": "object",
             "required": [
@@ -529,6 +548,9 @@ const docTemplateuser = `{
                 },
                 "email": {
                     "type": "string"
+                },
+                "login_number": {
+                    "type": "integer"
                 },
                 "nickname": {
                     "type": "string"

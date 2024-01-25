@@ -11,6 +11,10 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type LogoutRequest struct {
+	LoginNumber uint `json:"login_number"`
+}
+
 type RegisterRequest struct {
 	Email       string `json:"email" binding:"required"`
 	Password    string `json:"password" binding:"required"`
@@ -28,6 +32,7 @@ type UserInfoResponse struct {
 	Signature      string             `json:"signature"`
 	Status         UserStatus         `json:"status"`
 	RelationStatus UserRelationStatus `json:"relation_status"`
+	LoginNumber    uint               `json:"login_number"`
 }
 
 type UserStatus int

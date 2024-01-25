@@ -47,8 +47,12 @@ discovers:
     port: "10001"
 
 encryption:
-  enabled: true
+  enabled: false
   name: coss-im
   email: max.mustermann@example.com
   passphrase: LongSecret
   rsaBits: 2048
+
+multiple_device_limit:
+  enable: false
+  max: 1

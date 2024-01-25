@@ -36,13 +36,23 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 		ID     string `json:"id"`
 		Status int64  `json:"status"`
 	}
-	data, err := cache.GetKey(a.RDB, claims.UserId)
+	data, err := cache.GetAllListValues(a.RDB, claims.UserId)
+	if err != nil {
+		fmt.Println("error => ", err)
+		return false, err
+	}
+	users, err := cache.GetUserInfoList(data)
 	if err != nil {
 		return false, err
 	}
-
-	if data[driverType] != tokenString {
-		return false, errors.New("token expired")
+	var found = false
+	for _, user := range users {
+		if user.UserId == claims.UserId {
+			found = true
+		}
+	}
+	if !found {
+		return false, errors.New("token not found")
 	}
 	var user User
 	if err = a.DB.Raw(_queryUser, claims.UserId).Scan(&user).Error; err != nil {
