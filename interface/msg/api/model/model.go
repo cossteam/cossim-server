@@ -26,8 +26,8 @@ type SendGroupMsgRequest struct {
 type MsgListRequest struct {
 	//GroupId    int64  `json:"group_id" binding:"required"`
 	UserId   string `json:"user_id" binding:"required"`
-	Type     int32  `json:"type" binding:"required"`
-	Content  string `json:"content" binding:"required"`
+	Type     int32  `json:"type"`
+	Content  string `json:"content"`
 	PageNum  int    `json:"page_num" binding:"required"`
 	PageSize int    `json:"page_size" binding:"required"`
 }

@@ -32,10 +32,11 @@ func login(c *gin.Context) {
 		response.SetFail(c, "邮箱格式不正确", nil)
 		return
 	}
+
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
 
-	resp, token, err := svc.Login(c, req, deviceType)
+	resp, token, err := svc.Login(c, req, deviceType, c.ClientIP())
 	if err != nil {
 		c.Error(err)
 		return
@@ -48,9 +49,16 @@ func login(c *gin.Context) {
 // @Description 退出登录
 // @Accept  json
 // @Produce  json
+// @param request body model.LogoutRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /user/logout [post]
 func logout(c *gin.Context) {
+	req := new(model.LogoutRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
@@ -58,7 +66,7 @@ func logout(c *gin.Context) {
 	}
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
-	if err = svc.Logout(c, thisId, deviceType); err != nil {
+	if err = svc.Logout(c, thisId, req); err != nil {
 		c.Error(err)
 		return
 	}
@@ -370,4 +378,20 @@ func getUserSecretBundle(c *gin.Context) {
 	}
 
 	response.SetSuccess(c, "获取成功", bundle)
+}
+
+// @Summary 获取该用户当前登录的所有客户端
+// @Description 获取该用户当前登录的所有客户端
+// @Accept  json
+// @Produce  json
+// @Success		200 {object} model.Response{}
+// @Router /user/clients/get [get]
+func getUserLoginClients(c *gin.Context) {
+	_, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	response.SetSuccess(c, "获取成功", nil)
 }

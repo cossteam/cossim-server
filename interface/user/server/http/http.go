@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/interface/user/service"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
@@ -13,7 +12,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
 )
 
 var (
@@ -37,7 +35,6 @@ func Init(c *pkgconfig.AppConfig, service *service.Service) {
 }
 
 func setupRedis() {
-	fmt.Println("cfg.Redis.Addr() => ", cfg.Redis.Addr())
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Redis.Addr(),
 		Password: cfg.Redis.Password, // no password set
@@ -60,40 +57,40 @@ func setupEncryption() {
 	}
 	ThisKey = enc.GetPublicKey()
 
-	fmt.Println("公钥：\n", enc.GetPublicKey())
-	readString, err := encryption.GenerateRandomKey(32)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	resp, err := enc.SecretMessage("{\"email\":\"12345ddd@qq.com\",\"password\":\"123123a\"}", enc.GetPublicKey(), []byte(readString))
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	j, err := json.Marshal(resp)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-
-	cacheDir := ".cache"
-	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
-		err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
-		if err != nil {
-			logger.Fatal("Failed to ", zap.Error(err))
-		}
-	}
-	// 保存私钥到文件
-	privateKeyFile, err := os.Create(cacheDir + "/data.json")
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-
-	_, err = privateKeyFile.WriteString(string(j))
-	if err != nil {
-		privateKeyFile.Close()
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	privateKeyFile.Close()
-	fmt.Println("加密后消息：", string(j))
+	//fmt.Println("公钥：\n", enc.GetPublicKey())
+	//readString, err := encryption.GenerateRandomKey(32)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//resp, err := enc.SecretMessage("{\"email\":\"12345ddd@qq.com\",\"password\":\"123123a\"}", enc.GetPublicKey(), []byte(readString))
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//j, err := json.Marshal(resp)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//
+	//cacheDir := ".cache"
+	//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+	//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+	//	if err != nil {
+	//		logger.Fatal("Failed to ", zap.Error(err))
+	//	}
+	//}
+	//// 保存私钥到文件
+	//privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//
+	//_, err = privateKeyFile.WriteString(string(j))
+	//if err != nil {
+	//	privateKeyFile.Close()
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//privateKeyFile.Close()
+	//fmt.Println("加密后消息：", string(j))
 }
 
 func setupLogger() {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/msg/api/model"
 	"github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/constants"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -87,6 +88,7 @@ func ws(c *gin.Context) {
 	if messages.IsClosed() {
 		log.Fatal("Channel is Closed")
 	}
+
 	cli := &client{
 		ClientType: deviceType,
 		Conn:       conn,
@@ -94,16 +96,44 @@ func ws(c *gin.Context) {
 		Rid:        wsRid,
 		queue:      messages,
 	}
+
 	if _, ok := Pool[uid]; !ok {
 		Pool[uid] = make(map[string][]*client)
 	}
-	if _, ok := Pool[uid][deviceType]; ok {
-		if len(Pool[uid][deviceType]) == 2 {
-			fmt.Println("达到限制客户端数")
+
+	if cfg.MultipleDeviceLimit.Enable {
+		if _, ok := Pool[uid][deviceType]; ok {
+			if len(Pool[uid][deviceType]) == cfg.MultipleDeviceLimit.Max {
+				return
+			}
 		}
 	}
+
 	//保存到线程池
 	cli.wsOnlineClients()
+
+	//todo 加锁
+	//更新登录信息
+	values, err := cache.GetAllListValues(redisClient, cli.Uid)
+	if err != nil {
+		return
+	}
+	list, err := cache.GetUserInfoList(values)
+	if err != nil {
+		return
+	}
+	for _, info := range list {
+		if info.Token == token {
+			info.Rid = cli.Rid
+			nlist := cache.GetUserInfoListToInterfaces(list)
+			err := cache.AddToList(redisClient, cli.Uid, nlist)
+			if err != nil {
+				return
+			}
+			break
+		}
+	}
+
 	//读取客户端消息
 	for {
 		_, _, err := conn.ReadMessage()
@@ -122,6 +152,7 @@ func (c client) wsOnlineClients() {
 	Pool[c.Uid][c.ClientType] = append(Pool[c.Uid][c.ClientType], &c)
 
 	wsMutex.Unlock()
+
 	//通知前端接收离线消息
 	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: time.Now()}
 	js, _ := json.Marshal(msg)
@@ -129,11 +160,13 @@ func (c client) wsOnlineClients() {
 		logger.Error("加密客户端错误", zap.Error(nil))
 		return
 	}
+
 	message, err := enc.GetSecretMessage(string(js), c.Uid)
 	if err != nil {
 		fmt.Println("加密失败：", err)
 		return
 	}
+
 	//上线推送消息
 	c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 	for {
@@ -148,14 +181,6 @@ func (c client) wsOnlineClients() {
 	}
 }
 
-// 用户离线
-//func (c client) wsOfflineClients() {
-//	wsMutex.Lock()
-//	defer wsMutex.Unlock()
-//
-//	delete(Pool, c.Uid)
-//}
-
 func (c client) wsOfflineClients() {
 	wsMutex.Lock()
 	defer wsMutex.Unlock()
@@ -163,13 +188,12 @@ func (c client) wsOfflineClients() {
 	if _, ok := Pool[c.Uid][c.ClientType]; ok {
 		for i, c2 := range Pool[c.Uid][c.ClientType] {
 			if c2.Rid == c.Rid {
-				fmt.Println("关闭客户端", Pool[c.Uid][c.ClientType])
 				Pool[c.Uid][c.ClientType] = append(Pool[c.Uid][c.ClientType][:i], Pool[c.Uid][c.ClientType][i+1:]...)
-				fmt.Println("关闭客户端后", Pool[c.Uid][c.ClientType])
 				break
 			}
 		}
 	}
+
 }
 
 // @Summary 发送私聊消息
@@ -1148,7 +1172,6 @@ func SendMsg(uid string, event config.WSEventType, data interface{}) {
 	}
 	for _, v := range Pool[uid] {
 		for _, c := range v {
-			fmt.Println("6666", c.Rid)
 			m.Rid = c.Rid
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)
