@@ -24,7 +24,7 @@ message_queue:
   port: "5672"
 
 grpc:
-  address: "0.0.0.0"
+  address: "relation_service"
   port: "10001"
 
 # 注册本服务

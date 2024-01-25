@@ -5,22 +5,61 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/service/group/api/v1"
 	"github.com/cossim/coss-server/service/group/domain/entity"
 	"github.com/cossim/coss-server/service/group/domain/repository"
 	"github.com/cossim/coss-server/service/group/infrastructure/persistence"
+	"github.com/rs/xid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+	"log"
 )
 
-func NewService(repo *persistence.Repositories) *Service {
-	return &Service{gr: repo.Gr}
+func NewService(repo *persistence.Repositories, ac pkgconfig.AppConfig) *Service {
+	return &Service{
+		gr:  repo.Gr,
+		ac:  ac,
+		sid: xid.New().String(),
+	}
 }
 
 type Service struct {
 	gr repository.GroupRepository
 	v1.UnimplementedGroupServiceServer
+
+	ac        pkgconfig.AppConfig
+	discovery discovery.Discovery
+	sid       string
+}
+
+func (s *Service) Start(discover bool) {
+	if !discover {
+		return
+	}
+	d, err := discovery.NewConsulRegistry(s.ac.Register.Addr())
+	if err != nil {
+		panic(err)
+	}
+	s.discovery = d
+	if err = s.discovery.Register(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid); err != nil {
+		panic(err)
+	}
+	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+}
+
+func (s *Service) Close(discover bool) error {
+	if !discover {
+		return nil
+	}
+	if err := s.discovery.Cancel(s.sid); err != nil {
+		log.Printf("Failed to cancel service registration: %v", err)
+		return err
+	}
+	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+	return nil
 }
 
 func (s *Service) GetGroupInfoByGid(ctx context.Context, request *v1.GetGroupInfoRequest) (*v1.Group, error) {

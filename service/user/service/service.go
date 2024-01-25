@@ -9,7 +9,6 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	api "github.com/cossim/coss-server/service/user/api/v1"
-	conf "github.com/cossim/coss-server/service/user/config"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"github.com/cossim/coss-server/service/user/domain/repository"
 	"github.com/cossim/coss-server/service/user/utils"
@@ -22,8 +21,9 @@ import (
 
 func NewService(ur repository.UserRepository, c pkgconfig.AppConfig) *Service {
 	return &Service{
-		c:  c,
-		ur: ur,
+		c:   c,
+		ur:  ur,
+		sid: xid.New().String(),
 	}
 }
 
@@ -35,8 +35,8 @@ type Service struct {
 	api.UnimplementedUserServiceServer
 }
 
-func (s *Service) Start() {
-	if conf.Direct {
+func (s *Service) Start(discover bool) {
+	if !discover {
 		return
 	}
 	d, err := discovery.NewConsulRegistry(s.c.Register.Addr())
@@ -44,15 +44,14 @@ func (s *Service) Start() {
 		panic(err)
 	}
 	s.discovery = d
-	s.sid = xid.New().String()
 	if err = s.discovery.Register(s.c.Register.Name, s.c.GRPC.Addr(), s.sid); err != nil {
 		panic(err)
 	}
 	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.c.Register.Name, s.c.GRPC.Addr(), s.sid)
 }
 
-func (s *Service) Close() error {
-	if conf.Direct {
+func (s *Service) Close(discover bool) error {
+	if !discover {
 		return nil
 	}
 	if err := s.discovery.Cancel(s.sid); err != nil {

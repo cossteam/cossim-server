@@ -159,7 +159,7 @@ func (m *MinIOStorage) CreateMinoBuket(bucketName string, fileType int) error {
 	}
 	// 将存储桶名称与文件类型关联起来
 	//m.BucketList[storev1.FileType(fileType)] = bucketName
-	fmt.Printf("Successfully created %s bucket for file type %s\n", bucketName, fileType)
+	fmt.Printf("Successfully created %s bucket for file type %v\n", bucketName, fileType)
 
 	return nil
 }

@@ -202,3 +202,55 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 
 	return groupID, err
 }
+
+func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest, userID string) (interface{}, error) {
+	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+		Gid: req.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("更新群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	sf, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		UserId:  userID,
+		GroupId: req.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户群聊关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	if sf.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+		return nil, code.Unauthorized
+	}
+
+	group.Type = groupgrpcv1.GroupType(req.Type)
+	group.Status = groupgrpcv1.GroupStatus(req.Status)
+	group.MaxMembersLimit = int32(req.MaxMembersLimit)
+	group.CreatorId = req.CreatorID
+	group.Name = req.Name
+	group.Avatar = req.Avatar
+
+	resp, err := s.groupClient.UpdateGroup(ctx, &groupgrpcv1.UpdateGroupRequest{
+		Group: group,
+	})
+	if err != nil {
+		s.logger.Error("更新群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, ids []uint32) (interface{}, error) {
+	groups, err := s.groupClient.GetBatchGroupInfoByIDs(ctx, &groupgrpcv1.GetBatchGroupInfoRequest{
+		GroupIds: ids,
+	})
+	if err != nil {
+		s.logger.Error("批量获取群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	return groups.Groups, nil
+}

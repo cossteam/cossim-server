@@ -4,7 +4,6 @@ import (
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/service/relation/api/v1"
-	"github.com/cossim/coss-server/service/relation/config"
 	"github.com/cossim/coss-server/service/relation/domain/repository"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"github.com/rs/xid"
@@ -37,8 +36,8 @@ type Service struct {
 	sid       string
 }
 
-func (s *Service) Start() {
-	if config.Direct {
+func (s *Service) Start(discover bool) {
+	if !discover {
 		return
 	}
 	d, err := discovery.NewConsulRegistry(s.ac.Register.Addr())
@@ -52,8 +51,8 @@ func (s *Service) Start() {
 	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
 }
 
-func (s *Service) Close() error {
-	if config.Direct {
+func (s *Service) Close(discover bool) error {
+	if !discover {
 		return nil
 	}
 	if err := s.discovery.Cancel(s.sid); err != nil {

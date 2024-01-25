@@ -8,6 +8,7 @@ import (
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -27,6 +28,7 @@ type Service struct {
 	rabbitMQClient      *msg_queue.RabbitMQ
 
 	logger    *zap.Logger
+	sid       string
 	discovery discovery.Discovery
 	conf      *pkgconfig.AppConfig
 
@@ -49,22 +51,28 @@ func New(c *pkgconfig.AppConfig) *Service {
 		logger:         logger,
 		conf:           c,
 
-		dtmGrpcServer:      c.Dtm.Addr(),
-		relationGrpcServer: c.Discovers["relation"].Addr(),
-		dialogGrpcServer:   c.Discovers["relation"].Addr(),
+		sid: xid.New().String(),
+
+		dtmGrpcServer: c.Dtm.Addr(),
+		//relationGrpcServer: c.Discovers["relation"].Addr(),
+		//dialogGrpcServer:   c.Discovers["relation"].Addr(),
 	}
 }
 
-func (s *Service) Start(direct bool) {
-	if direct {
-		s.direct()
-	} else {
+func (s *Service) Start(discover bool) {
+	if discover {
 		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
 		if err != nil {
 			panic(err)
 		}
 		s.discovery = d
+		if err = s.discovery.RegisterHTTP(s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid); err != nil {
+			panic(err)
+		}
+		log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid)
 		go s.discover()
+	} else {
+		s.direct()
 	}
 }
 
@@ -125,6 +133,8 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 		s.userClient = user.NewUserServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "relation":
+		s.relationGrpcServer = addr
+		s.dtmGrpcServer = addr
 		s.userRelationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
 
@@ -141,8 +151,16 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 	return nil
 }
 
-func (s *Service) Close() {
-
+func (s *Service) Close(discover bool) error {
+	if !discover {
+		return nil
+	}
+	if err := s.discovery.Cancel(s.sid); err != nil {
+		log.Printf("Failed to cancel service registration: %v", err)
+		return err
+	}
+	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.conf.Register.Name, s.conf.GRPC.Addr(), s.sid)
+	return nil
 }
 
 func setupLogger(c *pkgconfig.AppConfig) *zap.Logger {

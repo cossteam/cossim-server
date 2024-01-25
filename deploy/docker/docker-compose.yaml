@@ -92,6 +92,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     ports:
     - "8080:8080"
     environment:
@@ -103,14 +104,20 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
     - ./config/interface/msg.yaml:/config/config.yaml
     - ./config/pgp:/.cache
     expose:
     - "8081"
     depends_on:
-      mysql:
-        condition: service_healthy
+    - dtm
+    - redis
+    - rabbitmq
+    - group_service
+    - relation_service
+    - user_service
+    - msg_service
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
@@ -120,6 +127,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
     - ./config/interface/relation.yaml:/config/config.yaml
     - ./config/pgp:/.cache
@@ -137,15 +145,16 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
-    - "--direct"
+    - "--discover"
     volumes:
     - ./config/interface/user.yaml:/config/config.yaml
     - ./config/pgp:/.cache
     expose:
     - "8083"
     depends_on:
-      mysql:
-        condition: service_healthy
+      - redis
+      - relation_service
+      - user_service
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
@@ -155,14 +164,20 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
     - ./config/interface/group.yaml:/config/config.yaml
     - ./config/pgp:/.cache
     expose:
     - "8084"
     depends_on:
-      mysql:
-        condition: service_healthy
+    - dtm
+    - redis
+    - rabbitmq
+    - group_service
+    - relation_service
+    - user_service
+    - msg_service
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
@@ -172,14 +187,16 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
     - ./config/interface/storage.yaml:/config/config.yaml
     - ./config/pgp:/.cache
     expose:
     - "8084"
     depends_on:
-      mysql:
-        condition: service_healthy
+      - minio
+      - redis
+      - storage_service
     environment:
       SOME_VARIABLE: some_value
     restart: on-failure
@@ -189,6 +206,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
       - ./config/service/msg.yaml:/config/config.yaml
     expose:
@@ -205,6 +223,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
       - ./config/service/relation.yaml:/config/config.yaml
     expose:
@@ -221,7 +240,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
-    - "--direct"
+    - "--discover"
     volumes:
     - ./config/service/user.yaml:/config/config.yaml
     expose:
@@ -238,6 +257,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
     - ./config/service/group.yaml:/config/config.yaml
     expose:
@@ -254,6 +274,7 @@ services:
     command:
     - "--config"
     - "/config/config.yaml"
+    - "--discover"
     volumes:
     - ./config/service/storage.yaml:/config/config.yaml
     expose:

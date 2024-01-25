@@ -6,7 +6,6 @@ import (
 
 var Conf pkgconfig.AppConfig
 var ConfigFile string
-var Direct bool
 
 func Init() error {
 	c, err := pkgconfig.LoadFile(ConfigFile)

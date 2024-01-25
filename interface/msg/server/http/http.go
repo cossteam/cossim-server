@@ -3,51 +3,37 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cossim/coss-server/interface/msg/service"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	"github.com/cossim/coss-server/pkg/msg_queue"
-	groupApi "github.com/cossim/coss-server/service/group/api/v1"
-	msgApi "github.com/cossim/coss-server/service/msg/api/v1"
-	relationApi "github.com/cossim/coss-server/service/relation/api/v1"
-	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"os"
 	"time"
 )
 
 var (
-	msgClient       msgApi.MsgServiceClient
-	relationClient  relationApi.UserRelationServiceClient
-	redisClient     *redis.Client
-	userGroupClient relationApi.GroupRelationServiceClient
-	groupClient     groupApi.GroupServiceClient
-	rabbitMQClient  *msg_queue.RabbitMQ
-	userClient      userApi.UserServiceClient
-	dialogClient    relationApi.DialogServiceClient
-	cfg             *pkgconfig.AppConfig
-	logger          *zap.Logger
-	enc             encryption.Encryptor
+	redisClient *redis.Client
+
+	cfg    *pkgconfig.AppConfig
+	logger *zap.Logger
+	enc    encryption.Encryptor
+	svc    *service.Service
 )
 
-func Init(c *pkgconfig.AppConfig) {
+func Init(c *pkgconfig.AppConfig, srv *service.Service) {
 	cfg = c
+	svc = srv
+
 	setupLogger()
-	setupDialogGRPCClient()
-	setupMsgGRPCClient()
-	setupUserGRPCClient()
 	setupEncryption()
+	service.Enc = enc
 	setupRedis()
-	setupGroupGRPCClient()
-	setRabbitMQProvider()
-	setupRelationGRPCClient()
 	setupGin()
 }
 
@@ -103,63 +89,6 @@ func setupRedis() {
 		//Protocol: cfg,
 	})
 	redisClient = rdb
-}
-
-func setRabbitMQProvider() {
-	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", cfg.MessageQueue.Username, cfg.MessageQueue.Password, cfg.MessageQueue.Addr()))
-	fmt.Println("cfg.MessageQueue => ", cfg.MessageQueue)
-	if err != nil {
-		logger.Fatal("Failed to connect to RabbitMQ", zap.Error(err))
-	}
-	rabbitMQClient = rmq
-}
-func setupGroupGRPCClient() {
-	var err error
-	groupConn, err := grpc.Dial(cfg.Discovers["group"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	groupClient = groupApi.NewGroupServiceClient(groupConn)
-}
-
-func setupDialogGRPCClient() {
-	var err error
-	msgConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	dialogClient = relationApi.NewDialogServiceClient(msgConn)
-}
-func setupRelationGRPCClient() {
-	var err error
-	relationConn, err := grpc.Dial(cfg.Discovers["relation"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	relationClient = relationApi.NewUserRelationServiceClient(relationConn)
-	userGroupClient = relationApi.NewGroupRelationServiceClient(relationConn)
-}
-
-func setupMsgGRPCClient() {
-	var err error
-	msgConn, err := grpc.Dial(cfg.Discovers["msg"].Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	msgClient = msgApi.NewMsgServiceClient(msgConn)
-}
-func setupUserGRPCClient() {
-	var err error
-	userConn, err := grpc.Dial(cfg.Discovers["user"].Addr(), grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
-	}
-
-	userClient = userApi.NewUserServiceClient(userConn)
 }
 
 func setupLogger() {
@@ -226,6 +155,9 @@ func setupGin() {
 
 // @title Swagger Example API
 func route(engine *gin.Engine) {
+	engine.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 	u := engine.Group("/api/v1/msg")
 	//u.Use(middleware.AuthMiddleware())
 	u.GET("/ws", middleware.AuthMiddleware(redisClient), ws)

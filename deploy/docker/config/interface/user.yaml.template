@@ -17,7 +17,7 @@ redis:
 #  protocol: 3
 
 http:
-  address: "0.0.0.0"
+  address: "user_bff"
   port: 8083
 
 grpc:
@@ -27,7 +27,7 @@ grpc:
 # 注册本服务
 register:
   name: "user_bff"
-  address: "registry"   # 注册中心地址
+  address: "consul"   # 注册中心地址
   port: 8500            # 注册中心端口
   tags: ["user", "bff"]
 

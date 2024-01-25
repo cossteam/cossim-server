@@ -17,9 +17,11 @@ import (
 	"syscall"
 )
 
+var discover bool
+
 func init() {
-	flag.StringVar(&config.ConfigFile, "config", "config/config.yaml", "Path to configuration file")
-	flag.BoolVar(&config.Direct, "direct", false, "Enable direct connection")
+	flag.StringVar(&config.ConfigFile, "config", "/config/config.yaml", "Path to configuration file")
+	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
 	flag.Parse()
 }
 
@@ -59,14 +61,14 @@ func main() {
 		}
 	}()
 
-	svc.Start()
+	svc.Start(discover)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
-			svc.Close()
+			svc.Close(discover)
 			grpcServer.Stop()
 			return
 		case syscall.SIGHUP:

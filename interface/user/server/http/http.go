@@ -153,6 +153,9 @@ func setupGin() {
 // @title coss-user服务
 
 func route(engine *gin.Engine) {
+	engine.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 	u := engine.Group("/api/v1/user")
 	u.POST("/login", login)
 	u.POST("/register", register)
