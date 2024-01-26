@@ -61,9 +61,7 @@ func (c *client) wsOfflineClients() {
 	if _, ok := pool[c.Uid][c.ClientType]; ok {
 		for i, c2 := range pool[c.Uid][c.ClientType] {
 			if c2.Rid == c.Rid {
-				fmt.Println("关闭客户端", pool[c.Uid][c.ClientType])
 				pool[c.Uid][c.ClientType] = append(pool[c.Uid][c.ClientType][:i], pool[c.Uid][c.ClientType][i+1:]...)
-				fmt.Println("关闭客户端后", pool[c.Uid][c.ClientType])
 				break
 			}
 		}
