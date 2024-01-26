@@ -14,9 +14,25 @@ import (
 func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取 authorization header
-		tokenString := ctx.GetHeader("Authorization")
+		tokenString := ""
+		if ctx.GetHeader("Authorization") != "" {
+			tokenString = ctx.GetHeader("Authorization")
+			if !strings.HasPrefix(tokenString, "Bearer ") {
+				ctx.JSON(http.StatusUnauthorized, gin.H{
+					"code": 401,
+					"msg":  http.StatusText(http.StatusUnauthorized),
+				})
+				ctx.Abort()
+				return
+			}
+			tokenString = tokenString[7:]
+		}
+		if ctx.Query("token") != "" {
+			tokenString = ctx.Query("token")
+		}
+		fmt.Println(tokenString)
 		//validate token formate
-		if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {
+		if tokenString == "" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  http.StatusText(http.StatusUnauthorized),
@@ -24,9 +40,7 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-
-		tokenString = tokenString[7:] //截取字符
-
+		fmt.Println(tokenString)
 		conn, err := db.NewDefaultMysqlConn().GetConnection()
 		if err != nil {
 			fmt.Printf("获取数据库连接失败: %v", err)
@@ -45,6 +59,7 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 
 		is, err := a.ValidateToken(tokenString, drive)
 		if err != nil || !is {
+			fmt.Printf("token验证失败: %v", err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  http.StatusText(http.StatusUnauthorized),
