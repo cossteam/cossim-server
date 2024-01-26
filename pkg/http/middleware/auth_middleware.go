@@ -30,8 +30,6 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		if ctx.Query("token") != "" {
 			tokenString = ctx.Query("token")
 		}
-		fmt.Println(tokenString)
-		//validate token formate
 		if tokenString == "" {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
@@ -40,7 +38,6 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		fmt.Println(tokenString)
 		conn, err := db.NewDefaultMysqlConn().GetConnection()
 		if err != nil {
 			fmt.Printf("获取数据库连接失败: %v", err)

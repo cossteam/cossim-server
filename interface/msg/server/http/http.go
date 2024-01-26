@@ -177,6 +177,7 @@ func route(engine *gin.Engine) {
 	//私聊标注消息
 	u.POST("/label/user", middleware.AuthMiddleware(redisClient), labelUserMessage)
 	u.GET("/label/user", middleware.AuthMiddleware(redisClient), getUserLabelMsgList)
+	u.POST("/after/get", middleware.AuthMiddleware(redisClient), getDialogAfterMsg)
 
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

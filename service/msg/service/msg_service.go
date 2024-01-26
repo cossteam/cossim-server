@@ -384,3 +384,61 @@ func (s *Service) GetUnreadUserMsgs(ctx context.Context, in *v1.GetUnreadUserMsg
 	resp.UserMessages = list
 	return resp, nil
 }
+
+func (s *Service) GetUserMsgIdAfterMsgList(ctx context.Context, in *v1.GetUserMsgIdAfterMsgListRequest) (*v1.GetUserMsgIdAfterMsgListResponse, error) {
+	var resp = &v1.GetUserMsgIdAfterMsgListResponse{}
+	if len(in.List) > 0 {
+		for _, v := range in.List {
+			list, err := s.mr.GetUserMsgIdAfterMsgList(v.DialogId, v.MsgId)
+			if err != nil {
+				return nil, err
+			}
+			if len(list) > 0 {
+				mlist := &v1.GetUserMsgIdAfterMsgResponse{}
+				for _, msg := range list {
+					mlist.UserMessages = append(mlist.UserMessages, &v1.UserMessage{
+						Id:         uint32(msg.ID),
+						Content:    msg.Content,
+						Type:       uint32(msg.Type),
+						ReplayId:   uint64(msg.ReplyId),
+						SenderId:   msg.SendID,
+						ReceiverId: msg.ReceiveID,
+						CreatedAt:  msg.CreatedAt,
+					})
+				}
+				mlist.DialogId = v.DialogId
+				resp.Messages = append(resp.Messages, mlist)
+			}
+		}
+	}
+	return resp, nil
+}
+
+func (s *Service) GetGroupMsgIdAfterMsgList(ctx context.Context, in *v1.GetGroupMsgIdAfterMsgListRequest) (*v1.GetGroupMsgIdAfterMsgListResponse, error) {
+	var resp = &v1.GetGroupMsgIdAfterMsgListResponse{}
+	if len(in.List) > 0 {
+		for _, v := range in.List {
+			list, err := s.mr.GetGroupMsgIdAfterMsgList(v.DialogId, v.MsgId)
+			if err != nil {
+				return nil, err
+			}
+			if len(list) > 0 {
+				mlist := &v1.GetGroupMsgIdAfterMsgResponse{}
+				for _, msg := range list {
+					mlist.GroupMessages = append(mlist.GroupMessages, &v1.GroupMessage{
+						Id:        uint32(msg.ID),
+						UserId:    msg.UID,
+						Content:   msg.Content,
+						Type:      uint32(int32(msg.Type)),
+						ReplyId:   uint32(msg.ReplyId),
+						GroupId:   uint32(msg.GroupID),
+						ReadCount: int32(msg.ReadCount),
+					})
+				}
+				mlist.DialogId = v.DialogId
+				resp.Messages = append(resp.Messages, mlist)
+			}
+		}
+	}
+	return resp, nil
+}

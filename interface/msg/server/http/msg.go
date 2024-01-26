@@ -503,3 +503,30 @@ func readUserMsgs(c *gin.Context) {
 
 	response.SetSuccess(c, "设置成功", nil)
 }
+
+// @Summary 获取指定对话落后消息
+// @Description 获取指定对话落后消息
+// @Accept  json
+// @Produce  json
+// @param request body []model.AfterMsg true "request"
+// @Success 200 {object} model.Response{}
+// @Router /msg/after/get [post]
+func getDialogAfterMsg(c *gin.Context) {
+	req := new([]model.AfterMsg)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+	resp, err := svc.GetDialogAfterMsg(c, *req, thisId)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+	}
+	response.SetSuccess(c, "获取成功", resp)
+}
