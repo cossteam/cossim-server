@@ -134,8 +134,8 @@ func GetUserInfoList(data []string) ([]UserInfo, error) {
 // 用户信息转成[]interfaces{}
 func GetUserInfoListToInterfaces(data []UserInfo) []interface{} {
 	list := make([]interface{}, 0)
-	for i, datum := range data {
-		list[i] = datum
+	for _, datum := range data {
+		list = append(list, datum)
 	}
 	return list
 }

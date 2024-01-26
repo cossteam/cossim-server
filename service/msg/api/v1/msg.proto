@@ -334,7 +334,17 @@ message GetUnreadUserMsgsResponse {
 //  // @inject_tag: json:"group_messages"
 //  repeated GroupMessage GroupMessages = 1;
 //}
+message GetUserMsgIdAfterMsgRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+  // @inject_tag: json:"msg_id"
+  uint32 MsgId = 2;
+}
 
+message GetUserMsgIdAfterMsgListRequest{
+  // @inject_tag: json:"dialog_ids"
+  repeated GetUserMsgIdAfterMsgRequest list = 1;
+}
 
 service MsgService{
   //发送私聊消息
@@ -353,6 +363,10 @@ service MsgService{
   rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
   //撤回私聊消息
   rpc DeleteUserMessage(DeleteUserMsgRequest) returns (UserMessage);
+  //根据对话id与msgId查询msgId之后的私聊消息
+  rpc GetUserMsgIdAfterMsgList(GetUserMsgIdAfterMsgListRequest) returns (GetUserMsgIdAfterMsgListResponse);
+
+
   //编辑群消息
   rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
   //撤回群消息
@@ -369,6 +383,8 @@ service MsgService{
   rpc GetUserMsgLabelByDialogId(GetUserMsgLabelByDialogIdRequest) returns (GetUserMsgLabelByDialogIdResponse);
   //根据对话id获取群消息标注信息
   rpc GetGroupMsgLabelByDialogId(GetGroupMsgLabelByDialogIdRequest) returns (GetGroupMsgLabelByDialogIdResponse);
+  //根据对话id与msgId查询msgId之后的群消息
+  rpc GetGroupMsgIdAfterMsgList(GetGroupMsgIdAfterMsgListRequest) returns (GetGroupMsgIdAfterMsgListResponse);
 
 
   //批量设置私聊消息id为已读

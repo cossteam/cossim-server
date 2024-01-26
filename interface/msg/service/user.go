@@ -426,6 +426,7 @@ func (s *Service) GetUserLabelMsgList(ctx context.Context, userID string, dialog
 }
 
 func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string) {
+	defer conn.Close()
 	//用户上线
 	wsRid++
 	messages := rabbitMQClient.GetChannel()
@@ -457,10 +458,13 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 	//更新登录信息
 	values, err := cache.GetAllListValues(s.redisClient, cli.Uid)
 	if err != nil {
+		s.logger.Error("获取用户信息失败1", zap.Error(err))
 		return
 	}
 	list, err := cache.GetUserInfoList(values)
+
 	if err != nil {
+		s.logger.Error("获取用户信息失败2", zap.Error(err))
 		return
 	}
 	for _, info := range list {
@@ -469,10 +473,12 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 			nlist := cache.GetUserInfoListToInterfaces(list)
 			err := cache.DeleteList(s.redisClient, cli.Uid)
 			if err != nil {
+				s.logger.Error("获取用户信息失败", zap.Error(err))
 				return
 			}
 			err = cache.AddToList(s.redisClient, cli.Uid, nlist)
 			if err != nil {
+				s.logger.Error("保存用户信息失败", zap.Error(err))
 				return
 			}
 			break
@@ -482,6 +488,7 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
+			s.logger.Error("读取消息失败", zap.Error(err))
 			//用户下线
 			cli.wsOfflineClients()
 			return
