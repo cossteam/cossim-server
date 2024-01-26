@@ -88,93 +88,101 @@ func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, er
 
 func (s *Service) UserRequestList(ctx context.Context, userID string) (interface{}, error) {
 
-	reqList, err := s.userRelationClient.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
+	reqList, err := s.userFriendRequestClient.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
 	if err != nil {
 		s.logger.Error("user service GetFriendRequestList", zap.Error(err))
 		return nil, err
 	}
 
-	var ids []string
 	var data []*model.UserRequestListResponse
 	for _, v := range reqList.FriendRequestList {
-		ids = append(ids, v.UserId)
-		data = append(data, &model.UserRequestListResponse{
-			UserID:     v.UserId,
-			Msg:        v.Msg,
-			UserStatus: uint32(v.Status),
-		})
-	}
-
-	users, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: ids})
-	if err != nil {
-		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
-		return nil, err
-	}
-
-	for _, v := range data {
-		for _, u := range users.Users {
-			if v.UserID == u.UserId {
-				v.UserName = u.NickName
-				v.UserAvatar = u.Avatar
-				break
+		if v.SenderId == userID {
+			info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.ReceiverId})
+			if err != nil {
+				return nil, err
 			}
+			data = append(data, &model.UserRequestListResponse{
+				ID:         v.ID,
+				ReceiverId: info.UserId,
+				Remark:     v.Remark,
+				RequestAt:  v.CreateAt,
+				Status:     uint32(v.Status),
+				SenderId:   v.SenderId,
+				ReceiverInfo: &model.UserInfo{
+					UserID:     info.UserId,
+					UserName:   info.NickName,
+					UserAvatar: info.Avatar,
+				},
+			})
+		} else {
+			info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.SenderId})
+			if err != nil {
+				return nil, err
+			}
+			data = append(data, &model.UserRequestListResponse{
+				ID:         v.ID,
+				ReceiverId: info.UserId,
+				Remark:     v.Remark,
+				RequestAt:  v.CreateAt,
+				Status:     uint32(v.Status),
+				SenderId:   v.SenderId,
+				ReceiverInfo: &model.UserInfo{
+					UserID:     info.UserId,
+					UserName:   info.NickName,
+					UserAvatar: info.Avatar,
+				},
+			})
 		}
 	}
 	return data, nil
 }
-
-func (s *Service) AddFriend(ctx context.Context, userID string, req *model.AddFriendRequest) (interface{}, error) {
-	// 检查添加的用户是否存在
-	_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: req.UserID})
-	if err != nil {
-		err = code.UserErrNotExist
+func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *model.SendFriendRequest) (interface{}, error) {
+	if req.UserId == userID {
+		err := errors.New("不能添加自己为好友")
 		return nil, err
 	}
+	_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: req.UserId})
+	if err != nil {
+		s.logger.Error("获取用户信息失败", zap.Error(err))
+		return nil, code.UserErrNotExist
+	}
 
-	_, err = s.userRelationClient.AddFriend(ctx, &relationgrpcv1.AddFriendRequest{
-		UserId:   userID,
-		FriendId: req.UserID,
-		Msg:      req.Msg,
+	_, err = s.userFriendRequestClient.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
+		SenderId:   userID,
+		ReceiverId: req.UserId,
+		Remark:     req.Remark,
 	})
 	if err != nil {
 		s.logger.Error("添加好友失败", zap.Error(err))
+		err := errors.New("添加好友失败")
 		return nil, err
 	}
-
-	targetId := req.UserID
-	req.UserID = userID
-	msg := msgconfig.WsMsg{Uid: targetId, Event: msgconfig.AddFriendEvent, Data: req, SendAt: time.Now()}
-	//通知消息服务有消息需要发送
-	if err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {
-		s.logger.Error("添加好友申请通知推送失败", zap.Error(err))
-	}
-
 	return nil, nil
 }
 
 func (s *Service) ManageFriend(ctx context.Context, userID, friendID string, action int32, key string) (interface{}, error) {
-	var dialogId uint32
-
-	// 检查要操作的用户是否存在
-	_, err := s.userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: friendID})
-	if err != nil {
-		return nil, err
-	}
-
-	switch action {
-	case 1: // 同意好友申请
-		_, err = s.handleAction1(ctx, userID, friendID, relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED)
-		if err != nil {
-			return nil, err
-		}
-
-	default: // 同意申请之外的操作，修改状态
-		if err = s.manageFriend3(ctx, userID, friendID, dialogId, relationgrpcv1.RelationStatus_RELATION_STATUS_REJECTED); err != nil {
-			return nil, err
-		}
-	}
-
-	// 向用户推送通知
+	//var dialogId uint32
+	//
+	//// 检查要操作的用户是否存在
+	//_, err := s.userClient.UserInfo(context.Background(), &userApi.UserInfoRequest{UserId: friendID})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//switch action {
+	//case 1: // 同意好友申请
+	//	_, err = s.handleAction1(ctx, userID, friendID, relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//
+	//default: // 同意申请之外的操作，修改状态
+	//	if err = s.manageFriend3(ctx, userID, friendID, dialogId, relationgrpcv1.RelationStatus_RELATION_STATUS_REJECTED); err != nil {
+	//		return nil, err
+	//	}
+	//}
+	//
+	//// 向用户推送通知
 	resp, err := s.sendFriendManagementNotification(ctx, userID, friendID, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
 		s.logger.Error("发送好友管理通知失败", zap.Error(err))
@@ -275,10 +283,10 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return err
 	}
-
-	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-		return code.RelationUserErrFriendRelationNotFound
-	}
+	//TODO
+	//if relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+	//	return code.RelationUserErrFriendRelationNotFound
+	//}
 
 	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID}
 	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: friendID}
@@ -301,15 +309,15 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 }
 
 func (s *Service) AddBlacklist(ctx context.Context, userID, friendID string) (interface{}, error) {
-	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	_, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return nil, err
 	}
-
-	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-		return nil, code.RelationUserErrFriendRelationNotFound
-	}
+	//TODO
+	//if relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+	//	return nil, code.RelationUserErrFriendRelationNotFound
+	//}
 
 	// 进行添加黑名单操作
 	_, err = s.userRelationClient.AddBlacklist(ctx, &relationgrpcv1.AddBlacklistRequest{UserId: userID, FriendId: friendID})
@@ -356,7 +364,7 @@ func (s *Service) SwitchUserE2EPublicKey(ctx context.Context, userID string, fri
 }
 
 func (s *Service) UserSilentNotification(ctx context.Context, userID string, friendID string, silent model.SilentNotificationType) (interface{}, error) {
-	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	_, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: friendID,
 	})
@@ -365,9 +373,10 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 		return nil, err
 	}
 
-	if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-		return nil, code.RelationUserErrFriendRelationNotFound
-	}
+	//TODO
+	//if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+	//	return nil, code.RelationUserErrFriendRelationNotFound
+	//}
 
 	_, err = s.userRelationClient.SetFriendSilentNotification(ctx, &relationgrpcv1.SetFriendSilentNotificationRequest{
 		UserId:   userID,
@@ -385,6 +394,9 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus) (uint32, error) {
 	var dialogId uint32
 	// 创建 DTM 分布式事务工作流
+	fmt.Println("s.dtmGrpcServer => ", s.dtmGrpcServer)
+	fmt.Println("s.relationGrpcServer => ", s.relationGrpcServer)
+
 	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "manage_friend_workflow_2_" + gid
@@ -526,21 +538,21 @@ func (s *Service) convertDialogType(_type uint32) (relationgrpcv1.DialogType, er
 	}
 }
 
-func (s *Service) convertStatusToRelationStatus(status uint32) (relationgrpcv1.RelationStatus, error) {
-	switch status {
-	case 0:
-		return relationgrpcv1.RelationStatus_RELATION_STATUS_APPLYING, nil
-	case 1:
-		return relationgrpcv1.RelationStatus_RELATION_STATUS_PENDING, nil
-	case 2:
-		return relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED, nil
-	case 3:
-		return relationgrpcv1.RelationStatus_RELATION_STATUS_REJECTED, nil
-	case 4:
-		return relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED, nil
-	case 5:
-		return relationgrpcv1.RelationStatus_RELATION_STATUS_DELETED, nil
-	default:
-		return 0, errors.New("invalid status")
-	}
-}
+//func (s *Service) convertStatusToRelationStatus(status uint32) (relationgrpcv1.RelationStatus, error) {
+//	switch status {
+//	case 0:
+//		return relationgrpcv1.RelationStatus_RELATION_STATUS_APPLYING, nil
+//	case 1:
+//		return relationgrpcv1.RelationStatus_RELATION_STATUS_PENDING, nil
+//	case 2:
+//		return relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED, nil
+//	case 3:
+//		return relationgrpcv1.RelationStatus_RELATION_STATUS_REJECTED, nil
+//	case 4:
+//		return relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED, nil
+//	case 5:
+//		return relationgrpcv1.RelationStatus_RELATION_STATUS_DELETED, nil
+//	default:
+//		return 0, errors.New("invalid status")
+//	}
+//}

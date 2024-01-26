@@ -20,12 +20,13 @@ import (
 
 // Service struct
 type Service struct {
-	dialogClient        relationgrpcv1.DialogServiceClient
-	groupRelationClient relationgrpcv1.GroupRelationServiceClient
-	userRelationClient  relationgrpcv1.UserRelationServiceClient
-	userClient          user.UserServiceClient
-	groupClient         groupgrpcv1.GroupServiceClient
-	rabbitMQClient      *msg_queue.RabbitMQ
+	dialogClient            relationgrpcv1.DialogServiceClient
+	groupRelationClient     relationgrpcv1.GroupRelationServiceClient
+	userRelationClient      relationgrpcv1.UserRelationServiceClient
+	userFriendRequestClient relationgrpcv1.UserFriendRequestServiceClient
+	userClient              user.UserServiceClient
+	groupClient             groupgrpcv1.GroupServiceClient
+	rabbitMQClient          *msg_queue.RabbitMQ
 
 	logger    *zap.Logger
 	sid       string
@@ -47,6 +48,7 @@ func New(c *pkgconfig.AppConfig) *Service {
 		//userRelationClient:  userRelationClient,
 		//userClient:          userClient,
 		//groupClient:         groupClient,
+
 		rabbitMQClient: rabbitMQClient,
 		logger:         logger,
 		conf:           c,
@@ -134,9 +136,13 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "relation":
 		s.relationGrpcServer = addr
-		s.dtmGrpcServer = addr
+		s.dialogGrpcServer = addr
+
 		s.userRelationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
+
+		s.userFriendRequestClient = relationgrpcv1.NewUserFriendRequestServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userFriendRequestRelation"), zap.String("addr", conn.Target()))
 
 		s.groupRelationClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))

@@ -75,21 +75,18 @@ func (s *Service) GetUserGroupRequestList(ctx context.Context, request *v1.GetUs
 				isAdmin = false
 			}
 
-			if isAdmin && (v.Status == entity.GroupStatusPending || v.Status == entity.GroupStatusApplying) {
+			if isAdmin {
 				resp.UserGroupRequestList = append(resp.UserGroupRequestList, &v1.UserGroupRequestList{
-					GroupId: gid,
-					UserId:  v.UserID,
-
+					GroupId:   gid,
+					UserId:    v.UserID,
 					Msg:       v.Remark,
-					Status:    v1.GroupRelationStatus(v.Status),
 					CreatedAt: v.CreatedAt,
 				})
-			} else if !isAdmin && v.Status == entity.GroupStatusPending && v.Inviter != "" && v.UserID == request.UserId {
+			} else if !isAdmin && v.Inviter != "" && v.UserID == request.UserId {
 				resp.UserGroupRequestList = append(resp.UserGroupRequestList, &v1.UserGroupRequestList{
 					GroupId:   gid,
 					UserId:    v.Inviter,
 					Msg:       v.Remark,
-					Status:    v1.GroupRelationStatus(v.Status),
 					CreatedAt: v.CreatedAt,
 				})
 			}
@@ -106,7 +103,6 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 		UserID:   request.UserId,
 		GroupID:  uint(request.GroupId),
 		Remark:   request.Msg,
-		Status:   entity.GroupStatusApplying,
 		Identity: entity.GroupIdentity(request.Identify),
 	}
 
@@ -116,13 +112,13 @@ func (s *Service) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
 	}
 
-	if relation != nil && relation.Status == entity.GroupStatusApplying {
+	if relation != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrRequestAlreadyPending.Code()), code.RelationGroupErrRequestFailed.Message())
 	}
-	//如果是群主，则直接加入群组
-	if request.Identify == v1.GroupIdentity_IDENTITY_OWNER {
-		userGroup.Status = entity.GroupStatusJoined
-	}
+	//TODO 如果是群主，则直接加入群组
+	//if request.Identify == v1.GroupIdentity_IDENTITY_OWNER {
+	//	userGroup.Status = entity.GroupStatusJoined
+	//}
 
 	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
 
@@ -154,7 +150,6 @@ func (s *Service) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGro
 		userGroup := &entity.GroupRelation{
 			UserID:      userID,
 			GroupID:     uint(request.GroupId),
-			Status:      entity.GroupStatusPending,
 			Identity:    entity.IdentityUser,
 			Inviter:     inviterID,
 			EntryMethod: entity.EntryInvitation,
@@ -192,12 +187,12 @@ func (s *Service) ManageJoinGroup(ctx context.Context, request *v1.ManageJoinGro
 	if relation == nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrNoJoinRequestRecords.Code()), code.RelationGroupErrNoJoinRequestRecords.Message())
 	}
-
-	if relation.Status == entity.GroupStatusJoined {
-		return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), code.RelationGroupErrAlreadyInGroup.Message())
-	}
-
-	relation.Status = entity.GroupRelationStatus(request.Status)
+	// TODO
+	//if relation.Status == entity.GroupStatusJoined {
+	//	return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), code.RelationGroupErrAlreadyInGroup.Message())
+	//}
+	//
+	//relation.Status = entity.GroupRelationStatus(request.Status)
 	// 插入加入申请
 	_, err = s.grr.UpdateRelation(relation)
 	if err != nil {
@@ -262,7 +257,6 @@ func (s *Service) GetGroupJoinRequestList(ctx context.Context, request *v1.GetGr
 		resp.GroupJoinRequestList = append(resp.GroupJoinRequestList, &v1.GroupJoinRequestList{
 			UserId: join.UserID,
 			Msg:    join.Remark,
-			Status: v1.GroupRelationStatus(join.Status),
 		})
 	}
 
@@ -281,7 +275,6 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	resp.UserId = relation.UserID
 	resp.Identity = v1.GroupIdentity(uint32(relation.Identity))
 	resp.MuteEndTime = relation.MuteEndTime
-	resp.Status = v1.GroupRelationStatus(uint32(relation.Status))
 	resp.IsSilent = v1.GroupSilentNotificationType(relation.SilentNotification)
 	return resp, nil
 }
@@ -303,7 +296,6 @@ func (s *Service) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatc
 			GroupId:     uint32(gr.GroupID),
 			Identity:    v1.GroupIdentity(uint32(gr.Identity)),
 			MuteEndTime: gr.MuteEndTime,
-			Status:      v1.GroupRelationStatus(uint32(gr.Status)),
 		})
 	}
 	return resp, nil
@@ -387,7 +379,6 @@ func (s *Service) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 	owner := &entity.GroupRelation{
 		UserID:   request.UserID,
 		GroupID:  uint(request.GroupId),
-		Status:   entity.GroupStatusJoined,
 		Identity: entity.IdentityOwner,
 	}
 	grs := []*entity.GroupRelation{owner}
@@ -395,7 +386,6 @@ func (s *Service) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 		gr := &entity.GroupRelation{
 			UserID:   v,
 			GroupID:  uint(request.GroupId),
-			Status:   entity.GroupStatusPending,
 			Identity: entity.IdentityUser,
 			Inviter:  owner.UserID,
 		}

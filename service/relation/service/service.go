@@ -13,24 +13,26 @@ import (
 
 func NewService(repo *persistence.Repositories, db *gorm.DB, ac pkgconfig.AppConfig) *Service {
 	return &Service{
-		urr: repo.Urr,
-		grr: repo.Grr,
-		dr:  repo.Dr,
-		db:  db,
-		ac:  ac,
-		sid: xid.New().String(),
+		urr:  repo.Urr,
+		grr:  repo.Grr,
+		dr:   repo.Dr,
+		db:   db,
+		ufqr: repo.Ufqr,
+		ac:   ac,
+		sid:  xid.New().String(),
 	}
 }
 
 type Service struct {
-	db  *gorm.DB
-	urr repository.UserRelationRepository
-	grr repository.GroupRelationRepository
-	dr  repository.DialogRepository
+	db   *gorm.DB
+	urr  repository.UserRelationRepository
+	grr  repository.GroupRelationRepository
+	ufqr repository.UserFriendRequestRepository
+	dr   repository.DialogRepository
 	v1.UnimplementedUserRelationServiceServer
 	v1.UnimplementedGroupRelationServiceServer
 	v1.UnimplementedDialogServiceServer
-
+	v1.UnimplementedUserFriendRequestServiceServer
 	ac        pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string

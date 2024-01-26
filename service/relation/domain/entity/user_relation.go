@@ -2,7 +2,7 @@ package entity
 
 type UserRelation struct {
 	BaseModel
-	Status             UserRelationStatus `gorm:"comment:好友关系状态 (0=申请中 1=待通过 2=已添加 3=已拒绝 4=拉黑 5=删除)" json:"status"`
+	Status             UserRelationStatus `gorm:"comment:好友关系状态 (0=拉黑 1=正常 3=删除 )" json:"status"`
 	UserID             string             `gorm:"type:varchar(64);comment:用户ID" json:"user_id"`
 	FriendID           string             `gorm:"type:varchar(64);comment:好友ID" json:"friend_id"`
 	DialogId           uint               `gorm:"comment:对话ID" json:"dialog_id"`
@@ -21,10 +21,8 @@ const (
 type UserRelationStatus uint
 
 const (
-	UserStatusApplying UserRelationStatus = iota // 申请中
-	UserStatusPending                            // 待通过
-	UserStatusAdded                              // 已添加
-	UserStatusRejected                           // 已拒绝
-	UserStatusBlocked                            // 拉黑
-	UserStatusDeleted                            // 删除
+	//正常关系
+	UserStatusBlocked UserRelationStatus = iota //拉黑
+	UserStatusNormal                            //正常
+	UserStatusDeleted                           // 删除
 )

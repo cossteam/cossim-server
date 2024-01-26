@@ -8,8 +8,8 @@ message AddFriendRequest {
   string UserId = 1;    // 用户id
   // @inject_tag: json:"friend_id"
   string FriendId = 2;  // 好友id
-  // @inject_tag: json:"msg"
-  string Msg = 3;       // 验证信息
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 3;
 }
 
 message AddFriendResponse {
@@ -104,12 +104,9 @@ message GetUserRelationRequest {
 }
 
 enum RelationStatus {
-  RELATION_STATUS_APPLYING = 0;   // 申请中
-  RELATION_STATUS_PENDING = 1;    // 待通过
-  RELATION_STATUS_ADDED = 2;      // 已添加
-  RELATION_STATUS_REJECTED = 3;   // 已拒绝
-  RELATION_STATUS_BLOCKED = 4;    // 已拉黑
-  RELATION_STATUS_DELETED = 5;    // 已删除
+  RELATION_STATUS_BLOCKED = 0;    // 已拉黑
+  RELATION_NORMAL = 1;            // 正常
+  RELATION_STATUS_DELETED = 2;    // 已删除
 }
 
 message GetUserRelationResponse {
@@ -125,28 +122,9 @@ message GetUserRelationResponse {
   UserSilentNotificationType IsSilent = 5;
 }
 
-message GetFriendRequestListRequest {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-}
 
-message GetFriendRequestListResponse {
-  // @inject_tag: json:"friend_request_list"
-  repeated FriendRequestList FriendRequestList = 1;
-}
 
-message FriendRequestList {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;    // 用户id
-  // @inject_tag: json:"nickname"
-  string Nickname = 2;  // 用户昵称
-  // @inject_tag: json:"avatar"
-  string Avatar = 3;    // 用户头像
-  // @inject_tag: json:"msg"
-  string Msg = 4;       // 申请信息
-  // @inject_tag: json:"status"
-  RelationStatus Status = 5;
-}
+
 
 message GetUserRelationByUserIdsRequest {
   // @inject_tag: json:"user_id"
@@ -198,8 +176,7 @@ service UserRelationService {
   rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
   // 获取用户关系
   rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
-  // 获取好友请求列表
-  rpc GetFriendRequestList(GetFriendRequestListRequest) returns (GetFriendRequestListResponse);
+
   // 批量获取用户关系
   rpc GetUserRelationByUserIds(GetUserRelationByUserIdsRequest) returns (GetUserRelationByUserIdsResponse);
   // 设置好友静默通知

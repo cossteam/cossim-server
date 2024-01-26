@@ -436,7 +436,7 @@ const docTemplaterelation = `{
         },
         "/relation/user/add_friend": {
             "post": {
-                "description": "添加好友",
+                "description": "发送好友请求",
                 "consumes": [
                     "application/json"
                 ],
@@ -446,7 +446,7 @@ const docTemplaterelation = `{
                 "tags": [
                     "UserRelation"
                 ],
-                "summary": "添加好友",
+                "summary": "发送好友请求",
                 "parameters": [
                     {
                         "description": "request",
@@ -454,7 +454,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.AddFriendRequest"
+                            "$ref": "#/definitions/model.SendFriendRequest"
                         }
                     }
                 ],
@@ -712,23 +712,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "model.AddFriendRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "e2e_public_key": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "model.AdminManageJoinGroupRequest": {
             "type": "object",
             "required": [
@@ -908,6 +891,20 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "model.SendFriendRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "remark": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "model.SetGroupSilentNotificationRequest": {
             "type": "object",
             "required": [
@@ -978,15 +975,9 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "model.UserRequestListResponse": {
+        "model.UserInfo": {
             "type": "object",
             "properties": {
-                "msg": {
-                    "type": "string"
-                },
-                "request_at": {
-                    "type": "string"
-                },
                 "user_avatar": {
                     "type": "string"
                 },
@@ -995,6 +986,29 @@ const docTemplaterelation = `{
                 },
                 "user_name": {
                     "type": "string"
+                }
+            }
+        },
+        "model.UserRequestListResponse": {
+            "type": "object",
+            "properties": {
+                "receiver_id": {
+                    "type": "string"
+                },
+                "receiver_info": {
+                    "$ref": "#/definitions/model.UserInfo"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "request_at": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "string"
+                },
+                "sender_info": {
+                    "$ref": "#/definitions/model.UserInfo"
                 },
                 "user_status": {
                     "type": "integer"

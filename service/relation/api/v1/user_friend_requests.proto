@@ -1,0 +1,66 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
+import "google/protobuf/empty.proto";
+
+
+message GetFriendRequestListRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message GetFriendRequestListResponse {
+  // @inject_tag: json:"friend_request_list"
+  repeated FriendRequestList FriendRequestList = 1;
+}
+
+message FriendRequestList {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"sender_id"
+  string SenderId = 2;    // 发送方id
+  // @inject_tag: json:"receiver_id"
+  string ReceiverId = 3;       // 接收方id
+  // @inject_tag: json:"status"
+  FriendRequestStatus Status = 4; //状态
+  // @inject_tag: json:"remark"
+  string Remark = 5; //备注
+  // @inject_tag: json:"create_at"
+  uint64 CreateAt = 6;
+}
+
+enum FriendRequestStatus {
+  // 申请中
+  FriendRequestStatus_PENDING = 0;
+  // 已同意
+  FriendRequestStatus_ACCEPT = 1;
+  // 已拒绝
+  FriendRequestStatus_REJECT = 2;
+}
+
+message SendFriendRequestStruct{
+  // @inject_tag: json:"sender_id"
+  string SenderId = 1;    // 发送请求方id
+  // @inject_tag: json:"receiver_id"
+  string ReceiverId = 2;  // 接收请求方id
+  // @inject_tag: json:"remark"
+  string Remark = 3;       // 申请信息
+}
+
+message ManageFriendRequestStruct {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"status"
+  FriendRequestStatus Status = 3;
+}
+
+
+
+service UserFriendRequestService {
+  // 获取好友请求列表
+  rpc GetFriendRequestList(GetFriendRequestListRequest) returns (GetFriendRequestListResponse);
+  //发送好友请求
+  rpc SendFriendRequest(SendFriendRequestStruct) returns (google.protobuf.Empty);
+  // 管理好友请求
+  rpc ManageFriendRequest(ManageFriendRequestStruct) returns (google.protobuf.Empty);
+}
