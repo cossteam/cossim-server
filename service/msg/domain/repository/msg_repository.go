@@ -25,6 +25,8 @@ type MsgRepository interface {
 	GetUnreadUserMsgs(uid string, dialogId uint32) ([]*entity.UserMessage, error)
 	//批量查询阅后即焚消息id
 	GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogId uint32) ([]*entity.UserMessage, error)
+	GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error)
+	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error)
 
 	//删除
 	PhysicalDeleteGroupMessage(msgId uint32) error

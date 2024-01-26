@@ -15,6 +15,40 @@ const docTemplatemsg = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/msg/after/get": {
+            "post": {
+                "description": "获取指定对话落后消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取指定对话落后消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.AfterMsg"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/dialog/list": {
             "get": {
                 "description": "获取用户对话列表",
@@ -431,6 +465,17 @@ const docTemplatemsg = `{
         }
     },
     "definitions": {
+        "model.AfterMsg": {
+            "type": "object",
+            "properties": {
+                "dialog_id": {
+                    "type": "integer"
+                },
+                "msg_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.EditGroupMsgRequest": {
             "type": "object",
             "required": [

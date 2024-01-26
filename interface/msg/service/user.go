@@ -528,3 +528,84 @@ func (s *Service) SendMsgToUsers(uids []string, event config.WSEventType, data i
 		s.SendMsg(uid, event, data)
 	}
 }
+
+// 获取对话落后信息
+func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMsg, userID string) ([]*model.GetDialogAfterMsgResponse, error) {
+	var responses = make([]*model.GetDialogAfterMsgResponse, 0)
+	dialogIds := make([]uint32, 0)
+	for _, v := range request {
+		dialogIds = append(dialogIds, v.DialogId)
+	}
+
+	//TODO 验证是否在对话内
+
+	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+		DialogIds: dialogIds,
+	})
+	if err != nil {
+		s.logger.Error("获取用户会话信息", zap.Error(err))
+		return nil, err
+	}
+	var infos2 = make([]*msggrpcv1.GetGroupMsgIdAfterMsgRequest, 0)
+	var infos3 = make([]*msggrpcv1.GetUserMsgIdAfterMsgRequest, 0)
+	for i, i2 := range infos.Dialogs {
+		if i2.Type == uint32(model.GroupConversation) {
+			infos2 = append(infos2, &msggrpcv1.GetGroupMsgIdAfterMsgRequest{
+				DialogId: i2.Id,
+				MsgId:    request[i].MsgId,
+			})
+		} else {
+			infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
+				DialogId: i2.Id,
+				MsgId:    request[i].MsgId,
+			})
+		}
+	}
+	//获取群聊消息
+	grouplist, err := s.msgClient.GetGroupMsgIdAfterMsgList(ctx, &msggrpcv1.GetGroupMsgIdAfterMsgListRequest{
+		List: infos2,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, i2 := range grouplist.Messages {
+		msgs := make([]*model.Message, 0)
+		for _, i3 := range i2.GroupMessages {
+			msg := model.Message{}
+			msg.MsgId = uint64(i3.Id)
+			msg.MsgType = uint(i3.Type)
+			msg.Content = i3.Content
+			msg.SenderId = i3.UserId
+			msg.SendTime = i3.CreatedAt
+			msgs = append(msgs, &msg)
+		}
+		responses = append(responses, &model.GetDialogAfterMsgResponse{
+			DialogId: i2.DialogId,
+			Messages: msgs,
+		})
+	}
+	//获取私聊消息
+	userlist, err := s.msgClient.GetUserMsgIdAfterMsgList(ctx, &msggrpcv1.GetUserMsgIdAfterMsgListRequest{
+		List: infos3,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, i2 := range userlist.Messages {
+		msgs := make([]*model.Message, 0)
+		for _, i3 := range i2.UserMessages {
+			msg := model.Message{}
+			msg.MsgId = uint64(i3.Id)
+			msg.MsgType = uint(i3.Type)
+			msg.Content = i3.Content
+			msg.SenderId = i3.SenderId
+			msg.SendTime = i3.CreatedAt
+			msgs = append(msgs, &msg)
+		}
+		responses = append(responses, &model.GetDialogAfterMsgResponse{
+			DialogId: i2.DialogId,
+			Messages: msgs,
+		})
+	}
+	return responses, nil
+}

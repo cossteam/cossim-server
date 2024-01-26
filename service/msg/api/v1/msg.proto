@@ -346,9 +346,16 @@ message GetUserMsgIdAfterMsgListRequest{
   repeated GetUserMsgIdAfterMsgRequest list = 1;
 }
 
-message GetUserMsgIdAfterMsgListResponse{
+message GetUserMsgIdAfterMsgResponse{
   // @inject_tag: json:"user_messages"
-  repeated GroupMessage UserMessages = 1;
+  repeated UserMessage UserMessages = 1;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 2;
+}
+
+message GetUserMsgIdAfterMsgListResponse {
+  // @inject_tag: json:"messages"
+  repeated GetUserMsgIdAfterMsgResponse messages = 1;
 }
 
 message GetGroupMsgIdAfterMsgRequest {
@@ -360,14 +367,19 @@ message GetGroupMsgIdAfterMsgRequest {
 
 message GetGroupMsgIdAfterMsgListRequest{
   // @inject_tag: json:"dialog_ids"
-  repeated GetUserMsgIdAfterMsgRequest list = 1;
+  repeated GetGroupMsgIdAfterMsgRequest list = 1;
 }
 
-message GetGroupMsgIdAfterMsgListResponse{
+message GetGroupMsgIdAfterMsgResponse{
   // @inject_tag: json:"group_messages"
   repeated GroupMessage GroupMessages = 1;
   // @inject_tag: json:"dialog_id"
-  string DialogId = 2;
+  uint32 DialogId = 2;
+}
+
+message GetGroupMsgIdAfterMsgListResponse {
+  // @inject_tag: json:"messages"
+  repeated GetGroupMsgIdAfterMsgResponse messages = 1;
 }
 
 service MsgService{

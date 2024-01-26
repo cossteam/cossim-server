@@ -123,3 +123,20 @@ const (
 	NotLabel LabelMsgType = iota //不标注
 	IsLabel                      //标注
 )
+
+type GetDialogAfterMsgRequest struct {
+	AfterMsg `json:"msg_list"`
+}
+type AfterMsg struct {
+	MsgId    uint32 `json:"msg_id"`
+	DialogId uint32 `json:"dialog_id"`
+}
+
+type GetDialogAfterMsgResponse struct {
+	DialogId uint32     `json:"dialog_id"`
+	Messages []*Message `json:"msg_list"`
+}
+
+type GetDialogAfterMsgListResponse struct {
+	MsgList []*GetDialogAfterMsgResponse `json:"msg_list"`
+}

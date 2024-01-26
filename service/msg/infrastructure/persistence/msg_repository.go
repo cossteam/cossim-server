@@ -287,3 +287,21 @@ func (g *MsgRepo) LogicalDeleteGroupMessages(msgIds []uint32) error {
 		Where("id IN (?)", msgIds).
 		Update("deleted_at", time.Now()).Error
 }
+
+func (g *MsgRepo) GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error) {
+	var userMessages []*entity.UserMessage
+	err := g.db.Model(&entity.UserMessage{}).
+		Where("dialog_id = ? AND id > ? AND deleted_at = 0", dialogId, msgIds).
+		Order("id ASC").
+		Find(&userMessages).Error
+	return userMessages, err
+}
+
+func (g *MsgRepo) GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error) {
+	var groupMessages []*entity.GroupMessage
+	err := g.db.Model(&entity.GroupMessage{}).
+		Where("dialog_id = ? AND id > ? AND deleted_at = 0", dialogId, msgIds).
+		Order("id ASC").
+		Find(&groupMessages).Error
+	return groupMessages, err
+}

@@ -1,4 +1,11 @@
 definitions:
+  model.AfterMsg:
+    properties:
+      dialog_id:
+        type: integer
+      msg_id:
+        type: integer
+    type: object
   model.EditGroupMsgRequest:
     properties:
       content:
@@ -143,6 +150,28 @@ info:
   contact: {}
   title: Swagger Example API
 paths:
+  /msg/after/get:
+    post:
+      consumes:
+      - application/json
+      description: 获取指定对话落后消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/model.AfterMsg'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 获取指定对话落后消息
   /msg/dialog/list:
     get:
       consumes:
