@@ -50,6 +50,7 @@ var (
 	RelationErrNotInBlacklist                        = New(13017, "没有在黑名单")
 	RelationErrSendFriendRequestFailed               = New(13018, "发送好友请求失败")
 	RelationErrManageFriendRequestFailed             = New(13019, "管理好友请求失败")
+	RelationErrRequestAlreadyProcessed               = New(13020, "该请求已处理")
 
 	RelationErrCreateGroupFailed                         = New(13101, "创建群聊失败")
 	RelationErrGetGroupIDsFailed                         = New(13102, "获取群聊成员")

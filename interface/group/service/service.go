@@ -50,7 +50,7 @@ func New(c *pkgconfig.AppConfig) (s *Service) {
 		conf:   c,
 		sid:    xid.New().String(),
 
-		dtmGrpcServer: c.Dtm.Address,
+		dtmGrpcServer: c.Dtm.Addr(),
 		//relationGrpcServer: c.Discovers["relation"].Addr(),
 		//dialogGrpcServer:   c.Discovers["relation"].Addr(),
 		//groupGrpcServer:    c.Discovers["group"].Addr(),

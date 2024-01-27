@@ -822,16 +822,16 @@ const docTemplaterelation = `{
         "model.ManageFriendRequest": {
             "type": "object",
             "required": [
-                "user_id"
+                "Request_id"
             ],
             "properties": {
+                "Request_id": {
+                    "type": "integer"
+                },
                 "action": {
                     "$ref": "#/definitions/model.ActionEnum"
                 },
                 "e2e_public_key": {
-                    "type": "string"
-                },
-                "user_id": {
                     "type": "string"
                 }
             }
@@ -992,6 +992,9 @@ const docTemplaterelation = `{
         "model.UserRequestListResponse": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "integer"
+                },
                 "receiver_id": {
                     "type": "string"
                 },

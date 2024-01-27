@@ -54,13 +54,42 @@ message ManageFriendRequestStruct {
   FriendRequestStatus Status = 3;
 }
 
+message GetFriendRequestByIdRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+message GetFriendRequestByUserIdAndFriendIdRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+}
+
+message SendFriendRequestStructResponse {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+message DeleteFriendRequestByUserIdAndFriendIdRequest{
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+}
 
 
 service UserFriendRequestService {
   // 获取好友请求列表
   rpc GetFriendRequestList(GetFriendRequestListRequest) returns (GetFriendRequestListResponse);
   //发送好友请求
-  rpc SendFriendRequest(SendFriendRequestStruct) returns (google.protobuf.Empty);
+  rpc SendFriendRequest(SendFriendRequestStruct) returns (SendFriendRequestStructResponse);
   // 管理好友请求
   rpc ManageFriendRequest(ManageFriendRequestStruct) returns (google.protobuf.Empty);
+  //根据请求id获取好友请求
+  rpc GetFriendRequestById(GetFriendRequestByIdRequest) returns (FriendRequestList);
+  //根据用户id与好友id获取请求
+  rpc GetFriendRequestByUserIdAndFriendId(GetFriendRequestByUserIdAndFriendIdRequest) returns (FriendRequestList);
+  //删除已经处理的请求
+  rpc DeleteFriendRequestByUserIdAndFriendId(DeleteFriendRequestByUserIdAndFriendIdRequest) returns (google.protobuf.Empty);
 }

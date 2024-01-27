@@ -25,8 +25,8 @@ var (
 func Init(c *pkgconfig.AppConfig, service *service.Service) {
 	cfg = c
 	svc = service
-
 	setupLogger()
+	setupRedis()
 	setupEncryption()
 	setupGin()
 }

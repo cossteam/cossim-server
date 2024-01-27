@@ -52,7 +52,7 @@ type AddBlacklistRequest struct {
 }
 
 type ManageFriendRequest struct {
-	UserID       string     `json:"user_id" binding:"required"`
+	RequestID    uint32     `json:"request_id" binding:"required"`
 	Action       ActionEnum `json:"action"`
 	E2EPublicKey string     `json:"e2e_public_key"`
 }

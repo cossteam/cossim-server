@@ -229,7 +229,7 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
-	responseData, err := svc.ManageFriend(c, userID, req.UserID, int32(req.Action), req.E2EPublicKey)
+	responseData, err := svc.ManageFriend(c, userID, req.RequestID, int32(req.Action), req.E2EPublicKey)
 	if err != nil {
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
@@ -259,13 +259,13 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.SendFriendRequest(c, thisId, req)
+	resp, err := svc.SendFriendRequest(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "发送好友请求成功", nil)
+	response.SetSuccess(c, "发送好友请求成功", resp)
 }
 
 // @Summary 群聊成员列表

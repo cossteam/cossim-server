@@ -89,14 +89,14 @@ definitions:
     type: object
   model.ManageFriendRequest:
     properties:
+      Request_id:
+        type: integer
       action:
         $ref: '#/definitions/model.ActionEnum'
       e2e_public_key:
         type: string
-      user_id:
-        type: string
     required:
-    - user_id
+    - Request_id
     type: object
   model.ManageJoinGroupRequest:
     properties:
@@ -199,6 +199,8 @@ definitions:
     type: object
   model.UserRequestListResponse:
     properties:
+      id:
+        type: integer
       receiver_id:
         type: string
       receiver_info:
