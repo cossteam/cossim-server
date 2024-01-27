@@ -8,8 +8,8 @@ message UserGroupRequest {
   string UserId = 1;
   // @inject_tag: json:"group_id"
   uint32 GroupId = 2;
-  // @inject_tag: json:"relation_status"
-  uint32 RelationStatus = 4;
+//  // @inject_tag: json:"relation_status"
+//  uint32 RelationStatus = 4;
 }
 
 message UserGroupResponse {
@@ -23,34 +23,6 @@ message GroupIDRequest {
 message UserIdsResponse {
   // @inject_tag: json:"user_ids"
   repeated string UserIds = 1;
-}
-
-
-message JoinGroupRequest {
-  // @inject_tag: json:"group_id"
-  uint32 GroupId = 1; // 群聊id
-  // @inject_tag: json:"user_id"
-  string UserId = 2;  // 用户id
-  // @inject_tag: json:"msg"
-  string Msg = 3; // 申请信息
-  // @inject_tag: json:"identify"
-  GroupIdentity Identify = 4;
-}
-
-message JoinGroupResponse {
-
-}
-
-message ManageJoinGroupRequest {
-  // @inject_tag: json:"group_id"
-  uint32 GroupId = 1;     // 群聊id
-  // @inject_tag: json:"user_id"
-  string UserId = 2;  // 用户id
-  // @inject_tag: json:"status"
-  GroupRelationStatus Status = 3;
-}
-
-message ManageJoinGroupResponse {
 }
 
 
@@ -74,26 +46,6 @@ message LeaveGroupRequest {
 message LeaveGroupResponse {
 }
 
-message GetGroupJoinRequestListRequest {
-  repeated GroupIDRequest GroupIds = 1;
-}
-
-message GroupJoinRequestListResponse {
-  repeated GroupJoinRequestList GroupJoinRequestList = 1;
-}
-
-message GroupJoinRequestList {
-  // @inject_tag: json:"group_id"
-  uint32 GroupId = 1;   // 群聊id
-  // @inject_tag: json:"user_id"
-  string UserId = 2;    // 用户id
-  // @inject_tag: json:"msg"
-  string Msg = 3;       // 申请信息
-  // @inject_tag: json:"status"
-  GroupRelationStatus Status = 4;
-  // @inject_tag: json:"created_at"
-  int64 CreatedAt = 5;
-}
 
 message GetGroupRelationRequest {
   // @inject_tag: json:"group_id"
@@ -107,8 +59,8 @@ message GetGroupRelationResponse {
   uint32 GroupId = 1; // 群聊ID
   // @inject_tag: json:"user_id"
   string UserId = 2;  // 用户ID
-  // @inject_tag: json:"status"
-  GroupRelationStatus Status = 3; //状态
+//  // @inject_tag: json:"status"
+//  GroupRelationStatus Status = 3; //状态
   // @inject_tag: json:"identity"
   GroupIdentity Identity = 4;  // 群聊身份
   // @inject_tag: json:"join_method"
@@ -128,14 +80,15 @@ enum GroupIdentity {
   IDENTITY_OWNER = 2; // 群主
 }
 
-enum GroupRelationStatus {
-    GroupStatusApplying  = 0; // 申请
-    GroupStatusPending   = 1; // 待通过
-    GroupStatusJoined    = 2; // 加入
-    GroupStatusDeleted   = 3; // 已删除
-    GroupStatusReject    = 4; // 拒绝
-    GroupStatusBlocked   = 5; // 被封禁
-}
+//enum GroupRelationStatus {
+//    GroupStatusApplying  = 0; // 申请
+//    GroupStatusPending   = 1; // 待通过
+//    GroupStatusJoined    = 2; // 加入
+//    GroupStatusDeleted   = 3; // 已删除
+//    GroupStatusReject    = 4; // 拒绝
+//    GroupStatusBlocked   = 5; // 被封禁
+//}
+
 
 message GetUserManageGroupIDRequest {
   // @inject_tag: json:"user_id"
@@ -156,12 +109,12 @@ message GetUserGroupIDsResponse {
   repeated  uint32 GroupId = 1; // 群聊ID
 }
 
-message GetUserGroupRequestListRequest {
+message GetUserGroupListRequest {
   // @inject_tag: json:"user_id"
   string UserId = 1;
 }
 
-message GetUserGroupRequestListResponse {
+message GetUserGroupListResponse {
   repeated UserGroupRequestList UserGroupRequestList = 1;
 }
 
@@ -172,8 +125,8 @@ message UserGroupRequestList {
   string UserId = 2;    // 用户id
   // @inject_tag: json:"msg"
   string Msg = 3;       // 申请信息
-  // @inject_tag: json:"status"
-  GroupRelationStatus Status = 4;
+//  // @inject_tag: json:"status"
+//  GroupRelationStatus Status = 4;
   // @inject_tag: json:"created_at"
   int64 CreatedAt = 5;
   // @inject_tag: json:"inviter_id"
@@ -185,8 +138,8 @@ message DeleteGroupRelationByGroupIdAndUserIDRequest {
   uint32 GroupID = 1; // 群聊ID
   // @inject_tag: json:"user_id"
   string UserID = 2;  // 用户ID
-  // @inject_tag: json:"status"
-  GroupRelationStatus Status = 3;
+//  // @inject_tag: json:"status"
+//  GroupRelationStatus Status = 3;
 }
 
 message DeleteGroupRelationByGroupIdAndUserIDRevertRequest {
@@ -194,8 +147,8 @@ message DeleteGroupRelationByGroupIdAndUserIDRevertRequest {
   uint32 GroupID = 1; // 群聊ID
   // @inject_tag: json:"user_id"
   string UserID = 2;  // 用户ID
-  // @inject_tag: json:"status"
-  GroupRelationStatus Status = 3;
+//  // @inject_tag: json:"status"
+//  GroupRelationStatus Status = 3;
 }
 
 message CreateGroupAndInviteUsersRequest {
@@ -220,14 +173,6 @@ message GetBatchGroupRelationResponse {
 
 message DeleteGroupRelationByGroupIdAndUserIDResponse {}
 
-message InviteJoinGroupRequest {
-  // @inject_tag: json:"group_id"
-  uint32 GroupId = 1;
-  // @inject_tag: json:"inviter_id"
-  string InviterId = 2;
-  // @inject_tag: json:"member"
-  repeated string Member = 3;
-}
 
 enum GroupSilentNotificationType {
   // @inject_tag: json:"not_silent"
@@ -245,19 +190,24 @@ message SetGroupSilentNotificationRequest{
   GroupSilentNotificationType IsSilent = 3;
 }
 
+message CreateGroupAndInviteUsersResponse {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+}
+
 
 service GroupRelationService {
-  // 加入群聊
-  rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
-
-  // 加入群聊回滚操作
-  rpc JoinGroupRevert(JoinGroupRequest) returns (JoinGroupResponse);
+  // 申请加入群聊
+//  rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
+//
+//  // 加入群聊回滚操作
+//  rpc JoinGroupRevert(JoinGroupRequest) returns (JoinGroupResponse);
 
   // 邀请好友加入群聊
-  rpc InviteJoinGroup(InviteJoinGroupRequest) returns (google.protobuf.Empty);
-
-  // InviteJoinGroup回滚操作
-  rpc InviteJoinGroupRevert(InviteJoinGroupRequest) returns (google.protobuf.Empty);
+//  rpc InviteJoinGroup(InviteJoinGroupRequest) returns (google.protobuf.Empty);
+//
+//  // InviteJoinGroup回滚操作
+//  rpc InviteJoinGroupRevert(InviteJoinGroupRequest) returns (google.protobuf.Empty);
 
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
@@ -266,7 +216,7 @@ service GroupRelationService {
   rpc GetUserGroupIDs(GetUserGroupIDsRequest) returns (GetUserGroupIDsResponse);
 
   // 获取用户的所有群聊列表信息
-  rpc GetUserGroupRequestList(GetUserGroupRequestListRequest) returns (GetUserGroupRequestListResponse);
+  rpc GetUserGroupList(GetUserGroupListRequest) returns (GetUserGroupListResponse);
 
   // 获取群聊管理员ID列表
   rpc GetGroupAdminIds(GroupIDRequest) returns (UserIdsResponse);
@@ -274,11 +224,11 @@ service GroupRelationService {
   // 获取用户管理的群聊ID列表
   rpc GetUserManageGroupID(GetUserManageGroupIDRequest) returns (GetUserManageGroupIDResponse);
 
-  // ManageJoinGroup 管理群聊加入申请
-  rpc ManageJoinGroup (ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
-
-  // 管理群聊加入申请回滚操作
-  rpc ManageJoinGroupRevert(ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
+//  // ManageJoinGroup 管理群聊加入申请
+//  rpc ManageJoinGroup (ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
+//
+//  // 管理群聊加入申请回滚操作
+//  rpc ManageJoinGroupRevert(ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
 
   // 从群聊中移除成员
   rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);
@@ -289,8 +239,6 @@ service GroupRelationService {
   // 退出群聊回滚操作
   rpc LeaveGroupRevert(LeaveGroupRequest) returns (LeaveGroupResponse);
 
-  // 获取群聊加入申请列表
-  rpc GetGroupJoinRequestList (GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse);
 
   // 获取用户与群聊关系信息
   rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
@@ -311,7 +259,7 @@ service GroupRelationService {
   rpc DeleteGroupRelationByGroupIdAndUserIDRevert(DeleteGroupRelationByGroupIdAndUserIDRequest) returns (google.protobuf.Empty);
 
   // 创建群聊并邀请多个用户进群（包括自己）
-  rpc CreateGroupAndInviteUsers(CreateGroupAndInviteUsersRequest) returns (google.protobuf.Empty);
+  rpc CreateGroupAndInviteUsers(CreateGroupAndInviteUsersRequest) returns (CreateGroupAndInviteUsersResponse);
 
   // CreateGroupAndInviteUsers 回滚操作
   rpc CreateGroupAndInviteUsersRevert(CreateGroupAndInviteUsersRequest) returns (google.protobuf.Empty);

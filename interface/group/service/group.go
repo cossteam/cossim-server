@@ -45,23 +45,15 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		Avatar:          req.Avatar,
 		Member:          req.Member,
 	}}
-	//r2 := &relationgrpcv1.JoinGroupRequest{
-	//	UserId:   req.CreatorId,
-	//	Identify: relationgrpcv1.GroupIdentity_IDENTITY_OWNER,
-	//}
+
 	r22 := &relationgrpcv1.CreateGroupAndInviteUsersRequest{
 		UserID: req.CreatorId,
 		Member: req.Member,
 	}
-	r3 := &relationgrpcv1.CreateAndJoinDialogWithGroupRequest{
-		OwnerId: req.CreatorId,
-		//UserIds: req.Member,
-		Type: uint32(relationgrpcv1.DialogType_GROUP_DIALOG),
-	}
-	resp1 := &groupgrpcv1.Group{}
-	resp2 := &relationgrpcv1.CreateAndJoinDialogWithGroupResponse{}
-	var groupID uint32
 
+	resp1 := &groupgrpcv1.Group{}
+	var groupID uint32
+	var DialogID uint32
 	// 创建 DTM 分布式事务工作流
 	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
@@ -80,37 +72,16 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		})
 		groupID = resp1.Id
 
-		// 加入群聊
-		//r2.GroupId = resp1.Id
-		//_, err = s.relationGroupClient.JoinGroup(ctx, r2)
-		//if err != nil {
-		//	return err
-		//}
+		r22.GroupId = groupID
+		resp2, err := s.relationGroupClient.CreateGroupAndInviteUsers(ctx, r22)
+		if err != nil {
+			return err
+		}
+		DialogID = resp2.DialogId
 		//wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-		//	_, err = s.relationGroupClient.JoinGroupRevert(ctx, r2)
+		//	_, err = s.relationGroupClient.CreateGroupAndInviteUsersRevert(ctx, r22)
 		//	return err
 		//})
-
-		r22.GroupId = groupID
-		_, err = s.relationGroupClient.CreateGroupAndInviteUsers(ctx, r22)
-		if err != nil {
-			return err
-		}
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.relationGroupClient.CreateGroupAndInviteUsersRevert(ctx, r22)
-			return err
-		})
-
-		// 创建群聊会话并加入
-		r3.GroupId = groupID
-		resp2, err = s.relationDialogClient.CreateAndJoinDialogWithGroup(ctx, r3)
-		if err != nil {
-			return err
-		}
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.relationDialogClient.CreateAndJoinDialogWithGroupRevert(ctx, r3)
-			return err
-		})
 
 		return err
 	}); err != nil {
@@ -137,7 +108,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		Status:          int32(resp1.Status),
 		MaxMembersLimit: resp1.MaxMembersLimit,
 		CreatorId:       resp1.CreatorId,
-		DialogId:        resp2.Id,
+		DialogId:        DialogID,
 	}, nil
 }
 

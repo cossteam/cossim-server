@@ -1,0 +1,105 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
+import "google/protobuf/empty.proto";
+
+
+enum GroupRequestStatus {
+  Pending = 0; //等待中
+  Accepted = 1; //已通过
+  Rejected = 2; //已拒绝
+  Invitation = 3; //邀请中
+}
+
+message GetGroupJoinRequestListRequest {
+  // @inject_tag: json:"string"
+  string UserId = 1;
+}
+
+message GroupJoinRequestResponse {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"user_id"
+  string UserId = 3;
+  // @inject_tag: json:"inviter_id"
+  string InviterId = 4;
+  // @inject_tag: json:"created_at"
+  uint64 CreatedAt = 5;
+  //  @inject_tag: json:"status"
+  GroupRequestStatus Status = 6;
+  // @inject_tag: json:"remark"
+  string Remark = 7;
+}
+
+message GroupJoinRequestListResponse {
+  // @inject_tag: json:"group_join_request_list"
+  repeated GroupJoinRequestResponse GroupJoinRequestResponses = 1;
+}
+
+message GetGroupJoinRequestByGroupIdAndUserIdRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+message GetGroupJoinRequestByGroupIdAndUserIdResponse {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"user_id"
+  string UserId = 3;
+  // @inject_tag: json:"inviter_id"
+  string InviterId = 4;
+  // @inject_tag: json:"created_at"
+  uint64 CreatedAt = 5;
+  //  @inject_tag: json:"status"
+  GroupRequestStatus Status = 6;
+  // @inject_tag: json:"remark"
+  string Remark = 7;
+}
+
+message JoinGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1; // 群聊id
+  // @inject_tag: json:"user_id"
+  string UserId = 2;  // 用户id
+  // @inject_tag: json:"msg"
+  string Msg = 3; // 申请信息
+}
+
+message JoinGroupResponse {
+
+}
+
+message InviteJoinGroupRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+  // @inject_tag: json:"inviter_id"
+  string InviterId = 2;
+  // @inject_tag: json:"member"
+  repeated string Member = 3;
+}
+
+message ManageGroupJoinRequestByIDRequest{
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"status"
+  GroupRequestStatus Status = 2;
+}
+
+service GroupJoinRequestService {
+  // 获取用户加入群聊列表
+  rpc GetGroupJoinRequestListByUserId(GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse) {}
+  // 根据群聊id和用户id获取群聊加入请求
+  rpc GetGroupJoinRequestByGroupIdAndUserId(GetGroupJoinRequestByGroupIdAndUserIdRequest) returns (GetGroupJoinRequestByGroupIdAndUserIdResponse) {}
+  // 申请加入群聊
+  rpc JoinGroup(JoinGroupRequest) returns (JoinGroupResponse) {}
+  // 邀请用户加入群聊
+  rpc InviteJoinGroup(InviteJoinGroupRequest) returns (JoinGroupResponse) {}
+  // 用户管理入群邀请
+  rpc ManageGroupJoinRequestByID(ManageGroupJoinRequestByIDRequest) returns (google.protobuf.Empty) {}
+}

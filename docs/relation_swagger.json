@@ -59,7 +59,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.AdminManageJoinGroupRequest"
+                            "$ref": "#/definitions/model.ManageJoinGroupRequest"
                         }
                     }
                 ],
@@ -702,24 +702,6 @@
                 }
             }
         },
-        "model.AdminManageJoinGroupRequest": {
-            "type": "object",
-            "required": [
-                "group_id",
-                "user_id"
-            ],
-            "properties": {
-                "action": {
-                    "$ref": "#/definitions/model.ActionEnum"
-                },
-                "group_id": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "model.DeleteBlacklistRequest": {
             "type": "object",
             "required": [
@@ -761,6 +743,9 @@
                     "type": "integer"
                 },
                 "group_type": {
+                    "type": "integer"
+                },
+                "id": {
                     "type": "integer"
                 },
                 "max_members_limit": {
@@ -829,7 +814,8 @@
         "model.ManageJoinGroupRequest": {
             "type": "object",
             "required": [
-                "group_id"
+                "group_id",
+                "id"
             ],
             "properties": {
                 "action": {
@@ -838,8 +824,8 @@
                 "group_id": {
                     "type": "integer"
                 },
-                "inviter_id": {
-                    "type": "string"
+                "id": {
+                    "type": "integer"
                 }
             }
         },

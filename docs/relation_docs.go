@@ -69,7 +69,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.AdminManageJoinGroupRequest"
+                            "$ref": "#/definitions/model.ManageJoinGroupRequest"
                         }
                     }
                 ],
@@ -712,24 +712,6 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "model.AdminManageJoinGroupRequest": {
-            "type": "object",
-            "required": [
-                "group_id",
-                "user_id"
-            ],
-            "properties": {
-                "action": {
-                    "$ref": "#/definitions/model.ActionEnum"
-                },
-                "group_id": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "model.DeleteBlacklistRequest": {
             "type": "object",
             "required": [
@@ -771,6 +753,9 @@ const docTemplaterelation = `{
                     "type": "integer"
                 },
                 "group_type": {
+                    "type": "integer"
+                },
+                "id": {
                     "type": "integer"
                 },
                 "max_members_limit": {
@@ -839,7 +824,8 @@ const docTemplaterelation = `{
         "model.ManageJoinGroupRequest": {
             "type": "object",
             "required": [
-                "group_id"
+                "group_id",
+                "id"
             ],
             "properties": {
                 "action": {
@@ -848,8 +834,8 @@ const docTemplaterelation = `{
                 "group_id": {
                     "type": "integer"
                 },
-                "inviter_id": {
-                    "type": "string"
+                "id": {
+                    "type": "integer"
                 }
             }
         },

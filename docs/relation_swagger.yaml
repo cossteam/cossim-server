@@ -17,18 +17,6 @@ definitions:
     required:
     - user_id
     type: object
-  model.AdminManageJoinGroupRequest:
-    properties:
-      action:
-        $ref: '#/definitions/model.ActionEnum'
-      group_id:
-        type: integer
-      user_id:
-        type: string
-    required:
-    - group_id
-    - user_id
-    type: object
   model.DeleteBlacklistRequest:
     properties:
       user_id:
@@ -56,6 +44,8 @@ definitions:
       group_status:
         type: integer
       group_type:
+        type: integer
+      id:
         type: integer
       max_members_limit:
         type: integer
@@ -104,10 +94,11 @@ definitions:
         $ref: '#/definitions/model.ActionEnum'
       group_id:
         type: integer
-      inviter_id:
-        type: string
+      id:
+        type: integer
     required:
     - group_id
+    - id
     type: object
   model.QuitGroupRequest:
     properties:
@@ -266,7 +257,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.AdminManageJoinGroupRequest'
+          $ref: '#/definitions/model.ManageJoinGroupRequest'
       produces:
       - application/json
       responses:

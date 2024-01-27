@@ -415,17 +415,17 @@ func manageJoinGroup(c *gin.Context) {
 		return
 	}
 
-	var status relationgrpcv1.GroupRelationStatus
+	var status relationgrpcv1.GroupRequestStatus
 	var msg string
 	if req.Action == model.ActionAccepted {
-		status = relationgrpcv1.GroupRelationStatus_GroupStatusJoined
+		status = relationgrpcv1.GroupRequestStatus_Accepted
 		msg = "同意加入群聊"
 	} else {
-		status = relationgrpcv1.GroupRelationStatus_GroupStatusReject
+		status = relationgrpcv1.GroupRequestStatus_Rejected
 		msg = "拒绝加入群聊"
 	}
 
-	if err = svc.ManageJoinGroup(c, req.GroupID, req.InviterId, userID, status); err != nil {
+	if err = svc.ManageJoinGroup(c, req.GroupID, req.ID, userID, status); err != nil {
 		logger.Error("用户管理群聊申请", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
@@ -439,11 +439,11 @@ func manageJoinGroup(c *gin.Context) {
 // @Tags GroupRelation
 // @Accept  json
 // @Produce  json
-// @param request body model.AdminManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
+// @param request body model.ManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/admin/manage/join [post]
 func adminManageJoinGroup(c *gin.Context) {
-	req := new(model.AdminManageJoinGroupRequest)
+	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
@@ -462,17 +462,17 @@ func adminManageJoinGroup(c *gin.Context) {
 		return
 	}
 
-	var status relationgrpcv1.GroupRelationStatus
+	var status relationgrpcv1.GroupRequestStatus
 	var msg string
 	if req.Action == model.ActionAccepted {
-		status = relationgrpcv1.GroupRelationStatus_GroupStatusJoined
+		status = relationgrpcv1.GroupRequestStatus_Accepted
 		msg = "同意加入群聊"
 	} else {
-		status = relationgrpcv1.GroupRelationStatus_GroupStatusReject
+		status = relationgrpcv1.GroupRequestStatus_Rejected
 		msg = "拒绝加入群聊"
 	}
 
-	if err = svc.AdminManageJoinGroup(c, req.GroupID, adminID, req.UserID, status); err != nil {
+	if err = svc.AdminManageJoinGroup(c, req.ID, req.GroupID, adminID, status); err != nil {
 		logger.Error("管理员管理群聊申请", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return

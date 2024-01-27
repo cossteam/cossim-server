@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
@@ -64,7 +63,7 @@ func (s *Service) GetGroupMember(ctx context.Context, gid uint32) (interface{}, 
 func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGroupRequest) (interface{}, error) {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
 	if err != nil {
-		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
 		return nil, err
 	}
 
@@ -77,19 +76,11 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		UserId:  uid,
 	})
 	if relation != nil {
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			return nil, code.RelationGroupErrAlreadyInGroup
-		}
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusReject {
-			return nil, code.RelationGroupErrRejectJoinGroup
-		}
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusBlocked {
-			return nil, code.GroupErrGroupStatusNotAvailable
-		}
+		return nil, code.RelationGroupErrAlreadyInGroup
 	}
 
 	//添加普通用户申请
-	_, err = s.groupRelationClient.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID, Identify: relationgrpcv1.GroupIdentity_IDENTITY_USER})
+	_, err = s.groupJoinRequestClient.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID})
 	if err != nil {
 		s.logger.Error("添加群聊申请失败", zap.Error(err))
 		return nil, err
@@ -150,18 +141,13 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 }
 
 func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, uid string, silent model.SilentNotificationType) (interface{}, error) {
-	groupRelation, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
+	_, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: gid,
 		UserId:  uid,
 	})
 	if err != nil {
 		s.logger.Error("获取群聊关系失败", zap.Error(err))
 		return nil, err
-	}
-
-	if groupRelation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-		return nil, code.RelationGroupErrNotInGroup
-
 	}
 
 	_, err = s.groupRelationClient.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
@@ -178,24 +164,25 @@ func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, ui
 }
 
 func (s *Service) GroupRequestList(ctx context.Context, userID string) (interface{}, error) {
-	reqList, err := s.groupRelationClient.GetUserGroupRequestList(ctx, &relationgrpcv1.GetUserGroupRequestListRequest{UserId: userID})
+	reqList, err := s.groupJoinRequestClient.GetGroupJoinRequestListByUserId(ctx, &relationgrpcv1.GetGroupJoinRequestListRequest{UserId: userID})
 	if err != nil {
 		s.logger.Error("获取群聊申请列表失败", zap.Error(err))
 		return nil, err
 	}
 
-	gids := make([]uint32, len(reqList.UserGroupRequestList))
-	uids := make([]string, len(reqList.UserGroupRequestList))
-	data := make([]*model.GroupRequestListResponse, len(reqList.UserGroupRequestList))
+	gids := make([]uint32, len(reqList.GroupJoinRequestResponses))
+	uids := make([]string, len(reqList.GroupJoinRequestResponses))
+	data := make([]*model.GroupRequestListResponse, len(reqList.GetGroupJoinRequestResponses()))
 
-	for i, v := range reqList.UserGroupRequestList {
+	for i, v := range reqList.GroupJoinRequestResponses {
 		gids[i] = v.GroupId
 		uids[i] = v.UserId
 
 		data[i] = &model.GroupRequestListResponse{
+			ID:          v.ID,
 			GroupId:     v.GroupId,
 			UserID:      v.UserId,
-			Msg:         v.Msg,
+			Msg:         v.Remark,
 			GroupStatus: uint32(v.Status),
 		}
 	}
@@ -245,7 +232,7 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 	return data, nil
 }
 
-func (s *Service) AdminManageJoinGroup(ctx context.Context, groupID uint32, adminID, userID string, status relationgrpcv1.GroupRelationStatus) error {
+func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID uint32, userID string, status relationgrpcv1.GroupRequestStatus) error {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 	if err != nil {
 		s.logger.Error("get group info failed", zap.Error(err))
@@ -256,7 +243,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, groupID uint32, admi
 		return code.GroupErrGroupStatusNotAvailable
 	}
 
-	relation1, err := s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: adminID})
+	relation1, err := s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
 	if err != nil {
 		s.logger.Error("get group relation failed", zap.Error(err))
 		return code.RelationGroupErrGetGroupInfoFailed
@@ -266,37 +253,12 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, groupID uint32, admi
 		return code.Unauthorized
 	}
 
-	relation2, err := s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
+	_, err = s.groupJoinRequestClient.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
+		ID:     requestID,
+		Status: status,
+	})
 	if err != nil {
-		s.logger.Error("get group relation failed", zap.Error(err))
-		return code.RelationGroupErrGetGroupInfoFailed
-	}
-
-	if err = s.validateAdminGroupRelationStatus(relation2, status); err != nil {
 		return err
-	}
-
-	id, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
-	if err != nil {
-		s.logger.Error("get group relation failed", zap.Error(err))
-		return code.RelationGroupErrGetGroupInfoFailed
-	}
-
-	r1 := &relationgrpcv1.JoinDialogRequest{DialogId: id.DialogId, UserId: userID}
-	r2 := &relationgrpcv1.ManageJoinGroupRequest{UserId: userID, GroupId: groupID, Status: relation1.Status}
-	gid := shortuuid.New()
-	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
-		r := &emptypb.Empty{}
-		if err = tcc.CallBranch(r1, s.dialogGrpcServer+relationgrpcv1.DialogService_JoinDialog_FullMethodName, "", s.dialogGrpcServer+relationgrpcv1.DialogService_JoinDialogRevert_FullMethodName, r); err != nil {
-			return err
-		}
-		if err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.GroupRelationService_ManageJoinGroup_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_ManageJoinGroupRevert_FullMethodName, r); err != nil {
-			return err
-		}
-		return err
-	}); err != nil {
-		s.logger.Error("TCC AdminManageJoinGroup Failed", zap.Error(err))
-		return code.RelationGroupErrManageJoinFailed
 	}
 
 	msg := msgconfig.WsMsg{
@@ -313,48 +275,35 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, groupID uint32, admi
 	return nil
 }
 
-func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, inviterId string, userID string, status relationgrpcv1.GroupRelationStatus) error {
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID uint32, userID string, status relationgrpcv1.GroupRequestStatus) error {
+
+	_, err := s.groupJoinRequestClient.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{GroupId: groupID, UserId: userID})
+	if err != nil {
+		s.logger.Error("找不到入群请求", zap.Error(err))
+		return code.RelationErrManageFriendRequestFailed
+	}
+
+	_, err = s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 	if err != nil {
 		s.logger.Error("get group info failed", zap.Error(err))
 		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
-	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
-		return code.GroupErrGroupStatusNotAvailable
-	}
-
 	relation, err := s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
 	if err != nil {
 		s.logger.Error("get group relation failed", zap.Error(err))
-		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
-	if err = s.validateGroupRelationStatus(relation, status); err != nil {
-		return err
+	if relation != nil {
+		return code.RelationGroupErrAlreadyInGroup
 	}
 
-	id, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+	_, err = s.groupJoinRequestClient.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
+		ID:     requestID,
+		Status: status,
+	})
 	if err != nil {
-		s.logger.Error("get group relation failed", zap.Error(err))
-		return code.RelationGroupErrGetGroupInfoFailed
-	}
-
-	r1 := &relationgrpcv1.JoinDialogRequest{DialogId: id.DialogId, UserId: userID}
-	r2 := &relationgrpcv1.ManageJoinGroupRequest{UserId: userID, GroupId: groupID, Status: status}
-	gid := shortuuid.New()
-	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
-		r := &emptypb.Empty{}
-		if err = tcc.CallBranch(r1, s.dialogGrpcServer+relationgrpcv1.DialogService_JoinDialog_FullMethodName, "", s.dialogGrpcServer+relationgrpcv1.DialogService_JoinDialogRevert_FullMethodName, r); err != nil {
-			return err
-		}
-		if err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.GroupRelationService_ManageJoinGroup_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_ManageJoinGroupRevert_FullMethodName, r); err != nil {
-			return err
-		}
 		return err
-	}); err != nil {
-		s.logger.Error("TCC ManageJoinGroup Failed", zap.Error(err))
-		return code.RelationGroupErrManageJoinFailed
 	}
 
 	msg := msgconfig.WsMsg{
@@ -381,7 +330,7 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 		return errors.New("没有权限操作")
 	}
 
-	gr2, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
+	_, err = s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return errors.New("获取用户群组关系失败")
@@ -393,7 +342,7 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 	}
 
 	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: dialog.DialogId, UserId: userID}
-	r2 := &relationgrpcv1.DeleteGroupRelationByGroupIdAndUserIDRequest{GroupID: groupID, UserID: userID, Status: gr2.Status}
+	r2 := &relationgrpcv1.DeleteGroupRelationByGroupIdAndUserIDRequest{GroupID: groupID, UserID: userID}
 
 	gid := shortuuid.New()
 	err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
@@ -441,49 +390,49 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 	return nil
 }
 
-func (s *Service) validateAdminGroupRelationStatus(relation *relationgrpcv1.GetGroupRelationResponse, status relationgrpcv1.GroupRelationStatus) error {
-	switch status {
-	case relationgrpcv1.GroupRelationStatus_GroupStatusJoined:
-		if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusApplying {
-			return errors.New("没有申请记录")
-		}
-
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			return errors.New("已经在群里了")
-		}
-
-	case relationgrpcv1.GroupRelationStatus_GroupStatusReject:
-		if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusApplying {
-			return errors.New("没有处于申请中")
-		}
-	default:
-		return errors.New("用户状态异常")
-	}
-
-	return nil
-}
-
-func (s *Service) validateGroupRelationStatus(relation *relationgrpcv1.GetGroupRelationResponse, status relationgrpcv1.GroupRelationStatus) error {
-	switch status {
-	case relationgrpcv1.GroupRelationStatus_GroupStatusJoined:
-		fmt.Println("relation => ", relation)
-		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			return code.RelationGroupErrAlreadyInGroup
-		}
-		if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusPending {
-			return errors.New("没有待处理的群聊申请记录")
-		}
-
-	//case relationgrpcv1.GroupRelationStatus_GroupStatusReject:
-	//	if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusPending {
-	//		return errors.New("群聊申请状态异常")
-	//	}
-	default:
-		return errors.New("群聊申请状态异常")
-	}
-
-	return nil
-}
+//func (s *Service) validateAdminGroupRelationStatus(relation *relationgrpcv1.GetGroupRelationResponse, status relationgrpcv1.GroupRelationStatus) error {
+//	switch status {
+//	case relationgrpcv1.GroupRelationStatus_GroupStatusJoined:
+//		if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusApplying {
+//			return errors.New("没有申请记录")
+//		}
+//
+//		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
+//			return errors.New("已经在群里了")
+//		}
+//
+//	case relationgrpcv1.GroupRelationStatus_GroupStatusReject:
+//		if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusApplying {
+//			return errors.New("没有处于申请中")
+//		}
+//	default:
+//		return errors.New("用户状态异常")
+//	}
+//
+//	return nil
+//}
+//
+//func (s *Service) validateGroupRelationStatus(relation *relationgrpcv1.GetGroupRelationResponse, status relationgrpcv1.GetGroupRelationRequest) error {
+//	switch status {
+//	case relationgrpcv1.GroupRelationStatus_GroupStatusJoined:
+//		fmt.Println("relation => ", relation)
+//		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
+//			return code.RelationGroupErrAlreadyInGroup
+//		}
+//		if relation.Status != relatio  ngrpcv1.GroupRelationStatus_GroupStatusPending {
+//			return errors.New("没有待处理的群聊申请记录")
+//		}
+//
+//	//case relationgrpcv1.GroupRelationStatus_GroupStatusReject:
+//	//	if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusPending {
+//	//		return errors.New("群聊申请状态异常")
+//	//	}
+//	default:
+//		return errors.New("群聊申请状态异常")
+//	}
+//
+//	return nil
+//}
 
 func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.InviteGroupRequest) error {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
@@ -514,17 +463,11 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrInviteFailed
 	}
 
-	for _, gr := range grs.GroupRelationResponses {
-		fmt.Println("gr => ", gr)
-		if gr.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			return code.RelationGroupErrAlreadyInGroup
-		}
-		if gr.Status == relationgrpcv1.GroupRelationStatus_GroupStatusPending {
-			return code.RelationGroupErrRequestAlreadyPending
-		}
+	if len(grs.GroupRelationResponses) > 0 {
+		return code.RelationGroupErrInviteFailed
 	}
-
-	_, err = s.groupRelationClient.InviteJoinGroup(ctx, &relationgrpcv1.InviteJoinGroupRequest{
+	//TODO 添加群聊配置，（是否邀请入群需要管理员权限）
+	_, err = s.groupJoinRequestClient.InviteJoinGroup(ctx, &relationgrpcv1.InviteJoinGroupRequest{
 		GroupId:   req.GroupID,
 		InviterId: inviterId,
 		Member:    req.Member,

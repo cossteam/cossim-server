@@ -18,6 +18,7 @@ func NewService(repo *persistence.Repositories, db *gorm.DB, ac pkgconfig.AppCon
 		dr:   repo.Dr,
 		db:   db,
 		ufqr: repo.Ufqr,
+		gjqr: repo.Gjqr,
 		ac:   ac,
 		sid:  xid.New().String(),
 	}
@@ -28,11 +29,13 @@ type Service struct {
 	urr  repository.UserRelationRepository
 	grr  repository.GroupRelationRepository
 	ufqr repository.UserFriendRequestRepository
+	gjqr repository.GroupJoinRequestRepository
 	dr   repository.DialogRepository
 	v1.UnimplementedUserRelationServiceServer
 	v1.UnimplementedGroupRelationServiceServer
 	v1.UnimplementedDialogServiceServer
 	v1.UnimplementedUserFriendRequestServiceServer
+	v1.UnimplementedGroupJoinRequestServiceServer
 	ac        pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string
