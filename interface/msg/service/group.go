@@ -36,11 +36,6 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, userId stri
 			continue
 		}
 
-		if groupRelation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-			s.logger.Error("不是群聊成员", zap.String("uid", uid))
-			continue
-		}
-
 		//判断是否静默通知
 		if groupRelation.IsSilent == relationgrpcv1.GroupSilentNotificationType_GroupSilent {
 			m.Event = config.SendSilentGroupMessageEvent
@@ -98,13 +93,10 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		UserId:  userID,
 	})
 	if err != nil {
-		s.logger.Error("获取用户关系失败", zap.Error(err))
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
 		return nil, err
 	}
 
-	if groupRelation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-		return nil, code.StatusNotAvailable
-	}
 	if groupRelation.MuteEndTime > pkgtime.Now() && groupRelation.MuteEndTime != 0 {
 		return nil, code.GroupErrUserIsMuted
 	}

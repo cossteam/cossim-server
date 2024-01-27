@@ -10,6 +10,7 @@ type Repositories struct {
 	Urr  repository.UserRelationRepository
 	Grr  repository.GroupRelationRepository
 	Ufqr repository.UserFriendRequestRepository
+	Gjqr repository.GroupJoinRequestRepository
 	Dr   repository.DialogRepository
 	db   *gorm.DB
 }
@@ -19,6 +20,7 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		Urr:  NewUserRelationRepo(db),
 		Grr:  NewGroupRelationRepo(db),
 		Dr:   NewDialogRepo(db),
+		Gjqr: NewGroupJoinRequestRepo(db),
 		Ufqr: NewUserFriendRequestRepo(db),
 		db:   db,
 	}

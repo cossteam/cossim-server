@@ -186,7 +186,6 @@ func (s *Service) CreateGroup(ctx context.Context, request *v1.CreateGroupReques
 }
 
 func (s *Service) CreateGroupRevert(ctx context.Context, request *v1.CreateGroupRequest) (*v1.Group, error) {
-	fmt.Println("CreateGroupRevert req => ", request)
 	resp := &v1.Group{}
 	if err := s.gr.DeleteGroup(uint(request.Group.Id)); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())

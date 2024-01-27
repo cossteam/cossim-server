@@ -24,6 +24,7 @@ type Service struct {
 	groupRelationClient     relationgrpcv1.GroupRelationServiceClient
 	userRelationClient      relationgrpcv1.UserRelationServiceClient
 	userFriendRequestClient relationgrpcv1.UserFriendRequestServiceClient
+	groupJoinRequestClient  relationgrpcv1.GroupJoinRequestServiceClient
 	userClient              user.UserServiceClient
 	groupClient             groupgrpcv1.GroupServiceClient
 	rabbitMQClient          *msg_queue.RabbitMQ
@@ -143,6 +144,9 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 
 		s.userFriendRequestClient = relationgrpcv1.NewUserFriendRequestServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userFriendRequestRelation"), zap.String("addr", conn.Target()))
+
+		s.groupJoinRequestClient = relationgrpcv1.NewGroupJoinRequestServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupJoinRequestRelation"), zap.String("addr", conn.Target()))
 
 		s.groupRelationClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))

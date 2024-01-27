@@ -9,6 +9,7 @@ type Response struct {
 }
 
 type GroupRequestListResponse struct {
+	ID              uint32 `json:"id"`
 	GroupId         uint32 `json:"group_id" description:"群组ID"`
 	GroupType       uint32 `json:"group_type" description:"群组类型"`
 	GroupStatus     uint32 `json:"group_status" description:"群组状态"`
@@ -91,26 +92,13 @@ type InviteGroupRequest struct {
 }
 
 type ManageJoinGroupRequest struct {
-	GroupID   uint32     `json:"group_id" binding:"required"`
-	InviterId string     `json:"inviter_id"`
-	Action    ActionEnum `json:"action"`
+	ID      uint32     `json:"id" binding:"required"`
+	GroupID uint32     `json:"group_id" binding:"required"`
+	Action  ActionEnum `json:"action"`
 }
 
 func (m *ManageJoinGroupRequest) Validator() error {
 	if m.Action != ActionRejected && m.Action != ActionAccepted {
-		return errors.New("invalid action")
-	}
-	return nil
-}
-
-type AdminManageJoinGroupRequest struct {
-	GroupID uint32     `json:"group_id" binding:"required"`
-	UserID  string     `json:"user_id" binding:"required"`
-	Action  ActionEnum `json:"action"`
-}
-
-func (a *AdminManageJoinGroupRequest) Validator() error {
-	if a.Action != ActionRejected && a.Action != ActionAccepted {
 		return errors.New("invalid action")
 	}
 	return nil
