@@ -30,7 +30,6 @@ const (
 	UserRelationService_GetFriendList_FullMethodName               = "/v1.UserRelationService/GetFriendList"
 	UserRelationService_GetBlacklist_FullMethodName                = "/v1.UserRelationService/GetBlacklist"
 	UserRelationService_GetUserRelation_FullMethodName             = "/v1.UserRelationService/GetUserRelation"
-	UserRelationService_GetFriendRequestList_FullMethodName        = "/v1.UserRelationService/GetFriendRequestList"
 	UserRelationService_GetUserRelationByUserIds_FullMethodName    = "/v1.UserRelationService/GetUserRelationByUserIds"
 	UserRelationService_SetFriendSilentNotification_FullMethodName = "/v1.UserRelationService/SetFriendSilentNotification"
 )
@@ -59,8 +58,6 @@ type UserRelationServiceClient interface {
 	GetBlacklist(ctx context.Context, in *GetBlacklistRequest, opts ...grpc.CallOption) (*GetBlacklistResponse, error)
 	// 获取用户关系
 	GetUserRelation(ctx context.Context, in *GetUserRelationRequest, opts ...grpc.CallOption) (*GetUserRelationResponse, error)
-	// 获取好友请求列表
-	GetFriendRequestList(ctx context.Context, in *GetFriendRequestListRequest, opts ...grpc.CallOption) (*GetFriendRequestListResponse, error)
 	// 批量获取用户关系
 	GetUserRelationByUserIds(ctx context.Context, in *GetUserRelationByUserIdsRequest, opts ...grpc.CallOption) (*GetUserRelationByUserIdsResponse, error)
 	// 设置好友静默通知
@@ -165,15 +162,6 @@ func (c *userRelationServiceClient) GetUserRelation(ctx context.Context, in *Get
 	return out, nil
 }
 
-func (c *userRelationServiceClient) GetFriendRequestList(ctx context.Context, in *GetFriendRequestListRequest, opts ...grpc.CallOption) (*GetFriendRequestListResponse, error) {
-	out := new(GetFriendRequestListResponse)
-	err := c.cc.Invoke(ctx, UserRelationService_GetFriendRequestList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userRelationServiceClient) GetUserRelationByUserIds(ctx context.Context, in *GetUserRelationByUserIdsRequest, opts ...grpc.CallOption) (*GetUserRelationByUserIdsResponse, error) {
 	out := new(GetUserRelationByUserIdsResponse)
 	err := c.cc.Invoke(ctx, UserRelationService_GetUserRelationByUserIds_FullMethodName, in, out, opts...)
@@ -216,8 +204,6 @@ type UserRelationServiceServer interface {
 	GetBlacklist(context.Context, *GetBlacklistRequest) (*GetBlacklistResponse, error)
 	// 获取用户关系
 	GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error)
-	// 获取好友请求列表
-	GetFriendRequestList(context.Context, *GetFriendRequestListRequest) (*GetFriendRequestListResponse, error)
 	// 批量获取用户关系
 	GetUserRelationByUserIds(context.Context, *GetUserRelationByUserIdsRequest) (*GetUserRelationByUserIdsResponse, error)
 	// 设置好友静默通知
@@ -258,9 +244,6 @@ func (UnimplementedUserRelationServiceServer) GetBlacklist(context.Context, *Get
 }
 func (UnimplementedUserRelationServiceServer) GetUserRelation(context.Context, *GetUserRelationRequest) (*GetUserRelationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserRelation not implemented")
-}
-func (UnimplementedUserRelationServiceServer) GetFriendRequestList(context.Context, *GetFriendRequestListRequest) (*GetFriendRequestListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFriendRequestList not implemented")
 }
 func (UnimplementedUserRelationServiceServer) GetUserRelationByUserIds(context.Context, *GetUserRelationByUserIdsRequest) (*GetUserRelationByUserIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserRelationByUserIds not implemented")
@@ -461,24 +444,6 @@ func _UserRelationService_GetUserRelation_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserRelationService_GetFriendRequestList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFriendRequestListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserRelationServiceServer).GetFriendRequestList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserRelationService_GetFriendRequestList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserRelationServiceServer).GetFriendRequestList(ctx, req.(*GetFriendRequestListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserRelationService_GetUserRelationByUserIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetUserRelationByUserIdsRequest)
 	if err := dec(in); err != nil {
@@ -561,10 +526,6 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserRelation",
 			Handler:    _UserRelationService_GetUserRelation_Handler,
-		},
-		{
-			MethodName: "GetFriendRequestList",
-			Handler:    _UserRelationService_GetFriendRequestList_Handler,
 		},
 		{
 			MethodName: "GetUserRelationByUserIds",

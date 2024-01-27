@@ -36,7 +36,7 @@ var (
 	RelationErrAddFriendFailed                       = New(13003, "添加好友失败")
 	RelationErrFriendRequestAlreadyPending           = New(13004, "好友请求已经发送，等待确认")
 	RelationErrAlreadyFriends                        = New(13005, "已经是好友")
-	RelationErrConfirmFriendFailed                   = New(13006, "确认好友失败")
+	RelationErrConfirmFriendFailed                   = New(13006, "管理好友申请失败")
 	RelationErrDeleteFriendFailed                    = New(13007, "删除好友失败")
 	RelationErrAddBlacklistFailed                    = New(13008, "添加黑名单失败")
 	RelationErrDeleteBlacklistFailed                 = New(13009, "删除黑名单失败")
@@ -48,6 +48,9 @@ var (
 	RelationErrRejectFriendFailed                    = New(13015, "拒绝好友申请失败")
 	RelationErrSetUserFriendSilentNotificationFailed = New(13016, "设置用户好友静默通知失败")
 	RelationErrNotInBlacklist                        = New(13017, "没有在黑名单")
+	RelationErrSendFriendRequestFailed               = New(13018, "发送好友请求失败")
+	RelationErrManageFriendRequestFailed             = New(13019, "管理好友请求失败")
+	RelationErrRequestAlreadyProcessed               = New(13020, "该请求已处理")
 
 	RelationErrCreateGroupFailed                         = New(13101, "创建群聊失败")
 	RelationErrGetGroupIDsFailed                         = New(13102, "获取群聊成员")

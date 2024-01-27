@@ -17,9 +17,11 @@ func RecoveryMiddleware() gin.HandlerFunc {
 				fmt.Printf("recover error: %v\n", err)
 				if e, ok := err.(error); ok {
 					response.Fail(ctx, code.Cause(e).Message(), nil)
+					ctx.Abort()
 					return
 				}
 				response.InternalServerError(ctx)
+				ctx.Abort()
 			}
 		}()
 

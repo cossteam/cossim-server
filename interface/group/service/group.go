@@ -32,7 +32,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 	for _, friend := range friends.Users {
-		if friend.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+		if friend.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
 			return nil, code.StatusNotAvailable
 		}
 	}

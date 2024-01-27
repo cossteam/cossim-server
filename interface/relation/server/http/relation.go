@@ -229,7 +229,7 @@ func manageFriend(c *gin.Context) {
 		return
 	}
 
-	responseData, err := svc.ManageFriend(c, userID, req.UserID, int32(req.Action), req.E2EPublicKey)
+	responseData, err := svc.ManageFriend(c, userID, req.RequestID, int32(req.Action), req.E2EPublicKey)
 	if err != nil {
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
@@ -238,16 +238,16 @@ func manageFriend(c *gin.Context) {
 	response.SetSuccess(c, "管理好友申请成功", responseData)
 }
 
-// @Summary 添加好友
-// @Description 添加好友
+// @Summary 发送好友请求
+// @Description 发送好友请求
 // @Tags UserRelation
 // @Accept  json
 // @Produce  json
-// @param request body model.AddFriendRequest true "request"
+// @param request body model.SendFriendRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/add_friend [post]
 func addFriend(c *gin.Context) {
-	req := new(model.AddFriendRequest)
+	req := new(model.SendFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
@@ -259,13 +259,13 @@ func addFriend(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.AddFriend(c, thisId, req)
+	resp, err := svc.SendFriendRequest(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "发送好友请求成功", nil)
+	response.SetSuccess(c, "发送好友请求成功", resp)
 }
 
 // @Summary 群聊成员列表

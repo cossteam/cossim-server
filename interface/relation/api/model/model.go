@@ -23,12 +23,20 @@ type GroupRequestListResponse struct {
 }
 
 type UserRequestListResponse struct {
-	UserID     string `json:"user_id" description:"用户ID"`
-	UserName   string `json:"user_name" description:"用户昵称"`
-	UserAvatar string `json:"user_avatar" description:"用户头像"`
-	Msg        string `json:"msg" description:"申请消息"`
-	RequestAt  string `json:"request_at" description:"申请时间"`
-	UserStatus uint32 `json:"user_status" description:"申请状态 (0=申请中, 1=已加入, 2=被拒绝, 3=被封禁)"`
+	ID           uint32    `json:"id"`
+	SenderId     string    `json:"sender_id" description:"发送者ID"`
+	ReceiverId   string    `json:"receiver_id" description:"接收者ID"`
+	Remark       string    `json:"remark" description:"申请消息"`
+	RequestAt    uint64    `json:"request_at" description:"申请时间"`
+	Status       uint32    `json:"user_status" description:"申请状态 (0=申请中, 1=已通过, 2=被拒绝)"`
+	SenderInfo   *UserInfo `json:"sender_info,omitempty"`
+	ReceiverInfo *UserInfo `json:"receiver_info,omitempty"`
+}
+
+type UserInfo struct {
+	UserID     string `json:"user_id,omitempty" description:"用户ID"`
+	UserName   string `json:"user_name,omitempty" description:"用户昵称"`
+	UserAvatar string `json:"user_avatar,omitempty" description:"用户头像"`
 }
 
 type DeleteFriendRequest struct {
@@ -44,7 +52,7 @@ type AddBlacklistRequest struct {
 }
 
 type ManageFriendRequest struct {
-	UserID       string     `json:"user_id" binding:"required"`
+	RequestID    uint32     `json:"request_id" binding:"required"`
 	Action       ActionEnum `json:"action"`
 	E2EPublicKey string     `json:"e2e_public_key"`
 }
@@ -141,4 +149,9 @@ const (
 
 func IsValidSilentNotificationType(isSilent SilentNotificationType) bool {
 	return isSilent == NotSilent || isSilent == IsSilent
+}
+
+type SendFriendRequest struct {
+	UserId string `json:"user_id" binding:"required"`
+	Remark string `json:"remark"`
 }

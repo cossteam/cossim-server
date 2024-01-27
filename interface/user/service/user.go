@@ -153,7 +153,7 @@ func (s *Service) Search(ctx context.Context, userID string, email string) (inte
 		return resp, nil
 	}
 
-	if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+	if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		resp.RelationStatus = model.UserRelationStatusFriend
 	} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
 		resp.RelationStatus = model.UserRelationStatusBlacked
@@ -190,7 +190,7 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 		return resp, nil
 	}
 
-	if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+	if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		resp.RelationStatus = model.UserRelationStatusFriend
 	} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
 		resp.RelationStatus = model.UserRelationStatusBlacked

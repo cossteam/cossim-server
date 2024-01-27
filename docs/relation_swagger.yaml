@@ -17,17 +17,6 @@ definitions:
     required:
     - user_id
     type: object
-  model.AddFriendRequest:
-    properties:
-      e2e_public_key:
-        type: string
-      msg:
-        type: string
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
   model.AdminManageJoinGroupRequest:
     properties:
       action:
@@ -104,10 +93,10 @@ definitions:
         $ref: '#/definitions/model.ActionEnum'
       e2e_public_key:
         type: string
-      user_id:
-        type: string
+      request_id:
+        type: integer
     required:
-    - user_id
+    - request_id
     type: object
   model.ManageJoinGroupRequest:
     properties:
@@ -144,6 +133,15 @@ definitions:
       data: {}
       msg:
         type: string
+    type: object
+  model.SendFriendRequest:
+    properties:
+      remark:
+        type: string
+      user_id:
+        type: string
+    required:
+    - user_id
     type: object
   model.SetGroupSilentNotificationRequest:
     properties:
@@ -190,18 +188,31 @@ definitions:
     - public_key
     - user_id
     type: object
-  model.UserRequestListResponse:
+  model.UserInfo:
     properties:
-      msg:
-        type: string
-      request_at:
-        type: string
       user_avatar:
         type: string
       user_id:
         type: string
       user_name:
         type: string
+    type: object
+  model.UserRequestListResponse:
+    properties:
+      id:
+        type: integer
+      receiver_id:
+        type: string
+      receiver_info:
+        $ref: '#/definitions/model.UserInfo'
+      remark:
+        type: string
+      request_at:
+        type: integer
+      sender_id:
+        type: string
+      sender_info:
+        $ref: '#/definitions/model.UserInfo'
       user_status:
         type: integer
     type: object
@@ -491,14 +502,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: 添加好友
+      description: 发送好友请求
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.AddFriendRequest'
+          $ref: '#/definitions/model.SendFriendRequest'
       produces:
       - application/json
       responses:
@@ -506,7 +517,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Response'
-      summary: 添加好友
+      summary: 发送好友请求
       tags:
       - UserRelation
   /relation/user/blacklist:

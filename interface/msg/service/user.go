@@ -30,7 +30,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		return nil, err
 	}
 
-	if userRelationStatus1.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+	if userRelationStatus1.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
@@ -43,7 +43,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		return nil, err
 	}
 
-	if userRelationStatus2.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
+	if userRelationStatus2.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 

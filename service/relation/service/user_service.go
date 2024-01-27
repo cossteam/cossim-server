@@ -19,121 +19,45 @@ import (
 func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (*v1.AddFriendResponse, error) {
 	resp := &v1.AddFriendResponse{}
 
-	userId := request.GetUserId()
-	friendId := request.GetFriendId()
-	//获取关系信息
-	relation, err := s.urr.GetRelationByID(userId, friendId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		//不是未找到关系的错误
-		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
+	//查询是否单删
+	relation, err := s.urr.GetRelationByID(request.FriendId, request.GetUserId())
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), formatErrorMessage(err))
 	}
 	if relation != nil {
-		//已经有关系
-		if relation.Status == entity.UserStatusPending {
-			return resp, status.Error(codes.Code(code.RelationErrFriendRequestAlreadyPending.Code()), "好友状态处于申请中")
-		} else if relation.Status == entity.UserStatusAdded && relation.DeletedAt == 0 {
-			return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
-		}
-	}
-	//检查之前是否有记录
-	relation3, err := s.urr.GetRelationByID(friendId, userId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
-	}
-	if relation3 != nil {
-		relation4 := &entity.UserRelation{
-			UserID:   userId,
-			FriendID: friendId,
-			Remark:   request.Msg,
-			DialogId: relation3.DialogId,
-			Status:   entity.UserStatusPending,
-		}
-		_, err = s.urr.CreateRelation(relation4)
-		if err != nil {
-			return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
-		}
-		err := s.urr.UpdateRelationColumn(relation3.ID, "status", entity.UserStatusApplying)
-		if err != nil {
-			return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
+		if _, err := s.urr.CreateRelation(&entity.UserRelation{
+			UserID:   request.GetUserId(),
+			FriendID: request.GetFriendId(),
+			Status:   entity.UserRelationStatus(v1.RelationStatus_RELATION_NORMAL),
+			DialogId: relation.DialogId,
+		}); err != nil {
+			return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), formatErrorMessage(err))
 		}
 		return resp, nil
 	}
-	relation1 := &entity.UserRelation{
-		UserID:   userId,
-		FriendID: friendId,
-		Status:   entity.UserStatusPending,
-	}
-	_, err = s.urr.CreateRelation(relation1)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
-	}
-
-	relation2 := &entity.UserRelation{
-		UserID:   friendId,
-		FriendID: userId,
-		Remark:   request.Msg,
-		Status:   entity.UserStatusApplying,
-	}
-
-	_, err = s.urr.CreateRelation(relation2)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), err.Error())
-	}
-
-	return resp, nil
-}
-
-func (s *Service) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
-	resp := &v1.ManageFriendResponse{}
-
-	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
-
+	//双方都没有好友关系
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		userId := request.GetUserId()
-		friendId := request.GetFriendId()
 		npo := persistence.NewRepositories(tx)
 
-		relation1, err := npo.Urr.GetRelationByID(userId, friendId)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
-			}
-			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+		if _, err := npo.Urr.CreateRelation(&entity.UserRelation{
+			UserID:   request.GetUserId(),
+			FriendID: request.GetFriendId(),
+			Status:   entity.UserRelationStatus(v1.RelationStatus_RELATION_NORMAL),
+			DialogId: uint(request.DialogId),
+		}); err != nil {
+			return err
 		}
-
-		if relation1.Status == entity.UserStatusAdded {
-			return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
+		if _, err := npo.Urr.CreateRelation(&entity.UserRelation{
+			UserID:   request.GetFriendId(),
+			FriendID: request.GetUserId(),
+			Status:   entity.UserRelationStatus(v1.RelationStatus_RELATION_NORMAL),
+			DialogId: uint(request.DialogId),
+		}); err != nil {
+			return err
 		}
-
-		relation1.Status = entity.UserRelationStatus(request.Status)
-		relation1.DialogId = uint(request.DialogId)
-		_, err = npo.Urr.UpdateRelation(relation1)
-		if err != nil {
-			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-			return status.Error(codes.Aborted, formatErrorMessage(err))
-		}
-
-		relation2, err := npo.Urr.GetRelationByID(friendId, userId)
-		if err != nil {
-			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-			return status.Error(codes.Aborted, formatErrorMessage(err))
-		}
-
-		//if relation2.Status == entity.UserStatusAdded {
-		//	return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
-		//}
-
-		relation2.Status = entity.UserRelationStatus(request.Status)
-		relation2.DialogId = uint(request.DialogId)
-		_, err = npo.Urr.UpdateRelation(relation2)
-		if err != nil {
-			//return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-			return status.Error(codes.Aborted, formatErrorMessage(err))
-		}
-
 		return nil
 	}); err != nil {
-		return resp, err
+		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), formatErrorMessage(err))
 	}
 
 	return resp, nil
@@ -153,48 +77,48 @@ func formatErrorMessage(err error) string {
 func (s *Service) ManageFriendRevert(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
 	resp := &v1.ManageFriendResponse{}
 
-	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		userId := request.GetUserId()
-		friendId := request.GetFriendId()
-
-		relation1, err := s.urr.GetRelationByID(userId, friendId)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
-			}
-			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-		}
-
-		//if relation1.Status == entity.UserStatusAdded {
-		//	return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
-		//}
-
-		//relation1.Status = entity.UserRelationStatus(request.Status)
-		//relation1.Status = entity.UserRelationStatus(request.Status)
-		relation1.Status = entity.UserStatusPending
-		relation1.DialogId = uint(request.DialogId)
-		_, err = s.urr.UpdateRelation(relation1)
-		if err != nil {
-			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-		}
-
-		relation2, err := s.urr.GetRelationByID(friendId, userId)
-		if err != nil {
-			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-		}
-
-		//relation2.Status = entity.UserRelationStatus(request.Status)
-		relation2.Status = entity.UserStatusApplying
-		relation2.DialogId = uint(request.DialogId)
-		_, err = s.urr.UpdateRelation(relation2)
-		if err != nil {
-			return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-		}
-
-		return nil
-	}); err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
-	}
+	//if err := s.db.Transaction(func(tx *gorm.DB) error {
+	//	userId := request.GetUserId()
+	//	friendId := request.GetFriendId()
+	//
+	//	relation1, err := s.urr.GetRelationByID(userId, friendId)
+	//	if err != nil {
+	//		if errors.Is(err, gorm.ErrRecordNotFound) {
+	//			return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+	//		}
+	//		return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+	//	}
+	//
+	//	//if relation1.Status == entity.UserStatusAdded {
+	//	//	return resp, status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "已经是好友")
+	//	//}
+	//
+	//	//relation1.Status = entity.UserRelationStatus(request.Status)
+	//	//relation1.Status = entity.UserRelationStatus(request.Status)
+	//	relation1.Status = entity.UserStatusPending
+	//	relation1.DialogId = uint(request.DialogId)
+	//	_, err = s.urr.UpdateRelation(relation1)
+	//	if err != nil {
+	//		return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+	//	}
+	//
+	//	relation2, err := s.urr.GetRelationByID(friendId, userId)
+	//	if err != nil {
+	//		return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+	//	}
+	//
+	//	//relation2.Status = entity.UserRelationStatus(request.Status)
+	//	relation2.Status = entity.UserStatusApplying
+	//	relation2.DialogId = uint(request.DialogId)
+	//	_, err = s.urr.UpdateRelation(relation2)
+	//	if err != nil {
+	//		return status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+	//	}
+	//
+	//	return nil
+	//}); err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationErrConfirmFriendFailed.Code()), formatErrorMessage(err))
+	//}
 
 	return resp, nil
 }
@@ -239,7 +163,7 @@ func (s *Service) AddBlacklist(ctx context.Context, request *v1.AddBlacklistRequ
 		return resp, status.Error(codes.Code(code.RelationErrAddBlacklistFailed.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
 	}
 
-	if relation1.Status != entity.UserStatusAdded {
+	if relation1.Status != entity.UserStatusNormal {
 		return resp, code.RelationUserErrFriendRelationNotFound
 	}
 
@@ -262,7 +186,7 @@ func (s *Service) DeleteBlacklist(ctx context.Context, request *v1.DeleteBlackli
 		return resp, status.Error(codes.Code(code.RelationErrDeleteBlacklistFailed.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
 	}
 
-	relation1.Status = entity.UserStatusAdded
+	relation1.Status = entity.UserStatusNormal
 	if _, err = s.urr.UpdateRelation(relation1); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrDeleteBlacklistFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
@@ -335,24 +259,24 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	return resp, nil
 }
 
-func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
-	resp := &v1.GetFriendRequestListResponse{}
-
-	friends, err := s.urr.GetFriendRequestListByUserID(request.UserId)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrGetJoinRequestListFailed.Code()), err.Error())
-	}
-
-	for _, friend := range friends {
-		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
-			UserId: friend.FriendID,
-			Msg:    friend.Remark,
-			Status: v1.RelationStatus(friend.Status),
-		})
-	}
-
-	return resp, nil
-}
+//func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
+//	resp := &v1.GetFriendRequestListResponse{}
+//
+//	friends, err := s.urr.GetFriendRequestListByUserID(request.UserId)
+//	if err != nil {
+//		return resp, status.Error(codes.Code(code.RelationGroupErrGetJoinRequestListFailed.Code()), err.Error())
+//	}
+//
+//	for _, friend := range friends {
+//		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
+//			UserId: friend.FriendID,
+//			Msg:    friend.Remark,
+//			Status: v1.FriendRequestStatus(friend.Status),
+//		})
+//	}
+//
+//	return resp, nil
+//}
 
 func (s *Service) GetUserRelationByUserIds(ctx context.Context, request *v1.GetUserRelationByUserIdsRequest) (*v1.GetUserRelationByUserIdsResponse, error) {
 	resp := &v1.GetUserRelationByUserIdsResponse{}
@@ -373,9 +297,9 @@ func (s *Service) GetUserRelationByUserIds(ctx context.Context, request *v1.GetU
 	return resp, nil
 }
 
-func (s *Service) SetFriendSilentNotification(ctx context.Context, in *v1.SetFriendSilentNotificationRequest) (*emptypb.Empty, error) {
+func (s *Service) SetFriendSilentNotification(ctx context.Context, request *v1.SetFriendSilentNotificationRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
-	if err := s.urr.SetUserFriendSilentNotification(in.UserId, in.FriendId, entity.SilentNotification(in.IsSilent)); err != nil {
+	if err := s.urr.SetUserFriendSilentNotification(request.UserId, request.FriendId, entity.SilentNotification(request.IsSilent)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserFriendSilentNotificationFailed.Code()), err.Error())
 	}
 	return resp, nil
