@@ -35,7 +35,7 @@ func (repo *GroupRelationRepo) GetGroupUserIDs(gid uint32) ([]string, error) {
 
 func (repo *GroupRelationRepo) GetUserGroupIDs(uid string) ([]uint32, error) {
 	var groupIDs []uint32
-	if err := repo.db.Model(&entity.GroupRelation{}).Where("user_id = ?", uid).Pluck("group_id", &groupIDs).Error; err != nil {
+	if err := repo.db.Model(&entity.GroupRelation{}).Where("user_id = ? AND deleted_at = 0", uid).Pluck("group_id", &groupIDs).Error; err != nil {
 		return groupIDs, err
 	}
 	return groupIDs, nil
@@ -43,7 +43,7 @@ func (repo *GroupRelationRepo) GetUserGroupIDs(uid string) ([]uint32, error) {
 
 func (repo *GroupRelationRepo) GetUserJoinedGroupIDs(uid string) ([]uint32, error) {
 	var groupIDs []uint32
-	if err := repo.db.Model(&entity.GroupRelation{}).Where("user_id = ? ", uid).Pluck("group_id", &groupIDs).Error; err != nil {
+	if err := repo.db.Model(&entity.GroupRelation{}).Where("user_id = ? AND deleted_at = 0", uid).Pluck("group_id", &groupIDs).Error; err != nil {
 		return groupIDs, err
 	}
 	return groupIDs, nil
@@ -69,7 +69,7 @@ func (repo *GroupRelationRepo) UpdateRelationColumnByGroupAndUser(gid uint32, ui
 }
 
 func (repo *GroupRelationRepo) DeleteRelationByID(gid uint32, uid string) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Update("status", entity.UserStatusDeleted).Update("deleted_at", time.Now()).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where("group_id = ? and user_id = ?", gid, uid).Update("deleted_at", time.Now()).Error
 }
 
 func (repo *GroupRelationRepo) GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error) {
@@ -114,7 +114,7 @@ func (repo *GroupRelationRepo) GetJoinRequestBatchListByID(gids []uint32) ([]*en
 
 func (repo *GroupRelationRepo) GetGroupAdminIds(gid uint32) ([]string, error) {
 	var adminIds []string
-	repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND status = ? AND deleted_at = 0", gid, entity.IdentityAdmin).Pluck("user_id", &adminIds)
+	repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND identity = ? AND deleted_at = 0", gid, entity.IdentityAdmin).Pluck("user_id", &adminIds)
 	return adminIds, nil
 }
 

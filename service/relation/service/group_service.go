@@ -98,60 +98,6 @@ func (s *Service) GetUserGroupList(ctx context.Context, request *v1.GetUserGroup
 	return resp, nil
 }
 
-//func (s *Service) JoinGroupRevert(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
-//	resp := &v1.JoinGroupResponse{}
-//	if err := s.grr.DeleteRelationByID(request.GroupId, request.UserId); err != nil {
-//		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
-//	}
-//	return resp, nil
-//}
-
-//func (s *Service) InviteJoinGroupRevert(ctx context.Context, request *v1.InviteJoinGroupRequest) (*emptypb.Empty, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (s *Service) ManageJoinGroup(ctx context.Context, request *v1.ManageJoinGroupRequest) (*v1.ManageJoinGroupResponse, error) {
-//	resp := &v1.ManageJoinGroupResponse{}
-//
-//	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
-//
-//	// 检查是否已经存在加入申请
-//	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
-//	if err != nil {
-//		if errors.Is(err, gorm.ErrRecordNotFound) {
-//			return resp, status.Error(codes.Code(code.RelationGroupErrNoJoinRequestRecords.Code()), code.RelationGroupErrNoJoinRequestRecords.Message())
-//		}
-//		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
-//	}
-//
-//	if relation == nil {
-//		return resp, status.Error(codes.Code(code.RelationGroupErrNoJoinRequestRecords.Code()), code.RelationGroupErrNoJoinRequestRecords.Message())
-//	}
-//	// TODO
-//	//if relation.Status == entity.GroupStatusJoined {
-//	//	return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), code.RelationGroupErrAlreadyInGroup.Message())
-//	//}
-//	//
-//	//relation.Status = entity.GroupRelationStatus(request.Status)
-//	// 插入加入申请
-//	_, err = s.grr.UpdateRelation(relation)
-//	if err != nil {
-//		//return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
-//		return resp, status.Error(codes.Aborted, fmt.Sprintf("Failed to revert join request : %v", err))
-//	}
-//
-//	return resp, nil
-//}
-//
-//func (s *Service) ManageJoinGroupRevert(ctx context.Context, request *v1.ManageJoinGroupRequest) (*v1.ManageJoinGroupResponse, error) {
-//	resp := &v1.ManageJoinGroupResponse{}
-//	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupId, request.UserId, "status", request.Status); err != nil {
-//		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
-//	}
-//	return resp, nil
-//}
-
 func (s *Service) RemoveFromGroup(ctx context.Context, request *v1.RemoveFromGroupRequest) (*v1.RemoveFromGroupResponse, error) {
 	resp := &v1.RemoveFromGroupResponse{}
 
@@ -180,29 +126,6 @@ func (s *Service) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRe
 
 	return resp, nil
 }
-
-//func (s *Service) GetGroupJoinRequestList(ctx context.Context, request *v1.GetGroupJoinRequestListRequest) (*v1.GroupJoinRequestListResponse, error) {
-//	resp := &v1.GroupJoinRequestListResponse{}
-//
-//	var ids []uint32
-//	for _, v := range request.GroupIds {
-//		ids = append(ids, v.GroupId)
-//	}
-//
-//	joins, err := s.grr.GetJoinRequestBatchListByID(ids)
-//	if err != nil {
-//		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
-//	}
-//
-//	for _, join := range joins {
-//		resp.GroupJoinRequestList = append(resp.GroupJoinRequestList, &v1.GroupJoinRequestList{
-//			UserId: join.UserID,
-//			Msg:    join.Remark,
-//		})
-//	}
-//
-//	return resp, nil
-//}
 
 func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRelationRequest) (*v1.GetGroupRelationResponse, error) {
 	resp := &v1.GetGroupRelationResponse{}
@@ -300,14 +223,10 @@ func (s *Service) DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, req
 
 func (s *Service) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
-	//if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, request.UserID, "deleted_at", 0); err != nil {
-	//	//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
-	//	return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationRevertFailed.Code()), err.Error())
-	//}
-	//if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, request.UserID, "status", request.Status); err != nil {
-	//	//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
-	//	return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationRevertFailed.Code()), err.Error())
-	//}
+	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, request.UserID, "deleted_at", 0); err != nil {
+		//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationRevertFailed.Code()), err.Error())
+	}
 	return resp, nil
 }
 
