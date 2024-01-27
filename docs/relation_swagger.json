@@ -812,17 +812,17 @@
         "model.ManageFriendRequest": {
             "type": "object",
             "required": [
-                "Request_id"
+                "request_id"
             ],
             "properties": {
-                "Request_id": {
-                    "type": "integer"
-                },
                 "action": {
                     "$ref": "#/definitions/model.ActionEnum"
                 },
                 "e2e_public_key": {
                     "type": "string"
+                },
+                "request_id": {
+                    "type": "integer"
                 }
             }
         },
