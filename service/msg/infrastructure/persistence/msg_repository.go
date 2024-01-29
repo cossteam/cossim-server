@@ -32,7 +32,7 @@ func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg stri
 
 func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.GroupMessage, error) {
 	content := &entity.GroupMessage{
-		UID:      uid,
+		UserID:   uid,
 		GroupID:  groupId,
 		Content:  msg,
 		Type:     msgType,
@@ -138,7 +138,7 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 			DialogId: groupMsg.DialogId,
 			Content:  groupMsg.Content,
 			Type:     uint(groupMsg.Type),
-			SenderId: groupMsg.UID,
+			SenderId: groupMsg.UserID,
 			CreateAt: groupMsg.CreatedAt,
 		})
 	}
@@ -304,4 +304,44 @@ func (g *MsgRepo) GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*
 		Order("id ASC").
 		Find(&groupMessages).Error
 	return groupMessages, err
+}
+
+func (g *MsgRepo) GetGroupMsgList(list dataTransformers.GroupMsgList) (*dataTransformers.GroupMsgListResponse, error) {
+	response := &dataTransformers.GroupMsgListResponse{}
+
+	query := g.db.Model(&entity.GroupMessage{}).
+		Where("group_id = ? AND deleted_at = 0", list.GroupID)
+
+	var total int64
+	err := query.Count(&total).Error
+	if err != nil {
+		return response, err
+	}
+	if list.UserID != "" {
+		query = query.Where("user_id = ?", list.UserID)
+	}
+
+	if list.Content != "" {
+		query = query.Where("content LIKE ?", "%"+list.Content+"%")
+	}
+
+	if list.MsgType != 0 {
+		query = query.Where("msg_type = ?", list.MsgType)
+	}
+
+	var groupMessages []entity.GroupMessage
+	err = query.Order("id DESC").
+		Limit(list.PageSize).
+		Offset(list.PageSize * (list.PageNumber - 1)).
+		Find(&groupMessages).
+		Error
+	if err != nil {
+		return response, err
+	}
+
+	response.GroupMessages = groupMessages
+	response.Total = int32(total)
+	response.CurrentPage = int32(list.PageNumber)
+
+	return response, nil
 }

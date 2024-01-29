@@ -98,6 +98,7 @@ var (
 	SetMsgErrSetUserMsgReadStatusFailed             = New(14017, "修改消息已读状态失败")
 	GetMsgErrGetUnreadUserMsgsFailed                = New(14018, "获取未读消息失败")
 	MsgErrTimeoutExceededCannotRevoke               = New(14019, "超过时间限制不能撤回")
+	MsgErrGetGroupMsgListFailed                     = New(14020, "获取群聊消息列表失败")
 
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed             = New(15000, "获取群聊信息失败")

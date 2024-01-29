@@ -164,6 +164,7 @@ func route(engine *gin.Engine) {
 	u.POST("/send/user", middleware.AuthMiddleware(redisClient), sendUserMsg)
 	u.POST("/send/group", middleware.AuthMiddleware(redisClient), sendGroupMsg)
 	u.GET("/list/user", middleware.AuthMiddleware(redisClient), getUserMsgList)
+	u.GET("/list/group", middleware.AuthMiddleware(redisClient), getGroupMsgList)
 	u.GET("/dialog/list", middleware.AuthMiddleware(redisClient), getUserDialogList)
 	u.POST("/recall/group", middleware.AuthMiddleware(redisClient), recallGroupMsg)
 	u.POST("/recall/user", middleware.AuthMiddleware(redisClient), recallUserMsg)
