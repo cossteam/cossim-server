@@ -117,10 +117,10 @@ func SetKeyExpirationAt(client *redis.Client, key string, expiration time.Time) 
 }
 
 // 解析用户登录信息列表
-func GetUserInfoList(data []string) ([]UserInfo, error) {
-	list := make([]UserInfo, 0)
+func GetUserInfoList(data []string) ([]*UserInfo, error) {
+	list := make([]*UserInfo, 0)
 	for _, datum := range data {
-		var user UserInfo
+		var user *UserInfo
 		err := json.Unmarshal([]byte(datum), &user)
 		if err != nil {
 			fmt.Println("GetUserInfoList JSON unmarshal error:", err)
@@ -132,7 +132,7 @@ func GetUserInfoList(data []string) ([]UserInfo, error) {
 }
 
 // 用户信息转成[]interfaces{}
-func GetUserInfoListToInterfaces(data []UserInfo) []interface{} {
+func GetUserInfoListToInterfaces(data []*UserInfo) []interface{} {
 	list := make([]interface{}, 0)
 	for _, datum := range data {
 		list = append(list, datum)
@@ -141,8 +141,8 @@ func GetUserInfoListToInterfaces(data []UserInfo) []interface{} {
 }
 
 // 根据客户端类型分类用户登录信息列表
-func CategorizeByDriveType(data []UserInfo) map[string][]UserInfo {
-	result := make(map[string][]UserInfo)
+func CategorizeByDriveType(data []*UserInfo) map[string][]*UserInfo {
+	result := make(map[string][]*UserInfo)
 
 	for _, userInfo := range data {
 		result[userInfo.DriverType] = append(result[userInfo.DriverType], userInfo)

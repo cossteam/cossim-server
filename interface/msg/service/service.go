@@ -145,26 +145,54 @@ func (s *Service) ListenQueue() {
 				fmt.Println("解析消息失败：", err)
 				return
 			}
+
+			mmap, ok := msg_query.Data.(map[string]interface{})
+			if !ok {
+				fmt.Println("解析消息失败：")
+				return
+			}
+			//map解析成结构体
+			jsonData, err := json.Marshal(mmap)
+			if err != nil {
+				fmt.Println("Failed to marshal map to JSON:", err)
+				return
+			}
+			var wsm config2.WsMsg
+			err = json.Unmarshal(jsonData, &wsm)
+			if err != nil {
+				fmt.Println("解析消息失败：", err)
+				return
+			}
+
 			switch msg_query.Action {
+			//推送消息
 			case msg_queue.SendMessage:
-				mmap, ok := msg_query.Data.(map[string]interface{})
+				s.SendMsg(wsm.Uid, wsm.Event, wsm.Data)
+			//强制断开ws
+			case msg_queue.UserWebsocketClose:
+				thismap, ok := wsm.Data.(map[string]interface{})
 				if !ok {
 					fmt.Println("解析消息失败：")
 					return
 				}
-				//map解析成结构体
-				jsonData, err := json.Marshal(mmap)
-				if err != nil {
-					fmt.Println("Failed to marshal map to JSON:", err)
+				t := thismap["driver_type"]
+				id := thismap["rid"]
+				//类型断言
+				driType, ok := t.(string)
+				if !ok {
+					fmt.Println("解析消息失败：")
 					return
 				}
-				var wsm config2.WsMsg
-				err = json.Unmarshal(jsonData, &wsm)
-				if err != nil {
-					fmt.Println("解析消息失败：", err)
-					return
+
+				rid := id.(float64)
+
+				for _, c := range pool[wsm.Uid][driType] {
+
+					if c.Rid == int64(rid) {
+						fmt.Println("关闭连接", rid)
+						c.Conn.Close()
+					}
 				}
-				s.SendMsg(wsm.Uid, wsm.Event, wsm.Data)
 			}
 		}
 	}()

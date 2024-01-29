@@ -59,14 +59,19 @@ func logout(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
+
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
+	tokenString := c.GetHeader("Authorization")
+
+	token := tokenString[7:]
+
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
-	if err = svc.Logout(c, thisId, req); err != nil {
+	if err = svc.Logout(c, thisId, token, req); err != nil {
 		c.Error(err)
 		return
 	}
