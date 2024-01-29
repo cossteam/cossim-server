@@ -10,6 +10,8 @@ type DialogRepository interface {
 	JoinBatchDialog(dialogID uint, userIDs []string) ([]*entity.DialogUser, error)
 	GetUserDialogs(userID string) ([]uint, error)
 	GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
+	GetDialogById(dialogID uint) (*entity.Dialog, error)
+
 	GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUser, error)
 	GetDialogUserByDialogIDAndUserID(dialogID uint, userID string) (*entity.DialogUser, error)
 	GetDialogByGroupId(groupId uint) (*entity.Dialog, error)
@@ -26,4 +28,6 @@ type DialogRepository interface {
 	UpdateDialogUserByDialogID(dialogID uint, updateFields map[string]interface{}) error
 	// UpdateDialogUserByDialogIDAndUserID 根据会话ID和用户ID更新会话成员信息
 	UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error
+	// UpdateDialogColumnByDialogID 根据会话ID更新会话信息
+	UpdateDialogUserColumnByDialogIDAndUserId(dialogID uint, userID string, column string, value interface{}) error
 }

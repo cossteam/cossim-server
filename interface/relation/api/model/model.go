@@ -143,3 +143,35 @@ type SendFriendRequest struct {
 	UserId string `json:"user_id" binding:"required"`
 	Remark string `json:"remark"`
 }
+
+type CloseOrOpenDialogRequest struct {
+	DialogId uint32                  `json:"dialog_id" binding:"required"`
+	Action   CloseOrOpenDialogAction `json:"action"`
+}
+
+type CloseOrOpenDialogAction uint
+
+const (
+	CloseDialog CloseOrOpenDialogAction = iota
+	OpenDialog
+)
+
+func IsValidOpenAction(isOpen CloseOrOpenDialogAction) bool {
+	return isOpen == CloseDialog || isOpen == OpenDialog
+}
+
+type TopOrCancelTopDialogRequest struct {
+	DialogId uint32               `json:"dialog_id" binding:"required"`
+	Action   TopOrCancelTopAction `json:"action"`
+}
+
+func IsValidTopAction(isTop TopOrCancelTopAction) bool {
+	return isTop == CancelTopDialog || isTop == TopDialog
+}
+
+type TopOrCancelTopAction uint
+
+const (
+	CancelTopDialog TopOrCancelTopAction = iota
+	TopDialog
+)

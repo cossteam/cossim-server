@@ -199,6 +199,15 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	var responseList = make([]model.UserDialogListResponse, 0)
 	for _, v := range infos.Dialogs {
 		var re model.UserDialogListResponse
+		du, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+			DialogId: v.Id,
+			UserId:   userID,
+		})
+		if err != nil {
+			s.logger.Error("获取对话用户信息失败", zap.Error(err))
+			return nil, err
+		}
+		re.TopAt = int64(du.TopAt)
 		//用户
 		if v.Type == 0 {
 			users, _ := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{

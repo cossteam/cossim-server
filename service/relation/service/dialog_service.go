@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/utils/time"
 	v1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 )
 
@@ -335,5 +337,44 @@ func (s *Service) GetDialogByGroupIds(ctx context.Context, in *v1.GetDialogByGro
 			})
 		}
 	}
+	return resp, nil
+}
+
+func (s *Service) CloseOrOpenDialog(ctx context.Context, in *v1.CloseOrOpenDialogRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(in.DialogId), in.UserId, "is_show", in.Action); err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrCloseOrOpenDialogFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) TopOrCancelTopDialog(ctx context.Context, in *v1.TopOrCancelTopDialogRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	switch in.Action {
+	case v1.TopOrCancelTopDialogType_CANCEL_TOP:
+		if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(in.DialogId), in.UserId, "top_at", 0); err != nil {
+			return resp, status.Error(codes.Code(code.DialogErrCloseOrOpenDialogFailed.Code()), err.Error())
+		}
+	case v1.TopOrCancelTopDialogType_TOP:
+		if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(in.DialogId), in.UserId, "top_at", time.Now()); err != nil {
+			return resp, status.Error(codes.Code(code.DialogErrCloseOrOpenDialogFailed.Code()), err.Error())
+		}
+	}
+
+	return resp, nil
+}
+
+func (s *Service) GetDialogById(ctx context.Context, in *v1.GetDialogByIdRequest) (*v1.Dialog, error) {
+	var resp = &v1.Dialog{}
+	dialog, err := s.dr.GetDialogById(uint(in.DialogId))
+	if err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrGetDialogByIdFailed.Code()), err.Error())
+	}
+	resp.Id = uint32(dialog.ID)
+	resp.GroupId = uint32(dialog.GroupId)
+	resp.Type = uint32(dialog.Type)
+	resp.CreateAt = dialog.CreatedAt
+	resp.OwnerId = dialog.OwnerId
+
 	return resp, nil
 }

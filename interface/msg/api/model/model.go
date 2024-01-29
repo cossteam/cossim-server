@@ -62,6 +62,7 @@ type UserDialogListResponse struct {
 	LastMessage       Message `json:"last_message"`
 
 	DialogCreateAt int64 `json:"dialog_create_at"`
+	TopAt          int64 `json:"top_at"`
 }
 
 type Message struct {
