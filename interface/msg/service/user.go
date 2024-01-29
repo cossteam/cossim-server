@@ -498,6 +498,35 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 		_, _, err := conn.ReadMessage()
 		if err != nil {
 			s.logger.Error("读取消息失败", zap.Error(err))
+			//删除redis里的rid
+			values, err := cache.GetAllListValues(s.redisClient, cli.Uid)
+			if err != nil {
+				s.logger.Error("获取用户信息失败1", zap.Error(err))
+				return
+			}
+			list, err := cache.GetUserInfoList(values)
+
+			if err != nil {
+				s.logger.Error("获取用户信息失败2", zap.Error(err))
+				return
+			}
+			for _, info := range list {
+				if info.Token == token {
+					info.Rid = 0
+					nlist := cache.GetUserInfoListToInterfaces(list)
+					err := cache.DeleteList(s.redisClient, cli.Uid)
+					if err != nil {
+						s.logger.Error("获取用户信息失败", zap.Error(err))
+						return
+					}
+					err = cache.AddToList(s.redisClient, cli.Uid, nlist)
+					if err != nil {
+						s.logger.Error("保存用户信息失败", zap.Error(err))
+						return
+					}
+					break
+				}
+			}
 			//用户下线
 			cli.wsOfflineClients()
 			return
@@ -519,7 +548,6 @@ func (s *Service) SendMsg(uid string, event config.WSEventType, data interface{}
 	}
 	for _, v := range pool[uid] {
 		for _, c := range v {
-			fmt.Println("6666", c.Rid)
 			m.Rid = c.Rid
 			js, _ := json.Marshal(m)
 			err := c.Conn.WriteMessage(websocket.TextMessage, js)

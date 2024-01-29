@@ -23,11 +23,11 @@ type Service struct {
 	conf   *pkgconfig.AppConfig
 	logger *zap.Logger
 
-	discovery   discovery.Discovery
-	userClient  user.UserServiceClient
-	relClient   relationgrpcv1.UserRelationServiceClient
-	redisClient *redis.Client
-	//rabbitMQClient *msg_queue.RabbitMQ
+	discovery      discovery.Discovery
+	userClient     user.UserServiceClient
+	relClient      relationgrpcv1.UserRelationServiceClient
+	redisClient    *redis.Client
+	rabbitMQClient *msg_queue.RabbitMQ
 
 	sid             string
 	tokenExpiration time.Duration
@@ -38,7 +38,7 @@ func New(c *pkgconfig.AppConfig) (s *Service) {
 		conf:            c,
 		sid:             xid.New().String(),
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
-		//rabbitMQClient:  setRabbitMQProvider(c),
+		rabbitMQClient:  setRabbitMQProvider(c),
 	}
 
 	s.setupLogger()

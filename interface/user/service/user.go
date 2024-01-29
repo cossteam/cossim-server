@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/user/api/model"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
@@ -79,7 +81,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	}, token, nil
 }
 
-func (s *Service) Logout(ctx context.Context, userID string, request *model.LogoutRequest) error {
+func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest) error {
 	values, err := cache.GetAllListValues(s.redisClient, userID)
 	if err != nil {
 		return code.UserErrErrLogoutFailed
@@ -88,15 +90,35 @@ func (s *Service) Logout(ctx context.Context, userID string, request *model.Logo
 		s.logger.Error("logout : len(values) < int(request.LoginNumber)")
 		return code.UserErrErrLogoutFailed
 	}
-	//todo 关闭websocket
-	//list, err := cache.GetUserInfoList(values)
-	//if err != nil {
-	//	s.logger.Error("failed to get user info list", zap.Error(err))
-	//	return code.UserErrErrLogoutFailed
-	//}
-	//rid := list[request.LoginNumber].Rid
-	//s.rabbitMQClient.PublishServiceMessage()
 
+	list, err := cache.GetUserInfoList(values)
+	if err != nil {
+		s.logger.Error("failed to get user info list", zap.Error(err))
+		return code.UserErrErrLogoutFailed
+	}
+
+	if list[request.LoginNumber].Token != token {
+		s.logger.Error("logout : list[request.LoginNumber].Token != token")
+		return code.UserErrErrLogoutFailed
+	}
+
+	//通知消息服务关闭ws
+	rid := list[request.LoginNumber].Rid
+	t := list[request.LoginNumber].DriverType
+	if rid != 0 {
+		msg := msgconfig.WsMsg{
+			Uid:    userID,
+			Event:  msgconfig.OfflineEvent,
+			Data:   map[string]interface{}{"rid": rid, "driver_type": t},
+			SendAt: time.Now(),
+		}
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.UserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.UserWebsocketClose, msg)
+		if err != nil {
+			s.logger.Error("通知消息服务失败", zap.Error(err))
+		}
+	}
+
+	//删除客户端信息
 	err = cache.RemoveFromList(s.redisClient, userID, 0, values[request.LoginNumber])
 	if err != nil {
 		s.logger.Error("failed to logout user", zap.Error(err))
