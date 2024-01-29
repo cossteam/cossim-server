@@ -8,7 +8,7 @@ enum GroupRequestStatus {
   Pending = 0; //等待中
   Accepted = 1; //已通过
   Rejected = 2; //已拒绝
-  Invitation = 3; //邀请中
+  Invite = 3; //邀请中
 }
 
 message GetGroupJoinRequestListRequest {

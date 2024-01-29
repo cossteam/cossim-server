@@ -258,7 +258,6 @@ func addFriend(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-
 	resp, err := svc.SendFriendRequest(c, thisId, req)
 	if err != nil {
 		c.Error(err)

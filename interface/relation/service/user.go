@@ -103,7 +103,7 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 			}
 			data = append(data, &model.UserRequestListResponse{
 				ID:         v.ID,
-				ReceiverId: info.UserId,
+				ReceiverId: v.ReceiverId,
 				Remark:     v.Remark,
 				RequestAt:  v.CreateAt,
 				Status:     uint32(v.Status),
@@ -121,7 +121,7 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 			}
 			data = append(data, &model.UserRequestListResponse{
 				ID:         v.ID,
-				ReceiverId: info.UserId,
+				ReceiverId: v.ReceiverId,
 				Remark:     v.Remark,
 				RequestAt:  v.CreateAt,
 				Status:     uint32(v.Status),
@@ -165,7 +165,6 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	if relation != nil {
 		return nil, code.RelationErrAlreadyFriends
 	}
-	fmt.Println("55555555555555555555555")
 
 	//删除之前的
 	_, err = s.userFriendRequestClient.DeleteFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.DeleteFriendRequestByUserIdAndFriendIdRequest{
@@ -175,7 +174,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("666666666666666666666")
+
 	resp, err := s.userFriendRequestClient.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
 		SenderId:   userID,
 		ReceiverId: req.UserId,
@@ -190,7 +189,6 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 }
 
 func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint32, action int32, key string) (interface{}, error) {
-
 	qs, err := s.userFriendRequestClient.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: questId})
 	if err != nil {
 		return nil, err
@@ -199,7 +197,6 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	if qs == nil {
 		return nil, code.RelationUserErrNoFriendRequestRecords
 	}
-
 	if qs.ReceiverId != userId {
 		return nil, code.RelationUserErrNoFriendRequestRecords
 	}
