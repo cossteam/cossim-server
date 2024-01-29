@@ -9,19 +9,29 @@ type Response struct {
 }
 
 type GroupRequestListResponse struct {
-	ID              uint32 `json:"id"`
-	GroupId         uint32 `json:"group_id" description:"群组ID"`
-	GroupType       uint32 `json:"group_type" description:"群组类型"`
-	GroupStatus     uint32 `json:"group_status" description:"群组状态"`
-	MaxMembersLimit int32  `json:"max_members_limit,omitempty" description:"最大成员限制"`
-	CreatorId       string `json:"creator_id,omitempty" description:"创建者ID"`
-	GroupName       string `json:"group_name" description:"群组名称"`
-	GroupAvatar     string `json:"group_avatar" description:"群组头像"`
-	UserID          string `json:"user_id" description:"用户ID"`
-	UserName        string `json:"user_name" description:"用户昵称"`
-	UserAvatar      string `json:"user_avatar" description:"用户头像"`
-	Msg             string `json:"msg" description:"申请消息"`
+	ID              uint32             `json:"id"`
+	GroupId         uint32             `json:"group_id" description:"群组ID"`
+	GroupType       uint32             `json:"group_type" description:"群组类型"`
+	GroupStatus     uint32             `json:"group_status" description:"群组状态"`
+	MaxMembersLimit int32              `json:"max_members_limit,omitempty" description:"最大成员限制"`
+	CreatorId       string             `json:"creator_id,omitempty" description:"创建者ID"`
+	GroupName       string             `json:"group_name" description:"群组名称"`
+	GroupAvatar     string             `json:"group_avatar" description:"群组头像"`
+	SenderInfo      *UserInfo          `json:"sender_info" description:"发送者信息"`
+	ReceiverInfo    *UserInfo          `json:"receiver_info" description:"接收者信息"`
+	Status          GroupRequestStatus `json:"status" description:"请求状态"`
+	Remark          string             `json:"remark" description:"申请消息"`
 }
+
+type GroupRequestStatus uint32
+
+const (
+	Pending            GroupRequestStatus = iota //等待
+	Accepted                                     //已通过
+	Rejected                                     //已拒绝
+	InviteSender                                 //邀请发送者
+	InvitationReceived                           //邀请接收者
+)
 
 type UserRequestListResponse struct {
 	ID           uint32    `json:"id"`
@@ -72,7 +82,6 @@ func (m *ManageFriendRequest) Validator() error {
 		return errors.New("invalid action")
 	}
 
-	// 添加其他验证逻辑...
 	return nil
 }
 

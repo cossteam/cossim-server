@@ -15,7 +15,6 @@ func NewUserFriendRequestRepo(db *gorm.DB) *UserFriendRequestRepo {
 }
 
 func (u UserFriendRequestRepo) AddFriendRequest(ent *entity.UserFriendRequest) (*entity.UserFriendRequest, error) {
-
 	if err := u.db.Create(ent).Error; err != nil {
 		return nil, err
 	}

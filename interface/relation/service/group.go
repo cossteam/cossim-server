@@ -177,13 +177,30 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 	for i, v := range reqList.GroupJoinRequestResponses {
 		gids[i] = v.GroupId
 		uids[i] = v.UserId
-
+		//查询发送者接受者信息
+		reinfo, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.UserId})
+		if err != nil {
+			return nil, err
+		}
+		sendinfo, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.InviterId})
+		if err != nil {
+			return nil, err
+		}
 		data[i] = &model.GroupRequestListResponse{
-			ID:          v.ID,
-			GroupId:     v.GroupId,
-			UserID:      v.UserId,
-			Msg:         v.Remark,
-			GroupStatus: uint32(v.Status),
+			ID:      v.ID,
+			GroupId: v.GroupId,
+			Remark:  v.Remark,
+			Status:  SwitchGroupRequestStatus(userID, sendinfo.UserId, reinfo.UserId, v.Status),
+			SenderInfo: &model.UserInfo{
+				UserID:     sendinfo.UserId,
+				UserName:   sendinfo.NickName,
+				UserAvatar: sendinfo.Avatar,
+			},
+			ReceiverInfo: &model.UserInfo{
+				UserID:     reinfo.UserId,
+				UserName:   reinfo.NickName,
+				UserAvatar: reinfo.Avatar,
+			},
 		}
 	}
 
@@ -208,9 +225,9 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 		groupInfoMap[groupID] = groupInfo
 	}
 
-	users, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
+	_, err = s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
 	if err != nil {
-		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		s.logger.Error("获取群聊成员信息失败", zap.Error(err))
 		return nil, err
 	}
 
@@ -219,14 +236,7 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 		if groupInfo, ok := groupInfoMap[groupID]; ok {
 			v.GroupName = groupInfo.Name
 			v.GroupAvatar = groupInfo.Avatar
-		}
-
-		for _, u := range users.Users {
-			if v.UserID == u.UserId {
-				v.UserName = u.NickName
-				v.UserAvatar = u.Avatar
-				break
-			}
+			v.GroupStatus = uint32(groupInfo.Status)
 		}
 	}
 	return data, nil
@@ -499,4 +509,16 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	//}
 
 	return nil
+}
+
+func SwitchGroupRequestStatus(thisId, senderId, receiverId string, status relationgrpcv1.GroupRequestStatus) model.GroupRequestStatus {
+	result := model.GroupRequestStatus(status)
+	if status == relationgrpcv1.GroupRequestStatus_Invite {
+		if thisId == receiverId {
+			result = model.InvitationReceived
+		} else {
+			result = model.InviteSender
+		}
+	}
+	return result
 }

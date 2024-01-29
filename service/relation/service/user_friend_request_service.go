@@ -60,7 +60,6 @@ func (s *Service) ManageFriendRequest(ctx context.Context, request *v1.ManageFri
 			}
 			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), formatErrorMessage(err))
 		}
-
 		//拒绝
 		if request.Status == v1.FriendRequestStatus_FriendRequestStatus_REJECT {
 			if err := npo.Ufqr.UpdateFriendRequestStatus(uint(request.ID), entity.Rejected); err != nil {
