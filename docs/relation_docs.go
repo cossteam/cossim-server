@@ -49,6 +49,74 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/dialog/show": {
+            "post": {
+                "description": "关闭或打开对话(action: 0:关闭对话, 1:打开对话)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dialog"
+                ],
+                "summary": "关闭或打开对话(action: 0:关闭对话, 1:打开对话)",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CloseOrOpenDialogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/dialog/top": {
+            "post": {
+                "description": "是否置顶对话(action: 0:关闭取消置顶对话, 1:置顶对话)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dialog"
+                ],
+                "summary": "是否置顶对话(action: 0:关闭取消置顶对话, 1:置顶对话)",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TopOrCancelTopDialogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/admin/manage/join": {
             "post": {
                 "description": "管理员管理加入群聊 action (0=拒绝, 1=同意)",
@@ -712,6 +780,31 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "model.CloseOrOpenDialogAction": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "CloseDialog",
+                "OpenDialog"
+            ]
+        },
+        "model.CloseOrOpenDialogRequest": {
+            "type": "object",
+            "required": [
+                "dialog_id"
+            ],
+            "properties": {
+                "action": {
+                    "$ref": "#/definitions/model.CloseOrOpenDialogAction"
+                },
+                "dialog_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.DeleteBlacklistRequest": {
             "type": "object",
             "required": [
@@ -958,6 +1051,31 @@ const docTemplaterelation = `{
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "model.TopOrCancelTopAction": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "CancelTopDialog",
+                "TopDialog"
+            ]
+        },
+        "model.TopOrCancelTopDialogRequest": {
+            "type": "object",
+            "required": [
+                "dialog_id"
+            ],
+            "properties": {
+                "action": {
+                    "$ref": "#/definitions/model.TopOrCancelTopAction"
+                },
+                "dialog_id": {
+                    "type": "integer"
                 }
             }
         },

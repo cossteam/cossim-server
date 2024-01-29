@@ -197,17 +197,6 @@ message CreateGroupAndInviteUsersResponse {
 
 
 service GroupRelationService {
-  // 申请加入群聊
-//  rpc JoinGroup (JoinGroupRequest) returns (JoinGroupResponse);
-//
-//  // 加入群聊回滚操作
-//  rpc JoinGroupRevert(JoinGroupRequest) returns (JoinGroupResponse);
-
-  // 邀请好友加入群聊
-//  rpc InviteJoinGroup(InviteJoinGroupRequest) returns (google.protobuf.Empty);
-//
-//  // InviteJoinGroup回滚操作
-//  rpc InviteJoinGroupRevert(InviteJoinGroupRequest) returns (google.protobuf.Empty);
 
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
@@ -223,12 +212,6 @@ service GroupRelationService {
 
   // 获取用户管理的群聊ID列表
   rpc GetUserManageGroupID(GetUserManageGroupIDRequest) returns (GetUserManageGroupIDResponse);
-
-//  // ManageJoinGroup 管理群聊加入申请
-//  rpc ManageJoinGroup (ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
-//
-//  // 管理群聊加入申请回滚操作
-//  rpc ManageJoinGroupRevert(ManageJoinGroupRequest) returns (ManageJoinGroupResponse);
 
   // 从群聊中移除成员
   rpc RemoveFromGroup (RemoveFromGroupRequest) returns (RemoveFromGroupResponse);

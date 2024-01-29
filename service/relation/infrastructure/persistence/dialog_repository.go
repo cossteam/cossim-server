@@ -143,3 +143,15 @@ func (g *DialogRepo) UpdateDialogUserByDialogID(dialogID uint, updateFields map[
 func (g *DialogRepo) UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error {
 	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Updates(updateFields).Error
 }
+
+func (g *DialogRepo) UpdateDialogUserColumnByDialogIDAndUserId(dialogID uint, userID string, column string, value interface{}) error {
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Update(column, value).Error
+}
+
+func (g *DialogRepo) GetDialogById(dialogID uint) (*entity.Dialog, error) {
+	var dialog *entity.Dialog
+	if err := g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).First(&dialog).Error; err != nil {
+		return nil, err
+	}
+	return dialog, nil
+}

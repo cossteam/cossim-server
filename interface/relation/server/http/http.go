@@ -190,6 +190,10 @@ func route(engine *gin.Engine) {
 	// 管理员移除群聊成员
 	gg.POST("/manage/remove", removeUserFromGroup)
 
+	d := api.Group("/dialog")
+	d.POST("/top", topOrCancelTopDialog)
+	d.POST("/show", closeOrOpenDialog)
+
 	// 为Swagger路径添加不需要身份验证的中间件
 	swagger := engine.Group("/api/v1/relation/swagger")
 	swagger.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("relation")))

@@ -17,6 +17,23 @@ definitions:
     required:
     - user_id
     type: object
+  model.CloseOrOpenDialogAction:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - CloseDialog
+    - OpenDialog
+  model.CloseOrOpenDialogRequest:
+    properties:
+      action:
+        $ref: '#/definitions/model.CloseOrOpenDialogAction'
+      dialog_id:
+        type: integer
+    required:
+    - dialog_id
+    type: object
   model.DeleteBlacklistRequest:
     properties:
       user_id:
@@ -179,6 +196,23 @@ definitions:
     - public_key
     - user_id
     type: object
+  model.TopOrCancelTopAction:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - CancelTopDialog
+    - TopDialog
+  model.TopOrCancelTopDialogRequest:
+    properties:
+      action:
+        $ref: '#/definitions/model.TopOrCancelTopAction'
+      dialog_id:
+        type: integer
+    required:
+    - dialog_id
+    type: object
   model.UserInfo:
     properties:
       user_avatar:
@@ -246,6 +280,50 @@ paths:
       summary: 删除黑名单
       tags:
       - UserRelation
+  /relation/dialog/show:
+    post:
+      consumes:
+      - application/json
+      description: '关闭或打开对话(action: 0:关闭对话, 1:打开对话)'
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CloseOrOpenDialogRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: '关闭或打开对话(action: 0:关闭对话, 1:打开对话)'
+      tags:
+      - Dialog
+  /relation/dialog/top:
+    post:
+      consumes:
+      - application/json
+      description: '是否置顶对话(action: 0:关闭取消置顶对话, 1:置顶对话)'
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TopOrCancelTopDialogRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: '是否置顶对话(action: 0:关闭取消置顶对话, 1:置顶对话)'
+      tags:
+      - Dialog
   /relation/group/admin/manage/join:
     post:
       consumes:

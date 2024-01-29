@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -28,6 +29,7 @@ const (
 	DialogService_JoinDialogRevert_FullMethodName                          = "/v1.DialogService/JoinDialogRevert"
 	DialogService_GetUserDialogList_FullMethodName                         = "/v1.DialogService/GetUserDialogList"
 	DialogService_GetDialogByIds_FullMethodName                            = "/v1.DialogService/GetDialogByIds"
+	DialogService_GetDialogById_FullMethodName                             = "/v1.DialogService/GetDialogById"
 	DialogService_GetDialogUsersByDialogID_FullMethodName                  = "/v1.DialogService/GetDialogUsersByDialogID"
 	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName          = "/v1.DialogService/GetDialogUserByDialogIDAndUserID"
 	DialogService_GetDialogByGroupId_FullMethodName                        = "/v1.DialogService/GetDialogByGroupId"
@@ -39,6 +41,8 @@ const (
 	DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName         = "/v1.DialogService/DeleteDialogUsersByDialogIDRevert"
 	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName       = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
 	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
+	DialogService_CloseOrOpenDialog_FullMethodName                         = "/v1.DialogService/CloseOrOpenDialog"
+	DialogService_TopOrCancelTopDialog_FullMethodName                      = "/v1.DialogService/TopOrCancelTopDialog"
 )
 
 // DialogServiceClient is the client API for DialogService service.
@@ -61,8 +65,10 @@ type DialogServiceClient interface {
 	JoinDialogRevert(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
 	// 获取用户对话列表
 	GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error)
-	// 根据对话ID获取对话信息
+	// 根据多个对话ID获取对话信息
 	GetDialogByIds(ctx context.Context, in *GetDialogByIdsRequest, opts ...grpc.CallOption) (*GetDialogByIdsResponse, error)
+	// 根据对话id获取对话信息
+	GetDialogById(ctx context.Context, in *GetDialogByIdRequest, opts ...grpc.CallOption) (*Dialog, error)
 	// 根据对话ID获取对话成员列表
 	GetDialogUsersByDialogID(ctx context.Context, in *GetDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*GetDialogUsersByDialogIDResponse, error)
 	// 根据对话ID和用户ID获取对话成员信息
@@ -84,6 +90,10 @@ type DialogServiceClient interface {
 	DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// DeleteDialogUserByDialogIDAndUserID回滚操作
 	DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
+	// 关闭或者打开对话
+	CloseOrOpenDialog(ctx context.Context, in *CloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 置顶或者取消置顶对话
+	TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type dialogServiceClient struct {
@@ -169,6 +179,15 @@ func (c *dialogServiceClient) GetUserDialogList(ctx context.Context, in *GetUser
 func (c *dialogServiceClient) GetDialogByIds(ctx context.Context, in *GetDialogByIdsRequest, opts ...grpc.CallOption) (*GetDialogByIdsResponse, error) {
 	out := new(GetDialogByIdsResponse)
 	err := c.cc.Invoke(ctx, DialogService_GetDialogByIds_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) GetDialogById(ctx context.Context, in *GetDialogByIdRequest, opts ...grpc.CallOption) (*Dialog, error) {
+	out := new(Dialog)
+	err := c.cc.Invoke(ctx, DialogService_GetDialogById_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,6 +293,24 @@ func (c *dialogServiceClient) DeleteDialogUserByDialogIDAndUserIDRevert(ctx cont
 	return out, nil
 }
 
+func (c *dialogServiceClient) CloseOrOpenDialog(ctx context.Context, in *CloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, DialogService_CloseOrOpenDialog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dialogServiceClient) TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, DialogService_TopOrCancelTopDialog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DialogServiceServer is the server API for DialogService service.
 // All implementations must embed UnimplementedDialogServiceServer
 // for forward compatibility
@@ -294,8 +331,10 @@ type DialogServiceServer interface {
 	JoinDialogRevert(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
 	// 获取用户对话列表
 	GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error)
-	// 根据对话ID获取对话信息
+	// 根据多个对话ID获取对话信息
 	GetDialogByIds(context.Context, *GetDialogByIdsRequest) (*GetDialogByIdsResponse, error)
+	// 根据对话id获取对话信息
+	GetDialogById(context.Context, *GetDialogByIdRequest) (*Dialog, error)
 	// 根据对话ID获取对话成员列表
 	GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error)
 	// 根据对话ID和用户ID获取对话成员信息
@@ -317,6 +356,10 @@ type DialogServiceServer interface {
 	DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// DeleteDialogUserByDialogIDAndUserID回滚操作
 	DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
+	// 关闭或者打开对话
+	CloseOrOpenDialog(context.Context, *CloseOrOpenDialogRequest) (*emptypb.Empty, error)
+	// 置顶或者取消置顶对话
+	TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedDialogServiceServer()
 }
 
@@ -351,6 +394,9 @@ func (UnimplementedDialogServiceServer) GetUserDialogList(context.Context, *GetU
 func (UnimplementedDialogServiceServer) GetDialogByIds(context.Context, *GetDialogByIdsRequest) (*GetDialogByIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDialogByIds not implemented")
 }
+func (UnimplementedDialogServiceServer) GetDialogById(context.Context, *GetDialogByIdRequest) (*Dialog, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDialogById not implemented")
+}
 func (UnimplementedDialogServiceServer) GetDialogUsersByDialogID(context.Context, *GetDialogUsersByDialogIDRequest) (*GetDialogUsersByDialogIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDialogUsersByDialogID not implemented")
 }
@@ -383,6 +429,12 @@ func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserID(cont
 }
 func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUserByDialogIDAndUserIDRevert not implemented")
+}
+func (UnimplementedDialogServiceServer) CloseOrOpenDialog(context.Context, *CloseOrOpenDialogRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseOrOpenDialog not implemented")
+}
+func (UnimplementedDialogServiceServer) TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TopOrCancelTopDialog not implemented")
 }
 func (UnimplementedDialogServiceServer) mustEmbedUnimplementedDialogServiceServer() {}
 
@@ -555,6 +607,24 @@ func _DialogService_GetDialogByIds_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DialogServiceServer).GetDialogByIds(ctx, req.(*GetDialogByIdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_GetDialogById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDialogByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).GetDialogById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_GetDialogById_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).GetDialogById(ctx, req.(*GetDialogByIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -757,6 +827,42 @@ func _DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_Handler(srv interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_CloseOrOpenDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloseOrOpenDialogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).CloseOrOpenDialog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_CloseOrOpenDialog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).CloseOrOpenDialog(ctx, req.(*CloseOrOpenDialogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DialogService_TopOrCancelTopDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TopOrCancelTopDialogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).TopOrCancelTopDialog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_TopOrCancelTopDialog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).TopOrCancelTopDialog(ctx, req.(*TopOrCancelTopDialogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DialogService_ServiceDesc is the grpc.ServiceDesc for DialogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -801,6 +907,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DialogService_GetDialogByIds_Handler,
 		},
 		{
+			MethodName: "GetDialogById",
+			Handler:    _DialogService_GetDialogById_Handler,
+		},
+		{
 			MethodName: "GetDialogUsersByDialogID",
 			Handler:    _DialogService_GetDialogUsersByDialogID_Handler,
 		},
@@ -843,6 +953,14 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteDialogUserByDialogIDAndUserIDRevert",
 			Handler:    _DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_Handler,
+		},
+		{
+			MethodName: "CloseOrOpenDialog",
+			Handler:    _DialogService_CloseOrOpenDialog_Handler,
+		},
+		{
+			MethodName: "TopOrCancelTopDialog",
+			Handler:    _DialogService_TopOrCancelTopDialog_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
