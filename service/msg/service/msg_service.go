@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/service/msg/api/dataTransformers"
 	v1 "github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
 	"github.com/cossim/coss-server/service/msg/infrastructure/persistence"
@@ -98,7 +99,7 @@ func (s *Service) GetLastMsgsForGroupsWithIDs(ctx context.Context, request *v1.G
 	for _, m := range msgs {
 		nmsgs = append(nmsgs, &v1.GroupMessage{
 			Id:        uint32(m.ID),
-			UserId:    m.UID,
+			UserId:    m.UserID,
 			Content:   m.Content,
 			Type:      uint32(m.Type),
 			ReplyId:   uint32(m.ReplyId),
@@ -178,7 +179,7 @@ func (s *Service) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsg
 		},
 		Content: request.GroupMessage.Content,
 		ReplyId: uint(request.GroupMessage.ReplyId),
-		UID:     request.GroupMessage.UserId,
+		UserID:  request.GroupMessage.UserId,
 		GroupID: uint(request.GroupMessage.GroupId),
 		Type:    entity.UserMessageType(request.GroupMessage.Type),
 		IsLabel: uint(request.GroupMessage.IsLabel),
@@ -188,7 +189,7 @@ func (s *Service) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsg
 	}
 	resp = &v1.GroupMessage{
 		Id:        uint32(msg.ID),
-		UserId:    msg.UID,
+		UserId:    msg.UserID,
 		Content:   msg.Content,
 		Type:      uint32(int32(msg.Type)),
 		ReplyId:   uint32(msg.ReplyId),
@@ -242,7 +243,7 @@ func (s *Service) GetGroupMessageById(ctx context.Context, in *v1.GetGroupMsgByI
 	}
 	return &v1.GroupMessage{
 		Id:        uint32(msg.ID),
-		UserId:    msg.UID,
+		UserId:    msg.UserID,
 		Content:   msg.Content,
 		Type:      uint32(int32(msg.Type)),
 		ReplyId:   uint32(msg.ReplyId),
@@ -306,7 +307,7 @@ func (s *Service) GetGroupMsgLabelByDialogId(ctx context.Context, in *v1.GetGrou
 	for _, msg := range msgs {
 		msglist = append(msglist, &v1.GroupMessage{
 			Id:        uint32(msg.ID),
-			UserId:    msg.UID,
+			UserId:    msg.UserID,
 			Content:   msg.Content,
 			Type:      uint32(int32(msg.Type)),
 			ReplyId:   uint32(msg.ReplyId),
@@ -427,7 +428,7 @@ func (s *Service) GetGroupMsgIdAfterMsgList(ctx context.Context, in *v1.GetGroup
 				for _, msg := range list {
 					mlist.GroupMessages = append(mlist.GroupMessages, &v1.GroupMessage{
 						Id:        uint32(msg.ID),
-						UserId:    msg.UID,
+						UserId:    msg.UserID,
 						Content:   msg.Content,
 						Type:      uint32(int32(msg.Type)),
 						ReplyId:   uint32(msg.ReplyId),
@@ -440,5 +441,42 @@ func (s *Service) GetGroupMsgIdAfterMsgList(ctx context.Context, in *v1.GetGroup
 			}
 		}
 	}
+	return resp, nil
+}
+
+func (s *Service) GetGroupMessageList(ctx context.Context, in *v1.GetGroupMsgListRequest) (*v1.GetGroupMsgListResponse, error) {
+	var resp = &v1.GetGroupMsgListResponse{}
+	list, err := s.mr.GetGroupMsgList(dataTransformers.GroupMsgList{
+		GroupID:    uint32(in.GroupId),
+		Content:    in.Content,
+		UserID:     in.UserId,
+		MsgType:    entity.UserMessageType(in.Type),
+		PageNumber: int(in.PageNum),
+		PageSize:   int(in.PageSize),
+	})
+	if err != nil {
+		return nil, status.Error(codes.Code(code.MsgErrGetGroupMsgListFailed.Code()), err.Error())
+	}
+
+	resp.Total = list.Total
+	resp.CurrentPage = list.CurrentPage
+
+	if len(list.GroupMessages) > 0 {
+		for _, msg := range list.GroupMessages {
+			resp.GroupMessages = append(resp.GroupMessages, &v1.GroupMessage{
+				Id:        uint32(msg.ID),
+				UserId:    msg.UserID,
+				Content:   msg.Content,
+				Type:      uint32(int32(msg.Type)),
+				ReplyId:   uint32(msg.ReplyId),
+				GroupId:   uint32(msg.GroupID),
+				ReadCount: int32(msg.ReadCount),
+				CreatedAt: msg.CreatedAt,
+				DialogId:  uint32(msg.DialogId),
+				IsLabel:   v1.MsgLabel(msg.IsLabel),
+			})
+		}
+	}
+
 	return resp, nil
 }

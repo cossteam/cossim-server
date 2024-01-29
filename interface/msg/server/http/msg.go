@@ -142,10 +142,10 @@ func sendGroupMsg(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param user_id query string true "用户id"
-// @Param type query string true "类型"
+// @Param type query string false "类型"
 // @Param content query string false "消息"
-// @Param page_num query int false "页码"
-// @Param page_size query int false "页大小"
+// @Param page_num query int true "页码"
+// @Param page_size query int true "页大小"
 // @Success		200 {object} model.Response{}
 // @Router /msg/list/user [get]
 func getUserMsgList(c *gin.Context) {
@@ -181,6 +181,63 @@ func getUserMsgList(c *gin.Context) {
 	}
 
 	resp, err := svc.GetUserMessageList(c, thisId, msgListRequest)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取成功", resp)
+}
+
+// @Summary 获取私聊消息
+// @Description 获取私聊消息
+// @Accept  json
+// @Produce  json
+// @Param group_id query string true "群聊id"
+// @Param user_id query string false "用户id"
+// @Param type query string false "类型"
+// @Param content query string false "消息"
+// @Param page_num query int true "页码"
+// @Param page_size query int true "页大小"
+// @Success		200 {object} model.Response{}
+// @Router /msg/list/group [get]
+func getGroupMsgList(c *gin.Context) {
+	var gid = c.Query("group_id")
+	var num = c.Query("page_num")
+	var size = c.Query("page_size")
+	var id = c.Query("user_id")
+	var msgType = c.Query("type")
+	var content = c.Query("content")
+
+	if num == "" || size == "" || gid == "" {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	gidInt, _ := strconv.Atoi(gid)
+	pageNum, _ := strconv.Atoi(num)
+	pageSize, _ := strconv.Atoi(size)
+	mt, _ := strconv.Atoi(msgType)
+	if pageNum == 0 || pageSize == 0 {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	var msgListRequest = &model.GroupMsgListRequest{
+		GroupId:  uint32(gidInt),
+		UserId:   id,
+		Type:     int32(mt),
+		Content:  content,
+		PageNum:  pageNum,
+		PageSize: pageSize,
+	}
+
+	resp, err := svc.GetGroupMessageList(c, thisId, msgListRequest)
 	if err != nil {
 		c.Error(err)
 		return

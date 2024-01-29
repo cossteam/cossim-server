@@ -7,8 +7,10 @@ import (
 	"github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
+	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 )
@@ -263,4 +265,38 @@ func (s *Service) GetGroupLabelMsgList(ctx context.Context, userID string, dialo
 	}
 
 	return msgs, nil
+}
+
+func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.GroupMsgListRequest) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+		Gid: request.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: request.GroupId,
+		UserId:  id,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	resp, err := s.msgClient.GetGroupMessageList(c, &msggrpcv1.GetGroupMsgListRequest{
+		GroupId:  int32(request.GroupId),
+		UserId:   request.UserId,
+		Content:  request.Content,
+		Type:     request.Type,
+		PageNum:  int32(request.PageNum),
+		PageSize: int32(request.PageSize),
+	})
+	if err != nil {
+		s.logger.Error("获取群聊消息列表失败", zap.Error(err))
+		return nil, err
+	}
+
+	return resp, nil
 }

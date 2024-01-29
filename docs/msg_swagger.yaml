@@ -301,6 +301,47 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 标注用户消息状态
+  /msg/list/group:
+    get:
+      consumes:
+      - application/json
+      description: 获取私聊消息
+      parameters:
+      - description: 群聊id
+        in: query
+        name: group_id
+        required: true
+        type: string
+      - description: 用户id
+        in: query
+        name: user_id
+        type: string
+      - description: 类型
+        in: query
+        name: type
+        type: string
+      - description: 消息
+        in: query
+        name: content
+        type: string
+      - description: 页码
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - description: 页大小
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 获取私聊消息
   /msg/list/user:
     get:
       consumes:
@@ -315,7 +356,6 @@ paths:
       - description: 类型
         in: query
         name: type
-        required: true
         type: string
       - description: 消息
         in: query
@@ -324,10 +364,12 @@ paths:
       - description: 页码
         in: query
         name: page_num
+        required: true
         type: integer
       - description: 页大小
         in: query
         name: page_size
+        required: true
         type: integer
       produces:
       - application/json
