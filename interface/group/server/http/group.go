@@ -132,9 +132,10 @@ func createGroup(c *gin.Context) {
 		CreatorId:       thisId,
 		Name:            req.Name,
 		Avatar:          req.Avatar,
-		Member:          req.Member,
 	}
-
+	if len(req.Member) == 0 {
+		group.Member = make([]string, 0)
+	}
 	resp, err := svc.CreateGroup(c, group)
 	if err != nil {
 		logger.Error("创建群聊失败", zap.Error(err))
@@ -148,11 +149,11 @@ func createGroup(c *gin.Context) {
 // @Description 删除群聊
 // @Accept  json
 // @Produce  json
-// @Param gid query string true "群聊ID"
+// @Param group_id query string true "群聊ID"
 // @Success 200 {object} model.Response{}
 // @Router /group/delete [post]
 func deleteGroup(c *gin.Context) {
-	gid := c.Query("gid")
+	gid := c.Query("group_id")
 	if gid == "" {
 		response.SetFail(c, "群聊ID不能为空", nil)
 		return

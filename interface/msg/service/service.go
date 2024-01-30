@@ -63,7 +63,6 @@ func New() (s *Service) {
 		logger:      setupLogger(),
 		sid:         xid.New().String(),
 		redisClient: setupRedis(),
-		//Enc:       setupEncryption(),
 		//rabbitMQClient: mqClient,
 		//pool:     make(map[string]map[string][]*client),
 		//mqClient: mqClient,
@@ -76,9 +75,10 @@ func setupLogger() *zap.Logger {
 }
 
 func (s *Service) Start(discover bool) {
+	setupEncryption()
+
 	// 监听服务消息队列
 	go s.ListenQueue()
-
 	if discover {
 		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
 		if err != nil {
@@ -264,4 +264,15 @@ func setupRedis() *redis.Client {
 		DB:       0,                          // use default DB
 		//Protocol: cfg,
 	})
+}
+
+func setupEncryption() {
+	enc := encryption.NewEncryptor([]byte(config.Conf.Encryption.Passphrase), config.Conf.Encryption.Name, config.Conf.Encryption.Email, config.Conf.Encryption.RsaBits, config.Conf.Encryption.Enable)
+
+	err := enc.ReadKeyPair()
+	if err != nil {
+		return
+	}
+
+	Enc = enc
 }
