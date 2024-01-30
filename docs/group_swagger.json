@@ -83,7 +83,7 @@
                         },
                         "collectionFormat": "csv",
                         "description": "群聊ID列表",
-                        "name": "groupIds",
+                        "name": "group_ids",
                         "in": "query",
                         "required": true
                     }
@@ -112,7 +112,7 @@
                     {
                         "type": "integer",
                         "description": "群聊ID",
-                        "name": "gid",
+                        "name": "group_id",
                         "in": "query",
                         "required": true
                     }

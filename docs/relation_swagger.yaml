@@ -148,13 +148,13 @@ definitions:
     properties:
       group_id:
         type: integer
-      user_ids:
+      member:
         items:
           type: string
         type: array
     required:
     - group_id
-    - user_ids
+    - member
     type: object
   model.Response:
     properties:

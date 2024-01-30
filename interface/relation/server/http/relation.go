@@ -509,14 +509,14 @@ func removeUserFromGroup(c *gin.Context) {
 		return
 	}
 
-	for _, d := range req.UserIDs {
+	for _, d := range req.Member {
 		if userID == d {
 			response.SetFail(c, "不能将自己从群聊中移除", nil)
 			return
 		}
 	}
 
-	if err = svc.RemoveUserFromGroup(c, req.GroupID, userID, req.UserIDs); err != nil {
+	if err = svc.RemoveUserFromGroup(c, req.GroupID, userID, req.Member); err != nil {
 		logger.Error("RemoveUserFromGroup Failed", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return

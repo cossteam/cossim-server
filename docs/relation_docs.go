@@ -971,13 +971,13 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "group_id",
-                "user_ids"
+                "member"
             ],
             "properties": {
                 "group_id": {
                     "type": "integer"
                 },
-                "user_ids": {
+                "member": {
                     "type": "array",
                     "items": {
                         "type": "string"
