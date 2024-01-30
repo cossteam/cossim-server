@@ -39,7 +39,7 @@ func New() (s *Service) {
 		conf:            config.Conf,
 		sid:             xid.New().String(),
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
-		rabbitMQClient:  setRabbitMQProvider(c),
+		rabbitMQClient:  setRabbitMQProvider(),
 	}
 
 	s.logger = setupLogger()
@@ -166,8 +166,8 @@ func (s *Service) setupRedis() {
 func (s *Service) Ping() {
 }
 
-func setRabbitMQProvider(c *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
-	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Addr()))
+func setRabbitMQProvider() *msg_queue.RabbitMQ {
+	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", config.Conf.MessageQueue.Username, config.Conf.MessageQueue.Password, config.Conf.MessageQueue.Addr()))
 	if err != nil {
 		panic(err)
 	}
