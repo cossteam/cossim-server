@@ -31,7 +31,6 @@ func (s *Service) SendGroupMessage(ctx context.Context, request *v1.SendGroupMsg
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrInsertGroupMessageFailed.Code()), err.Error())
 	}
-
 	return &v1.SendGroupMsgResponse{
 		MsgId:   uint32(ums.ID),
 		GroupId: uint32(ums.GroupID),

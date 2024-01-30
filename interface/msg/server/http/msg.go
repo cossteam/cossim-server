@@ -42,7 +42,6 @@ type client struct {
 func ws(c *gin.Context) {
 	var uid string
 	token := c.Query("token")
-	fmt.Println(111111)
 	//判断设备类型
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)

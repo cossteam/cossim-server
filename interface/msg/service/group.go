@@ -42,6 +42,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, userId stri
 		if groupRelation.IsSilent == relationgrpcv1.GroupSilentNotificationType_GroupSilent {
 			m.Event = config.SendSilentGroupMessageEvent
 		}
+
 		//在线则推送ws
 		if _, ok := pool[uid]; ok {
 			for _, c := range pool[uid] {
@@ -64,7 +65,9 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, userId stri
 		}
 		//否则推送到消息队列
 		//是否传输加密
+
 		if Enc.IsEnable() {
+
 			marshal, err := json.Marshal(m)
 			if err != nil {
 				s.logger.Error("json解析失败", zap.Error(err))
@@ -140,6 +143,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 	uids, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupId,
 	})
+
 	s.sendWsGroupMsg(ctx, uids.UserIds, userID, req.GroupId, req.Content, req.Type, req.ReplayId, req.DialogId)
 
 	return message.MsgId, nil
