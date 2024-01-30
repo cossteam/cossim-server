@@ -114,6 +114,7 @@ func startGRPCServer() {
 	api.RegisterUserRelationServiceServer(grpcServer, svc)
 	api.RegisterGroupRelationServiceServer(grpcServer, svc)
 	api.RegisterDialogServiceServer(grpcServer, svc)
+	api.RegisterGroupJoinRequestServiceServer(grpcServer, svc)
 	// 注册服务开启健康检查
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
