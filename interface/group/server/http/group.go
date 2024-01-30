@@ -15,11 +15,11 @@ import (
 // @Description 获取群聊信息
 // @Accept  json
 // @Produce  json
-// @Param gid query int32 true "群聊ID"
+// @Param group_id query int32 true "群聊ID"
 // @Success 200 {object} model.Response{}
 // @Router /group/info [get]
 func getGroupInfoByGid(c *gin.Context) {
-	gid := c.Query("gid")
+	gid := c.Query("group_id")
 	if gid == "" {
 		response.SetFail(c, "群聊ID不能为空", nil)
 		return
@@ -44,7 +44,7 @@ func getGroupInfoByGid(c *gin.Context) {
 // @Description 批量获取群聊信息
 // @Accept  json
 // @Produce  json
-// @Param groupIds query []string true "群聊ID列表"
+// @Param group_ids query []string true "群聊ID列表"
 // @Success 200 {object} model.Response{}
 // @Router /group/getBatch [get]
 func getBatchGroupInfoByIDs(c *gin.Context) {

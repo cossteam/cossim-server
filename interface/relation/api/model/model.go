@@ -115,7 +115,7 @@ func (m *ManageJoinGroupRequest) Validator() error {
 
 type RemoveUserFromGroupRequest struct {
 	GroupID uint32   `json:"group_id" binding:"required"`
-	UserIDs []string `json:"user_ids" binding:"required"`
+	Member  []string `json:"member" binding:"required"`
 }
 
 type QuitGroupRequest struct {
