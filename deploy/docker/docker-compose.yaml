@@ -72,7 +72,7 @@ services:
       - '36789:36789'
       - '36790:36790'
   consul:
-    image: consul:latest
+    image: hub.hitosea.com/cossim/consul:latest
     container_name: cossim_consul
     volumes:
       - ./data/var/lib/consul:/consul/data
