@@ -217,13 +217,13 @@ func (e *MyEncryptor) GenerateKeyPair() error {
 func (e *MyEncryptor) ReadKeyPair() error {
 	cacheDir := ".cache"
 
-	getwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	//输出当前工作目录
-	fmt.Println("ReadKeyPair pwd => ", getwd)
+	//getwd, err := os.Getwd()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	////输出当前工作目录
+	//fmt.Println("ReadKeyPair pwd => ", getwd)
 
 	// 检查目录是否存在
 	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {

@@ -311,7 +311,7 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 	// 检查删除的用户是否存在
 	//_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: friendID})
 	//if err != nil {
-	//	s.logger.Error("获取用户信息失败", zap.Error(err))
+	//	s.log.Error("获取用户信息失败", zap.Error(err))
 	//	return err
 	//}
 

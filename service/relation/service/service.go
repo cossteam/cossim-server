@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func NewService(repo *persistence.Repositories, db *gorm.DB, ac pkgconfig.AppConfig) *Service {
+func NewService(repo *persistence.Repositories, db *gorm.DB, ac *pkgconfig.AppConfig) *Service {
 	return &Service{
 		urr:  repo.Urr,
 		grr:  repo.Grr,
@@ -36,7 +36,7 @@ type Service struct {
 	v1.UnimplementedDialogServiceServer
 	v1.UnimplementedUserFriendRequestServiceServer
 	v1.UnimplementedGroupJoinRequestServiceServer
-	ac        pkgconfig.AppConfig
+	ac        *pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string
 }
@@ -56,7 +56,7 @@ func (s *Service) Start(discover bool) {
 	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
 }
 
-func (s *Service) Close(discover bool) error {
+func (s *Service) Stop(discover bool) error {
 	if !discover {
 		return nil
 	}
@@ -66,4 +66,9 @@ func (s *Service) Close(discover bool) error {
 	}
 	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
 	return nil
+}
+
+func (s *Service) Restart(discover bool) {
+	s.Stop(discover)
+	s.Start(discover)
 }

@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/cossim/coss-server/interface/storage/config"
 	conf "github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/storage/minio"
@@ -26,7 +27,7 @@ import (
 func upload(c *gin.Context) {
 	//userID, err := http2.ParseTokenReUid(c)
 	//if err != nil {
-	//	logger.Error("token解析失败", zap.Error(err))
+	//	log.Error("token解析失败", zap.Error(err))
 	//	response.SetFail(c, "token解析失败", nil)
 	//	return
 	//}
@@ -118,7 +119,7 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	headerUrl.Host = cfg.Discovers["gateway"].Address
+	headerUrl.Host = config.Conf.Discovers["gateway"].Address
 	headerUrl.Path = downloadURL + headerUrl.Path
 	response.SetSuccess(c, "上传成功", gin.H{
 		"url":     headerUrl.String(),
@@ -134,7 +135,7 @@ func upload(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/download/:type/:id [get]
 func download(c *gin.Context) {
-	targetURL := "http://" + conf.MinioConf.Endpoint
+	targetURL := "http://" + conf.Conf.OSS["minio"].Addr()
 	URL := c.Request.URL.String()
 	if strings.Contains(URL, downloadURL) {
 		URL = strings.Replace(URL, downloadURL, "", 1)
@@ -168,7 +169,7 @@ func download(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	//logger.Info("Received response from service", zap.Any("ResponseHeaders", resp.Header), zap.String("TargetURL", targetURL))
+	//log.Info("Received response from service", zap.Any("ResponseHeaders", resp.Header), zap.String("TargetURL", targetURL))
 
 	// 将 BFF 服务的响应返回给客户端
 	c.Status(resp.StatusCode)

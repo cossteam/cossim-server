@@ -11,6 +11,8 @@ type Discovery interface {
 
 // ConfigCenter 定义配置中心接口
 type ConfigCenter interface {
-	Set(key string, value string)
-	Get(key string) string
+	Get(key string) (string, error)          // 获取配置项的值
+	Set(key, value string) error             // 更新配置项的值
+	Watch(key string) (<-chan string, error) // 监听配置项的变化并返回一个通道
+	Close() error                            // 关闭配置中心连接
 }

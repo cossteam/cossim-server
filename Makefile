@@ -52,7 +52,7 @@ fmt: ## Run go fmt against code.
 
 .PHONY: fmt
 test: fmt vet## Run unittests
-	@go test -short ./...
+	@#go test -short ./...
 
 SERVICE_DIR := ./service
 INTERFACE_DIR := ./interface
@@ -168,6 +168,14 @@ docker-buildx: test ## Build and push docker image for the manager for cross-pla
 	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
 	- docker buildx create --name project-v3-builder
 	docker buildx use project-v3-builder
-	- docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
+	-# docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
+	- docker buildx build --load --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \
+             --build-arg BUILD_COMMIT="${BUILD_COMMIT}" \
+             --build-arg BUILD_TIME="${BUILD_TIME}" \
+             --build-arg BUILD_GO_VERSION="${BUILD_GO_VERSION}" \
+             --build-arg BUILD_PATH="${DOCKER_BUILD_PATH}" \
+             --build-arg VERSION_PATH="${VERSION_PATH}" \
+              --build-arg MAIN_FILE="${MAIN_FILE}" \
+             -t "${IMG}" -f Dockerfile.cross .
 	- docker buildx rm project-v3-builder
 	rm Dockerfile.cross

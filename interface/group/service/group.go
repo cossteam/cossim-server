@@ -225,3 +225,14 @@ func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, ids []uint32) (int
 
 	return groups.Groups, nil
 }
+
+func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32) (interface{}, error) {
+	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+		Gid: gid,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return group, nil
+}

@@ -1,54 +1,86 @@
 package http
 
 import (
-	"fmt"
+	"context"
+	"github.com/cossim/coss-server/interface/user/config"
 	"github.com/cossim/coss-server/interface/user/service"
-	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"net/http"
+	"time"
 )
 
 var (
 	redisClient *redis.Client
-	cfg         *pkgconfig.AppConfig
 	logger      *zap.Logger
 	enc         encryption.Encryptor
 	svc         *service.Service
+
+	server *http.Server
+	engine *gin.Engine
 )
 
 var ThisKey string
 
-func Init(c *pkgconfig.AppConfig, service *service.Service) {
-	cfg = c
+func Start(service *service.Service) {
 	svc = service
+
+	engine = gin.New()
+	server = &http.Server{
+		Addr:    config.Conf.HTTP.Addr(),
+		Handler: engine,
+	}
 
 	setupLogger()
 	setupEncryption()
 	setupRedis()
 	setupGin()
+
+	go func() {
+		logger.Info("Gin server is running on port", zap.String("addr", config.Conf.HTTP.Addr()))
+		if err := server.ListenAndServe(); err != nil {
+			logger.Info("Failed to start Gin server", zap.Error(err))
+			return
+		}
+	}()
+}
+
+func Restart(service *service.Service) error {
+	Start(service)
+	return nil
+}
+
+func Stop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Fatal("Server forced to shutdown", zap.Error(err))
+	}
+
+	redisClient.Close()
 }
 
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr(),
-		Password: cfg.Redis.Password, // no password set
-		DB:       0,                  // use default DB
+		Addr:     config.Conf.Redis.Addr(),
+		Password: config.Conf.Redis.Password, // no password set
+		DB:       0,                          // use default DB
 		//Protocol: cfg,
 	})
 	redisClient = rdb
 }
 
 func setupEncryption() {
-	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	enc = encryption.NewEncryptor([]byte(config.Conf.Encryption.Passphrase), config.Conf.Encryption.Name, config.Conf.Encryption.Email, config.Conf.Encryption.RsaBits, config.Conf.Encryption.Enable)
 	//err := enc.GenerateKeyPair()
 	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
+	//	log.Fatal("Failed to ", zap.Error(err))
 	//}
 	err := enc.ReadKeyPair()
 	if err != nil {
@@ -60,94 +92,49 @@ func setupEncryption() {
 	//fmt.Println("公钥：\n", enc.GetPublicKey())
 	//readString, err := encryption.GenerateRandomKey(32)
 	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
+	//	log.Fatal("Failed to ", zap.Error(err))
 	//}
 	//resp, err := enc.SecretMessage("{\"email\":\"12345ddd@qq.com\",\"password\":\"123123a\"}", enc.GetPublicKey(), []byte(readString))
 	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
+	//	log.Fatal("Failed to ", zap.Error(err))
 	//}
 	//j, err := json.Marshal(resp)
 	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
+	//	log.Fatal("Failed to ", zap.Error(err))
 	//}
 	//
 	//cacheDir := ".cache"
 	//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
 	//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
 	//	if err != nil {
-	//		logger.Fatal("Failed to ", zap.Error(err))
+	//		log.Fatal("Failed to ", zap.Error(err))
 	//	}
 	//}
 	//// 保存私钥到文件
 	//privateKeyFile, err := os.Create(cacheDir + "/data.json")
 	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
+	//	log.Fatal("Failed to ", zap.Error(err))
 	//}
 	//
 	//_, err = privateKeyFile.WriteString(string(j))
 	//if err != nil {
-	//	privateKeyFile.Close()
-	//	logger.Fatal("Failed to ", zap.Error(err))
+	//	privateKeyFile.Stop()
+	//	log.Fatal("Failed to ", zap.Error(err))
 	//}
-	//privateKeyFile.Close()
+	//privateKeyFile.Stop()
 	//fmt.Println("加密后消息：", string(j))
 }
 
 func setupLogger() {
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "user",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder, // 小写编码器
-		EncodeTime:     zapcore.ISO8601TimeEncoder,    // ISO8601 UTC 时间格式
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.FullCallerEncoder, // 全路径编码器
-	}
-
-	// 设置日志级别
-	atom := zap.NewAtomicLevelAt(zapcore.Level(cfg.Log.V))
-	config := zap.Config{
-		Level:            atom,                                              // 日志级别
-		Development:      true,                                              // 开发模式，堆栈跟踪
-		Encoding:         cfg.Log.Format,                                    // 输出格式 console 或 json
-		EncoderConfig:    encoderConfig,                                     // 编码器配置
-		InitialFields:    map[string]interface{}{"serviceName": "user-bff"}, // 初始化字段，如：添加一个服务器名称
-		OutputPaths:      []string{"stdout"},                                // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
-		ErrorOutputPaths: []string{"stderr"},
-	}
-	// 构建日志
-	var err error
-	logger, err = config.Build()
-	if err != nil {
-		panic(fmt.Sprintf("log 初始化失败: %v", err))
-	}
-	logger.Info("log 初始化成功")
+	logger = plog.NewDevLogger("user_bff")
 }
 
 func setupGin() {
-	if cfg == nil {
-		panic("Config not initialized")
-	}
-
-	// 初始化 gin engine
-	engine := gin.New()
-
+	gin.SetMode(gin.ReleaseMode)
 	// 添加一些中间件或其他配置
 	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.EncryptionMiddleware(enc), middleware.RecoveryMiddleware())
-
 	// 设置路由
 	route(engine)
-
-	// 启动 Gin 服务器
-	go func() {
-		if err := engine.Run(cfg.HTTP.Addr()); err != nil {
-			logger.Fatal("Failed to start Gin server", zap.Error(err))
-		}
-	}()
 }
 
 // @title coss-user服务

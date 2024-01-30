@@ -45,7 +45,7 @@ func (c *client) wsOnlineClients() {
 	for {
 		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
 		if err != nil || !ok {
-			//c.queue.Close()
+			//c.queue.Stop()
 			//拉取完之后删除队列
 			_ = rabbitMQClient.DeleteEmptyQueue(c.Uid)
 			return
