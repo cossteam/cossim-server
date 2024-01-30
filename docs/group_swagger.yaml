@@ -16,6 +16,13 @@ definitions:
     required:
     - name
     type: object
+  model.DeleteGroupRequest:
+    properties:
+      group_id:
+        type: integer
+    required:
+    - group_id
+    type: object
   model.Response:
     properties:
       code:
@@ -71,11 +78,12 @@ paths:
       - application/json
       description: 删除群聊
       parameters:
-      - description: 群聊ID
-        in: query
-        name: gid
+      - description: 群聊id
+        in: body
+        name: request
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/model.DeleteGroupRequest'
       produces:
       - application/json
       responses:

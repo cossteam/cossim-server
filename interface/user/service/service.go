@@ -7,6 +7,9 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	"github.com/cossim/coss-server/pkg/storage"
+	"github.com/cossim/coss-server/pkg/storage/minio"
+	"github.com/cossim/coss-server/pkg/utils/os"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/redis/go-redis/v9"
@@ -15,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -24,22 +28,32 @@ type Service struct {
 	conf   *pkgconfig.AppConfig
 	logger *zap.Logger
 
-	discovery      discovery.Discovery
-	userClient     user.UserServiceClient
-	relClient      relationgrpcv1.UserRelationServiceClient
-	redisClient    *redis.Client
-	rabbitMQClient *msg_queue.RabbitMQ
-
+	discovery       discovery.Discovery
+	userClient      user.UserServiceClient
+	relClient       relationgrpcv1.UserRelationServiceClient
+	sp              storage.StorageProvider
+	redisClient     *redis.Client
+	rabbitMQClient  *msg_queue.RabbitMQ
 	sid             string
 	tokenExpiration time.Duration
+	appPath         string
+	downloadURL     string
+	gatewayAddress  string
 }
 
 func New() (s *Service) {
+	path, err := os.GetPackagePath()
+	if err != nil {
+		return
+	}
 	s = &Service{
 		conf:            config.Conf,
 		sid:             xid.New().String(),
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
 		rabbitMQClient:  setRabbitMQProvider(),
+		appPath:         path,
+		sp:              setMinIOProvider(),
+		downloadURL:     "/api/v1/storage/files/download",
 	}
 
 	s.logger = setupLogger()
@@ -48,6 +62,8 @@ func New() (s *Service) {
 }
 
 func (s *Service) Start(discover bool) {
+	gate := s.conf.Discovers["gateway"]
+	s.gatewayAddress = gate.Address + ":" + strconv.Itoa(gate.Port)
 	if discover {
 		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
 		if err != nil {
@@ -172,4 +188,14 @@ func setRabbitMQProvider() *msg_queue.RabbitMQ {
 		panic(err)
 	}
 	return rmq
+}
+
+func setMinIOProvider() storage.StorageProvider {
+	var err error
+	sp, err := minio.NewMinIOStorage(config.Conf.OSS["minio"].Addr(), config.Conf.OSS["minio"].AccessKey, config.Conf.OSS["minio"].SecretKey, config.Conf.OSS["minio"].SSL)
+	if err != nil {
+		panic(err)
+	}
+
+	return sp
 }

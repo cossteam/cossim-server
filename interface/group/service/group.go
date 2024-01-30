@@ -21,7 +21,6 @@ import (
 
 func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*model.CreateGroupResponse, error) {
 	var err error
-
 	friends, err := s.relationUserClient.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: req.CreatorId, FriendIds: req.Member})
 	if err != nil {
 		s.logger.Error("获取好友关系失败", zap.Error(err))

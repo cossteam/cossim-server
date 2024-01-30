@@ -26,13 +26,10 @@ message UploadResponse {
 
 // 文件类型的枚举
 enum FileType {
-  Text = 0;     // 文本消息
-  Voice = 1;    // 语音消息
-  Image = 2;    // 图片消息
-  File = 3;     // 文件消息
-  Video = 4;    // 视频消息
-  Emoji = 5;    // Emoji表情
-  Sticker = 6;  // 表情包
+  Voice = 0;    // 语音类型
+  Image = 1;    // 图片类型
+  File = 2;     // 文件类型
+  Video = 3;    // 视频类型
 }
 
 message GetFileInfoRequest {

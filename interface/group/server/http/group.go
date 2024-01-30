@@ -149,32 +149,28 @@ func createGroup(c *gin.Context) {
 // @Description 删除群聊
 // @Accept  json
 // @Produce  json
-// @Param group_id query string true "群聊ID"
+// @Param request body model.DeleteGroupRequest true "群聊id"
 // @Success 200 {object} model.Response{}
 // @Router /group/delete [post]
 func deleteGroup(c *gin.Context) {
-	gid := c.Query("group_id")
-	if gid == "" {
-		response.SetFail(c, "群聊ID不能为空", nil)
+	req := new(model.DeleteGroupRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	//转换类型
-	gidInt, err := strconv.Atoi(gid)
-	if gidInt == 0 {
-		response.SetFail(c, "群聊ID错误", nil)
-	}
+
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
-	groupId, err := svc.DeleteGroup(c, uint32(gidInt), thisId)
+	groupId, err := svc.DeleteGroup(c, req.GroupId, thisId)
 	if err != nil {
 		logger.Error("删除群聊失败", zap.Error(err))
 		response.SetFail(c, "删除群聊失败", nil)
 		return
 	}
 
-	response.SetSuccess(c, "删除群聊成功", gin.H{"gid": groupId})
+	response.SetSuccess(c, "删除群聊成功", gin.H{"group_id": groupId})
 }

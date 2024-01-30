@@ -40,3 +40,7 @@ type CreateGroupResponse struct {
 func IsValidGroupType(value api.GroupType) bool {
 	return value == api.GroupType_TypePublic || value == api.GroupType_TypePrivate
 }
+
+type DeleteGroupRequest struct {
+	GroupId uint32 `json:"group_id" binding:"required"`
+}

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	msgconfig "github.com/cossim/coss-server/interface/msg/config"
@@ -8,10 +9,16 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
+	"github.com/cossim/coss-server/pkg/utils/avatarbuilder"
 	"github.com/cossim/coss-server/pkg/utils/time"
+	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
+	"github.com/minio/minio-go/v7"
+
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"strings"
 )
@@ -133,18 +140,47 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		req.Nickname = req.Email
 	}
 
+	avatar, err := avatarbuilder.GenerateAvatar(req.Nickname, s.appPath)
+	if err != nil {
+		return "", err
+	}
+
+	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Image))
+	if err != nil {
+		return "", err
+	}
+
+	// 将字节数组转换为 io.Reader
+	reader := bytes.NewReader(avatar)
+	fileID := uuid.New().String()
+	key := myminio.GenKey(bucket, fileID+".jpeg")
+	headerUrl, err := s.sp.Upload(context.Background(), key, reader, reader.Size(), minio.PutObjectOptions{ContentType: "image/jpeg"})
+	if err != nil {
+		return "", err
+	}
+	//fmt.Println("headerUrl:", headerUrl.RequestURI())
+	if err != nil {
+		return "", err
+	}
+
+	headerUrl.Host = s.gatewayAddress
+
+	headerUrl.Path = s.downloadURL + headerUrl.Path
+
 	resp, err := s.userClient.UserRegister(ctx, &usergrpcv1.UserRegisterRequest{
 		Email:           req.Email,
 		NickName:        req.Nickname,
 		Password:        utils.HashString(req.Password),
 		ConfirmPassword: req.ConfirmPass,
 		PublicKey:       req.PublicKey,
-		Avatar:          "https://fastly.picsum.photos/id/1036/200/200.jpg?hmac=Yb5E0WTltIYlUDPDqT-d0Llaaq0mJnwiCUtxx8RrtVE",
+		Avatar:          headerUrl.String(),
 	})
 	if err != nil {
 		s.logger.Error("failed to register user", zap.Error(err))
 		return "", err
 	}
+
+	fmt.Println("headerUrl:", headerUrl.String())
 
 	return resp.UserId, nil
 }
