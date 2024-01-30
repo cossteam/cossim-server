@@ -1,15 +1,17 @@
 package http
 
 import (
+	"context"
 	"fmt"
+	"github.com/cossim/coss-server/interface/gateway/config"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/pretty66/websocketproxy"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"io"
 	"log"
 	"net/http"
@@ -18,10 +20,10 @@ import (
 )
 
 var (
-	cfg    *pkgconfig.AppConfig
-	logger *zap.Logger
-
-	dis discovery.Discovery
+	logger = plog.NewDevLogger("gateway")
+	server *http.Server
+	engine *gin.Engine
+	dis    discovery.Discovery
 
 	userServiceURL      string
 	relationServiceURL  string
@@ -31,72 +33,52 @@ var (
 	storageServiceURL   string
 )
 
-func Init(c *pkgconfig.AppConfig, discover bool) {
-	cfg = c
+func Start(discover bool) {
+	engine = gin.New()
+	server = &http.Server{
+		Addr:    config.Conf.HTTP.Addr(),
+		Handler: engine,
+	}
 
-	setupLogger()
-	setDiscovery(discover)
+	if discover {
+		setDiscovery()
+	}
 	setupURLs(discover)
 	setupGin()
+
+	go func() {
+		logger.Info("Gin server is running on port", zap.String("addr", config.Conf.HTTP.Addr()))
+		if err := server.ListenAndServe(); err != nil {
+			logger.Info("Failed to start Gin server", zap.Error(err))
+			return
+		}
+	}()
 }
 
-func setDiscovery(f bool) {
-	if !f {
-		return
+func Restart(discover bool) error {
+	Start(discover)
+	return nil
+}
+
+func Stop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Fatal("Server forced to shutdown", zap.Error(err))
 	}
-	d, err := discovery.NewConsulRegistry(cfg.Register.Addr())
+}
+
+func setDiscovery() {
+	d, err := discovery.NewConsulRegistry(config.Conf.Register.Addr())
 	if err != nil {
 		panic(err)
 	}
 	dis = d
 }
 
-func setupLogger() {
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder, // 小写编码器
-		EncodeTime:     zapcore.ISO8601TimeEncoder,    // ISO8601 UTC 时间格式
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.FullCallerEncoder, // 全路径编码器
-	}
-
-	// 设置日志级别
-	atom := zap.NewAtomicLevelAt(zapcore.Level(cfg.Log.V))
-	config := zap.Config{
-		Level:            atom,                                              // 日志级别
-		Development:      true,                                              // 开发模式，堆栈跟踪
-		Encoding:         cfg.Log.Format,                                    // 输出格式 console 或 json
-		EncoderConfig:    encoderConfig,                                     // 编码器配置
-		InitialFields:    map[string]interface{}{"serviceName": "user-bff"}, // 初始化字段，如：添加一个服务器名称
-		OutputPaths:      []string{"stdout"},                                // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
-		ErrorOutputPaths: []string{"stderr"},
-	}
-	// 构建日志
-	var err error
-	logger, err = config.Build()
-	if err != nil {
-		panic(fmt.Sprintf("log 初始化失败: %v", err))
-	}
-	logger.Info("log 初始化成功")
-	logger.Info("无法获取网址",
-		zap.String("url", "http://www.baidu.com"),
-		zap.Int("attempt", 3),
-		zap.Duration("backoff", time.Second),
-	)
-}
-
 func setupURLs(d bool) {
-	if cfg == nil {
-		panic("Config not initialized")
-	}
 	if d {
-		discover()
+		go discover()
 	} else {
 		direct()
 	}
@@ -116,7 +98,7 @@ func discover() {
 	}
 	ch := make(chan serviceInfo)
 
-	for serviceName, c := range cfg.Discovers {
+	for serviceName, c := range config.Conf.Discovers {
 		wg.Add(1)
 		go func(serviceName string, c pkgconfig.ServiceConfig) {
 			defer wg.Done()
@@ -124,7 +106,7 @@ func discover() {
 				addr, err := dis.Discover(c.Name)
 				if err != nil {
 					log.Printf("Service discovery failed ServiceName: %s %v\n", c.Name, err)
-					time.Sleep(5 * time.Second)
+					time.Sleep(15 * time.Second)
 					continue
 				}
 				log.Printf("Service discovery successful ServiceName: %s  Addr: %s\n", c.Name, addr)
@@ -148,8 +130,8 @@ func discover() {
 }
 
 func direct() {
-	for serviceName, _ := range cfg.Discovers {
-		if err := handlerGrpcClient(serviceName, cfg.Discovers[serviceName].Addr()); err != nil {
+	for serviceName, _ := range config.Conf.Discovers {
+		if err := handlerGrpcClient(serviceName, config.Conf.Discovers[serviceName].Addr()); err != nil {
 			panic(err)
 		}
 	}
@@ -179,25 +161,11 @@ func handlerGrpcClient(serviceName string, addr string) error {
 }
 
 func setupGin() {
-	if cfg == nil {
-		panic("Config not initialized")
-	}
-
-	// 初始化 gin engine
-	engine := gin.New()
-
+	gin.SetMode(gin.ReleaseMode)
 	// 添加一些中间件或其他配置
 	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(logger))
-
 	// 设置路由
 	route(engine)
-
-	// 启动 Gin 服务器
-	go func() {
-		if err := engine.Run(cfg.HTTP.Addr()); err != nil {
-			logger.Fatal("Failed to start Gin server", zap.Error(err))
-		}
-	}()
 }
 
 func route(engine *gin.Engine) {

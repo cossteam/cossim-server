@@ -18,7 +18,7 @@ import (
 	"log"
 )
 
-func NewService(repo *persistence.Repositories, ac pkgconfig.AppConfig) *Service {
+func NewService(ac *pkgconfig.AppConfig, repo *persistence.Repositories) *Service {
 	return &Service{
 		gr:  repo.Gr,
 		ac:  ac,
@@ -30,7 +30,7 @@ type Service struct {
 	gr repository.GroupRepository
 	v1.UnimplementedGroupServiceServer
 
-	ac        pkgconfig.AppConfig
+	ac        *pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string
 }
@@ -50,7 +50,7 @@ func (s *Service) Start(discover bool) {
 	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
 }
 
-func (s *Service) Close(discover bool) error {
+func (s *Service) Stop(discover bool) error {
 	if !discover {
 		return nil
 	}
@@ -60,6 +60,11 @@ func (s *Service) Close(discover bool) error {
 	}
 	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
 	return nil
+}
+
+func (s *Service) Restart(discover bool) {
+	s.Stop(discover)
+	s.Start(discover)
 }
 
 func (s *Service) GetGroupInfoByGid(ctx context.Context, request *v1.GetGroupInfoRequest) (*v1.Group, error) {

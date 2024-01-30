@@ -2,10 +2,11 @@ package service
 
 import (
 	"fmt"
-	config2 "github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/interface/msg/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
+	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
@@ -15,10 +16,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
 	"sync"
 	"time"
 )
@@ -53,17 +52,17 @@ type Service struct {
 	//pool  map[string]map[string][]*client
 }
 
-func New(c *pkgconfig.AppConfig) (s *Service) {
-	mqClient, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", c.MessageQueue.Username, c.MessageQueue.Password, c.MessageQueue.Addr()))
+func New() (s *Service) {
+	mqClient, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", config.Conf.MessageQueue.Username, config.Conf.MessageQueue.Password, config.Conf.MessageQueue.Addr()))
 	if err != nil {
 		panic(err)
 	}
 	rabbitMQClient = mqClient
 	return &Service{
-		conf:        c,
-		logger:      setupLogger(c),
+		conf:        config.Conf,
+		logger:      setupLogger(),
 		sid:         xid.New().String(),
-		redisClient: setupRedis(c),
+		redisClient: setupRedis(),
 		//Enc:       setupEncryption(),
 		//rabbitMQClient: mqClient,
 		//pool:     make(map[string]map[string][]*client),
@@ -72,40 +71,8 @@ func New(c *pkgconfig.AppConfig) (s *Service) {
 	}
 }
 
-func setupLogger(c *pkgconfig.AppConfig) *zap.Logger {
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder, // 小写编码器
-		EncodeTime:     zapcore.ISO8601TimeEncoder,    // ISO8601 UTC 时间格式
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.FullCallerEncoder, // 全路径编码器
-	}
-
-	// 设置日志级别
-	atom := zap.NewAtomicLevelAt(zapcore.Level(c.Log.V))
-	config := zap.Config{
-		Level:            atom,                                             // 日志级别
-		Development:      true,                                             // 开发模式，堆栈跟踪
-		Encoding:         c.Log.Format,                                     // 输出格式 console 或 json
-		EncoderConfig:    encoderConfig,                                    // 编码器配置
-		InitialFields:    map[string]interface{}{"serviceName": "msg-bff"}, // 初始化字段，如：添加一个服务器名称
-		OutputPaths:      []string{"stdout"},                               // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
-		ErrorOutputPaths: []string{"stderr"},
-	}
-	// 构建日志
-	var err error
-	logger, err := config.Build()
-	if err != nil {
-		panic(fmt.Sprintf("logger 初始化失败: %v", err))
-	}
-	logger.Info("logger 初始化成功")
-	return logger
+func setupLogger() *zap.Logger {
+	return plog.NewDevLogger("msg_bff")
 }
 
 func (s *Service) Start(discover bool) {
@@ -121,11 +88,18 @@ func (s *Service) Start(discover bool) {
 		if err = s.discovery.RegisterHTTP(s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid); err != nil {
 			panic(err)
 		}
-		log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid)
+		s.logger.Info("Service registration successful", zap.String("service", s.conf.Register.Name), zap.String("addr", s.conf.HTTP.Addr()), zap.String("sid", s.sid))
 		go s.discover()
 	} else {
 		s.direct()
 	}
+}
+
+func Restart(discover bool) *Service {
+	s := New()
+	s.logger.Info("Service restart")
+	s.Start(discover)
+	return s
 }
 
 func (s *Service) ListenQueue() {
@@ -157,7 +131,7 @@ func (s *Service) ListenQueue() {
 				fmt.Println("Failed to marshal map to JSON:", err)
 				return
 			}
-			var wsm config2.WsMsg
+			var wsm config.WsMsg
 			err = json.Unmarshal(jsonData, &wsm)
 			if err != nil {
 				fmt.Println("解析消息失败：", err)
@@ -183,9 +157,7 @@ func (s *Service) ListenQueue() {
 					fmt.Println("解析消息失败：")
 					return
 				}
-
 				rid := id.(float64)
-
 				for _, c := range pool[wsm.Uid][driType] {
 
 					if c.Rid == int64(rid) {
@@ -203,10 +175,10 @@ func (s *Service) Stop(discover bool) {
 	rabbitMQClient.Close()
 	if discover {
 		if err := s.discovery.Cancel(s.sid); err != nil {
-			log.Printf("Failed to cancel service registration: %v", err)
+			s.logger.Error("Failed to cancel service registration: %v", zap.Error(err))
 			return
 		}
-		log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid)
+		s.logger.Info("Service registration canceled", zap.String("service", s.conf.Register.Name), zap.String("addr", s.conf.GRPC.Addr()), zap.String("sid", s.sid))
 	}
 }
 
@@ -225,12 +197,11 @@ func (s *Service) discover() {
 			for {
 				addr, err := s.discovery.Discover(c.Name)
 				if err != nil {
-					log.Printf("Service discovery failed ServiceName: %s %v\n", c.Name, err)
-					time.Sleep(5 * time.Second)
+					s.logger.Info("Service discovery failed", zap.String("service", c.Name))
+					time.Sleep(15 * time.Second)
 					continue
 				}
-				log.Printf("Service discovery successful ServiceName: %s  Addr: %s\n", c.Name, addr)
-
+				s.logger.Info("Service discovery successful", zap.String("service", s.conf.Register.Name), zap.String("addr", addr))
 				ch <- serviceInfo{ServiceName: serviceName, Addr: addr}
 				break
 			}
@@ -244,7 +215,7 @@ func (s *Service) discover() {
 
 	for info := range ch {
 		if err := s.handlerGrpcClient(info.ServiceName, info.Addr); err != nil {
-			log.Printf("Failed to initialize gRPC client for service: %s, Error: %v\n", info.ServiceName, err)
+			panic(err)
 		}
 	}
 }
@@ -286,11 +257,11 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 	return nil
 }
 
-func setupRedis(cfg *pkgconfig.AppConfig) *redis.Client {
+func setupRedis() *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr(),
-		Password: cfg.Redis.Password, // no password set
-		DB:       0,                  // use default DB
+		Addr:     config.Conf.Redis.Addr(),
+		Password: config.Conf.Redis.Password, // no password set
+		DB:       0,                          // use default DB
 		//Protocol: cfg,
 	})
 }

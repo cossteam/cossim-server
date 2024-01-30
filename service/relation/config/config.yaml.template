@@ -21,11 +21,11 @@ message_queue:
   username: ""
   password: ""
   address: "rabbitmq"
-  port: "5672"
+  port: 5672
 
 grpc:
   address: "relation_service"
-  port: "10001"
+  port: 10001
 
 # 注册本服务
 register:

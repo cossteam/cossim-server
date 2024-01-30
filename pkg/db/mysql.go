@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -139,12 +138,6 @@ func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 	}
 
 	return c
-}
-
-func NewMysqlFromConfig(c *pkgconfig.MySQLConfig, opts ...Option) *MySQL {
-	mysqlC := NewMySQLFromDSN(fmt.Sprintf(GenerateMysqlDSN("root", c.RootPassword, c.Address, c.Database)))
-
-	return mysqlC
 }
 
 func GenerateMysqlDSN(rootUsername, rootPassword, addr, database string) string {

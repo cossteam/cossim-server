@@ -91,12 +91,12 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType
 
 	//userRelation, err := s.relationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{UserId: receiverId, FriendId: senderId})
 	//if err != nil {
-	//	logger.Error("获取用户关系失败", zap.Error(err))
+	//	log.Error("获取用户关系失败", zap.Error(err))
 	//	return
 	//}
 	//
 	//if userRelation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-	//	logger.Error("不是好友")
+	//	log.Error("不是好友")
 	//	return
 	//}
 

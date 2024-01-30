@@ -5,19 +5,15 @@ import (
 )
 
 type LogConfig struct {
-	Stdout bool   `mapstructure:"stdout"`
-	V      int    `mapstructure:"v"`
-	Format string `mapstructure:"format"`
+	Stdout bool   `mapstructure:"stdout" yaml:"stdout"`
+	V      int    `mapstructure:"v" yaml:"v"`
+	Format string `mapstructure:"format" yaml:"format"`
 }
 
 type MySQLConfig struct {
-	DSN          string `mapstructure:"dsn"`
-	RootPassword string `mapstructure:"root_password"`
-	Database     string `mapstructure:"database"`
-	User         string `mapstructure:"user"`
-	Password     string `mapstructure:"password"`
-	Address      string `mapstructure:"address"`
-	Port         int    `mapstructure:"port"`
+	DSN     string `mapstructure:"dsn" yaml:"dsn"`
+	Address string `mapstructure:"address" yaml:"address"`
+	Port    int    `mapstructure:"port" yaml:"port"`
 }
 
 func (c MySQLConfig) Addr() string {
@@ -25,11 +21,10 @@ func (c MySQLConfig) Addr() string {
 }
 
 type RedisConfig struct {
-	Name     string `mapstructure:"name"`
-	Proto    string `mapstructure:"proto"`
-	Password string `mapstructure:"password"`
-	Address  string `mapstructure:"address"`
-	Port     int    `mapstructure:"port"`
+	Proto    string `mapstructure:"proto" yaml:"proto"`
+	Password string `mapstructure:"password" yaml:"password"`
+	Address  string `mapstructure:"address" yaml:"address"`
+	Port     int    `mapstructure:"port" yaml:"port"`
 }
 
 func (c RedisConfig) Addr() string {
@@ -37,8 +32,8 @@ func (c RedisConfig) Addr() string {
 }
 
 type HTTPConfig struct {
-	Address string `mapstructure:"address"`
-	Port    int    `mapstructure:"port"`
+	Address string `mapstructure:"address" yaml:"address"`
+	Port    int    `mapstructure:"port" yaml:"port"`
 }
 
 func (c HTTPConfig) Addr() string {
@@ -46,8 +41,8 @@ func (c HTTPConfig) Addr() string {
 }
 
 type GRPCConfig struct {
-	Address string `mapstructure:"address"`
-	Port    int    `mapstructure:"port"`
+	Address string `mapstructure:"address" yaml:"address"`
+	Port    int    `mapstructure:"port" yaml:"port"`
 }
 
 func (c GRPCConfig) Addr() string {
@@ -55,10 +50,10 @@ func (c GRPCConfig) Addr() string {
 }
 
 type RegisterConfig struct {
-	Name    string   `mapstructure:"name"`
-	Tags    []string `mapstructure:"tags"`
-	Address string   `mapstructure:"address"`
-	Port    int      `mapstructure:"port"`
+	Name    string   `mapstructure:"name" yaml:"name"`
+	Tags    []string `mapstructure:"tags" yaml:"tags"`
+	Address string   `mapstructure:"address" yaml:"address"`
+	Port    int      `mapstructure:"port" yaml:"port"`
 }
 
 func (c RegisterConfig) Addr() string {
@@ -68,9 +63,9 @@ func (c RegisterConfig) Addr() string {
 type DiscoversConfig map[string]ServiceConfig
 
 type ServiceConfig struct {
-	Name    string `mapstructure:"name"`
-	Address string `mapstructure:"address"`
-	Port    int    `mapstructure:"port"`
+	Name    string `mapstructure:"name" yaml:"name"`
+	Address string `mapstructure:"address" yaml:"address"`
+	Port    int    `mapstructure:"port" yaml:"port"`
 }
 
 func (c ServiceConfig) Addr() string {
@@ -78,11 +73,11 @@ func (c ServiceConfig) Addr() string {
 }
 
 type MessageQueueConfig struct {
-	Name     string `mapstructure:"name"`
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-	Address  string `mapstructure:"address"`
-	Port     int    `mapstructure:"port"`
+	Name     string `mapstructure:"name" yaml:"name"`
+	Username string `mapstructure:"username" yaml:"username"`
+	Password string `mapstructure:"password" yaml:"password"`
+	Address  string `mapstructure:"address" yaml:"address"`
+	Port     int    `mapstructure:"port" yaml:"port"`
 }
 
 func (c MessageQueueConfig) Addr() string {
@@ -90,38 +85,54 @@ func (c MessageQueueConfig) Addr() string {
 }
 
 type DtmConfig struct {
-	Name    string `mapstructure:"name"`
-	Address string `mapstructure:"address"`
-	Port    int    `mapstructure:"port"`
+	Name    string `mapstructure:"name" yaml:"name"`
+	Address string `mapstructure:"address" yaml:"address"`
+	Port    int    `mapstructure:"port" yaml:"port"`
 }
 
 func (c DtmConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
+type OSSCommonConfig struct {
+	Address   string `mapstructure:"address" yaml:"address"`
+	Port      int    `mapstructure:"port" yaml:"port"`
+	AccessKey string `mapstructure:"accessKey" yaml:"accessKey"`
+	SecretKey string `mapstructure:"secretKey" yaml:"secretKey"`
+	SSL       bool   `mapstructure:"ssl" yaml:"ssl"`
+	//PresignedExpires int    `mapstructure:"presignedExpires"`
+}
+
+func (c OSSCommonConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
+}
+
+type OssConfig map[string]OSSCommonConfig
+
 type AppConfig struct {
-	Log                 LogConfig                 `mapstructure:"log"`
-	MySQL               MySQLConfig               `mapstructure:"mysql"`
-	Redis               RedisConfig               `mapstructure:"redis"`
-	HTTP                HTTPConfig                `mapstructure:"http"`
-	GRPC                GRPCConfig                `mapstructure:"grpc"`
-	Register            RegisterConfig            `mapstructure:"register"`
-	Discovers           DiscoversConfig           `mapstructure:"discovers"`
-	Encryption          EncryptionConfig          `mapstructure:"encryption"`
-	MessageQueue        MessageQueueConfig        `mapstructure:"message_queue"`
-	MultipleDeviceLimit MultipleDeviceLimitConfig `mapstructure:"multiple_device_limit"`
-	Dtm                 DtmConfig                 `mapstructure:"dtm"`
+	Log                 LogConfig                 `mapstructure:"log" yaml:"log"`
+	MySQL               MySQLConfig               `mapstructure:"mysql" yaml:"mySQL"`
+	Redis               RedisConfig               `mapstructure:"redis" yaml:"redis"`
+	HTTP                HTTPConfig                `mapstructure:"http" yaml:"http"`
+	GRPC                GRPCConfig                `mapstructure:"grpc" yaml:"grpc"`
+	Register            RegisterConfig            `mapstructure:"register" yaml:"register"`
+	Discovers           DiscoversConfig           `mapstructure:"discovers" yaml:"discovers"`
+	Encryption          EncryptionConfig          `mapstructure:"encryption" yaml:"encryption"`
+	MessageQueue        MessageQueueConfig        `mapstructure:"message_queue" yaml:"messageQueue"`
+	MultipleDeviceLimit MultipleDeviceLimitConfig `mapstructure:"multiple_device_limit" yaml:"multiple_device_limit"`
+	Dtm                 DtmConfig                 `mapstructure:"dtm" yaml:"dtm"`
+	OSS                 OssConfig                 `mapstructure:"oss" yaml:"oss"`
 }
 
 type EncryptionConfig struct {
-	Enable     bool   `mapstructure:"enable"`
-	Name       string `mapstructure:"name"`
-	Email      string `mapstructure:"email"`
-	RsaBits    int    `mapstructure:"rsaBits"`
-	Passphrase string `mapstructure:"passphrase"`
+	Enable     bool   `mapstructure:"enable" yaml:"enable"`
+	Name       string `mapstructure:"name" yaml:"name"`
+	Email      string `mapstructure:"email" yaml:"email"`
+	RsaBits    int    `mapstructure:"rsaBits" yaml:"rsaBits"`
+	Passphrase string `mapstructure:"passphrase" yaml:"passphrase"`
 }
 
 type MultipleDeviceLimitConfig struct {
-	Enable bool `mapstructure:"enable"`
-	Max    int  `mapstructure:"max"`
+	Enable bool `mapstructure:"enable" yaml:"enable"`
+	Max    int  `mapstructure:"max" yaml:"max"`
 }

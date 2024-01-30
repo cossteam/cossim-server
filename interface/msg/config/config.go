@@ -4,15 +4,13 @@ import (
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 )
 
-var Conf pkgconfig.AppConfig
-var ConfigFile string
+var Conf = &pkgconfig.AppConfig{}
 
-func Init() error {
-	c, err := pkgconfig.LoadFile(ConfigFile)
+func LoadConfigFromFile(file string) error {
+	c, err := pkgconfig.LoadFile(file)
 	if err != nil {
 		return err
 	}
-	Conf = *c
-
+	Conf = c
 	return nil
 }

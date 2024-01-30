@@ -13,13 +13,13 @@ import (
 	"github.com/cossim/coss-server/service/user/domain/repository"
 	"github.com/cossim/coss-server/service/user/utils"
 	"github.com/rs/xid"
-	codes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 	"log"
 )
 
-func NewService(ur repository.UserRepository, c pkgconfig.AppConfig) *Service {
+func NewService(ur repository.UserRepository, c *pkgconfig.AppConfig) *Service {
 	return &Service{
 		c:   c,
 		ur:  ur,
@@ -28,7 +28,7 @@ func NewService(ur repository.UserRepository, c pkgconfig.AppConfig) *Service {
 }
 
 type Service struct {
-	c         pkgconfig.AppConfig
+	c         *pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string
 	ur        repository.UserRepository
@@ -50,7 +50,7 @@ func (s *Service) Start(discover bool) {
 	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.c.Register.Name, s.c.GRPC.Addr(), s.sid)
 }
 
-func (s *Service) Close(discover bool) error {
+func (s *Service) Stop(discover bool) error {
 	if !discover {
 		return nil
 	}
@@ -60,6 +60,11 @@ func (s *Service) Close(discover bool) error {
 	}
 	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.c.Register.Name, s.c.GRPC.Addr(), s.sid)
 	return nil
+}
+
+func (s *Service) Restart(discover bool) {
+	s.Stop(discover)
+	s.Start(discover)
 }
 
 // 用户登录

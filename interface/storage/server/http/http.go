@@ -1,13 +1,14 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	conf "github.com/cossim/coss-server/interface/storage/config"
-	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
@@ -17,27 +18,36 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"log"
+	"net/http"
 	"os"
+	"time"
 )
 
 var (
 	sp            storage.StorageProvider
 	storageClient storagev1.StorageServiceClient
 	redisClient   *redis.Client
-	cfg           *pkgconfig.AppConfig
-	logger        *zap.Logger
-	downloadURL   = "/api/v1/storage/files/download"
-	enc           encryption.Encryptor
+
+	logger      *zap.Logger
+	downloadURL = "/api/v1/storage/files/download"
+	enc         encryption.Encryptor
 
 	discover discovery.Discovery
-	sid      = xid.New().String()
+	sid      string
+
+	server *http.Server
+	engine *gin.Engine
 )
 
-func Init(c *pkgconfig.AppConfig, dis bool) {
-	cfg = c
+func Start(dis bool) {
+	engine = gin.New()
+	server = &http.Server{
+		Addr:    config.Conf.HTTP.Addr(),
+		Handler: engine,
+	}
+
 	setupRedis()
 	setupLogger()
 	setupEncryption()
@@ -47,32 +57,52 @@ func Init(c *pkgconfig.AppConfig, dis bool) {
 	if dis {
 		setupDiscovery()
 	}
+
+	go func() {
+		logger.Info("Gin server is running on port", zap.String("addr", config.Conf.HTTP.Addr()))
+		if err := server.ListenAndServe(); err != nil {
+			logger.Info("Failed to start Gin server", zap.Error(err))
+			return
+		}
+	}()
 }
 
-func setupDiscovery() {
-	d, err := discovery.NewConsulRegistry(cfg.Register.Addr())
-	if err != nil {
-		panic(err)
+func Stop(dis bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Fatal("Server forced to shutdown", zap.Error(err))
 	}
-	discover = d
-	if err = d.RegisterHTTP(cfg.Register.Name, cfg.HTTP.Addr(), sid); err != nil {
-		panic(err)
-	}
-	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", cfg.Register.Name, cfg.HTTP.Addr(), sid)
-}
 
-func Close(dis bool) {
 	if dis {
 		if err := discover.Cancel(sid); err != nil {
 			log.Printf("Failed to cancel service registration: %v", err)
 			return
 		}
-		log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", cfg.Register.Name, cfg.GRPC.Addr(), sid)
+		log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", config.Conf.Register.Name, config.Conf.GRPC.Addr(), sid)
 	}
 }
 
+func Restart(dis bool) error {
+	Start(dis)
+	return nil
+}
+
+func setupDiscovery() {
+	d, err := discovery.NewConsulRegistry(config.Conf.Register.Addr())
+	if err != nil {
+		panic(err)
+	}
+	discover = d
+	sid = xid.New().String()
+	if err = d.RegisterHTTP(config.Conf.Register.Name, config.Conf.HTTP.Addr(), sid); err != nil {
+		panic(err)
+	}
+	logger.Info("Service register success", zap.String("name", config.Conf.Register.Name), zap.String("addr", config.Conf.HTTP.Addr()), zap.String("id", sid))
+}
+
 func setupEncryption() {
-	enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	enc = encryption.NewEncryptor([]byte(config.Conf.Encryption.Passphrase), config.Conf.Encryption.Name, config.Conf.Encryption.Email, config.Conf.Encryption.RsaBits, config.Conf.Encryption.Enable)
 
 	err := enc.ReadKeyPair()
 	if err != nil {
@@ -117,16 +147,16 @@ func setupEncryption() {
 
 func setupRedis() {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr(),
-		Password: cfg.Redis.Password, // no password set
-		DB:       0,                  // use default DB
+		Addr:     config.Conf.Redis.Addr(),
+		Password: config.Conf.Redis.Password, // no password set
+		DB:       0,                          // use default DB
 		//Protocol: cfg,
 	})
 	redisClient = rdb
 }
 
 func setupStorageClient() {
-	conn, err := grpc.Dial(cfg.Discovers["storage"].Addr(), grpc.WithInsecure())
+	conn, err := grpc.Dial(config.Conf.Discovers["storage"].Addr(), grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("Failed to connect to gRPC server", zap.Error(err))
 	}
@@ -136,67 +166,21 @@ func setupStorageClient() {
 
 func setMinIOProvider() {
 	var err error
-	sp, err = minio.NewMinIOStorage(conf.MinioConf.Endpoint, conf.MinioConf.AccessKey, conf.MinioConf.SecretKey, conf.MinioConf.SSL)
+	sp, err = minio.NewMinIOStorage(config.Conf.OSS["minio"].Addr(), config.Conf.OSS["minio"].AccessKey, config.Conf.OSS["minio"].SecretKey, config.Conf.OSS["minio"].SSL)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func setupLogger() {
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "storage",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder, // 小写编码器
-		EncodeTime:     zapcore.ISO8601TimeEncoder,    // ISO8601 UTC 时间格式
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.FullCallerEncoder, // 全路径编码器
-	}
-
-	// 设置日志级别
-	atom := zap.NewAtomicLevelAt(zapcore.Level(cfg.Log.V))
-	c := zap.Config{
-		Level:            atom,                                                 // 日志级别
-		Development:      true,                                                 // 开发模式，堆栈跟踪
-		Encoding:         "console",                                            // 输出格式 console 或 json
-		EncoderConfig:    encoderConfig,                                        // 编码器配置
-		InitialFields:    map[string]interface{}{"serviceName": "storage-bff"}, // 初始化字段，如：添加一个服务器名称
-		OutputPaths:      []string{"stdout"},                                   // 输出到指定文件 stdout（标准输出，正常颜色） stderr（错误输出，红色）
-		ErrorOutputPaths: []string{"stderr"},
-	}
-
-	var err error
-	logger, err = c.Build()
-	if err != nil {
-		panic(fmt.Sprintf("logger初始化失败: %v", err))
-	}
-	logger.Info("logger初始化成功")
+	logger = plog.NewDevLogger("storage_bff")
 }
 
 func setupGin() {
-	if cfg == nil {
-		panic("Config not initialized")
-	}
-
-	// 初始化 gin engine
-	engine := gin.New()
-
 	// 添加一些中间件或其他配置
 	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.EncryptionMiddleware(enc), middleware.RecoveryMiddleware())
-
 	// 设置路由
 	route(engine)
-
-	// 启动 Gin 服务器
-	go func() {
-		if err := engine.Run(cfg.HTTP.Addr()); err != nil {
-			logger.Fatal("Failed to start Gin server", zap.Error(err))
-		}
-	}()
 }
 
 // @title coss-storage-bff服务

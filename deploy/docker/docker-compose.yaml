@@ -4,14 +4,14 @@ services:
     container_name: cossim_mysql
     image: mysql:5.7
     volumes:
-    - ./data/var/lib/mysql:/var/lib/mysql
+      - ./data/var/lib/mysql:/var/lib/mysql
     command: [
       '--character-set-server=utf8mb4',
     ]
     expose:
-    - "3306"
+      - "3306"
     ports:
-    - "3306:3306"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: "Hitosea@123.."
       MYSQL_DATABASE: coss
@@ -31,11 +31,11 @@ services:
     image: quay.io/minio/minio
     container_name: cossim_minio
     ports:
-    - "9000:9000"
-    - "9001:9001"
+      - "9000:9000"
+      - "9001:9001"
     expose:
-    - "9000"
-    - "9001"
+      - "9000"
+      - "9001"
     environment:
       MINIO_ROOT_USER: root
       MINIO_ROOT_PASSWORD: Hitosea@123..
@@ -52,10 +52,10 @@ services:
         max-size: "100m"
         max-file: "1"
     volumes:
-    - "./data/var/lib/rabbitmq:/var/lib/rabbitmq"
+      - "./data/var/lib/rabbitmq:/var/lib/rabbitmq"
     ports:
-    - "5672:5672"
-    - "15672:15672"
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: root
       RABBITMQ_DEFAULT_PASS: Hitosea@123..
@@ -69,75 +69,81 @@ services:
     container_name: cossim_dtm
     image: hub.hitosea.com/cossim/dtm
     ports:
-    - '36789:36789'
-    - '36790:36790'
+      - '36789:36789'
+      - '36790:36790'
   consul:
     image: consul:latest
     container_name: cossim_consul
     volumes:
-    - ./data/var/lib:/bitnami
-    command: agent -server -bootstrap-expect=1 -client=0.0.0.0 -ui
+      - ./data/var/lib/consul:/consul/data
+      - ./config/common/consul.json:/etc/consul/consul-config.json
+    command: consul agent -server -bootstrap-expect=1 -client=0.0.0.0 -ui -data-dir=/consul/data -config-dir=/etc/consul
     ports:
-    - '8300:8300'
-    - '8301:8301'
-    - '8301:8301/udp'
-    - '8500:8500'
-    - '8600:8600'
-    - '8600:8600/udp'
+      - '8300:8300'
+      - '8301:8301'
+      - '8301:8301/udp'
+      - '8500:8500'
+      - '8600:8600'
+      - '8600:8600/udp'
   gateway:
     container_name: cossim_gateway
     image: hub.hitosea.com/cossim/gateway-interface
     volumes:
-    - ./config/interface/gateway.yaml:/config/config.yaml
+      - ./config/interface/gateway.yaml:/config/config.yaml
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     ports:
-    - "8080:8080"
+      - "8080:8080"
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   msg_bff:
     container_name: cossim_msg_bff
     image: hub.hitosea.com/cossim/msg-interface
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
-    - ./config/interface/msg.yaml:/config/config.yaml
-    - ./config/pgp:/.cache
-    expose:
-    - "8081"
+      - ./config/interface/msg.yaml:/config/config.yaml
+      - ./config/pgp:/.cache
     depends_on:
-    - dtm
-    - redis
-    - rabbitmq
-    - group_service
-    - relation_service
-    - user_service
-    - msg_service
+      - dtm
+      - redis
+      - rabbitmq
+      - group_service
+      - relation_service
+      - user_service
+      - msg_service
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   relation_bff:
     container_name: cossim_relation_bff
     image: hub.hitosea.com/cossim/relation-interface
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
-    - ./config/interface/relation.yaml:/config/config.yaml
-    - ./config/pgp:/.cache
-    expose:
-    - "8082"
+      - ./config/interface/relation.yaml:/config/config.yaml
+      - ./config/pgp:/.cache
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   user_bff:
     container_name: cossim_user_bff
@@ -146,142 +152,148 @@ services:
     - "--config"
     - "/config/config.yaml"
     - "--discover"
+    - "--remote-config"
+    - "--config-center-addr"
+    - "consul:8500"
     volumes:
-    - ./config/interface/user.yaml:/config/config.yaml
-    - ./config/pgp:/.cache
-    expose:
-    - "8083"
+      - ./config/interface/user.yaml:/config/config.yaml
+      - ./config/pgp:/.cache
     depends_on:
       - redis
       - relation_service
       - user_service
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   group_bff:
     container_name: cossim_group_bff
     image: hub.hitosea.com/cossim/group-interface
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
-    - ./config/interface/group.yaml:/config/config.yaml
-    - ./config/pgp:/.cache
-    expose:
-    - "8084"
+      - ./config/interface/group.yaml:/config/config.yaml
+      - ./config/pgp:/.cache
     depends_on:
-    - dtm
-    - redis
-    - rabbitmq
-    - group_service
-    - relation_service
-    - user_service
-    - msg_service
+      - dtm
+      - redis
+      - rabbitmq
+      - group_service
+      - relation_service
+      - user_service
+      - msg_service
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   storage_bff:
     container_name: cossim_storgae_bff
     image: hub.hitosea.com/cossim/storage-interface
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
-    - ./config/interface/storage.yaml:/config/config.yaml
-    - ./config/pgp:/.cache
-    expose:
-    - "8084"
+      - ./config/pgp:/.cache
     depends_on:
+      - consul
       - minio
       - redis
       - storage_service
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   msg_service:
     container_name: cossim_msg_service
     image: hub.hitosea.com/cossim/msg-service
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
       - ./config/service/msg.yaml:/config/config.yaml
-    expose:
-    - "10000"
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   relation_service:
     container_name: cossim_relation_service
     image: hub.hitosea.com/cossim/relation-service
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
       - ./config/service/relation.yaml:/config/config.yaml
-    expose:
-    - "10001"
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   user_service:
     container_name: cossim_user_service
     image: hub.hitosea.com/cossim/user-service
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
-    - ./config/service/user.yaml:/config/config.yaml
-    expose:
-    - "10002"
+      - ./config/service/user.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   group_service:
     container_name: cossim_group_service
     image: hub.hitosea.com/cossim/group-service
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
-    - ./config/service/group.yaml:/config/config.yaml
-    expose:
-    - "10005"
+      - ./config/service/group.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure
   storage_service:
     container_name: cossim_storage_service
     image: hub.hitosea.com/cossim/storage-service
     command:
-    - "--config"
-    - "/config/config.yaml"
-    - "--discover"
+      - "--config"
+      - "/config/config.yaml"
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
-    - ./config/service/storage.yaml:/config/config.yaml
-    expose:
-    - "10006"
+      - ./config/service/storage.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      SOME_VARIABLE: some_value
+      CONSUL_HTTP_TOKEN:
     restart: on-failure

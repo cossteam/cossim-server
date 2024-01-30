@@ -42,7 +42,7 @@ type client struct {
 func ws(c *gin.Context) {
 	var uid string
 	token := c.Query("token")
-
+	fmt.Println(111111)
 	//判断设备类型
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
@@ -50,12 +50,14 @@ func ws(c *gin.Context) {
 	if token == "" {
 		id, err := pkghttp.ParseTokenReUid(c)
 		if err != nil {
+			logger.Error("token解析失败", zap.Error(err))
 			return
 		}
 		uid = id
 	} else {
 		_, c2, err := utils.ParseToken(token)
 		if err != nil {
+			logger.Error("token解析失败", zap.Error(err))
 			return
 		}
 		uid = c2.UserId
