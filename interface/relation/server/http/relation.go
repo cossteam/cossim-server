@@ -288,7 +288,14 @@ func getGroupMember(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.GetGroupMember(c, uint32(gid))
+	userID, err := http.ParseTokenReUid(c)
+	if err != nil {
+		logger.Error("token解析失败", zap.Error(err))
+		response.SetFail(c, "token解析失败", nil)
+		return
+	}
+
+	resp, err := svc.GetGroupMember(c, uint32(gid), userID)
 	if err != nil {
 		c.Error(err)
 		return

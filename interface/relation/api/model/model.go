@@ -184,3 +184,18 @@ const (
 	CancelTopDialog TopOrCancelTopAction = iota
 	TopDialog
 )
+
+type RequestListResponse struct {
+	UserID   string                `json:"user_id"`
+	Nickname string                `json:"nickname"`
+	Avatar   string                `json:"avatar"`
+	Identity GroupRelationIdentity `json:"identity"`
+}
+
+type GroupRelationIdentity uint
+
+const (
+	IdentityUser  GroupRelationIdentity = iota //普通用户
+	IdentityAdmin                              //管理员
+	IdentityOwner                              //群主
+)

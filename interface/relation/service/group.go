@@ -18,7 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Service) GetGroupMember(ctx context.Context, gid uint32) (interface{}, error) {
+func (s *Service) GetGroupMember(ctx context.Context, gid uint32, userID string) (interface{}, error) {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: gid})
 	if err != nil {
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
@@ -29,9 +29,19 @@ func (s *Service) GetGroupMember(ctx context.Context, gid uint32) (interface{}, 
 		return nil, code.GroupErrGroupStatusNotAvailable
 	}
 
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: userID})
+	if err != nil {
+		return nil, err
+	}
+
 	groupRelation, err := s.groupRelationClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: gid})
 	if err != nil {
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	relation, err := s.groupRelationClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: gid, UserIds: groupRelation.UserIds})
+	if err != nil {
 		return nil, err
 	}
 
@@ -41,21 +51,20 @@ func (s *Service) GetGroupMember(ctx context.Context, gid uint32) (interface{}, 
 		return nil, err
 	}
 
-	type requestListResponse struct {
-		UserID   string `json:"user_id"`
-		Nickname string `json:"nickname"`
-		Avatar   string `json:"avatar"`
-	}
-
 	var ids []string
-	var data []*requestListResponse
-	for _, v := range resp.Users {
+	var data []*model.RequestListResponse
+	for i, v := range resp.Users {
 		ids = append(ids, v.UserId)
-		data = append(data, &requestListResponse{
+		data = append(data, &model.RequestListResponse{
 			UserID:   v.UserId,
 			Nickname: v.NickName,
 			Avatar:   v.Avatar,
 		})
+		for _, v1 := range relation.GroupRelationResponses {
+			if v1.UserId == v.UserId {
+				data[i].Identity = model.GroupRelationIdentity(v1.Identity)
+			}
+		}
 	}
 	return data, nil
 }
