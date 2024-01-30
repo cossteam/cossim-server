@@ -25,12 +25,12 @@ var (
 	engine *gin.Engine
 	dis    discovery.Discovery
 
-	userServiceURL      string
-	relationServiceURL  string
-	messageServiceURL   string
-	messageWsServiceURL string
-	groupServiceURL     string
-	storageServiceURL   string
+	userServiceURL      = new(string)
+	relationServiceURL  = new(string)
+	messageServiceURL   = new(string)
+	messageWsServiceURL = new(string)
+	groupServiceURL     = new(string)
+	storageServiceURL   = new(string)
 )
 
 func Start(discover bool) {
@@ -140,20 +140,19 @@ func direct() {
 func handlerGrpcClient(serviceName string, addr string) error {
 	switch serviceName {
 	case "user":
-		userServiceURL = "http://" + addr
+		*userServiceURL = "http://" + addr
 		logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", addr))
 	case "relation":
-		relationServiceURL = "http://" + addr
+		*relationServiceURL = "http://" + addr
 		logger.Info("gRPC client for relation service initialized", zap.String("service", "relation"), zap.String("addr", addr))
 	case "group":
-		groupServiceURL = "http://" + addr
+		*groupServiceURL = "http://" + addr
 		logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", addr))
 	case "msg":
-		messageServiceURL = "http://" + addr
-		messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
+		*messageServiceURL = "http://" + addr
+		*messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
 		logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", addr))
 	case "storage":
-		storageServiceURL = "http://" + addr
 		logger.Info("gRPC client for group service initialized", zap.String("service", "storage"), zap.String("addr", addr))
 	}
 
@@ -179,15 +178,15 @@ func route(engine *gin.Engine) {
 	}
 }
 
-func proxyToService(targetURL string) gin.HandlerFunc {
+func proxyToService(targetURL *string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		logger.Info("Received request", zap.Any("RequestHeaders", c.Request.Header), zap.String("RequestURL", c.Request.URL.String()))
 		if c.Request.Header.Get("Upgrade") == "websocket" {
-			wp, err := websocketproxy.NewProxy(messageWsServiceURL, func(r *http.Request) error {
+			wp, err := websocketproxy.NewProxy(*messageWsServiceURL, func(r *http.Request) error {
 				// 握手时设置cookie, 权限验证
 				r.Header.Set("Cookie", "----")
 				// 伪装来源
-				r.Header.Set("Origin", messageServiceURL)
+				r.Header.Set("Origin", *messageServiceURL)
 				return nil
 			})
 			if err != nil {
@@ -197,7 +196,7 @@ func proxyToService(targetURL string) gin.HandlerFunc {
 			return
 		}
 		// 创建一个代理请求
-		proxyReq, err := http.NewRequest(c.Request.Method, targetURL+c.Request.URL.Path, c.Request.Body)
+		proxyReq, err := http.NewRequest(c.Request.Method, *targetURL+c.Request.URL.Path, c.Request.Body)
 		if err != nil {
 			logger.Error("Failed to create proxy request", zap.Error(err))
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -226,7 +225,7 @@ func proxyToService(targetURL string) gin.HandlerFunc {
 		}
 		defer resp.Body.Close()
 
-		logger.Info("Received response from service", zap.Any("ResponseHeaders", resp.Header), zap.String("TargetURL", targetURL))
+		logger.Info("Received response from service", zap.Any("ResponseHeaders", resp.Header), zap.String("TargetURL", *targetURL))
 
 		// 将 BFF 服务的响应返回给客户端
 		c.Status(resp.StatusCode)
