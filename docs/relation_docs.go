@@ -854,19 +854,43 @@ const docTemplaterelation = `{
                 "max_members_limit": {
                     "type": "integer"
                 },
-                "msg": {
+                "receiver_info": {
+                    "$ref": "#/definitions/model.UserInfo"
+                },
+                "remark": {
                     "type": "string"
                 },
-                "user_avatar": {
-                    "type": "string"
+                "sender_info": {
+                    "$ref": "#/definitions/model.UserInfo"
                 },
-                "user_id": {
-                    "type": "string"
-                },
-                "user_name": {
-                    "type": "string"
+                "status": {
+                    "$ref": "#/definitions/model.GroupRequestStatus"
                 }
             }
+        },
+        "model.GroupRequestStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3,
+                4
+            ],
+            "x-enum-comments": {
+                "Accepted": "已通过",
+                "InvitationReceived": "邀请接收者",
+                "InviteSender": "邀请发送者",
+                "Pending": "等待",
+                "Rejected": "已拒绝"
+            },
+            "x-enum-varnames": [
+                "Pending",
+                "Accepted",
+                "Rejected",
+                "InviteSender",
+                "InvitationReceived"
+            ]
         },
         "model.InviteGroupRequest": {
             "type": "object",
@@ -947,14 +971,17 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "group_id",
-                "user_id"
+                "user_ids"
             ],
             "properties": {
                 "group_id": {
                     "type": "integer"
                 },
-                "user_id": {
-                    "type": "string"
+                "user_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -1117,7 +1144,7 @@ const docTemplaterelation = `{
                 "sender_info": {
                     "$ref": "#/definitions/model.UserInfo"
                 },
-                "user_status": {
+                "status": {
                     "type": "integer"
                 }
             }

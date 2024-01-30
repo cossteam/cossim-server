@@ -37,6 +37,7 @@ const (
 	GroupRelationService_CreateGroupAndInviteUsers_FullMethodName                   = "/v1.GroupRelationService/CreateGroupAndInviteUsers"
 	GroupRelationService_CreateGroupAndInviteUsersRevert_FullMethodName             = "/v1.GroupRelationService/CreateGroupAndInviteUsersRevert"
 	GroupRelationService_SetGroupSilentNotification_FullMethodName                  = "/v1.GroupRelationService/SetGroupSilentNotification"
+	GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_FullMethodName      = "/v1.GroupRelationService/RemoveGroupRelationByGroupIdAndUserIDs"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -77,6 +78,8 @@ type GroupRelationServiceClient interface {
 	CreateGroupAndInviteUsersRevert(ctx context.Context, in *CreateGroupAndInviteUsersRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 设置群聊为静默通知状态
 	SetGroupSilentNotification(ctx context.Context, in *SetGroupSilentNotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 移除多个用户
+	RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in *RemoveGroupRelationByGroupIdAndUserIDsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type groupRelationServiceClient struct {
@@ -240,6 +243,15 @@ func (c *groupRelationServiceClient) SetGroupSilentNotification(ctx context.Cont
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in *RemoveGroupRelationByGroupIdAndUserIDsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupRelationServiceServer is the server API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
@@ -278,6 +290,8 @@ type GroupRelationServiceServer interface {
 	CreateGroupAndInviteUsersRevert(context.Context, *CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error)
 	// 设置群聊为静默通知状态
 	SetGroupSilentNotification(context.Context, *SetGroupSilentNotificationRequest) (*emptypb.Empty, error)
+	// 移除多个用户
+	RemoveGroupRelationByGroupIdAndUserIDs(context.Context, *RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -335,6 +349,9 @@ func (UnimplementedGroupRelationServiceServer) CreateGroupAndInviteUsersRevert(c
 }
 func (UnimplementedGroupRelationServiceServer) SetGroupSilentNotification(context.Context, *SetGroupSilentNotificationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGroupSilentNotification not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) RemoveGroupRelationByGroupIdAndUserIDs(context.Context, *RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveGroupRelationByGroupIdAndUserIDs not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
 
@@ -655,6 +672,24 @@ func _GroupRelationService_SetGroupSilentNotification_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveGroupRelationByGroupIdAndUserIDsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).RemoveGroupRelationByGroupIdAndUserIDs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).RemoveGroupRelationByGroupIdAndUserIDs(ctx, req.(*RemoveGroupRelationByGroupIdAndUserIDsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -729,6 +764,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetGroupSilentNotification",
 			Handler:    _GroupRelationService_SetGroupSilentNotification_Handler,
+		},
+		{
+			MethodName: "RemoveGroupRelationByGroupIdAndUserIDs",
+			Handler:    _GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

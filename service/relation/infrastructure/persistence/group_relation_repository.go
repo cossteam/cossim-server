@@ -123,7 +123,7 @@ func (repo *GroupRelationRepo) UpdateGroupRelationByGroupID(groupID uint32, upda
 }
 
 func (repo *GroupRelationRepo) DeleteRelationByGroupIDAndUserIDs(gid uint32, uid []string) error {
-	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND user_id IN (?) AND deleted_at = 0", gid, uid).Delete(&entity.GroupRelation{}).Error
+	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND user_id IN (?) AND deleted_at = 0", gid, uid).Update("deleted_at", time.Now()).Error
 }
 
 func (repo *GroupRelationRepo) SetUserGroupSilentNotification(gid uint32, uid string, silentNotification entity.SilentNotification) error {

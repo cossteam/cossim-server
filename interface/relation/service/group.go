@@ -191,25 +191,31 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 		if err != nil {
 			return nil, err
 		}
-		sendinfo, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.InviterId})
-		if err != nil {
-			return nil, err
+		sendinfo := &userApi.UserInfoResponse{}
+		if v.InviterId != "" {
+			sendinfo, err = s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.InviterId})
+			if err != nil {
+				return nil, err
+			}
 		}
+
 		data[i] = &model.GroupRequestListResponse{
 			ID:      v.ID,
 			GroupId: v.GroupId,
 			Remark:  v.Remark,
-			Status:  SwitchGroupRequestStatus(userID, sendinfo.UserId, reinfo.UserId, v.Status),
-			SenderInfo: &model.UserInfo{
-				UserID:     sendinfo.UserId,
-				UserName:   sendinfo.NickName,
-				UserAvatar: sendinfo.Avatar,
-			},
+			Status:  SwitchGroupRequestStatus(userID, v.InviterId, reinfo.UserId, v.Status),
 			ReceiverInfo: &model.UserInfo{
 				UserID:     reinfo.UserId,
 				UserName:   reinfo.NickName,
 				UserAvatar: reinfo.Avatar,
 			},
+		}
+		if v.InviterId != "" {
+			data[i].SenderInfo = &model.UserInfo{
+				UserID:     sendinfo.UserId,
+				UserName:   sendinfo.NickName,
+				UserAvatar: sendinfo.Avatar,
+			}
 		}
 	}
 
@@ -338,7 +344,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 	return nil
 }
 
-func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, adminID, userID string) error {
+func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, adminID string, userIDs []string) error {
 	gr1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: adminID, GroupId: groupID})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
@@ -349,31 +355,21 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 		return errors.New("没有权限操作")
 	}
 
-	_, err = s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
+	relation, err := s.groupRelationClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: groupID, UserIds: userIDs})
 	if err != nil {
-		s.logger.Error("获取用户群组关系失败", zap.Error(err))
-		return errors.New("获取用户群组关系失败")
-	}
-
-	dialog, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
-	if err != nil {
-		return errors.New("获取群聊会话失败")
-	}
-
-	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: dialog.DialogId, UserId: userID}
-	r2 := &relationgrpcv1.DeleteGroupRelationByGroupIdAndUserIDRequest{GroupID: groupID, UserID: userID}
-
-	gid := shortuuid.New()
-	err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
-		r := &emptypb.Empty{}
-		if err = tcc.CallBranch(r1, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r); err != nil {
-			return err
-		}
-		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName, r)
 		return err
-	})
+	}
+
+	for _, v := range relation.GroupRelationResponses {
+		if v.Identity != relationgrpcv1.GroupIdentity_IDENTITY_USER {
+			return errors.New("不能移除管理员")
+		}
+	}
+
+	//删除用户群聊关系
+	_, err = s.groupRelationClient.RemoveGroupRelationByGroupIdAndUserIDs(ctx, &relationgrpcv1.RemoveGroupRelationByGroupIdAndUserIDsRequest{GroupId: groupID, UserIDs: userIDs})
 	if err != nil {
-		return errors.New("移出群聊失败")
+		return err
 	}
 
 	return nil
