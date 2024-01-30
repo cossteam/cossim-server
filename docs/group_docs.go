@@ -93,7 +93,7 @@ const docTemplategroup = `{
                         },
                         "collectionFormat": "csv",
                         "description": "群聊ID列表",
-                        "name": "groupIds",
+                        "name": "group_ids",
                         "in": "query",
                         "required": true
                     }
@@ -122,7 +122,7 @@ const docTemplategroup = `{
                     {
                         "type": "integer",
                         "description": "群聊ID",
-                        "name": "gid",
+                        "name": "group_id",
                         "in": "query",
                         "required": true
                     }

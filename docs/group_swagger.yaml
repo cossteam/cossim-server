@@ -95,7 +95,7 @@ paths:
         in: query
         items:
           type: string
-        name: groupIds
+        name: group_ids
         required: true
         type: array
       produces:
@@ -114,7 +114,7 @@ paths:
       parameters:
       - description: 群聊ID
         in: query
-        name: gid
+        name: group_id
         required: true
         type: integer
       produces:
