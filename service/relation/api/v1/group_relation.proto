@@ -195,6 +195,13 @@ message CreateGroupAndInviteUsersResponse {
   uint32 DialogId = 1;
 }
 
+message RemoveGroupRelationByGroupIdAndUserIDsRequest{
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+  // @inject_tag: json:"user_id"
+  repeated string UserIDs = 2;
+}
+
 
 service GroupRelationService {
 
@@ -249,4 +256,7 @@ service GroupRelationService {
 
   // 设置群聊为静默通知状态
   rpc SetGroupSilentNotification(SetGroupSilentNotificationRequest) returns (google.protobuf.Empty);
+
+  //移除多个用户
+  rpc RemoveGroupRelationByGroupIdAndUserIDs(RemoveGroupRelationByGroupIdAndUserIDsRequest) returns (google.protobuf.Empty);
 }

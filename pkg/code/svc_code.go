@@ -70,6 +70,7 @@ var (
 	RelationGroupErrRelationNotFound                     = New(13116, "关系不存在")
 	RelationGroupErrSetUserGroupSilentNotificationFailed = New(13117, "设置群聊消息静默通知失败")
 	RelationGroupErrNotInGroup                           = New(13118, "没有在群聊中")
+	RelationGroupErrDeleteUsersGroupRelationFailed       = New(13119, "删除多个用户群聊关系失败")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

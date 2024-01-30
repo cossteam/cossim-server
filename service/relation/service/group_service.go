@@ -301,3 +301,33 @@ func (s *Service) SetGroupSilentNotification(ctx context.Context, in *v1.SetGrou
 	}
 	return resp, nil
 }
+
+func (s *Service) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in *v1.RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		npo := persistence.NewRepositories(tx)
+
+		//查询对话信息
+		dialog, err := npo.Dr.GetDialogByGroupId(uint(in.GroupId))
+		if err != nil {
+			return err
+		}
+
+		//删除对话用户
+		err = npo.Dr.DeleteDialogUserByDialogIDAndUserID(dialog.ID, in.UserIDs)
+		if err != nil {
+			return err
+		}
+
+		//删除关系
+		if err := npo.Grr.DeleteRelationByGroupIDAndUserIDs(in.GroupId, in.UserIDs); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
+	}
+
+	return resp, nil
+}
