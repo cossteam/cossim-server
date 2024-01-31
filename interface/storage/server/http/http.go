@@ -2,8 +2,6 @@ package http
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -11,6 +9,7 @@ import (
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
+	"github.com/cossim/coss-server/pkg/utils/os"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -21,7 +20,6 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -37,8 +35,11 @@ var (
 	discover discovery.Discovery
 	sid      string
 
-	server *http.Server
-	engine *gin.Engine
+	server         *http.Server
+	engine         *gin.Engine
+	gatewayAddress string
+	gatewayPort    string
+	appPath        string
 )
 
 func Start(dis bool) {
@@ -52,6 +53,7 @@ func Start(dis bool) {
 	setupLogger()
 	setupEncryption()
 	setupStorageClient()
+	setLoadSystem()
 	setMinIOProvider()
 	setupGin()
 	if dis {
@@ -110,39 +112,39 @@ func setupEncryption() {
 		return
 	}
 
-	readString, err := encryption.GenerateRandomKey(32)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	resp, err := enc.SecretMessage("{\n    \"user_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"action\": 0,\n    \"e2e_public_key\": \"ex Ut ad incididunt occaecat\"\n}", enc.GetPublicKey(), []byte(readString))
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	j, err := json.Marshal(resp)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	//保存成文件
-	cacheDir := ".cache"
-	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
-		err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
-		if err != nil {
-			logger.Fatal("Failed to ", zap.Error(err))
-		}
-	}
-	// 保存私钥到文件
-	privateKeyFile, err := os.Create(cacheDir + "/data.json")
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-
-	_, err = privateKeyFile.WriteString(string(j))
-	if err != nil {
-		privateKeyFile.Close()
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	privateKeyFile.Close()
-	fmt.Println("加密后消息：", string(j))
+	//readString, err := encryption.GenerateRandomKey(32)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//resp, err := enc.SecretMessage("{\n    \"user_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"action\": 0,\n    \"e2e_public_key\": \"ex Ut ad incididunt occaecat\"\n}", enc.GetPublicKey(), []byte(readString))
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//j, err := json.Marshal(resp)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	////保存成文件
+	//cacheDir := ".cache"
+	//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+	//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+	//	if err != nil {
+	//		logger.Fatal("Failed to ", zap.Error(err))
+	//	}
+	//}
+	//// 保存私钥到文件
+	//privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//
+	//_, err = privateKeyFile.WriteString(string(j))
+	//if err != nil {
+	//	privateKeyFile.Close()
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//privateKeyFile.Close()
+	//fmt.Println("加密后消息：", string(j))
 }
 
 func setupRedis() {
@@ -201,4 +203,58 @@ func route(engine *gin.Engine) {
 	// 为Swagger路径添加不需要身份验证的中间件
 	swagger := engine.Group("/api/v1/storage/swagger")
 	swagger.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("storage")))
+}
+
+func setLoadSystem() {
+
+	env := config.Conf.SystemConfig.Environment
+	if env == "" {
+		env = "dev"
+	}
+
+	switch env {
+	case "prod":
+		path := config.Conf.SystemConfig.AvatarFilePath
+		if path == "" {
+			path = "/.catch/"
+		}
+		appPath = path
+
+		gatewayAdd := config.Conf.SystemConfig.GatewayAddress
+		if gatewayAdd == "" {
+			gatewayAdd = "43.229.28.107"
+		}
+
+		gatewayAddress = gatewayAdd
+
+		gatewayPo := config.Conf.SystemConfig.GatewayPort
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		gatewayPort = gatewayPo
+	default:
+		path := config.Conf.SystemConfig.AvatarFilePathDev
+		if path == "" {
+			npath, err := os.GetPackagePath()
+			if err != nil {
+				panic(err)
+			}
+			path = npath + "deploy/docker/config/common/"
+		}
+		appPath = path
+
+		gatewayAdd := config.Conf.SystemConfig.GatewayAddressDev
+		if gatewayAdd == "" {
+			gatewayAdd = "127.0.0.1"
+		}
+
+		gatewayAddress = gatewayAdd
+
+		gatewayPo := config.Conf.SystemConfig.GatewayPortDev
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		gatewayPort = gatewayPo
+	}
+
 }

@@ -16,7 +16,7 @@ var colors = []uint32{
 }
 
 func GenerateAvatar(name string, path string) ([]byte, error) {
-	ab := avatarbuilder.NewAvatarBuilder(path+"pkg/utils/avatarbuilder/"+"SourceHanSansSC-Medium.ttf", &calc.SourceHansSansSCMedium{})
+	ab := avatarbuilder.NewAvatarBuilder(path+"SourceHanSansSC-Medium.ttf", &calc.SourceHansSansSCMedium{})
 	ab.SetBackgroundColorHex(GetRandomColor())
 	ab.SetFrontgroundColor(color.White)
 	ab.SetFontSize(80)

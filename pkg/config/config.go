@@ -120,6 +120,7 @@ type AppConfig struct {
 	Encryption          EncryptionConfig          `mapstructure:"encryption" yaml:"encryption"`
 	MessageQueue        MessageQueueConfig        `mapstructure:"message_queue" yaml:"messageQueue"`
 	MultipleDeviceLimit MultipleDeviceLimitConfig `mapstructure:"multiple_device_limit" yaml:"multiple_device_limit"`
+	SystemConfig        SystemConfig              `mapstructure:"system" yaml:"system"`
 	Dtm                 DtmConfig                 `mapstructure:"dtm" yaml:"dtm"`
 	OSS                 OssConfig                 `mapstructure:"oss" yaml:"oss"`
 }
@@ -135,4 +136,14 @@ type EncryptionConfig struct {
 type MultipleDeviceLimitConfig struct {
 	Enable bool `mapstructure:"enable" yaml:"enable"`
 	Max    int  `mapstructure:"max" yaml:"max"`
+}
+
+type SystemConfig struct {
+	Environment       string `mapstructure:"environment" yaml:"environment"`
+	AvatarFilePath    string `mapstructure:"avatar_file_path" yaml:"avatar_file_path"`
+	AvatarFilePathDev string `mapstructure:"avatar_file_path_dev" yaml:"avatar_file_path_dev"`
+	GatewayAddress    string `mapstructure:"gateway_address" yaml:"gateway_address"`
+	GatewayPort       string `mapstructure:"gateway_port" yaml:"gateway_port"`
+	GatewayAddressDev string `mapstructure:"gateway_address_dev" yaml:"gateway_address_dev"`
+	GatewayPortDev    string `mapstructure:"gateway_port_dev" yaml:"gateway_port_dev"`
 }

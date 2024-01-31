@@ -158,6 +158,7 @@ services:
     volumes:
       - ./config/interface/user.yaml:/config/config.yaml
       - ./config/pgp:/.cache
+      - ./config/common/SourceHanSansSC-Medium.ttf:/.cache
     depends_on:
       - redis
       - relation_service

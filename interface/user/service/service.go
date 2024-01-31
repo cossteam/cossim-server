@@ -39,24 +39,22 @@ type Service struct {
 	appPath         string
 	downloadURL     string
 	gatewayAddress  string
+	gatewayPort     string
 }
 
 func New() (s *Service) {
-	path, err := os.GetPackagePath()
-	if err != nil {
-		return
-	}
+
 	s = &Service{
 		conf:            config.Conf,
 		sid:             xid.New().String(),
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
 		rabbitMQClient:  setRabbitMQProvider(),
-		appPath:         path,
-		sp:              setMinIOProvider(),
-		downloadURL:     "/api/v1/storage/files/download",
+		//appPath:         path,
+		sp:          setMinIOProvider(),
+		downloadURL: "/api/v1/storage/files/download",
 	}
-
 	s.logger = setupLogger()
+	s.setLoadSystem()
 	s.setupRedis()
 	return s
 }
@@ -198,4 +196,58 @@ func setMinIOProvider() storage.StorageProvider {
 	}
 
 	return sp
+}
+
+func (s *Service) setLoadSystem() {
+
+	env := config.Conf.SystemConfig.Environment
+	if env == "" {
+		env = "dev"
+	}
+
+	switch env {
+	case "prod":
+		path := config.Conf.SystemConfig.AvatarFilePath
+		if path == "" {
+			path = "/.catch/"
+		}
+		s.appPath = path
+
+		gatewayAdd := config.Conf.SystemConfig.GatewayAddress
+		if gatewayAdd == "" {
+			gatewayAdd = "43.229.28.107"
+		}
+
+		s.gatewayAddress = gatewayAdd
+
+		gatewayPo := config.Conf.SystemConfig.GatewayPort
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		s.gatewayPort = gatewayPo
+	default:
+		path := config.Conf.SystemConfig.AvatarFilePathDev
+		if path == "" {
+			npath, err := os.GetPackagePath()
+			if err != nil {
+				panic(err)
+			}
+			path = npath + "deploy/docker/config/common/"
+		}
+		s.appPath = path
+
+		gatewayAdd := config.Conf.SystemConfig.GatewayAddressDev
+		if gatewayAdd == "" {
+			gatewayAdd = "127.0.0.1"
+		}
+
+		s.gatewayAddress = gatewayAdd
+
+		gatewayPo := config.Conf.SystemConfig.GatewayPortDev
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		s.gatewayPort = gatewayPo
+	}
+
 }
