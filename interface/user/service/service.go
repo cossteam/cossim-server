@@ -9,15 +9,17 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
-	"github.com/cossim/coss-server/pkg/utils/os"
+	myos "github.com/cossim/coss-server/pkg/utils/os"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -39,24 +41,22 @@ type Service struct {
 	appPath         string
 	downloadURL     string
 	gatewayAddress  string
+	gatewayPort     string
 }
 
 func New() (s *Service) {
-	path, err := os.GetPackagePath()
-	if err != nil {
-		return
-	}
+
 	s = &Service{
 		conf:            config.Conf,
 		sid:             xid.New().String(),
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
 		rabbitMQClient:  setRabbitMQProvider(),
-		appPath:         path,
-		sp:              setMinIOProvider(),
-		downloadURL:     "/api/v1/storage/files/download",
+		//appPath:         path,
+		sp:          setMinIOProvider(),
+		downloadURL: "/api/v1/storage/files/download",
 	}
-
 	s.logger = setupLogger()
+	s.setLoadEnv()
 	s.setupRedis()
 	return s
 }
@@ -198,4 +198,60 @@ func setMinIOProvider() storage.StorageProvider {
 	}
 
 	return sp
+}
+func (s *Service) setLoadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		s.logger.Error("无法加载 .env 文件:" + err.Error())
+	}
+
+	env := os.Getenv("ENVIRONMENT")
+	if env == "" {
+		env = "dev"
+	}
+
+	switch env {
+	case "prod":
+		path := os.Getenv("AVATAR_FILE_PATH")
+		if path == "" {
+			path = "/.catch/"
+		}
+		s.appPath = path
+
+		gatewayAdd := os.Getenv("GATEWAY_ADDRESS")
+		if gatewayAdd == "" {
+			gatewayAdd = "43.229.28.107"
+		}
+
+		s.gatewayAddress = gatewayAdd
+
+		gatewayPo := os.Getenv("GATEWAY_PORT")
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		s.gatewayPort = gatewayPo
+	default:
+		path := os.Getenv("AVATAR_FILE_PATH_DEV")
+		if path == "" {
+			path1, err := myos.GetPackagePath()
+			if err != nil {
+				panic(err)
+			}
+			path = path1 + "/pkg/utils/avatarbuilder/"
+		}
+		s.appPath = path
+
+		gatewayAdd := os.Getenv("GATEWAY_ADDRESS_DEV")
+		if gatewayAdd == "" {
+			gatewayAdd = "127.0.0.1"
+		}
+		s.gatewayAddress = gatewayAdd
+
+		gatewayPo := os.Getenv("GATEWAY_PORT_DEV")
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		s.gatewayPort = gatewayPo
+	}
+
 }

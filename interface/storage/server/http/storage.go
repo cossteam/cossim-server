@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"github.com/cossim/coss-server/interface/storage/api/model"
-	"github.com/cossim/coss-server/interface/storage/config"
 	conf "github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/storage/minio"
@@ -126,7 +125,7 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	headerUrl.Host = config.Conf.Discovers["gateway"].Address
+	headerUrl.Host = gatewayAddress + ":" + gatewayPort
 	headerUrl.Path = downloadURL + headerUrl.Path
 	response.SetSuccess(c, "上传成功", gin.H{
 		"url":     headerUrl.String(),
