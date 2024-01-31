@@ -2,10 +2,12 @@ package http
 
 import (
 	"context"
+	"github.com/cossim/coss-server/interface/storage/api/model"
 	"github.com/cossim/coss-server/interface/storage/config"
 	conf "github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/cossim/coss-server/pkg/storage/minio"
+
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,7 +22,7 @@ import (
 // @Summary 上传文件
 // @Description 上传文件
 // @param file formData file true "文件"
-// @param type formData integer false "文件类型"
+// @param type formData integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files [post]
@@ -85,14 +87,19 @@ func upload(c *gin.Context) {
 		return
 	}
 	lastDotIndex := strings.LastIndex(file.Filename, ".")
+	fileExtension := ""
+
 	if lastDotIndex == -1 || lastDotIndex == len(file.Filename)-1 {
-		response.SetFail(c, "没有文件后缀", nil)
-		return
+		fileExtension = ""
+	} else {
+		fileExtension = file.Filename[strings.LastIndex(file.Filename, "."):]
 	}
-	fileExtension := file.Filename[strings.LastIndex(file.Filename, "."):]
+
+	opt := model.GetContentTypeOption(fileExtension)
+
 	fileID := uuid.New().String()
 	key := minio.GenKey(bucket, fileID+fileExtension)
-	headerUrl, err := sp.Upload(context.Background(), key, fileObj, file.Size)
+	headerUrl, err := sp.Upload(context.Background(), key, fileObj, file.Size, opt)
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)

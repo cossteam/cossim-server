@@ -21,13 +21,13 @@ const FileBucket = "file"
 const AudioBucket = "audio"
 
 var BucketList = map[storev1.FileType]string{
-	storev1.FileType_Text:  FileBucket,
+	//storev1.FileType_Text:  FileBucket,
 	storev1.FileType_Voice: AudioBucket,
 	storev1.FileType_Image: FileBucket,
 	storev1.FileType_File:  FileBucket,
 	storev1.FileType_Video: AudioBucket,
 	//storev1.FileType_EMOJI: FileBucket,
-	storev1.FileType_Sticker: FileBucket,
+	//storev1.FileType_Sticker: FileBucket,
 }
 
 func NewMinIOStorage(endpoint, accessKey, secretKey string, useSSL bool, opts ...func(*MinIOStorage)) (storage.StorageProvider, error) {
@@ -91,18 +91,20 @@ func ParseKey(key string) (bucketName, objectName string, err error) {
 	return split[0], split[1], nil
 }
 
-func (m *MinIOStorage) Upload(ctx context.Context, key string, reader io.Reader, objectSize int64) (*url.URL, error) {
+func (m *MinIOStorage) Upload(ctx context.Context, key string, reader io.Reader, objectSize int64, opt minio.PutObjectOptions) (*url.URL, error) {
 	bucketName, objectName, err := ParseKey(key)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = m.client.PutObject(ctx, bucketName, objectName, reader, objectSize, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	_, err = m.client.PutObject(ctx, bucketName, objectName, reader, objectSize, opt)
 	if err != nil {
 		return nil, err
 	}
 
 	reqParams := make(url.Values)
+	//reqParams.Set("response-content-disposition", "inline")
+
 	presignedURL, err := m.client.PresignedGetObject(ctx, bucketName, objectName, m.PresignedExpires, reqParams)
 	if err != nil {
 		return nil, err

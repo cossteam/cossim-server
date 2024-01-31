@@ -20,7 +20,7 @@ paths:
         name: file
         required: true
         type: file
-      - description: 文件类型
+      - description: 文件类型(0:音频，1:图片，2:文件，3:视频)
         in: formData
         name: type
         type: integer

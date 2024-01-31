@@ -185,6 +185,14 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		err := errors.New("添加好友失败")
 		return nil, err
 	}
+
+	wsMsgData := map[string]interface{}{"user_id": userID, "msg": req.Remark, "e2e_public_key": req.E2EPublicKey}
+	msg := msgconfig.WsMsg{Uid: req.UserId, Event: msgconfig.AddFriendEvent, Data: wsMsgData}
+
+	if err = s.publishServiceMessage(ctx, msg); err != nil {
+		s.logger.Error("Failed to publish service message", zap.Error(err))
+	}
+
 	return resp, nil
 }
 

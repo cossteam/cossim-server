@@ -32,7 +32,7 @@ const docTemplatestorage = `{
                     },
                     {
                         "type": "integer",
-                        "description": "文件类型",
+                        "description": "文件类型(0:音频，1:图片，2:文件，3:视频)",
                         "name": "type",
                         "in": "formData"
                     }

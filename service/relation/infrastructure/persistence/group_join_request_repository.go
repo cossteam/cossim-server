@@ -30,6 +30,9 @@ func (g GroupJoinRequestRepo) GetJoinRequestListByID(userId string) ([]*entity.G
 }
 
 func (g GroupJoinRequestRepo) AddJoinRequestBatch(en []*entity.GroupJoinRequest) ([]*entity.GroupJoinRequest, error) {
+	if len(en) == 0 {
+		return nil, nil
+	}
 	if err := g.db.Create(&en).Error; err != nil {
 		return nil, err
 	}

@@ -58,11 +58,13 @@ const docTemplategroup = `{
                 "summary": "删除群聊",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "群聊ID",
-                        "name": "gid",
-                        "in": "query",
-                        "required": true
+                        "description": "群聊id",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteGroupRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -192,6 +194,17 @@ const docTemplategroup = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.DeleteGroupRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "group_id": {
                     "type": "integer"
                 }
             }
