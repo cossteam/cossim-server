@@ -2,8 +2,6 @@ package http
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/msg/service"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -15,7 +13,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -41,6 +38,15 @@ func Start(service *service.Service) {
 	setupLogger()
 	setupEncryption()
 	setupRedis()
+
+	if enc == nil {
+		logger.Fatal("Failed to setup encryption")
+		return
+	}
+	if redisClient == nil {
+		logger.Fatal("Failed to setup redis")
+		return
+	}
 	setupGin()
 
 	go func() {
@@ -63,7 +69,6 @@ func Stop() {
 	if err := server.Shutdown(ctx); err != nil {
 		logger.Fatal("Server forced to shutdown", zap.Error(err))
 	}
-
 	redisClient.Close()
 }
 
@@ -76,39 +81,39 @@ func setupEncryption() {
 		return
 	}
 
-	readString, err := encryption.GenerateRandomKey(32)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	resp, err := enc.SecretMessage("{\n    \"content\": \"enim nostrud\",\n    \"receiver_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"type\": 1,\n    \"dialog_id\":82\n}", enc.GetPublicKey(), []byte(readString))
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	j, err := json.Marshal(resp)
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	//保存成文件
-	cacheDir := ".cache"
-	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
-		err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
-		if err != nil {
-			logger.Fatal("Failed to ", zap.Error(err))
-		}
-	}
-	// 保存私钥到文件
-	privateKeyFile, err := os.Create(cacheDir + "/data.json")
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-
-	_, err = privateKeyFile.WriteString(string(j))
-	if err != nil {
-		privateKeyFile.Close()
-		logger.Fatal("Failed to ", zap.Error(err))
-	}
-	privateKeyFile.Close()
-	fmt.Println("加密后消息：", string(j))
+	//readString, err := encryption.GenerateRandomKey(32)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//resp, err := enc.SecretMessage("{\n    \"content\": \"enim nostrud\",\n    \"receiver_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"type\": 1,\n    \"dialog_id\":82\n}", enc.GetPublicKey(), []byte(readString))
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//j, err := json.Marshal(resp)
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	////保存成文件
+	//cacheDir := ".cache"
+	//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+	//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+	//	if err != nil {
+	//		logger.Fatal("Failed to ", zap.Error(err))
+	//	}
+	//}
+	//// 保存私钥到文件
+	//privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	//if err != nil {
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//
+	//_, err = privateKeyFile.WriteString(string(j))
+	//if err != nil {
+	//	privateKeyFile.Close()
+	//	logger.Fatal("Failed to ", zap.Error(err))
+	//}
+	//privateKeyFile.Close()
+	//fmt.Println("加密后消息：", string(j))
 }
 
 func setupRedis() {
