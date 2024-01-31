@@ -220,6 +220,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	if relation != nil {
 		return nil, code.RelationErrAlreadyFriends
 	}
+
 	_, err = s.userFriendRequestClient.ManageFriendRequest(ctx, &relationgrpcv1.ManageFriendRequestStruct{
 		ID:     questId,
 		Status: s.convertStatusToRelationStatus(uint32(action)),
@@ -228,7 +229,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 		return nil, err
 	}
 	//// 向用户推送通知
-	resp, err := s.sendFriendManagementNotification(ctx, qs.SenderId, qs.ReceiverId, key, relationgrpcv1.RelationStatus(action))
+	resp, err := s.sendFriendManagementNotification(ctx, userId, qs.SenderId, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
 		s.logger.Error("发送好友管理通知失败", zap.Error(err))
 	}
