@@ -22,6 +22,7 @@ func init() {
 	flag.StringVar(&config.File, "config", "/config/config.yaml", "Path to configuration file")
 	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
 	flag.BoolVar(&remoteConfig, "remote-config", false, "Load configuration from remote source")
+	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the configuration center")
 	flag.StringVar(&remoteConfigToken, "config-center-token", "", "Token for accessing the configuration center")
 	flag.Parse()
 }
