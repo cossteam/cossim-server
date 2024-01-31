@@ -149,8 +149,9 @@ func IsValidSilentNotificationType(isSilent SilentNotificationType) bool {
 }
 
 type SendFriendRequest struct {
-	UserId string `json:"user_id" binding:"required"`
-	Remark string `json:"remark"`
+	UserId       string `json:"user_id" binding:"required"`
+	Remark       string `json:"remark"`
+	E2EPublicKey string `json:"e2e_public_key"`
 }
 
 type CloseOrOpenDialogRequest struct {

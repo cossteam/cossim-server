@@ -158,7 +158,6 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	if err != nil {
 		return "", err
 	}
-	//fmt.Println("headerUrl:", headerUrl.RequestURI())
 	if err != nil {
 		return "", err
 	}
@@ -179,8 +178,6 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		s.logger.Error("failed to register user", zap.Error(err))
 		return "", err
 	}
-
-	fmt.Println("headerUrl:", headerUrl.String())
 
 	return resp.UserId, nil
 }

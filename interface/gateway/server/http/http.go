@@ -153,6 +153,7 @@ func handlerGrpcClient(serviceName string, addr string) error {
 		*messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
 		logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", addr))
 	case "storage":
+		*storageServiceURL = "http://" + addr
 		logger.Info("gRPC client for group service initialized", zap.String("service", "storage"), zap.String("addr", addr))
 	}
 
