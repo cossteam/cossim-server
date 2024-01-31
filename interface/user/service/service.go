@@ -9,17 +9,15 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
-	myos "github.com/cossim/coss-server/pkg/utils/os"
+	"github.com/cossim/coss-server/pkg/utils/os"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
-	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -56,7 +54,7 @@ func New() (s *Service) {
 		downloadURL: "/api/v1/storage/files/download",
 	}
 	s.logger = setupLogger()
-	s.setLoadEnv()
+	s.setLoadSystem()
 	s.setupRedis()
 	return s
 }
@@ -199,55 +197,53 @@ func setMinIOProvider() storage.StorageProvider {
 
 	return sp
 }
-func (s *Service) setLoadEnv() {
-	err := godotenv.Load()
-	if err != nil {
-		s.logger.Error("无法加载 .env 文件:" + err.Error())
-	}
 
-	env := os.Getenv("ENVIRONMENT")
+func (s *Service) setLoadSystem() {
+
+	env := config.Conf.SystemConfig.Environment
 	if env == "" {
 		env = "dev"
 	}
 
 	switch env {
 	case "prod":
-		path := os.Getenv("AVATAR_FILE_PATH")
+		path := config.Conf.SystemConfig.AvatarFilePath
 		if path == "" {
 			path = "/.catch/"
 		}
 		s.appPath = path
 
-		gatewayAdd := os.Getenv("GATEWAY_ADDRESS")
+		gatewayAdd := config.Conf.SystemConfig.GatewayAddress
 		if gatewayAdd == "" {
 			gatewayAdd = "43.229.28.107"
 		}
 
 		s.gatewayAddress = gatewayAdd
 
-		gatewayPo := os.Getenv("GATEWAY_PORT")
+		gatewayPo := config.Conf.SystemConfig.GatewayPort
 		if gatewayPo == "" {
 			gatewayPo = "8080"
 		}
 		s.gatewayPort = gatewayPo
 	default:
-		path := os.Getenv("AVATAR_FILE_PATH_DEV")
+		path := config.Conf.SystemConfig.AvatarFilePathDev
 		if path == "" {
-			path1, err := myos.GetPackagePath()
+			npath, err := os.GetPackagePath()
 			if err != nil {
 				panic(err)
 			}
-			path = path1 + "/pkg/utils/avatarbuilder/"
+			path = npath + "deploy/docker/config/common/"
 		}
 		s.appPath = path
 
-		gatewayAdd := os.Getenv("GATEWAY_ADDRESS_DEV")
+		gatewayAdd := config.Conf.SystemConfig.GatewayAddressDev
 		if gatewayAdd == "" {
 			gatewayAdd = "127.0.0.1"
 		}
+
 		s.gatewayAddress = gatewayAdd
 
-		gatewayPo := os.Getenv("GATEWAY_PORT_DEV")
+		gatewayPo := config.Conf.SystemConfig.GatewayPortDev
 		if gatewayPo == "" {
 			gatewayPo = "8080"
 		}
