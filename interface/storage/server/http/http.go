@@ -56,6 +56,16 @@ func Start(dis bool) {
 	setLoadSystem()
 	setMinIOProvider()
 	setupGin()
+
+	if enc == nil {
+		logger.Fatal("Failed to setup encryption")
+		return
+	}
+	if redisClient == nil {
+		logger.Fatal("Failed to setup redis")
+		return
+	}
+
 	if dis {
 		setupDiscovery()
 	}

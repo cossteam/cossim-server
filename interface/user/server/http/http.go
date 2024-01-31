@@ -42,6 +42,14 @@ func Start(service *service.Service) {
 	setupRedis()
 	setupGin()
 
+	if enc == nil {
+		logger.Fatal("Failed to setup encryption")
+		return
+	}
+	if redisClient == nil {
+		logger.Fatal("Failed to setup redis")
+		return
+	}
 	go func() {
 		logger.Info("Gin server is running on port", zap.String("addr", config.Conf.HTTP.Addr()))
 		if err := server.ListenAndServe(); err != nil {

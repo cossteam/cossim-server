@@ -191,7 +191,7 @@ services:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
   storage_bff:
-    container_name: cossim_storgae_bff
+    container_name: cossim_storage_bff
     image: hub.hitosea.com/cossim/storage-interface
     command:
       - "--discover"
