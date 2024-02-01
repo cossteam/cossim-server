@@ -122,9 +122,163 @@ const docTemplatestorage = `{
                     }
                 }
             }
+        },
+        "/storage/files/multipart/complete": {
+            "post": {
+                "description": "完成分片上传",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "完成分片上传",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CompleteUploadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/storage/files/multipart/key": {
+            "get": {
+                "description": "生成分片上传id",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "生成分片上传id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "文件名",
+                        "name": "file_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "文件类型(0:音频，1:图片，2:文件，3:视频)",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/storage/files/multipart/upload": {
+            "post": {
+                "description": "上传分片",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "上传分片",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "本次分片",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传id",
+                        "name": "upload_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "本次分片序号",
+                        "name": "part_number",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "文件唯一key",
+                        "name": "key",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "model.CompleteUploadRequest": {
+            "type": "object",
+            "required": [
+                "file_name",
+                "key",
+                "type",
+                "upload_id"
+            ],
+            "properties": {
+                "file_name": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.FileType"
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.FileType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-comments": {
+                "FileType_File": "文件类型",
+                "FileType_Image": "图片类型",
+                "FileType_Video": "视频类型",
+                "FileType_Voice": "语音类型"
+            },
+            "x-enum-varnames": [
+                "FileType_Voice",
+                "FileType_Image",
+                "FileType_File",
+                "FileType_Video"
+            ]
+        },
         "model.Response": {
             "type": "object",
             "properties": {
