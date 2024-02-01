@@ -1003,6 +1003,9 @@ const docTemplaterelation = `{
                 "user_id"
             ],
             "properties": {
+                "e2e_public_key": {
+                    "type": "string"
+                },
                 "remark": {
                     "type": "string"
                 },

@@ -5,7 +5,8 @@ import (
 	"github.com/cossim/coss-server/interface/storage/api/model"
 	conf "github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/http/response"
-	"github.com/cossim/coss-server/pkg/storage/minio"
+	myminio "github.com/cossim/coss-server/pkg/storage/minio"
+	"github.com/minio/minio-go/v7"
 
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func upload(c *gin.Context) {
 	// 获取表单中的整数字段，如果字段不存在或无法解析为整数，则使用默认值 0
 	value := c.PostForm("type")
 	if value == "" {
-		value = "0"
+		value = "2"
 	}
 	_Type, err := strconv.Atoi(value)
 	if err != nil {
@@ -79,7 +80,7 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	bucket, err := minio.GetBucketName(_Type)
+	bucket, err := myminio.GetBucketName(_Type)
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
@@ -97,7 +98,7 @@ func upload(c *gin.Context) {
 	opt := model.GetContentTypeOption(fileExtension)
 
 	fileID := uuid.New().String()
-	key := minio.GenKey(bucket, fileID+fileExtension)
+	key := myminio.GenKey(bucket, fileID+fileExtension)
 	headerUrl, err := sp.Upload(context.Background(), key, fileObj, file.Size, opt)
 	if err != nil {
 		logger.Error("上传失败", zap.Error(err))
@@ -258,4 +259,194 @@ func deleteFile(c *gin.Context) {
 	}
 
 	response.SetSuccess(c, "success", nil)
+}
+
+// @Summary 生成分片上传id
+// @Description 生成分片上传id
+// @Produce  json
+// @param file_name query string true "文件名"
+// @param type query integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
+// @Success		200 {object} model.Response{}
+// @Router /storage/files/multipart/key [get]
+func getMultipartKey(c *gin.Context) {
+	fileName := c.Query("file_name")
+	if fileName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file_name is required"})
+		return
+	}
+	fileType := c.Query("type")
+	if fileType == "" {
+		fileType = "2"
+	}
+	t, err := strconv.Atoi(fileType)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type is required"})
+		return
+	}
+	// 获取桶名称
+	bucket, err := myminio.GetBucketName(t)
+	if err != nil {
+		logger.Error("获取桶失败", zap.Error(err))
+		response.SetFail(c, "获取分片id失败，请重试", nil)
+		return
+	}
+
+	// 生成文件ID和文件扩展名
+	lastDotIndex := strings.LastIndex(fileName, ".")
+	fileExtension := ""
+	if lastDotIndex == -1 || lastDotIndex == len(fileName)-1 {
+		fileExtension = ""
+	} else {
+		fileExtension = fileName[lastDotIndex:]
+	}
+	fileID := uuid.New().String()
+
+	// 生成对象键
+	key := myminio.GenKey(bucket, fileID+fileExtension)
+	multipartUpload, err := sp.NewMultipartUpload(context.Background(), key, minio.PutObjectOptions{})
+	if err != nil {
+		return
+	}
+
+	response.SetSuccess(c, "获取文件信息成功", gin.H{"upload_id": multipartUpload, "type": t, "key": key})
+}
+
+// @Summary 上传分片
+// @Description 上传分片
+// @param file formData file true "本次分片"
+// @param upload_id formData string true "上传id"
+// @param part_number formData integer true "本次分片序号"
+// @param key formData string true "文件唯一key"
+// @Produce  json
+// @Success		200 {object} model.Response{}
+// @Router /storage/files/multipart/upload [post]
+func uploadMultipart(c *gin.Context) {
+	//单次分片限制100m
+	maxFileSize := 100 * 1024 * 1024
+	file, err := c.FormFile("file")
+	if err != nil {
+		logger.Error("上传失败", zap.Error(err))
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if file.Size > int64(maxFileSize) {
+		logger.Error("文件大小超过限制", zap.Error(err))
+		response.SetFail(c, "文件大小超过限制", nil)
+		return
+	}
+
+	fileObj, err := file.Open()
+	if err != nil {
+		logger.Error("上传失败", zap.Error(err))
+		response.SetFail(c, "上传失败", nil)
+		return
+	}
+
+	uploadId := c.PostForm("upload_id")
+	if uploadId == "" {
+		logger.Error("upload_id is required", zap.Error(err))
+		response.SetFail(c, "upload_id is required", nil)
+		return
+	}
+	number := c.PostForm("part_number")
+	if uploadId == "" {
+		logger.Error("part_number is required", zap.Error(err))
+		response.SetFail(c, "part_number is required", nil)
+		return
+	}
+	partNumber, err := strconv.Atoi(number)
+	if err != nil {
+		logger.Error("part_number解析失败", zap.Error(err))
+		response.SetFail(c, "part_number解析失败", nil)
+		return
+	}
+
+	key := c.PostForm("key")
+	if key == "" {
+		logger.Error("key is required", zap.Error(err))
+		response.SetFail(c, "key is required", nil)
+		return
+	}
+
+	err = sp.UploadPart(context.Background(), key, uploadId, partNumber, fileObj, file.Size, minio.PutObjectPartOptions{})
+	if err != nil {
+		logger.Error("上传失败", zap.Error(err))
+		response.SetFail(c, "上传失败", nil)
+		return
+	}
+
+	response.SetSuccess(c, "分片上传成功", nil)
+}
+
+// @Summary 完成分片上传
+// @Description 完成分片上传
+// @Produce  json
+// @Accept  json
+// @param request body model.CompleteUploadRequest true "request"
+// @Success		200 {object} model.Response{}
+// @Router /storage/files/multipart/complete [post]
+func completeUploadMultipart(c *gin.Context) {
+	req := new(model.CompleteUploadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	headerUrl, err := sp.CompleteMultipartUpload(context.Background(), req.Key, req.UploadId)
+	if err != nil {
+		logger.Error("上传失败", zap.Error(err))
+		response.SetFail(c, "上传失败", nil)
+		return
+	}
+	info, err := sp.GetObjectInfo(context.Background(), req.Key, minio.GetObjectOptions{})
+	if err != nil {
+		logger.Error("上传失败", zap.Error(err))
+		response.SetFail(c, "上传失败", nil)
+		return
+	}
+
+	_, err = storageClient.Upload(context.Background(), &storagev1.UploadRequest{
+		UserID:   "userID",
+		FileName: req.FileName,
+		Path:     req.Key,
+		Url:      headerUrl.String(),
+		Type:     storagev1.FileType(req.Type),
+		Size:     uint64(info.Size),
+	})
+	if err != nil {
+		logger.Error("上传失败", zap.Error(err))
+		response.SetFail(c, "上传失败", nil)
+		return
+	}
+
+	headerUrl.Host = gatewayAddress + ":" + gatewayPort
+	headerUrl.Path = downloadURL + headerUrl.Path
+	response.SetSuccess(c, "上传成功", gin.H{"file_url": headerUrl.String()})
+}
+
+// @Summary 清除文件分片(用于中断上传)
+// @Description 清除文件分片
+// @Produce  json
+// @Accept  json
+// @param request body model.AbortUploadRequest true "request"
+// @Success		200 {object} model.Response{}
+// @Router /storage/files/multipart/abort [post]
+func abortUploadMultipart(c *gin.Context) {
+	req := new(model.AbortUploadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	err := sp.AbortMultipartUpload(context.Background(), req.Key, req.UploadId)
+	if err != nil {
+		logger.Error("清理失败", zap.Error(err))
+		response.SetFail(c, "清理失败", nil)
+		return
+	}
+
+	response.SetSuccess(c, "清理成功", nil)
 }

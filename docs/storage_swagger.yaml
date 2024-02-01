@@ -1,4 +1,47 @@
 definitions:
+  model.AbortUploadRequest:
+    properties:
+      key:
+        type: string
+      upload_id:
+        type: string
+    required:
+    - key
+    - upload_id
+    type: object
+  model.CompleteUploadRequest:
+    properties:
+      file_name:
+        type: string
+      key:
+        type: string
+      type:
+        $ref: '#/definitions/model.FileType'
+      upload_id:
+        type: string
+    required:
+    - file_name
+    - key
+    - type
+    - upload_id
+    type: object
+  model.FileType:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-comments:
+      FileType_File: 文件类型
+      FileType_Image: 图片类型
+      FileType_Video: 视频类型
+      FileType_Voice: 语音类型
+    x-enum-varnames:
+    - FileType_Voice
+    - FileType_Image
+    - FileType_File
+    - FileType_Video
   model.Response:
     properties:
       code:
@@ -82,4 +125,97 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 下载文件
+  /storage/files/multipart/abort:
+    post:
+      consumes:
+      - application/json
+      description: 清除文件分片
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.AbortUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 清除文件分片(用于中断上传)
+  /storage/files/multipart/complete:
+    post:
+      consumes:
+      - application/json
+      description: 完成分片上传
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CompleteUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 完成分片上传
+  /storage/files/multipart/key:
+    get:
+      description: 生成分片上传id
+      parameters:
+      - description: 文件名
+        in: query
+        name: file_name
+        required: true
+        type: string
+      - description: 文件类型(0:音频，1:图片，2:文件，3:视频)
+        in: query
+        name: type
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 生成分片上传id
+  /storage/files/multipart/upload:
+    post:
+      description: 上传分片
+      parameters:
+      - description: 本次分片
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 上传id
+        in: formData
+        name: upload_id
+        required: true
+        type: string
+      - description: 本次分片序号
+        in: formData
+        name: part_number
+        required: true
+        type: integer
+      - description: 文件唯一key
+        in: formData
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 上传分片
 swagger: "2.0"

@@ -55,3 +55,15 @@ const (
 //		return false
 //	}
 //}
+
+type CompleteUploadRequest struct {
+	UploadId string   `json:"upload_id" binding:"required"`
+	FileName string   `json:"file_name" binding:"required"`
+	Key      string   `json:"key" binding:"required"`
+	Type     FileType `json:"type" binding:"required"`
+}
+
+type AbortUploadRequest struct {
+	UploadId string `json:"upload_id" binding:"required"`
+	Key      string `json:"key" binding:"required"`
+}
