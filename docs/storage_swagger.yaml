@@ -1,4 +1,14 @@
 definitions:
+  model.AbortUploadRequest:
+    properties:
+      key:
+        type: string
+      upload_id:
+        type: string
+    required:
+    - key
+    - upload_id
+    type: object
   model.CompleteUploadRequest:
     properties:
       file_name:
@@ -115,6 +125,26 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 下载文件
+  /storage/files/multipart/abort:
+    post:
+      consumes:
+      - application/json
+      description: 清除文件分片
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.AbortUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 清除文件分片(用于中断上传)
   /storage/files/multipart/complete:
     post:
       consumes:

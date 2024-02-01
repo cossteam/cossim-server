@@ -212,6 +212,7 @@ func route(engine *gin.Engine) {
 	api.GET("/files/multipart/key", getMultipartKey)
 	api.POST("/files/multipart/upload", uploadMultipart)
 	api.POST("/files/multipart/complete", completeUploadMultipart)
+	api.POST("/files/multipart/abort", abortUploadMultipart)
 
 	// 为Swagger路径添加不需要身份验证的中间件
 	swagger := engine.Group("/api/v1/storage/swagger")

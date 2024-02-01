@@ -123,6 +123,37 @@ const docTemplatestorage = `{
                 }
             }
         },
+        "/storage/files/multipart/abort": {
+            "post": {
+                "description": "清除文件分片",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "清除文件分片(用于中断上传)",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AbortUploadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/storage/files/multipart/complete": {
             "post": {
                 "description": "完成分片上传",
@@ -235,6 +266,21 @@ const docTemplatestorage = `{
         }
     },
     "definitions": {
+        "model.AbortUploadRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "upload_id"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
         "model.CompleteUploadRequest": {
             "type": "object",
             "required": [

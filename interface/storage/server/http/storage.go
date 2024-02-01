@@ -425,3 +425,28 @@ func completeUploadMultipart(c *gin.Context) {
 	headerUrl.Path = downloadURL + headerUrl.Path
 	response.SetSuccess(c, "上传成功", gin.H{"file_url": headerUrl.String()})
 }
+
+// @Summary 清除文件分片(用于中断上传)
+// @Description 清除文件分片
+// @Produce  json
+// @Accept  json
+// @param request body model.AbortUploadRequest true "request"
+// @Success		200 {object} model.Response{}
+// @Router /storage/files/multipart/abort [post]
+func abortUploadMultipart(c *gin.Context) {
+	req := new(model.AbortUploadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	err := sp.AbortMultipartUpload(context.Background(), req.Key, req.UploadId)
+	if err != nil {
+		logger.Error("清理失败", zap.Error(err))
+		response.SetFail(c, "清理失败", nil)
+		return
+	}
+
+	response.SetSuccess(c, "清理成功", nil)
+}
