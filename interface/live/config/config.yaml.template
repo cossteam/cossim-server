@@ -1,0 +1,55 @@
+log:
+  stdout: true
+  v: -1
+  file: "logs/app.log"
+  format: "console" # console、json
+
+mysql:
+  address: "mysql"
+  port: 3306
+  dsn: "root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
+
+redis:
+  proto: "tcp"
+  address: "redis"
+  port: 6379
+  password: "Hitosea@123.."
+#  protocol: 3
+
+message_queue:
+  name: "rabbitmq"
+  username: "root"
+  password: "Hitosea@123.."
+  address: "rabbitmq"
+  port: "5672"
+
+livekit:
+  address:
+  port: 7880
+  url: wss://
+  api_key:
+  secret_key:
+  timeout: 2
+
+http:
+  address: "127.0.0.1"
+  port: 8086
+
+# 注册本服务
+register:
+  name: "live_bff"
+  address: "consul"   # 注册中心地址
+  port: 8500            # 注册中心端口
+  tags: ["live", "bff", "用户通话服务"]
+
+discovers:
+  user:
+    name: "user_service"
+    address: "user_service"
+    port: 10002
+    direct: true
+  relation:
+    name: "relation_service"
+    address: "relation_service"
+    port: 10001
+    direct: true

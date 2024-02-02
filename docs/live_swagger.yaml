@@ -1,0 +1,183 @@
+definitions:
+  dto.CallOption:
+    properties:
+      audio_enabled:
+        description: 是否启用音频
+        type: boolean
+      codec:
+        description: 编解码器
+        type: string
+      frame_rate:
+        description: 帧率
+        type: integer
+      resolution:
+        description: 分辨率
+        type: string
+      video_enabled:
+        description: 是否启用视频
+        type: boolean
+    type: object
+  dto.ParticipantState:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - ParticipantInfo_JOINING
+    - ParticipantInfo_JOINED
+    - ParticipantInfo_ACTIVE
+    - ParticipantInfo_DISCONNECTED
+  dto.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  dto.UserCallRequest:
+    properties:
+      option:
+        $ref: '#/definitions/dto.CallOption'
+      user_id:
+        description: 接收视频通话的用户ID
+        type: string
+    required:
+    - user_id
+    type: object
+  dto.UserLeaveRequest:
+    properties:
+      room:
+        description: 房间名称
+        type: string
+      user_id:
+        description: 用户ID
+        type: string
+    required:
+    - room
+    - user_id
+    type: object
+  dto.UserShowResponse:
+    properties:
+      identity:
+        type: string
+      is_publisher:
+        type: boolean
+      joined_at:
+        type: integer
+      name:
+        type: string
+      sid:
+        type: string
+      state:
+        $ref: '#/definitions/dto.ParticipantState'
+    type: object
+info:
+  contact: {}
+  title: Swagger Example API
+paths:
+  /live/user/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建用户通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserCallRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: url=webRtc服务器地址 token=加入通话的token room_name=房间名称 room_id=房间id
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+      security:
+      - Bearer: []
+      summary: 创建用户通话
+      tags:
+      - liveUser
+  /live/user/leave:
+    post:
+      consumes:
+      - application/json
+      description: 结束通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserLeaveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - Bearer: []
+      summary: 结束通话
+      tags:
+      - liveUser
+  /live/user/show:
+    get:
+      description: 获取通话房间信息
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 用户id
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: 房间名
+        in: query
+        name: room
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: sid=房间id identity=用户id state=用户状态 (0=加入中 1=已加入 2=已连接 3=断开连接
+            ) joined_at=加入时间 name=用户名称 is_publisher=是否是创建者
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserShowResponse'
+              type: object
+      security:
+      - Bearer: []
+      summary: 获取通话房间信息
+      tags:
+      - liveUser
+swagger: "2.0"

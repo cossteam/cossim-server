@@ -40,3 +40,7 @@ discovers:
     name: "storage_bff"
     address: "storage_bff"
     port: 8085
+  live:
+    name: "live_bff"
+    address: "live_bff"
+    port: 8086

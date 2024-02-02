@@ -141,7 +141,9 @@ func (s *Service) ListenQueue() {
 			switch msg_query.Action {
 			//推送消息
 			case msg_queue.SendMessage:
-				s.SendMsg(wsm.Uid, wsm.Event, wsm.Data)
+				s.SendMsg(wsm.Uid, wsm.Event, wsm.Data, true)
+			case msg_queue.LiveEvent:
+				s.SendMsg(wsm.Uid, wsm.Event, wsm.Data, false)
 			//强制断开ws
 			case msg_queue.UserWebsocketClose:
 				thismap, ok := wsm.Data.(map[string]interface{})
