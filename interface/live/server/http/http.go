@@ -37,7 +37,7 @@ func NewHandler(svc *service.Service) *Handler {
 	return &Handler{
 		svc:    svc,
 		logger: log.NewDevLogger("live"),
-		enc:    nil,
+		enc:    setupEncryption(),
 		engine: engine,
 		server: &http.Server{
 			Addr:    config.Conf.HTTP.Addr(),
@@ -54,7 +54,7 @@ func NewHandler(svc *service.Service) *Handler {
 func (h *Handler) Start() {
 	gin.SetMode(gin.ReleaseMode)
 	// 添加一些中间件或其他配置
-	h.engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.RecoveryMiddleware())
+	h.engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	// 设置路由
 	h.route()
 	go func() {
@@ -264,4 +264,13 @@ func (h *Handler) getRoomInfoFromRedis(roomID string) (*model.RoomInfo, error) {
 		return nil, code.InvalidParameter.Reason(err)
 	}
 	return data, nil
+}
+
+func setupEncryption() encryption.Encryptor {
+	enc := encryption.NewEncryptor([]byte(config.Conf.Encryption.Passphrase), config.Conf.Encryption.Name, config.Conf.Encryption.Email, config.Conf.Encryption.RsaBits, config.Conf.Encryption.Enable)
+	err := enc.ReadKeyPair()
+	if err != nil {
+		panic(err)
+	}
+	return enc
 }
