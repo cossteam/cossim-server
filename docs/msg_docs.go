@@ -538,6 +538,21 @@ const docTemplatemsg = `{
                 }
             }
         },
+        "model.BurnAfterReadingType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-comments": {
+                "IsBurnAfterReading": "阅后即焚消息",
+                "NotBurnAfterReading": "非阅后即焚"
+            },
+            "x-enum-varnames": [
+                "NotBurnAfterReading",
+                "IsBurnAfterReading"
+            ]
+        },
         "model.EditGroupMsgRequest": {
             "type": "object",
             "required": [
@@ -710,6 +725,9 @@ const docTemplatemsg = `{
                 "group_id": {
                     "type": "integer"
                 },
+                "is_burn_after_reading": {
+                    "$ref": "#/definitions/model.BurnAfterReadingType"
+                },
                 "replay_id": {
                     "type": "integer"
                 },
@@ -732,6 +750,9 @@ const docTemplatemsg = `{
                 },
                 "dialog_id": {
                     "type": "integer"
+                },
+                "is_burn_after_reading": {
+                    "$ref": "#/definitions/model.BurnAfterReadingType"
                 },
                 "receiver_id": {
                     "type": "string"

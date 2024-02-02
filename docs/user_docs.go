@@ -15,6 +15,26 @@ const docTemplateuser = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/user/activate": {
+            "get": {
+                "description": "激活账号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "激活账号",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/bundle/get": {
             "get": {
                 "description": "获取用户密钥包",

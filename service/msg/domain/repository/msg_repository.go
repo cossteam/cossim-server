@@ -6,8 +6,8 @@ import (
 )
 
 type MsgRepository interface {
-	InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.UserMessage, error)
-	InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.GroupMessage, error)
+	InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.UserMessage, error)
+	InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.GroupMessage, error)
 	GetGroupMsgList(response dataTransformers.GroupMsgList) (*dataTransformers.GroupMsgListResponse, error)
 	GetUserMsgList(uid, friendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) ([]entity.UserMessage, int32, int32)
 	GetLastMsgsForUserWithFriends(userID string, friendIDs []string) ([]*entity.UserMessage, error)
@@ -27,6 +27,7 @@ type MsgRepository interface {
 
 	//批量查询阅后即焚消息id
 	GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogId uint32) ([]*entity.UserMessage, error)
+
 	GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error)
 	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error)
 

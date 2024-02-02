@@ -21,6 +21,10 @@ import (
 )
 
 func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.SendUserMsgRequest) (interface{}, error) {
+
+	if !model.IsAllowedConversationType(req.IsBurnAfterReadingType) {
+		return nil, code.MsgErrInsertUserMessageFailed
+	}
 	userRelationStatus1, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: req.ReceiverId,
@@ -68,34 +72,36 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 	}
 
 	message, err := s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
-		DialogId:   req.DialogId,
-		SenderId:   userID,
-		ReceiverId: req.ReceiverId,
-		Content:    req.Content,
-		Type:       int32(req.Type),
-		ReplayId:   uint64(req.ReplayId),
+		DialogId:               req.DialogId,
+		SenderId:               userID,
+		ReceiverId:             req.ReceiverId,
+		Content:                req.Content,
+		Type:                   int32(req.Type),
+		ReplayId:               uint64(req.ReplayId),
+		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
 	})
 	if err != nil {
 		s.logger.Error("发送消息失败", zap.Error(err))
 		return nil, code.MsgErrInsertUserMessageFailed
 	}
 
-	s.sendWsUserMsg(userID, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId, userRelationStatus2.IsSilent, message.MsgId)
+	s.sendWsUserMsg(userID, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId, userRelationStatus2.IsSilent, message.MsgId, req.IsBurnAfterReadingType)
 
 	return message, nil
 }
 
 // 推送私聊消息
-func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32, silent relationgrpcv1.UserSilentNotificationType, msgid uint32) {
+func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32, silent relationgrpcv1.UserSilentNotificationType, msgid uint32, isBnr model.BurnAfterReadingType) {
 	m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, SendAt: pkgtime.Now(),
 		Data: &model.WsUserMsg{
-			SenderId: senderId,
-			Content:  msg,
-			MsgType:  msgType,
-			ReplayId: replayId,
-			MsgId:    msgid,
-			SendAt:   pkgtime.Now(),
-			DialogId: dialogId,
+			SenderId:           senderId,
+			Content:            msg,
+			MsgType:            msgType,
+			ReplayId:           replayId,
+			MsgId:              msgid,
+			SendAt:             pkgtime.Now(),
+			DialogId:           dialogId,
+			IsBurnAfterReading: isBnr,
 		},
 	}
 

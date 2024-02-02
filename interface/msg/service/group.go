@@ -19,15 +19,7 @@ import (
 func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, msg *model.WsGroupMsg) {
 	//发送群聊消息
 	for _, uid := range uIds {
-		m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: &model.WsGroupMsg{
-			GroupId:  msg.GroupId,
-			UserId:   msg.UserId,
-			Content:  msg.Content,
-			MsgType:  msg.MsgType,
-			ReplayId: msg.ReplayId,
-			SendAt:   pkgtime.Now(),
-			DialogId: msg.DialogId,
-		}}
+		m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
 		//查询是否静默通知
 		groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 			GroupId: uint32(msg.GroupId),
@@ -93,6 +85,11 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, msg *model.
 }
 
 func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.SendGroupMsgRequest) (interface{}, error) {
+
+	if !model.IsAllowedConversationType(req.IsBurnAfterReadingType) {
+		return nil, code.MsgErrInsertUserMessageFailed
+	}
+
 	groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: req.GroupId,
 		UserId:  userID,
@@ -127,12 +124,13 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 	}
 
 	message, err := s.msgClient.SendGroupMessage(ctx, &msggrpcv1.SendGroupMsgRequest{
-		DialogId: req.DialogId,
-		GroupId:  req.GroupId,
-		UserId:   userID,
-		Content:  req.Content,
-		Type:     req.Type,
-		ReplayId: req.ReplayId,
+		DialogId:               req.DialogId,
+		GroupId:                req.GroupId,
+		UserId:                 userID,
+		Content:                req.Content,
+		Type:                   req.Type,
+		ReplayId:               req.ReplayId,
+		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
 	})
 	// 发送成功进行消息推送
 	if err != nil {
@@ -145,14 +143,15 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 	})
 
 	s.sendWsGroupMsg(ctx, uids.UserIds, &model.WsGroupMsg{
-		MsgId:    message.MsgId,
-		GroupId:  int64(req.GroupId),
-		UserId:   userID,
-		Content:  req.Content,
-		MsgType:  uint(req.Type),
-		ReplayId: uint(req.ReplayId),
-		SendAt:   pkgtime.Now(),
-		DialogId: req.DialogId,
+		MsgId:              message.MsgId,
+		GroupId:            int64(req.GroupId),
+		UserId:             userID,
+		Content:            req.Content,
+		MsgType:            uint(req.Type),
+		ReplayId:           uint(req.ReplayId),
+		SendAt:             pkgtime.Now(),
+		DialogId:           req.DialogId,
+		IsBurnAfterReading: req.IsBurnAfterReadingType,
 	})
 
 	return message.MsgId, nil

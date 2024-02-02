@@ -329,10 +329,6 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return err
 	}
-	//TODO
-	//if relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-	//	return code.RelationUserErrFriendRelationNotFound
-	//}
 
 	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID}
 	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: friendID}
@@ -360,10 +356,6 @@ func (s *Service) AddBlacklist(ctx context.Context, userID, friendID string) (in
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return nil, err
 	}
-	//TODO
-	//if relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-	//	return nil, code.RelationUserErrFriendRelationNotFound
-	//}
 
 	// 进行添加黑名单操作
 	_, err = s.userRelationClient.AddBlacklist(ctx, &relationgrpcv1.AddBlacklistRequest{UserId: userID, FriendId: friendID})
@@ -418,11 +410,6 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return nil, err
 	}
-
-	//TODO
-	//if relation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-	//	return nil, code.RelationUserErrFriendRelationNotFound
-	//}
 
 	_, err = s.userRelationClient.SetFriendSilentNotification(ctx, &relationgrpcv1.SetFriendSilentNotificationRequest{
 		UserId:   userID,
