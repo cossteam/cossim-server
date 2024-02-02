@@ -9,6 +9,7 @@ const (
 	GroupService    ServiceType = "group_service"
 	UserService     ServiceType = "user_service"
 	RelationService ServiceType = "relation_service"
+	LiveUserService ServiceType = "live_user_service"
 )
 
 type ServiceActionType uint
@@ -17,6 +18,7 @@ const (
 	Notice             = iota //系统通知事件
 	SendMessage               //推送消息时间
 	UserWebsocketClose        //通知用户下线事件
+	LiveEvent                 // 通话事件
 )
 
 type ServiceQueueMsg struct {
