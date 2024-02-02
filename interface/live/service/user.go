@@ -44,7 +44,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	roomName := uuid.New().String()
 	room, err := s.roomService.CreateRoom(ctx, &livekit.CreateRoomRequest{
 		Name:            roomName,
-		EmptyTimeout:    uint32(s.liveTimeout), // 空闲时间
+		EmptyTimeout:    uint32(s.liveTimeout.Seconds()), // 空闲时间
 		MaxParticipants: 2,
 	})
 	if err != nil {
