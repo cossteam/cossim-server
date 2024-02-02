@@ -132,6 +132,7 @@ func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLas
 				Type:      uint32(m.Type),
 				CreatedAt: m.CreateAt,
 				Content:   m.Content,
+				SenderId:  m.SenderId,
 				DialogId:  uint32(m.DialogId),
 			})
 		}
