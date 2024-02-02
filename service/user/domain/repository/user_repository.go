@@ -12,4 +12,5 @@ type UserRepository interface {
 	GetUserPublicKey(userId string) (string, error)
 	SetUserSecretBundle(userId, secretBundle string) error
 	GetUserSecretBundle(userId string) (string, error)
+	UpdateUserColumn(userId string, column string, value interface{}) error
 }

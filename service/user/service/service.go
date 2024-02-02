@@ -284,3 +284,11 @@ func (s *Service) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecret
 	resp.UserId = in.UserId
 	return resp, nil
 }
+
+func (s *Service) ActivateUser(ctx context.Context, in *api.UserRequest) (*api.UserResponse, error) {
+	var resp = &api.UserResponse{UserId: in.UserId}
+	if err := s.ur.UpdateUserColumn(in.UserId, "email_verity", entity.Activated); err != nil {
+		return resp, status.Error(codes.Code(code.UserErrActivateUserFailed.Code()), err.Error())
+	}
+	return resp, nil
+}

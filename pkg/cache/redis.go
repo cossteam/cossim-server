@@ -22,7 +22,7 @@ func (i UserInfo) MarshalBinary() ([]byte, error) {
 	return json.Marshal(i)
 }
 
-func SetKey(client *redis.Client, key string, data map[string]string) error {
+func SetHMapKey(client *redis.Client, key string, data map[string]string) error {
 	err := client.HMSet(context.Background(), key, data).Err()
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func SetKey(client *redis.Client, key string, data map[string]string) error {
 	return nil
 }
 
-func GetKey(client *redis.Client, key string) (map[string]string, error) {
+func GetHMapKey(client *redis.Client, key string) (map[string]string, error) {
 	data, err := client.HGetAll(context.Background(), key).Result()
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func GetKey(client *redis.Client, key string) (map[string]string, error) {
 	return data, nil
 }
 
-func DeleteKey(client *redis.Client, userID string) error {
+func DeleteHMapKey(client *redis.Client, userID string) error {
 	err := client.HDel(context.Background(), userID).Err()
 	if err != nil {
 		return err
@@ -149,4 +149,28 @@ func CategorizeByDriveType(data []*UserInfo) map[string][]*UserInfo {
 	}
 
 	return result
+}
+
+func SetKey(client *redis.Client, key string, data interface{}, expiration time.Duration) error {
+	err := client.Set(context.Background(), key, data, expiration).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetKey(client *redis.Client, key string) (interface{}, error) {
+	data, err := client.Get(context.Background(), key).Result()
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func DelKey(client *redis.Client, key string) error {
+	err := client.Del(context.Background(), key).Err()
+	if err != nil {
+		return err
+	}
+	return nil
 }

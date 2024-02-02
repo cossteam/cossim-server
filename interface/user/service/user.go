@@ -20,6 +20,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"strings"
+	ostime "time"
 )
 
 func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string, clientIp string) (*model.UserInfoResponse, string, error) {
@@ -176,6 +177,24 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	if err != nil {
 		s.logger.Error("failed to register user", zap.Error(err))
 		return "", err
+	}
+
+	if s.conf.Email.Enable {
+		//生成uuid
+		ekey := uuid.New().String()
+
+		//保存到redis
+		err = cache.SetKey(s.redisClient, ekey, resp.UserId, 30*ostime.Minute)
+		if err != nil {
+			return "", err
+		}
+
+		//注册成功发送邮件
+		err = s.smtpClient.SendEmail(req.Email, "欢迎注册", s.smtpClient.GenerateEmailVerificationContent("192.168.100.142:8080", resp.UserId, ekey))
+		if err != nil {
+			s.logger.Error("failed to send email", zap.Error(err))
+			return "", err
+		}
 	}
 
 	return resp.UserId, nil
@@ -366,4 +385,33 @@ func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*mo
 		})
 	}
 	return clients, nil
+}
+
+func (s *Service) UserActivate(ctx context.Context, userID string, key string) (interface{}, error) {
+	value, err := cache.GetKey(s.redisClient, key)
+	if err != nil {
+		s.logger.Error("激活用户失败", zap.Error(err))
+		return nil, code.UserErrActivateUserFailed
+	}
+
+	if value != userID {
+		s.logger.Error("激活用户失败", zap.Error(err))
+		return nil, code.UserErrActivateUserFailed
+	}
+
+	resp, err := s.userClient.ActivateUser(ctx, &usergrpcv1.UserRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		s.logger.Error("激活用户失败", zap.Error(err))
+		return nil, code.UserErrActivateUserFailed
+	}
+	//删除缓存
+	err = cache.DelKey(s.redisClient, key)
+	if err != nil {
+		s.logger.Error("激活用户失败", zap.Error(err))
+		return nil, code.UserErrActivateUserFailed
+	}
+
+	return resp, nil
 }

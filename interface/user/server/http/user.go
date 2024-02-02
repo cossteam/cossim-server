@@ -401,3 +401,28 @@ func getUserLoginClients(c *gin.Context) {
 
 	response.SetSuccess(c, "获取成功", clients)
 }
+
+// @Summary 激活账号
+// @Description 激活账号
+// @Accept  json
+// @Produce  json
+// @Success		200 {object} model.Response{}
+// @Router /user/activate [get]
+func userActivate(c *gin.Context) {
+	userId := c.Query("user_id")
+	if userId == "" {
+		response.Fail(c, "参数错误", nil)
+		return
+	}
+	key := c.Query("key")
+	if userId == "" {
+		response.Fail(c, "参数错误", nil)
+		return
+	}
+	resp, err := svc.UserActivate(c, userId, key)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	response.SetSuccess(c, "激活成功", resp)
+}

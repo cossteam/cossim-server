@@ -22,6 +22,7 @@ var (
 	UserErrOldPassword               = New(10017, "旧密码错误")
 	UserErrSwapPublicKeyFailed       = New(10018, "用户交换公钥失败")
 	UserErrGetUserLoginClientsFailed = New(10019, "获取用户登录客户端失败，请重试")
+	UserErrActivateUserFailed        = New(10020, "激活用户失败")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")

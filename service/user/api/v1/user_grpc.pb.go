@@ -31,6 +31,7 @@ const (
 	UserService_GetUserPasswordByUserId_FullMethodName = "/v1.UserService/GetUserPasswordByUserId"
 	UserService_SetUserSecretBundle_FullMethodName     = "/v1.UserService/SetUserSecretBundle"
 	UserService_GetUserSecretBundle_FullMethodName     = "/v1.UserService/GetUserSecretBundle"
+	UserService_ActivateUser_FullMethodName            = "/v1.UserService/ActivateUser"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -56,6 +57,7 @@ type UserServiceClient interface {
 	SetUserSecretBundle(ctx context.Context, in *SetUserSecretBundleRequest, opts ...grpc.CallOption) (*SetUserSecretBundleResponse, error)
 	// 获取用户密钥包
 	GetUserSecretBundle(ctx context.Context, in *GetUserSecretBundleRequest, opts ...grpc.CallOption) (*GetUserSecretBundleResponse, error)
+	ActivateUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
 }
 
 type userServiceClient struct {
@@ -174,6 +176,15 @@ func (c *userServiceClient) GetUserSecretBundle(ctx context.Context, in *GetUser
 	return out, nil
 }
 
+func (c *userServiceClient) ActivateUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error) {
+	out := new(UserResponse)
+	err := c.cc.Invoke(ctx, UserService_ActivateUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -197,6 +208,7 @@ type UserServiceServer interface {
 	SetUserSecretBundle(context.Context, *SetUserSecretBundleRequest) (*SetUserSecretBundleResponse, error)
 	// 获取用户密钥包
 	GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error)
+	ActivateUser(context.Context, *UserRequest) (*UserResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -239,6 +251,9 @@ func (UnimplementedUserServiceServer) SetUserSecretBundle(context.Context, *SetU
 }
 func (UnimplementedUserServiceServer) GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserSecretBundle not implemented")
+}
+func (UnimplementedUserServiceServer) ActivateUser(context.Context, *UserRequest) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActivateUser not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -469,6 +484,24 @@ func _UserService_GetUserSecretBundle_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_ActivateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ActivateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ActivateUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ActivateUser(ctx, req.(*UserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -523,6 +556,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserSecretBundle",
 			Handler:    _UserService_GetUserSecretBundle_Handler,
+		},
+		{
+			MethodName: "ActivateUser",
+			Handler:    _UserService_ActivateUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

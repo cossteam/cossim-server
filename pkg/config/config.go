@@ -125,6 +125,7 @@ type AppConfig struct {
 	SystemConfig        SystemConfig              `mapstructure:"system" yaml:"system"`
 	Dtm                 DtmConfig                 `mapstructure:"dtm" yaml:"dtm"`
 	OSS                 OssConfig                 `mapstructure:"oss" yaml:"oss"`
+	Email               EmailConfig               `mapstructure:"email" yaml:"email"`
 	Livekit             LivekitConfig             `mapstructure:"livekit" yaml:"livekit"`
 }
 
@@ -149,6 +150,14 @@ type SystemConfig struct {
 	GatewayPort       string `mapstructure:"gateway_port" yaml:"gateway_port"`
 	GatewayAddressDev string `mapstructure:"gateway_address_dev" yaml:"gateway_address_dev"`
 	GatewayPortDev    string `mapstructure:"gateway_port_dev" yaml:"gateway_port_dev"`
+}
+
+type EmailConfig struct {
+	Enable     bool   `mapstructure:"enable" yaml:"enable"`
+	SmtpServer string `mapstructure:"smtp_server" yaml:"smtp_server"`
+	Port       int    `mapstructure:"port" yaml:"port"`
+	Username   string `mapstructure:"username" yaml:"username"`
+	Password   string `mapstructure:"password" yaml:"password"`
 }
 
 type LivekitConfig struct {

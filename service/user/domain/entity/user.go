@@ -52,3 +52,11 @@ const (
 	//锁定状态
 	UserStatusLock
 )
+
+// 用户激活状态
+type UserActivateStatus uint
+
+const (
+	NotActivated UserActivateStatus = iota //未激活
+	Activated                              //已经激活
+)

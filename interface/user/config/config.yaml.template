@@ -1,6 +1,6 @@
 system:
   environment: "dev" # dev、prod
-  avatar_file_path: "/.cache"
+  avatar_file_path: "/.cache/"
   avatar_file_path_dev:
   gateway_address: "43.229.28.107"
   gateway_port: 8080
@@ -12,6 +12,13 @@ log:
   v: -1
   file: "logs/app.log"
   format: "console" # console、json
+
+email:
+  enable: false
+  smtp_server: "smtp.gmail.com"
+  port: 25
+  username: ""
+  password: ""
 
 mysql:
   address: "mysql"

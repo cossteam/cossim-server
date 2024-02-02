@@ -209,10 +209,6 @@ func (s *Service) DeleteGroupMessage(ctx context.Context, request *v1.DeleteGrou
 	}, nil
 }
 
-// MsgErrDeleteUserMessageFailed                   = New(14008, "撤回用户消息失败")
-// MsgErrDeleteGroupMessageFailed                  = New(14009, "撤回群聊消息失败")
-// GetMsgErrGetGroupMsgByIDFailed                  = New(14010, "获取群聊消息失败")
-// GetMsgErrGetUserMsgByIDFailed
 func (s *Service) GetUserMessageById(ctx context.Context, in *v1.GetUserMsgByIDRequest) (*v1.UserMessage, error) {
 	var resp = &v1.UserMessage{}
 	msg, err := s.mr.GetUserMsgByID(in.MsgId)
@@ -221,6 +217,7 @@ func (s *Service) GetUserMessageById(ctx context.Context, in *v1.GetUserMsgByIDR
 	}
 
 	resp = &v1.UserMessage{
+		DialogId:   uint32(msg.DialogId),
 		Id:         uint32(msg.ID),
 		Content:    msg.Content,
 		Type:       uint32(int32(msg.Type)),

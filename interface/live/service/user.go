@@ -73,7 +73,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	if err != nil {
 		return nil, err
 	}
-	if err = cache.SetKey(s.redisClient, room.Name, toMap); err != nil {
+	if err = cache.SetHMapKey(s.redisClient, room.Name, toMap); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
 	}
