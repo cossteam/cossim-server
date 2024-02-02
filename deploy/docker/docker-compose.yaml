@@ -210,7 +210,7 @@ services:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
   live_bff:
-    container_name: live_bff
+    container_name: cossim_live_bff
     image: hub.hitosea.com/cossim/live-interface
     command:
       - "--discover"
