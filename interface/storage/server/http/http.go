@@ -178,6 +178,7 @@ func setupStorageClient() {
 
 func setMinIOProvider() {
 	var err error
+
 	sp, err = minio.NewMinIOStorage(config.Conf.OSS["minio"].Addr(), config.Conf.OSS["minio"].AccessKey, config.Conf.OSS["minio"].SecretKey, config.Conf.OSS["minio"].SSL)
 	if err != nil {
 		panic(err)
