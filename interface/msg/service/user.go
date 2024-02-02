@@ -80,14 +80,24 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		return nil, code.MsgErrInsertUserMessageFailed
 	}
 
-	s.sendWsUserMsg(userID, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId, userRelationStatus2.IsSilent)
+	s.sendWsUserMsg(userID, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId, userRelationStatus2.IsSilent, message.MsgId)
 
 	return message, nil
 }
 
 // 推送私聊消息
-func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32, silent relationgrpcv1.UserSilentNotificationType) {
-	m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, SendAt: pkgtime.Now(), Data: &model.WsUserMsg{SenderId: senderId, Content: msg, MsgType: msgType, ReplayId: replayId, SendAt: pkgtime.Now(), DialogId: dialogId}}
+func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32, silent relationgrpcv1.UserSilentNotificationType, msgid uint32) {
+	m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, SendAt: pkgtime.Now(),
+		Data: &model.WsUserMsg{
+			SenderId: senderId,
+			Content:  msg,
+			MsgType:  msgType,
+			ReplayId: replayId,
+			MsgId:    msgid,
+			SendAt:   pkgtime.Now(),
+			DialogId: dialogId,
+		},
+	}
 
 	//userRelation, err := s.relationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{UserId: receiverId, FriendId: senderId})
 	//if err != nil {

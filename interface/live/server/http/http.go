@@ -255,7 +255,7 @@ func (h *Handler) getJoinToken(c *gin.Context) {
 }
 
 func (h *Handler) getRoomInfoFromRedis(roomID string) (*model.RoomInfo, error) {
-	room, err := cache.GetKey(h.redisClient, roomID)
+	room, err := cache.GetHMapKey(h.redisClient, roomID)
 	if err != nil {
 		return nil, code.NotFound.Reason(err)
 	}

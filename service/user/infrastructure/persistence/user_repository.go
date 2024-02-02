@@ -86,3 +86,10 @@ func (ur *UserRepo) GetUserSecretBundle(userId string) (string, error) {
 	}
 	return user.SecretBundle, nil
 }
+
+func (ur *UserRepo) UpdateUserColumn(userId string, column string, value interface{}) error {
+	if err := ur.db.Model(&entity.User{}).Where("id = ?", userId).UpdateColumn(column, value).Error; err != nil {
+		return err
+	}
+	return nil
+}

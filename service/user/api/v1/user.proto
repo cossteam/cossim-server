@@ -181,5 +181,7 @@ service UserService {
   rpc SetUserSecretBundle (SetUserSecretBundleRequest) returns (SetUserSecretBundleResponse);
   //获取用户密钥包
   rpc GetUserSecretBundle (GetUserSecretBundleRequest) returns (GetUserSecretBundleResponse);
+  //激活用户
+  rpc ActivateUser (UserRequest) returns (UserResponse);
 }
 

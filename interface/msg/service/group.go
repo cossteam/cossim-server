@@ -16,21 +16,21 @@ import (
 )
 
 // 推送群聊消息
-func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, userId string, groupId uint32, msg string, msgType uint32, replayId uint32, dialogId uint32) {
+func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, msg *model.WsGroupMsg) {
 	//发送群聊消息
 	for _, uid := range uIds {
 		m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: &model.WsGroupMsg{
-			GroupId:  int64(groupId),
-			UserId:   userId,
-			Content:  msg,
-			MsgType:  uint(msgType),
-			ReplayId: uint(replayId),
+			GroupId:  msg.GroupId,
+			UserId:   msg.UserId,
+			Content:  msg.Content,
+			MsgType:  msg.MsgType,
+			ReplayId: msg.ReplayId,
 			SendAt:   pkgtime.Now(),
-			DialogId: dialogId,
+			DialogId: msg.DialogId,
 		}}
 		//查询是否静默通知
 		groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
-			GroupId: groupId,
+			GroupId: uint32(msg.GroupId),
 			UserId:  uid,
 		})
 		if err != nil {
@@ -144,7 +144,16 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		GroupId: req.GroupId,
 	})
 
-	s.sendWsGroupMsg(ctx, uids.UserIds, userID, req.GroupId, req.Content, req.Type, req.ReplayId, req.DialogId)
+	s.sendWsGroupMsg(ctx, uids.UserIds, &model.WsGroupMsg{
+		MsgId:    message.MsgId,
+		GroupId:  int64(req.GroupId),
+		UserId:   userID,
+		Content:  req.Content,
+		MsgType:  uint(req.Type),
+		ReplayId: uint(req.ReplayId),
+		SendAt:   pkgtime.Now(),
+		DialogId: req.DialogId,
+	})
 
 	return message.MsgId, nil
 }

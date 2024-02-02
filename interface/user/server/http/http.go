@@ -154,6 +154,7 @@ func route(engine *gin.Engine) {
 	u := engine.Group("/api/v1/user")
 	u.POST("/login", login)
 	u.POST("/register", register)
+	u.GET("/activate", userActivate)
 	u.GET("/search", middleware.AuthMiddleware(redisClient), search)
 	u.GET("/info", middleware.AuthMiddleware(redisClient), getUserInfo)
 	u.POST("/logout", middleware.AuthMiddleware(redisClient), logout)

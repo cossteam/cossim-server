@@ -5,6 +5,8 @@ import (
 	"github.com/cossim/coss-server/interface/user/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
+	"github.com/cossim/coss-server/pkg/email"
+	"github.com/cossim/coss-server/pkg/email/smtp"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/storage"
@@ -32,6 +34,7 @@ type Service struct {
 	relClient       relationgrpcv1.UserRelationServiceClient
 	sp              storage.StorageProvider
 	redisClient     *redis.Client
+	smtpClient      email.EmailProvider
 	rabbitMQClient  *msg_queue.RabbitMQ
 	sid             string
 	tokenExpiration time.Duration
@@ -51,6 +54,7 @@ func New() (s *Service) {
 		//appPath:         path,
 		sp:          setMinIOProvider(),
 		downloadURL: "/api/v1/storage/files/download",
+		smtpClient:  setupSmtpProvider(),
 	}
 	s.logger = setupLogger()
 	s.setLoadSystem()
@@ -195,6 +199,14 @@ func setMinIOProvider() storage.StorageProvider {
 	}
 
 	return sp
+}
+
+func setupSmtpProvider() email.EmailProvider {
+	smtpStorage, err := smtp.NewSmtpStorage(config.Conf.Email.SmtpServer, config.Conf.Email.Port, config.Conf.Email.Username, config.Conf.Email.Password)
+	if err != nil {
+		panic(err)
+	}
+	return smtpStorage
 }
 
 func (s *Service) setLoadSystem() {
