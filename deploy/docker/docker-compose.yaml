@@ -158,7 +158,7 @@ services:
     volumes:
       - ./config/interface/user.yaml:/config/config.yaml
       - ./config/pgp:/.cache
-      - ./config/common/SourceHanSansSC-Medium.ttf:/.cache
+      - ./config/common/SourceHanSansSC-Medium.ttf:/.cache/SourceHanSansSC-Medium.ttf
     depends_on:
       - redis
       - relation_service
@@ -200,11 +200,30 @@ services:
       - "consul:8500"
     volumes:
       - ./config/pgp:/.cache
+      - ./config/common/SourceHanSansSC-Medium.ttf:/.cache/SourceHanSansSC-Medium.ttf
     depends_on:
       - consul
       - minio
       - redis
       - storage_service
+    environment:
+      CONSUL_HTTP_TOKEN:
+    restart: on-failure
+  live_bff:
+    container_name: cossim_live_bff
+    image: hub.hitosea.com/cossim/live-interface
+    command:
+      - "--discover"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
+    volumes:
+      - ./config/pgp:/.cache
+    depends_on:
+      - consul
+      - redis
+      - user_service
+      - relation_service
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure

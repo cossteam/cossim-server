@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 )
 
 type LogConfig struct {
@@ -66,6 +67,7 @@ type ServiceConfig struct {
 	Name    string `mapstructure:"name" yaml:"name"`
 	Address string `mapstructure:"address" yaml:"address"`
 	Port    int    `mapstructure:"port" yaml:"port"`
+	Direct  bool   `mapstructure:"direct" yaml:"direct"`
 }
 
 func (c ServiceConfig) Addr() string {
@@ -123,6 +125,7 @@ type AppConfig struct {
 	SystemConfig        SystemConfig              `mapstructure:"system" yaml:"system"`
 	Dtm                 DtmConfig                 `mapstructure:"dtm" yaml:"dtm"`
 	OSS                 OssConfig                 `mapstructure:"oss" yaml:"oss"`
+	Livekit             LivekitConfig             `mapstructure:"livekit" yaml:"livekit"`
 }
 
 type EncryptionConfig struct {
@@ -146,4 +149,17 @@ type SystemConfig struct {
 	GatewayPort       string `mapstructure:"gateway_port" yaml:"gateway_port"`
 	GatewayAddressDev string `mapstructure:"gateway_address_dev" yaml:"gateway_address_dev"`
 	GatewayPortDev    string `mapstructure:"gateway_port_dev" yaml:"gateway_port_dev"`
+}
+
+type LivekitConfig struct {
+	Address   string        `mapstructure:"address" yaml:"address"`
+	Url       string        `mapstructure:"url" yaml:"livekit_server"`
+	ApiKey    string        `mapstructure:"api_key" yaml:"api_key"`
+	ApiSecret string        `mapstructure:"secret_key" yaml:"secret_key"`
+	Timeout   time.Duration `mapstructure:"timeout" yaml:"timeout"`
+	Port      int           `mapstructure:"port" yaml:"port"`
+}
+
+func (c LivekitConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }

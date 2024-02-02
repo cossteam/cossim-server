@@ -535,9 +535,13 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 }
 
 // SendMsg 推送消息
-func (s *Service) SendMsg(uid string, event config.WSEventType, data interface{}) {
+func (s *Service) SendMsg(uid string, event config.WSEventType, data interface{}, pushOffline bool) {
 	m := config.WsMsg{Uid: uid, Event: event, Rid: 0, Data: data, SendAt: pkgtime.Now()}
-	if _, ok := pool[uid]; !ok {
+	_, ok := pool[uid]
+	if !pushOffline && !ok {
+		return
+	}
+	if pushOffline && !ok {
 		//不在线则推送到消息队列
 		err := rabbitMQClient.PublishMessage(uid, m)
 		if err != nil {
@@ -562,7 +566,7 @@ func (s *Service) SendMsg(uid string, event config.WSEventType, data interface{}
 // SendMsgToUsers 推送多个用户消息
 func (s *Service) SendMsgToUsers(uids []string, event config.WSEventType, data interface{}) {
 	for _, uid := range uids {
-		s.SendMsg(uid, event, data)
+		s.SendMsg(uid, event, data, true)
 	}
 }
 

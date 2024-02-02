@@ -31,6 +31,7 @@ var (
 	messageWsServiceURL = new(string)
 	groupServiceURL     = new(string)
 	storageServiceURL   = new(string)
+	liveUserServiceURL  = new(string)
 )
 
 func Start(discover bool) {
@@ -99,6 +100,9 @@ func discover() {
 	ch := make(chan serviceInfo)
 
 	for serviceName, c := range config.Conf.Discovers {
+		if c.Direct {
+			continue
+		}
 		wg.Add(1)
 		go func(serviceName string, c pkgconfig.ServiceConfig) {
 			defer wg.Done()
@@ -155,6 +159,9 @@ func handlerGrpcClient(serviceName string, addr string) error {
 	case "storage":
 		*storageServiceURL = "http://" + addr
 		logger.Info("gRPC client for group service initialized", zap.String("service", "storage"), zap.String("addr", addr))
+	case "live":
+		*liveUserServiceURL = "http://" + addr
+		logger.Info("gRPC client for group service initialized", zap.String("service", "live"), zap.String("addr", addr))
 	}
 
 	return nil
@@ -176,6 +183,7 @@ func route(engine *gin.Engine) {
 		gateway.Any("/msg/*path", proxyToService(messageServiceURL))
 		gateway.Any("/group/*path", proxyToService(groupServiceURL))
 		gateway.Any("/storage/*path", proxyToService(storageServiceURL))
+		gateway.Any("/live/*path", proxyToService(liveUserServiceURL))
 	}
 }
 
@@ -202,7 +210,7 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 			logger.Error("Failed to create proxy request", zap.Error(err))
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
-				"msg":  code.InternalServerError,
+				"msg":  code.InternalServerError.Message(),
 				"data": nil,
 			})
 			return
@@ -221,7 +229,11 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 		resp, err := client.Do(proxyReq)
 		if err != nil {
 			logger.Error("Failed to fetch response from service", zap.Error(err))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch response from service"})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  code.InternalServerError.Message(),
+				"data": nil,
+			})
 			return
 		}
 		defer resp.Body.Close()
