@@ -15,14 +15,15 @@ func NewMsgRepo(db *gorm.DB) *MsgRepo {
 	return &MsgRepo{db: db}
 }
 
-func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.UserMessage, error) {
+func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.UserMessage, error) {
 	content := &entity.UserMessage{
-		SendID:    senderId,
-		ReceiveID: receiverId,
-		Content:   msg,
-		Type:      msgType,
-		ReplyId:   replyId,
-		DialogId:  dialogId,
+		SendID:             senderId,
+		ReceiveID:          receiverId,
+		Content:            msg,
+		Type:               msgType,
+		ReplyId:            replyId,
+		DialogId:           dialogId,
+		IsBurnAfterReading: isBurnAfterReading,
 	}
 	if err := g.db.Save(content).Error; err != nil {
 		return nil, err
@@ -30,14 +31,15 @@ func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg stri
 	return content, nil
 }
 
-func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint) (*entity.GroupMessage, error) {
+func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.GroupMessage, error) {
 	content := &entity.GroupMessage{
-		UserID:   uid,
-		GroupID:  groupId,
-		Content:  msg,
-		Type:     msgType,
-		ReplyId:  replyId,
-		DialogId: dialogId,
+		UserID:             uid,
+		GroupID:            groupId,
+		Content:            msg,
+		Type:               msgType,
+		ReplyId:            replyId,
+		DialogId:           dialogId,
+		IsBurnAfterReading: isBurnAfterReading,
 	}
 	if err := g.db.Save(content).Error; err != nil {
 		return nil, err
@@ -134,22 +136,24 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 	var result []dataTransformers.LastMessage
 	for _, groupMsg := range groupMessages {
 		result = append(result, dataTransformers.LastMessage{
-			ID:       groupMsg.ID,
-			DialogId: groupMsg.DialogId,
-			Content:  groupMsg.Content,
-			Type:     uint(groupMsg.Type),
-			SenderId: groupMsg.UserID,
-			CreateAt: groupMsg.CreatedAt,
+			ID:                 groupMsg.ID,
+			DialogId:           groupMsg.DialogId,
+			Content:            groupMsg.Content,
+			Type:               uint(groupMsg.Type),
+			SenderId:           groupMsg.UserID,
+			CreateAt:           groupMsg.CreatedAt,
+			IsBurnAfterReading: groupMsg.IsBurnAfterReading,
 		})
 	}
 	for _, userMsg := range userMessages {
 		result = append(result, dataTransformers.LastMessage{
-			ID:       userMsg.ID,
-			DialogId: userMsg.DialogId,
-			Content:  userMsg.Content,
-			Type:     uint(userMsg.Type),
-			SenderId: userMsg.SendID,
-			CreateAt: userMsg.CreatedAt,
+			ID:                 userMsg.ID,
+			DialogId:           userMsg.DialogId,
+			Content:            userMsg.Content,
+			Type:               uint(userMsg.Type),
+			SenderId:           userMsg.SendID,
+			CreateAt:           userMsg.CreatedAt,
+			IsBurnAfterReading: userMsg.IsBurnAfterReading,
 		})
 	}
 	return result, nil
@@ -260,7 +264,7 @@ func (g *MsgRepo) GetUnreadUserMsgs(uid string, dialogId uint32) ([]*entity.User
 func (g *MsgRepo) GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogID uint32) ([]*entity.UserMessage, error) {
 	var userMessages []*entity.UserMessage
 	err := g.db.Model(&entity.UserMessage{}).
-		Where("dialog_id = ? AND id IN (?) AND type = ?", dialogID, msgIds, entity.MessageTypeBurnAfterReading).
+		Where("dialog_id = ? AND id IN (?) AND is_burn_after_reading = ?", dialogID, msgIds, entity.IsBurnAfterReading).
 		Find(&userMessages).Error
 	if err != nil {
 		return nil, err

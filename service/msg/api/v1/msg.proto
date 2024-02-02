@@ -15,6 +15,9 @@ message SendUserMsgRequest{
   uint64 ReplayId=5;
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 6;
+  // @inject_tag: json:"is_burn_after_reading"
+  BurnAfterReadingType IsBurnAfterReadingType = 7;
+
 
 }
 
@@ -31,6 +34,14 @@ message SendGroupMsgRequest{
   uint32 ReplayId=5;
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 6;
+  // @inject_tag: json:"is_burn_after_reading"
+  BurnAfterReadingType IsBurnAfterReadingType = 7;
+
+}
+
+enum BurnAfterReadingType{
+    NotBurnAfterReading = 0; //非阅后即焚
+    IsBurnAfterReading  = 1;                          //阅后即焚消息
 }
 
 message GetUserMsgListRequest{
@@ -73,6 +84,8 @@ message UserMessage{
   uint32 DialogId = 11;
   // @inject_tag: json:"is_label"
   MsgLabel IsLabel = 12;
+  // @inject_tag: json:"is_burn_after_reading"
+  BurnAfterReadingType IsBurnAfterReadingType = 13;
 }
 
 enum MsgLabel {
@@ -101,6 +114,8 @@ message GroupMessage {
   uint32 Dialog_id = 9;
   // @inject_tag: json:"is_label"
   MsgLabel IsLabel = 10;
+  // @inject_tag: json:"is_burn_after_reading"
+  BurnAfterReadingType IsBurnAfterReadingType = 11;
 }
 
 message GetUserMsgListResponse{

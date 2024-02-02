@@ -21,12 +21,13 @@ type GroupMessageResponse struct {
 }
 
 type LastMessage struct {
-	ID       uint   `json:"id"`
-	DialogId uint   `json:"dialog_id"`
-	Content  string `json:"msg"`
-	Type     uint   `json:"msg_type"`
-	SenderId string `json:"sender_id"`
-	CreateAt int64  `json:"create_at"`
+	ID                 uint                        `json:"id"`
+	DialogId           uint                        `json:"dialog_id"`
+	Content            string                      `json:"msg"`
+	Type               uint                        `json:"msg_type"`
+	SenderId           string                      `json:"sender_id"`
+	CreateAt           int64                       `json:"create_at"`
+	IsBurnAfterReading entity.BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 
 type GroupMsgList struct {

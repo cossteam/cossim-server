@@ -11,7 +11,9 @@ type SendUserMsgRequest struct {
 	ReceiverId string `json:"receiver_id" binding:"required"`
 	Content    string `json:"content" binding:"required"`
 	Type       uint   `json:"type" binding:"required"`
-	ReplayId   uint   `json:"replay_id" `
+	ReplayId   uint   `json:"replay_id"`
+	//是否是阅后即焚消息
+	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 
 type SendGroupMsgRequest struct {
@@ -21,6 +23,7 @@ type SendGroupMsgRequest struct {
 	Type     uint32 `json:"type" binding:"required"`
 	ReplayId uint32 `json:"replay_id"`
 	//AtUserIds []string `json:"at_user_ids"`
+	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 
 type MsgListRequest struct {
@@ -148,4 +151,20 @@ type GetDialogAfterMsgResponse struct {
 
 type GetDialogAfterMsgListResponse struct {
 	MsgList []*GetDialogAfterMsgResponse `json:"msg_list"`
+}
+
+type BurnAfterReadingType uint
+
+const (
+	NotBurnAfterReading BurnAfterReadingType = iota //非阅后即焚
+	IsBurnAfterReading                              //阅后即焚消息
+)
+
+func IsAllowedConversationType(isBurnAfterReading BurnAfterReadingType) bool {
+	switch isBurnAfterReading {
+	case NotBurnAfterReading, IsBurnAfterReading:
+		return true
+	default:
+		return false
+	}
 }
