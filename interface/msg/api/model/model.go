@@ -7,22 +7,20 @@ type Response struct {
 }
 
 type SendUserMsgRequest struct {
-	DialogId   uint32 `json:"dialog_id" binding:"required"`
-	ReceiverId string `json:"receiver_id" binding:"required"`
-	Content    string `json:"content" binding:"required"`
-	Type       uint   `json:"type" binding:"required"`
-	ReplayId   uint   `json:"replay_id"`
-	//是否是阅后即焚消息
+	DialogId               uint32               `json:"dialog_id" binding:"required"`
+	ReceiverId             string               `json:"receiver_id" binding:"required"`
+	Content                string               `json:"content" binding:"required"`
+	Type                   uint                 `json:"type" binding:"required"`
+	ReplayId               uint                 `json:"replay_id"`
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 
 type SendGroupMsgRequest struct {
-	DialogId uint32 `json:"dialog_id" binding:"required"`
-	GroupId  uint32 `json:"group_id" binding:"required"`
-	Content  string `json:"content" binding:"required"`
-	Type     uint32 `json:"type" binding:"required"`
-	ReplayId uint32 `json:"replay_id"`
-	//AtUserIds []string `json:"at_user_ids"`
+	DialogId               uint32               `json:"dialog_id" binding:"required"`
+	GroupId                uint32               `json:"group_id" binding:"required"`
+	Content                string               `json:"content" binding:"required"`
+	Type                   uint32               `json:"type" binding:"required"`
+	ReplayId               uint32               `json:"replay_id"`
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 

@@ -124,6 +124,19 @@ info:
   contact: {}
   title: coss-user服务
 paths:
+  /user/activate:
+    get:
+      consumes:
+      - application/json
+      description: 激活账号
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 激活账号
   /user/bundle/get:
     get:
       consumes:
