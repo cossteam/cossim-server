@@ -13,12 +13,11 @@ import (
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/avatarbuilder"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
-	"github.com/minio/minio-go/v7"
-
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"strings"
 )

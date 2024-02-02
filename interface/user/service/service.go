@@ -18,7 +18,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -60,8 +59,8 @@ func New() (s *Service) {
 }
 
 func (s *Service) Start(discover bool) {
-	gate := s.conf.Discovers["gateway"]
-	s.gatewayAddress = gate.Address + ":" + strconv.Itoa(gate.Port)
+	//gate := s.conf.Discovers["gateway"]
+	s.gatewayAddress = s.gatewayAddress + ":" + s.gatewayPort
 	if discover {
 		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
 		if err != nil {

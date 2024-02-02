@@ -28,7 +28,7 @@ services:
       retries: 10
       start_period: 30s
   minio:
-    image: quay.io/minio/minio
+    image: hub.hitosea.com/cossim/minio
     container_name: cossim_minio
     ports:
       - "9000:9000"
