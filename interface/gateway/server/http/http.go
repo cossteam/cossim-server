@@ -210,7 +210,7 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 			logger.Error("Failed to create proxy request", zap.Error(err))
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
-				"msg":  code.InternalServerError,
+				"msg":  code.InternalServerError.Message(),
 				"data": nil,
 			})
 			return
@@ -231,7 +231,7 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 			logger.Error("Failed to fetch response from service", zap.Error(err))
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
-				"msg":  code.InternalServerError,
+				"msg":  code.InternalServerError.Message(),
 				"data": nil,
 			})
 			return
