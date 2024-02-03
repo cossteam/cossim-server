@@ -11,7 +11,8 @@ import (
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	dialoggrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -51,7 +52,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
-	dialogs, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+	dialogs, err := s.relationDialogClient.GetDialogByIds(ctx, &dialoggrpcv1.GetDialogByIdsRequest{
 		DialogIds: []uint32{req.DialogId},
 	})
 	if err != nil {
@@ -62,7 +63,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		return nil, code.DialogErrGetDialogUserByDialogIDAndUserIDFailed
 	}
 
-	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &dialoggrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: req.DialogId,
 		UserId:   userID,
 	})
@@ -185,7 +186,7 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 
 func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interface{}, error) {
 	//获取对话id
-	ids, err := s.relationDialogClient.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
+	ids, err := s.relationDialogClient.GetUserDialogList(ctx, &dialoggrpcv1.GetUserDialogListRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -194,7 +195,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	}
 
 	//获取对话信息
-	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &dialoggrpcv1.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
 	if err != nil {
@@ -215,7 +216,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	var responseList = make([]model.UserDialogListResponse, 0)
 	for _, v := range infos.Dialogs {
 		var re model.UserDialogListResponse
-		du, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+		du, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &dialoggrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 			DialogId: v.Id,
 			UserId:   userID,
 		})
@@ -226,7 +227,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		re.TopAt = int64(du.TopAt)
 		//用户
 		if v.Type == 0 {
-			users, _ := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+			users, _ := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &dialoggrpcv1.GetDialogUsersByDialogIDRequest{
 				DialogId: v.Id,
 			})
 			if len(users.UserIds) == 0 {
@@ -355,7 +356,7 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, msgID uint32, conte
 }
 
 func (s *Service) ReadUserMsgs(ctx context.Context, userid string, dialogId uint32, msgids []uint32) (interface{}, error) {
-	ids, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	ids, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &dialoggrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: dialogId,
 	})
 	if err != nil {
@@ -396,7 +397,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, msgID uin
 		return nil, err
 	}
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &dialoggrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -429,7 +430,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, msgID uin
 }
 
 func (s *Service) GetUserLabelMsgList(ctx context.Context, userID string, dialogID uint32) (interface{}, error) {
-	_, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &dialoggrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		UserId:   userID,
 		DialogId: dialogID,
 	})
@@ -596,7 +597,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 
 	//TODO 验证是否在对话内
 
-	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &dialoggrpcv1.GetDialogByIdsRequest{
 		DialogIds: dialogIds,
 	})
 	if err != nil {

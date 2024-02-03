@@ -57,13 +57,13 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 	var user User
 	if err = a.DB.Raw(_queryUser, claims.UserId).Scan(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, errors.New("user not found")
+			return false, errors.New("user_relation not found")
 		}
-		return false, fmt.Errorf("error retrieving user: %s", err.Error())
+		return false, fmt.Errorf("error retrieving user_relation: %s", err.Error())
 	}
 
 	if user.Status != 1 {
-		return false, errors.New("user status is abnormal")
+		return false, errors.New("user_relation status is abnormal")
 	}
 
 	return true, nil

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	v1 "github.com/cossim/coss-server/service/relation/api/v1"
+	v1 "github.com/cossim/coss-server/service/relation/api/v1/group_join_request"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"google.golang.org/grpc/codes"

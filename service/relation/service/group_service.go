@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	v1 "github.com/cossim/coss-server/service/relation/api/v1"
+	v1 "github.com/cossim/coss-server/service/relation/api/v1/group_relation"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	codes "google.golang.org/grpc/codes"
@@ -117,7 +117,7 @@ func (s *Service) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest)
 }
 
 func (s *Service) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
-	fmt.Println("revert leave group req => ", request)
+	fmt.Println("revert leave group_relation req => ", request)
 	resp := &v1.LeaveGroupResponse{}
 
 	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupId, request.UserId, "deleted_at", 0); err != nil {

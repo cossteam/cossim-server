@@ -9,8 +9,8 @@ on:
     paths:
       - 'pkg/config/**.go'
       - 'pkg/http/**.go'
-      - 'docs/group*.*'
-      - 'interface/group/**.go'
+      - 'docs/group_relation*.*'
+      - 'interface/group_relation/**.go'
 jobs:
   build_group_interface:
     runs-on: ubuntu-latest

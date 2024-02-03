@@ -9,7 +9,9 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	dialoggrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
+	grouprelationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/group_relation"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/dtmgrpc"
 	"github.com/dtm-labs/client/workflow"
@@ -45,7 +47,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		Member:          req.Member,
 	}}
 
-	r22 := &relationgrpcv1.CreateGroupAndInviteUsersRequest{
+	r22 := &grouprelationgrpcv1.CreateGroupAndInviteUsersRequest{
 		UserID: req.CreatorId,
 		Member: req.Member,
 	}
@@ -118,29 +120,29 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	if err != nil {
 		return 0, err
 	}
-	sf, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	sf, err := s.relationGroupClient.GetGroupRelation(ctx, &grouprelationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: groupID,
 	})
 	if err != nil {
 		return 0, err
 	}
-	if sf.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+	if sf.Identity == grouprelationgrpcv1.GroupIdentity_IDENTITY_USER {
 		return 0, errors.New("不允许操作")
 	}
 
-	dialog, err := s.relationDialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+	dialog, err := s.relationDialogClient.GetDialogByGroupId(ctx, &dialoggrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 	if err != nil {
 		return 0, err
 	}
 
-	r1 := &relationgrpcv1.DeleteDialogUsersByDialogIDRequest{
+	r1 := &dialoggrpcv1.DeleteDialogUsersByDialogIDRequest{
 		DialogId: dialog.DialogId,
 	}
-	r2 := &relationgrpcv1.DeleteDialogByIdRequest{
+	r2 := &dialoggrpcv1.DeleteDialogByIdRequest{
 		DialogId: dialog.DialogId,
 	}
-	r3 := &relationgrpcv1.GroupIDRequest{
+	r3 := &grouprelationgrpcv1.GroupIDRequest{
 		GroupId: groupID,
 	}
 	r4 := &groupgrpcv1.DeleteGroupRequest{
@@ -150,15 +152,15 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
 		r := &emptypb.Empty{}
 		// 删除对话用户
-		if err = tcc.CallBranch(r1, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUsersByDialogID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r1, s.relationGrpcServer+dialoggrpcv1.DialogService_DeleteDialogUsersByDialogID_FullMethodName, "", s.relationGrpcServer+dialoggrpcv1.DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		// 删除对话
-		if err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogById_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogByIdRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r2, s.relationGrpcServer+dialoggrpcv1.DialogService_DeleteDialogById_FullMethodName, "", s.relationGrpcServer+dialoggrpcv1.DialogService_DeleteDialogByIdRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		// 删除群聊成员
-		if err = tcc.CallBranch(r3, s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r3, s.relationGrpcServer+grouprelationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, "", s.relationGrpcServer+grouprelationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		// 删除群聊
@@ -182,7 +184,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 		return nil, err
 	}
 
-	sf, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	sf, err := s.relationGroupClient.GetGroupRelation(ctx, &grouprelationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: req.GroupId,
 	})
@@ -191,7 +193,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 		return nil, err
 	}
 
-	if sf.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+	if sf.Identity == grouprelationgrpcv1.GroupIdentity_IDENTITY_USER {
 		return nil, code.Unauthorized
 	}
 

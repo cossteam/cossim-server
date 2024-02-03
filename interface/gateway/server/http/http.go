@@ -83,11 +83,11 @@ func setupURLs(d bool) {
 	} else {
 		direct()
 	}
-	//userServiceURL = "http://" + cfg.Discovers["user"].Addr()
+	//userServiceURL = "http://" + cfg.Discovers["user_relation"].Addr()
 	//relationServiceURL = "http://" + cfg.Discovers["relation"].Addr()
 	//messageServiceURL = "http://" + cfg.Discovers["msg"].Addr()
 	//messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Addr() + "/api/v1/msg/ws"
-	//groupServiceURL = "http://" + cfg.Discovers["group"].Addr()
+	//groupServiceURL = "http://" + cfg.Discovers["group_relation"].Addr()
 	//storageServiceURL = "http://" + cfg.Discovers["storage"].Addr()
 }
 
@@ -143,25 +143,25 @@ func direct() {
 
 func handlerGrpcClient(serviceName string, addr string) error {
 	switch serviceName {
-	case "user":
+	case "user_relation":
 		*userServiceURL = "http://" + addr
-		logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", addr))
+		logger.Info("gRPC client for user_relation service initialized", zap.String("service", "user_relation"), zap.String("addr", addr))
 	case "relation":
 		*relationServiceURL = "http://" + addr
 		logger.Info("gRPC client for relation service initialized", zap.String("service", "relation"), zap.String("addr", addr))
-	case "group":
+	case "group_relation":
 		*groupServiceURL = "http://" + addr
-		logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", addr))
+		logger.Info("gRPC client for group_relation service initialized", zap.String("service", "group_relation"), zap.String("addr", addr))
 	case "msg":
 		*messageServiceURL = "http://" + addr
 		*messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
-		logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", addr))
+		logger.Info("gRPC client for group_relation service initialized", zap.String("service", "msg"), zap.String("addr", addr))
 	case "storage":
 		*storageServiceURL = "http://" + addr
-		logger.Info("gRPC client for group service initialized", zap.String("service", "storage"), zap.String("addr", addr))
+		logger.Info("gRPC client for group_relation service initialized", zap.String("service", "storage"), zap.String("addr", addr))
 	case "live":
 		*liveUserServiceURL = "http://" + addr
-		logger.Info("gRPC client for group service initialized", zap.String("service", "live"), zap.String("addr", addr))
+		logger.Info("gRPC client for group_relation service initialized", zap.String("service", "live"), zap.String("addr", addr))
 	}
 
 	return nil
@@ -178,10 +178,10 @@ func setupGin() {
 func route(engine *gin.Engine) {
 	gateway := engine.Group("/api/v1")
 	{
-		gateway.Any("/user/*path", proxyToService(userServiceURL))
+		gateway.Any("/user_relation/*path", proxyToService(userServiceURL))
 		gateway.Any("/relation/*path", proxyToService(relationServiceURL))
 		gateway.Any("/msg/*path", proxyToService(messageServiceURL))
-		gateway.Any("/group/*path", proxyToService(groupServiceURL))
+		gateway.Any("/group_relation/*path", proxyToService(groupServiceURL))
 		gateway.Any("/storage/*path", proxyToService(storageServiceURL))
 		gateway.Any("/live/*path", proxyToService(liveUserServiceURL))
 	}

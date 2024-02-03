@@ -18,7 +18,7 @@ import (
 // @Produce  json
 // @param request body model.LoginRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /user/login [post]
+// @Router /user_relation/login [post]
 func login(c *gin.Context) {
 	req := new(model.LoginRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -51,7 +51,7 @@ func login(c *gin.Context) {
 // @Produce  json
 // @param request body model.LogoutRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /user/logout [post]
+// @Router /user_relation/logout [post]
 func logout(c *gin.Context) {
 	req := new(model.LogoutRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -85,7 +85,7 @@ func logout(c *gin.Context) {
 // @Produce  json
 // @param request body model.RegisterRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /user/register [post]
+// @Router /user_relation/register [post]
 func register(c *gin.Context) {
 	req := new(model.RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -132,7 +132,7 @@ func register(c *gin.Context) {
 // @Param Authorization header string true "Bearer JWT"
 // @Param email query string true "用户邮箱"
 // @Success		200 {object} model.Response{data=model.UserInfoResponse} "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)"
-// @Router /user/search [get]
+// @Router /user_relation/search [get]
 func search(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
@@ -170,7 +170,7 @@ func search(c *gin.Context) {
 // @Param Authorization header string true "Bearer JWT"
 // @Param user_id query string true "用户id"
 // @Success		200 {object} model.Response{data=model.UserInfoResponse} "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)"
-// @Router /user/info [get]
+// @Router /user_relation/info [get]
 func getUserInfo(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
@@ -201,7 +201,7 @@ func getUserInfo(c *gin.Context) {
 // @param request body model.SetPublicKeyRequest true "request"
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
-// @Router /user/key/set [post]
+// @Router /user_relation/key/set [post]
 func setUserPublicKey(c *gin.Context) {
 	req := new(model.SetPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -233,7 +233,7 @@ func setUserPublicKey(c *gin.Context) {
 // @Param type query model.GetType true "指定根据id还是邮箱类型查找"
 // @Param email query string false "邮箱"
 // @Success		200 {object} model.Response{}
-// @Router /user/system/key/get [get]
+// @Router /user_relation/system/key/get [get]
 func GetSystemPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": ThisKey})
 }
@@ -245,7 +245,7 @@ func GetSystemPublicKey(c *gin.Context) {
 // @param request body model.UserInfoRequest true "request"
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
-// @Router /user/info/modify [post]
+// @Router /user_relation/info/modify [post]
 func modifyUserInfo(c *gin.Context) {
 	req := new(model.UserInfoRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -276,7 +276,7 @@ func modifyUserInfo(c *gin.Context) {
 // @param request body model.PasswordRequest true "request"
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
-// @Router /user/password/modify [post]
+// @Router /user_relation/password/modify [post]
 func modifyUserPassword(c *gin.Context) {
 	req := new(model.PasswordRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -332,7 +332,7 @@ func modifyUserPassword(c *gin.Context) {
 // @param request body model.ModifyUserSecretBundleRequest true "request"
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
-// @Router /user/bundle/modify [post]
+// @Router /user_relation/bundle/modify [post]
 func modifyUserSecretBundle(c *gin.Context) {
 	req := new(model.ModifyUserSecretBundleRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -363,7 +363,7 @@ func modifyUserSecretBundle(c *gin.Context) {
 // @Produce  json
 // @Param user_id query string true "用户id"
 // @Success		200 {object} model.Response{}
-// @Router /user/bundle/get [get]
+// @Router /user_relation/bundle/get [get]
 func getUserSecretBundle(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
@@ -390,7 +390,7 @@ func getUserSecretBundle(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} model.Response{}
-// @Router /user/clients/get [get]
+// @Router /user_relation/clients/get [get]
 func getUserLoginClients(c *gin.Context) {
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
@@ -407,7 +407,7 @@ func getUserLoginClients(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} model.Response{}
-// @Router /user/activate [get]
+// @Router /user_relation/activate [get]
 func userActivate(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {

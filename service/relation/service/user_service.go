@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/service/relation/api/v1"
+	v1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"google.golang.org/grpc/codes"
@@ -248,7 +248,7 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.RelationUserErrFriendRelationNotFound.Code()), err.Error())
 		}
-		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), fmt.Sprintf("failed to get user relation: %v", err))
+		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), fmt.Sprintf("failed to get user_relation relation: %v", err))
 	}
 
 	resp.Status = v1.RelationStatus(relation.Status)

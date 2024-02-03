@@ -82,7 +82,7 @@ func (h *Handler) route() {
 	h.engine.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
-	u := h.engine.Group("/api/v1/live/user")
+	u := h.engine.Group("/api/v1/live/user_relation")
 	u.Use(middleware.AuthMiddleware(h.redisClient))
 	//u.GET("/getToken", h.getJoinToken)
 	u.POST("/create", h.Create)
@@ -105,7 +105,7 @@ func (h *Handler) route() {
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} dto.Response{data=map[string]string} "url=webRtc服务器地址 token=加入通话的token room_name=房间名称 room_id=房间id"
-// @Router /live/user/create [post]
+// @Router /live/user_relation/create [post]
 func (h *Handler) Create(c *gin.Context) {
 	req := new(dto.UserCallRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -171,7 +171,7 @@ func (h *Handler) Join(c *gin.Context) {
 // @Param room query string true "房间名"
 // @Produce  json
 // @Success		200 {object} dto.Response{data=dto.UserShowResponse} "sid=房间id identity=用户id state=用户状态 (0=加入中 1=已加入 2=已连接 3=断开连接 ) joined_at=加入时间 name=用户名称 is_publisher=是否是创建者"
-// @Router /live/user/show [get]
+// @Router /live/user_relation/show [get]
 func (h *Handler) Show(c *gin.Context) {
 	userID := c.Query("user_id")
 	rid := c.Query("room")
@@ -210,7 +210,7 @@ func (h *Handler) Show(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} dto.Response{}
-// @Router /live/user/leave [post]
+// @Router /live/user_relation/leave [post]
 func (h *Handler) Leave(c *gin.Context) {
 	req := new(dto.UserLeaveRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {

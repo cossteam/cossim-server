@@ -117,7 +117,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/admin/manage/join": {
+        "/relation/group_relation/admin/manage/join": {
             "post": {
                 "description": "管理员管理加入群聊 action (0=拒绝, 1=同意)",
                 "consumes": [
@@ -151,7 +151,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/admin/manage/remove": {
+        "/relation/group_relation/admin/manage/remove": {
             "post": {
                 "description": "将用户从群聊移除",
                 "consumes": [
@@ -185,7 +185,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/invite": {
+        "/relation/group_relation/invite": {
             "post": {
                 "description": "邀请加入群聊",
                 "consumes": [
@@ -219,7 +219,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/join": {
+        "/relation/group_relation/join": {
             "post": {
                 "description": "加入群聊",
                 "consumes": [
@@ -253,7 +253,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/list": {
+        "/relation/group_relation/list": {
             "get": {
                 "description": "群聊列表",
                 "produces": [
@@ -288,7 +288,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/manage_join": {
+        "/relation/group_relation/manage_join": {
             "post": {
                 "description": "用户管理加入群聊 action (0=拒绝, 1=同意)",
                 "consumes": [
@@ -322,7 +322,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/member": {
+        "/relation/group_relation/member": {
             "get": {
                 "description": "群聊成员列表",
                 "produces": [
@@ -351,7 +351,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/quit": {
+        "/relation/group_relation/quit": {
             "post": {
                 "description": "退出群聊",
                 "consumes": [
@@ -385,7 +385,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/request_list": {
+        "/relation/group_relation/request_list": {
             "get": {
                 "security": [
                     {
@@ -434,7 +434,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/silent": {
+        "/relation/group_relation/silent": {
             "post": {
                 "description": "设置群聊静默通知",
                 "consumes": [
@@ -468,7 +468,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/add_blacklist": {
+        "/relation/user_relation/add_blacklist": {
             "post": {
                 "description": "添加黑名单",
                 "consumes": [
@@ -502,7 +502,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/add_friend": {
+        "/relation/user_relation/add_friend": {
             "post": {
                 "description": "发送好友请求",
                 "consumes": [
@@ -536,7 +536,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/blacklist": {
+        "/relation/user_relation/blacklist": {
             "get": {
                 "description": "黑名单",
                 "produces": [
@@ -556,7 +556,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/delete_friend": {
+        "/relation/user_relation/delete_friend": {
             "post": {
                 "description": "删除好友",
                 "consumes": [
@@ -590,7 +590,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/friend_list": {
+        "/relation/user_relation/friend_list": {
             "get": {
                 "description": "好友列表",
                 "produces": [
@@ -610,7 +610,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/manage_friend": {
+        "/relation/user_relation/manage_friend": {
             "post": {
                 "description": "管理好友请求  action (0=拒绝, 1=同意)",
                 "consumes": [
@@ -644,7 +644,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/request_list": {
+        "/relation/user_relation/request_list": {
             "get": {
                 "description": "好友申请列表",
                 "produces": [
@@ -679,7 +679,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/silent": {
+        "/relation/user_relation/silent": {
             "post": {
                 "description": "设置私聊静默通知",
                 "consumes": [
@@ -713,7 +713,7 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/user/switch/e2e/key": {
+        "/relation/user_relation/switch/e2e/key": {
             "post": {
                 "security": [
                     {

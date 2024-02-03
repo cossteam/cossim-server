@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.32.0
 // 	protoc        v4.25.1
-// source: api/v1/group.proto
+// source: api/v1/group_relation.proto
 
 package v1
 
@@ -375,8 +375,8 @@ type UpdateGroupRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"group"
-	Group *Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group"`
+	// @inject_tag: json:"group_relation"
+	Group *Group `protobuf:"bytes,1,opt,name=group_relation,proto3" json:"group_relation"`
 }
 
 func (x *UpdateGroupRequest) Reset() {
@@ -423,8 +423,8 @@ type CreateGroupRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// @inject_tag: json:"group"
-	Group *Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group"`
+	// @inject_tag: json:"group_relation"
+	Group *Group `protobuf:"bytes,1,opt,name=group_relation,proto3" json:"group_relation"`
 }
 
 func (x *CreateGroupRequest) Reset() {
@@ -665,8 +665,8 @@ var file_api_v1_group_proto_depIdxs = []int32{
 	1,  // 0: v1.Group.Type:type_name -> v1.GroupType
 	0,  // 1: v1.Group.Status:type_name -> v1.GroupStatus
 	2,  // 2: v1.GetBatchGroupInfoResponse.groups:type_name -> v1.Group
-	2,  // 3: v1.UpdateGroupRequest.group:type_name -> v1.Group
-	2,  // 4: v1.CreateGroupRequest.group:type_name -> v1.Group
+	2,  // 3: v1.UpdateGroupRequest.group_relation:type_name -> v1.Group
+	2,  // 4: v1.CreateGroupRequest.group_relation:type_name -> v1.Group
 	3,  // 5: v1.GroupService.GetGroupInfoByGid:input_type -> v1.GetGroupInfoRequest
 	4,  // 6: v1.GroupService.GetBatchGroupInfoByIDs:input_type -> v1.GetBatchGroupInfoRequest
 	6,  // 7: v1.GroupService.UpdateGroup:input_type -> v1.UpdateGroupRequest

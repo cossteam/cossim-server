@@ -12,7 +12,7 @@ import (
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils/os"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
@@ -148,13 +148,13 @@ func (s *Service) direct() {
 
 func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 	switch serviceName {
-	case "user":
+	case "user_relation":
 		conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			return err
 		}
 		s.userClient = user.NewUserServiceClient(conn)
-		s.logger.Info("gRPC client for user service initialized", zap.String("addr", conn.Target()))
+		s.logger.Info("gRPC client for user_relation service initialized", zap.String("addr", conn.Target()))
 	case "relation":
 		conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {

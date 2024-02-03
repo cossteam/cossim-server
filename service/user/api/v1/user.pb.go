@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.32.0
 // 	protoc        v4.25.1
-// source: api/v1/user.proto
+// source: api/v1/user_relation.proto
 
 package v1
 

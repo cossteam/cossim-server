@@ -10,7 +10,9 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	dialoggrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
+	userfriendgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_friend_request"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/dtmgrpc"
@@ -25,7 +27,7 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 	// 获取好友列表
 	friendListResp, err := s.userRelationClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: userID})
 	if err != nil {
-		s.logger.Error("user service GetFriendList", zap.Error(err))
+		s.logger.Error("user_relation service GetFriendList", zap.Error(err))
 		return nil, err
 	}
 
@@ -36,7 +38,7 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 
 	userInfos, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
 	if err != nil {
-		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
+		s.logger.Error("user_relation service GetBatchUserInfo", zap.Error(err))
 		return nil, err
 	}
 
@@ -59,7 +61,7 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 
 	}
 
-	// Sort and group by specified field
+	// Sort and group_relation by specified field
 	groupedUsers := usersorter.SortAndGroupUsers(data, "NickName")
 	return groupedUsers, nil
 }
@@ -68,7 +70,7 @@ func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, er
 	// 获取黑名单列表
 	blacklistResp, err := s.userRelationClient.GetBlacklist(ctx, &relationgrpcv1.GetBlacklistRequest{UserId: userID})
 	if err != nil {
-		s.logger.Error("user service GetBlacklist", zap.Error(err))
+		s.logger.Error("user_relation service GetBlacklist", zap.Error(err))
 		return nil, err
 	}
 
@@ -79,7 +81,7 @@ func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, er
 
 	blacklist, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
 	if err != nil {
-		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
+		s.logger.Error("user_relation service GetBatchUserInfo", zap.Error(err))
 		return nil, err
 	}
 
@@ -88,9 +90,9 @@ func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, er
 
 func (s *Service) UserRequestList(ctx context.Context, userID string) (interface{}, error) {
 
-	reqList, err := s.userFriendRequestClient.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
+	reqList, err := s.userFriendRequestClient.GetFriendRequestList(ctx, &userfriendgrpcv1.GetFriendRequestListRequest{UserId: userID})
 	if err != nil {
-		s.logger.Error("user service GetFriendRequestList", zap.Error(err))
+		s.logger.Error("user_relation service GetFriendRequestList", zap.Error(err))
 		return nil, err
 	}
 
@@ -147,12 +149,12 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		return nil, code.UserErrNotExist
 	}
 
-	fRequest, err := s.userFriendRequestClient.GetFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.GetFriendRequestByUserIdAndFriendIdRequest{
+	fRequest, err := s.userFriendRequestClient.GetFriendRequestByUserIdAndFriendId(ctx, &userfriendgrpcv1.GetFriendRequestByUserIdAndFriendIdRequest{
 		UserId:   userID,
 		FriendId: req.UserId,
 	})
 	if fRequest != nil {
-		if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
+		if fRequest.Status == userfriendgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
 			return nil, code.RelationErrFriendRequestAlreadyPending
 		}
 		return nil, code.RelationErrRequestAlreadyProcessed
@@ -167,7 +169,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	}
 
 	//删除之前的
-	_, err = s.userFriendRequestClient.DeleteFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.DeleteFriendRequestByUserIdAndFriendIdRequest{
+	_, err = s.userFriendRequestClient.DeleteFriendRequestByUserIdAndFriendId(ctx, &userfriendgrpcv1.DeleteFriendRequestByUserIdAndFriendIdRequest{
 		UserId:   userID,
 		FriendId: req.UserId,
 	})
@@ -175,7 +177,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		return nil, err
 	}
 
-	resp, err := s.userFriendRequestClient.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
+	resp, err := s.userFriendRequestClient.SendFriendRequest(ctx, &userfriendgrpcv1.SendFriendRequestStruct{
 		SenderId:   userID,
 		ReceiverId: req.UserId,
 		Remark:     req.Remark,
@@ -197,7 +199,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 }
 
 func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint32, action int32, key string) (interface{}, error) {
-	qs, err := s.userFriendRequestClient.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: questId})
+	qs, err := s.userFriendRequestClient.GetFriendRequestById(ctx, &userfriendgrpcv1.GetFriendRequestByIdRequest{ID: questId})
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +211,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 		return nil, code.RelationUserErrNoFriendRequestRecords
 	}
 
-	if qs.Status != relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
+	if qs.Status != userfriendgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
 		return nil, code.RelationErrRequestAlreadyProcessed
 	}
 
@@ -221,7 +223,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 		return nil, code.RelationErrAlreadyFriends
 	}
 
-	_, err = s.userFriendRequestClient.ManageFriendRequest(ctx, &relationgrpcv1.ManageFriendRequestStruct{
+	_, err = s.userFriendRequestClient.ManageFriendRequest(ctx, &userfriendgrpcv1.ManageFriendRequestStruct{
 		ID:     questId,
 		Status: s.convertStatusToRelationStatus(uint32(action)),
 	})
@@ -330,13 +332,13 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		return err
 	}
 
-	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID}
+	r1 := &dialoggrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID}
 	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: friendID}
 	gid := shortuuid.New()
 	// tcc
 	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
 		r := &emptypb.Empty{}
-		err = tcc.CallBranch(r1, s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r)
+		err = tcc.CallBranch(r1, s.dialogGrpcServer+dialoggrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.dialogGrpcServer+dialoggrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r)
 		if err != nil {
 			return err
 		}
@@ -434,7 +436,7 @@ func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, st
 	gid := shortuuid.New()
 	wfName := "manage_friend_workflow_2_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		r1 := &relationgrpcv1.ConfirmFriendAndJoinDialogRequest{
+		r1 := &dialoggrpcv1.ConfirmFriendAndJoinDialogRequest{
 			OwnerId: userId,
 			UserId:  friendId,
 		}
@@ -444,7 +446,7 @@ func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, st
 		}
 		dialogId = resp1.Id
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.dialogClient.ConfirmFriendAndJoinDialogRevert(ctx, &relationgrpcv1.ConfirmFriendAndJoinDialogRevertRequest{DialogId: resp1.Id, OwnerId: userId, UserId: friendId})
+			_, err = s.dialogClient.ConfirmFriendAndJoinDialogRevert(ctx, &dialoggrpcv1.ConfirmFriendAndJoinDialogRevertRequest{DialogId: resp1.Id, OwnerId: userId, UserId: friendId})
 			return err
 		})
 
@@ -559,24 +561,24 @@ func (s *Service) publishServiceMessage(ctx context.Context, msg msgconfig.WsMsg
 	return s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 }
 
-func (s *Service) convertDialogType(_type uint32) (relationgrpcv1.DialogType, error) {
+func (s *Service) convertDialogType(_type uint32) (dialoggrpcv1.DialogType, error) {
 	switch _type {
 	case 0:
-		return relationgrpcv1.DialogType_USER_DIALOG, nil
+		return dialoggrpcv1.DialogType_USER_DIALOG, nil
 	case 1:
-		return relationgrpcv1.DialogType_GROUP_DIALOG, nil
+		return dialoggrpcv1.DialogType_GROUP_DIALOG, nil
 	default:
 		return 0, errors.New("invalid dialog type")
 	}
 }
 
-func (s *Service) convertStatusToRelationStatus(status uint32) relationgrpcv1.FriendRequestStatus {
+func (s *Service) convertStatusToRelationStatus(status uint32) userfriendgrpcv1.FriendRequestStatus {
 	switch status {
 	case 0:
-		return relationgrpcv1.FriendRequestStatus_FriendRequestStatus_REJECT
+		return userfriendgrpcv1.FriendRequestStatus_FriendRequestStatus_REJECT
 	case 1:
-		return relationgrpcv1.FriendRequestStatus_FriendRequestStatus_ACCEPT
+		return userfriendgrpcv1.FriendRequestStatus_FriendRequestStatus_ACCEPT
 	default:
-		return relationgrpcv1.FriendRequestStatus_FriendRequestStatus_REJECT
+		return userfriendgrpcv1.FriendRequestStatus_FriendRequestStatus_REJECT
 	}
 }

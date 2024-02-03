@@ -88,7 +88,7 @@ func NewEncryptedAuthenticator(db *gorm.DB) *EncryptedAuthenticator {
 
 const _queryUser = "SELECT * FROM users WHERE id = ?"
 
-// QueryUser retrieves user information by user ID
+// QueryUser retrieves user_relation information by user_relation ID
 func (a *EncryptedAuthenticator) QueryUser(userID string) (entity.User, error) {
 	var user entity.User
 	if err := a.DB.Raw(_queryUser, userID).Scan(&user).Error; err != nil {

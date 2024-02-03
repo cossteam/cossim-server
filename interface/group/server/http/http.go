@@ -100,7 +100,7 @@ func route(engine *gin.Engine) {
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
-	g := engine.Group("/api/v1/group")
+	g := engine.Group("/api/v1/group_relation")
 	// 获取群聊信息
 	g.GET("/info", middleware.AuthMiddleware(redisClient), getGroupInfoByGid)
 	// 创建群聊
@@ -109,7 +109,7 @@ func route(engine *gin.Engine) {
 	g.POST("/delete", middleware.AuthMiddleware(redisClient), deleteGroup)
 	// 更新群聊信息
 	g.POST("/update", middleware.AuthMiddleware(redisClient), updateGroup)
-	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("group")))
+	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("group_relation")))
 	//u.POST("/logout", handleLogout)
 }
 

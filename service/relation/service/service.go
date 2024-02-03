@@ -3,7 +3,11 @@ package service
 import (
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
-	"github.com/cossim/coss-server/service/relation/api/v1"
+	dialoggrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
+	v1 "github.com/cossim/coss-server/service/relation/api/v1/group_join_request"
+	grouprelationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/group_relation"
+	userfriendgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_friend_request"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	"github.com/cossim/coss-server/service/relation/domain/repository"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"github.com/rs/xid"
@@ -31,10 +35,10 @@ type Service struct {
 	ufqr repository.UserFriendRequestRepository
 	gjqr repository.GroupJoinRequestRepository
 	dr   repository.DialogRepository
-	v1.UnimplementedUserRelationServiceServer
-	v1.UnimplementedGroupRelationServiceServer
-	v1.UnimplementedDialogServiceServer
-	v1.UnimplementedUserFriendRequestServiceServer
+	relationgrpcv1.UnimplementedUserRelationServiceServer
+	grouprelationgrpcv1.UnimplementedGroupRelationServiceServer
+	dialoggrpcv1.UnimplementedDialogServiceServer
+	userfriendgrpcv1.UnimplementedUserFriendRequestServiceServer
 	v1.UnimplementedGroupJoinRequestServiceServer
 	ac        *pkgconfig.AppConfig
 	discovery discovery.Discovery

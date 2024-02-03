@@ -143,7 +143,7 @@ func route(engine *gin.Engine) {
 	api := engine.Group("/api/v1/relation")
 	api.Use(middleware.AuthMiddleware(redisClient))
 
-	u := api.Group("/user")
+	u := api.Group("/user_relation")
 	u.GET("/friend_list", friendList)
 	u.GET("/blacklist", blackList)
 	u.GET("/request_list", userRequestList)
@@ -156,7 +156,7 @@ func route(engine *gin.Engine) {
 	//设置用户静默通知
 	u.POST("/silent", setUserSilentNotification)
 
-	g := api.Group("/group")
+	g := api.Group("/group_relation")
 	g.GET("/member", getGroupMember)
 	g.GET("/request_list", groupRequestList)
 	// 邀请好友加入群聊
@@ -172,7 +172,7 @@ func route(engine *gin.Engine) {
 	//群聊设置消息静默
 	g.POST("/silent", setGroupSilentNotification)
 
-	gg := api.Group("/group/admin")
+	gg := api.Group("/group_relation/admin")
 	// 管理员管理群聊申请
 	gg.POST("/manage/join", adminManageJoinGroup)
 	// 管理员移除群聊成员

@@ -4,7 +4,7 @@
 // - protoc             v4.25.1
 // source: api/v1/dialog.proto
 
-package v1
+package dialog
 
 import (
 	context "context"

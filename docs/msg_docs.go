@@ -69,7 +69,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/edit/group": {
+        "/msg/edit/group_relation": {
             "post": {
                 "description": "编辑群消息",
                 "consumes": [
@@ -100,7 +100,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/edit/user": {
+        "/msg/edit/user_relation": {
             "post": {
                 "description": "编辑用户消息",
                 "consumes": [
@@ -131,7 +131,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/label/group": {
+        "/msg/label/group_relation": {
             "get": {
                 "description": "获取群聊标注信息",
                 "consumes": [
@@ -189,7 +189,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/label/user": {
+        "/msg/label/user_relation": {
             "get": {
                 "description": "获取私聊标注信息",
                 "consumes": [
@@ -247,7 +247,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/list/group": {
+        "/msg/list/group_relation": {
             "get": {
                 "description": "获取私聊消息",
                 "consumes": [
@@ -308,7 +308,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/list/user": {
+        "/msg/list/user_relation": {
             "get": {
                 "description": "获取私聊消息",
                 "consumes": [
@@ -363,7 +363,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/read/user": {
+        "/msg/read/user_relation": {
             "post": {
                 "description": "批量设置私聊消息状态为已读",
                 "consumes": [
@@ -394,7 +394,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/recall/group": {
+        "/msg/recall/group_relation": {
             "post": {
                 "description": "撤回群消息",
                 "consumes": [
@@ -425,7 +425,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/recall/user": {
+        "/msg/recall/user_relation": {
             "post": {
                 "description": "撤回用户消息",
                 "consumes": [
@@ -456,7 +456,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/send/group": {
+        "/msg/send/group_relation": {
             "post": {
                 "description": "发送群聊消息",
                 "consumes": [
@@ -487,7 +487,7 @@ const docTemplatemsg = `{
                 }
             }
         },
-        "/msg/send/user": {
+        "/msg/send/user_relation": {
             "post": {
                 "description": "发送私聊消息",
                 "consumes": [

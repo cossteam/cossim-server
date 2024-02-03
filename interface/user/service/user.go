@@ -13,7 +13,7 @@ import (
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/avatarbuilder"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/google/uuid"
@@ -29,13 +29,13 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		Password: utils.HashString(req.Password),
 	})
 	if err != nil {
-		s.logger.Error("user login failed", zap.Error(err))
+		s.logger.Error("user_relation login failed", zap.Error(err))
 		return nil, "", code.UserErrNotExistOrPassword
 	}
 
 	token, err := utils.GenerateToken(resp.UserId, resp.Email)
 	if err != nil {
-		s.logger.Error("failed to generate user token", zap.Error(err))
+		s.logger.Error("failed to generate user_relation token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
 
@@ -100,7 +100,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 
 	list, err := cache.GetUserInfoList(values)
 	if err != nil {
-		s.logger.Error("failed to get user info list", zap.Error(err))
+		s.logger.Error("failed to get user_relation info list", zap.Error(err))
 		return code.UserErrErrLogoutFailed
 	}
 
@@ -128,7 +128,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 	//删除客户端信息
 	err = cache.RemoveFromList(s.redisClient, userID, 0, values[request.LoginNumber])
 	if err != nil {
-		s.logger.Error("failed to logout user", zap.Error(err))
+		s.logger.Error("failed to logout user_relation", zap.Error(err))
 		return code.UserErrErrLogoutFailed
 	}
 	return nil
@@ -175,7 +175,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		Avatar:          headerUrl.String(),
 	})
 	if err != nil {
-		s.logger.Error("failed to register user", zap.Error(err))
+		s.logger.Error("failed to register user_relation", zap.Error(err))
 		return "", err
 	}
 
@@ -281,7 +281,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 		Tel:       req.Tel,
 		Avatar:    req.Avatar,
 		Signature: req.Signature,
-		//Action:    user.UserStatus(req.Action),
+		//Action:    user_relation.UserStatus(req.Action),
 	})
 	if err != nil {
 		s.logger.Error("修改用户信息失败", zap.Error(err))

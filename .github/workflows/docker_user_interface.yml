@@ -10,8 +10,8 @@ on:
       - 'pkg/cache/**.go'
       - 'pkg/config/**.go'
       - 'pkg/http/**.go'
-      - 'docs/user*.*'
-      - 'interface/user/**.go'
+      - 'docs/user_relation*.*'
+      - 'interface/user_relation/**.go'
 jobs:
   build_user_interface:
     runs-on: ubuntu-latest

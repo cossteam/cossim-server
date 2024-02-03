@@ -79,7 +79,7 @@ type Message struct {
 	MsgId uint64 `json:"msg_id"`
 }
 
-// EditUserMsgRequest represents the request structure for editing user message.
+// EditUserMsgRequest represents the request structure for editing user_relation message.
 type EditUserMsgRequest struct {
 	MsgId uint32 `json:"msg_id" binding:"required"` // Message ID
 	// 消息类型
@@ -88,19 +88,19 @@ type EditUserMsgRequest struct {
 	Content string `json:"content" binding:"required"`
 }
 
-// EditGroupMsgRequest represents the request structure for editing group message.
+// EditGroupMsgRequest represents the request structure for editing group_relation message.
 type EditGroupMsgRequest struct {
 	MsgId   uint32 `json:"msg_id" binding:"required"` // Message ID
 	MsgType uint   `json:"msg_type" binding:"required"`
 	Content string `json:"content" binding:"required"` // New content of the message
 }
 
-// RecallUserMsgRequest represents the request structure for recalling user message.
+// RecallUserMsgRequest represents the request structure for recalling user_relation message.
 type RecallUserMsgRequest struct {
 	MsgId uint32 `json:"msg_id" binding:"required"` // Message ID
 }
 
-// RecallGroupMsgRequest represents the request structure for recalling group message.
+// RecallGroupMsgRequest represents the request structure for recalling group_relation message.
 type RecallGroupMsgRequest struct {
 	MsgId uint32 `json:"msg_id" binding:"required"` // Message ID
 }

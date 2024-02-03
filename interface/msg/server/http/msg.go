@@ -82,7 +82,7 @@ func ws(c *gin.Context) {
 // @Produce  json
 // @param request body model.SendUserMsgRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /msg/send/user [post]
+// @Router /msg/send/user_relation [post]
 func sendUserMsg(c *gin.Context) {
 	req := new(model.SendUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -111,7 +111,7 @@ func sendUserMsg(c *gin.Context) {
 // @Produce  json
 // @param request body model.SendGroupMsgRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /msg/send/group [post]
+// @Router /msg/send/group_relation [post]
 func sendGroupMsg(c *gin.Context) {
 	req := new(model.SendGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -148,7 +148,7 @@ func sendGroupMsg(c *gin.Context) {
 // @Param page_num query int true "页码"
 // @Param page_size query int true "页大小"
 // @Success		200 {object} model.Response{}
-// @Router /msg/list/user [get]
+// @Router /msg/list/user_relation [get]
 func getUserMsgList(c *gin.Context) {
 	var num = c.Query("page_num")
 	var size = c.Query("page_size")
@@ -201,7 +201,7 @@ func getUserMsgList(c *gin.Context) {
 // @Param page_num query int true "页码"
 // @Param page_size query int true "页大小"
 // @Success		200 {object} model.Response{}
-// @Router /msg/list/group [get]
+// @Router /msg/list/group_relation [get]
 func getGroupMsgList(c *gin.Context) {
 	var gid = c.Query("group_id")
 	var num = c.Query("page_num")
@@ -276,7 +276,7 @@ func getUserDialogList(c *gin.Context) {
 // @Produce  json
 // @param request body model.EditUserMsgRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /msg/edit/user [post]
+// @Router /msg/edit/user_relation [post]
 func editUserMsg(c *gin.Context) {
 	req := new(model.EditUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -306,7 +306,7 @@ func editUserMsg(c *gin.Context) {
 // @Produce  json
 // @param request body model.EditGroupMsgRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /msg/edit/group [post]
+// @Router /msg/edit/group_relation [post]
 func editGroupMsg(c *gin.Context) {
 	req := new(model.EditGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -336,7 +336,7 @@ func editGroupMsg(c *gin.Context) {
 // @Produce  json
 // @param request body model.RecallUserMsgRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /msg/recall/user [post]
+// @Router /msg/recall/user_relation [post]
 func recallUserMsg(c *gin.Context) {
 	req := new(model.RecallUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -366,7 +366,7 @@ func recallUserMsg(c *gin.Context) {
 // @Produce  json
 // @param request body model.RecallGroupMsgRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /msg/recall/group [post]
+// @Router /msg/recall/group_relation [post]
 func recallGroupMsg(c *gin.Context) {
 	req := new(model.RecallGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -396,7 +396,7 @@ func recallGroupMsg(c *gin.Context) {
 // @Produce  json
 // @param request body model.LabelUserMessageRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /msg/label/user [post]
+// @Router /msg/label/user_relation [post]
 func labelUserMessage(c *gin.Context) {
 	req := new(model.LabelUserMessageRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -431,7 +431,7 @@ func labelUserMessage(c *gin.Context) {
 // @Produce  json
 // @param request body model.LabelGroupMessageRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /msg/label/group [post]
+// @Router /msg/label/group_relation [post]
 func labelGroupMessage(c *gin.Context) {
 	req := new(model.LabelGroupMessageRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -467,7 +467,7 @@ func labelGroupMessage(c *gin.Context) {
 // @Produce  json
 // @Param dialog_id query string true "对话id"
 // @Success		200 {object} model.Response{}
-// @Router /msg/label/user [get]
+// @Router /msg/label/user_relation [get]
 func getUserLabelMsgList(c *gin.Context) {
 	var id = c.Query("dialog_id")
 
@@ -503,7 +503,7 @@ func getUserLabelMsgList(c *gin.Context) {
 // @Produce  json
 // @Param dialog_id query string true "对话id"
 // @Success		200 {object} model.Response{}
-// @Router /msg/label/group [get]
+// @Router /msg/label/group_relation [get]
 func getGroupLabelMsgList(c *gin.Context) {
 	var id = c.Query("dialog_id")
 	if id == "" {
@@ -538,7 +538,7 @@ func getGroupLabelMsgList(c *gin.Context) {
 // @Produce  json
 // @param request body model.ReadUserMsgsRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /msg/read/user [post]
+// @Router /msg/read/user_relation [post]
 func readUserMsgs(c *gin.Context) {
 	req := new(model.ReadUserMsgsRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {

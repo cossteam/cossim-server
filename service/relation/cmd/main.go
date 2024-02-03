@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/discovery"
-	api "github.com/cossim/coss-server/service/relation/api/v1"
+	dialoggrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/group_join_request"
+	grouprelationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/group_relation"
+	userfriendgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_friend_request"
+	userrelationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	"github.com/cossim/coss-server/service/relation/config"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"github.com/cossim/coss-server/service/relation/service"
@@ -111,11 +115,11 @@ func startGRPCServer() {
 
 	grpcServer = grpc.NewServer()
 	svc = service.NewService(infra, dbConn, config.Conf)
-	api.RegisterUserRelationServiceServer(grpcServer, svc)
-	api.RegisterGroupRelationServiceServer(grpcServer, svc)
-	api.RegisterDialogServiceServer(grpcServer, svc)
-	api.RegisterGroupJoinRequestServiceServer(grpcServer, svc)
-	api.RegisterUserFriendRequestServiceServer(grpcServer, svc)
+	userrelationgrpcv1.RegisterUserRelationServiceServer(grpcServer, svc)
+	grouprelationgrpcv1.RegisterGroupRelationServiceServer(grpcServer, svc)
+	dialoggrpcv1.RegisterDialogServiceServer(grpcServer, svc)
+	relationgrpcv1.RegisterGroupJoinRequestServiceServer(grpcServer, svc)
+	userfriendgrpcv1.RegisterUserFriendRequestServiceServer(grpcServer, svc)
 	// 注册服务开启健康检查
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 

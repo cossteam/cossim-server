@@ -17,7 +17,7 @@ import (
 // @Produce  json
 // @Param group_id query int32 true "群聊ID"
 // @Success 200 {object} model.Response{}
-// @Router /group/info [get]
+// @Router /group_relation/info [get]
 func getGroupInfoByGid(c *gin.Context) {
 	gid := c.Query("group_id")
 	if gid == "" {
@@ -46,7 +46,7 @@ func getGroupInfoByGid(c *gin.Context) {
 // @Produce  json
 // @Param group_ids query []string true "群聊ID列表"
 // @Success 200 {object} model.Response{}
-// @Router /group/getBatch [get]
+// @Router /group_relation/getBatch [get]
 func getBatchGroupInfoByIDs(c *gin.Context) {
 	groupIds := c.QueryArray("groupIds")
 	ids := make([]uint32, len(groupIds))
@@ -75,7 +75,7 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 // @Produce  json
 // @Param request body model.UpdateGroupRequest true "请求体"
 // @Success 200 {object} model.Response{}
-// @Router /group/update/{gid} [post]
+// @Router /group_relation/update/{gid} [post]
 func updateGroup(c *gin.Context) {
 	req := new(model.UpdateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -99,7 +99,7 @@ func updateGroup(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "更新群聊信息成功", gin.H{"group": resp})
+	response.SetSuccess(c, "更新群聊信息成功", gin.H{"group_relation": resp})
 }
 
 // @Summary 创建群聊
@@ -108,7 +108,7 @@ func updateGroup(c *gin.Context) {
 // @Produce  json
 // @Param request body model.CreateGroupRequest true "请求体"
 // @Success 200 {object} model.Response{}
-// @Router /group/create [post]
+// @Router /group_relation/create [post]
 func createGroup(c *gin.Context) {
 	req := new(model.CreateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -151,7 +151,7 @@ func createGroup(c *gin.Context) {
 // @Produce  json
 // @Param request body model.DeleteGroupRequest true "群聊id"
 // @Success 200 {object} model.Response{}
-// @Router /group/delete [post]
+// @Router /group_relation/delete [post]
 func deleteGroup(c *gin.Context) {
 	req := new(model.DeleteGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -76,12 +76,12 @@ help: ## Display this help screen
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	# make docker-build ACTION=interface NAME=group
+	# make docker-build ACTION=interface NAME=group_relation
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-	# make docker-push ACTION=interface NAME=group
+	# make docker-push ACTION=interface NAME=group_relation
 	docker push ${IMG}
 
 # PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple

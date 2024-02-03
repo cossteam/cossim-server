@@ -15,7 +15,7 @@ const docTemplatelive = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/live/user/create": {
+        "/live/user_relation/create": {
             "post": {
                 "security": [
                     {
@@ -76,7 +76,7 @@ const docTemplatelive = `{
                 }
             }
         },
-        "/live/user/leave": {
+        "/live/user_relation/leave": {
             "post": {
                 "security": [
                     {
@@ -122,7 +122,7 @@ const docTemplatelive = `{
                 }
             }
         },
-        "/live/user/show": {
+        "/live/user_relation/show": {
             "get": {
                 "security": [
                     {

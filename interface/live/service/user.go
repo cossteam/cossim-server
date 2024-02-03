@@ -109,7 +109,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, req *dto.UserJoinRequest) (i
 		return nil, code.LiveErrMaxParticipantsExceeded
 	}
 
-	//user, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: req.UserID})
+	//user_relation, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: req.UserID})
 	//if err != nil {
 	//	s.logger.Error("获取用户信息失败", zap.Error(err))
 	//	return nil, err

@@ -119,7 +119,7 @@ swag: ## Run unittests
 #endif
 
 
-# 构建指定grpc服务  make build-service ACTION=service NAME="user"
+# 构建指定grpc服务  make build-service ACTION=service NAME="user_relation"
 build-service: dep ## Build the binary file
 ifdef NAME
 	@echo "Building with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}/$(MAIN_FILE)"
@@ -128,7 +128,7 @@ else
 	@echo "Please provide service NAME"
 endif
 
-# 构建指定接口服务  make build-interface ACTION=interface NAME="user"
+# 构建指定接口服务  make build-interface ACTION=interface NAME="user_relation"
 build-interface: dep
 ifdef NAME
 	@echo "Building ${INTERFACE_NAME} interface with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}/$(MAIN_FILE)"

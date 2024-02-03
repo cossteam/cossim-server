@@ -10,7 +10,7 @@ import (
 	"github.com/mozillazg/go-pinyin"
 )
 
-// User is an interface for user data
+// User is an interface for user_relation data
 type User interface{}
 
 type Group interface{}
@@ -49,7 +49,7 @@ func ConvertToGinH(data map[string][]interface{}) gin.H {
 	return result
 }
 
-// SortAndGroupUsers sorts the user data based on a specified field and groups them by the first letter of the field values or special characters
+// SortAndGroupUsers sorts the user_relation data based on a specified field and groups them by the first letter of the field values or special characters
 func SortAndGroupUsers(data interface{}, fieldName string) map[string][]interface{} {
 	groupedUsers := make(map[string][]interface{})
 	keyMap := make(map[string]bool)

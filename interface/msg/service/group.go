@@ -9,7 +9,8 @@ import (
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	dialoggrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
+	grouprelationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/group_relation"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -21,7 +22,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, msg *model.
 	for _, uid := range uIds {
 		m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
 		//查询是否静默通知
-		groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &grouprelationgrpcv1.GetGroupRelationRequest{
 			GroupId: uint32(msg.GroupId),
 			UserId:  uid,
 		})
@@ -31,7 +32,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, msg *model.
 		}
 
 		//判断是否静默通知
-		if groupRelation.IsSilent == relationgrpcv1.GroupSilentNotificationType_GroupSilent {
+		if groupRelation.IsSilent == grouprelationgrpcv1.GroupSilentNotificationType_GroupSilent {
 			m.Event = config.SendSilentGroupMessageEvent
 		}
 
@@ -90,7 +91,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		return nil, code.MsgErrInsertUserMessageFailed
 	}
 
-	groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &grouprelationgrpcv1.GetGroupRelationRequest{
 		GroupId: req.GroupId,
 		UserId:  userID,
 	})
@@ -103,7 +104,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		return nil, code.GroupErrUserIsMuted
 	}
 
-	dialogs, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+	dialogs, err := s.relationDialogClient.GetDialogByIds(ctx, &dialoggrpcv1.GetDialogByIdsRequest{
 		DialogIds: []uint32{req.DialogId},
 	})
 	if err != nil {
@@ -114,7 +115,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		return nil, code.DialogErrGetDialogUserByDialogIDAndUserIDFailed
 	}
 
-	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &dialoggrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: req.DialogId,
 		UserId:   userID,
 	})
@@ -138,7 +139,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		return nil, err
 	}
 	//查询群聊所有用户id
-	uids, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
+	uids, err := s.relationGroupClient.GetGroupUserIDs(ctx, &grouprelationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupId,
 	})
 
@@ -226,7 +227,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, msgID ui
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &dialoggrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -259,7 +260,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, msgID ui
 }
 
 func (s *Service) GetGroupLabelMsgList(ctx context.Context, userID string, dialogId uint32) (interface{}, error) {
-	_, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &dialoggrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		UserId:   userID,
 		DialogId: dialogId,
 	})
@@ -288,7 +289,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		return nil, err
 	}
 
-	_, err = s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+	_, err = s.relationGroupClient.GetGroupRelation(c, &grouprelationgrpcv1.GetGroupRelationRequest{
 		GroupId: request.GroupId,
 		UserId:  id,
 	})

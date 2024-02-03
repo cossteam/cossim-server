@@ -70,19 +70,19 @@ func HandleGRPCErrors(c *gin.Context, logger *zap.Logger, err error) {
 	// 判断 gRPC 错误码
 	if grpcCode := status.Code(err); grpcCode == codes.Unavailable {
 		// 连接不可用错误处理
-		logger.Error("user service unavailable", zap.Error(err))
+		logger.Error("user_relation service unavailable", zap.Error(err))
 		//response.Fail(c, http.StatusText(http.StatusInternalServerError), nil)
 		response.GRPCError(c, err)
 		return
 	} else if grpcCode == codes.Unauthenticated {
 		// 未认证错误处理
-		logger.Error("user service unauthenticated", zap.Error(err))
+		logger.Error("user_relation service unauthenticated", zap.Error(err))
 		//response.Fail(c, http.StatusText(http.StatusInternalServerError), nil)
 		response.GRPCError(c, err)
 		return
 	}
 
 	// 其他 gRPC 错误处理
-	logger.Error("user service failed", zap.Error(err))
+	logger.Error("user_relation service failed", zap.Error(err))
 	response.Fail(c, err.Error(), nil)
 }

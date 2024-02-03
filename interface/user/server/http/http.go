@@ -151,7 +151,7 @@ func route(engine *gin.Engine) {
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
-	u := engine.Group("/api/v1/user")
+	u := engine.Group("/api/v1/user_relation")
 	u.POST("/login", login)
 	u.POST("/register", register)
 	u.GET("/activate", userActivate)
@@ -165,6 +165,6 @@ func route(engine *gin.Engine) {
 	u.POST("/bundle/modify", middleware.AuthMiddleware(redisClient), modifyUserSecretBundle)
 	u.GET("/bundle/get", middleware.AuthMiddleware(redisClient), getUserSecretBundle)
 	u.GET("/clients/get", middleware.AuthMiddleware(redisClient), getUserLoginClients)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user_relation")))
 	//u.POST("/logout", handleLogout)
 }

@@ -4,7 +4,7 @@
 // - protoc             v4.25.1
 // source: api/v1/group_join_request.proto
 
-package v1
+package group_join_request
 
 import (
 	context "context"

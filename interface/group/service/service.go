@@ -8,7 +8,9 @@ import (
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	dialoggrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
+	grouprelationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/group_relation"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
@@ -21,8 +23,8 @@ import (
 // Service struct
 type Service struct {
 	groupClient          groupgrpcv1.GroupServiceClient
-	relationDialogClient relationgrpcv1.DialogServiceClient
-	relationGroupClient  relationgrpcv1.GroupRelationServiceClient
+	relationDialogClient dialoggrpcv1.DialogServiceClient
+	relationGroupClient  grouprelationgrpcv1.GroupRelationServiceClient
 	relationUserClient   relationgrpcv1.UserRelationServiceClient
 	userClient           usergrpcv1.UserServiceClient
 	rabbitMQClient       *msg_queue.RabbitMQ
@@ -140,24 +142,24 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 		return err
 	}
 	switch serviceName {
-	case "user":
+	case "user_relation":
 		s.userClient = usergrpcv1.NewUserServiceClient(conn)
-		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
+		s.logger.Info("gRPC client for user_relation service initialized", zap.String("service", "user_relation"), zap.String("addr", conn.Target()))
 	case "relation":
 		s.relationGrpcServer = addr
 		s.dialogGrpcServer = addr
 		s.relationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
 
-		s.relationGroupClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
+		s.relationGroupClient = grouprelationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
 
-		s.relationDialogClient = relationgrpcv1.NewDialogServiceClient(conn)
+		s.relationDialogClient = dialoggrpcv1.NewDialogServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
-	case "group":
+	case "group_relation":
 		s.groupGrpcServer = addr
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
-		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
+		s.logger.Info("gRPC client for group_relation service initialized", zap.String("service", "group_relation"), zap.String("addr", conn.Target()))
 	}
 
 	return nil

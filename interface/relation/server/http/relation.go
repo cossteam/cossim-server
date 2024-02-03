@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/cossim/coss-server/pkg/http/response"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/group_join_request"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -18,7 +18,7 @@ import (
 // @Tags UserRelation
 // @Produce  json
 // @Success		200 {object} model.Response{}
-// @Router /relation/user/blacklist [get]
+// @Router /relation/user_relation/blacklist [get]
 func blackList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
@@ -41,7 +41,7 @@ func blackList(c *gin.Context) {
 // @Tags UserRelation
 // @Produce  json
 // @Success		200 {object} model.Response{}
-// @Router /relation/user/friend_list [get]
+// @Router /relation/user_relation/friend_list [get]
 func friendList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
@@ -64,7 +64,7 @@ func friendList(c *gin.Context) {
 // @Tags GroupRelation
 // @Produce  json
 // @Success		200 {object} model.Response{data=[]usersorter.CustomGroupData} "status 0:正常状态；1:被封禁状态；2:被删除状态"
-// @Router /relation/group/list [get]
+// @Router /relation/group_relation/list [get]
 func getUserGroupList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
@@ -87,7 +87,7 @@ func getUserGroupList(c *gin.Context) {
 // @Tags UserRelation
 // @Produce  json
 // @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
-// @Router /relation/user/request_list [get]
+// @Router /relation/user_relation/request_list [get]
 func userRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
@@ -144,7 +144,7 @@ func deleteBlacklist(c *gin.Context) {
 // @Produce  json
 // @param request body model.AddBlacklistRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/user/add_blacklist [post]
+// @Router /relation/user_relation/add_blacklist [post]
 func addBlacklist(c *gin.Context) {
 	req := new(model.AddBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -176,7 +176,7 @@ func addBlacklist(c *gin.Context) {
 // @Produce  json
 // @param request body model.DeleteFriendRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/user/delete_friend [post]
+// @Router /relation/user_relation/delete_friend [post]
 func deleteFriend(c *gin.Context) {
 	req := new(model.DeleteFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -207,7 +207,7 @@ func deleteFriend(c *gin.Context) {
 // @Produce  json
 // @param request body model.ManageFriendRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/user/manage_friend [post]
+// @Router /relation/user_relation/manage_friend [post]
 func manageFriend(c *gin.Context) {
 	req := new(model.ManageFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -245,7 +245,7 @@ func manageFriend(c *gin.Context) {
 // @Produce  json
 // @param request body model.SendFriendRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/user/add_friend [post]
+// @Router /relation/user_relation/add_friend [post]
 func addFriend(c *gin.Context) {
 	req := new(model.SendFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -273,7 +273,7 @@ func addFriend(c *gin.Context) {
 // @Param group_id query integer true "群聊ID"
 // @Produce  json
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/member [get]
+// @Router /relation/group_relation/member [get]
 func getGroupMember(c *gin.Context) {
 	// 从请求中获取群聊ID
 	groupID := c.Query("group_id")
@@ -313,7 +313,7 @@ func getGroupMember(c *gin.Context) {
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
 // @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=申请中, 1=待通过, 2=已加入, 3=已删除, 4=被拒绝, 5=被封禁)"
-// @Router /relation/group/request_list [get]
+// @Router /relation/group_relation/request_list [get]
 func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
@@ -338,7 +338,7 @@ func groupRequestList(c *gin.Context) {
 // @Produce  json
 // @param request body model.InviteGroupRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/invite [post]
+// @Router /relation/group_relation/invite [post]
 func inviteGroup(c *gin.Context) {
 	req := new(model.InviteGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -369,7 +369,7 @@ func inviteGroup(c *gin.Context) {
 // @Produce  json
 // @param request body model.JoinGroupRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/join [post]
+// @Router /relation/group_relation/join [post]
 func joinGroup(c *gin.Context) {
 	req := new(model.JoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -400,7 +400,7 @@ func joinGroup(c *gin.Context) {
 // @Produce  json
 // @param request body model.ManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/manage_join [post]
+// @Router /relation/group_relation/manage_join [post]
 func manageJoinGroup(c *gin.Context) {
 	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -447,7 +447,7 @@ func manageJoinGroup(c *gin.Context) {
 // @Produce  json
 // @param request body model.ManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/admin/manage/join [post]
+// @Router /relation/group_relation/admin/manage/join [post]
 func adminManageJoinGroup(c *gin.Context) {
 	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -494,7 +494,7 @@ func adminManageJoinGroup(c *gin.Context) {
 // @Produce  json
 // @param request body model.RemoveUserFromGroupRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/admin/manage/remove [post]
+// @Router /relation/group_relation/admin/manage/remove [post]
 func removeUserFromGroup(c *gin.Context) {
 	req := new(model.RemoveUserFromGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -532,7 +532,7 @@ func removeUserFromGroup(c *gin.Context) {
 // @Produce  json
 // @param request body model.QuitGroupRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/quit [post]
+// @Router /relation/group_relation/quit [post]
 func quitGroup(c *gin.Context) {
 	req := new(model.QuitGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -563,7 +563,7 @@ func quitGroup(c *gin.Context) {
 // @param request body model.SwitchUserE2EPublicKeyRequest true "request"
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
-// @Router /relation/user/switch/e2e/key [post]
+// @Router /relation/user_relation/switch/e2e/key [post]
 func switchUserE2EPublicKey(c *gin.Context) {
 	req := new(model.SwitchUserE2EPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -595,7 +595,7 @@ func switchUserE2EPublicKey(c *gin.Context) {
 // @Produce  json
 // @param request body model.SetGroupSilentNotificationRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /relation/group/silent [post]
+// @Router /relation/group_relation/silent [post]
 func setGroupSilentNotification(c *gin.Context) {
 	req := new(model.SetGroupSilentNotificationRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -631,7 +631,7 @@ func setGroupSilentNotification(c *gin.Context) {
 // @Produce  json
 // @param request body model.SetUserSilentNotificationRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /relation/user/silent [post]
+// @Router /relation/user_relation/silent [post]
 func setUserSilentNotification(c *gin.Context) {
 	req := new(model.SetUserSilentNotificationRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {

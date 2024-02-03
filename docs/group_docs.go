@@ -15,7 +15,7 @@ const docTemplategroup = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/group/create": {
+        "/group_relation/create": {
             "post": {
                 "description": "创建群聊",
                 "consumes": [
@@ -46,7 +46,7 @@ const docTemplategroup = `{
                 }
             }
         },
-        "/group/delete": {
+        "/group_relation/delete": {
             "post": {
                 "description": "删除群聊",
                 "consumes": [
@@ -77,7 +77,7 @@ const docTemplategroup = `{
                 }
             }
         },
-        "/group/getBatch": {
+        "/group_relation/getBatch": {
             "get": {
                 "description": "批量获取群聊信息",
                 "consumes": [
@@ -110,7 +110,7 @@ const docTemplategroup = `{
                 }
             }
         },
-        "/group/info": {
+        "/group_relation/info": {
             "get": {
                 "description": "获取群聊信息",
                 "consumes": [
@@ -139,7 +139,7 @@ const docTemplategroup = `{
                 }
             }
         },
-        "/group/update/{gid}": {
+        "/group_relation/update/{gid}": {
             "post": {
                 "description": "更新群聊信息",
                 "consumes": [
@@ -258,7 +258,7 @@ var SwaggerInfogroup = &swag.Spec{
 	Schemes:          []string{},
 	Title:            "coss-user服务",
 	Description:      "",
-	InfoInstanceName: "group",
+	InfoInstanceName: "group_relation",
 	SwaggerTemplate:  docTemplategroup,
 	LeftDelim:        "{{",
 	RightDelim:       "}}",

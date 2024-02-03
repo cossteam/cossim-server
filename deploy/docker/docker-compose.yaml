@@ -147,7 +147,7 @@ services:
     restart: on-failure
   user_bff:
     container_name: cossim_user_bff
-    image: hub.hitosea.com/cossim/user-interface
+    image: hub.hitosea.com/cossim/user_relation-interface
     command:
     - "--config"
     - "/config/config.yaml"
@@ -156,7 +156,7 @@ services:
     - "--config-center-addr"
     - "consul:8500"
     volumes:
-      - ./config/interface/user.yaml:/config/config.yaml
+      - ./config/interface/user_relation.yaml:/config/config.yaml
       - ./config/pgp:/.cache
       - ./config/common/SourceHanSansSC-Medium.ttf:/.cache/SourceHanSansSC-Medium.ttf
     depends_on:
@@ -168,7 +168,7 @@ services:
     restart: on-failure
   group_bff:
     container_name: cossim_group_bff
-    image: hub.hitosea.com/cossim/group-interface
+    image: hub.hitosea.com/cossim/group_relation-interface
     command:
       - "--config"
       - "/config/config.yaml"
@@ -177,7 +177,7 @@ services:
       - "--config-center-addr"
       - "consul:8500"
     volumes:
-      - ./config/interface/group.yaml:/config/config.yaml
+      - ./config/interface/group_relation.yaml:/config/config.yaml
       - ./config/pgp:/.cache
     depends_on:
       - dtm
@@ -265,7 +265,7 @@ services:
     restart: on-failure
   user_service:
     container_name: cossim_user_service
-    image: hub.hitosea.com/cossim/user-service
+    image: hub.hitosea.com/cossim/user_relation-service
     command:
       - "--config"
       - "/config/config.yaml"
@@ -274,7 +274,7 @@ services:
       - "--config-center-addr"
       - "consul:8500"
     volumes:
-      - ./config/service/user.yaml:/config/config.yaml
+      - ./config/service/user_relation.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
@@ -283,7 +283,7 @@ services:
     restart: on-failure
   group_service:
     container_name: cossim_group_service
-    image: hub.hitosea.com/cossim/group-service
+    image: hub.hitosea.com/cossim/group_relation-service
     command:
       - "--config"
       - "/config/config.yaml"
@@ -292,7 +292,7 @@ services:
       - "--config-center-addr"
       - "consul:8500"
     volumes:
-      - ./config/service/group.yaml:/config/config.yaml
+      - ./config/service/group_relation.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy

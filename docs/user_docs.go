@@ -15,7 +15,7 @@ const docTemplateuser = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/user/activate": {
+        "/user_relation/activate": {
             "get": {
                 "description": "激活账号",
                 "consumes": [
@@ -35,7 +35,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/bundle/get": {
+        "/user_relation/bundle/get": {
             "get": {
                 "description": "获取用户密钥包",
                 "consumes": [
@@ -64,7 +64,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/bundle/modify": {
+        "/user_relation/bundle/modify": {
             "post": {
                 "security": [
                     {
@@ -100,7 +100,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/clients/get": {
+        "/user_relation/clients/get": {
             "get": {
                 "description": "获取该用户当前登录的所有客户端",
                 "consumes": [
@@ -120,7 +120,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/info": {
+        "/user_relation/info": {
             "get": {
                 "security": [
                     {
@@ -170,7 +170,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/info/modify": {
+        "/user_relation/info/modify": {
             "post": {
                 "security": [
                     {
@@ -206,7 +206,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/key/set": {
+        "/user_relation/key/set": {
             "post": {
                 "security": [
                     {
@@ -242,7 +242,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/login": {
+        "/user_relation/login": {
             "post": {
                 "description": "用户登录",
                 "consumes": [
@@ -273,7 +273,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/logout": {
+        "/user_relation/logout": {
             "post": {
                 "description": "退出登录",
                 "consumes": [
@@ -304,7 +304,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/password/modify": {
+        "/user_relation/password/modify": {
             "post": {
                 "security": [
                     {
@@ -340,7 +340,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/register": {
+        "/user_relation/register": {
             "post": {
                 "description": "用户注册",
                 "consumes": [
@@ -371,7 +371,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/search": {
+        "/user_relation/search": {
             "get": {
                 "security": [
                     {
@@ -421,7 +421,7 @@ const docTemplateuser = `{
                 }
             }
         },
-        "/user/system/key/get": {
+        "/user_relation/system/key/get": {
             "get": {
                 "description": "获取系统pgp公钥",
                 "consumes": [
@@ -653,7 +653,7 @@ var SwaggerInfouser = &swag.Spec{
 	Schemes:          []string{},
 	Title:            "coss-user服务",
 	Description:      "",
-	InfoInstanceName: "user",
+	InfoInstanceName: "user_relation",
 	SwaggerTemplate:  docTemplateuser,
 	LeftDelim:        "{{",
 	RightDelim:       "}}",

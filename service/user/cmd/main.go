@@ -48,7 +48,7 @@ func main() {
 			panic(err)
 		}
 	} else {
-		ch, err = discovery.LoadDefaultRemoteConfig(remoteConfigAddr, discovery.ServiceConfigPrefix+"user", remoteConfigToken, config.Conf)
+		ch, err = discovery.LoadDefaultRemoteConfig(remoteConfigAddr, discovery.ServiceConfigPrefix+"user_relation", remoteConfigToken, config.Conf)
 		if err != nil {
 			panic(err)
 		}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	v1 "github.com/cossim/coss-server/service/relation/api/v1"
+	v1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"github.com/cossim/coss-server/service/relation/infrastructure/persistence"
 	"google.golang.org/grpc/codes"
@@ -74,7 +74,7 @@ func (s *Service) CreateAndJoinDialogWithGroupRevert(ctx context.Context, reques
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		npo := persistence.NewRepositories(tx)
 		if err := npo.Dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), ids); err != nil {
-			return status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), fmt.Sprintf("failed to delete dialog user revert : %s", err.Error()))
+			return status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), fmt.Sprintf("failed to delete dialog user_relation revert : %s", err.Error()))
 		}
 		if err := npo.Dr.DeleteDialogByDialogID(uint(request.DialogId)); err != nil {
 			return status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), fmt.Sprintf("failed to delete dialog revert : %s", err.Error()))

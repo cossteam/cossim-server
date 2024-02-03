@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/cossim/coss-server/interface/relation/api/model"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/dialog"
 )
 
 func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request *model.CloseOrOpenDialogRequest) (interface{}, error) {
