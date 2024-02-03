@@ -259,7 +259,6 @@ func (s *Service) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 		if err != nil {
 			return err
 		}
-
 		//发送邀请给其他成员
 		requests := make([]*entity.GroupJoinRequest, 0)
 		for _, v := range request.Member {

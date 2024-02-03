@@ -132,6 +132,7 @@ func createGroup(c *gin.Context) {
 		CreatorId:       thisId,
 		Name:            req.Name,
 		Avatar:          req.Avatar,
+		Member:          req.Member,
 	}
 	if len(req.Member) == 0 {
 		group.Member = make([]string, 0)

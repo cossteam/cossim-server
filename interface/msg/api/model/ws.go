@@ -3,6 +3,7 @@ package model
 type WsUserMsg struct {
 	MsgId              uint32               `json:"msg_id"`
 	SenderId           string               `json:"sender_id"`
+	ReceiverId         string               `json:"receiver_id"`
 	Content            string               `json:"content"`
 	MsgType            uint                 `json:"msgType"`
 	ReplayId           uint                 `json:"reply_id"`
