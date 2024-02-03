@@ -7,7 +7,7 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	lksdk "github.com/livekit/server-sdk-go"
 	"github.com/redis/go-redis/v9"

@@ -9,7 +9,7 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/msg_queue"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1/user_relation"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/auth"
