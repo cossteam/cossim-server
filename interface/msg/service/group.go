@@ -145,7 +145,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 	s.sendWsGroupMsg(ctx, uids.UserIds, &model.WsGroupMsg{
 		MsgId:              message.MsgId,
 		GroupId:            int64(req.GroupId),
-		UserId:             userID,
+		SenderId:           userID,
 		Content:            req.Content,
 		MsgType:            uint(req.Type),
 		ReplayId:           uint(req.ReplayId),
