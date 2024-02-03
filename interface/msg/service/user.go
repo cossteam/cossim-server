@@ -33,7 +33,6 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		s.logger.Error("获取用户关系失败", zap.Error(err))
 		return nil, err
 	}
-
 	if userRelationStatus1.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
@@ -99,6 +98,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType
 			MsgType:            msgType,
 			ReplayId:           replayId,
 			MsgId:              msgid,
+			ReceiverId:         receiverId,
 			SendAt:             pkgtime.Now(),
 			DialogId:           dialogId,
 			IsBurnAfterReading: isBnr,
@@ -142,6 +142,26 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType
 			return
 		}
 	}
+	if _, ok := pool[senderId]; ok {
+		if len(pool[senderId]) > 0 {
+			for _, c := range pool[senderId] {
+				for _, c2 := range c {
+					m.Rid = c2.Rid
+					js, _ := json.Marshal(m)
+					message, err := Enc.GetSecretMessage(string(js), senderId)
+					if err != nil {
+						return
+					}
+					err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+					if err != nil {
+						s.logger.Error("send msggrpcv1 err", zap.Error(err))
+						return
+					}
+				}
+			}
+			return
+		}
+	}
 	if Enc.IsEnable() {
 		marshal, err := json.Marshal(m)
 		if err != nil {
@@ -157,9 +177,24 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType
 			s.logger.Error("发布消息失败", zap.Error(err))
 			return
 		}
+
+		message2, err := Enc.GetSecretMessage(string(marshal), senderId)
+		if err != nil {
+			return
+		}
+		err = rabbitMQClient.PublishEncryptedMessage(senderId, message2)
+		if err != nil {
+			s.logger.Error("发布消息失败", zap.Error(err))
+			return
+		}
 		return
 	}
 	err := rabbitMQClient.PublishMessage(receiverId, m)
+	if err != nil {
+		s.logger.Error("发布消息失败", zap.Error(err))
+		return
+	}
+	err = rabbitMQClient.PublishMessage(senderId, m)
 	if err != nil {
 		s.logger.Error("发布消息失败", zap.Error(err))
 		return

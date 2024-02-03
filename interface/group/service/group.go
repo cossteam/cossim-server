@@ -72,6 +72,8 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		groupID = resp1.Id
 
 		r22.GroupId = groupID
+		r22.Member = req.Member
+		r22.UserID = req.CreatorId
 		resp2, err := s.relationGroupClient.CreateGroupAndInviteUsers(ctx, r22)
 		if err != nil {
 			return err
