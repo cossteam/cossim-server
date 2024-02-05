@@ -32,6 +32,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.2
 	github.com/wneessen/go-mail v0.4.0
+	github.com/yzchan/umeng-go/v2 v2.0.0-20220228082727-cd1a1e444307
 	go.uber.org/zap v1.26.0
 	google.golang.org/grpc v1.61.0
 	google.golang.org/protobuf v1.32.0

@@ -12,16 +12,10 @@ type UserCallRequest struct {
 }
 
 type UserCallResponse struct {
-	Url    string `json:"url"` // webrtc server
-	Token  string `json:"token"`
+	Url    string `json:"url"`     // webRtc服务器地址
+	Token  string `json:"token"`   // 加入通话的token
 	Room   string `json:"room"`    // 房间名称
 	RoomID string `json:"room_id"` // 房间id
-}
-
-type GroupCallRequest struct {
-	SenderID string     `json:"sender_id" binding:"required"` // 发起视频通话的用户ID
-	GroupID  string     `json:"group_id" binding:"required"`  // 群组的ID
-	Option   CallOption `json:"option"`
 }
 
 type CallOption struct { // 通话选项
@@ -33,14 +27,16 @@ type CallOption struct { // 通话选项
 }
 
 type UserJoinRequest struct {
-	UserID string     `json:"user_id" binding:"required"` // 用户ID
-	Room   string     `json:"room" binding:"required"`    // 房间名称
+	Room   string     `json:"room" binding:"required"` // 房间名称
 	Option CallOption `json:"option"`
 }
 
 type UserLeaveRequest struct {
-	UserID string `json:"user_id" binding:"required"` // 用户ID
-	Room   string `json:"room" binding:"required"`    // 房间名称
+	Room string `json:"room" binding:"required"` // 房间名称
+}
+
+type UserRejectRequest struct {
+	Room string `json:"room" binding:"required"` // 房间名称
 }
 
 type UserShowRequest struct {
@@ -49,34 +45,34 @@ type UserShowRequest struct {
 }
 
 type UserShowResponse struct {
-	Sid         string           `json:"sid,omitempty"`
-	Identity    string           `json:"identity,omitempty"`
-	State       ParticipantState `json:"state,omitempty"`
-	JoinedAt    int64            `json:"joined_at,omitempty"`
-	Name        string           `json:"name,omitempty"`
-	IsPublisher bool             `json:"is_publisher,omitempty"`
+	StartAt            int64              `json:"start_at"` // 创建房间时间
+	Duration           int64              `json:"duration"` // 房间持续时间
+	Room               string             `json:"room"`     // 房间名称
+	VideoCallStatus    string             `json:"video_call_status,omitempty"`
+	VideoCallRecordURL string             `json:"video_call_record_url,omitempty"`
+	Participant        []*ParticipantInfo `json:"participant"`
 }
 
 type ParticipantInfo struct {
-	Sid         string           `json:"sid,omitempty"`
-	Identity    string           `json:"identity,omitempty"`
-	State       ParticipantState `json:"state,omitempty"`
-	JoinedAt    int64            `json:"joined_at,omitempty"`
+	Sid         string           `json:"sid,omitempty"`       // 房间id
+	Identity    string           `json:"identity,omitempty"`  // 用户昵称
+	State       ParticipantState `json:"state,omitempty"`     // 用户状态
+	JoinedAt    int64            `json:"joined_at,omitempty"` // 加入时间
 	Name        string           `json:"name,omitempty"`
-	IsPublisher bool             `json:"is_publisher,omitempty"`
+	IsPublisher bool             `json:"is_publisher,omitempty"` // 创建者
 }
 
 type ParticipantState int32
 
 const (
 	// ParticipantInfo_JOINING websocket' connected, but not offered yet
-	ParticipantInfo_JOINING ParticipantState = iota
+	ParticipantInfo_JOINING ParticipantState = iota // websocket已连接，未加入通话
 	// ParticipantInfo_JOINED server received client offer
-	ParticipantInfo_JOINED
+	ParticipantInfo_JOINED // 已加入通话，对方未响应
 	// ParticipantInfo_ACTIVE ICE connectivity established
-	ParticipantInfo_ACTIVE
+	ParticipantInfo_ACTIVE // 双方都已加入通话
 	// ParticipantInfo_DISCONNECTED WS disconnected
-	ParticipantInfo_DISCONNECTED
+	ParticipantInfo_DISCONNECTED // 断开连接
 )
 
 //type ParticipantInfo struct {

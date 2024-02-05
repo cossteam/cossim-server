@@ -86,7 +86,7 @@ run_interface:
 
 swag: ## Run unittests
 	$(foreach dir,$(INTERFACE_LIST), \
-		swag i -g http.go -dir interface/$(dir)/server/http,interface/$(dir)/api/model,interface/$(dir)/api/dto,pkg/utils/usersorter --instanceName $(dir); \
+		swag i -g http.go -dir interface/$(dir)/server/http,interface/$(dir)/api/model,interface/live/api/dto,pkg/utils/usersorter --instanceName $(dir); \
 	)
 
 #ifdef ACTION

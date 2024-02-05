@@ -11,7 +11,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "database migration",
-	Long:  `Show how to use database migration`,
+	Long:  `UserShow how to use database migration`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		//运行
 		fmt.Println("加载数据库")

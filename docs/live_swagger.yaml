@@ -17,6 +17,27 @@ definitions:
         description: 是否启用视频
         type: boolean
     type: object
+  dto.ParticipantInfo:
+    properties:
+      identity:
+        description: 用户昵称
+        type: string
+      is_publisher:
+        description: 创建者
+        type: boolean
+      joined_at:
+        description: 加入时间
+        type: integer
+      name:
+        type: string
+      sid:
+        description: 房间id
+        type: string
+      state:
+        allOf:
+        - $ref: '#/definitions/dto.ParticipantState'
+        description: 用户状态
+    type: object
   dto.ParticipantState:
     enum:
     - 0
@@ -24,6 +45,11 @@ definitions:
     - 2
     - 3
     type: integer
+    x-enum-comments:
+      ParticipantInfo_ACTIVE: 双方都已加入通话
+      ParticipantInfo_DISCONNECTED: 断开连接
+      ParticipantInfo_JOINED: 已加入通话，对方未响应
+      ParticipantInfo_JOINING: websocket已连接，未加入通话
     x-enum-varnames:
     - ParticipantInfo_JOINING
     - ParticipantInfo_JOINED
@@ -47,32 +73,66 @@ definitions:
     required:
     - user_id
     type: object
+  dto.UserCallResponse:
+    properties:
+      room:
+        description: 房间名称
+        type: string
+      room_id:
+        description: 房间id
+        type: string
+      token:
+        description: 加入通话的token
+        type: string
+      url:
+        description: webRtc服务器地址
+        type: string
+    type: object
+  dto.UserJoinRequest:
+    properties:
+      option:
+        $ref: '#/definitions/dto.CallOption'
+      room:
+        description: 房间名称
+        type: string
+    required:
+    - room
+    type: object
   dto.UserLeaveRequest:
     properties:
       room:
         description: 房间名称
         type: string
-      user_id:
-        description: 用户ID
+    required:
+    - room
+    type: object
+  dto.UserRejectRequest:
+    properties:
+      room:
+        description: 房间名称
         type: string
     required:
     - room
-    - user_id
     type: object
   dto.UserShowResponse:
     properties:
-      identity:
-        type: string
-      is_publisher:
-        type: boolean
-      joined_at:
+      duration:
+        description: 房间持续时间
         type: integer
-      name:
+      participant:
+        items:
+          $ref: '#/definitions/dto.ParticipantInfo'
+        type: array
+      room:
+        description: 房间名称
         type: string
-      sid:
+      start_at:
+        description: 创建房间时间
+        type: integer
+      video_call_record_url:
         type: string
-      state:
-        $ref: '#/definitions/dto.ParticipantState'
+      video_call_status:
+        type: string
     type: object
 info:
   contact: {}
@@ -99,19 +159,46 @@ paths:
       - application/json
       responses:
         "200":
-          description: url=webRtc服务器地址 token=加入通话的token room_name=房间名称 room_id=房间id
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/dto.Response'
             - properties:
                 data:
-                  additionalProperties:
-                    type: string
-                  type: object
+                  $ref: '#/definitions/dto.UserCallResponse'
               type: object
       security:
       - Bearer: []
       summary: 创建用户通话
+      tags:
+      - liveUser
+  /live/user/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserJoinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - Bearer: []
+      summary: 加入通话
       tags:
       - liveUser
   /live/user/leave:
@@ -143,6 +230,35 @@ paths:
       summary: 结束通话
       tags:
       - liveUser
+  /live/user/reject:
+    post:
+      consumes:
+      - application/json
+      description: 拒绝通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRejectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Response'
+      security:
+      - Bearer: []
+      summary: 拒绝通话
+      tags:
+      - liveUser
   /live/user/show:
     get:
       description: 获取通话房间信息
@@ -150,11 +266,6 @@ paths:
       - description: Bearer JWT
         in: header
         name: Authorization
-        required: true
-        type: string
-      - description: 用户id
-        in: query
-        name: user_id
         required: true
         type: string
       - description: 房间名
@@ -166,8 +277,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: sid=房间id identity=用户id state=用户状态 (0=加入中 1=已加入 2=已连接 3=断开连接
-            ) joined_at=加入时间 name=用户名称 is_publisher=是否是创建者
+          description: participant=通话参与者
           schema:
             allOf:
             - $ref: '#/definitions/dto.Response'

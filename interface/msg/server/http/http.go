@@ -102,7 +102,7 @@ func setupEncryption() {
 	//	}
 	//}
 	//// 保存私钥到文件
-	//privateKeyFile, err := os.Create(cacheDir + "/data.json")
+	//privateKeyFile, err := os.UserCreate(cacheDir + "/data.json")
 	//if err != nil {
 	//	logger.Fatal("Failed to ", zap.Error(err))
 	//}
