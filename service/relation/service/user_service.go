@@ -168,7 +168,7 @@ func (s *Service) AddBlacklist(ctx context.Context, request *v1.AddBlacklistRequ
 	}
 
 	relation1.Status = entity.UserStatusBlocked
-	if _, err = s.urr.UpdateRelation(relation1); err != nil {
+	if err = s.urr.UpdateRelationColumn(relation1.ID, "status", entity.UserStatusBlocked); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrAddBlacklistFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
 

@@ -716,6 +716,15 @@ const docTemplatemsg = `{
                 "type"
             ],
             "properties": {
+                "at_all_user": {
+                    "type": "integer"
+                },
+                "at_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "content": {
                     "type": "string"
                 },

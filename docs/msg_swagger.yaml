@@ -123,6 +123,12 @@ definitions:
     type: object
   model.SendGroupMsgRequest:
     properties:
+      at_all_user:
+        type: integer
+      at_users:
+        items:
+          type: string
+        type: array
       content:
         type: string
       dialog_id:

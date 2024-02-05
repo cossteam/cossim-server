@@ -15,40 +15,6 @@ const docTemplaterelation = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/relation/delete_blacklist": {
-            "post": {
-                "description": "删除黑名单",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "UserRelation"
-                ],
-                "summary": "删除黑名单",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.DeleteBlacklistRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/relation/dialog/show": {
             "post": {
                 "description": "关闭或打开对话(action: 0:关闭对话, 1:打开对话)",
@@ -611,6 +577,40 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.OpenUserBurnAfterReadingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/user/delete_blacklist": {
+            "post": {
+                "description": "删除黑名单",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
+                ],
+                "summary": "删除黑名单",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteBlacklistRequest"
                         }
                     }
                 ],
