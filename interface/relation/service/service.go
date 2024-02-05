@@ -25,6 +25,7 @@ type Service struct {
 	groupRelationClient     relationgrpcv1.GroupRelationServiceClient
 	userRelationClient      relationgrpcv1.UserRelationServiceClient
 	userFriendRequestClient relationgrpcv1.UserFriendRequestServiceClient
+	groupAnnouncementClient relationgrpcv1.GroupAnnouncementServiceClient
 	groupJoinRequestClient  relationgrpcv1.GroupJoinRequestServiceClient
 	userClient              user.UserServiceClient
 	groupClient             groupgrpcv1.GroupServiceClient
@@ -54,8 +55,7 @@ func New() *Service {
 		rabbitMQClient: rabbitMQClient,
 		logger:         logger,
 		conf:           config.Conf,
-
-		sid: xid.New().String(),
+		sid:            xid.New().String(),
 
 		dtmGrpcServer: config.Conf.Dtm.Addr(),
 		//relationGrpcServer: c.Discovers["relation"].Addr(),
@@ -156,6 +156,9 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 
 		s.groupRelationClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
+
+		s.groupAnnouncementClient = relationgrpcv1.NewGroupAnnouncementServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupAnnouncementRelation"), zap.String("addr", conn.Target()))
 
 		s.dialogClient = relationgrpcv1.NewDialogServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))

@@ -134,7 +134,7 @@ type SetGroupSilentNotificationRequest struct {
 
 type SetUserSilentNotificationRequest struct {
 	UserId   string                 `json:"user_id" binding:"required"` // 用户ID
-	IsSilent SilentNotificationType `json:"is_silent" `                 // 是否开启静默通知
+	IsSilent SilentNotificationType `json:"is_silent"`                  // 是否开启静默通知
 }
 
 type SilentNotificationType uint
@@ -220,4 +220,22 @@ type OpenGroupBurnAfterReadingRequest struct {
 
 func IsValidOpenBurnAfterReadingType(input OpenBurnAfterReadingType) bool {
 	return input == Close || input == Open
+}
+
+type CreateGroupAnnouncementRequest struct {
+	GroupId uint32 `json:"group_id" binding:"required"` // 群组ID
+	Title   string `json:"title" binding:"required"`    // 公告标题
+	Content string `json:"content" binding:"required"`  // 公告内容
+}
+
+type DeleteGroupAnnouncementRequest struct {
+	Id      uint32 `json:"id" binding:"required"`       // 公告ID
+	GroupId uint32 `json:"group_id" binding:"required"` // 群组ID
+}
+
+type UpdateGroupAnnouncementRequest struct {
+	Id      uint32 `json:"id" binding:"required"`       // 公告ID
+	GroupId uint32 `json:"group_id" binding:"required"` // 群组ID
+	Title   string `json:"title" binding:"required"`    // 公告标题
+	Content string `json:"content" binding:"required"`  // 公告内容
 }

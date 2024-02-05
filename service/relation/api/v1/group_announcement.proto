@@ -1,0 +1,99 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
+
+service GroupAnnouncementService {
+  rpc CreateGroupAnnouncement(CreateGroupAnnouncementRequest) returns (CreateGroupAnnouncementResponse) {}
+  rpc GetGroupAnnouncementList(GetGroupAnnouncementListRequest) returns (GetGroupAnnouncementListResponse) {}
+  rpc GetGroupAnnouncement(GetGroupAnnouncementRequest) returns (GetGroupAnnouncementResponse) {}
+  rpc UpdateGroupAnnouncement(UpdateGroupAnnouncementRequest) returns (UpdateGroupAnnouncementResponse) {}
+  rpc DeleteGroupAnnouncement(DeleteGroupAnnouncementRequest) returns (DeleteGroupAnnouncementResponse) {}
+}
+
+// 创建群公告请求
+message CreateGroupAnnouncementRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+  // @inject_tag: json:"title"
+  string Title = 2;
+  // @inject_tag: json:"content"
+  string Content = 3;
+  // @inject_tag: json:"user_id"
+  string UserId = 4;
+}
+
+// 创建群公告响应
+message CreateGroupAnnouncementResponse {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+// 获取群公告列表请求
+message GetGroupAnnouncementListRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+}
+
+// 获取群公告列表响应
+message GetGroupAnnouncementListResponse {
+  // @inject_tag: json:"announcement_list"
+  repeated GroupAnnouncementInfo AnnouncementList = 1;
+}
+
+// 获取群公告请求
+message GetGroupAnnouncementRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+// 获取群公告响应
+message GetGroupAnnouncementResponse {
+  // @inject_tag: json:"announcement_info"
+  GroupAnnouncementInfo AnnouncementInfo = 1;
+}
+
+// 更新群公告请求
+message UpdateGroupAnnouncementRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"title"
+  string Title = 2;
+  // @inject_tag: json:"content"
+  string Content = 3;
+}
+
+// 更新群公告响应
+message UpdateGroupAnnouncementResponse {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+// 删除群公告请求
+message DeleteGroupAnnouncementRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+// 删除群公告响应
+message DeleteGroupAnnouncementResponse {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+// 群公告信息
+message GroupAnnouncementInfo {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"title"
+  string Title = 3;
+  // @inject_tag: json:"content"
+  string Content = 4;
+  // @inject_tag: json:"created_at"
+  int64 CreatedAt = 5;
+  // @inject_tag: json:"updated_at"
+  int64 UpdatedAt = 6;
+  // @inject_tag: json:"user_id"
+  string UserId = 7;
+}
