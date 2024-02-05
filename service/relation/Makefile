@@ -50,7 +50,13 @@ install: ## Install depence go package
 	@go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	@go install github.com/favadi/protoc-go-inject-tag@latest
 
+SUBDIRNAME := $(shell find api/v1/ -type d -exec basename {} \; | awk "!/v1\// {print}")
+
 gen: ## generate protobuf file
+#	$(foreach dir,$(SUBDIRNAME), \
+#		protoc -I=./api/v1/$(dir)/ --go_out=plugins=grpc,paths=source_relative:. --go-grpc_out=plugins=grpc,paths=source_relative:. api/v1/$(dir)/*.proto; \
+#        protoc-go-inject-tag -input=api/v1/$(dir)/*.pb.go; \
+#	)
 	@protoc -I=. --go_out=. --go_opt=module=${PKG} --go-grpc_out=. --go-grpc_opt=module=${PKG} api/v1/*.proto
 	@go fmt ./...
 	@protoc-go-inject-tag -input=api/v1/*.pb.go

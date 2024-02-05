@@ -200,3 +200,24 @@ const (
 	IdentityAdmin                              //管理员
 	IdentityOwner                              //群主
 )
+
+type OpenUserBurnAfterReadingRequest struct {
+	UserId string                   `json:"user_id" binding:"required"` // 用户ID
+	Action OpenBurnAfterReadingType `json:"action"`
+}
+
+type OpenBurnAfterReadingType uint
+
+const (
+	Close = iota
+	Open
+)
+
+type OpenGroupBurnAfterReadingRequest struct {
+	GroupId uint32                   `json:"group_id" binding:"required"` // 群组ID
+	Action  OpenBurnAfterReadingType `json:"action"`
+}
+
+func IsValidOpenBurnAfterReadingType(input OpenBurnAfterReadingType) bool {
+	return input == Close || input == Open
+}

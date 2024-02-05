@@ -22,13 +22,13 @@ const (
 	MsgService_SendUserMessage_FullMethodName               = "/v1.MsgService/SendUserMessage"
 	MsgService_SendGroupMessage_FullMethodName              = "/v1.MsgService/SendGroupMessage"
 	MsgService_GetUserMessageList_FullMethodName            = "/v1.MsgService/GetUserMessageList"
-	MsgService_GetGroupMessageList_FullMethodName           = "/v1.MsgService/GetGroupMessageList"
 	MsgService_GetLastMsgsForUserWithFriends_FullMethodName = "/v1.MsgService/GetLastMsgsForUserWithFriends"
 	MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName   = "/v1.MsgService/GetLastMsgsForGroupsWithIDs"
 	MsgService_GetLastMsgsByDialogIds_FullMethodName        = "/v1.MsgService/GetLastMsgsByDialogIds"
 	MsgService_EditUserMessage_FullMethodName               = "/v1.MsgService/EditUserMessage"
 	MsgService_DeleteUserMessage_FullMethodName             = "/v1.MsgService/DeleteUserMessage"
 	MsgService_GetUserMsgIdAfterMsgList_FullMethodName      = "/v1.MsgService/GetUserMsgIdAfterMsgList"
+	MsgService_GetGroupMessageList_FullMethodName           = "/v1.MsgService/GetGroupMessageList"
 	MsgService_EditGroupMessage_FullMethodName              = "/v1.MsgService/EditGroupMessage"
 	MsgService_DeleteGroupMessage_FullMethodName            = "/v1.MsgService/DeleteGroupMessage"
 	MsgService_GetUserMessageById_FullMethodName            = "/v1.MsgService/GetUserMessageById"
@@ -53,8 +53,6 @@ type MsgServiceClient interface {
 	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
 	// 获取用户消息列表
 	GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error)
-	// 获取群消息列表
-	GetGroupMessageList(ctx context.Context, in *GetGroupMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgListResponse, error)
 	// 根据好友id获取最后一条消息
 	GetLastMsgsForUserWithFriends(ctx context.Context, in *UserMsgsRequest, opts ...grpc.CallOption) (*UserMessages, error)
 	// 根据群组id获取最后一条消息
@@ -67,6 +65,8 @@ type MsgServiceClient interface {
 	DeleteUserMessage(ctx context.Context, in *DeleteUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error)
 	// 根据对话id与msgId查询msgId之后的私聊消息
 	GetUserMsgIdAfterMsgList(ctx context.Context, in *GetUserMsgIdAfterMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgIdAfterMsgListResponse, error)
+	// 获取群消息列表
+	GetGroupMessageList(ctx context.Context, in *GetGroupMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgListResponse, error)
 	// 编辑群消息
 	EditGroupMessage(ctx context.Context, in *EditGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error)
 	// 撤回群消息
@@ -128,15 +128,6 @@ func (c *msgServiceClient) GetUserMessageList(ctx context.Context, in *GetUserMs
 	return out, nil
 }
 
-func (c *msgServiceClient) GetGroupMessageList(ctx context.Context, in *GetGroupMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgListResponse, error) {
-	out := new(GetGroupMsgListResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupMessageList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgServiceClient) GetLastMsgsForUserWithFriends(ctx context.Context, in *UserMsgsRequest, opts ...grpc.CallOption) (*UserMessages, error) {
 	out := new(UserMessages)
 	err := c.cc.Invoke(ctx, MsgService_GetLastMsgsForUserWithFriends_FullMethodName, in, out, opts...)
@@ -185,6 +176,15 @@ func (c *msgServiceClient) DeleteUserMessage(ctx context.Context, in *DeleteUser
 func (c *msgServiceClient) GetUserMsgIdAfterMsgList(ctx context.Context, in *GetUserMsgIdAfterMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgIdAfterMsgListResponse, error) {
 	out := new(GetUserMsgIdAfterMsgListResponse)
 	err := c.cc.Invoke(ctx, MsgService_GetUserMsgIdAfterMsgList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) GetGroupMessageList(ctx context.Context, in *GetGroupMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgListResponse, error) {
+	out := new(GetGroupMsgListResponse)
+	err := c.cc.Invoke(ctx, MsgService_GetGroupMessageList_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +309,6 @@ type MsgServiceServer interface {
 	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
 	// 获取用户消息列表
 	GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error)
-	// 获取群消息列表
-	GetGroupMessageList(context.Context, *GetGroupMsgListRequest) (*GetGroupMsgListResponse, error)
 	// 根据好友id获取最后一条消息
 	GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error)
 	// 根据群组id获取最后一条消息
@@ -323,6 +321,8 @@ type MsgServiceServer interface {
 	DeleteUserMessage(context.Context, *DeleteUserMsgRequest) (*UserMessage, error)
 	// 根据对话id与msgId查询msgId之后的私聊消息
 	GetUserMsgIdAfterMsgList(context.Context, *GetUserMsgIdAfterMsgListRequest) (*GetUserMsgIdAfterMsgListResponse, error)
+	// 获取群消息列表
+	GetGroupMessageList(context.Context, *GetGroupMsgListRequest) (*GetGroupMsgListResponse, error)
 	// 编辑群消息
 	EditGroupMessage(context.Context, *EditGroupMsgRequest) (*GroupMessage, error)
 	// 撤回群消息
@@ -363,9 +363,6 @@ func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendGrou
 func (UnimplementedMsgServiceServer) GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessageList not implemented")
 }
-func (UnimplementedMsgServiceServer) GetGroupMessageList(context.Context, *GetGroupMsgListRequest) (*GetGroupMsgListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessageList not implemented")
-}
 func (UnimplementedMsgServiceServer) GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsForUserWithFriends not implemented")
 }
@@ -383,6 +380,9 @@ func (UnimplementedMsgServiceServer) DeleteUserMessage(context.Context, *DeleteU
 }
 func (UnimplementedMsgServiceServer) GetUserMsgIdAfterMsgList(context.Context, *GetUserMsgIdAfterMsgListRequest) (*GetUserMsgIdAfterMsgListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserMsgIdAfterMsgList not implemented")
+}
+func (UnimplementedMsgServiceServer) GetGroupMessageList(context.Context, *GetGroupMsgListRequest) (*GetGroupMsgListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessageList not implemented")
 }
 func (UnimplementedMsgServiceServer) EditGroupMessage(context.Context, *EditGroupMsgRequest) (*GroupMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EditGroupMessage not implemented")
@@ -483,24 +483,6 @@ func _MsgService_GetUserMessageList_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServiceServer).GetUserMessageList(ctx, req.(*GetUserMsgListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupMsgListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupMessageList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupMessageList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupMessageList(ctx, req.(*GetGroupMsgListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -609,6 +591,24 @@ func _MsgService_GetUserMsgIdAfterMsgList_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServiceServer).GetUserMsgIdAfterMsgList(ctx, req.(*GetUserMsgIdAfterMsgListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_GetGroupMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupMsgListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetGroupMessageList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetGroupMessageList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetGroupMessageList(ctx, req.(*GetGroupMsgListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -849,10 +849,6 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MsgService_GetUserMessageList_Handler,
 		},
 		{
-			MethodName: "GetGroupMessageList",
-			Handler:    _MsgService_GetGroupMessageList_Handler,
-		},
-		{
 			MethodName: "GetLastMsgsForUserWithFriends",
 			Handler:    _MsgService_GetLastMsgsForUserWithFriends_Handler,
 		},
@@ -875,6 +871,10 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserMsgIdAfterMsgList",
 			Handler:    _MsgService_GetUserMsgIdAfterMsgList_Handler,
+		},
+		{
+			MethodName: "GetGroupMessageList",
+			Handler:    _MsgService_GetGroupMessageList_Handler,
 		},
 		{
 			MethodName: "EditGroupMessage",

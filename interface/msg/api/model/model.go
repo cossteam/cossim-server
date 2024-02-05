@@ -21,7 +21,20 @@ type SendGroupMsgRequest struct {
 	Content                string               `json:"content" binding:"required"`
 	Type                   uint32               `json:"type" binding:"required"`
 	ReplayId               uint32               `json:"replay_id"`
+	AtUsers                []string             `json:"at_users"`
+	AtAllUser              AtAllUserType        `json:"at_all_user"`
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
+}
+
+type AtAllUserType uint
+
+const (
+	NotAtAllUser = iota
+	AtAllUser
+)
+
+func isValidAtAllUserType(atAllUserType AtAllUserType) bool {
+	return atAllUserType == NotAtAllUser || atAllUserType == AtAllUser
 }
 
 type MsgListRequest struct {

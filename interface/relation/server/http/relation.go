@@ -731,3 +731,74 @@ func topOrCancelTopDialog(c *gin.Context) {
 
 	response.SetSuccess(c, "操作成功", gin.H{"dialog_id": req.DialogId})
 }
+
+// @Summary 是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)
+// @Description 是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)
+// @Tags UserRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.OpenUserBurnAfterReadingRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/user/burn/open [post]
+func openUserBurnAfterReading(c *gin.Context) {
+	req := new(model.OpenUserBurnAfterReadingRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if !model.IsValidOpenBurnAfterReadingType(req.Action) {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	_, err = svc.SetUserBurnAfterReading(c, thisId, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "操作成功", nil)
+}
+
+// @Summary 是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)
+// @Description 是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.OpenGroupBurnAfterReadingRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/burn/open [post]
+func openGroupBurnAfterReading(c *gin.Context) {
+	req := new(model.OpenGroupBurnAfterReadingRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	if !model.IsValidOpenBurnAfterReadingType(req.Action) {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	_, err = svc.SetGroupBurnAfterReading(c, thisId, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "操作成功", nil)
+}

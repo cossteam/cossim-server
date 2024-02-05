@@ -16,8 +16,17 @@ type GroupMessage struct {
 	Content            string               `gorm:"longtext;comment:详细消息" json:"content"`
 	IsLabel            uint                 `gorm:"default:0;comment:是否标注" json:"is_label"`
 	ReplyEmoji         string               `gorm:"comment:回复时使用的 Emoji" json:"reply_emoji"`
+	AtAllUser          AtAllUserType        `gorm:"default:0;comment:是否at全体用户" json:"at_all_users"`
+	AtUsers            []string             `gorm:"type:json;comment:at的用户" json:"at_users"`
 	IsBurnAfterReading BurnAfterReadingType `gorm:"default:0;comment:是否阅后即焚消息" json:"is_burn_after_reading"`
 }
+
+type AtAllUserType uint
+
+const (
+	NotAtAllUser = iota
+	AtAllUser
+)
 
 type BaseModel struct {
 	ID        uint  `gorm:"primaryKey;autoIncrement;" json:"id"`

@@ -31,7 +31,7 @@ func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg stri
 	return content, nil
 }
 
-func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.GroupMessage, error) {
+func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType, atUsers []string, atAlluser entity.AtAllUserType) (*entity.GroupMessage, error) {
 	content := &entity.GroupMessage{
 		UserID:             uid,
 		GroupID:            groupId,
@@ -40,6 +40,8 @@ func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgTy
 		ReplyId:            replyId,
 		DialogId:           dialogId,
 		IsBurnAfterReading: isBurnAfterReading,
+		AtUsers:            atUsers,
+		AtAllUser:          atAlluser,
 	}
 	if err := g.db.Save(content).Error; err != nil {
 		return nil, err

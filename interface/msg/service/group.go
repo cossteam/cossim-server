@@ -130,6 +130,8 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		Content:                req.Content,
 		Type:                   req.Type,
 		ReplayId:               req.ReplayId,
+		AtUsers:                req.AtUsers,
+		AtAllUser:              msggrpcv1.AtAllUserType(req.AtAllUser),
 		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
 	})
 	// 发送成功进行消息推送
@@ -151,6 +153,8 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		ReplayId:           uint(req.ReplayId),
 		SendAt:             pkgtime.Now(),
 		DialogId:           req.DialogId,
+		AtUsers:            req.AtUsers,
+		AtAllUser:          req.AtAllUser,
 		IsBurnAfterReading: req.IsBurnAfterReadingType,
 	})
 

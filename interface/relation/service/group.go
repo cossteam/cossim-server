@@ -172,6 +172,34 @@ func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, ui
 	return nil, nil
 }
 
+func (s *Service) SetGroupBurnAfterReading(ctx context.Context, userId string, req *model.OpenGroupBurnAfterReadingRequest) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		UserId:  userId,
+		GroupId: req.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.groupRelationClient.SetGroupOpenBurnAfterReading(ctx, &relationgrpcv1.SetGroupOpenBurnAfterReadingRequest{
+		UserId:               userId,
+		GroupId:              req.GroupId,
+		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
+	})
+	if err != nil {
+		s.logger.Error("设置群聊消息阅后即焚失败", zap.Error(err))
+		return nil, err
+	}
+	return nil, nil
+}
+
 func (s *Service) GroupRequestList(ctx context.Context, userID string) (interface{}, error) {
 	reqList, err := s.groupJoinRequestClient.GetGroupJoinRequestListByUserId(ctx, &relationgrpcv1.GetGroupJoinRequestListRequest{UserId: userID})
 	if err != nil {
