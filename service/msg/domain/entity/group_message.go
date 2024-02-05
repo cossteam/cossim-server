@@ -17,9 +17,11 @@ type GroupMessage struct {
 	IsLabel            uint                 `gorm:"default:0;comment:是否标注" json:"is_label"`
 	ReplyEmoji         string               `gorm:"comment:回复时使用的 Emoji" json:"reply_emoji"`
 	AtAllUser          AtAllUserType        `gorm:"default:0;comment:是否at全体用户" json:"at_all_users"`
-	AtUsers            []string             `gorm:"type:json;comment:at的用户" json:"at_users"`
+	AtUsers            AtUsers              `gorm:"serializer:json;comment:at的用户" json:"at_users"`
 	IsBurnAfterReading BurnAfterReadingType `gorm:"default:0;comment:是否阅后即焚消息" json:"is_burn_after_reading"`
 }
+
+type AtUsers []string
 
 type AtAllUserType uint
 
