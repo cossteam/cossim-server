@@ -302,28 +302,6 @@ info:
   contact: {}
   title: coss-relation-bff服务
 paths:
-  /relation/delete_blacklist:
-    post:
-      consumes:
-      - application/json
-      description: 删除黑名单
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.DeleteBlacklistRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: 删除黑名单
-      tags:
-      - UserRelation
   /relation/dialog/show:
     post:
       consumes:
@@ -688,6 +666,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: '是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)'
+      tags:
+      - UserRelation
+  /relation/user/delete_blacklist:
+    post:
+      consumes:
+      - application/json
+      description: 删除黑名单
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 删除黑名单
       tags:
       - UserRelation
   /relation/user/delete_friend:

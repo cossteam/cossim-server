@@ -112,7 +112,7 @@ func userRequestList(c *gin.Context) {
 // @Produce  json
 // @param request body model.DeleteBlacklistRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/delete_blacklist [post]
+// @Router /relation/user/delete_blacklist [post]
 func deleteBlacklist(c *gin.Context) {
 	req := new(model.DeleteBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
