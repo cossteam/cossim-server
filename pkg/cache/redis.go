@@ -27,6 +27,7 @@ func SetHMapKey(client *redis.Client, key string, data map[string]string) error 
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -173,4 +174,19 @@ func DelKey(client *redis.Client, key string) error {
 		return err
 	}
 	return nil
+}
+
+// UpdateKeyExpiration 更新键的过期时间
+func UpdateKeyExpiration(client *redis.Client, key string, expiration time.Duration) error {
+	remaining, err := client.TTL(context.Background(), key).Result()
+	if err != nil {
+		return err
+	}
+	fmt.Println("remaining => ", remaining)
+	// 如果键不存在或已过期，返回错误
+	if remaining < 0 && remaining != -1 {
+		return fmt.Errorf("key does not exist or has expired")
+	}
+	// 使用 EXPIRE 命令更新键的过期时间
+	return client.Expire(context.Background(), key, expiration).Err()
 }

@@ -130,7 +130,7 @@ var (
 	LiveErrUpdateCallStatusFailed   = New(16010, "更新通话状态失败")
 	LiveErrCallNotFound             = New(16011, "通话不存在")
 	LiveErrInvalidCallStatus        = New(16012, "无效的通话状态")
-	LiveErrUserAlreadyInCall        = New(16013, "用户已经在通话中")
+	LiveErrAlreadyInCall            = New(16013, "通话中")
 	LiveErrUserNotInCall            = New(16014, "用户不在通话中")
 	LiveErrGroupCallNotSupported    = New(16015, "群聊不支持通话")
 	LiveErrMaxParticipantsExceeded  = New(16016, "超过通话最大参与人数")

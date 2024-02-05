@@ -53,7 +53,7 @@ const docTemplatelive = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "url=webRtc服务器地址 token=加入通话的token room_name=房间名称 room_id=房间id",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -63,14 +63,57 @@ const docTemplatelive = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/dto.UserCallResponse"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/live/user/join": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "加入通话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "liveUser"
+                ],
+                "summary": "加入通话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserJoinRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
                         }
                     }
                 }
@@ -122,6 +165,52 @@ const docTemplatelive = `{
                 }
             }
         },
+        "/live/user/reject": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "拒绝通话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "liveUser"
+                ],
+                "summary": "拒绝通话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserRejectRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/live/user/show": {
             "get": {
                 "security": [
@@ -147,13 +236,6 @@ const docTemplatelive = `{
                     },
                     {
                         "type": "string",
-                        "description": "用户id",
-                        "name": "user_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "房间名",
                         "name": "room",
                         "in": "query",
@@ -162,7 +244,7 @@ const docTemplatelive = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "sid=房间id identity=用户id state=用户状态 (0=加入中 1=已加入 2=已连接 3=断开连接 ) joined_at=加入时间 name=用户名称 is_publisher=是否是创建者",
+                        "description": "participant=通话参与者",
                         "schema": {
                             "allOf": [
                                 {
@@ -209,6 +291,38 @@ const docTemplatelive = `{
                 }
             }
         },
+        "dto.ParticipantInfo": {
+            "type": "object",
+            "properties": {
+                "identity": {
+                    "description": "用户昵称",
+                    "type": "string"
+                },
+                "is_publisher": {
+                    "description": "创建者",
+                    "type": "boolean"
+                },
+                "joined_at": {
+                    "description": "加入时间",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sid": {
+                    "description": "房间id",
+                    "type": "string"
+                },
+                "state": {
+                    "description": "用户状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ParticipantState"
+                        }
+                    ]
+                }
+            }
+        },
         "dto.ParticipantState": {
             "type": "integer",
             "enum": [
@@ -217,6 +331,12 @@ const docTemplatelive = `{
                 2,
                 3
             ],
+            "x-enum-comments": {
+                "ParticipantInfo_ACTIVE": "双方都已加入通话",
+                "ParticipantInfo_DISCONNECTED": "断开连接",
+                "ParticipantInfo_JOINED": "已加入通话，对方未响应",
+                "ParticipantInfo_JOINING": "websocket已连接，未加入通话"
+            },
             "x-enum-varnames": [
                 "ParticipantInfo_JOINING",
                 "ParticipantInfo_JOINED",
@@ -251,19 +371,62 @@ const docTemplatelive = `{
                 }
             }
         },
-        "dto.UserLeaveRequest": {
+        "dto.UserCallResponse": {
             "type": "object",
-            "required": [
-                "room",
-                "user_id"
-            ],
             "properties": {
                 "room": {
                     "description": "房间名称",
                     "type": "string"
                 },
-                "user_id": {
-                    "description": "用户ID",
+                "room_id": {
+                    "description": "房间id",
+                    "type": "string"
+                },
+                "token": {
+                    "description": "加入通话的token",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "webRtc服务器地址",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserJoinRequest": {
+            "type": "object",
+            "required": [
+                "room"
+            ],
+            "properties": {
+                "option": {
+                    "$ref": "#/definitions/dto.CallOption"
+                },
+                "room": {
+                    "description": "房间名称",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserLeaveRequest": {
+            "type": "object",
+            "required": [
+                "room"
+            ],
+            "properties": {
+                "room": {
+                    "description": "房间名称",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserRejectRequest": {
+            "type": "object",
+            "required": [
+                "room"
+            ],
+            "properties": {
+                "room": {
+                    "description": "房间名称",
                     "type": "string"
                 }
             }
@@ -271,23 +434,29 @@ const docTemplatelive = `{
         "dto.UserShowResponse": {
             "type": "object",
             "properties": {
-                "identity": {
-                    "type": "string"
-                },
-                "is_publisher": {
-                    "type": "boolean"
-                },
-                "joined_at": {
+                "duration": {
+                    "description": "房间持续时间",
                     "type": "integer"
                 },
-                "name": {
+                "participant": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ParticipantInfo"
+                    }
+                },
+                "room": {
+                    "description": "房间名称",
                     "type": "string"
                 },
-                "sid": {
+                "start_at": {
+                    "description": "创建房间时间",
+                    "type": "integer"
+                },
+                "video_call_record_url": {
                     "type": "string"
                 },
-                "state": {
-                    "$ref": "#/definitions/dto.ParticipantState"
+                "video_call_status": {
+                    "type": "string"
                 }
             }
         }

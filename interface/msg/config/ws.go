@@ -39,10 +39,14 @@ const (
 	//发送静默群聊消息
 	SendSilentGroupMessageEvent
 
-	// 用户通话事件
-	UserCallEvent
-	// 群聊通话事件
-	GroupCallEvent
+	// 用户通话呼叫请求事件
+	UserCallReqEvent
+	// 群聊通话呼叫请求事件
+	GroupCallReqEvent
+	// 用户通话呼叫拒绝事件
+	UserCallRejectEvent
+	// 群聊通话呼叫拒绝事件
+	GroupCallRejectEvent
 )
 
 type WsMsg struct {

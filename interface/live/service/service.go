@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
 	lksdk "github.com/livekit/server-sdk-go"
@@ -20,12 +21,19 @@ import (
 	"time"
 )
 
+const (
+	liveUserPrefix  = "liveUser:"
+	liveGroupPrefix = "liveGroup:"
+)
+
 type Service struct {
-	userClient    user.UserServiceClient
-	relUserClient relationgrpcv1.UserRelationServiceClient
-	roomService   *lksdk.RoomServiceClient
-	mqClient      *msg_queue.RabbitMQ
-	redisClient   *redis.Client
+	userClient     user.UserServiceClient
+	relUserClient  relationgrpcv1.UserRelationServiceClient
+	relGroupClient relationgrpcv1.GroupRelationServiceClient
+	groupClient    groupgrpcv1.GroupServiceClient
+	roomService    *lksdk.RoomServiceClient
+	mqClient       *msg_queue.RabbitMQ
+	redisClient    *redis.Client
 
 	livekitServer string
 	liveApiKey    string
