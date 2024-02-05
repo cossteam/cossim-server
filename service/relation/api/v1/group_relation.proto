@@ -71,8 +71,20 @@ message GetGroupRelationResponse {
   int64 MuteEndTime = 7; //禁言结束时间
   // @inject_tag: json:"is_silent"
   GroupSilentNotificationType IsSilent = 8; //是否静默通知
+  // @inject_tag: json:"inviter"
+  string Inviter = 9; //邀请人
+  // @inject_tag: json:"group_nickname"
+  string GroupNickname = 10; //群聊昵称
+  // @inject_tag: json:"remark"
+  string Remark = 11; //群聊备注
+  // @inject_tag: json:"open_burn_after_reading"
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 12;
 }
 
+enum OpenBurnAfterReadingType {
+  CLOSE_BURN_AFTER_READING = 0; // 关闭
+  OPEN_BURN_AFTER_READING = 1; // 开启
+}
 // 添加 GroupIdentity 枚举定义
 enum GroupIdentity {
   IDENTITY_USER = 0;  // 普通用户
@@ -202,6 +214,15 @@ message RemoveGroupRelationByGroupIdAndUserIDsRequest{
   repeated string UserIDs = 2;
 }
 
+message SetGroupOpenBurnAfterReadingRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"open_burn_after_reading"
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 3;
+}
+
 
 service GroupRelationService {
 
@@ -259,4 +280,7 @@ service GroupRelationService {
 
   //移除多个用户
   rpc RemoveGroupRelationByGroupIdAndUserIDs(RemoveGroupRelationByGroupIdAndUserIDsRequest) returns (google.protobuf.Empty);
+
+  // 设置阅后即焚开关
+  rpc SetGroupOpenBurnAfterReading(SetGroupOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
 }

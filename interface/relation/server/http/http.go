@@ -155,6 +155,7 @@ func route(engine *gin.Engine) {
 	u.POST("/switch/e2e/key", switchUserE2EPublicKey)
 	//设置用户静默通知
 	u.POST("/silent", setUserSilentNotification)
+	u.POST("/burn/open", openUserBurnAfterReading)
 
 	g := api.Group("/group")
 	g.GET("/member", getGroupMember)
@@ -171,6 +172,7 @@ func route(engine *gin.Engine) {
 	g.POST("quit", quitGroup)
 	//群聊设置消息静默
 	g.POST("/silent", setGroupSilentNotification)
+	g.POST("/burn/open", openGroupBurnAfterReading)
 
 	gg := api.Group("/group/admin")
 	// 管理员管理群聊申请

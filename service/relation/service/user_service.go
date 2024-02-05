@@ -256,27 +256,11 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	resp.UserId = relation.UserID
 	resp.FriendId = relation.FriendID
 	resp.IsSilent = v1.UserSilentNotificationType(relation.SilentNotification)
+	resp.OpenBurnAfterReading = v1.OpenBurnAfterReadingType(relation.OpenBurnAfterReading)
+	resp.Remark = relation.Remark
+	resp.IsSilent = v1.UserSilentNotificationType(relation.SilentNotification)
 	return resp, nil
 }
-
-//func (s *Service) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
-//	resp := &v1.GetFriendRequestListResponse{}
-//
-//	friends, err := s.urr.GetFriendRequestListByUserID(request.UserId)
-//	if err != nil {
-//		return resp, status.Error(codes.Code(code.RelationGroupErrGetJoinRequestListFailed.Code()), err.Error())
-//	}
-//
-//	for _, friend := range friends {
-//		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
-//			UserId: friend.FriendID,
-//			Msg:    friend.Remark,
-//			Status: v1.FriendRequestStatus(friend.Status),
-//		})
-//	}
-//
-//	return resp, nil
-//}
 
 func (s *Service) GetUserRelationByUserIds(ctx context.Context, request *v1.GetUserRelationByUserIdsRequest) (*v1.GetUserRelationByUserIdsResponse, error) {
 	resp := &v1.GetUserRelationByUserIdsResponse{}
@@ -301,6 +285,14 @@ func (s *Service) SetFriendSilentNotification(ctx context.Context, request *v1.S
 	var resp = &emptypb.Empty{}
 	if err := s.urr.SetUserFriendSilentNotification(request.UserId, request.FriendId, entity.SilentNotification(request.IsSilent)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserFriendSilentNotificationFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) SetUserOpenBurnAfterReading(ctx context.Context, in *v1.SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	if err := s.urr.SetUserOpenBurnAfterReading(in.UserId, in.FriendId, entity.OpenBurnAfterReadingType(in.OpenBurnAfterReading)); err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingFailed.Code()), err.Error())
 	}
 	return resp, nil
 }

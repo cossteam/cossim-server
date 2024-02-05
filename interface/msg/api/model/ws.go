@@ -21,5 +21,7 @@ type WsGroupMsg struct {
 	ReplayId           uint                 `json:"reply_id"`
 	SendAt             int64                `json:"send_at"`
 	DialogId           uint32               `json:"dialog_id"`
+	AtUsers            []string             `json:"at_users"`
+	AtAllUser          AtAllUserType        `json:"at_all_users"`
 	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`
 }

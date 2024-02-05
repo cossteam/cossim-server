@@ -38,6 +38,7 @@ const (
 	GroupRelationService_CreateGroupAndInviteUsersRevert_FullMethodName             = "/v1.GroupRelationService/CreateGroupAndInviteUsersRevert"
 	GroupRelationService_SetGroupSilentNotification_FullMethodName                  = "/v1.GroupRelationService/SetGroupSilentNotification"
 	GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_FullMethodName      = "/v1.GroupRelationService/RemoveGroupRelationByGroupIdAndUserIDs"
+	GroupRelationService_SetGroupOpenBurnAfterReading_FullMethodName                = "/v1.GroupRelationService/SetGroupOpenBurnAfterReading"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -80,6 +81,8 @@ type GroupRelationServiceClient interface {
 	SetGroupSilentNotification(ctx context.Context, in *SetGroupSilentNotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 移除多个用户
 	RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in *RemoveGroupRelationByGroupIdAndUserIDsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 设置阅后即焚开关
+	SetGroupOpenBurnAfterReading(ctx context.Context, in *SetGroupOpenBurnAfterReadingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type groupRelationServiceClient struct {
@@ -252,6 +255,15 @@ func (c *groupRelationServiceClient) RemoveGroupRelationByGroupIdAndUserIDs(ctx 
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) SetGroupOpenBurnAfterReading(ctx context.Context, in *SetGroupOpenBurnAfterReadingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_SetGroupOpenBurnAfterReading_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupRelationServiceServer is the server API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
@@ -292,6 +304,8 @@ type GroupRelationServiceServer interface {
 	SetGroupSilentNotification(context.Context, *SetGroupSilentNotificationRequest) (*emptypb.Empty, error)
 	// 移除多个用户
 	RemoveGroupRelationByGroupIdAndUserIDs(context.Context, *RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error)
+	// 设置阅后即焚开关
+	SetGroupOpenBurnAfterReading(context.Context, *SetGroupOpenBurnAfterReadingRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -352,6 +366,9 @@ func (UnimplementedGroupRelationServiceServer) SetGroupSilentNotification(contex
 }
 func (UnimplementedGroupRelationServiceServer) RemoveGroupRelationByGroupIdAndUserIDs(context.Context, *RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveGroupRelationByGroupIdAndUserIDs not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) SetGroupOpenBurnAfterReading(context.Context, *SetGroupOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetGroupOpenBurnAfterReading not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
 
@@ -690,6 +707,24 @@ func _GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_Handler(srv in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_SetGroupOpenBurnAfterReading_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetGroupOpenBurnAfterReadingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).SetGroupOpenBurnAfterReading(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_SetGroupOpenBurnAfterReading_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).SetGroupOpenBurnAfterReading(ctx, req.(*SetGroupOpenBurnAfterReadingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -768,6 +803,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveGroupRelationByGroupIdAndUserIDs",
 			Handler:    _GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_Handler,
+		},
+		{
+			MethodName: "SetGroupOpenBurnAfterReading",
+			Handler:    _GroupRelationService_SetGroupOpenBurnAfterReading_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -32,6 +32,7 @@ const (
 	UserRelationService_GetUserRelation_FullMethodName             = "/v1.UserRelationService/GetUserRelation"
 	UserRelationService_GetUserRelationByUserIds_FullMethodName    = "/v1.UserRelationService/GetUserRelationByUserIds"
 	UserRelationService_SetFriendSilentNotification_FullMethodName = "/v1.UserRelationService/SetFriendSilentNotification"
+	UserRelationService_SetUserOpenBurnAfterReading_FullMethodName = "/v1.UserRelationService/SetUserOpenBurnAfterReading"
 )
 
 // UserRelationServiceClient is the client API for UserRelationService service.
@@ -62,6 +63,8 @@ type UserRelationServiceClient interface {
 	GetUserRelationByUserIds(ctx context.Context, in *GetUserRelationByUserIdsRequest, opts ...grpc.CallOption) (*GetUserRelationByUserIdsResponse, error)
 	// 设置好友静默通知
 	SetFriendSilentNotification(ctx context.Context, in *SetFriendSilentNotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 设置阅后即焚开关
+	SetUserOpenBurnAfterReading(ctx context.Context, in *SetUserOpenBurnAfterReadingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userRelationServiceClient struct {
@@ -180,6 +183,15 @@ func (c *userRelationServiceClient) SetFriendSilentNotification(ctx context.Cont
 	return out, nil
 }
 
+func (c *userRelationServiceClient) SetUserOpenBurnAfterReading(ctx context.Context, in *SetUserOpenBurnAfterReadingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserRelationService_SetUserOpenBurnAfterReading_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserRelationServiceServer is the server API for UserRelationService service.
 // All implementations must embed UnimplementedUserRelationServiceServer
 // for forward compatibility
@@ -208,6 +220,8 @@ type UserRelationServiceServer interface {
 	GetUserRelationByUserIds(context.Context, *GetUserRelationByUserIdsRequest) (*GetUserRelationByUserIdsResponse, error)
 	// 设置好友静默通知
 	SetFriendSilentNotification(context.Context, *SetFriendSilentNotificationRequest) (*emptypb.Empty, error)
+	// 设置阅后即焚开关
+	SetUserOpenBurnAfterReading(context.Context, *SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserRelationServiceServer()
 }
 
@@ -250,6 +264,9 @@ func (UnimplementedUserRelationServiceServer) GetUserRelationByUserIds(context.C
 }
 func (UnimplementedUserRelationServiceServer) SetFriendSilentNotification(context.Context, *SetFriendSilentNotificationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetFriendSilentNotification not implemented")
+}
+func (UnimplementedUserRelationServiceServer) SetUserOpenBurnAfterReading(context.Context, *SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUserOpenBurnAfterReading not implemented")
 }
 func (UnimplementedUserRelationServiceServer) mustEmbedUnimplementedUserRelationServiceServer() {}
 
@@ -480,6 +497,24 @@ func _UserRelationService_SetFriendSilentNotification_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserRelationService_SetUserOpenBurnAfterReading_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserOpenBurnAfterReadingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserRelationServiceServer).SetUserOpenBurnAfterReading(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserRelationService_SetUserOpenBurnAfterReading_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserRelationServiceServer).SetUserOpenBurnAfterReading(ctx, req.(*SetUserOpenBurnAfterReadingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserRelationService_ServiceDesc is the grpc.ServiceDesc for UserRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -534,6 +569,10 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetFriendSilentNotification",
 			Handler:    _UserRelationService_SetFriendSilentNotification_Handler,
+		},
+		{
+			MethodName: "SetUserOpenBurnAfterReading",
+			Handler:    _UserRelationService_SetUserOpenBurnAfterReading_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

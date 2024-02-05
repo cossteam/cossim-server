@@ -36,9 +36,16 @@ message SendGroupMsgRequest{
   uint32 DialogId = 6;
   // @inject_tag: json:"is_burn_after_reading"
   BurnAfterReadingType IsBurnAfterReadingType = 7;
-
+  // @inject_tag: json:"at_users"
+  repeated string AtUsers = 8;
+  // @inject_tag: json:"at_all_user"
+  AtAllUserType AtAllUser = 9;
 }
 
+enum AtAllUserType {
+  NotAtAllUser = 0;
+  AtAllUser = 1;
+}
 enum BurnAfterReadingType{
     NotBurnAfterReading = 0; //非阅后即焚
     IsBurnAfterReading  = 1;                          //阅后即焚消息
@@ -116,6 +123,10 @@ message GroupMessage {
   MsgLabel IsLabel = 10;
   // @inject_tag: json:"is_burn_after_reading"
   BurnAfterReadingType IsBurnAfterReadingType = 11;
+  // @inject_tag: json:"at_users"
+  repeated string AtUsers = 12;
+  // @inject_tag: json:"at_all_user"
+  AtAllUserType AtAllUser = 13;
 }
 
 message GetUserMsgListResponse{
@@ -427,8 +438,7 @@ service MsgService{
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
   //获取用户消息列表
   rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
-  //获取群消息列表
-  rpc GetGroupMessageList(GetGroupMsgListRequest) returns(GetGroupMsgListResponse);
+
   //根据好友id获取最后一条消息
   rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
   //根据群组id获取最后一条消息
@@ -442,7 +452,8 @@ service MsgService{
   //根据对话id与msgId查询msgId之后的私聊消息
   rpc GetUserMsgIdAfterMsgList(GetUserMsgIdAfterMsgListRequest) returns (GetUserMsgIdAfterMsgListResponse);
 
-
+  //获取群消息列表
+  rpc GetGroupMessageList(GetGroupMsgListRequest) returns(GetGroupMsgListResponse);
   //编辑群消息
   rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
   //撤回群消息

@@ -227,7 +227,7 @@ func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, ids []uint32) (int
 	return groups.Groups, nil
 }
 
-func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32) (interface{}, error) {
+func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32, userID string) (interface{}, error) {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
 		Gid: gid,
 	})
@@ -235,5 +235,40 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32) (interface{
 		return nil, err
 	}
 
-	return group, nil
+	id, err := s.relationDialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: gid})
+	if err != nil {
+		return nil, err
+	}
+
+	relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: gid,
+		UserId:  userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	per := &model.Preferences{
+		OpenBurnAfterReading: model.OpenBurnAfterReadingType(relation.OpenBurnAfterReading),
+		SilentNotification:   model.SilentNotification(relation.IsSilent),
+		Remark:               relation.Remark,
+		EntryMethod:          model.EntryMethod(relation.JoinMethod),
+		GroupNickname:        relation.GroupNickname,
+		Inviter:              relation.Inviter,
+		JoinedAt:             relation.JoinTime,
+		MuteEndTime:          relation.MuteEndTime,
+		Identity:             model.GroupIdentity(relation.Identity),
+	}
+
+	return &model.GroupInfo{
+		Id:              group.Id,
+		Avatar:          group.Avatar,
+		Name:            group.Name,
+		Type:            uint32(group.Type),
+		Status:          int32(group.Status),
+		MaxMembersLimit: group.MaxMembersLimit,
+		CreatorId:       group.CreatorId,
+		DialogId:        id.DialogId,
+		Preferences:     per,
+	}, nil
 }

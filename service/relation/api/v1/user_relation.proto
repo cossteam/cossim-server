@@ -2,6 +2,7 @@ syntax = "proto3";
 package v1;
 option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
 import "google/protobuf/empty.proto";
+import "api/v1/group_relation.proto";
 
 message AddFriendRequest {
   // @inject_tag: json:"user_id"
@@ -120,11 +121,11 @@ message GetUserRelationResponse {
   RelationStatus Status = 4;
   // @inject_tag: json:"is_silent"
   UserSilentNotificationType IsSilent = 5;
+  // @inject_tag: json:"open_burn_after_reading"
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 6;
+  // @inject_tag: json:"remark"
+  string remark = 7;
 }
-
-
-
-
 
 message GetUserRelationByUserIdsRequest {
   // @inject_tag: json:"user_id"
@@ -136,8 +137,6 @@ message GetUserRelationByUserIdsRequest {
 message GetUserRelationByUserIdsResponse {
   repeated GetUserRelationResponse Users = 1;
 }
-
-
 
 enum UserSilentNotificationType {
   // @inject_tag: json:"not_silent"
@@ -153,6 +152,15 @@ message SetFriendSilentNotificationRequest {
   string FriendId = 2;
   // @inject_tag: json:"is_silent"
   UserSilentNotificationType IsSilent = 3;
+}
+
+message SetUserOpenBurnAfterReadingRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"open_burn_after_reading"
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 3;
 }
 
 service UserRelationService {
@@ -176,10 +184,10 @@ service UserRelationService {
   rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
   // 获取用户关系
   rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
-
   // 批量获取用户关系
   rpc GetUserRelationByUserIds(GetUserRelationByUserIdsRequest) returns (GetUserRelationByUserIdsResponse);
   // 设置好友静默通知
   rpc SetFriendSilentNotification(SetFriendSilentNotificationRequest) returns (google.protobuf.Empty);
-
+  // 设置阅后即焚开关
+  rpc SetUserOpenBurnAfterReading(SetUserOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
 }

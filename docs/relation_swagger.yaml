@@ -137,6 +137,26 @@ definitions:
     - group_id
     - id
     type: object
+  model.OpenGroupBurnAfterReadingRequest:
+    properties:
+      action:
+        type: integer
+      group_id:
+        description: 群组ID
+        type: integer
+    required:
+    - group_id
+    type: object
+  model.OpenUserBurnAfterReadingRequest:
+    properties:
+      action:
+        type: integer
+      user_id:
+        description: 用户ID
+        type: string
+    required:
+    - user_id
+    type: object
   model.QuitGroupRequest:
     properties:
       group_id:
@@ -392,6 +412,28 @@ paths:
       summary: 将用户从群聊移除
       tags:
       - GroupRelation
+  /relation/group/burn/open:
+    post:
+      consumes:
+      - application/json
+      description: '是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)'
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.OpenGroupBurnAfterReadingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: '是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)'
+      tags:
+      - GroupRelation
   /relation/group/invite:
     post:
       consumes:
@@ -624,6 +666,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 黑名单
+      tags:
+      - UserRelation
+  /relation/user/burn/open:
+    post:
+      consumes:
+      - application/json
+      description: '是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)'
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.OpenUserBurnAfterReadingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: '是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)'
       tags:
       - UserRelation
   /relation/user/delete_friend:

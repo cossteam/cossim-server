@@ -423,6 +423,28 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 	return nil, nil
 }
 
+func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, req *model.OpenUserBurnAfterReadingRequest) (interface{}, error) {
+	_, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userId,
+		FriendId: req.UserId,
+	})
+	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.userRelationClient.SetUserOpenBurnAfterReading(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingRequest{
+		UserId:               userId,
+		FriendId:             req.UserId,
+		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
+	})
+	if err != nil {
+		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))
+		return nil, err
+	}
+	return nil, nil
+}
+
 // manageFriend2 不存在好友关系，创建新的关系
 func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus) (uint32, error) {
 	var dialogId uint32

@@ -496,6 +496,21 @@ const docTemplateuser = `{
                 }
             }
         },
+        "model.OpenBurnAfterReadingType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-comments": {
+                "CloseBurnAfterReading": "关闭阅后即焚",
+                "OpenBurnAfterReading": "开启阅后即焚消息"
+            },
+            "x-enum-varnames": [
+                "CloseBurnAfterReading",
+                "OpenBurnAfterReading"
+            ]
+        },
         "model.PasswordRequest": {
             "type": "object",
             "required": [
@@ -512,6 +527,20 @@ const docTemplateuser = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "model.Preferences": {
+            "type": "object",
+            "properties": {
+                "open_burn_after_reading": {
+                    "$ref": "#/definitions/model.OpenBurnAfterReadingType"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "silent_notification": {
+                    "$ref": "#/definitions/model.SilentNotification"
                 }
             }
         },
@@ -563,6 +592,21 @@ const docTemplateuser = `{
                 }
             }
         },
+        "model.SilentNotification": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-comments": {
+                "IsSilentNotification": "开启静默通知",
+                "NotSilentNotification": "不开启静默通知"
+            },
+            "x-enum-varnames": [
+                "NotSilentNotification",
+                "IsSilentNotification"
+            ]
+        },
         "model.UserInfoRequest": {
             "type": "object",
             "properties": {
@@ -595,6 +639,9 @@ const docTemplateuser = `{
                 "nickname": {
                     "type": "string"
                 },
+                "preferences": {
+                    "$ref": "#/definitions/model.Preferences"
+                },
                 "relation_status": {
                     "$ref": "#/definitions/model.UserRelationStatus"
                 },
@@ -620,9 +667,9 @@ const docTemplateuser = `{
                 2
             ],
             "x-enum-comments": {
-                "UserRelationStatusBlacked": "黑名单 拉黑对方了",
-                "UserRelationStatusFriend": "好友关系",
-                "UserRelationStatusUnknown": "不是好友"
+                "UserRelationStatusBlacked": "删除",
+                "UserRelationStatusFriend": "正常",
+                "UserRelationStatusUnknown": "拉黑"
             },
             "x-enum-varnames": [
                 "UserRelationStatusUnknown",

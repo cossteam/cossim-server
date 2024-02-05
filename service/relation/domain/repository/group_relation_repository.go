@@ -25,4 +25,5 @@ type GroupRelationRepository interface {
 	DeleteRelationByGroupIDAndUserIDs(gid uint32, uid []string) error
 
 	SetUserGroupSilentNotification(gid uint32, uid string, silentNotification entity.SilentNotification) error
+	SetUserGroupOpenBurnAfterReading(gid uint32, uid string, openBurnAfterReading entity.OpenBurnAfterReadingType) error
 }

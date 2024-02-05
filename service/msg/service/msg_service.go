@@ -27,7 +27,7 @@ func (s *Service) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRe
 func (s *Service) SendGroupMessage(ctx context.Context, request *v1.SendGroupMsgRequest) (*v1.SendGroupMsgResponse, error) {
 	resp := &v1.SendGroupMsgResponse{}
 
-	ums, err := s.mr.InsertGroupMessage(request.GetUserId(), uint(request.GetGroupId()), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()), entity.BurnAfterReadingType(request.IsBurnAfterReadingType))
+	ums, err := s.mr.InsertGroupMessage(request.GetUserId(), uint(request.GetGroupId()), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()), entity.BurnAfterReadingType(request.IsBurnAfterReadingType), request.AtUsers, entity.AtAllUserType(request.AtAllUser))
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrInsertGroupMessageFailed.Code()), err.Error())
 	}
@@ -241,6 +241,7 @@ func (s *Service) GetGroupMessageById(ctx context.Context, in *v1.GetGroupMsgByI
 	return &v1.GroupMessage{
 		Id:        uint32(msg.ID),
 		UserId:    msg.UserID,
+		DialogId:  uint32(msg.DialogId),
 		Content:   msg.Content,
 		Type:      uint32(int32(msg.Type)),
 		ReplyId:   uint32(msg.ReplyId),
@@ -471,6 +472,8 @@ func (s *Service) GetGroupMessageList(ctx context.Context, in *v1.GetGroupMsgLis
 				CreatedAt: msg.CreatedAt,
 				DialogId:  uint32(msg.DialogId),
 				IsLabel:   v1.MsgLabel(msg.IsLabel),
+				AtUsers:   msg.AtUsers,
+				AtAllUser: v1.AtAllUserType(msg.AtAllUser),
 			})
 		}
 	}

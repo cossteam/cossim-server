@@ -33,7 +33,28 @@ type UserInfoResponse struct {
 	Status         UserStatus         `json:"status"`
 	RelationStatus UserRelationStatus `json:"relation_status"`
 	LoginNumber    uint               `json:"login_number"`
+	Preferences    *Preferences       `json:"preferences,omitempty"`
 }
+
+type Preferences struct {
+	SilentNotification   SilentNotification       `json:"silent_notification"`
+	Remark               string                   ` json:"remark"`
+	OpenBurnAfterReading OpenBurnAfterReadingType `json:"open_burn_after_reading"`
+}
+
+type OpenBurnAfterReadingType uint
+
+const (
+	CloseBurnAfterReading OpenBurnAfterReadingType = iota //关闭阅后即焚
+	OpenBurnAfterReading                                  //开启阅后即焚消息
+)
+
+type SilentNotification uint
+
+const (
+	NotSilentNotification SilentNotification = iota //不开启静默通知
+	IsSilentNotification                            //开启静默通知
+)
 
 type UserStatus int
 
@@ -65,21 +86,21 @@ func (s UserStatus) String() string {
 type UserRelationStatus int
 
 const (
-	UserRelationStatusUnknown UserRelationStatus = iota // 不是好友
-	UserRelationStatusFriend                            // 好友关系
-	UserRelationStatusBlacked                           // 黑名单 拉黑对方了
+	UserRelationStatusUnknown UserRelationStatus = iota // 拉黑
+	UserRelationStatusFriend                            // 正常
+	UserRelationStatusBlacked                           // 删除
 )
 
 func (s UserRelationStatus) String() string {
 	switch s {
 	case UserRelationStatusUnknown:
-		return "不是好友"
+		return "拉黑"
 	case UserRelationStatusFriend:
-		return "好友关系"
+		return "正常"
 	case UserRelationStatusBlacked:
-		return "拉黑了"
+		return "删除"
 	default:
-		return "不是好友"
+		return "状态不正常"
 	}
 }
 

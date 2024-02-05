@@ -31,7 +31,13 @@ func getGroupInfoByGid(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.GetGroupInfoByGid(c, uint32(gidInt))
+	userID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := svc.GetGroupInfoByGid(c, uint32(gidInt), userID)
 	if err != nil {
 		c.Error(err)
 		return

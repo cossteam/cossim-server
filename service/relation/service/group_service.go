@@ -139,6 +139,12 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	resp.Identity = v1.GroupIdentity(uint32(relation.Identity))
 	resp.MuteEndTime = relation.MuteEndTime
 	resp.IsSilent = v1.GroupSilentNotificationType(relation.SilentNotification)
+	resp.OpenBurnAfterReading = v1.OpenBurnAfterReadingType(relation.OpenBurnAfterReading)
+	resp.JoinTime = relation.JoinedAt
+	resp.Remark = relation.Remark
+	resp.GroupNickname = relation.GroupNickname
+	resp.JoinMethod = uint32(relation.EntryMethod)
+	resp.Inviter = relation.Inviter
 	return resp, nil
 }
 
@@ -328,5 +334,13 @@ func (s *Service) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in
 		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
 	}
 
+	return resp, nil
+}
+
+func (s *Service) SetGroupOpenBurnAfterReading(ctx context.Context, in *v1.SetGroupOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	if err := s.grr.SetUserGroupOpenBurnAfterReading(in.GroupId, in.UserId, entity.OpenBurnAfterReadingType(in.OpenBurnAfterReading)); err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupRrrSetUserGroupOpenBurnAfterReadingFailed.Code()), err.Error())
+	}
 	return resp, nil
 }

@@ -245,6 +245,7 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 		s.logger.Error("获取用户信息失败", zap.Error(err))
 		return nil, err
 	}
+
 	resp = &model.UserInfoResponse{
 		UserId:    r.UserId,
 		Nickname:  r.NickName,
@@ -254,22 +255,31 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 		Status:    model.UserStatus(r.Status),
 	}
 
-	relation, err := s.relClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-		UserId:   thisID,
-		FriendId: userID,
-	})
-	if err != nil {
-		s.logger.Error("获取用户关系失败", zap.Error(err))
-		return resp, nil
+	if thisID != userID {
+		relation, err := s.relClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+			UserId:   thisID,
+			FriendId: userID,
+		})
+		if err != nil {
+			s.logger.Error("获取用户关系失败", zap.Error(err))
+			return resp, nil
+		}
+
+		if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
+			resp.RelationStatus = model.UserRelationStatusFriend
+		} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
+			resp.RelationStatus = model.UserRelationStatusBlacked
+		} else {
+			resp.RelationStatus = model.UserRelationStatusUnknown
+		}
+
+		resp.Preferences = &model.Preferences{
+			OpenBurnAfterReading: model.OpenBurnAfterReadingType(relation.OpenBurnAfterReading),
+			SilentNotification:   model.SilentNotification(relation.IsSilent),
+			Remark:               relation.Remark,
+		}
 	}
 
-	if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
-		resp.RelationStatus = model.UserRelationStatusFriend
-	} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
-		resp.RelationStatus = model.UserRelationStatusBlacked
-	} else {
-		resp.RelationStatus = model.UserRelationStatusUnknown
-	}
 	return resp, nil
 }
 

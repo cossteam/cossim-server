@@ -185,6 +185,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/group/burn/open": {
+            "post": {
+                "description": "是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.OpenGroupBurnAfterReadingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/invite": {
             "post": {
                 "description": "邀请加入群聊",
@@ -546,6 +580,40 @@ const docTemplaterelation = `{
                     "UserRelation"
                 ],
                 "summary": "黑名单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/user/burn/open": {
+            "post": {
+                "description": "是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
+                ],
+                "summary": "是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.OpenUserBurnAfterReadingRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -953,6 +1021,36 @@ const docTemplaterelation = `{
                 },
                 "id": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.OpenGroupBurnAfterReadingRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "action": {
+                    "type": "integer"
+                },
+                "group_id": {
+                    "description": "群组ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.OpenUserBurnAfterReadingRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "action": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "string"
                 }
             }
         },
