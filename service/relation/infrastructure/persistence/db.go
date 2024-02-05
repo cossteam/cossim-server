@@ -11,6 +11,7 @@ type Repositories struct {
 	Grr  repository.GroupRelationRepository
 	Ufqr repository.UserFriendRequestRepository
 	Gjqr repository.GroupJoinRequestRepository
+	GAr  repository.GroupAnnouncementRepository
 	Dr   repository.DialogRepository
 	db   *gorm.DB
 }
@@ -21,11 +22,12 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		Grr:  NewGroupRelationRepo(db),
 		Dr:   NewDialogRepo(db),
 		Gjqr: NewGroupJoinRequestRepo(db),
+		GAr:  NewGroupAnnouncementRepository(db),
 		Ufqr: NewUserFriendRequestRepo(db),
 		db:   db,
 	}
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.GroupRelation{}, &entity.UserRelation{}, &entity.Dialog{}, &entity.DialogUser{}, &entity.UserFriendRequest{}, &entity.GroupJoinRequest{})
+	return s.db.AutoMigrate(&entity.GroupRelation{}, &entity.UserRelation{}, &entity.Dialog{}, &entity.DialogUser{}, &entity.UserFriendRequest{}, &entity.GroupJoinRequest{}, &entity.GroupAnnouncement{})
 }

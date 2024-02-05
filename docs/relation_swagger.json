@@ -73,6 +73,40 @@
                 }
             }
         },
+        "/relation/group/admin/announcement": {
+            "post": {
+                "description": "创建群公告(管理员)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "创建群公告(管理员)",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateGroupAnnouncementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/admin/manage/join": {
             "post": {
                 "description": "管理员管理加入群聊 action (0=拒绝, 1=同意)",
@@ -128,6 +162,106 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.RemoveUserFromGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/announcement/delete": {
+            "post": {
+                "description": "删除群公告",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "删除群公告",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteGroupAnnouncementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/announcement/list": {
+            "get": {
+                "description": "获取群公告",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "获取群公告",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "群聊id",
+                        "name": "group_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/announcement/update": {
+            "post": {
+                "description": "更新群公告",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "更新群公告",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateGroupAnnouncementRequest"
                         }
                     }
                 ],
@@ -863,6 +997,28 @@
                 }
             }
         },
+        "model.CreateGroupAnnouncementRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "group_id",
+                "title"
+            ],
+            "properties": {
+                "content": {
+                    "description": "公告内容",
+                    "type": "string"
+                },
+                "group_id": {
+                    "description": "群组ID",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "公告标题",
+                    "type": "string"
+                }
+            }
+        },
         "model.DeleteBlacklistRequest": {
             "type": "object",
             "required": [
@@ -882,6 +1038,23 @@
             "properties": {
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "model.DeleteGroupAnnouncementRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "id"
+            ],
+            "properties": {
+                "group_id": {
+                    "description": "群组ID",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "公告ID",
+                    "type": "integer"
                 }
             }
         },
@@ -1194,6 +1367,33 @@
                 },
                 "dialog_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "model.UpdateGroupAnnouncementRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "group_id",
+                "id",
+                "title"
+            ],
+            "properties": {
+                "content": {
+                    "description": "公告内容",
+                    "type": "string"
+                },
+                "group_id": {
+                    "description": "群组ID",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "公告ID",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "公告标题",
+                    "type": "string"
                 }
             }
         },

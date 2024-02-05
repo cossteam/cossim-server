@@ -34,6 +34,22 @@ definitions:
     required:
     - dialog_id
     type: object
+  model.CreateGroupAnnouncementRequest:
+    properties:
+      content:
+        description: 公告内容
+        type: string
+      group_id:
+        description: 群组ID
+        type: integer
+      title:
+        description: 公告标题
+        type: string
+    required:
+    - content
+    - group_id
+    - title
+    type: object
   model.DeleteBlacklistRequest:
     properties:
       user_id:
@@ -47,6 +63,18 @@ definitions:
         type: string
     required:
     - user_id
+    type: object
+  model.DeleteGroupAnnouncementRequest:
+    properties:
+      group_id:
+        description: 群组ID
+        type: integer
+      id:
+        description: 公告ID
+        type: integer
+    required:
+    - group_id
+    - id
     type: object
   model.GroupRequestListResponse:
     properties:
@@ -257,6 +285,26 @@ definitions:
     required:
     - dialog_id
     type: object
+  model.UpdateGroupAnnouncementRequest:
+    properties:
+      content:
+        description: 公告内容
+        type: string
+      group_id:
+        description: 群组ID
+        type: integer
+      id:
+        description: 公告ID
+        type: integer
+      title:
+        description: 公告标题
+        type: string
+    required:
+    - content
+    - group_id
+    - id
+    - title
+    type: object
   model.UserInfo:
     properties:
       user_avatar:
@@ -346,6 +394,28 @@ paths:
       summary: '是否置顶对话(action: 0:关闭取消置顶对话, 1:置顶对话)'
       tags:
       - Dialog
+  /relation/group/admin/announcement:
+    post:
+      consumes:
+      - application/json
+      description: 创建群公告(管理员)
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateGroupAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 创建群公告(管理员)
+      tags:
+      - GroupRelation
   /relation/group/admin/manage/join:
     post:
       consumes:
@@ -388,6 +458,71 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 将用户从群聊移除
+      tags:
+      - GroupRelation
+  /relation/group/announcement/delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除群公告
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteGroupAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 删除群公告
+      tags:
+      - GroupRelation
+  /relation/group/announcement/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取群公告
+      parameters:
+      - description: 群聊id
+        in: query
+        name: group_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 获取群公告
+      tags:
+      - GroupRelation
+  /relation/group/announcement/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新群公告
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateGroupAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 更新群公告
       tags:
       - GroupRelation
   /relation/group/burn/open:

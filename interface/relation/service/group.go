@@ -372,6 +372,34 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 	return nil
 }
 
+func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, req *model.CreateGroupAnnouncementRequest) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+
+	relation, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userId, GroupId: req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+
+	if relation.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+		return nil, errors.New("没有权限操作")
+	}
+
+	_, err = s.groupAnnouncementClient.CreateGroupAnnouncement(ctx, &relationgrpcv1.CreateGroupAnnouncementRequest{
+		GroupId: req.GroupId,
+		UserId:  userId,
+		Content: req.Content,
+		Title:   req.Title,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
 func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, adminID string, userIDs []string) error {
 	gr1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: adminID, GroupId: groupID})
 	if err != nil {
@@ -542,6 +570,87 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	//}
 
 	return nil
+}
+
+func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, groupId uint32) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.groupAnnouncementClient.GetGroupAnnouncementList(ctx, &relationgrpcv1.GetGroupAnnouncementListRequest{GroupId: groupId})
+	if err != nil {
+		return nil, err
+	}
+	return res.AnnouncementList, nil
+}
+
+func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, req *model.UpdateGroupAnnouncementRequest) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+
+	relation, err := s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
+	if err != nil {
+		return nil, err
+	}
+
+	if relation.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+		return nil, errors.New("没有权限操作")
+	}
+
+	an, err := s.groupAnnouncementClient.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
+	if err != nil {
+		return nil, err
+	}
+
+	if an.AnnouncementInfo.GroupId != req.GroupId {
+		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
+	}
+
+	res, err := s.groupAnnouncementClient.UpdateGroupAnnouncement(ctx, &relationgrpcv1.UpdateGroupAnnouncementRequest{ID: req.Id, Title: req.Title, Content: req.Content})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *Service) DeleteGroupAnnouncement(ctx context.Context, userId string, req *model.DeleteGroupAnnouncementRequest) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+
+	relation, err := s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
+	if err != nil {
+		return nil, err
+	}
+
+	if relation.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+		return nil, errors.New("没有权限操作")
+	}
+
+	an, err := s.groupAnnouncementClient.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
+	if err != nil {
+		return nil, err
+	}
+
+	if an.AnnouncementInfo.GroupId != req.GroupId {
+		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
+	}
+
+	res, err := s.groupAnnouncementClient.DeleteGroupAnnouncement(ctx, &relationgrpcv1.DeleteGroupAnnouncementRequest{ID: req.Id})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func SwitchGroupRequestStatus(thisId, senderId, receiverId string, status relationgrpcv1.GroupRequestStatus) model.GroupRequestStatus {

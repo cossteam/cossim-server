@@ -802,3 +802,134 @@ func openGroupBurnAfterReading(c *gin.Context) {
 
 	response.SetSuccess(c, "操作成功", nil)
 }
+
+// @Summary 创建群公告(管理员)
+// @Description 创建群公告(管理员)
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.CreateGroupAnnouncementRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/admin/announcement [post]
+func createGroupAnnouncement(c *gin.Context) {
+	req := new(model.CreateGroupAnnouncementRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = svc.CreateGroupAnnouncement(c, thisId, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "创建成功", nil)
+}
+
+// 获取群公告
+// @Summary 获取群公告
+// @Description 获取群公告
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @Param group_id query string true "群聊id"
+// @Success		200 {object} model.Response{}
+// @Router /relation/group/announcement/list [get]
+func getGroupAnnouncementList(c *gin.Context) {
+	var id = c.Query("group_id")
+	if id == "" {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	groupId, err := strconv.Atoi(id)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := svc.GetGroupAnnouncementList(c, thisId, uint32(groupId))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取成功", resp)
+}
+
+// 更新群公告
+// @Summary 更新群公告
+// @Description 更新群公告
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.UpdateGroupAnnouncementRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/announcement/update [post]
+func updateGroupAnnouncement(c *gin.Context) {
+	req := new(model.UpdateGroupAnnouncementRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := svc.UpdateGroupAnnouncement(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "更新成功", resp)
+}
+
+// 删除群公告
+// @Summary 删除群公告
+// @Description 删除群公告
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.DeleteGroupAnnouncementRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/announcement/delete [post]
+func deleteGroupAnnouncement(c *gin.Context) {
+	req := new(model.DeleteGroupAnnouncementRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := svc.DeleteGroupAnnouncement(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "删除成功", resp)
+}

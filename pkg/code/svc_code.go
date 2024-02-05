@@ -74,6 +74,12 @@ var (
 	RelationGroupErrNotInGroup                             = New(13118, "没有在群聊中")
 	RelationGroupErrDeleteUsersGroupRelationFailed         = New(13119, "删除多个用户群聊关系失败")
 	RelationGroupRrrSetUserGroupOpenBurnAfterReadingFailed = New(13120, "获取群聊阅后即焚开关失败")
+	RelationGroupErrGetGroupAnnouncementListFailed         = New(13121, "获取群聊公告列表失败")
+	RelationGroupErrCreateGroupAnnouncementFailed          = New(13122, "创建群聊公告失败")
+	RelationGroupErrGetGroupAnnouncementFailed             = New(13123, "获取群聊公告失败")
+	RelationGroupErrDeleteGroupAnnouncementFailed          = New(13124, "删除群聊公告失败")
+	RelationGroupErrUpdateGroupAnnouncementFailed          = New(13125, "更新群聊公告失败")
+	RelationGroupErrGroupAnnouncementNotFoundFailed        = New(13126, "群聊公告不存在")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

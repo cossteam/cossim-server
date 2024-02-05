@@ -412,10 +412,12 @@ func (s *Service) UserActivate(ctx context.Context, userID string, key string) (
 	resp, err := s.userClient.ActivateUser(ctx, &usergrpcv1.UserRequest{
 		UserId: userID,
 	})
+
 	if err != nil {
 		s.logger.Error("激活用户失败", zap.Error(err))
 		return nil, code.UserErrActivateUserFailed
 	}
+
 	//删除缓存
 	err = cache.DelKey(s.redisClient, key)
 	if err != nil {

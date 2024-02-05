@@ -172,13 +172,19 @@ func route(engine *gin.Engine) {
 	g.POST("quit", quitGroup)
 	//群聊设置消息静默
 	g.POST("/silent", setGroupSilentNotification)
+	//关闭或打开阅后即焚消息
 	g.POST("/burn/open", openGroupBurnAfterReading)
+	//获取群聊公告列表
+	g.GET("/announcement/list", getGroupAnnouncementList)
+	g.POST("/announcement/update", updateGroupAnnouncement)
+	g.POST("/announcement/delete", deleteGroupAnnouncement)
 
 	gg := api.Group("/group/admin")
 	// 管理员管理群聊申请
 	gg.POST("/manage/join", adminManageJoinGroup)
 	// 管理员移除群聊成员
 	gg.POST("/manage/remove", removeUserFromGroup)
+	gg.POST("/announcement", createGroupAnnouncement)
 
 	d := api.Group("/dialog")
 	d.POST("/top", topOrCancelTopDialog)
