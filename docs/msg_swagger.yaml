@@ -48,6 +48,33 @@ definitions:
     - msg_id
     - msg_type
     type: object
+  model.GetGroupMessageReadersResponse:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.GroupMessageReadRequest:
+    properties:
+      dialog_id:
+        description: 会话ID
+        type: integer
+      group_id:
+        description: 群组ID
+        type: integer
+      msg_id:
+        description: 消息ID
+        items:
+          type: integer
+        type: array
+    required:
+    - dialog_id
+    - group_id
+    - msg_id
+    type: object
   model.LabelGroupMessageRequest:
     properties:
       is_label:
@@ -246,6 +273,62 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 编辑用户消息
+  /msg/group/read/get:
+    get:
+      consumes:
+      - application/json
+      description: 获取消息已读人员
+      parameters:
+      - description: 消息ID
+        in: query
+        name: msg_id
+        required: true
+        type: integer
+      - description: 对话ID
+        in: query
+        name: dialog_id
+        required: true
+        type: integer
+      - description: 群聊ID
+        in: query
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.GetGroupMessageReadersResponse'
+                  type: array
+              type: object
+      summary: 获取消息已读人员
+  /msg/group/read/set:
+    post:
+      consumes:
+      - application/json
+      description: 批量设置群聊消息为已读
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.GroupMessageReadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 批量设置群聊消息为已读
   /msg/label/group:
     get:
       consumes:
@@ -326,7 +409,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取私聊消息
+      description: 获取群聊消息
       parameters:
       - description: 群聊id
         in: query
@@ -362,7 +445,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Response'
-      summary: 获取私聊消息
+      summary: 获取群聊消息
   /msg/list/user:
     get:
       consumes:

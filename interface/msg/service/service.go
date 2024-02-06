@@ -39,6 +39,7 @@ type Service struct {
 	userClient           usergrpcv1.UserServiceClient
 	groupClient          groupgrpcv1.GroupServiceClient
 	msgClient            msggrpcv1.MsgServiceClient
+	groupMsgClient       msggrpcv1.GroupMessageServiceClient
 	redisClient          *redis.Client
 
 	//mqClient *msg_queue.RabbitMQ
@@ -252,6 +253,7 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	case "msg":
+		s.groupMsgClient = msggrpcv1.NewGroupMessageServiceClient(conn)
 		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
 	}

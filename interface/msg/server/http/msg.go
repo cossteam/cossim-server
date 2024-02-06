@@ -190,8 +190,8 @@ func getUserMsgList(c *gin.Context) {
 	response.SetSuccess(c, "获取成功", resp)
 }
 
-// @Summary 获取私聊消息
-// @Description 获取私聊消息
+// @Summary 获取群聊消息
+// @Description 获取群聊消息
 // @Accept  json
 // @Produce  json
 // @Param group_id query string true "群聊id"
@@ -586,5 +586,76 @@ func getDialogAfterMsg(c *gin.Context) {
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 	}
+	response.SetSuccess(c, "获取成功", resp)
+}
+
+// @Summary 批量设置群聊消息为已读
+// @Description 批量设置群聊消息为已读
+// @Accept json
+// @Produce json
+// @Param request body model.GroupMessageReadRequest true "请求参数"
+// @Success 200 {object} model.Response{}
+// @Router /msg/group/read/set [post]
+func setGroupMessagesRead(c *gin.Context) {
+	req := new(model.GroupMessageReadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+	_, err = svc.SetGroupMessagesRead(c, thisId, req)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", nil)
+}
+
+// @Summary 获取消息已读人员
+// @Description 获取消息已读人员
+// @Accept json
+// @Produce json
+// @Param msg_id query uint32 true "消息ID"
+// @Param dialog_id query uint32 true "对话ID"
+// @Param group_id query uint32 true "群聊ID"
+// @Success 200 {object} model.Response{data=[]model.GetGroupMessageReadersResponse{}}
+// @Router /msg/group/read/get [get]
+func getGroupMessageReaders(c *gin.Context) {
+	msgID, err := strconv.ParseUint(c.Query("msg_id"), 10, 32)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	dialogID, err := strconv.ParseUint(c.Query("dialog_id"), 10, 32)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	groupID, err := strconv.ParseUint(c.Query("group_id"), 10, 32)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	// 执行获取消息已读人员的逻辑
+	resp, err := svc.GetGroupMessageReadersResponse(c, thisId, uint32(msgID), uint32(dialogID), uint32(groupID))
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
 	response.SetSuccess(c, "获取成功", resp)
 }

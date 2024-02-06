@@ -131,6 +131,95 @@ const docTemplatemsg = `{
                 }
             }
         },
+        "/msg/group/read/get": {
+            "get": {
+                "description": "获取消息已读人员",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "获取消息已读人员",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "msg_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "对话ID",
+                        "name": "dialog_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "群聊ID",
+                        "name": "group_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.GetGroupMessageReadersResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/group/read/set": {
+            "post": {
+                "description": "批量设置群聊消息为已读",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "批量设置群聊消息为已读",
+                "parameters": [
+                    {
+                        "description": "请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.GroupMessageReadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/msg/label/group": {
             "get": {
                 "description": "获取群聊标注信息",
@@ -249,14 +338,14 @@ const docTemplatemsg = `{
         },
         "/msg/list/group": {
             "get": {
-                "description": "获取私聊消息",
+                "description": "获取群聊消息",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "获取私聊消息",
+                "summary": "获取群聊消息",
                 "parameters": [
                     {
                         "type": "string",
@@ -593,6 +682,45 @@ const docTemplatemsg = `{
                 "msg_type": {
                     "description": "消息类型",
                     "type": "integer"
+                }
+            }
+        },
+        "model.GetGroupMessageReadersResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.GroupMessageReadRequest": {
+            "type": "object",
+            "required": [
+                "dialog_id",
+                "group_id",
+                "msg_id"
+            ],
+            "properties": {
+                "dialog_id": {
+                    "description": "会话ID",
+                    "type": "integer"
+                },
+                "group_id": {
+                    "description": "群组ID",
+                    "type": "integer"
+                },
+                "msg_id": {
+                    "description": "消息ID",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

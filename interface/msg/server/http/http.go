@@ -165,6 +165,10 @@ func route(engine *gin.Engine) {
 	u.POST("/label/user", middleware.AuthMiddleware(redisClient), labelUserMessage)
 	u.GET("/label/user", middleware.AuthMiddleware(redisClient), getUserLabelMsgList)
 	u.POST("/after/get", middleware.AuthMiddleware(redisClient), getDialogAfterMsg)
+	//群聊设置消息已读
+	u.POST("/group/read/set", middleware.AuthMiddleware(redisClient), setGroupMessagesRead)
+	//获取群聊消息阅读者
+	u.GET("/group/read/get", middleware.AuthMiddleware(redisClient), getGroupMessageReaders)
 
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 }

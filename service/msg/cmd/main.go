@@ -114,6 +114,7 @@ func startGRPCServer() {
 	grpcServer = grpc.NewServer()
 	svc = service.NewService(config.Conf, infra, dbConn)
 	api.RegisterMsgServiceServer(grpcServer, svc)
+	api.RegisterGroupMessageServiceServer(grpcServer, svc)
 	// 注册服务开启健康检查
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
