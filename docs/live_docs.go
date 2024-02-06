@@ -163,7 +163,7 @@ const docTemplatelive = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupShowRequest"
+                            "$ref": "#/definitions/dto.GroupLeaveRequest"
                         }
                     }
                 ],
@@ -274,13 +274,18 @@ const docTemplatelive = `{
                         "required": true
                     },
                     {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.GroupShowRequest"
-                        }
+                        "type": "integer",
+                        "description": "群聊id",
+                        "name": "group_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "房间名",
+                        "name": "room",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -631,6 +636,30 @@ const docTemplatelive = `{
                 "room"
             ],
             "properties": {
+                "group_id": {
+                    "description": "群组的ID",
+                    "type": "integer"
+                },
+                "option": {
+                    "$ref": "#/definitions/dto.CallOption"
+                },
+                "room": {
+                    "description": "房间名称",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GroupLeaveRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "room"
+            ],
+            "properties": {
+                "force": {
+                    "description": "是否要结束整个通话",
+                    "type": "boolean"
+                },
                 "group_id": {
                     "description": "群组的ID",
                     "type": "integer"

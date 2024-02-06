@@ -61,6 +61,23 @@ definitions:
     - group_id
     - room
     type: object
+  dto.GroupLeaveRequest:
+    properties:
+      force:
+        description: 是否要结束整个通话
+        type: boolean
+      group_id:
+        description: 群组的ID
+        type: integer
+      option:
+        $ref: '#/definitions/dto.CallOption'
+      room:
+        description: 房间名称
+        type: string
+    required:
+    - group_id
+    - room
+    type: object
   dto.GroupShowRequest:
     properties:
       group_id:
@@ -280,7 +297,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupShowRequest'
+          $ref: '#/definitions/dto.GroupLeaveRequest'
       produces:
       - application/json
       responses:
@@ -343,12 +360,16 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: request
-        in: body
-        name: request
+      - description: 群聊id
+        in: query
+        name: group_id
         required: true
-        schema:
-          $ref: '#/definitions/dto.GroupShowRequest'
+        type: integer
+      - description: 房间名
+        in: query
+        name: room
+        required: true
+        type: string
       produces:
       - application/json
       responses:
