@@ -51,6 +51,9 @@ const (
 	UserCallEndEvent
 	// 群聊通话结束事件
 	GroupCallEndEvent
+
+	//群聊消息已读事件
+	GroupMsgReadEvent
 )
 
 type WsMsg struct {
