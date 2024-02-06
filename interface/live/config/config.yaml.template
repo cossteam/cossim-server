@@ -53,3 +53,7 @@ discovers:
     address: "relation_service"
     port: 10001
     direct: true
+  group:
+    name: "group_service"
+    address: "group_service"
+    port: "10005"

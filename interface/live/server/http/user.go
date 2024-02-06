@@ -176,17 +176,17 @@ func (h *Handler) UserLeave(c *gin.Context) {
 }
 
 func (h *Handler) getJoinToken(c *gin.Context) {
-	userID := c.Query("user_id")
-	if userID == "" {
-		response.SetFail(c, code.InvalidParameter.Message(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetJoinToken(c, userID, "")
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "获取token成功", resp)
+	//userID := c.Query("user_id")
+	//if userID == "" {
+	//	response.SetFail(c, code.InvalidParameter.Message(), nil)
+	//	return
+	//}
+	//
+	//resp, err := h.svc.GetJoinToken(c, userID, "")
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//
+	//response.SetSuccess(c, "获取token成功", resp)
 }

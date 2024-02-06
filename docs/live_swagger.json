@@ -5,6 +5,296 @@
         "contact": {}
     },
     "paths": {
+        "/live/group/create": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "创建群聊通话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupUser"
+                ],
+                "summary": "创建群聊通话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GroupCallRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupCallResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/live/group/join": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "加入群聊通话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupUser"
+                ],
+                "summary": "加入群聊通话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GroupJoinRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupJoinRequest"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/live/group/leave": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "离开群聊通话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupUser"
+                ],
+                "summary": "离开群聊通话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GroupShowRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupJoinRequest"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/live/group/reject": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "拒绝群聊通话",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupUser"
+                ],
+                "summary": "拒绝群聊通话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GroupShowRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupJoinRequest"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/live/group/show": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取群聊通话信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupUser"
+                ],
+                "summary": "获取群聊通话信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer JWT",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GroupShowRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GroupJoinRequest"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/live/user/create": {
             "post": {
                 "security": [
@@ -281,6 +571,89 @@
                 }
             }
         },
+        "dto.GroupCallRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "group_id": {
+                    "description": "群组的ID",
+                    "type": "integer"
+                },
+                "member": {
+                    "description": "成员ids",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "option": {
+                    "$ref": "#/definitions/dto.CallOption"
+                }
+            }
+        },
+        "dto.GroupCallResponse": {
+            "type": "object",
+            "properties": {
+                "room": {
+                    "description": "房间名称",
+                    "type": "string"
+                },
+                "room_id": {
+                    "description": "房间id",
+                    "type": "string"
+                },
+                "token": {
+                    "description": "加入通话的token",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "webRtc服务器地址",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GroupJoinRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "room"
+            ],
+            "properties": {
+                "group_id": {
+                    "description": "群组的ID",
+                    "type": "integer"
+                },
+                "option": {
+                    "$ref": "#/definitions/dto.CallOption"
+                },
+                "room": {
+                    "description": "房间名称",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GroupShowRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "room"
+            ],
+            "properties": {
+                "group_id": {
+                    "description": "群组的ID",
+                    "type": "integer"
+                },
+                "option": {
+                    "$ref": "#/definitions/dto.CallOption"
+                },
+                "room": {
+                    "description": "房间名称",
+                    "type": "string"
+                }
+            }
+        },
         "dto.ParticipantInfo": {
             "type": "object",
             "properties": {
@@ -442,10 +815,10 @@
                     "description": "创建房间时间",
                     "type": "integer"
                 },
-                "video_call_record_url": {
+                "status": {
                     "type": "string"
                 },
-                "video_call_status": {
+                "video_call_record_url": {
                     "type": "string"
                 }
             }

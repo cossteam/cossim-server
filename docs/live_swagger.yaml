@@ -17,6 +17,64 @@ definitions:
         description: 是否启用视频
         type: boolean
     type: object
+  dto.GroupCallRequest:
+    properties:
+      group_id:
+        description: 群组的ID
+        type: integer
+      member:
+        description: 成员ids
+        items:
+          type: string
+        type: array
+      option:
+        $ref: '#/definitions/dto.CallOption'
+    required:
+    - group_id
+    type: object
+  dto.GroupCallResponse:
+    properties:
+      room:
+        description: 房间名称
+        type: string
+      room_id:
+        description: 房间id
+        type: string
+      token:
+        description: 加入通话的token
+        type: string
+      url:
+        description: webRtc服务器地址
+        type: string
+    type: object
+  dto.GroupJoinRequest:
+    properties:
+      group_id:
+        description: 群组的ID
+        type: integer
+      option:
+        $ref: '#/definitions/dto.CallOption'
+      room:
+        description: 房间名称
+        type: string
+    required:
+    - group_id
+    - room
+    type: object
+  dto.GroupShowRequest:
+    properties:
+      group_id:
+        description: 群组的ID
+        type: integer
+      option:
+        $ref: '#/definitions/dto.CallOption'
+      room:
+        description: 房间名称
+        type: string
+    required:
+    - group_id
+    - room
+    type: object
   dto.ParticipantInfo:
     properties:
       identity:
@@ -129,15 +187,185 @@ definitions:
       start_at:
         description: 创建房间时间
         type: integer
-      video_call_record_url:
+      status:
         type: string
-      video_call_status:
+      video_call_record_url:
         type: string
     type: object
 info:
   contact: {}
   title: Swagger Example API
 paths:
+  /live/group/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建群聊通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupCallRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GroupCallResponse'
+              type: object
+      security:
+      - Bearer: []
+      summary: 创建群聊通话
+      tags:
+      - GroupUser
+  /live/group/join:
+    post:
+      consumes:
+      - application/json
+      description: 加入群聊通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJoinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GroupJoinRequest'
+              type: object
+      security:
+      - Bearer: []
+      summary: 加入群聊通话
+      tags:
+      - GroupUser
+  /live/group/leave:
+    post:
+      consumes:
+      - application/json
+      description: 离开群聊通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupShowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GroupJoinRequest'
+              type: object
+      security:
+      - Bearer: []
+      summary: 离开群聊通话
+      tags:
+      - GroupUser
+  /live/group/reject:
+    post:
+      consumes:
+      - application/json
+      description: 拒绝群聊通话
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupShowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GroupJoinRequest'
+              type: object
+      security:
+      - Bearer: []
+      summary: 拒绝群聊通话
+      tags:
+      - GroupUser
+  /live/group/show:
+    get:
+      consumes:
+      - application/json
+      description: 获取群聊通话信息
+      parameters:
+      - description: Bearer JWT
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupShowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GroupJoinRequest'
+              type: object
+      security:
+      - Bearer: []
+      summary: 获取群聊通话信息
+      tags:
+      - GroupUser
   /live/user/create:
     post:
       consumes:
