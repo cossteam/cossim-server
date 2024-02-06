@@ -489,7 +489,7 @@ func (s *Service) GetJoinToken(ctx context.Context, room, identity, userName str
 		RoomJoin:   true,
 		Room:       room,
 	}
-	at.AddGrant(grant).SetIdentity(identity).SetValidFor(s.liveTimeout).SetName(userName)
+	at.AddGrant(grant).SetIdentity(userName).SetValidFor(s.liveTimeout).SetName(userName)
 	jwt, err := at.ToJWT()
 	if err != nil {
 		s.logger.Error("Failed to generate JWT", zap.Error(err))
