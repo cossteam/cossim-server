@@ -17,8 +17,6 @@ message SendUserMsgRequest{
   uint32 DialogId = 6;
   // @inject_tag: json:"is_burn_after_reading"
   BurnAfterReadingType IsBurnAfterReadingType = 7;
-
-
 }
 
 message SendGroupMsgRequest{
@@ -286,24 +284,7 @@ message GetGroupMsgLabelByDialogIdResponse {
   repeated GroupMessage MsgList = 2;
 }
 
-////批量设置私聊消息id为已读
-//    rpc SetUserMsgsReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-////修改指定私聊消息的已读状态
-//    rpc SetUserMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-////获取私聊对话未读消息
-//    rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
-////删除多条私聊消息
-//    rpc DeleteUserMsgs(DeleteUserMsgsRequest) returns (DeleteUserMsgsResponse);
-//
-//
-////批量设置群聊消息id为已读
-//    rpc SetGroupMsgsReadStatus(SetGroupMsgReadStatusRequest) returns (SetGroupMsgReadStatusResponse);
-////修改指定群聊消息的已读状态
-//    rpc SetGroupMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-////获取群聊对话未读消息
-//    rpc GetUnreadGroupMsgs(GetUnreadGroupMsgsRequest) returns (GetUnreadGroupMsgsResponse);
-////删除多条群聊消息
-//    rpc DeleteGroupMsgs(DeleteGroupMsgsRequest) returns (DeleteGroupMsgsResponse);
+
 enum ReadType {
   NotRead = 0; //未读
   IsRead = 1; //已读
@@ -330,15 +311,6 @@ message SetUserMsgReadStatusResponse {
 
 }
 
-//message SetGroupMsgReadStatusRequest {
-//  // @inject_tag: json:"msg_ids"
-//  repeated uint32 msgIds = 1;
-//}
-//
-//message SetGroupMsgReadStatusResponse {
-//
-//}
-
 message GetUnreadUserMsgsRequest {
   // @inject_tag: json:"user_id"
   string UserId = 1;
@@ -350,16 +322,7 @@ message GetUnreadUserMsgsResponse {
   // @inject_tag: json:"user_messages"
   repeated UserMessage UserMessages = 1;
 }
-//message GetUnreadGroupMsgsRequest {
-//  // @inject_tag: json:"group_id"
-//  uint32 DialogId = 1;
-//  // @inject_tag: json:"user_id"
-//  string UserId = 2;
-//}
-//message GetUnreadGroupMsgsResponse {
-//  // @inject_tag: json:"group_messages"
-//  repeated GroupMessage GroupMessages = 1;
-//}
+
 message GetUserMsgIdAfterMsgRequest {
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 1;
@@ -482,14 +445,4 @@ service MsgService{
   rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
   //删除多条私聊消息
 //  rpc DeleteUserMsgs(DeleteUserMsgsRequest) returns (DeleteUserMsgsResponse);
-
-
-  //批量设置群聊消息id为已读
-//  rpc SetGroupMsgsReadStatus(SetGroupMsgReadStatusRequest) returns (SetGroupMsgReadStatusResponse);
-//  //修改指定群聊消息的已读状态
-//  rpc SetGroupMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-//  //获取群聊对话未读消息
-//  rpc GetUnreadGroupMsgs(GetUnreadGroupMsgsRequest) returns (GetUnreadGroupMsgsResponse);
-//  //删除多条群聊消息
-//  rpc DeleteGroupMsgs(DeleteGroupMsgsRequest) returns (DeleteGroupMsgsResponse);
 }

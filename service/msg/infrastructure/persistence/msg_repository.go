@@ -351,3 +351,12 @@ func (g *MsgRepo) GetGroupMsgList(list dataTransformers.GroupMsgList) (*dataTran
 
 	return response, nil
 }
+
+func (g *MsgRepo) GetGroupMsgsByIDs(msgIds []uint32) ([]*entity.GroupMessage, error) {
+	var groupMessages []*entity.GroupMessage
+	err := g.db.Model(&entity.GroupMessage{}).
+		Where("id IN (?) AND deleted_at = 0", msgIds).
+		Find(&groupMessages).Error
+
+	return groupMessages, err
+}

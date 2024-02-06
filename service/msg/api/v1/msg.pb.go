@@ -158,37 +158,6 @@ func (MsgLabel) EnumDescriptor() ([]byte, []int) {
 	return file_api_v1_msg_proto_rawDescGZIP(), []int{2}
 }
 
-// //批量设置私聊消息id为已读
-//
-//	rpc SetUserMsgsReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-//
-// //修改指定私聊消息的已读状态
-//
-//	rpc SetUserMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-//
-// //获取私聊对话未读消息
-//
-//	rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
-//
-// //删除多条私聊消息
-//
-//	rpc DeleteUserMsgs(DeleteUserMsgsRequest) returns (DeleteUserMsgsResponse);
-//
-// //批量设置群聊消息id为已读
-//
-//	rpc SetGroupMsgsReadStatus(SetGroupMsgReadStatusRequest) returns (SetGroupMsgReadStatusResponse);
-//
-// //修改指定群聊消息的已读状态
-//
-//	rpc SetGroupMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-//
-// //获取群聊对话未读消息
-//
-//	rpc GetUnreadGroupMsgs(GetUnreadGroupMsgsRequest) returns (GetUnreadGroupMsgsResponse);
-//
-// //删除多条群聊消息
-//
-//	rpc DeleteGroupMsgs(DeleteGroupMsgsRequest) returns (DeleteGroupMsgsResponse);
 type ReadType int32
 
 const (
@@ -2530,17 +2499,6 @@ func (x *GetUnreadUserMsgsResponse) GetUserMessages() []*UserMessage {
 	return nil
 }
 
-//	message GetUnreadGroupMsgsRequest {
-//	 // @inject_tag: json:"group_id"
-//	 uint32 DialogId = 1;
-//	 // @inject_tag: json:"user_id"
-//	 string UserId = 2;
-//	}
-//
-//	message GetUnreadGroupMsgsResponse {
-//	 // @inject_tag: json:"group_messages"
-//	 repeated GroupMessage GroupMessages = 1;
-//	}
 type GetUserMsgIdAfterMsgRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

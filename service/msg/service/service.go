@@ -13,10 +13,11 @@ import (
 
 func NewService(ac *pkgconfig.AppConfig, repo *persistence.Repositories, db *gorm.DB) *Service {
 	return &Service{
-		mr:  repo.Mr,
-		db:  db,
-		ac:  ac,
-		sid: xid.New().String(),
+		mr:   repo.Mr,
+		db:   db,
+		gmrr: repo.Gmrr,
+		ac:   ac,
+		sid:  xid.New().String(),
 	}
 }
 
@@ -24,7 +25,8 @@ type Service struct {
 	mr repository.MsgRepository
 	db *gorm.DB
 	v1.UnimplementedMsgServiceServer
-
+	v1.UnimplementedGroupMessageServiceServer
+	gmrr      repository.GroupMsgReadRepository
 	ac        *pkgconfig.AppConfig
 	discovery discovery.Discovery
 	sid       string

@@ -1,0 +1,67 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/msg/api/v1";
+
+// 设置群聊消息已读请求
+message SetGroupMessageReadRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 MsgId = 1;             // 消息ID
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 2;          // 对话ID
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 3;           // 群聊ID
+  // @inject_tag: json:"read_at"
+  int64 ReadAt = 4;             // 已读时间
+  // @inject_tag: json:"user_id"
+  string UserId = 5;            // 用户ID
+}
+
+message SetGroupMessagesReadRequest {
+  // @inject_tag: json:"list"
+  repeated SetGroupMessageReadRequest List = 1;
+}
+
+// 设置群聊消息已读响应
+message SetGroupMessageReadResponse {
+  // 可以根据需要定义响应字段
+}
+
+// 获取指定消息已读人员请求
+message GetGroupMessageReadersRequest {
+  // @inject_tag: json:"msg_id"
+  uint32 MsgId = 1;             // 消息ID
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 2;          // 对话ID
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 3;           // 群聊ID
+}
+
+// 获取指定消息已读人员响应
+message GetGroupMessageReadersResponse {
+  // @inject_tag: json:"user_ids"
+  repeated string UserIds = 1;  // 已读人员的用户ID列表
+}
+
+message GetGroupMessageReadByMsgIdAndUserIdRequest{
+  // @inject_tag: json:"msg_id"
+  uint32 MsgId = 1;             // 消息ID
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+message GetGroupMessageReadByMsgIdAndUserIdResponse{
+  // @inject_tag: json:"read_at"
+  int64 ReadAt = 1;
+}
+
+// 群聊消息服务
+service GroupMessageService {
+  // 设置群聊消息已读
+  rpc SetGroupMessageRead(SetGroupMessagesReadRequest) returns (SetGroupMessageReadResponse);
+
+  // 获取指定消息已读人员
+  rpc GetGroupMessageReaders(GetGroupMessageReadersRequest) returns (GetGroupMessageReadersResponse);
+
+  //根据消息id与用户id查询是否已经读取过
+  rpc GetGroupMessageReadByMsgIdAndUserId(GetGroupMessageReadByMsgIdAndUserIdRequest) returns (GetGroupMessageReadByMsgIdAndUserIdResponse);
+}

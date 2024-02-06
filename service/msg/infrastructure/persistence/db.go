@@ -7,14 +7,16 @@ import (
 )
 
 type Repositories struct {
-	Mr repository.MsgRepository
-	db *gorm.DB
+	Mr   repository.MsgRepository
+	Gmrr repository.GroupMsgReadRepository
+	db   *gorm.DB
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
-		Mr: NewMsgRepo(db),
-		db: db,
+		Mr:   NewMsgRepo(db),
+		Gmrr: NewGroupMsgReadRepo(db),
+		db:   db,
 	}
 }
 

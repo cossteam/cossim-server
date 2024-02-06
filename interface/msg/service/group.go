@@ -10,6 +10,7 @@ import (
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -315,4 +316,120 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 	}
 
 	return resp, nil
+}
+
+func (s *Service) SetGroupMessagesRead(c context.Context, id string, request *model.GroupMessageReadRequest) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+		Gid: request.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: request.GroupId,
+		UserId:  id,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+		UserId:   id,
+		DialogId: request.DialogId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	msgList := make([]*msggrpcv1.SetGroupMessageReadRequest, 0)
+	for _, v := range request.MsgIds {
+		userId, _ := s.groupMsgClient.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
+			MsgId:  v,
+			UserId: id,
+		})
+		if userId != nil {
+			continue
+		}
+		msgList = append(msgList, &msggrpcv1.SetGroupMessageReadRequest{
+			MsgId:    v,
+			GroupId:  request.GroupId,
+			DialogId: request.DialogId,
+			UserId:   id,
+			ReadAt:   pkgtime.Now(),
+		})
+	}
+	if len(msgList) == 0 {
+		return nil, nil
+	}
+
+	_, err = s.groupMsgClient.SetGroupMessageRead(c, &msggrpcv1.SetGroupMessagesReadRequest{
+		List: msgList,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId string, msgId uint32, dialogId uint32, groupId uint32) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+		Gid: groupId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: groupId,
+		UserId:  userId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+		UserId:   userId,
+		DialogId: dialogId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	us, err := s.groupMsgClient.GetGroupMessageReaders(c, &msggrpcv1.GetGroupMessageReadersRequest{
+		MsgId:    msgId,
+		GroupId:  groupId,
+		DialogId: dialogId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := s.userClient.GetBatchUserInfo(c, &usergrpcv1.GetBatchUserInfoRequest{
+		UserIds: us.UserIds,
+	})
+	if err != nil {
+		return nil, err
+	}
+	response := make([]model.GetGroupMessageReadersResponse, 0)
+
+	if len(us.UserIds) == len(info.Users) {
+		for _, v := range us.UserIds {
+			for _, v1 := range info.Users {
+				if v == v1.UserId {
+					response = append(response, model.GetGroupMessageReadersResponse{
+						UserId: v1.UserId,
+						Avatar: v1.Avatar,
+						Name:   v1.NickName,
+					})
+				}
+			}
+		}
+	}
+
+	return response, nil
 }

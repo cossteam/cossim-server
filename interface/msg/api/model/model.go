@@ -179,3 +179,16 @@ func IsAllowedConversationType(isBurnAfterReading BurnAfterReadingType) bool {
 		return false
 	}
 }
+
+type GroupMessageReadRequest struct {
+	GroupId  uint32   `json:"group_id" binding:"required"`  // 群组ID
+	DialogId uint32   `json:"dialog_id" binding:"required"` // 会话ID
+	MsgIds   []uint32 `json:"msg_id" binding:"required"`    // 消息ID
+}
+
+type GetGroupMessageReadersResponse struct {
+	UserId string `json:"user_id"`
+	Avatar string `json:"avatar"`
+	Name   string `json:"name"`
+	//ReadAt int64  `json:"read_at"`
+}
