@@ -386,6 +386,18 @@ message GetGroupMsgListRequest {
   int32 GroupId = 6;
 }
 
+message GetGroupMessagesByIdsRequest{
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 1;
+  // @inject_tag: json:"msg_ids"
+  repeated uint32 MsgIds = 2;
+}
+
+message GetGroupMessagesByIdsResponse{
+  // @inject_tag: json:"group_messages"
+  repeated GroupMessage GroupMessages = 1;
+}
+
 message GetGroupMsgListResponse {
   // @inject_tag: json:"group_messages"
   repeated GroupMessage GroupMessages = 1;
@@ -425,6 +437,8 @@ service MsgService{
   rpc GetUserMessageById(GetUserMsgByIDRequest) returns (UserMessage);
   //根据消息id获取群消息
   rpc GetGroupMessageById(GetGroupMsgByIDRequest) returns (GroupMessage);
+  //根据多个消息id获取群消息
+  rpc GetGroupMessagesByIds(GetGroupMessagesByIdsRequest) returns (GetGroupMessagesByIdsResponse);
   //设置私聊消息标注状态
   rpc SetUserMsgLabel(SetUserMsgLabelRequest) returns (SetUserMsgLabelResponse);
   // 设置群消息标注状态

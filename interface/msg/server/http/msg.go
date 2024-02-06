@@ -584,7 +584,7 @@ func getDialogAfterMsg(c *gin.Context) {
 	}
 	resp, err := svc.GetDialogAfterMsg(c, *req, thisId)
 	if err != nil {
-		response.SetFail(c, err.Error(), nil)
+		c.Error(err)
 	}
 	response.SetSuccess(c, "获取成功", resp)
 }
@@ -611,7 +611,7 @@ func setGroupMessagesRead(c *gin.Context) {
 	}
 	_, err = svc.SetGroupMessagesRead(c, thisId, req)
 	if err != nil {
-		response.SetFail(c, err.Error(), nil)
+		c.Error(err)
 		return
 	}
 
@@ -653,7 +653,7 @@ func getGroupMessageReaders(c *gin.Context) {
 	// 执行获取消息已读人员的逻辑
 	resp, err := svc.GetGroupMessageReadersResponse(c, thisId, uint32(msgID), uint32(dialogID), uint32(groupID))
 	if err != nil {
-		response.SetFail(c, err.Error(), nil)
+		c.Error(err)
 		return
 	}
 

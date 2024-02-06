@@ -371,6 +371,20 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, request *mo
 	if err != nil {
 		return nil, err
 	}
+
+	msgs, err := s.msgClient.GetGroupMessagesByIds(c, &msggrpcv1.GetGroupMessagesByIdsRequest{
+		MsgIds:  request.MsgIds,
+		GroupId: request.GroupId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	//给消息发送者推送谁读了消息
+	for _, message := range msgs.GroupMessages {
+		if message.UserId != id {
+			s.SendMsg(message.UserId, config.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": id}, false)
+		}
+	}
 	return nil, nil
 }
 
