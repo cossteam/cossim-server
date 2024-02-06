@@ -12,10 +12,10 @@ type UserCallRequest struct {
 }
 
 type UserCallResponse struct {
-	Url    string `json:"url"`     // webRtc服务器地址
-	Token  string `json:"token"`   // 加入通话的token
-	Room   string `json:"room"`    // 房间名称
-	RoomID string `json:"room_id"` // 房间id
+	Url   string `json:"url"`   // webRtc服务器地址
+	Token string `json:"token"` // 加入通话的token
+	//Room   string `json:"room"`    // 房间名称
+	//RoomID string `json:"room_id"` // 房间id
 }
 
 type CallOption struct { // 通话选项
@@ -27,7 +27,7 @@ type CallOption struct { // 通话选项
 }
 
 type UserJoinRequest struct {
-	Room   string     `json:"room" binding:"required"` // 房间名称
+	//Room   string     `json:"room" binding:"required"` // 房间名称
 	Option CallOption `json:"option"`
 }
 

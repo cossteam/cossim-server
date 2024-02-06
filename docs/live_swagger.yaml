@@ -53,30 +53,24 @@ definitions:
         description: 群组的ID
         type: integer
       option:
-        $ref: '#/definitions/dto.CallOption'
-      room:
-        description: 房间名称
-        type: string
+        allOf:
+        - $ref: '#/definitions/dto.CallOption'
+        description: Room    string     `json:"room" binding:"required"`     // 房间名称
     required:
     - group_id
-    - room
     type: object
   dto.GroupLeaveRequest:
     properties:
       force:
-        description: 是否要结束整个通话
+        description: Room    string     `json:"room" binding:"required"`     // 房间名称
         type: boolean
       group_id:
         description: 群组的ID
         type: integer
       option:
         $ref: '#/definitions/dto.CallOption'
-      room:
-        description: 房间名称
-        type: string
     required:
     - group_id
-    - room
     type: object
   dto.GroupShowRequest:
     properties:
@@ -84,13 +78,11 @@ definitions:
         description: 群组的ID
         type: integer
       option:
-        $ref: '#/definitions/dto.CallOption'
-      room:
-        description: 房间名称
-        type: string
+        allOf:
+        - $ref: '#/definitions/dto.CallOption'
+        description: Room    string     `json:"room" binding:"required"`     // 房间名称
     required:
     - group_id
-    - room
     type: object
   dto.ParticipantInfo:
     properties:
@@ -150,12 +142,6 @@ definitions:
     type: object
   dto.UserCallResponse:
     properties:
-      room:
-        description: 房间名称
-        type: string
-      room_id:
-        description: 房间id
-        type: string
       token:
         description: 加入通话的token
         type: string
@@ -166,28 +152,9 @@ definitions:
   dto.UserJoinRequest:
     properties:
       option:
-        $ref: '#/definitions/dto.CallOption'
-      room:
-        description: 房间名称
-        type: string
-    required:
-    - room
-    type: object
-  dto.UserLeaveRequest:
-    properties:
-      room:
-        description: 房间名称
-        type: string
-    required:
-    - room
-    type: object
-  dto.UserRejectRequest:
-    properties:
-      room:
-        description: 房间名称
-        type: string
-    required:
-    - room
+        allOf:
+        - $ref: '#/definitions/dto.CallOption'
+        description: Room   string     `json:"room" binding:"required"` // 房间名称
     type: object
   dto.UserShowResponse:
     properties:
@@ -365,11 +332,6 @@ paths:
         name: group_id
         required: true
         type: integer
-      - description: 房间名
-        in: query
-        name: room
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -461,12 +423,6 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UserLeaveRequest'
       produces:
       - application/json
       responses:
@@ -490,12 +446,6 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UserRejectRequest'
       produces:
       - application/json
       responses:
@@ -515,11 +465,6 @@ paths:
       - description: Bearer JWT
         in: header
         name: Authorization
-        required: true
-        type: string
-      - description: 房间名
-        in: query
-        name: room
         required: true
         type: string
       produces:

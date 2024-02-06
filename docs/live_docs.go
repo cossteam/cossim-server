@@ -279,13 +279,6 @@ const docTemplatelive = `{
                         "name": "group_id",
                         "in": "query",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "房间名",
-                        "name": "room",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -439,15 +432,6 @@ const docTemplatelive = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserLeaveRequest"
-                        }
                     }
                 ],
                 "responses": {
@@ -485,15 +469,6 @@ const docTemplatelive = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserRejectRequest"
-                        }
                     }
                 ],
                 "responses": {
@@ -527,13 +502,6 @@ const docTemplatelive = `{
                         "description": "Bearer JWT",
                         "name": "Authorization",
                         "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "房间名",
-                        "name": "room",
-                        "in": "query",
                         "required": true
                     }
                 ],
@@ -632,8 +600,7 @@ const docTemplatelive = `{
         "dto.GroupJoinRequest": {
             "type": "object",
             "required": [
-                "group_id",
-                "room"
+                "group_id"
             ],
             "properties": {
                 "group_id": {
@@ -641,23 +608,23 @@ const docTemplatelive = `{
                     "type": "integer"
                 },
                 "option": {
-                    "$ref": "#/definitions/dto.CallOption"
-                },
-                "room": {
-                    "description": "房间名称",
-                    "type": "string"
+                    "description": "Room    string     ` + "`" + `json:\"room\" binding:\"required\"` + "`" + `     // 房间名称",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CallOption"
+                        }
+                    ]
                 }
             }
         },
         "dto.GroupLeaveRequest": {
             "type": "object",
             "required": [
-                "group_id",
-                "room"
+                "group_id"
             ],
             "properties": {
                 "force": {
-                    "description": "是否要结束整个通话",
+                    "description": "Room    string     ` + "`" + `json:\"room\" binding:\"required\"` + "`" + `     // 房间名称",
                     "type": "boolean"
                 },
                 "group_id": {
@@ -666,18 +633,13 @@ const docTemplatelive = `{
                 },
                 "option": {
                     "$ref": "#/definitions/dto.CallOption"
-                },
-                "room": {
-                    "description": "房间名称",
-                    "type": "string"
                 }
             }
         },
         "dto.GroupShowRequest": {
             "type": "object",
             "required": [
-                "group_id",
-                "room"
+                "group_id"
             ],
             "properties": {
                 "group_id": {
@@ -685,11 +647,12 @@ const docTemplatelive = `{
                     "type": "integer"
                 },
                 "option": {
-                    "$ref": "#/definitions/dto.CallOption"
-                },
-                "room": {
-                    "description": "房间名称",
-                    "type": "string"
+                    "description": "Room    string     ` + "`" + `json:\"room\" binding:\"required\"` + "`" + `     // 房间名称",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CallOption"
+                        }
+                    ]
                 }
             }
         },
@@ -776,14 +739,6 @@ const docTemplatelive = `{
         "dto.UserCallResponse": {
             "type": "object",
             "properties": {
-                "room": {
-                    "description": "房间名称",
-                    "type": "string"
-                },
-                "room_id": {
-                    "description": "房间id",
-                    "type": "string"
-                },
                 "token": {
                     "description": "加入通话的token",
                     "type": "string"
@@ -796,40 +751,14 @@ const docTemplatelive = `{
         },
         "dto.UserJoinRequest": {
             "type": "object",
-            "required": [
-                "room"
-            ],
             "properties": {
                 "option": {
-                    "$ref": "#/definitions/dto.CallOption"
-                },
-                "room": {
-                    "description": "房间名称",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserLeaveRequest": {
-            "type": "object",
-            "required": [
-                "room"
-            ],
-            "properties": {
-                "room": {
-                    "description": "房间名称",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserRejectRequest": {
-            "type": "object",
-            "required": [
-                "room"
-            ],
-            "properties": {
-                "room": {
-                    "description": "房间名称",
-                    "type": "string"
+                    "description": "Room   string     ` + "`" + `json:\"room\" binding:\"required\"` + "`" + ` // 房间名称",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CallOption"
+                        }
+                    ]
                 }
             }
         },

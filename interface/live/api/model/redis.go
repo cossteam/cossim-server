@@ -6,6 +6,7 @@ import (
 )
 
 type UserRoomInfo struct {
+	Room            string                        `json:"room"`
 	SenderID        string                        `json:"sender_id"`
 	RecipientID     string                        `json:"recipient_id"`
 	NumParticipants uint32                        `json:"num_participants"`
@@ -69,6 +70,7 @@ func (r *UserRoomInfo) FromMap(data interface{}) error {
 }
 
 type GroupRoomInfo struct {
+	Room            string                        `json:"room"`
 	GroupID         uint32                        `json:"group_id"`
 	SenderID        string                        `json:"sender_id"`
 	Participants    map[string]*ActiveParticipant `json:"participants"`

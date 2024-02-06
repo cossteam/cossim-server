@@ -2,7 +2,6 @@ package http
 
 import (
 	"github.com/cossim/coss-server/interface/live/api/dto"
-	"github.com/cossim/coss-server/pkg/code"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
@@ -68,7 +67,7 @@ func (h *Handler) UserJoin(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.UserJoinRoom(c, userID, req.Room)
+	resp, err := h.svc.UserJoinRoom(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -83,24 +82,17 @@ func (h *Handler) UserJoin(c *gin.Context) {
 // @Tags liveUser
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @Param room query string true "房间名"
 // @Produce  json
 // @Success		200 {object} dto.Response{data=dto.UserShowResponse} "participant=通话参与者"
 // @Router /live/user/show [get]
 func (h *Handler) UserShow(c *gin.Context) {
-	rid := c.Query("room")
 	uid, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	if uid == "" || rid == "" {
-		response.SetFail(c, code.InvalidParameter.Message(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetUserRoom(c, uid, rid)
+	resp, err := h.svc.GetUserRoom(c, uid)
 	if err != nil {
 		c.Error(err)
 		return
@@ -115,17 +107,16 @@ func (h *Handler) UserShow(c *gin.Context) {
 // @Tags liveUser
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @param request body dto.UserRejectRequest true "request"
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} dto.Response{}
 // @Router /live/user/reject [post]
 func (h *Handler) UserReject(c *gin.Context) {
-	req := new(dto.UserRejectRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
+	//req := new(dto.UserRejectRequest)
+	//if err := c.ShouldBindJSON(&req); err != nil {
+	//	response.SetFail(c, "参数验证失败", nil)
+	//	return
+	//}
 
 	uid, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
@@ -133,7 +124,7 @@ func (h *Handler) UserReject(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.UserRejectRoom(c, uid, req.Room)
+	resp, err := h.svc.UserRejectRoom(c, uid)
 	if err != nil {
 		c.Error(err)
 		return
@@ -148,17 +139,16 @@ func (h *Handler) UserReject(c *gin.Context) {
 // @Tags liveUser
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @param request body dto.UserLeaveRequest true "request"
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} dto.Response{}
 // @Router /live/user/leave [post]
 func (h *Handler) UserLeave(c *gin.Context) {
-	req := new(dto.UserLeaveRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
+	//req := new(dto.UserLeaveRequest)
+	//if err := c.ShouldBindJSON(&req); err != nil {
+	//	response.SetFail(c, "参数验证失败", nil)
+	//	return
+	//}
 
 	uid, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
@@ -166,7 +156,7 @@ func (h *Handler) UserLeave(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.UserLeaveRoom(c, uid, req.Room)
+	resp, err := h.svc.UserLeaveRoom(c, uid)
 	if err != nil {
 		c.Error(err)
 		return
