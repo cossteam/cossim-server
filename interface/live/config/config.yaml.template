@@ -29,7 +29,7 @@ livekit:
   url: wss://
   api_key:
   secret_key:
-  timeout: 2m
+  timeout: 1m
 
 http:
   address: "127.0.0.1"
