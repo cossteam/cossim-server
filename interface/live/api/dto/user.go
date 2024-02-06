@@ -48,7 +48,7 @@ type UserShowResponse struct {
 	StartAt            int64              `json:"start_at"` // 创建房间时间
 	Duration           int64              `json:"duration"` // 房间持续时间
 	Room               string             `json:"room"`     // 房间名称
-	VideoCallStatus    string             `json:"video_call_status,omitempty"`
+	Status             string             `json:"status,omitempty"`
 	VideoCallRecordURL string             `json:"video_call_record_url,omitempty"`
 	Participant        []*ParticipantInfo `json:"participant"`
 }

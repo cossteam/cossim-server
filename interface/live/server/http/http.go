@@ -90,10 +90,11 @@ func (h *Handler) route() {
 
 	g := h.engine.Group("/api/v1/live/group")
 	g.Use(middleware.AuthMiddleware(h.redisClient))
+	g.GET("/show", h.GroupShow)
 	g.POST("/create", h.GroupCreate)
 	g.POST("/join", h.GroupJoin)
-	//g.GET("/show", h.GroupShow)
-	//g.POST("/leave", h.GroupLeave)
+	g.POST("/reject", h.GroupReject)
+	g.POST("/leave", h.GroupLeave)
 
 	// 为Swagger路径添加不需要身份验证的中间件
 	swagger := h.engine.Group("/api/v1/live/swagger")

@@ -47,6 +47,10 @@ const (
 	UserCallRejectEvent
 	// 群聊通话呼叫拒绝事件
 	GroupCallRejectEvent
+	// 用户通话结束事件
+	UserCallEndEvent
+	// 群聊通话结束事件
+	GroupCallEndEvent
 )
 
 type WsMsg struct {
