@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"sort"
+	"time"
 )
 
 func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.SendUserMsgRequest) (interface{}, error) {
@@ -516,27 +517,28 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 
 	//todo 加锁
 	//更新登录信息
-	values, err := cache.GetAllListValues(s.redisClient, cli.Uid)
+	keys, err := cache.ScanKeys(s.redisClient, cli.Uid+":"+deviceType+":*")
 	if err != nil {
 		s.logger.Error("获取用户信息失败1", zap.Error(err))
 		return
 	}
-	list, err := cache.GetUserInfoList(values)
 
-	if err != nil {
-		s.logger.Error("获取用户信息失败2", zap.Error(err))
-		return
-	}
-	for _, info := range list {
+	for _, key := range keys {
+		v, err := cache.GetKey(s.redisClient, key)
+		if err != nil {
+			s.logger.Error("获取用户信息失败", zap.Error(err))
+			return
+		}
+		strKey := v.(string)
+		info, err := cache.GetUserInfo(strKey)
+		if err != nil {
+			s.logger.Error("获取用户信息失败", zap.Error(err))
+			return
+		}
 		if info.Token == token {
 			info.Rid = cli.Rid
-			nlist := cache.GetUserInfoListToInterfaces(list)
-			err := cache.DeleteList(s.redisClient, cli.Uid)
-			if err != nil {
-				s.logger.Error("获取用户信息失败", zap.Error(err))
-				return
-			}
-			err = cache.AddToList(s.redisClient, cli.Uid, nlist)
+			resp := cache.GetUserInfoToInterfaces(info)
+			err := cache.SetKey(s.redisClient, key, resp, 60*60*24*7*time.Second)
 			if err != nil {
 				s.logger.Error("保存用户信息失败", zap.Error(err))
 				return

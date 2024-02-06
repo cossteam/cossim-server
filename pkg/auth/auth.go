@@ -36,21 +36,45 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 		ID     string `json:"id"`
 		Status int64  `json:"status"`
 	}
-	data, err := cache.GetAllListValues(a.RDB, claims.UserId)
+	//data, err := cache.GetAllListValues(a.RDB, claims.UserId)
+	//if err != nil {
+	//	fmt.Println("error => ", err)
+	//	return false, err
+	//}
+	keys, err := cache.ScanKeys(a.RDB, claims.UserId+":"+driverType+":*")
 	if err != nil {
 		fmt.Println("error => ", err)
 		return false, err
 	}
-	users, err := cache.GetUserInfoList(data)
-	if err != nil {
-		return false, err
+	if len(keys) <= 0 {
+		return false, errors.New("token not found")
 	}
+
 	var found = false
-	for _, user := range users {
-		if user.Token == tokenString {
+
+	for _, key := range keys {
+		v, err := cache.GetKey(a.RDB, key)
+		if err != nil {
+			return false, err
+		}
+		data := v.(string)
+		info, err := cache.GetUserInfo(data)
+		if err != nil {
+			return false, err
+		}
+		if info.Token == tokenString {
 			found = true
 		}
 	}
+
+	//users, err := cache.GetUserInfoList(data)
+	//if err != nil {
+	//	return false, err
+	//}
+	//for _, user := range users {
+	//	if user.Token == tokenString {
+	//	}
+	//}
 	if !found {
 		return false, errors.New("token not found")
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
+	"strconv"
 	"strings"
 	ostime "time"
 )
@@ -39,31 +40,23 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", code.UserErrLoginFailed
 	}
 
-	values, err := cache.GetAllListValues(s.redisClient, resp.UserId)
+	keys, err := cache.ScanKeys(s.redisClient, resp.UserId+":"+driveType+":*")
 	if err != nil {
-		s.logger.Error("login :redis get key err =>", zap.Error(err))
-
-		return nil, "", code.UserErrLoginFailed
+		s.logger.Error("redis scan err", zap.Error(err))
+		return nil, "", code.UserErrErrLogoutFailed
 	}
 
 	//多端设备登录限制
 	if s.conf.MultipleDeviceLimit.Enable {
-		list, err := cache.GetUserInfoList(values)
-		if err != nil {
-			return nil, "", err
+		if len(keys) >= s.conf.MultipleDeviceLimit.Max {
+			fmt.Println("登录设备达到限制")
+			return nil, "", code.UserErrLoginFailed
 		}
 
-		typeMap := cache.CategorizeByDriveType(list)
-		if _, ok := typeMap[driveType]; ok {
-			if len(typeMap[driveType]) >= s.conf.MultipleDeviceLimit.Max {
-				fmt.Println("登录设备达到限制")
-				return nil, "", code.UserErrLoginFailed
-			}
-		}
 	}
 
 	data := cache.UserInfo{
-		ID:         uint(len(values)),
+		ID:         uint(len(keys)),
 		UserId:     resp.UserId,
 		Token:      token,
 		DriverType: driveType,
@@ -71,11 +64,9 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		ClientIP:   clientIp,
 	}
 
-	list := []interface{}{data}
-	err = cache.AddToList(s.redisClient, resp.UserId, list)
+	err = cache.SetKey(s.redisClient, resp.UserId+":"+driveType+":"+strconv.Itoa(len(keys)), data, 60*60*24*7*ostime.Second)
 	if err != nil {
-		s.logger.Error("Redis error:", zap.Error(err))
-		return nil, "", code.UserErrLoginFailed
+		return nil, "", err
 	}
 
 	return &model.UserInfoResponse{
@@ -88,31 +79,21 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	}, token, nil
 }
 
-func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest) error {
-	values, err := cache.GetAllListValues(s.redisClient, userID)
+func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest, driverType string) error {
+	value, err := cache.GetKey(s.redisClient, userID+":"+driverType+":"+strconv.Itoa(int(request.LoginNumber)))
 	if err != nil {
-		s.logger.Error("logout :redis get key err", zap.Error(err))
-		return code.UserErrErrLogoutFailed
-	}
-	if len(values)-1 < int(request.LoginNumber) {
-		s.logger.Error("logout : len(values) < int(request.LoginNumber)")
-		return code.UserErrErrLogoutFailed
+		return err
 	}
 
-	list, err := cache.GetUserInfoList(values)
+	data := value.(string)
+
+	info, err := cache.GetUserInfo(data)
 	if err != nil {
-		s.logger.Error("failed to get user info list", zap.Error(err))
-		return code.UserErrErrLogoutFailed
+		return err
 	}
-
-	if list[request.LoginNumber].Token != token {
-		s.logger.Error("logout : list[request.LoginNumber].Token != token")
-		return code.UserErrErrLogoutFailed
-	}
-
 	//通知消息服务关闭ws
-	rid := list[request.LoginNumber].Rid
-	t := list[request.LoginNumber].DriverType
+	rid := info.Rid
+	t := info.DriverType
 	if rid != 0 {
 		msg := msgconfig.WsMsg{
 			Uid:    userID,
@@ -127,11 +108,11 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 	}
 
 	//删除客户端信息
-	err = cache.RemoveFromList(s.redisClient, userID, 0, values[request.LoginNumber])
+	err = cache.DelKey(s.redisClient, userID+":"+driverType+":"+strconv.Itoa(int(request.LoginNumber)))
 	if err != nil {
-		s.logger.Error("failed to logout user", zap.Error(err))
-		return code.UserErrErrLogoutFailed
+		return err
 	}
+
 	return nil
 }
 
