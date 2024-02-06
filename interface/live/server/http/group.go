@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"strconv"
 )
 
 // GroupCreate
@@ -67,7 +68,7 @@ func (h *Handler) GroupJoin(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GroupJoinRoom(c, req.GroupID, userID, req.Room)
+	resp, err := h.svc.GroupJoinRoom(c, req.GroupID, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -83,15 +84,14 @@ func (h *Handler) GroupJoin(c *gin.Context) {
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
 // @Param group_id query uint32 true "群聊id"
-// @Param room query string true "房间名"
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} dto.Response{data=dto.GroupJoinRequest}
 // @Router /live/group/show [get]
 func (h *Handler) GroupShow(c *gin.Context) {
-	req := new(dto.GroupShowRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.SetFail(c, "参数验证失败", nil)
+	gid, err := strconv.Atoi(c.Query("group_id"))
+	if err != nil {
+		response.Fail(c, "参数验证失败", nil)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *Handler) GroupShow(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GroupShowRoom(c, req.GroupID, userID, req.Room)
+	resp, err := h.svc.GroupShowRoom(c, uint32(gid), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -136,7 +136,7 @@ func (h *Handler) GroupReject(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GroupRejectRoom(c, req.GroupID, userID, req.Room)
+	resp, err := h.svc.GroupRejectRoom(c, req.GroupID, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -170,7 +170,7 @@ func (h *Handler) GroupLeave(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GroupLeaveRoom(c, req.GroupID, userID, req.Room, req.Force)
+	resp, err := h.svc.GroupLeaveRoom(c, req.GroupID, userID, req.Force)
 	if err != nil {
 		c.Error(err)
 		return

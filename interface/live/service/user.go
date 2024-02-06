@@ -52,9 +52,8 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		return nil, err
 	}
 
-	roomName := uuid.New().String()
 	room, err := s.roomService.CreateRoom(ctx, &livekit.CreateRoomRequest{
-		Name:            roomName,
+		Name:            uuid.New().String(),
 		EmptyTimeout:    uint32(s.liveTimeout.Seconds()), // 空闲时间
 		MaxParticipants: 2,
 	})
@@ -63,7 +62,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		return nil, err
 	}
 
-	fmt.Println("room => ", room)
+	fmt.Println("CreateUserCall room => ", room)
 
 	senderToken, err := s.GetJoinToken(ctx, room.Name, "admin", sender.NickName)
 
@@ -77,6 +76,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	}
 
 	ToJSONString, err := (&model.UserRoomInfo{
+		Room:            room.Name,
 		SenderID:        senderID,
 		RecipientID:     recipientID,
 		MaxParticipants: 2,
@@ -85,7 +85,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	if err != nil {
 		return nil, err
 	}
-	if err = cache.SetKey(s.redisClient, liveUserPrefix+roomName+":"+senderID+":"+recipientID, ToJSONString, s.liveTimeout); err != nil {
+	if err = cache.SetKey(s.redisClient, liveUserPrefix+room.Name+":"+senderID+":"+recipientID, ToJSONString, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
 	}
@@ -93,7 +93,6 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	msg := msgconfig.WsMsg{Uid: recipientID, Event: msgconfig.UserCallReqEvent, Data: map[string]interface{}{
 		"url":          s.livekitServer,
 		"token":        RecipientToken,
-		"room":         room.Name,
 		"sender_id":    senderID,
 		"recipient_id": recipientID,
 	}}
@@ -103,10 +102,8 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	}
 
 	return &dto.UserCallResponse{
-		Url:    s.livekitServer,
-		Token:  senderToken,
-		Room:   room.Name,
-		RoomID: room.Sid,
+		Url:   s.livekitServer,
+		Token: senderToken,
 	}, nil
 }
 
@@ -123,7 +120,7 @@ func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.UserRoomInf
 		return code.LiveErrMaxParticipantsExceeded
 	}
 
-	room, err := s.getLivekitRoom(ctx, roomName)
+	room, err := s.getLivekitRoom(ctx, roomName, nil)
 	if err != nil {
 		return err
 	}
@@ -135,14 +132,14 @@ func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.UserRoomInf
 	return nil
 }
 
-func (s *Service) UserJoinRoom(ctx context.Context, uid, roomName string) (interface{}, error) {
+func (s *Service) UserJoinRoom(ctx context.Context, uid string) (interface{}, error) {
 	roomInfo := &model.UserRoomInfo{}
-	key, err := s.getRedisRoomWithPrefix(ctx, liveUserPrefix, roomName, roomInfo)
+	key, err := s.getRedisUserRoom(ctx, uid, roomInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = s.checkUserRoom(ctx, roomInfo, uid, roomName); err != nil {
+	if err = s.checkUserRoom(ctx, roomInfo, uid, roomInfo.Room); err != nil {
 		return nil, err
 	}
 
@@ -205,7 +202,7 @@ func (s *Service) joinRoom(userName string, room *livekit.Room) (string, error) 
 	return jwt, err
 }
 
-func (s *Service) getLivekitRoom(ctx context.Context, room string) (*livekit.Room, error) {
+func (s *Service) getLivekitRoom(ctx context.Context, room string, callback func(ctx context.Context, room string)) (*livekit.Room, error) {
 	rooms, err := s.roomService.ListRooms(ctx, &livekit.ListRoomsRequest{Names: []string{room}})
 	if err != nil {
 		s.logger.Error("获取房间信息失败", zap.Error(err))
@@ -213,27 +210,31 @@ func (s *Service) getLivekitRoom(ctx context.Context, room string) (*livekit.Roo
 	}
 
 	if len(rooms.Rooms) == 0 {
-		s.deleteUserRoom(ctx, room)
+		if callback != nil {
+			callback(ctx, room)
+		}
 		return nil, code.LiveErrCallNotFound
 	}
 
 	return rooms.Rooms[0], nil
 }
 
-func (s *Service) GetUserRoom(ctx context.Context, uid, room string) (*dto.UserShowResponse, error) {
-	roomInfo := &model.UserRoomInfo{}
-	_, err := s.getRedisRoomWithPrefix(ctx, liveUserPrefix, room, roomInfo)
+func (s *Service) GetUserRoom(ctx context.Context, uid string) (*dto.UserShowResponse, error) {
+	room := &model.UserRoomInfo{}
+	_, err := s.getRedisUserRoom(ctx, uid, room)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("roomInfo => ", roomInfo)
+	fmt.Println("GetUserRoom room => ", room)
 
-	if uid != roomInfo.RecipientID && uid != roomInfo.SenderID {
+	if uid != room.RecipientID && uid != room.SenderID {
 		return nil, code.Unauthorized
 	}
 
-	livekitRoom, err := s.getLivekitRoom(ctx, room)
+	livekitRoom, err := s.getLivekitRoom(ctx, room.Room, func(ctx context.Context, room string) {
+		s.deleteUserRoom(ctx, room)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -245,19 +246,14 @@ func (s *Service) GetUserRoom(ctx context.Context, uid, room string) (*dto.UserS
 		Participant: make([]*dto.ParticipantInfo, 0),
 	}
 	res, err := s.roomService.ListParticipants(ctx, &livekit.ListParticipantsRequest{
-		Room: room, // 房间名称
+		Room: room.Room, // 房间名称
 	})
 	if err != nil {
 		s.logger.Error("获取通话信息失败", zap.Error(err))
 		return nil, code.LiveErrGetCallInfoFailed
 	}
 
-	fmt.Println("GetUserRoom res => ", res)
-
 	for _, p := range res.Participants {
-		//if p.Identity == userID {
-		//	continue
-		//}
 		resp.Participant = append(resp.Participant, &dto.ParticipantInfo{
 			Sid:         p.Sid,
 			Identity:    p.Identity,
@@ -271,9 +267,9 @@ func (s *Service) GetUserRoom(ctx context.Context, uid, room string) (*dto.UserS
 	return resp, nil
 }
 
-func (s *Service) UserRejectRoom(ctx context.Context, uid, room string) (interface{}, error) {
+func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, error) {
 	roomInfo := &model.UserRoomInfo{}
-	_, err := s.getRedisRoomWithPrefix(ctx, liveUserPrefix, room, roomInfo)
+	_, err := s.getRedisUserRoom(ctx, uid, roomInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -291,14 +287,13 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid, room string) (interfa
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
-	_, err = s.deleteUserRoom(ctx, room)
+	_, err = s.deleteUserRoom(ctx, roomInfo.Room)
 	if err != nil {
 		return nil, err
 	}
 
 	msg := msgconfig.WsMsg{Uid: roomInfo.SenderID, Event: msgconfig.UserCallRejectEvent, Data: map[string]interface{}{
 		"url":          s.livekitServer,
-		"room":         room,
 		"sender_id":    roomInfo.SenderID,
 		"recipient_id": roomInfo.RecipientID,
 	}}
@@ -309,9 +304,9 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid, room string) (interfa
 	return nil, nil
 }
 
-func (s *Service) UserLeaveRoom(ctx context.Context, uid, room string) (interface{}, error) {
+func (s *Service) UserLeaveRoom(ctx context.Context, uid string) (interface{}, error) {
 	roomInfo := &model.UserRoomInfo{}
-	_, err := s.getRedisRoomWithPrefix(ctx, liveUserPrefix, room, roomInfo)
+	_, err := s.getRedisUserRoom(ctx, uid, roomInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +320,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, room string) (interfac
 			continue
 		}
 		msg := msgconfig.WsMsg{Uid: k, Event: msgconfig.UserCallEndEvent, Data: map[string]interface{}{
-			"room":         room,
+			"room":         roomInfo.Room,
 			"sender_id":    roomInfo.SenderID,
 			"recipient_id": roomInfo.RecipientID,
 		}}
@@ -334,7 +329,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, room string) (interfac
 		}
 	}
 
-	return s.deleteUserRoom(ctx, room)
+	return s.deleteUserRoom(ctx, roomInfo.Room)
 }
 
 func (s *Service) deleteUserRoom(ctx context.Context, room string) (interface{}, error) {
@@ -350,25 +345,6 @@ func (s *Service) deleteUserRoom(ctx context.Context, room string) (interface{},
 	}
 
 	if err = s.deleteRedisRoomByPrefix(ctx, liveUserPrefix, room); err != nil {
-		s.logger.Error("删除房间信息失败", zap.Error(err))
-	}
-
-	return nil, nil
-}
-
-func (s *Service) deleteGroupRoom(ctx context.Context, room string) (interface{}, error) {
-	_, err := s.roomService.DeleteRoom(ctx, &livekit.DeleteRoomRequest{
-		Room: room, // 房间名称
-	})
-	if err != nil && !strings.Contains(err.Error(), "room not found") {
-		//if strings.Contains(err.Error(), "room not found") {
-		//	return nil, code.LiveErrCallNotFound
-		//}
-		s.logger.Error("error deleting room", zap.Error(err))
-		return nil, code.LiveErrLeaveCallFailed
-	}
-
-	if err = s.deleteRedisRoomByPrefix(ctx, liveGroupPrefix, room); err != nil {
 		s.logger.Error("删除房间信息失败", zap.Error(err))
 	}
 
@@ -395,7 +371,7 @@ func (s *Service) deleteRedisRoomByPrefix(ctx context.Context, prefix, roomID st
 }
 
 func (s *Service) deleteGroupCallByRoomID(ctx context.Context, roomID string) error {
-	pattern := liveUserPrefix + roomID + ":*"
+	pattern := liveGroupPrefix + roomID + ":*"
 	keys, err := s.redisClient.Keys(ctx, pattern).Result()
 	if err != nil {
 		return err
@@ -440,9 +416,13 @@ func (s *Service) isInCall(ctx context.Context, id string) (bool, error) {
 	return len(keys) > 0, nil
 }
 
+func (s *Service) getRedisUserRoom(ctx context.Context, uid string, out interface{}) (string, error) {
+	return s.getRedisRoomWithPrefix(ctx, liveUserPrefix, "*:"+uid+"*", out)
+}
+
 // GetRedisObjectWithCondition retrieves an object from Redis cache based on a condition and unmarshals it into the provided output interface.
 func (s *Service) getRedisRoomWithPrefix(ctx context.Context, prefix, key string, out interface{}) (string, error) {
-	pattern := prefix + key + ":*"
+	pattern := prefix + key
 	s.logger.Info("scanKeysWithPrefixAndContent", zap.String("pattern", pattern))
 	keys, err := s.scanKeysWithPrefixAndContent(ctx, pattern)
 	if err != nil {

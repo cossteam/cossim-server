@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	"github.com/cossim/coss-server/interface/live/api/model"
@@ -16,6 +15,7 @@ import (
 	"github.com/livekit/protocol/livekit"
 	"go.uber.org/zap"
 	"strconv"
+	"strings"
 )
 
 func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, member []string) (interface{}, error) {
@@ -73,6 +73,8 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 	}
 
 	redisRoom := &model.GroupRoomInfo{
+		Room:            room.Name,
+		GroupID:         gid,
 		SenderID:        uid,
 		MaxParticipants: 256,
 		Participants:    map[string]*model.ActiveParticipant{},
@@ -137,6 +139,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("ToJSONString => ", ToJSONString)
 	if err = cache.SetKey(s.redisClient, liveGroupPrefix+room.Name+":"+strconv.FormatUint(uint64(gid), 10), ToJSONString, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
@@ -150,21 +153,20 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 	}, nil
 }
 
-func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid, room string) (interface{}, error) {
+func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (interface{}, error) {
 	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return nil, err
 	}
 
-	key := liveGroupPrefix + room + ":" + strconv.FormatUint(uint64(gid), 10)
-	roomInfo, err := s.getGroupRedisRoom(key)
+	roomInfo, key, err := s.getGroupRedisRoom(ctx, gid)
 	if err != nil {
 		s.logger.Error("获取群聊房间信息失败", zap.Error(err))
 		return nil, code.LiveErrGetCallInfoFailed
 	}
 
-	if err = s.checkGroupRoom(ctx, roomInfo, uid, room); err != nil {
+	if err = s.checkGroupRoom(ctx, roomInfo, uid, roomInfo.Room); err != nil {
 		return nil, err
 	}
 
@@ -184,40 +186,42 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid, room strin
 	return nil, nil
 }
 
-func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string, room string) (*dto.GroupShowResponse, error) {
+func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string) (*dto.GroupShowResponse, error) {
 	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return nil, err
 	}
 
-	key := liveGroupPrefix + room + ":" + strconv.FormatUint(uint64(gid), 10)
-	_, err = s.getGroupRedisRoom(key)
+	room, key, err := s.getGroupRedisRoom(ctx, gid)
 	if err != nil {
 		s.logger.Error("获取群聊房间信息失败", zap.Error(err))
 		return nil, code.LiveErrGetCallInfoFailed
 	}
 
-	livekitRoom, err := s.getLivekitRoom(ctx, room)
+	livekitRoom, err := s.getLivekitRoom(ctx, room.Room, func(ctx context.Context, room string) {
+		s.deleteGroupRoom(ctx, room, key)
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &dto.GroupShowResponse{
-		StartAt:     livekitRoom.CreationTime,
-		Duration:    0,
-		Room:        livekitRoom.Name,
-		Participant: make([]*dto.ParticipantInfo, 0),
+		GroupID:         room.GroupID,
+		NumParticipants: livekitRoom.NumParticipants,
+		MaxParticipants: livekitRoom.MaxParticipants,
+		StartAt:         livekitRoom.CreationTime,
+		Duration:        0,
+		Room:            livekitRoom.Name,
+		Participant:     make([]*dto.ParticipantInfo, 0),
 	}
 	res, err := s.roomService.ListParticipants(ctx, &livekit.ListParticipantsRequest{
-		Room: room, // 房间名称
+		Room: room.Room, // 房间名称
 	})
 	if err != nil {
 		s.logger.Error("获取通话信息失败", zap.Error(err))
 		return nil, code.LiveErrGetCallInfoFailed
 	}
-
-	fmt.Println("GetUserRoom res => ", res)
 
 	for _, p := range res.Participants {
 		//if p.Identity == userID {
@@ -236,7 +240,7 @@ func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string, roo
 	return resp, nil
 }
 
-func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string, room string) (interface{}, error) {
+func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (interface{}, error) {
 	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
@@ -244,7 +248,7 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string, r
 	}
 
 	roomInfo := &model.UserRoomInfo{}
-	_, err = s.getRedisRoomWithPrefix(ctx, liveGroupPrefix, room, roomInfo)
+	_, _, err = s.getGroupRedisRoom(ctx, gid)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +259,6 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string, r
 	//}
 
 	msg := msgconfig.WsMsg{Uid: roomInfo.SenderID, Event: msgconfig.GroupCallRejectEvent, Data: map[string]interface{}{
-		"room":         room,
 		"sender_id":    roomInfo.SenderID,
 		"recipient_id": uid,
 	}}
@@ -267,15 +270,14 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string, r
 	return nil, nil
 }
 
-func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, room string, force bool) (interface{}, error) {
+func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, force bool) (interface{}, error) {
 	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return nil, err
 	}
 
-	key := liveGroupPrefix + room + ":" + strconv.FormatUint(uint64(gid), 10)
-	roomInfo, err := s.getGroupRedisRoom(key)
+	roomInfo, key, err := s.getGroupRedisRoom(ctx, gid)
 	if err != nil {
 		return nil, err
 	}
@@ -284,24 +286,25 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, ro
 		return nil, code.Unauthorized
 	}
 
-	if force || roomInfo.NumParticipants-1 == 0 {
-		_, err = s.deleteGroupRoom(ctx, room)
+	if force || roomInfo.NumParticipants-1 == 0 || roomInfo.NumParticipants == 0 {
+		_, err = s.deleteGroupRoom(ctx, roomInfo.Room, key)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	delete(roomInfo.Participants, uid)
-	if roomInfo.NumParticipants > 0 {
-		roomInfo.NumParticipants--
-	}
-	ToJSONString, err := roomInfo.ToJSONString()
-	if err != nil {
-		return nil, err
-	}
-	if err = cache.SetKey(s.redisClient, key, ToJSONString, 0); err != nil {
-		s.logger.Error("更新房间信息失败", zap.Error(err))
-		return nil, err
+	} else {
+		delete(roomInfo.Participants, uid)
+		if roomInfo.NumParticipants > 0 {
+			roomInfo.NumParticipants--
+		}
+		ToJSONString, err := roomInfo.ToJSONString()
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("111111111")
+		if err = cache.SetKey(s.redisClient, key, ToJSONString, 0); err != nil {
+			s.logger.Error("更新房间信息失败", zap.Error(err))
+			return nil, err
+		}
 	}
 
 	for k := range roomInfo.Participants {
@@ -309,7 +312,6 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, ro
 			continue
 		}
 		msg := msgconfig.WsMsg{Uid: k, Event: msgconfig.GroupCallEndEvent, Data: map[string]interface{}{
-			"room":         room,
 			"sender_id":    roomInfo.SenderID,
 			"recipient_id": uid,
 		}}
@@ -322,16 +324,15 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, ro
 	return nil, nil
 }
 
-func (s *Service) getGroupRedisRoom(key string) (*model.GroupRoomInfo, error) {
-	room, err := cache.GetKey(s.redisClient, key)
-	if err != nil {
-		return nil, code.LiveErrCallNotFound.Reason(err)
-	}
+func (s *Service) getGroupRedisRoom(ctx context.Context, gid uint32) (*model.GroupRoomInfo, string, error) {
+	k1 := "*:" + strconv.FormatUint(uint64(gid), 10)
+	s.logger.Info("getGroupRedisRoom", zap.String("key", k1))
 	resp := &model.GroupRoomInfo{}
-	if err = json.Unmarshal([]byte(room.(string)), &resp); err != nil {
-		return nil, err
+	k2, err := s.getRedisRoomWithPrefix(ctx, liveGroupPrefix, k1, resp)
+	if err != nil {
+		return nil, "", err
 	}
-	return resp, nil
+	return resp, k2, nil
 }
 
 func (s *Service) isEitherGroupInCall(ctx context.Context, gid uint32) (bool, error) {
@@ -344,6 +345,23 @@ func (s *Service) isEitherGroupInCall(ctx context.Context, gid uint32) (bool, er
 		return false, nil
 	}
 	return true, nil
+}
+
+func (s *Service) deleteGroupRoom(ctx context.Context, room string, key string) (interface{}, error) {
+	_, err := s.roomService.DeleteRoom(ctx, &livekit.DeleteRoomRequest{
+		Room: room, // 房间名称
+	})
+	if err != nil && !strings.Contains(err.Error(), "room not found") {
+		s.logger.Error("error deleting room", zap.Error(err))
+		return nil, code.LiveErrLeaveCallFailed
+	}
+
+	_, err = s.redisClient.Del(ctx, key).Result()
+	if err != nil {
+		s.logger.Error("删除房间信息失败", zap.Error(err))
+	}
+
+	return nil, nil
 }
 
 func (s *Service) checkGroupRoom(ctx context.Context, roomInfo *model.GroupRoomInfo, uid, roomName string) error {
@@ -359,7 +377,7 @@ func (s *Service) checkGroupRoom(ctx context.Context, roomInfo *model.GroupRoomI
 		return code.LiveErrAlreadyInCall
 	}
 
-	room, err := s.getLivekitRoom(ctx, roomName)
+	room, err := s.getLivekitRoom(ctx, roomName, nil)
 	if err != nil {
 		return err
 	}
