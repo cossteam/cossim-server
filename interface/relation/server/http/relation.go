@@ -312,7 +312,7 @@ func getGroupMember(c *gin.Context) {
 // @Produce json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=申请中, 1=待通过, 2=已加入, 3=已删除, 4=被拒绝, 5=被封禁)"
+// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=等待, 1=已通过, 2=已拒绝, 3=邀请发送者, 4=邀请接收者)"
 // @Router /relation/group/request_list [get]
 func groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
