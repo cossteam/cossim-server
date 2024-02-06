@@ -30,7 +30,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	})
 	if err != nil {
 		s.logger.Error("user login failed", zap.Error(err))
-		return nil, "", code.UserErrNotExistOrPassword
+		return nil, "", err
 	}
 
 	token, err := utils.GenerateToken(resp.UserId, resp.Email)
@@ -91,6 +91,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest) error {
 	values, err := cache.GetAllListValues(s.redisClient, userID)
 	if err != nil {
+		s.logger.Error("logout :redis get key err", zap.Error(err))
 		return code.UserErrErrLogoutFailed
 	}
 	if len(values)-1 < int(request.LoginNumber) {
