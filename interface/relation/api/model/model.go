@@ -26,11 +26,11 @@ type GroupRequestListResponse struct {
 type GroupRequestStatus uint32
 
 const (
-	Pending            GroupRequestStatus = iota //等待
-	Accepted                                     //已通过
-	Rejected                                     //已拒绝
-	InviteSender                                 //邀请发送者
-	InvitationReceived                           //邀请接收者
+	Pending            GroupRequestStatus = iota // 等待
+	Accepted                                     // 已通过
+	Rejected                                     // 已拒绝
+	InviteSender                                 // 邀请发送者
+	InvitationReceived                           // 邀请接收者
 )
 
 type UserRequestListResponse struct {
