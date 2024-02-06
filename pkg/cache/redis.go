@@ -132,6 +132,16 @@ func GetUserInfoList(data []string) ([]*UserInfo, error) {
 	return list, nil
 }
 
+func GetUserInfo(data string) (*UserInfo, error) {
+	var user *UserInfo
+	err := json.Unmarshal([]byte(data), &user)
+	if err != nil {
+		fmt.Println("GetUserInfoList JSON unmarshal error:", err)
+		return nil, err
+	}
+	return user, nil
+}
+
 // 用户信息转成[]interfaces{}
 func GetUserInfoListToInterfaces(data []*UserInfo) []interface{} {
 	list := make([]interface{}, 0)
@@ -139,6 +149,10 @@ func GetUserInfoListToInterfaces(data []*UserInfo) []interface{} {
 		list = append(list, datum)
 	}
 	return list
+}
+
+func GetUserInfoToInterfaces(data *UserInfo) interface{} {
+	return data
 }
 
 // 根据客户端类型分类用户登录信息列表
@@ -189,4 +203,12 @@ func UpdateKeyExpiration(client *redis.Client, key string, expiration time.Durat
 	}
 	// 使用 EXPIRE 命令更新键的过期时间
 	return client.Expire(context.Background(), key, expiration).Err()
+}
+
+func ScanKeys(client *redis.Client, pattern string) ([]string, error) {
+	keys, err := client.Keys(context.Background(), pattern).Result()
+	if err != nil {
+		return nil, err
+	}
+	return keys, nil
 }

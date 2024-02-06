@@ -71,7 +71,7 @@ func logout(c *gin.Context) {
 
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
-	if err = svc.Logout(c, thisId, token, req); err != nil {
+	if err = svc.Logout(c, thisId, token, req, deviceType); err != nil {
 		c.Error(err)
 		return
 	}
