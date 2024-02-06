@@ -82,7 +82,8 @@ func (h *Handler) GroupJoin(c *gin.Context) {
 // @Tags GroupUser
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @param request body dto.GroupShowRequest true "request"
+// @Param group_id query uint32 true "群聊id"
+// @Param room query string true "房间名"
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} dto.Response{data=dto.GroupJoinRequest}
@@ -150,7 +151,7 @@ func (h *Handler) GroupReject(c *gin.Context) {
 // @Tags GroupUser
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
-// @param request body dto.GroupShowRequest true "request"
+// @param request body dto.GroupLeaveRequest true "request"
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} dto.Response{data=dto.GroupJoinRequest}

@@ -106,12 +106,12 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 		participants[i].UserName = memberUser.NickName
 
 		if participants[i].UserID == uid {
-			token, err := s.GetJoinToken(ctx, room.Name, "admin", memberUser.NickName)
+			senderToken, err = s.GetJoinToken(ctx, room.Name, "admin", memberUser.NickName)
 			if err != nil {
 				s.logger.Error("获取token失败", zap.Error(err))
 				continue
 			}
-			participants[i].Token = token
+			participants[i].Token = senderToken
 			continue
 		}
 
