@@ -47,7 +47,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		return nil, err
 	}
 
-	recipient, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: senderID})
+	recipient, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: recipientID})
 	if err != nil {
 		return nil, err
 	}
