@@ -127,7 +127,7 @@ func (s *Service) discover() {
 					time.Sleep(15 * time.Second)
 					continue
 				}
-				s.logger.Info("Service discovery successful", zap.String("service", config.Conf.Register.Name), zap.String("addr", addr))
+				s.logger.Info("Service discovery successful", zap.String("service", c.Name), zap.String("addr", addr))
 				ch <- serviceInfo{ServiceName: serviceName, Addr: addr}
 				break
 			}
