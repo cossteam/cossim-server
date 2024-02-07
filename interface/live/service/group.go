@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, member []string) (interface{}, error) {
+func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, member []string) (*dto.GroupCallResponse, error) {
 	is, err := s.isEitherGroupInCall(ctx, gid)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,6 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 	type MemberInfo struct {
 		UserID   string
 		UserName string
-		Token    string
 	}
 
 	rels, err := s.relGroupClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: gid, UserIds: member})
@@ -89,8 +88,6 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 		//}
 	}
 
-	var senderToken string
-
 	// 获取成员的名称和其他信息
 	for i := range participants {
 		memberUser, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: participants[i].UserID})
@@ -108,24 +105,12 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 		participants[i].UserName = memberUser.NickName
 
 		if participants[i].UserID == uid {
-			senderToken, err = s.GetJoinToken(ctx, room.Name, "admin", memberUser.NickName)
-			if err != nil {
-				s.logger.Error("获取token失败", zap.Error(err))
-				continue
-			}
-			participants[i].Token = senderToken
-			continue
-		}
-
-		token, err := s.GetJoinToken(ctx, room.Name, "user", memberUser.NickName)
-		if err != nil {
-			s.logger.Error("获取token失败", zap.Error(err))
 			continue
 		}
 
 		msg := msgconfig.WsMsg{Uid: participants[i].UserID, Event: msgconfig.GroupCallReqEvent, Data: map[string]interface{}{
 			"url":          s.livekitServer,
-			"token":        token,
+			"group_id":     gid,
 			"room":         room.Name,
 			"sender_id":    uid,
 			"recipient_id": participants[i].UserID,
@@ -139,42 +124,38 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("ToJSONString => ", ToJSONString)
 	if err = cache.SetKey(s.redisClient, liveGroupPrefix+room.Name+":"+strconv.FormatUint(uint64(gid), 10), ToJSONString, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
 	}
 
-	return map[string]string{
-		"url":       s.livekitServer,
-		"token":     senderToken,
-		"room_name": roomName,
-		"room_id":   room.Sid,
+	return &dto.GroupCallResponse{
+		Url: s.livekitServer,
 	}, nil
 }
 
-func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (interface{}, error) {
+func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*dto.GroupJoinResponse, error) {
 	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return nil, err
 	}
 
-	roomInfo, key, err := s.getGroupRedisRoom(ctx, gid)
+	room, key, err := s.getGroupRedisRoom(ctx, gid)
 	if err != nil {
 		s.logger.Error("获取群聊房间信息失败", zap.Error(err))
 		return nil, code.LiveErrGetCallInfoFailed
 	}
 
-	if err = s.checkGroupRoom(ctx, roomInfo, uid, roomInfo.Room); err != nil {
+	if err = s.checkGroupRoom(ctx, room, uid, room.Room); err != nil {
 		return nil, err
 	}
 
-	roomInfo.NumParticipants++
-	roomInfo.Participants[uid] = &model.ActiveParticipant{
+	room.NumParticipants++
+	room.Participants[uid] = &model.ActiveParticipant{
 		Connected: true,
 	}
-	ToJSONString, err := roomInfo.ToJSONString()
+	ToJSONString, err := room.ToJSONString()
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +164,20 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (in
 		return nil, err
 	}
 
-	return nil, nil
+	user, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: uid})
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := s.GetJoinToken(ctx, room.Room, "admin", user.NickName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.GroupJoinResponse{
+		Url:   s.livekitServer,
+		Token: token,
+	}, nil
 }
 
 func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string) (*dto.GroupShowResponse, error) {
@@ -286,6 +280,10 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 		return nil, code.Unauthorized
 	}
 
+	if _, ok := roomInfo.Participants[uid]; !ok {
+		return nil, code.Unauthorized
+	}
+
 	if force || roomInfo.NumParticipants-1 == 0 || roomInfo.NumParticipants == 0 {
 		_, err = s.deleteGroupRoom(ctx, roomInfo.Room, key)
 		if err != nil {
@@ -306,6 +304,8 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 			return nil, err
 		}
 	}
+
+	fmt.Println("roomInfo.Participants => ", roomInfo.Participants)
 
 	for k := range roomInfo.Participants {
 		if k == uid {

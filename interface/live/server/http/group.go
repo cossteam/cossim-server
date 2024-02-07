@@ -52,7 +52,7 @@ func (h *Handler) GroupCreate(c *gin.Context) {
 // @param request body dto.GroupJoinRequest true "request"
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} dto.Response{data=dto.GroupJoinRequest}
+// @Success 200 {object} dto.Response{data=dto.GroupJoinResponse}
 // @Router /live/group/join [post]
 func (h *Handler) GroupJoin(c *gin.Context) {
 	req := new(dto.GroupJoinRequest)
@@ -74,7 +74,7 @@ func (h *Handler) GroupJoin(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "加入群聊通话成功", resp)
+	response.SetSuccess(c, "加入群聊通话成功", resp)
 }
 
 // GroupShow
