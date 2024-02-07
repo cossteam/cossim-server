@@ -157,7 +157,7 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*d
 	}
 	ToJSONString, err := room.ToJSONString()
 	if err != nil {
-		return nil, err
+		return nil, code.LiveErrJoinCallFailed
 	}
 	if err = cache.SetKey(s.redisClient, key, ToJSONString, 0); err != nil {
 		s.logger.Error("更新房间信息失败", zap.Error(err))
@@ -169,9 +169,14 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*d
 		return nil, err
 	}
 
-	token, err := s.GetJoinToken(ctx, room.Room, "admin", user.NickName)
+	var token string
+	if uid == room.SenderID {
+		token, err = s.GetAdminJoinToken(ctx, room.Room, user.NickName)
+	} else {
+		token, err = s.GetUserJoinToken(ctx, room.Room, user.NickName)
+	}
 	if err != nil {
-		return nil, err
+		return nil, code.LiveErrJoinCallFailed
 	}
 
 	return &dto.GroupJoinResponse{

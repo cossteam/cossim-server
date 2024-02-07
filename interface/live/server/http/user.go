@@ -172,7 +172,7 @@ func (h *Handler) getJoinToken(c *gin.Context) {
 	//	return
 	//}
 	//
-	//resp, err := h.svc.GetJoinToken(c, userID, "")
+	//resp, err := h.svc.GetAdminJoinToken(c, userID, "")
 	//if err != nil {
 	//	c.Error(err)
 	//	return
