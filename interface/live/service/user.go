@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID string) (*dto.UserCallResponse, error) {
@@ -43,16 +44,6 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
-	sender, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: senderID})
-	if err != nil {
-		return nil, err
-	}
-
-	recipient, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: recipientID})
-	if err != nil {
-		return nil, err
-	}
-
 	room, err := s.roomService.CreateRoom(ctx, &livekit.CreateRoomRequest{
 		Name:            uuid.New().String(),
 		EmptyTimeout:    uint32(s.liveTimeout.Seconds()), // 空闲时间
@@ -64,16 +55,6 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	}
 
 	fmt.Println("CreateUserCall room => ", room)
-
-	senderToken, err := s.GetJoinToken(ctx, room.Name, "admin", sender.NickName)
-	if err != nil {
-		return nil, err
-	}
-
-	RecipientToken, err := s.GetJoinToken(ctx, room.Name, "admin", recipient.NickName)
-	if err != nil {
-		return nil, err
-	}
 
 	roomInfo, err := (&model.UserRoomInfo{
 		Room:            room.Name,
@@ -106,7 +87,6 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		Event: msgconfig.UserCallReqEvent,
 		Data: map[string]interface{}{
 			"url":          s.livekitServer,
-			"token":        RecipientToken,
 			"sender_id":    senderID,
 			"recipient_id": recipientID,
 		}}
@@ -116,8 +96,8 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	}
 
 	return &dto.UserCallResponse{
-		Url:   s.livekitServer,
-		Token: senderToken,
+		Url: s.livekitServer,
+		//Token: senderToken,
 	}, nil
 }
 
@@ -146,7 +126,7 @@ func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.UserRoomInf
 	return nil
 }
 
-func (s *Service) UserJoinRoom(ctx context.Context, uid string) (interface{}, error) {
+func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinResponse, error) {
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
 		return nil, err
@@ -164,25 +144,27 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (interface{}, er
 	if err != nil {
 		return nil, err
 	}
-	if err = cache.SetKey(s.redisClient, liveUserPrefix+uid, ToJSONString, 0); err != nil {
+	if err = cache.SetKey(s.redisClient, liveUserPrefix+uid, ToJSONString, 365*24*time.Hour); err != nil {
 		s.logger.Error("更新房间信息失败", zap.Error(err))
 		return nil, err
 	}
 
-	//if err = cache.UpdateKeyExpiration(s.redisClient, key, 365*24*time.Hour); err != nil {
-	//	s.logger.Error("更新房间信息失败", zap.Error(err))
-	//	return nil, code.LiveErrJoinCallFailed
-	//}
+	user, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: uid})
+	if err != nil {
+		return nil, err
+	}
 
-	//token, err := s.joinRoom(uid, listRes.Rooms[0])
-	//if err != nil {
-	//	s.logger.Error("error joining room", zap.Error(err))
-	//	return nil, err
-	//}
+	token, err := s.GetJoinToken(ctx, room.Room, "admin", user.NickName)
+	if err != nil {
+		return nil, err
+	}
 
 	s.logger.Info("UserJoinRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", room.RecipientID))
 
-	return nil, nil
+	return &dto.UserJoinResponse{
+		Url:   s.livekitServer,
+		Token: token,
+	}, nil
 }
 
 func (s *Service) joinRoom(userName string, room *livekit.Room) (string, error) {

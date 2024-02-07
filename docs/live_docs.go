@@ -121,7 +121,7 @@ const docTemplatelive = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.GroupJoinRequest"
+                                            "$ref": "#/definitions/dto.GroupJoinResponse"
                                         }
                                     }
                                 }
@@ -401,7 +401,19 @@ const docTemplatelive = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserJoinResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -617,6 +629,19 @@ const docTemplatelive = `{
                 }
             }
         },
+        "dto.GroupJoinResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "description": "加入通话的token",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "webRtc服务器地址",
+                    "type": "string"
+                }
+            }
+        },
         "dto.GroupLeaveRequest": {
             "type": "object",
             "required": [
@@ -739,10 +764,6 @@ const docTemplatelive = `{
         "dto.UserCallResponse": {
             "type": "object",
             "properties": {
-                "token": {
-                    "description": "加入通话的token",
-                    "type": "string"
-                },
                 "url": {
                     "description": "webRtc服务器地址",
                     "type": "string"
@@ -759,6 +780,19 @@ const docTemplatelive = `{
                             "$ref": "#/definitions/dto.CallOption"
                         }
                     ]
+                }
+            }
+        },
+        "dto.UserJoinResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "description": "加入通话的token",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "webRtc服务器地址",
+                    "type": "string"
                 }
             }
         },

@@ -19,6 +19,11 @@ type GroupJoinRequest struct {
 	Option CallOption `json:"option"`
 }
 
+type GroupJoinResponse struct {
+	Url   string `json:"url"`   // webRtc服务器地址
+	Token string `json:"token"` // 加入通话的token
+}
+
 type GroupShowRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"` // 群组的ID
 	//Room    string     `json:"room" binding:"required"`     // 房间名称

@@ -51,7 +51,7 @@ func (h *Handler) UserCreate(c *gin.Context) {
 // @param request body dto.UserJoinRequest true "request"
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} dto.Response{}
+// @Success 200 {object} dto.Response{data=dto.UserJoinResponse}
 // @Router /live/user/join [post]
 func (h *Handler) UserJoin(c *gin.Context) {
 	req := new(dto.UserJoinRequest)
