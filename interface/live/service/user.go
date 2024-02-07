@@ -147,20 +147,20 @@ func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.UserRoomInf
 }
 
 func (s *Service) UserJoinRoom(ctx context.Context, uid string) (interface{}, error) {
-	roomInfo, err := s.getRedisUserRoom(ctx, uid)
+	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = s.checkUserRoom(ctx, roomInfo, uid, roomInfo.Room); err != nil {
+	if err = s.checkUserRoom(ctx, room, uid, room.Room); err != nil {
 		return nil, err
 	}
 
-	roomInfo.NumParticipants++
-	roomInfo.Participants[uid] = &model.ActiveParticipant{
+	room.NumParticipants++
+	room.Participants[uid] = &model.ActiveParticipant{
 		Connected: true,
 	}
-	ToJSONString, err := roomInfo.ToJSONString()
+	ToJSONString, err := room.ToJSONString()
 	if err != nil {
 		return nil, err
 	}
@@ -179,6 +179,8 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (interface{}, er
 	//	s.logger.Error("error joining room", zap.Error(err))
 	//	return nil, err
 	//}
+
+	s.logger.Info("UserJoinRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", room.RecipientID))
 
 	return nil, nil
 }
@@ -312,7 +314,7 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, 
 		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 
-	fmt.Println("msg => ", msg)
+	s.logger.Info("UserRejectRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", room.RecipientID))
 
 	return nil, nil
 }
@@ -340,6 +342,8 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid string) (interface{}, e
 			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 	}
+
+	s.logger.Info("UserLeaveRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", room.RecipientID))
 
 	return s.deleteUserRoom(ctx, room.Room, uid)
 }
