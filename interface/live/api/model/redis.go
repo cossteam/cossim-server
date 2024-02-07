@@ -79,7 +79,7 @@ type GroupRoomInfo struct {
 }
 
 type ActiveParticipant struct {
-	Connecting bool
+	Connected bool
 }
 
 func (r *GroupRoomInfo) ToMap() (map[string]string, error) {

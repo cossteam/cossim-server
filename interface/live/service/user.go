@@ -21,12 +21,12 @@ import (
 )
 
 func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID string) (*dto.UserCallResponse, error) {
-	is, err := s.isEitherUserInCall(ctx, senderID, recipientID)
+	inCall, err := s.isEitherUserInCall(ctx, senderID, recipientID)
 	if err != nil {
 		s.logger.Error("获取通话状态失败", zap.Error(err))
 		return nil, code.LiveErrCreateCallFailed
 	}
-	if is {
+	if inCall {
 		return nil, code.LiveErrAlreadyInCall
 	}
 
@@ -66,7 +66,6 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	fmt.Println("CreateUserCall room => ", room)
 
 	senderToken, err := s.GetJoinToken(ctx, room.Name, "admin", sender.NickName)
-
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +75,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		return nil, err
 	}
 
-	senderInfo, err := (&model.UserRoomInfo{
+	roomInfo, err := (&model.UserRoomInfo{
 		Room:            room.Name,
 		SenderID:        senderID,
 		RecipientID:     recipientID,
@@ -86,32 +85,24 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	if err != nil {
 		return nil, err
 	}
-	if err = cache.SetKey(s.redisClient, liveUserPrefix+senderID, senderInfo, s.liveTimeout); err != nil {
+	if err = cache.SetKey(s.redisClient, liveUserPrefix+senderID, roomInfo, s.liveTimeout); err != nil {
+		s.logger.Error("保存房间信息失败", zap.Error(err))
+		return nil, err
+	}
+	if err = cache.SetKey(s.redisClient, liveUserPrefix+recipientID, roomInfo, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
 	}
 
-	recipientInfo, err := (&model.UserRoomInfo{
-		Room:            room.Name,
-		SenderID:        senderID,
-		RecipientID:     recipientID,
-		MaxParticipants: 2,
-		Participants:    make(map[string]*model.ActiveParticipant),
-	}).ToJSONString()
-	if err != nil {
-		return nil, err
-	}
-	if err = cache.SetKey(s.redisClient, liveUserPrefix+recipientID, recipientInfo, s.liveTimeout); err != nil {
-		s.logger.Error("保存房间信息失败", zap.Error(err))
-		return nil, err
-	}
-
-	msg := msgconfig.WsMsg{Uid: recipientID, Event: msgconfig.UserCallReqEvent, Data: map[string]interface{}{
-		"url":          s.livekitServer,
-		"token":        RecipientToken,
-		"sender_id":    senderID,
-		"recipient_id": recipientID,
-	}}
+	msg := msgconfig.WsMsg{
+		Uid:   recipientID,
+		Event: msgconfig.UserCallReqEvent,
+		Data: map[string]interface{}{
+			"url":          s.livekitServer,
+			"token":        RecipientToken,
+			"sender_id":    senderID,
+			"recipient_id": recipientID,
+		}}
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("发送消息失败", zap.Error(err))
 		return nil, err
@@ -160,7 +151,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (interface{}, er
 
 	roomInfo.NumParticipants++
 	roomInfo.Participants[uid] = &model.ActiveParticipant{
-		Connecting: true,
+		Connected: true,
 	}
 	ToJSONString, err := roomInfo.ToJSONString()
 	if err != nil {
@@ -201,7 +192,7 @@ func (s *Service) joinRoom(userName string, room *livekit.Room) (string, error) 
 	//	return "", code.LiveErrUserAlreadyInCall
 	//}
 	//data.Participants[room.Sid] = &model.ActiveParticipant{
-	//	Connecting: true,
+	//	Connected: true,
 	//}
 	//s.lock.Unlock()
 
@@ -422,14 +413,12 @@ func (s *Service) isEitherUserInCall(ctx context.Context, userID1, userID2 strin
 	if is1 {
 		return true, nil
 	}
+
 	is2, err := s.isInCall(ctx, userID2)
 	if err != nil {
 		return false, err
 	}
-	if is2 {
-		return true, nil
-	}
-	return false, nil
+	return is2, nil
 }
 
 func (s *Service) isInCall(ctx context.Context, id string) (bool, error) {
