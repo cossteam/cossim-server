@@ -129,7 +129,8 @@ func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.UserRoomInf
 func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinResponse, error) {
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
-		return nil, err
+		s.logger.Error("获取用户房间信息失败", zap.Error(err))
+		return nil, code.LiveErrJoinCallFailed
 	}
 
 	if err = s.checkUserRoom(ctx, room, uid, room.Room); err != nil {
@@ -142,7 +143,8 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 	}
 	ToJSONString, err := room.ToJSONString()
 	if err != nil {
-		return nil, err
+		s.logger.Error("更新房间信息失败", zap.Error(err))
+		return nil, code.LiveErrJoinCallFailed
 	}
 	if err = cache.SetKey(s.redisClient, liveUserPrefix+uid, ToJSONString, 365*24*time.Hour); err != nil {
 		s.logger.Error("更新房间信息失败", zap.Error(err))
@@ -154,9 +156,9 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 		return nil, err
 	}
 
-	token, err := s.GetJoinToken(ctx, room.Room, "admin", user.NickName)
+	token, err := s.GetAdminJoinToken(ctx, room.Room, user.NickName)
 	if err != nil {
-		return nil, err
+		return nil, code.LiveErrJoinCallFailed
 	}
 
 	s.logger.Info("UserJoinRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", room.RecipientID))
@@ -504,7 +506,23 @@ func (s *Service) deleteRedisLiveUser(ctx context.Context, userID string) error 
 	return nil
 }
 
-func (s *Service) GetJoinToken(ctx context.Context, room, identity, userName string) (string, error) {
+func (s *Service) GetUserJoinToken(ctx context.Context, room, userName string) (string, error) {
+	at := auth.NewAccessToken(s.liveApiKey, s.liveApiSecret)
+	grant := &auth.VideoGrant{
+		RoomJoin: true,
+		Room:     room,
+	}
+	at.AddGrant(grant).SetIdentity(userName).SetValidFor(s.liveTimeout).SetName(userName)
+	jwt, err := at.ToJWT()
+	if err != nil {
+		s.logger.Error("Failed to generate JWT", zap.Error(err))
+		return "", err
+	}
+
+	return jwt, nil
+}
+
+func (s *Service) GetAdminJoinToken(ctx context.Context, room, userName string) (string, error) {
 	at := auth.NewAccessToken(s.liveApiKey, s.liveApiSecret)
 	grant := &auth.VideoGrant{
 		RoomCreate: true,
