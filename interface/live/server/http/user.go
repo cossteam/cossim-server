@@ -39,7 +39,7 @@ func (h *Handler) UserCreate(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "创建通话成功", resp)
+	response.SetSuccess(c, "创建通话成功", resp)
 }
 
 // UserJoin
@@ -73,7 +73,7 @@ func (h *Handler) UserJoin(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "加入通话成功", resp)
+	response.SetSuccess(c, "加入通话成功", resp)
 }
 
 // UserShow
@@ -98,7 +98,7 @@ func (h *Handler) UserShow(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "获取通话信息成功", resp)
+	response.SetSuccess(c, "获取通话信息成功", resp)
 }
 
 // UserReject
@@ -130,7 +130,7 @@ func (h *Handler) UserReject(c *gin.Context) {
 		return
 	}
 
-	response.SetFail(c, "拒绝通话成功", resp)
+	response.SetSuccess(c, "拒绝通话成功", resp)
 }
 
 // UserLeave
@@ -162,7 +162,7 @@ func (h *Handler) UserLeave(c *gin.Context) {
 		return
 	}
 
-	response.SetFail(c, "结束通话成功", resp)
+	response.SetSuccess(c, "结束通话成功", resp)
 }
 
 func (h *Handler) getJoinToken(c *gin.Context) {

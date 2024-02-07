@@ -80,7 +80,14 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		SenderID:        senderID,
 		RecipientID:     recipientID,
 		MaxParticipants: 2,
-		Participants:    make(map[string]*model.ActiveParticipant),
+		Participants: map[string]*model.ActiveParticipant{
+			senderID: {
+				Connected: false,
+			},
+			recipientID: {
+				Connected: false,
+			},
+		},
 	}).ToJSONString()
 	if err != nil {
 		return nil, err
@@ -304,6 +311,8 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, 
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("发送消息失败", zap.Error(err))
 	}
+
+	fmt.Println("msg => ", msg)
 
 	return nil, nil
 }
