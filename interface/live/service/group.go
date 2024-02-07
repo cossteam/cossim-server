@@ -172,7 +172,7 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (in
 
 	roomInfo.NumParticipants++
 	roomInfo.Participants[uid] = &model.ActiveParticipant{
-		Connecting: true,
+		Connected: true,
 	}
 	ToJSONString, err := roomInfo.ToJSONString()
 	if err != nil {
