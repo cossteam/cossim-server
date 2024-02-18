@@ -151,19 +151,30 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		UserId:   userID,
 		FriendId: req.UserId,
 	})
-	if fRequest != nil {
-		if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
-			return nil, code.RelationErrFriendRequestAlreadyPending
+	if err != nil {
+		if code.Code(code.RelationUserErrNoFriendRequestRecords.Code()) != code.Cause(err) {
+			s.logger.Error("获取好友请求失败", zap.Error(err))
+			return nil, err
 		}
+	}
+
+	if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
+		return nil, code.RelationErrFriendRequestAlreadyPending
+	} else if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_ACCEPT {
 		return nil, code.RelationErrRequestAlreadyProcessed
 	}
 
 	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserId})
-	//if err != nil {
-	//	return nil, err
-	//}
+	if err != nil {
+		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, err
+		}
+	}
 	if relation != nil {
-		return nil, code.RelationErrAlreadyFriends
+		if relation.DialogId != 0 {
+			return nil, code.RelationErrAlreadyFriends
+		}
 	}
 
 	//删除之前的
@@ -214,11 +225,16 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	}
 
 	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
-	//if err != nil {
-	//	return nil, err
-	//}
+	if err != nil {
+		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, err
+		}
+	}
 	if relation != nil {
-		return nil, code.RelationErrAlreadyFriends
+		if relation.DialogId != 0 {
+			return nil, code.RelationErrAlreadyFriends
+		}
 	}
 
 	_, err = s.userFriendRequestClient.ManageFriendRequest(ctx, &relationgrpcv1.ManageFriendRequestStruct{
@@ -228,7 +244,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	if err != nil {
 		return nil, err
 	}
-	//// 向用户推送通知
+	// 向用户推送通知
 	resp, err := s.sendFriendManagementNotification(ctx, userId, qs.SenderId, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
 		s.logger.Error("发送好友管理通知失败", zap.Error(err))
@@ -236,85 +252,6 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 
 	return resp, nil
 }
-
-//func (s *Service) handleAction1(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus) (uint32, error) {
-//	var dialogId uint32
-//	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userId, FriendId: friendId})
-//	if err != nil {
-//		s.logger.Error("获取好友关系失败", zap.Error(err))
-//		return 0, err
-//	}
-//
-//	if relation != nil && relation.DialogId != 0 {
-//		err = s.manageFriend1(ctx, userId, friendId, status, relation.DialogId)
-//		if err != nil {
-//			s.logger.Error("修改好友关系失败", zap.Error(err))
-//			return 0, err
-//		}
-//	} else {
-//		dialogId, err = s.manageFriend2(ctx, userId, friendId, status)
-//		if err != nil {
-//			s.logger.Error("添加好友关系失败", zap.Error(err))
-//			return 0, err
-//		}
-//	}
-//
-//	return dialogId, nil
-//}
-//
-//// manageFriend1 已经存在关系，修改关系状态
-//func (s *Service) manageFriend1(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus, dialogId uint32) error {
-//	var err error
-//	// 创建 DTM 分布式事务工作流
-//	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
-//	gid := shortuuid.New()
-//	wfName := "manage_friend_workflow_1_" + gid
-//	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-//		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-//			r1 := &relationgrpcv1.DeleteDialogByIdRequest{DialogId: dialogId}
-//			_, err = s.dialogClient.DeleteDialogById(ctx, r1)
-//			if err != nil {
-//				s.logger.Error("删除对话失败", zap.Error(err))
-//				return err
-//			}
-//			return nil
-//		})
-//		_, err = s.dialogClient.JoinDialog(context.Background(), &relationgrpcv1.JoinDialogRequest{DialogId: dialogId, UserId: userId})
-//		if err != nil {
-//			s.logger.Error("加入对话失败", zap.Error(err))
-//			return err
-//		}
-//
-//		mfr := &relationgrpcv1.ManageFriendRequest{
-//			UserId:   userId,
-//			FriendId: friendId,
-//			DialogId: dialogId,
-//			Status:   status,
-//		}
-//		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-//			_, err = s.userRelationClient.ManageFriendRevert(ctx, mfr)
-//			if err != nil {
-//				return err
-//			}
-//			return nil
-//		})
-//		if _, err = s.userRelationClient.ManageFriend(ctx, mfr); err != nil {
-//			fmt.Println("s.userRelationClient.ManageFriend err => ", err)
-//			return err
-//		}
-//
-//		return nil
-//	}); err != nil {
-//		s.logger.Error("workflow.Register err => ", zap.Error(err))
-//		return code.RelationErrConfirmFriendFailed
-//	}
-//	// 执行 DTM 分布式事务工作流
-//	if err = workflow.Execute(wfName, gid, nil); err != nil {
-//		return code.RelationErrConfirmFriendFailed
-//	}
-//
-//	return nil
-//}
 
 func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) error {
 	// 检查删除的用户是否存在
