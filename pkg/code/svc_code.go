@@ -25,6 +25,8 @@ var (
 	UserErrActivateUserFailed             = New(10020, "激活用户失败")
 	UserErrPasswordNotMatch               = New(10021, "两次输入密码不匹配")
 	UserErrNewPasswordAndOldPasswordEqual = New(10022, "新密码和旧密码一致")
+	UserErrResetPublicKeyFailed           = New(10023, "重置公钥失败")
+	UserErrSendEmailCodeFailed            = New(10024, "发送邮箱验证码失败")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")

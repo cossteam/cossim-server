@@ -181,9 +181,6 @@ const docTemplategroup = `{
                 "avatar": {
                     "type": "string"
                 },
-                "max_members_limit": {
-                    "type": "integer"
-                },
                 "member": {
                     "type": "array",
                     "items": {
@@ -231,9 +228,6 @@ const docTemplategroup = `{
                     "type": "string"
                 },
                 "group_id": {
-                    "type": "integer"
-                },
-                "max_members_limit": {
                     "type": "integer"
                 },
                 "name": {

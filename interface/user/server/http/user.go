@@ -426,3 +426,51 @@ func userActivate(c *gin.Context) {
 	}
 	response.SetSuccess(c, "激活成功", resp)
 }
+
+// @Summary 重置用户pgp公钥
+// @Description 重置用户pgp公钥
+// @Accept json
+// @Produce json
+// @param request body model.ResetPublicKeyRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /user/public_key/reset [post]
+func resetUserPublicKey(c *gin.Context) {
+	req := new(model.ResetPublicKeyRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	resp, err := svc.ResetUserPublicKey(c, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "重置成功", gin.H{"user_id": resp})
+}
+
+// @Summary 发送重置验证码(邮箱)
+// @Description 发送重置验证码(邮箱)
+// @Accept json
+// @Produce json
+// @param request body model.SendEmailCodeRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /user/email/code/send [post]
+func sendEmailCode(c *gin.Context) {
+	req := new(model.SendEmailCodeRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	_, err := svc.SendEmailCode(c, req.Email)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "验证码发送成功,请到邮箱查看", nil)
+}

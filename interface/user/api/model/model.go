@@ -143,3 +143,13 @@ type GetUserLoginClientsResponse struct {
 	LoginNumber uint   `json:"login_number"`
 	LoginAt     int64  `json:"login_at"`
 }
+
+type ResetPublicKeyRequest struct {
+	PublicKey string `json:"public_key" binding:"required"`
+	Email     string `json:"email" binding:"required"`
+	Code      string `json:"code" binding:"required"`
+}
+
+type SendEmailCodeRequest struct {
+	Email string `json:"email" binding:"required"`
+}

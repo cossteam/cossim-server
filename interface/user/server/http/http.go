@@ -155,6 +155,8 @@ func route(engine *gin.Engine) {
 	u.POST("/login", login)
 	u.POST("/register", register)
 	u.GET("/activate", userActivate)
+	u.POST("/public_key/reset", resetUserPublicKey)
+	u.POST("/email/code/send", sendEmailCode)
 	u.GET("/search", middleware.AuthMiddleware(redisClient), search)
 	u.GET("/info", middleware.AuthMiddleware(redisClient), getUserInfo)
 	u.POST("/logout", middleware.AuthMiddleware(redisClient), logout)

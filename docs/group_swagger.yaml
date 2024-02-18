@@ -3,8 +3,6 @@ definitions:
     properties:
       avatar:
         type: string
-      max_members_limit:
-        type: integer
       member:
         items:
           type: string
@@ -38,8 +36,6 @@ definitions:
       creator_id:
         type: string
       group_id:
-        type: integer
-      max_members_limit:
         type: integer
       name:
         type: string
