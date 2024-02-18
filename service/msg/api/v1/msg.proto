@@ -318,6 +318,8 @@ message GetUnreadUserMsgsRequest {
   uint32 DialogId = 2;
 }
 
+
+
 message GetUnreadUserMsgsResponse {
   // @inject_tag: json:"user_messages"
   repeated UserMessage UserMessages = 1;
@@ -406,6 +408,19 @@ message GetGroupMsgListResponse {
   // @inject_tag: json:"current_page"
   int32 CurrentPage = 3;
 }
+
+message GetGroupUnreadMessagesRequest{
+  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
+  string UserId=1;
+  // @inject_tag: json:"dialog_id" form:"dialog_id" uri:"dialog_id"
+  uint32 DialogId=2;
+}
+
+message GetGroupUnreadMessagesResponse{
+  // @inject_tag: json:"group_messages"
+  repeated GroupMessage GroupMessages = 1;
+}
+
 service MsgService{
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
@@ -449,6 +464,8 @@ service MsgService{
   rpc GetGroupMsgLabelByDialogId(GetGroupMsgLabelByDialogIdRequest) returns (GetGroupMsgLabelByDialogIdResponse);
   //根据对话id与msgId查询msgId之后的群消息
   rpc GetGroupMsgIdAfterMsgList(GetGroupMsgIdAfterMsgListRequest) returns (GetGroupMsgIdAfterMsgListResponse);
+  //获取群聊未读消息
+  rpc GetGroupUnreadMessages(GetGroupUnreadMessagesRequest) returns (GetGroupUnreadMessagesResponse);
 
 
   //批量设置私聊消息id为已读

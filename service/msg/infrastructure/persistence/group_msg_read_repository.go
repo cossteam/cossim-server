@@ -47,3 +47,9 @@ func (g GroupMsgReadRepo) GetGroupMsgReadByMsgIDAndUserID(msgId uint32, userId s
 		First(&groupMsgRead).Error
 	return &groupMsgRead, err
 }
+
+func (g GroupMsgReadRepo) GetGroupMsgUserReadIdsByDialogID(dialogID uint32, userId string) ([]uint32, error) {
+	var msgIds []uint32
+	err := g.db.Model(entity.GroupMessageRead{}).Where("dialog_id = ? and user_id = ?", dialogID, userId).Pluck("distinct(msg_id)", &msgIds).Error
+	return msgIds, err
+}

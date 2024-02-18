@@ -29,3 +29,23 @@ func RandomNum() string {
 	code := fmt.Sprintf("%06v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(1000000))
 	return code
 }
+
+// 求差集
+func SliceDifference(slice1, slice2 []uint32) []uint32 {
+	var diff []uint32
+	set := make(map[uint32]struct{})
+
+	// 将slice2中的元素存入一个集合
+	for _, num := range slice2 {
+		set[num] = struct{}{}
+	}
+
+	// 遍历slice1，如果元素不在集合中，则加入差集
+	for _, num := range slice1 {
+		if _, ok := set[num]; !ok {
+			diff = append(diff, num)
+		}
+	}
+
+	return diff
+}

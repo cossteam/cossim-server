@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/service/msg/api/dataTransformers"
 	v1 "github.com/cossim/coss-server/service/msg/api/v1"
 	"github.com/cossim/coss-server/service/msg/domain/entity"
@@ -506,5 +507,49 @@ func (s *Service) GetGroupMessagesByIds(ctx context.Context, in *v1.GetGroupMess
 			})
 		}
 	}
+	return resp, nil
+}
+
+func (s *Service) GetGroupUnreadMessages(ctx context.Context, in *v1.GetGroupUnreadMessagesRequest) (*v1.GetGroupUnreadMessagesResponse, error) {
+	resp := &v1.GetGroupUnreadMessagesResponse{}
+	//获取群聊消息id
+	ids, err := s.mr.GetGroupMsgIdsByDialogID(in.DialogId)
+	if err != nil {
+		return nil, err
+	}
+
+	//获取已读消息id
+	rids, err := s.gmrr.GetGroupMsgUserReadIdsByDialogID(in.DialogId, in.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	//求差集
+	msgIds := utils.SliceDifference(ids, rids)
+
+	msgs, err := s.mr.GetGroupMsgsByIDs(msgIds)
+	if err != nil {
+		return nil, err
+	}
+	if len(msgs) > 0 {
+		for _, msg := range msgs {
+			resp.GroupMessages = append(resp.GroupMessages, &v1.GroupMessage{
+				Id:                     uint32(msg.ID),
+				UserId:                 msg.UserID,
+				Content:                msg.Content,
+				Type:                   uint32(int32(msg.Type)),
+				ReplyId:                uint32(msg.ReplyId),
+				GroupId:                uint32(msg.GroupID),
+				ReadCount:              int32(msg.ReadCount),
+				DialogId:               uint32(msg.DialogId),
+				IsLabel:                v1.MsgLabel(msg.IsLabel),
+				IsBurnAfterReadingType: v1.BurnAfterReadingType(msg.IsBurnAfterReading),
+				AtUsers:                msg.AtUsers,
+				AtAllUser:              v1.AtAllUserType(msg.AtAllUser),
+				CreatedAt:              msg.CreatedAt,
+			})
+		}
+	}
+	//查询指定消息
 	return resp, nil
 }
