@@ -360,3 +360,12 @@ func (g *MsgRepo) GetGroupMsgsByIDs(msgIds []uint32) ([]*entity.GroupMessage, er
 
 	return groupMessages, err
 }
+
+func (g *MsgRepo) GetGroupMsgIdsByDialogID(dialogID uint32) ([]uint32, error) {
+	var msgIds []uint32
+	err := g.db.Model(&entity.GroupMessage{}).
+		Where("dialog_id = ? AND deleted_at = 0", dialogID).
+		Select("id").
+		Find(&msgIds).Error
+	return msgIds, err
+}

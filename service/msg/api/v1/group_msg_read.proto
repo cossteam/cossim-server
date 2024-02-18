@@ -64,4 +64,6 @@ service GroupMessageService {
 
   //根据消息id与用户id查询是否已经读取过
   rpc GetGroupMessageReadByMsgIdAndUserId(GetGroupMessageReadByMsgIdAndUserIdRequest) returns (GetGroupMessageReadByMsgIdAndUserIdResponse);
+
+
 }

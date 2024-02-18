@@ -9,4 +9,6 @@ type GroupMsgReadRepository interface {
 	SetGroupMsgReadByMsgs(read []*entity.GroupMessageRead) error
 	GetGroupMsgReadUserIdsByMsgID(msgId uint32) ([]string, error)
 	GetGroupMsgReadByMsgIDAndUserID(msgId uint32, userId string) (*entity.GroupMessageRead, error)
+	//获取用户对话已读消息
+	GetGroupMsgUserReadIdsByDialogID(dialogID uint32, userId string) ([]uint32, error)
 }

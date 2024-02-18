@@ -32,6 +32,7 @@ type MsgRepository interface {
 	UpdateGroupMsgColumn(msgId uint32, column string, value interface{}) error
 	GetGroupMsgLabelByDialogId(dialogId uint32) ([]*entity.GroupMessage, error)
 	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error)
+	GetGroupMsgIdsByDialogID(dialogId uint32) ([]uint32, error)
 
 	//删除
 	PhysicalDeleteGroupMessage(msgId uint32) error

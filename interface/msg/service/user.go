@@ -279,11 +279,20 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					fmt.Println(err)
 					continue
 				}
+
+				//获取未读消息
+				msgs, err := s.msgClient.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
+					UserId:   userID,
+					DialogId: v.Id,
+				})
+				if err != nil {
+					return nil, err
+				}
 				re.DialogId = v.Id
 				re.DialogAvatar = info.Avatar
 				re.DialogName = info.NickName
 				re.DialogType = 0
-				re.DialogUnreadCount = 10
+				re.DialogUnreadCount = len(msgs.UserMessages)
 				re.UserId = info.UserId
 				re.DialogCreateAt = v.CreateAt
 				break
@@ -298,10 +307,20 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 				fmt.Println(err)
 				continue
 			}
+
+			//获取未读消息
+			msgs, err := s.msgClient.GetGroupUnreadMessages(ctx, &msggrpcv1.GetGroupUnreadMessagesRequest{
+				UserId:   userID,
+				DialogId: v.Id,
+			})
+			if err != nil {
+				return nil, err
+			}
+
 			re.DialogAvatar = info.Avatar
 			re.DialogName = info.Name
 			re.DialogType = 1
-			re.DialogUnreadCount = 10
+			re.DialogUnreadCount = len(msgs.GroupMessages)
 			//re.UserId = v.OwnerId
 			re.GroupId = info.Id
 			re.DialogId = v.Id
