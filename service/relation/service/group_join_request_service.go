@@ -151,6 +151,7 @@ func (s *Service) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageG
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 	}
+
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		npo := persistence.NewRepositories(tx)
 

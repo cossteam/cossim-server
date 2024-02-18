@@ -37,8 +37,8 @@ func (bm *BaseModel) BeforeUpdate(tx *gorm.DB) error {
 type GroupType uint
 
 const (
-	TypePublic  GroupType = iota // 公开群
-	TypePrivate                  // 私密群
+	TypeDefault   GroupType = iota // 默认群
+	TypeEncrypted                  // 加密群
 )
 
 type GroupStatus uint

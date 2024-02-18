@@ -88,6 +88,15 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, code.RelationGroupErrAlreadyInGroup
 	}
 
+	groupRelation, err := s.groupRelationClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	if len(groupRelation.UserIds) >= int(group.MaxMembersLimit) {
+		return nil, code.RelationGroupErrGroupFull
+	}
 	//添加普通用户申请
 	_, err = s.groupJoinRequestClient.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID})
 	if err != nil {
@@ -306,6 +315,22 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		return code.Unauthorized
 	}
 
+	info, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+	if err != nil {
+		s.logger.Error("get group info failed", zap.Error(err))
+		return code.RelationGroupErrGetGroupInfoFailed
+	}
+
+	if status == relationgrpcv1.GroupRequestStatus_Accepted {
+		ds, err := s.groupRelationClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: groupID})
+		if err != nil {
+			return err
+		}
+		if info.MaxMembersLimit <= int32(len(ds.UserIds)) {
+			return code.RelationGroupErrGroupFull
+		}
+	}
+
 	_, err = s.groupJoinRequestClient.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
 		ID:     requestID,
 		Status: status,
@@ -336,7 +361,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 		return code.RelationErrManageFriendRequestFailed
 	}
 
-	_, err = s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+	info, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 	if err != nil {
 		s.logger.Error("get group info failed", zap.Error(err))
 		return code.RelationGroupErrGetGroupInfoFailed
@@ -349,6 +374,16 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 
 	if relation != nil {
 		return code.RelationGroupErrAlreadyInGroup
+	}
+
+	if status == relationgrpcv1.GroupRequestStatus_Accepted {
+		ds, err := s.groupRelationClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: groupID})
+		if err != nil {
+			return err
+		}
+		if info.MaxMembersLimit <= int32(len(ds.UserIds)) {
+			return code.RelationGroupErrGroupFull
+		}
 	}
 
 	_, err = s.groupJoinRequestClient.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{

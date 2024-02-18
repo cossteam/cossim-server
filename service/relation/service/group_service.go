@@ -61,7 +61,6 @@ func (s *Service) GetUserGroupList(ctx context.Context, request *v1.GetUserGroup
 		}
 
 		for _, v := range reqList {
-			fmt.Println("id => ", v.UserID)
 			// 判断用户是否为群组管理员
 			gr, err := s.grr.GetUserGroupByID(gid, v.UserID)
 			if err != nil {
