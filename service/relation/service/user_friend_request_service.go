@@ -168,7 +168,10 @@ func (s *Service) GetFriendRequestById(ctx context.Context, in *v1.GetFriendRequ
 func (s *Service) GetFriendRequestByUserIdAndFriendId(ctx context.Context, in *v1.GetFriendRequestByUserIdAndFriendIdRequest) (*v1.FriendRequestList, error) {
 	var resp = &v1.FriendRequestList{}
 	if re, err := s.ufqr.GetFriendRequestBySenderIDAndReceiverID(in.UserId, in.FriendId); err != nil {
-		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+		}
+		return resp, err
 	} else {
 		resp.ID = uint32(re.ID)
 		resp.SenderId = re.SenderID
