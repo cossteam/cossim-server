@@ -295,6 +295,13 @@ func (s *Service) ModifyUserPassword(ctx context.Context, userID string, req *mo
 		return code.UserErrOldPassword
 	}
 
+	if req.Password != req.ConfirmPass {
+		return code.UserErrPasswordNotMatch
+	}
+
+	if req.Password == req.OldPasswprd || req.ConfirmPass == req.OldPasswprd {
+		return code.UserErrNewPasswordAndOldPasswordEqual
+	}
 	_, err = s.userClient.ModifyUserPassword(ctx, &usergrpcv1.ModifyUserPasswordRequest{
 		UserId:   userID,
 		Password: utils.HashString(req.Password),
