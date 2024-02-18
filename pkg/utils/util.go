@@ -3,6 +3,8 @@ package utils
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -20,4 +22,10 @@ func HashString(input string) string {
 	hashedBytes := hasher.Sum(nil)
 	hashedString := hex.EncodeToString(hashedBytes)
 	return hashedString
+}
+
+// 生成6位随机数字
+func RandomNum() string {
+	code := fmt.Sprintf("%06v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(1000000))
+	return code
 }

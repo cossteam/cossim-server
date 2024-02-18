@@ -120,6 +120,37 @@ const docTemplateuser = `{
                 }
             }
         },
+        "/user/email/code/send": {
+            "post": {
+                "description": "发送重置验证码(邮箱)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "发送重置验证码(邮箱)",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SendEmailCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/info": {
             "get": {
                 "security": [
@@ -327,6 +358,37 @@ const docTemplateuser = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.PasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/public_key/reset": {
+            "post": {
+                "description": "重置用户pgp公钥",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "重置用户pgp公钥",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ResetPublicKeyRequest"
                         }
                     }
                 ],
@@ -569,6 +631,25 @@ const docTemplateuser = `{
                 }
             }
         },
+        "model.ResetPublicKeyRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "email",
+                "public_key"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Response": {
             "type": "object",
             "properties": {
@@ -577,6 +658,17 @@ const docTemplateuser = `{
                 },
                 "data": {},
                 "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendEmailCodeRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
                     "type": "string"
                 }
             }

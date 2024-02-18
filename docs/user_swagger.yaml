@@ -71,6 +71,19 @@ definitions:
     - email
     - password
     type: object
+  model.ResetPublicKeyRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      public_key:
+        type: string
+    required:
+    - code
+    - email
+    - public_key
+    type: object
   model.Response:
     properties:
       code:
@@ -78,6 +91,13 @@ definitions:
       data: {}
       msg:
         type: string
+    type: object
+  model.SendEmailCodeRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
     type: object
   model.SetPublicKeyRequest:
     properties:
@@ -224,6 +244,26 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 获取该用户当前登录的所有客户端
+  /user/email/code/send:
+    post:
+      consumes:
+      - application/json
+      description: 发送重置验证码(邮箱)
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendEmailCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 发送重置验证码(邮箱)
   /user/info:
     get:
       description: 查询用户信息
@@ -360,6 +400,26 @@ paths:
       security:
       - BearerToken: []
       summary: 修改用户密码
+  /user/public_key/reset:
+    post:
+      consumes:
+      - application/json
+      description: 重置用户pgp公钥
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.ResetPublicKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 重置用户pgp公钥
   /user/register:
     post:
       consumes:

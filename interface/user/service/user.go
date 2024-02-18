@@ -416,3 +416,69 @@ func (s *Service) UserActivate(ctx context.Context, userID string, key string) (
 
 	return resp, nil
 }
+
+func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublicKeyRequest) (interface{}, error) {
+	//查询redis是否存在该验证码
+	value, err := cache.GetKey(s.redisClient, req.Code)
+	if err != nil {
+		s.logger.Error("重置用户公钥失败", zap.Error(err))
+		return nil, code.UserErrResetPublicKeyFailed
+	}
+
+	info, err := s.userClient.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
+		Email: req.Email,
+	})
+	if err != nil {
+		s.logger.Error("重置用户公钥失败", zap.Error(err))
+		return nil, code.UserErrNotExist
+	}
+
+	if value != info.UserId {
+		return nil, code.UserErrResetPublicKeyFailed
+	}
+
+	_, err = s.userClient.SetUserPublicKey(ctx, &usergrpcv1.SetPublicKeyRequest{
+		UserId:    info.UserId,
+		PublicKey: req.PublicKey,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = cache.DelKey(s.redisClient, req.Code)
+	if err != nil {
+		s.logger.Error("重置用户公钥失败", zap.Error(err))
+		return nil, code.UserErrResetPublicKeyFailed
+	}
+
+	return value, nil
+}
+
+func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{}, error) {
+	//查询用户是否存在
+	info, err := s.userClient.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
+		Email: email,
+	})
+	if err != nil {
+		s.logger.Error("发送邮箱验证码失败", zap.Error(err))
+		return nil, code.UserErrNotExist
+	}
+
+	//生成验证码
+	code1 := utils.RandomNum()
+
+	//设置验证码(30分钟超时)
+	err = cache.SetKey(s.redisClient, code1, info.UserId, 30*ostime.Minute)
+	if err != nil {
+		s.logger.Error("发送邮箱验证码失败", zap.Error(err))
+		return nil, code.UserErrSendEmailCodeFailed
+	}
+
+	if s.conf.Email.Enable {
+		err := s.smtpClient.SendEmail(email, "重置pgp验证码(请妥善保管,有效时间30分钟)", code1)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return nil, err
+}
