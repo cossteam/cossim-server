@@ -59,8 +59,8 @@ enum GroupStatus {
   GROUP_STATUS_DELETED = 2;  // 删除状态
 }
 enum GroupType {
-  TypePublic  = 0; // 公开群
-  TypePrivate = 1; // 私有群
+  TypeDefault  = 0; // 公开群
+  TypeEncrypted = 1; // 私有群
 }
 
 service GroupService {

@@ -9,21 +9,19 @@ type Response struct {
 }
 
 type UpdateGroupRequest struct {
-	Type            uint32 `json:"type"`
-	Status          uint32 `json:"status"`
-	MaxMembersLimit uint32 `json:"max_members_limit"`
-	CreatorID       string `json:"creator_id"`
-	Name            string `json:"name"`
-	Avatar          string `json:"avatar"`
-	GroupId         uint32 `json:"group_id"`
+	Type      uint32 `json:"type"`
+	Status    uint32 `json:"status"`
+	CreatorID string `json:"creator_id"`
+	Name      string `json:"name"`
+	Avatar    string `json:"avatar"`
+	GroupId   uint32 `json:"group_id"`
 }
 
 type CreateGroupRequest struct {
-	Type            uint32   `json:"type"`
-	MaxMembersLimit uint32   `json:"max_members_limit"`
-	Name            string   `json:"name" binding:"required"`
-	Avatar          string   `json:"avatar"`
-	Member          []string `json:"member"`
+	Type   uint32   `json:"type"`
+	Name   string   `json:"name" binding:"required"`
+	Avatar string   `json:"avatar"`
+	Member []string `json:"member"`
 }
 
 type CreateGroupResponse struct {
@@ -77,7 +75,7 @@ const (
 )
 
 func IsValidGroupType(value api.GroupType) bool {
-	return value == api.GroupType_TypePublic || value == api.GroupType_TypePrivate
+	return value == api.GroupType_TypeEncrypted || value == api.GroupType_TypeDefault
 }
 
 type DeleteGroupRequest struct {
@@ -96,4 +94,11 @@ type SilentNotification uint
 const (
 	NotSilentNotification SilentNotification = iota //不开启静默通知
 	IsSilentNotification                            //开启静默通知
+)
+
+type GroupTypeMemberLimit uint
+
+const (
+	DefaultGroup   = 1000
+	EncryptedGroup = 500
 )

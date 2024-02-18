@@ -133,16 +133,23 @@ func createGroup(c *gin.Context) {
 		return
 	}
 	group := &api.Group{
-		Type:            api.GroupType(int32(req.Type)),
-		MaxMembersLimit: int32(req.MaxMembersLimit),
-		CreatorId:       thisId,
-		Name:            req.Name,
-		Avatar:          req.Avatar,
-		Member:          req.Member,
+		Type:      api.GroupType(int32(req.Type)),
+		CreatorId: thisId,
+		Name:      req.Name,
+		Avatar:    req.Avatar,
+		Member:    req.Member,
 	}
 	if len(req.Member) == 0 {
 		group.Member = make([]string, 0)
 	}
+
+	switch group.Type {
+	case api.GroupType_TypeEncrypted:
+		group.MaxMembersLimit = model.EncryptedGroup
+	default:
+		group.MaxMembersLimit = model.DefaultGroup
+	}
+
 	resp, err := svc.CreateGroup(c, group)
 	if err != nil {
 		logger.Error("创建群聊失败", zap.Error(err))

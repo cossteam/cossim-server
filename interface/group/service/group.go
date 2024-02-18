@@ -199,10 +199,16 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 
 	group.Type = groupgrpcv1.GroupType(req.Type)
 	group.Status = groupgrpcv1.GroupStatus(req.Status)
-	group.MaxMembersLimit = int32(req.MaxMembersLimit)
 	group.CreatorId = req.CreatorID
 	group.Name = req.Name
 	group.Avatar = req.Avatar
+
+	switch req.Type {
+	case uint32(groupgrpcv1.GroupType_TypeEncrypted):
+		group.MaxMembersLimit = model.EncryptedGroup
+	default:
+		group.MaxMembersLimit = model.DefaultGroup
+	}
 
 	resp, err := s.groupClient.UpdateGroup(ctx, &groupgrpcv1.UpdateGroupRequest{
 		Group: group,
