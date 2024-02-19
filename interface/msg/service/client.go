@@ -159,6 +159,7 @@ func (c *client) reduceUserWsCount() error {
 		if err != nil {
 			return err
 		}
+		fmt.Printf("%s账号当前还有%d个客户端在线", c.Uid, num)
 		if num == 1 {
 			//给好友推送下线
 			err := c.pushFriendStatus(offlineEvent)
@@ -253,7 +254,7 @@ func (c *client) pushAllFriendOnlineStatus() error {
 		}
 	}
 
-	msg := config.WsMsg{Uid: c.Uid, Event: config.FriendUpdateOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: friendList}
+	msg := config.WsMsg{Uid: c.Uid, Event: config.PushAllFriendOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: friendList}
 	js, _ := json.Marshal(msg)
 	if Enc == nil {
 		log.Println("加密客户端错误", zap.Error(nil))
