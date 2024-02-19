@@ -54,6 +54,12 @@ const (
 
 	//群聊消息已读事件
 	GroupMsgReadEvent
+
+	//好友在线状态变更事件
+	FriendUpdateOnlineStatusEvent
+
+	//推送所有好友在线状态事件
+	PushAllFriendOnlineStatusEvent
 )
 
 type WsMsg struct {

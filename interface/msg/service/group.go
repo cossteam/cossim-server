@@ -145,6 +145,13 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		GroupId: req.GroupId,
 	})
 
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
 	s.sendWsGroupMsg(ctx, uids.UserIds, &model.WsGroupMsg{
 		MsgId:              message.MsgId,
 		GroupId:            int64(req.GroupId),
@@ -157,6 +164,11 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 		AtUsers:            req.AtUsers,
 		AtAllUser:          req.AtAllUser,
 		IsBurnAfterReading: req.IsBurnAfterReadingType,
+		SenderInfo: model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: userID,
+		},
 	})
 
 	return message.MsgId, nil
