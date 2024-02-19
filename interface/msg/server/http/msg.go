@@ -53,6 +53,7 @@ func ws(c *gin.Context) {
 			return
 		}
 		uid = id
+		return
 	} else {
 		_, c2, err := utils.ParseToken(token)
 		if err != nil {
@@ -71,7 +72,6 @@ func ws(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
 	svc.Ws(conn, uid, deviceType, token)
 
 }

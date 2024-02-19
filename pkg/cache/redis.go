@@ -212,3 +212,16 @@ func ScanKeys(client *redis.Client, pattern string) ([]string, error) {
 	}
 	return keys, nil
 }
+
+func ExistsKey(client *redis.Client, key string) (bool, error) {
+	exists, err := client.Exists(context.Background(), key).Result()
+	if err != nil {
+		return false, err
+	}
+
+	found := false
+	if exists == 1 {
+		found = true
+	}
+	return found, nil
+}

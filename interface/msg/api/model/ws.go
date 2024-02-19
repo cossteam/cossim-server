@@ -24,4 +24,16 @@ type WsGroupMsg struct {
 	AtUsers            []string             `json:"at_users"`
 	AtAllUser          AtAllUserType        `json:"at_all_users"`
 	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`
+	SenderInfo         SenderInfo           `json:"sender_info"`
+}
+
+type SenderInfo struct {
+	UserId string `json:"user_id"`
+	Avatar string `json:"avatar"`
+	Name   string `json:"name"`
+}
+
+type FriendOnlineStatusMsg struct {
+	UserId string `json:"user_id"`
+	Status int32  `json:"status"`
 }
