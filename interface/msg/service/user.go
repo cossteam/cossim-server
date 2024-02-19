@@ -85,25 +85,38 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		return nil, code.MsgErrInsertUserMessageFailed
 	}
 
-	s.sendWsUserMsg(userID, req.ReceiverId, req.Content, req.Type, req.ReplayId, req.DialogId, userRelationStatus2.IsSilent, message.MsgId, req.IsBurnAfterReadingType)
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s.sendWsUserMsg(userID, req.ReceiverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
+		SenderId:           userID,
+		Content:            req.Content,
+		MsgType:            req.Type,
+		ReplayId:           req.ReplayId,
+		MsgId:              message.MsgId,
+		ReceiverId:         req.ReceiverId,
+		SendAt:             pkgtime.Now(),
+		DialogId:           req.DialogId,
+		IsBurnAfterReading: req.IsBurnAfterReadingType,
+		SenderInfo: model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: userID,
+		},
+	})
 
 	return message, nil
 }
 
 // 推送私聊消息
-func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType uint, replayId uint, dialogId uint32, silent relationgrpcv1.UserSilentNotificationType, msgid uint32, isBnr model.BurnAfterReadingType) {
+func (s *Service) sendWsUserMsg(senderId, receiverId string, silent relationgrpcv1.UserSilentNotificationType, msg *model.WsUserMsg) {
 	m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, SendAt: pkgtime.Now(),
-		Data: &model.WsUserMsg{
-			SenderId:           senderId,
-			Content:            msg,
-			MsgType:            msgType,
-			ReplayId:           replayId,
-			MsgId:              msgid,
-			ReceiverId:         receiverId,
-			SendAt:             pkgtime.Now(),
-			DialogId:           dialogId,
-			IsBurnAfterReading: isBnr,
-		},
+		Data: msg,
 	}
 
 	//userRelation, err := s.relationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{UserId: receiverId, FriendId: senderId})
@@ -140,7 +153,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType
 					}
 				}
 			}
-			return
 		}
 	}
 	if _, ok := pool[senderId]; ok {
@@ -160,7 +172,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType
 					}
 				}
 			}
-			return
 		}
 	}
 	if Enc.IsEnable() {
@@ -188,7 +199,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, msg string, msgType
 			s.logger.Error("发布消息失败", zap.Error(err))
 			return
 		}
-		return
 	}
 	err := rabbitMQClient.PublishMessage(receiverId, m)
 	if err != nil {

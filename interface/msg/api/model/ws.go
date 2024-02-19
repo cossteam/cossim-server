@@ -10,6 +10,7 @@ type WsUserMsg struct {
 	SendAt             int64                `json:"send_at"`
 	DialogId           uint32               `json:"dialog_id"`
 	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`
+	SenderInfo         SenderInfo           `json:"sender_info"`
 }
 
 type WsGroupMsg struct {
