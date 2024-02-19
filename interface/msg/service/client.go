@@ -243,12 +243,12 @@ func (c *client) pushAllFriendOnlineStatus() error {
 					return err
 				}
 				if num > 0 {
-					friendList = append(friendList, model.FriendOnlineStatusMsg{Status: 1, UserId: friend.UserId})
+					friendList = append(friendList, model.FriendOnlineStatusMsg{Status: int32(onlineEvent), UserId: friend.UserId})
 				} else {
-					friendList = append(friendList, model.FriendOnlineStatusMsg{Status: 0, UserId: friend.UserId})
+					friendList = append(friendList, model.FriendOnlineStatusMsg{Status: int32(offlineEvent), UserId: friend.UserId})
 				}
 			} else {
-				friendList = append(friendList, model.FriendOnlineStatusMsg{Status: 0, UserId: friend.UserId})
+				friendList = append(friendList, model.FriendOnlineStatusMsg{Status: int32(onlineEvent), UserId: friend.UserId})
 			}
 		}
 	}
