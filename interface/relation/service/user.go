@@ -157,11 +157,12 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 			return nil, err
 		}
 	}
-
-	if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
-		return nil, code.RelationErrFriendRequestAlreadyPending
-	} else if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_ACCEPT {
-		return nil, code.RelationErrRequestAlreadyProcessed
+	if fRequest != nil {
+		if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
+			return nil, code.RelationErrFriendRequestAlreadyPending
+		} else if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_ACCEPT {
+			return nil, code.RelationErrRequestAlreadyProcessed
+		}
 	}
 
 	relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserId})
