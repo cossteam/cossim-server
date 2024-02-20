@@ -28,7 +28,7 @@ type ConsulRegistry struct {
 	keepAliveSync time.Duration // 心跳同步间隔
 }
 
-func (c *ConsulRegistry) RegisterHTTP(serviceName, addr string, serviceID string) error {
+func (c *ConsulRegistry) RegisterHTTP(serviceName, addr, serviceID, healthAddr string) error {
 	address, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
 		return err
@@ -41,13 +41,12 @@ func (c *ConsulRegistry) RegisterHTTP(serviceName, addr string, serviceID string
 
 	// 生成对应grpc的检查对象
 	check := &api.AgentServiceCheck{
-		HTTP:                           "http://" + addr + "/health",
+		HTTP:                           healthAddr,
 		Method:                         http.MethodGet,
 		Timeout:                        "5s",
 		Interval:                       "5s",
 		DeregisterCriticalServiceAfter: "15s",
 	}
-
 	// 创建服务实例
 	service := &api.AgentServiceRegistration{
 		ID:      serviceID,
@@ -77,7 +76,7 @@ func WithKeepAliveSync(sync time.Duration) Option {
 	}
 }
 
-func NewConsulRegistry(addr string, opts ...Option) (Discovery, error) {
+func NewConsulRegistry(addr string, opts ...Option) (Registry, error) {
 	config := api.DefaultConfig()
 	if addr != "" {
 		config.Address = addr
@@ -91,7 +90,6 @@ func NewConsulRegistry(addr string, opts ...Option) (Discovery, error) {
 	if token := os.Getenv("CONSUL_HTTP_TOKEN"); token != "" {
 		config.Token = token
 	}
-	fmt.Println("config.Token => ", config.Token)
 
 	registry := &ConsulRegistry{
 		client:        client,
@@ -105,7 +103,7 @@ func NewConsulRegistry(addr string, opts ...Option) (Discovery, error) {
 	return registry, nil
 }
 
-func (c *ConsulRegistry) Register(serviceName, addr string, serviceID string) error {
+func (c *ConsulRegistry) RegisterGRPC(serviceName, addr string, serviceID string) error {
 
 	address, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -359,11 +357,7 @@ func WithToken(token string) RemoteConfigOption {
 
 func NewDefaultRemoteConfigManager(configCenterURL string, opts ...RemoteConfigOption) (*RemoteConfigManager, error) {
 	rcm := &RemoteConfigManager{
-		keys: []string{
-			CommonMySQLConfigKey,
-			CommonRedisConfigKey,
-			CommonMQConfigKey,
-		},
+		keys: []string{},
 	}
 
 	for _, opt := range opts {

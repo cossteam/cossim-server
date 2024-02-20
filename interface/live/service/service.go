@@ -42,7 +42,7 @@ type Service struct {
 
 	logger    *zap.Logger
 	sid       string
-	discovery discovery.Discovery
+	discovery discovery.Registry
 
 	lock sync.Mutex
 }
@@ -76,7 +76,7 @@ func (s *Service) Start(discover bool) {
 			panic(err)
 		}
 		s.discovery = d
-		if err = s.discovery.RegisterHTTP(config.Conf.Register.Name, config.Conf.HTTP.Addr(), s.sid); err != nil {
+		if err = s.discovery.RegisterHTTP(config.Conf.Register.Name, config.Conf.HTTP.Addr(), s.sid, ""); err != nil {
 			panic(err)
 		}
 		s.logger.Info("Service register success", zap.String("name", config.Conf.Register.Name), zap.String("addr", config.Conf.HTTP.Addr()), zap.String("id", s.sid))

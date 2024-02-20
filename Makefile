@@ -52,7 +52,7 @@ fmt: ## Run go fmt against code.
 
 .PHONY: fmt
 test: fmt vet## Run unittests
-	@#go test -short ./...
+	@go test -short ./...
 
 SERVICE_DIR := ./service
 INTERFACE_DIR := ./interface

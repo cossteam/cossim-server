@@ -33,7 +33,7 @@ type Service struct {
 
 	logger    *zap.Logger
 	sid       string
-	discovery discovery.Discovery
+	discovery discovery.Registry
 	conf      *pkgconfig.AppConfig
 
 	dtmGrpcServer      string
@@ -70,7 +70,7 @@ func (s *Service) Start(discover bool) {
 			panic(err)
 		}
 		s.discovery = d
-		if err = s.discovery.RegisterHTTP(s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid); err != nil {
+		if err = s.discovery.RegisterHTTP(s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid, ""); err != nil {
 			panic(err)
 		}
 		s.logger.Info("Service register success", zap.String("name", s.conf.Register.Name), zap.String("addr", s.conf.HTTP.Addr()), zap.String("id", s.sid))

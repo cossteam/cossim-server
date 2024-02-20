@@ -23,7 +23,7 @@ var (
 	logger = plog.NewDevLogger("gateway")
 	server *http.Server
 	engine *gin.Engine
-	dis    discovery.Discovery
+	dis    discovery.Registry
 
 	userServiceURL      = new(string)
 	relationServiceURL  = new(string)

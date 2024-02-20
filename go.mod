@@ -4,11 +4,14 @@ go 1.20
 
 require (
 	github.com/ProtonMail/gopenpgp/v2 v2.7.4
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/dlclark/regexp2 v1.10.0
 	github.com/dtm-labs/client v1.18.7
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ego/gse v0.80.2
 	github.com/go-gormigrate/gormigrate/v2 v2.1.1
+	github.com/go-logr/logr v1.4.1
+	github.com/go-logr/zapr v1.3.0
 	github.com/goccy/go-json v0.10.2
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.5.0
@@ -32,6 +35,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.2
 	github.com/wneessen/go-mail v0.4.0
+	go.etcd.io/etcd/client/v2 v2.305.10
 	go.uber.org/zap v1.26.0
 	google.golang.org/grpc v1.61.0
 	google.golang.org/protobuf v1.32.0
@@ -51,6 +55,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dtm-labs/dtmdriver v0.0.6 // indirect
@@ -65,7 +70,6 @@ require (
 	github.com/gammazero/deque v0.2.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.20.2 // indirect
 	github.com/go-openapi/jsonreference v0.20.4 // indirect
@@ -158,6 +162,8 @@ require (
 	github.com/xdg-go/stringprep v1.0.2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.10 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.10 // indirect
 	go.mongodb.org/mongo-driver v1.9.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

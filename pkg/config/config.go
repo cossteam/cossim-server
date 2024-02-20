@@ -1,7 +1,10 @@
 package config
 
 import (
+	"flag"
 	"fmt"
+	"github.com/spf13/viper"
+	"os"
 	"time"
 )
 
@@ -50,14 +53,16 @@ func (c GRPCConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
-type RegisterConfig struct {
-	Name    string   `mapstructure:"name" yaml:"name"`
-	Tags    []string `mapstructure:"tags" yaml:"tags"`
-	Address string   `mapstructure:"address" yaml:"address"`
-	Port    int      `mapstructure:"port" yaml:"port"`
+type RegistryConfig struct {
+	Name     string   `mapstructure:"name" yaml:"name"`
+	Tags     []string `mapstructure:"tags" yaml:"tags"`
+	Address  string   `mapstructure:"address" yaml:"address"`
+	Port     int      `mapstructure:"port" yaml:"port"`
+	Discover bool     `mapstructure:"discover" yaml:"discover"`
+	Register bool     `mapstructure:"register" yaml:"register"`
 }
 
-func (c RegisterConfig) Addr() string {
+func (c RegistryConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
@@ -117,7 +122,7 @@ type AppConfig struct {
 	Redis               RedisConfig               `mapstructure:"redis" yaml:"redis"`
 	HTTP                HTTPConfig                `mapstructure:"http" yaml:"http"`
 	GRPC                GRPCConfig                `mapstructure:"grpc" yaml:"grpc"`
-	Register            RegisterConfig            `mapstructure:"register" yaml:"register"`
+	Register            RegistryConfig            `mapstructure:"register" yaml:"register"`
 	Discovers           DiscoversConfig           `mapstructure:"discovers" yaml:"discovers"`
 	Encryption          EncryptionConfig          `mapstructure:"encryption" yaml:"encryption"`
 	MessageQueue        MessageQueueConfig        `mapstructure:"message_queue" yaml:"messageQueue"`
@@ -171,4 +176,76 @@ type LivekitConfig struct {
 
 func (c LivekitConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Address, c.Port)
+}
+
+// ConfigFlagName is the name of the config flag
+const ConfigFlagName = "config"
+const RecommendedConfigPathEnvVar = "CONFIG"
+
+var configPath string
+
+// init registers the "config" flag to the default command line FlagSet.
+func init() {
+	RegisterFlags(flag.CommandLine)
+}
+
+// RegisterFlags registers flag variables to the given FlagSet if not already registered.
+// It uses the default command line FlagSet, if none is provided. Currently, it only registers the config flag.
+func RegisterFlags(fs *flag.FlagSet) {
+	if fs == nil {
+		fs = flag.CommandLine
+	}
+	if f := fs.Lookup(ConfigFlagName); f != nil {
+		configPath = f.Value.String()
+	} else {
+		fs.StringVar(&configPath, ConfigFlagName, "", "config path")
+	}
+}
+
+// loadConfig loads the configuration from the specified file path or the default file path.
+func loadConfig(filePath string) (*AppConfig, error) {
+	v := viper.New()
+	v.SetConfigType("yaml")
+
+	// Read configuration from environment variables
+	v.AutomaticEnv()
+
+	// Read the configuration file
+	if filePath != "" {
+		v.SetConfigFile(filePath)
+	} else {
+		//return nil, fmt.Errorf("config file path is empty")
+		return nil, nil
+	}
+
+	if err := v.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("failed to read config file: %v", err)
+	}
+
+	var config AppConfig
+	if err := v.Unmarshal(&config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
+	}
+
+	return &config, nil
+}
+
+// LoadConfig loads a REST Config as per the rules specified in GetConfig.
+func LoadConfig() (config *AppConfig, configErr error) {
+	// If a flag is specified with the config location, use that
+	if len(configPath) > 0 {
+		return loadConfig(configPath)
+	}
+
+	// If the recommended config env variable is not specified,
+	configPath = os.Getenv(RecommendedConfigPathEnvVar)
+	return loadConfig(configPath)
+}
+
+func GetConfigOrDie() *AppConfig {
+	config, err := LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	return config
 }
