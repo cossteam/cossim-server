@@ -29,7 +29,7 @@ func NewService(ur repository.UserRepository, c *pkgconfig.AppConfig) *Service {
 
 type Service struct {
 	c         *pkgconfig.AppConfig
-	discovery discovery.Discovery
+	discovery discovery.Registry
 	sid       string
 	ur        repository.UserRepository
 	api.UnimplementedUserServiceServer
@@ -44,7 +44,7 @@ func (s *Service) Start(discover bool) {
 		panic(err)
 	}
 	s.discovery = d
-	if err = s.discovery.Register(s.c.Register.Name, s.c.GRPC.Addr(), s.sid); err != nil {
+	if err = s.discovery.RegisterGRPC(s.c.Register.Name, s.c.GRPC.Addr(), s.sid); err != nil {
 		panic(err)
 	}
 	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.c.Register.Name, s.c.GRPC.Addr(), s.sid)

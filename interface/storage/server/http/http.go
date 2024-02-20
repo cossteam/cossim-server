@@ -32,7 +32,7 @@ var (
 	downloadURL = "/api/v1/storage/files/download"
 	enc         encryption.Encryptor
 
-	discover discovery.Discovery
+	discover discovery.Registry
 	sid      string
 
 	server         *http.Server
@@ -107,7 +107,7 @@ func setupDiscovery() {
 	}
 	discover = d
 	sid = xid.New().String()
-	if err = d.RegisterHTTP(config.Conf.Register.Name, config.Conf.HTTP.Addr(), sid); err != nil {
+	if err = d.RegisterHTTP(config.Conf.Register.Name, config.Conf.HTTP.Addr(), sid, ""); err != nil {
 		panic(err)
 	}
 	logger.Info("Service register success", zap.String("name", config.Conf.Register.Name), zap.String("addr", config.Conf.HTTP.Addr()), zap.String("id", sid))

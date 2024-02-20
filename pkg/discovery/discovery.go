@@ -1,9 +1,9 @@
 package discovery
 
-// Discovery 定义服务注册发现接口
-type Discovery interface {
-	Register(serviceName, addr string, serviceID string) error
-	RegisterHTTP(serviceName, addr string, serviceID string) error
+// Registry 定义服务注册发现接口
+type Registry interface {
+	RegisterGRPC(serviceName, addr string, serviceID string) error
+	RegisterHTTP(serviceName, addr, serviceID, healthAddr string) error
 	Cancel(serviceID string) error
 	Discover(serviceName string) (string, error)
 	Health(serviceName string) bool

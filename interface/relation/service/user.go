@@ -428,7 +428,7 @@ func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, st
 
 		return nil
 	}); err != nil {
-		s.logger.Error("workflow Register manageFriend2", zap.Error(err))
+		s.logger.Error("workflow RegisterGRPC manageFriend2", zap.Error(err))
 		return 0, code.RelationErrConfirmFriendFailed
 	}
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
@@ -465,7 +465,7 @@ func (s *Service) manageFriend3(ctx context.Context, userId, friendId string, di
 
 		return nil
 	}); err != nil {
-		s.logger.Error("workflow Register manageFriend3", zap.Error(err))
+		s.logger.Error("workflow RegisterGRPC manageFriend3", zap.Error(err))
 		return code.RelationErrRejectFriendFailed
 	}
 

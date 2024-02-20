@@ -18,7 +18,7 @@ import (
 // @Param group_id query int32 true "群聊ID"
 // @Success 200 {object} model.Response{}
 // @Router /group/info [get]
-func getGroupInfoByGid(c *gin.Context) {
+func (h *Handler) getGroupInfoByGid(c *gin.Context) {
 	gid := c.Query("group_id")
 	if gid == "" {
 		response.SetFail(c, "群聊ID不能为空", nil)
@@ -37,7 +37,7 @@ func getGroupInfoByGid(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.GetGroupInfoByGid(c, uint32(gidInt), userID)
+	resp, err := h.svc.GetGroupInfoByGid(c, uint32(gidInt), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -53,7 +53,7 @@ func getGroupInfoByGid(c *gin.Context) {
 // @Param group_ids query []string true "群聊ID列表"
 // @Success 200 {object} model.Response{}
 // @Router /group/getBatch [get]
-func getBatchGroupInfoByIDs(c *gin.Context) {
+func (h *Handler) getBatchGroupInfoByIDs(c *gin.Context) {
 	groupIds := c.QueryArray("groupIds")
 	ids := make([]uint32, len(groupIds))
 	//转换类型
@@ -66,7 +66,7 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 		ids[i] = uint32(id)
 	}
 
-	resp, err := svc.GetBatchGroupInfoByIDs(c, ids)
+	resp, err := h.svc.GetBatchGroupInfoByIDs(c, ids)
 	if err != nil {
 		c.Error(err)
 		return
@@ -82,7 +82,7 @@ func getBatchGroupInfoByIDs(c *gin.Context) {
 // @Param request body model.UpdateGroupRequest true "请求体"
 // @Success 200 {object} model.Response{}
 // @Router /group/update/{gid} [post]
-func updateGroup(c *gin.Context) {
+func (h *Handler) updateGroup(c *gin.Context) {
 	req := new(model.UpdateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.SetFail(c, "参数验证失败", nil)
@@ -99,7 +99,7 @@ func updateGroup(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.UpdateGroup(c, req, userID)
+	resp, err := h.svc.UpdateGroup(c, req, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -115,7 +115,7 @@ func updateGroup(c *gin.Context) {
 // @Param request body model.CreateGroupRequest true "请求体"
 // @Success 200 {object} model.Response{}
 // @Router /group/create [post]
-func createGroup(c *gin.Context) {
+func (h *Handler) createGroup(c *gin.Context) {
 	req := new(model.CreateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.SetFail(c, "参数验证失败", nil)
@@ -150,9 +150,9 @@ func createGroup(c *gin.Context) {
 		group.MaxMembersLimit = model.DefaultGroup
 	}
 
-	resp, err := svc.CreateGroup(c, group)
+	resp, err := h.svc.CreateGroup(c, group)
 	if err != nil {
-		logger.Error("创建群聊失败", zap.Error(err))
+		h.logger.Error("创建群聊失败", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
@@ -166,7 +166,7 @@ func createGroup(c *gin.Context) {
 // @Param request body model.DeleteGroupRequest true "群聊id"
 // @Success 200 {object} model.Response{}
 // @Router /group/delete [post]
-func deleteGroup(c *gin.Context) {
+func (h *Handler) deleteGroup(c *gin.Context) {
 	req := new(model.DeleteGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.SetFail(c, "参数验证失败", nil)
@@ -179,9 +179,9 @@ func deleteGroup(c *gin.Context) {
 		return
 	}
 
-	groupId, err := svc.DeleteGroup(c, req.GroupId, thisId)
+	groupId, err := h.svc.DeleteGroup(c, req.GroupId, thisId)
 	if err != nil {
-		logger.Error("删除群聊失败", zap.Error(err))
+		h.logger.Error("删除群聊失败", zap.Error(err))
 		response.SetFail(c, "删除群聊失败", nil)
 		return
 	}

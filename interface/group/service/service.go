@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/cossim/coss-server/interface/group/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -29,36 +28,39 @@ type Service struct {
 
 	logger    *zap.Logger
 	sid       string
-	discovery discovery.Discovery
+	discovery discovery.Registry
 	conf      *pkgconfig.AppConfig
 
 	dtmGrpcServer      string
 	relationGrpcServer string
 	dialogGrpcServer   string
 	groupGrpcServer    string
+
+	dis bool
 }
 
-func New() *Service {
+func New(ac *pkgconfig.AppConfig) *Service {
 	logger := setupLogger()
-	rabbitMQClient := setRabbitMQProvider(config.Conf)
+	rabbitMQClient := setRabbitMQProvider(ac)
 
 	return &Service{
 		rabbitMQClient: rabbitMQClient,
 		logger:         logger,
-		conf:           config.Conf,
+		conf:           ac,
 		sid:            xid.New().String(),
-		dtmGrpcServer:  config.Conf.Dtm.Addr(),
+		dtmGrpcServer:  ac.Dtm.Addr(),
+		dis:            false,
 	}
 }
 
-func (s *Service) Start(discover bool) {
-	if discover {
+func (s *Service) Start() error {
+	if s.dis {
 		d, err := discovery.NewConsulRegistry(s.conf.Register.Addr())
 		if err != nil {
-			panic(err)
+			return err
 		}
 		s.discovery = d
-		if err = s.discovery.RegisterHTTP(s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid); err != nil {
+		if err = s.discovery.RegisterHTTP(s.conf.Register.Name, s.conf.HTTP.Addr(), s.sid, ""); err != nil {
 			panic(err)
 		}
 		s.logger.Info("Service registration successful", zap.String("service", s.conf.Register.Name), zap.String("addr", s.conf.HTTP.Addr()), zap.String("sid", s.sid))
@@ -66,17 +68,11 @@ func (s *Service) Start(discover bool) {
 	} else {
 		s.direct()
 	}
+	return nil
 }
 
-func Restart(discover bool) *Service {
-	s := New()
-	s.logger.Info("Service restart")
-	s.Start(discover)
-	return s
-}
-
-func (s *Service) Stop(discover bool) error {
-	if !discover {
+func (s *Service) Stop() error {
+	if !s.dis {
 		return nil
 	}
 	if err := s.discovery.Cancel(s.sid); err != nil {
@@ -132,6 +128,31 @@ func (s *Service) direct() {
 			panic(err)
 		}
 	}
+}
+
+func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	switch serviceName {
+	case "user_service":
+		s.userClient = usergrpcv1.NewUserServiceClient(conn)
+		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
+	case "relation_service":
+		s.relationGrpcServer = conn.Target()
+		s.dialogGrpcServer = conn.Target()
+		s.relationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
+
+		s.relationGroupClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
+
+		s.relationDialogClient = relationgrpcv1.NewDialogServiceClient(conn)
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
+	case "group_service":
+		s.groupGrpcServer = conn.Target()
+		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
+		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
+	}
+
+	return nil
 }
 
 func (s *Service) handlerGrpcClient(serviceName string, addr string) error {

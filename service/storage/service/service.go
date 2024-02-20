@@ -40,7 +40,7 @@ type Service struct {
 	v1.UnimplementedStorageServiceServer
 
 	ac        *pkgconfig.AppConfig
-	discovery discovery.Discovery
+	discovery discovery.Registry
 	sid       string
 }
 
@@ -53,7 +53,7 @@ func (s *Service) Start(discover bool) {
 		panic(err)
 	}
 	s.discovery = d
-	if err = s.discovery.Register(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid); err != nil {
+	if err = s.discovery.RegisterGRPC(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid); err != nil {
 		panic(err)
 	}
 	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
