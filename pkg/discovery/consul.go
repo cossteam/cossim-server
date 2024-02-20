@@ -3,7 +3,7 @@ package discovery
 import (
 	"errors"
 	"fmt"
-	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/config"
 	"github.com/hashicorp/consul/api"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -387,8 +387,8 @@ func NewRemoteConfigManager(configCenterURL string, opts ...RemoteConfigOption) 
 	return rcm, nil
 }
 
-func (m *RemoteConfigManager) Get(key string, keys ...string) (*pkgconfig.AppConfig, error) {
-	ac := &pkgconfig.AppConfig{}
+func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig, error) {
+	ac := &config.AppConfig{}
 
 	newValue, err := m.cc.Get(key)
 	if err != nil {
@@ -427,7 +427,7 @@ type ConfigUpdate struct {
 }
 
 // Watch 监听配置项的变化并更新配置
-func (m *RemoteConfigManager) Watch(ac *pkgconfig.AppConfig, updateCh chan<- ConfigUpdate, key string, keys ...string) error {
+func (m *RemoteConfigManager) Watch(ac *config.AppConfig, updateCh chan<- ConfigUpdate, key string, keys ...string) error {
 	//m.once.Do(func() {
 	go func(k string) {
 		log.Printf("开始监听配置 => %s", k)
@@ -477,9 +477,9 @@ func (m *RemoteConfigManager) Watch(ac *pkgconfig.AppConfig, updateCh chan<- Con
 	return nil
 }
 
-func (m *RemoteConfigManager) handlerAppConfig(ac *pkgconfig.AppConfig, newValue string) error {
+func (m *RemoteConfigManager) handlerAppConfig(ac *config.AppConfig, newValue string) error {
 	// 解析新的配置值
-	var newConfig *pkgconfig.AppConfig
+	var newConfig *config.AppConfig
 
 	if err := yaml.Unmarshal([]byte(newValue), &newConfig); err != nil {
 		return err
@@ -506,7 +506,7 @@ func (m *RemoteConfigManager) handlerAppConfig(ac *pkgconfig.AppConfig, newValue
 	return nil
 }
 
-func (m *RemoteConfigManager) handlerConfig(key string, ac *pkgconfig.AppConfig, newValue string) error {
+func (m *RemoteConfigManager) handlerConfig(key string, ac *config.AppConfig, newValue string) error {
 	var trimmedKey string
 	if strings.HasPrefix(key, CommonConfigPrefix) {
 		trimmedKey = strings.TrimPrefix(key, CommonConfigPrefix)
@@ -557,7 +557,7 @@ func (m *RemoteConfigManager) handlerConfig(key string, ac *pkgconfig.AppConfig,
 	return nil
 }
 
-func updateConfigField(fieldName string, ac *pkgconfig.AppConfig, newConfig map[string]interface{}) error {
+func updateConfigField(fieldName string, ac *config.AppConfig, newConfig map[string]interface{}) error {
 	acValue := reflect.ValueOf(ac).Elem()
 	acType := acValue.Type()
 	for i := 0; i < acType.NumField(); i++ {
@@ -665,7 +665,7 @@ func getObjectValue(obj map[string]interface{}, path []string) (interface{}, err
 }
 
 // saveConfigToFile 将配置保存到文件
-func (m *RemoteConfigManager) saveConfigToFile(ac *pkgconfig.AppConfig) error {
+func (m *RemoteConfigManager) saveConfigToFile(ac *config.AppConfig) error {
 	m.configLocker.Lock()
 	defer m.configLocker.Unlock()
 
@@ -686,7 +686,7 @@ func (m *RemoteConfigManager) Close() error {
 	return m.cc.Close()
 }
 
-func LoadDefaultRemoteConfig(addr string, configName string, tokens string, ac *pkgconfig.AppConfig) (chan ConfigUpdate, error) {
+func LoadDefaultRemoteConfig(addr string, configName string, tokens string, ac *config.AppConfig) (chan ConfigUpdate, error) {
 	cc, err := NewDefaultRemoteConfigManager(addr, WithToken(tokens))
 	if err != nil {
 		return nil, err
