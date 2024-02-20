@@ -6,66 +6,65 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
+	"github.com/cossim/coss-server/pkg/db"
+	"github.com/cossim/coss-server/pkg/version"
 	"github.com/cossim/coss-server/service/group/api/v1"
+	api "github.com/cossim/coss-server/service/group/api/v1"
 	"github.com/cossim/coss-server/service/group/domain/entity"
 	"github.com/cossim/coss-server/service/group/domain/repository"
 	"github.com/cossim/coss-server/service/group/infrastructure/persistence"
 	"github.com/rs/xid"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	"log"
 )
 
-func NewService(ac *pkgconfig.AppConfig, repo *persistence.Repositories) *Service {
-	return &Service{
-		gr:  repo.Gr,
-		ac:  ac,
-		sid: xid.New().String(),
-	}
-}
-
 type Service struct {
-	gr repository.GroupRepository
+	gr  repository.GroupRepository
+	ac  *pkgconfig.AppConfig
+	sid string
 	v1.UnimplementedGroupServiceServer
-
-	ac        *pkgconfig.AppConfig
-	discovery discovery.Registry
-	sid       string
 }
 
-func (s *Service) Start(discover bool) {
-	if !discover {
-		return
-	}
-	d, err := discovery.NewConsulRegistry(s.ac.Register.Addr())
+func (s *Service) Register(srv *grpc.Server) {
+	api.RegisterGroupServiceServer(srv, s)
+}
+
+func (s *Service) RegisterHealth(srv *grpc.Server) {
+	grpc_health_v1.RegisterHealthServer(srv, health.NewServer())
+}
+
+func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
+	dbConn, err := db.NewMySQLFromDSN(cfg.MySQL.DSN).GetConnection()
 	if err != nil {
-		panic(err)
-	}
-	s.discovery = d
-	if err = s.discovery.RegisterGRPC(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid); err != nil {
-		panic(err)
-	}
-	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
-}
-
-func (s *Service) Stop(discover bool) error {
-	if !discover {
-		return nil
-	}
-	if err := s.discovery.Cancel(s.sid); err != nil {
-		log.Printf("Failed to cancel service registration: %v", err)
 		return err
 	}
-	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+
+	infra := persistence.NewRepositories(dbConn)
+	if err = infra.Automigrate(); err != nil {
+		return err
+	}
+
+	s.gr = infra.Gr
+	s.ac = cfg
+	s.sid = xid.New().String()
 	return nil
 }
 
-func (s *Service) Restart(discover bool) {
-	s.Stop(discover)
-	s.Start(discover)
+func (s *Service) Name() string {
+	return "group_service"
 }
+
+func (s *Service) Version() string {
+	return version.FullVersion()
+}
+
+func (s *Service) Stop(ctx context.Context) error { return nil }
+
+func (s *Service) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
 
 func (s *Service) GetGroupInfoByGid(ctx context.Context, request *v1.GetGroupInfoRequest) (*v1.Group, error) {
 	resp := &v1.Group{}

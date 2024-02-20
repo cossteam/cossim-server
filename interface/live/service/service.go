@@ -67,14 +67,14 @@ func New(ac *pkgconfig.AppConfig) *Service {
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
 	switch serviceName {
-	case "user":
+	case "user_server":
 		s.userClient = user.NewUserServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
-	case "relation":
+	case "relation_service":
 		s.relUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.relGroupClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
-	case "group":
+	case "group_service":
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	}

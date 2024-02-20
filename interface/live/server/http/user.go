@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -39,7 +40,9 @@ func (h *Handler) UserCreate(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "创建通话成功", resp)
+	fmt.Println("enc => ", h.enc)
+
+	response.Success(c, "创建通话成功", resp)
 }
 
 // UserJoin
@@ -73,7 +76,7 @@ func (h *Handler) UserJoin(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "加入通话成功", resp)
+	response.Success(c, "加入通话成功", resp)
 }
 
 // UserShow

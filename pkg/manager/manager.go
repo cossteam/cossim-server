@@ -97,9 +97,12 @@ type Config struct {
 }
 
 type Options struct {
-	Grpc   GrpcServer
-	Http   HttpServer
+	Grpc GrpcServer
+
+	Http HttpServer
+
 	Logger logr.Logger
+
 	Config Config
 
 	// Readiness probe endpoint name, defaults to "ready"
@@ -113,13 +116,30 @@ type Options struct {
 	// It can be set to "0" to disable the metrics serving.
 	MetricsBindAddress string
 
+	// PprofBindAddress is the TCP address that the controller should bind to
+	// for serving pprof.
+	// It can be set to "" or "0" to disable the pprof serving.
+	// Since pprof may contain sensitive information, make sure to protect it
+	// before exposing it to public.
+	PprofBindAddress string
+
 	// GracefulShutdownTimeout is the duration given to runnable to stop before the manager actually returns on stop.
 	// To disable graceful shutdown, set to time.Duration(0)
 	// To use graceful shutdown without timeout, set to a negative duration, e.G. time.Duration(-1)
 	GracefulShutdownTimeout *time.Duration
 
+	// BaseContext is the function that provides Context values to Runnables
+	// managed by the Manager. If a BaseContext function isn't provided, Runnables
+	// will receive a new Background Context instead.
+	BaseContext BaseContextFunc
+
+	//newMetricsServer       func(options metricsserver.Options, config *rest.Config, httpClient *http.Client) (metricsserver.Server, error)
 	newHealthProbeListener func(addr string) (net.Listener, error)
+	newPprofListener       func(addr string) (net.Listener, error)
 }
+
+// HealthProbeListener 是一个接受地址参数并返回 net.Listener 和 error 的函数类型
+type HealthProbeListener func(addr string) (net.Listener, error)
 
 // New returns a new Manager for creating Controllers.
 // Note that if ContentType in the given config is not set, "application/vnd.kubernetes.protobuf"
@@ -128,6 +148,10 @@ type Options struct {
 func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	if cfg == nil && !opts.Config.LoadFromConfigCenter {
 		return nil, errors.New("must specify Config")
+	}
+
+	if opts.Http.HTTPService == nil && opts.Grpc.GRPCService == nil {
+		return nil, errors.New("must specify at least one of Http or Grpc")
 	}
 
 	// Set default values for options fields
@@ -153,11 +177,11 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 		cfg.Register.Discover = true
 	}
 
-	if opts.Http.HTTPService == nil && opts.Grpc.GRPCService == nil {
-		return nil, errors.New("must specify at least one of Http or Grpc")
-	}
-
-	hs := server.NewHttpService(cfg, opts.Http, opts.Http.HealthCheckAddress+opts.LivenessEndpointName, opts.Logger)
+	// Create the metrics server.
+	//metricsServer, err := opts.newMetricsServer(opts.Metrics, config, cluster.GetHTTPClient())
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	// Create health probes listener. This will throw an error if the bind
 	// address is invalid or already in use.
@@ -166,21 +190,42 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 		return nil, err
 	}
 
+	// Create pprof listener. This will throw an error if the bind
+	// address is invalid or already in use.
+	pprofListener, err := opts.newPprofListener(opts.PprofBindAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to new pprof listener: %w", err)
+	}
+
 	errChan := make(chan error, 1)
 	runnables := newRunnables(context.Background, errChan)
 
+	var hs *server.HttpService
+	var gs *server.GrpcService
+
+	if opts.Http.HTTPService != nil {
+		hs = server.NewHttpService(cfg, opts.Http.HTTPService, opts.Http.HealthCheckAddress+opts.LivenessEndpointName, opts.Logger)
+	}
+
+	if opts.Grpc.GRPCService != nil {
+		gs = server.NewGRPCService(cfg, opts.Grpc.GRPCService, opts.Logger)
+	}
+
 	return &controllerManager{
 		stopProcedureEngaged:    new(int64),
-		runnables:               runnables,
 		errChan:                 errChan,
+		runnables:               runnables,
 		httpServer:              hs,
-		optsHttpServer:          opts.Http,
-		readinessEndpointName:   opts.ReadinessEndpointName,
-		livenessEndpointName:    opts.LivenessEndpointName,
+		grpcServer:              gs,
+		optsHttpServer:          &opts.Http,
+		optsGrpcServer:          &opts.Grpc,
 		healthCheckAddress:      opts.Http.HealthCheckAddress,
 		httpHealthProbeListener: httpHealthProbeListener,
+		readinessEndpointName:   opts.ReadinessEndpointName,
+		livenessEndpointName:    opts.LivenessEndpointName,
 		internalProceduresStop:  make(chan struct{}),
 		configUpdateCh:          upCh,
+		pprofListener:           pprofListener,
 		logger:                  opts.Logger,
 		gracefulShutdownTimeout: *opts.GracefulShutdownTimeout,
 		config:                  cfg,
@@ -204,6 +249,10 @@ func setOptionsDefaults(opts Options) Options {
 		opts.newHealthProbeListener = defaultHealthProbeListener
 	}
 
+	if opts.newPprofListener == nil {
+		opts.newPprofListener = defaultPprofListener
+	}
+
 	if opts.GracefulShutdownTimeout == nil {
 		gracefulShutdownTimeout := defaultGracefulShutdownPeriod
 		opts.GracefulShutdownTimeout = &gracefulShutdownTimeout
@@ -211,6 +260,10 @@ func setOptionsDefaults(opts Options) Options {
 
 	if opts.Logger.GetSink() == nil {
 		opts.Logger = zapr.NewLogger(plog.NewLogger("console", int8(zapcore.DebugLevel)))
+	}
+
+	if opts.BaseContext == nil {
+		opts.BaseContext = defaultBaseContext
 	}
 
 	return opts
@@ -227,6 +280,25 @@ func defaultHealthProbeListener(addr string) (net.Listener, error) {
 		return nil, fmt.Errorf("error listening on %s: %w", addr, err)
 	}
 	return ln, nil
+}
+
+// defaultPprofListener creates the default pprof listener bound to the given address.
+func defaultPprofListener(addr string) (net.Listener, error) {
+	if addr == "" || addr == "0" {
+		return nil, nil
+	}
+
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("error listening on %s: %w", addr, err)
+	}
+	return ln, nil
+}
+
+// defaultBaseContext is used as the BaseContext value in Options if one
+// has not already been set.
+func defaultBaseContext() context.Context {
+	return context.Background()
 }
 
 func loadConfigFromRemote(opts Options, upCh chan<- discovery.ConfigUpdate) (*config.AppConfig, error) {
