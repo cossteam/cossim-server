@@ -87,7 +87,7 @@ func (s *HttpService) Start(ctx context.Context) error {
 	serverShutdown := make(chan struct{})
 	go func() {
 		<-ctx.Done()
-		s.logger.Info("shutting down httpServer")
+		s.logger.Info("shutting down httpServer", "addr", s.addr)
 
 		if err := s.server.Shutdown(ctx); err != nil {
 			s.logger.Error(err, "error shutting down httpServer")
@@ -97,12 +97,11 @@ func (s *HttpService) Start(ctx context.Context) error {
 
 	s.logger.Info(fmt.Sprintf("%s http service start", s.ac.Register.Name), "addr", s.ac.HTTP.Addr())
 	if err := s.server.ListenAndServe(); err != nil {
-		if errors.Is(err, http.ErrServerClosed) {
-			s.logger.Info(fmt.Sprintf("%s http service stop", s.ac.Register.Name), "addr", s.addr)
-			return nil
+		if !errors.Is(err, http.ErrServerClosed) {
+			s.logger.Error(err, fmt.Sprintf("启动 [%s] http服务失败：%v", s.ac.Register.Name, err))
+			return fmt.Errorf("启动 [%s] http服务失败：%v", s.ac.Register.Name, err)
 		}
-		s.logger.Error(err, fmt.Sprintf("启动 [%s] http服务失败：%v", s.ac.Register.Name, err))
-		return fmt.Errorf("启动 [%s] http服务失败：%v", s.ac.Register.Name, err)
+		return nil
 	}
 
 	<-serverShutdown
