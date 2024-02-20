@@ -2,173 +2,101 @@ package http
 
 import (
 	"context"
-	"github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/msg/service"
+	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	"github.com/cossim/coss-server/pkg/log"
+	plog "github.com/cossim/coss-server/pkg/log"
+	"github.com/cossim/coss-server/pkg/server"
+	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
-	"net/http"
-	"time"
+	"google.golang.org/grpc"
 )
 
 var (
-	redisClient *redis.Client
-
-	logger *zap.Logger
-	enc    encryption.Encryptor
-	svc    *service.Service
-
-	server *http.Server
-	engine *gin.Engine
+	_ server.HTTPService = &Handler{}
 )
 
-func Start(service *service.Service) {
-	svc = service
-	engine = gin.New()
-	server = &http.Server{
-		Addr:    config.Conf.HTTP.Addr(),
-		Handler: engine,
-	}
-
-	setupLogger()
-	setupEncryption()
-	setupRedis()
-
-	if enc == nil {
-		logger.Fatal("Failed to setup encryption")
-		return
-	}
-	if redisClient == nil {
-		logger.Fatal("Failed to setup redis")
-		return
-	}
-	setupGin()
-
-	go func() {
-		logger.Info("Gin server is running on port", zap.String("addr", config.Conf.HTTP.Addr()))
-		if err := server.ListenAndServe(); err != nil {
-			logger.Info("Failed to start Gin server", zap.Error(err))
-			return
-		}
-	}()
+type Handler struct {
+	svc         *service.Service
+	redisClient *redis.Client
+	logger      *zap.Logger
+	enc         encryption.Encryptor
 }
 
-func Restart(service *service.Service) error {
-	Start(service)
-	return nil
-}
-
-func Stop() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
-		logger.Fatal("Server forced to shutdown", zap.Error(err))
-	}
-	redisClient.Close()
-}
-
-func setupEncryption() {
-	enc = encryption.NewEncryptor([]byte(config.Conf.Encryption.Passphrase), config.Conf.Encryption.Name, config.Conf.Encryption.Email, config.Conf.Encryption.RsaBits, config.Conf.Encryption.Enable)
-
-	err := enc.ReadKeyPair()
-	if err != nil {
-		logger.Fatal("Failed to ", zap.Error(err))
-		return
-	}
-
-	//readString, err := encryption.GenerateRandomKey(32)
-	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	//resp, err := enc.SecretMessage("{\n    \"content\": \"enim nostrud\",\n    \"receiver_id\": \"e3798b56-68f7-45f0-911f-147b0418f387\",\n    \"type\": 1,\n    \"dialog_id\":82\n}", enc.GetPublicKey(), []byte(readString))
-	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	//j, err := json.Marshal(resp)
-	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	////保存成文件
-	//cacheDir := ".cache"
-	//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
-	//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
-	//	if err != nil {
-	//		logger.Fatal("Failed to ", zap.Error(err))
-	//	}
-	//}
-	//// 保存私钥到文件
-	//privateKeyFile, err := os.UserCreate(cacheDir + "/data.json")
-	//if err != nil {
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	//
-	//_, err = privateKeyFile.WriteString(string(j))
-	//if err != nil {
-	//	privateKeyFile.Close()
-	//	logger.Fatal("Failed to ", zap.Error(err))
-	//}
-	//privateKeyFile.Close()
-	//fmt.Println("加密后消息：", string(j))
-}
-
-func setupRedis() {
+func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     config.Conf.Redis.Addr(),
-		Password: config.Conf.Redis.Password, // no password set
-		DB:       0,                          // use default DB
+		Addr:     cfg.Redis.Addr(),
+		Password: cfg.Redis.Password, // no password set
+		DB:       0,                  // use default DB
 		//Protocol: cfg,
 	})
-	redisClient = rdb
+	h.redisClient = rdb
+	h.logger = plog.NewDevLogger("msg_bff")
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	h.svc = service.New(cfg)
+	return h.enc.ReadKeyPair()
 }
 
-func setupLogger() {
-	logger = log.NewDevLogger("msg_bff")
+func (h *Handler) Name() string {
+	return "msg_bff"
 }
 
-func setupGin() {
-	gin.SetMode(gin.ReleaseMode)
-	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(logger), middleware.EncryptionMiddleware(enc), middleware.RecoveryMiddleware())
-
-	// 设置路由
-	route(engine)
+func (h *Handler) Version() string {
+	return version.FullVersion()
 }
 
-// @title Swagger Example API
-func route(engine *gin.Engine) {
-	engine.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
-	})
-	u := engine.Group("/api/v1/msg")
-	//u.Use(middleware.AuthMiddleware())
-	u.GET("/ws", middleware.AuthMiddleware(redisClient), ws)
-	u.POST("/send/user", middleware.AuthMiddleware(redisClient), sendUserMsg)
-	u.POST("/send/group", middleware.AuthMiddleware(redisClient), sendGroupMsg)
-	u.GET("/list/user", middleware.AuthMiddleware(redisClient), getUserMsgList)
-	u.GET("/list/group", middleware.AuthMiddleware(redisClient), getGroupMsgList)
-	u.GET("/dialog/list", middleware.AuthMiddleware(redisClient), getUserDialogList)
-	u.POST("/recall/group", middleware.AuthMiddleware(redisClient), recallGroupMsg)
-	u.POST("/recall/user", middleware.AuthMiddleware(redisClient), recallUserMsg)
-	u.POST("/edit/group", middleware.AuthMiddleware(redisClient), editGroupMsg)
-	u.POST("/edit/user", middleware.AuthMiddleware(redisClient), editUserMsg)
-	u.POST("/read/user", middleware.AuthMiddleware(redisClient), readUserMsgs)
+// @title msg服务
+
+func (h *Handler) RegisterRoute(r gin.IRouter) {
+	u := r.Group("/api/v1/msg")
+	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
+	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
+	u.Use(middleware.AuthMiddleware(h.redisClient))
+
+	u.GET("/ws", h.ws)
+	u.POST("/send/user", h.sendUserMsg)
+	u.POST("/send/group", h.sendGroupMsg)
+	u.GET("/list/user", h.getUserMsgList)
+	u.GET("/list/group", h.getGroupMsgList)
+	u.GET("/dialog/list", h.getUserDialogList)
+	u.POST("/recall/group", h.recallGroupMsg)
+	u.POST("/recall/user", h.recallUserMsg)
+	u.POST("/edit/group", h.editGroupMsg)
+	u.POST("/edit/user", h.editUserMsg)
+	u.POST("/read/user", h.readUserMsgs)
 
 	//群聊标注消息
-	u.POST("/label/group", middleware.AuthMiddleware(redisClient), labelGroupMessage)
-	u.GET("/label/group", middleware.AuthMiddleware(redisClient), getGroupLabelMsgList)
+	u.POST("/label/group", h.labelGroupMessage)
+	u.GET("/label/group", h.getGroupLabelMsgList)
 	//私聊标注消息
-	u.POST("/label/user", middleware.AuthMiddleware(redisClient), labelUserMessage)
-	u.GET("/label/user", middleware.AuthMiddleware(redisClient), getUserLabelMsgList)
-	u.POST("/after/get", middleware.AuthMiddleware(redisClient), getDialogAfterMsg)
+	u.POST("/label/user", h.labelUserMessage)
+	u.GET("/label/user", h.getUserLabelMsgList)
+	u.POST("/after/get", h.getDialogAfterMsg)
 	//群聊设置消息已读
-	u.POST("/group/read/set", middleware.AuthMiddleware(redisClient), setGroupMessagesRead)
+	u.POST("/group/read/set", h.setGroupMessagesRead)
 	//获取群聊消息阅读者
-	u.GET("/group/read/get", middleware.AuthMiddleware(redisClient), getGroupMessageReaders)
+	u.GET("/group/read/get", h.getGroupMessageReaders)
+}
 
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
+func (h *Handler) Health(r gin.IRouter) string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (h *Handler) Stop(ctx context.Context) error {
+	return h.svc.Stop(ctx)
+}
+
+func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
+	for k, v := range services {
+		if err := h.svc.HandlerGrpcClient(k, v); err != nil {
+			h.logger.Error("handler grpc client error", zap.String("name", k), zap.String("addr", v.Target()), zap.Error(err))
+		}
+	}
+	return nil
 }

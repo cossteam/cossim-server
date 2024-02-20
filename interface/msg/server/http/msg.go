@@ -39,7 +39,7 @@ type client struct {
 // @Summary websocket请求
 // @Description websocket请求
 // @Router /msg/ws [get]
-func ws(c *gin.Context) {
+func (h *Handler) ws(c *gin.Context) {
 	var uid string
 	token := c.Query("token")
 	//判断设备类型
@@ -49,7 +49,7 @@ func ws(c *gin.Context) {
 	if token == "" {
 		id, err := pkghttp.ParseTokenReUid(c)
 		if err != nil {
-			logger.Error("token解析失败", zap.Error(err))
+			h.logger.Error("token解析失败", zap.Error(err))
 			return
 		}
 		uid = id
@@ -57,7 +57,7 @@ func ws(c *gin.Context) {
 	} else {
 		_, c2, err := utils.ParseToken(token)
 		if err != nil {
-			logger.Error("token解析失败", zap.Error(err))
+			h.logger.Error("token解析失败", zap.Error(err))
 			return
 		}
 		uid = c2.UserId
@@ -72,7 +72,7 @@ func ws(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	svc.Ws(conn, uid, deviceType, token)
+	h.svc.Ws(conn, uid, deviceType, token)
 
 }
 
@@ -83,10 +83,10 @@ func ws(c *gin.Context) {
 // @param request body model.SendUserMsgRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /msg/send/user [post]
-func sendUserMsg(c *gin.Context) {
+func (h *Handler) sendUserMsg(c *gin.Context) {
 	req := new(model.SendUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -96,7 +96,7 @@ func sendUserMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.SendUserMsg(c, thisId, req)
+	resp, err := h.svc.SendUserMsg(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -112,10 +112,10 @@ func sendUserMsg(c *gin.Context) {
 // @param request body model.SendGroupMsgRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /msg/send/group [post]
-func sendGroupMsg(c *gin.Context) {
+func (h *Handler) sendGroupMsg(c *gin.Context) {
 	req := new(model.SendGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -129,7 +129,7 @@ func sendGroupMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.SendGroupMsg(c, thisId, req)
+	resp, err := h.svc.SendGroupMsg(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -149,7 +149,7 @@ func sendGroupMsg(c *gin.Context) {
 // @Param page_size query int true "页大小"
 // @Success		200 {object} model.Response{}
 // @Router /msg/list/user [get]
-func getUserMsgList(c *gin.Context) {
+func (h *Handler) getUserMsgList(c *gin.Context) {
 	var num = c.Query("page_num")
 	var size = c.Query("page_size")
 	var id = c.Query("user_id")
@@ -181,7 +181,7 @@ func getUserMsgList(c *gin.Context) {
 		PageSize: pageSize,
 	}
 
-	resp, err := svc.GetUserMessageList(c, thisId, msgListRequest)
+	resp, err := h.svc.GetUserMessageList(c, thisId, msgListRequest)
 	if err != nil {
 		c.Error(err)
 		return
@@ -202,7 +202,7 @@ func getUserMsgList(c *gin.Context) {
 // @Param page_size query int true "页大小"
 // @Success		200 {object} model.Response{}
 // @Router /msg/list/group [get]
-func getGroupMsgList(c *gin.Context) {
+func (h *Handler) getGroupMsgList(c *gin.Context) {
 	var gid = c.Query("group_id")
 	var num = c.Query("page_num")
 	var size = c.Query("page_size")
@@ -238,7 +238,7 @@ func getGroupMsgList(c *gin.Context) {
 		PageSize: pageSize,
 	}
 
-	resp, err := svc.GetGroupMessageList(c, thisId, msgListRequest)
+	resp, err := h.svc.GetGroupMessageList(c, thisId, msgListRequest)
 	if err != nil {
 		c.Error(err)
 		return
@@ -254,14 +254,14 @@ func getGroupMsgList(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /msg/dialog/list [get]
-func getUserDialogList(c *gin.Context) {
+func (h *Handler) getUserDialogList(c *gin.Context) {
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
-	resp, err := svc.GetUserDialogList(c, thisId)
+	resp, err := h.svc.GetUserDialogList(c, thisId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -277,10 +277,10 @@ func getUserDialogList(c *gin.Context) {
 // @param request body model.EditUserMsgRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/edit/user [post]
-func editUserMsg(c *gin.Context) {
+func (h *Handler) editUserMsg(c *gin.Context) {
 	req := new(model.EditUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -291,7 +291,7 @@ func editUserMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.EditUserMsg(c, thisId, req.MsgId, req.Content)
+	resp, err := h.svc.EditUserMsg(c, thisId, req.MsgId, req.Content)
 	if err != nil {
 		c.Error(err)
 		return
@@ -307,10 +307,10 @@ func editUserMsg(c *gin.Context) {
 // @param request body model.EditGroupMsgRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/edit/group [post]
-func editGroupMsg(c *gin.Context) {
+func (h *Handler) editGroupMsg(c *gin.Context) {
 	req := new(model.EditGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -321,7 +321,7 @@ func editGroupMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.EditGroupMsg(c, thisId, req.MsgId, req.Content)
+	resp, err := h.svc.EditGroupMsg(c, thisId, req.MsgId, req.Content)
 	if err != nil {
 		c.Error(err)
 		return
@@ -337,10 +337,10 @@ func editGroupMsg(c *gin.Context) {
 // @param request body model.RecallUserMsgRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/recall/user [post]
-func recallUserMsg(c *gin.Context) {
+func (h *Handler) recallUserMsg(c *gin.Context) {
 	req := new(model.RecallUserMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -351,7 +351,7 @@ func recallUserMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.RecallUserMsg(c, thisId, req.MsgId)
+	resp, err := h.svc.RecallUserMsg(c, thisId, req.MsgId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -367,10 +367,10 @@ func recallUserMsg(c *gin.Context) {
 // @param request body model.RecallGroupMsgRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/recall/group [post]
-func recallGroupMsg(c *gin.Context) {
+func (h *Handler) recallGroupMsg(c *gin.Context) {
 	req := new(model.RecallGroupMsgRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -381,7 +381,7 @@ func recallGroupMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.RecallGroupMsg(c, thisId, req.MsgId)
+	resp, err := h.svc.RecallGroupMsg(c, thisId, req.MsgId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -397,10 +397,10 @@ func recallGroupMsg(c *gin.Context) {
 // @param request body model.LabelUserMessageRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/label/user [post]
-func labelUserMessage(c *gin.Context) {
+func (h *Handler) labelUserMessage(c *gin.Context) {
 	req := new(model.LabelUserMessageRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -416,7 +416,7 @@ func labelUserMessage(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.LabelUserMessage(c, thisId, req.MsgID, req.IsLabel)
+	_, err = h.svc.LabelUserMessage(c, thisId, req.MsgID, req.IsLabel)
 	if err != nil {
 		c.Error(err)
 		return
@@ -432,10 +432,10 @@ func labelUserMessage(c *gin.Context) {
 // @param request body model.LabelGroupMessageRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/label/group [post]
-func labelGroupMessage(c *gin.Context) {
+func (h *Handler) labelGroupMessage(c *gin.Context) {
 	req := new(model.LabelGroupMessageRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -451,7 +451,7 @@ func labelGroupMessage(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.LabelGroupMessage(c, thisId, req.MsgID, req.IsLabel)
+	_, err = h.svc.LabelGroupMessage(c, thisId, req.MsgID, req.IsLabel)
 	if err != nil {
 		c.Error(err)
 		return
@@ -468,7 +468,7 @@ func labelGroupMessage(c *gin.Context) {
 // @Param dialog_id query string true "对话id"
 // @Success		200 {object} model.Response{}
 // @Router /msg/label/user [get]
-func getUserLabelMsgList(c *gin.Context) {
+func (h *Handler) getUserLabelMsgList(c *gin.Context) {
 	var id = c.Query("dialog_id")
 
 	if id == "" {
@@ -487,7 +487,7 @@ func getUserLabelMsgList(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.GetUserLabelMsgList(c, thisId, uint32(dialogId))
+	resp, err := h.svc.GetUserLabelMsgList(c, thisId, uint32(dialogId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -504,7 +504,7 @@ func getUserLabelMsgList(c *gin.Context) {
 // @Param dialog_id query string true "对话id"
 // @Success		200 {object} model.Response{}
 // @Router /msg/label/group [get]
-func getGroupLabelMsgList(c *gin.Context) {
+func (h *Handler) getGroupLabelMsgList(c *gin.Context) {
 	var id = c.Query("dialog_id")
 	if id == "" {
 		response.SetFail(c, "参数验证失败", nil)
@@ -523,7 +523,7 @@ func getGroupLabelMsgList(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.GetGroupLabelMsgList(c, thisId, uint32(dialogId))
+	resp, err := h.svc.GetGroupLabelMsgList(c, thisId, uint32(dialogId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -539,10 +539,10 @@ func getGroupLabelMsgList(c *gin.Context) {
 // @param request body model.ReadUserMsgsRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/read/user [post]
-func readUserMsgs(c *gin.Context) {
+func (h *Handler) readUserMsgs(c *gin.Context) {
 	req := new(model.ReadUserMsgsRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -553,7 +553,7 @@ func readUserMsgs(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.ReadUserMsgs(c, thisId, req.DialogId, req.MsgIds)
+	_, err = h.svc.ReadUserMsgs(c, thisId, req.DialogId, req.MsgIds)
 	if err != nil {
 		c.Error(err)
 		return
@@ -569,10 +569,10 @@ func readUserMsgs(c *gin.Context) {
 // @param request body []model.AfterMsg true "request"
 // @Success 200 {object} model.Response{}
 // @Router /msg/after/get [post]
-func getDialogAfterMsg(c *gin.Context) {
+func (h *Handler) getDialogAfterMsg(c *gin.Context) {
 	req := new([]model.AfterMsg)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -582,7 +582,7 @@ func getDialogAfterMsg(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	resp, err := svc.GetDialogAfterMsg(c, *req, thisId)
+	resp, err := h.svc.GetDialogAfterMsg(c, *req, thisId)
 	if err != nil {
 		c.Error(err)
 	}
@@ -596,10 +596,10 @@ func getDialogAfterMsg(c *gin.Context) {
 // @Param request body model.GroupMessageReadRequest true "请求参数"
 // @Success 200 {object} model.Response{}
 // @Router /msg/group/read/set [post]
-func setGroupMessagesRead(c *gin.Context) {
+func (h *Handler) setGroupMessagesRead(c *gin.Context) {
 	req := new(model.GroupMessageReadRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -609,7 +609,7 @@ func setGroupMessagesRead(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	_, err = svc.SetGroupMessagesRead(c, thisId, req)
+	_, err = h.svc.SetGroupMessagesRead(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -627,7 +627,7 @@ func setGroupMessagesRead(c *gin.Context) {
 // @Param group_id query uint32 true "群聊ID"
 // @Success 200 {object} model.Response{data=[]model.GetGroupMessageReadersResponse{}}
 // @Router /msg/group/read/get [get]
-func getGroupMessageReaders(c *gin.Context) {
+func (h *Handler) getGroupMessageReaders(c *gin.Context) {
 	msgID, err := strconv.ParseUint(c.Query("msg_id"), 10, 32)
 	if err != nil {
 		response.SetFail(c, "参数验证失败", nil)
@@ -651,7 +651,7 @@ func getGroupMessageReaders(c *gin.Context) {
 	}
 
 	// 执行获取消息已读人员的逻辑
-	resp, err := svc.GetGroupMessageReadersResponse(c, thisId, uint32(msgID), uint32(dialogID), uint32(groupID))
+	resp, err := h.svc.GetGroupMessageReadersResponse(c, thisId, uint32(msgID), uint32(dialogID), uint32(groupID))
 	if err != nil {
 		c.Error(err)
 		return
