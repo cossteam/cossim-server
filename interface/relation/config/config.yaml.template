@@ -39,13 +39,14 @@ grpc:
 # 注册本服务
 register:
   # 服务注册名称
-  name: "live_bff"
+  name: "relation_bff"
 
   # 注册中心地址
   address: "consul"
 
   # 注册中心端口
   port: 8500
+
   tags: ["relation", "bff", "关系服务"]
 
   # 启用服务发现 默认为true

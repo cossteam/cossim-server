@@ -293,7 +293,7 @@ func (c *ConsulConfigCenter) Close() error {
 
 const (
 	CommonConfigPrefix   = "common/"
-	CommonMySQLogKey     = CommonConfigPrefix + "log"           // MySQL配置项的键名
+	CommonLogKey         = CommonConfigPrefix + "log"           // MySQL配置项的键名
 	CommonMySQLConfigKey = CommonConfigPrefix + "mysql"         // MySQL配置项的键名
 	CommonRedisConfigKey = CommonConfigPrefix + "redis"         // Redis配置项的键名
 	CommonMQConfigKey    = CommonConfigPrefix + "message_queue" // 消息队列（MQ）配置项的键名

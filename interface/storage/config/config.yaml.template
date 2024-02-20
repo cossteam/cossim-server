@@ -41,17 +41,34 @@ redis:
 
 # 注册本服务
 register:
+  # 服务注册名称
   name: "storage_bff"
-  address: "registry"   # 注册中心地址
-  port: 8500            # 注册中心端口
+
+  # 注册中心地址
+  address: "consul"
+
+  # 注册中心端口
+  port: 8500
+
   tags: ["storage", "bff"]
+
+  # 启用服务发现 默认为true
+  #discover: true
+  # 启用服务注册 默认为true
+  #register: true
 
 discovers:
   storage:
     name: "storage_service"
     address: "storage_service"
     port: 10006
+
+    # 不使用服务发现，使用addr直接连接
+    # 默认为false
+    #direct: false
+
   gateway:
     name: "gateway"
     address: "gateway"
     port: 8080
+    #direct: false

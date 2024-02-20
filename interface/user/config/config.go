@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	Conf = &pkgconfig.AppConfig{}
+// Conf = &pkgconfig.AppConfig{}
 )
 
 func LoadConfigFromFile(file string) error {
@@ -13,6 +13,6 @@ func LoadConfigFromFile(file string) error {
 	if err != nil {
 		return err
 	}
-	Conf = c
+	_ = c
 	return nil
 }

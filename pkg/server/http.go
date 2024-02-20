@@ -95,7 +95,7 @@ func (s *HttpService) Start(ctx context.Context) error {
 		close(serverShutdown)
 	}()
 
-	s.logger.Info(fmt.Sprintf("%s http service start", s.ac.Register.Name), "addr", s.ac.HTTP.Addr())
+	s.logger.Info("starting httpServer", "addr", s.ac.HTTP.Addr())
 	if err := s.server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			s.logger.Error(err, fmt.Sprintf("启动 [%s] http服务失败：%v", s.ac.Register.Name, err))
