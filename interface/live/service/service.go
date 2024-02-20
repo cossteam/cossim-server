@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/cossim/coss-server/interface/live/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -15,8 +14,6 @@ import (
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"log"
 	"sync"
 	"time"
 )
@@ -35,6 +32,8 @@ type Service struct {
 	mqClient       *msg_queue.RabbitMQ
 	redisClient    *redis.Client
 
+	ac *pkgconfig.AppConfig
+
 	livekitServer string
 	liveApiKey    string
 	liveApiSecret string
@@ -47,118 +46,26 @@ type Service struct {
 	lock sync.Mutex
 }
 
-func New() *Service {
+func New(ac *pkgconfig.AppConfig) *Service {
 	return &Service{
-		liveTimeout:   config.Conf.Livekit.Timeout,
-		liveApiKey:    config.Conf.Livekit.ApiKey,
-		liveApiSecret: config.Conf.Livekit.ApiSecret,
-		livekitServer: config.Conf.Livekit.Url,
-		roomService:   lksdk.NewRoomServiceClient(config.Conf.Livekit.Addr(), config.Conf.Livekit.ApiKey, config.Conf.Livekit.ApiSecret),
-
+		liveTimeout:   ac.Livekit.Timeout,
+		liveApiKey:    ac.Livekit.ApiKey,
+		liveApiSecret: ac.Livekit.ApiSecret,
+		livekitServer: ac.Livekit.Url,
+		roomService:   lksdk.NewRoomServiceClient(ac.Livekit.Addr(), ac.Livekit.ApiKey, ac.Livekit.ApiSecret),
 		redisClient: redis.NewClient(&redis.Options{
-			Addr:     config.Conf.Redis.Addr(),
-			Password: config.Conf.Redis.Password, // no password set
-			DB:       0,                          // use default DB
+			Addr:     ac.Redis.Addr(),
+			Password: ac.Redis.Password, // no password set
+			DB:       0,                 // use default DB
 		}),
-		mqClient: setRabbitMQProvider(),
-		// mqClient: msg_queue.NewRabbitMQ()
-
-		sid: xid.New().String(),
-
-		logger: plog.NewDevLogger("live_user_bff"),
+		mqClient: setRabbitMQProvider(ac),
+		ac:       ac,
+		sid:      xid.New().String(),
+		logger:   plog.NewDevLogger("live_user_bff"),
 	}
 }
 
-func (s *Service) Start(discover bool) {
-	if discover {
-		d, err := discovery.NewConsulRegistry(config.Conf.Register.Addr())
-		if err != nil {
-			panic(err)
-		}
-		s.discovery = d
-		if err = s.discovery.RegisterHTTP(config.Conf.Register.Name, config.Conf.HTTP.Addr(), s.sid, ""); err != nil {
-			panic(err)
-		}
-		s.logger.Info("Service register success", zap.String("name", config.Conf.Register.Name), zap.String("addr", config.Conf.HTTP.Addr()), zap.String("id", s.sid))
-		go s.discover()
-	} else {
-		s.direct()
-	}
-}
-
-func Restart(discover bool) *Service {
-	s := New()
-	s.logger.Info("Service restart")
-	s.Start(discover)
-	return s
-}
-
-func (s *Service) Stop(discover bool) error {
-	if !discover {
-		return nil
-	}
-	if err := s.discovery.Cancel(s.sid); err != nil {
-		log.Printf("Failed to cancel service registration: %v", err)
-		return err
-	}
-	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", config.Conf.Register.Name, config.Conf.GRPC.Addr(), s.sid)
-	return nil
-}
-
-func (s *Service) discover() {
-	var wg sync.WaitGroup
-	type serviceInfo struct {
-		ServiceName string
-		Addr        string
-	}
-	ch := make(chan serviceInfo)
-
-	for serviceName, c := range config.Conf.Discovers {
-		if c.Direct {
-			continue
-		}
-		wg.Add(1)
-		go func(serviceName string, c pkgconfig.ServiceConfig) {
-			defer wg.Done()
-			for {
-				addr, err := s.discovery.Discover(c.Name)
-				if err != nil {
-					s.logger.Info("Service discovery failed", zap.String("service", c.Name))
-					time.Sleep(15 * time.Second)
-					continue
-				}
-				s.logger.Info("Service discovery successful", zap.String("service", c.Name), zap.String("addr", addr))
-				ch <- serviceInfo{ServiceName: serviceName, Addr: addr}
-				break
-			}
-		}(serviceName, c)
-	}
-
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
-
-	for info := range ch {
-		if err := s.handlerGrpcClient(info.ServiceName, info.Addr); err != nil {
-			log.Printf("Failed to initialize gRPC client for service: %s, Error: %v\n", info.ServiceName, err)
-		}
-	}
-}
-
-func (s *Service) direct() {
-	for serviceName, _ := range config.Conf.Discovers {
-		if err := s.handlerGrpcClient(serviceName, config.Conf.Discovers[serviceName].Addr()); err != nil {
-			panic(err)
-		}
-	}
-}
-
-func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
+func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
 	switch serviceName {
 	case "user":
 		s.userClient = user.NewUserServiceClient(conn)
@@ -175,8 +82,8 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 	return nil
 }
 
-func setRabbitMQProvider() *msg_queue.RabbitMQ {
-	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", config.Conf.MessageQueue.Username, config.Conf.MessageQueue.Password, config.Conf.MessageQueue.Addr()))
+func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
+	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", ac.MessageQueue.Username, ac.MessageQueue.Password, ac.MessageQueue.Addr()))
 	if err != nil {
 		panic(err)
 	}
