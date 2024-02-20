@@ -76,13 +76,13 @@ func (s *HttpService) Start(ctx context.Context) error {
 		}
 	}
 
-	go func() {
-		if s.ac.Register.Discover {
+	if s.ac.Register.Discover {
+		go func() {
 			if err := s.Discover(); err != nil {
 				s.logger.Error(err, "发现服务失败")
 			}
-		}
-	}()
+		}()
+	}
 
 	serverShutdown := make(chan struct{})
 	go func() {
@@ -94,7 +94,6 @@ func (s *HttpService) Start(ctx context.Context) error {
 		}
 		close(serverShutdown)
 	}()
-
 	s.logger.Info("starting httpServer", "addr", s.ac.HTTP.Addr())
 	if err := s.server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
@@ -156,10 +155,10 @@ func (s *HttpService) Discover() error {
 			retryFunc := func() error {
 				addr, err := s.registry.Discover(c.Name)
 				if err != nil {
-					s.logger.Error(err, "Service discovery failed", "service", c.Name)
+					s.logger.Error(err, "Service registry failed", "service", c.Name)
 					return err
 				}
-				s.logger.Info("Service discovery success", "service", c.Name, "addr", addr)
+				s.logger.Info("Service registry success", "service", c.Name, "addr", addr)
 				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 				if err != nil {
 					return err

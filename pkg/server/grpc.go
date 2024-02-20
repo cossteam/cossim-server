@@ -2,15 +2,15 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/cenkalti/backoff"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
-	"github.com/cossim/coss-server/pkg/log"
+	"github.com/go-logr/logr"
 	"github.com/rs/xid"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/health"
-	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/credentials/insecure"
 	"net"
 	"sync"
 	"time"
@@ -23,7 +23,7 @@ type ServiceInfo struct {
 
 type Option func(*GrpcService)
 
-func WithLogger(logger *zap.Logger) Option {
+func WithLogger(logger logr.Logger) Option {
 	return func(s *GrpcService) {
 		s.logger = logger
 	}
@@ -31,7 +31,7 @@ func WithLogger(logger *zap.Logger) Option {
 
 func WithDiscovery(discovery discovery.Registry) Option {
 	return func(s *GrpcService) {
-		s.discovery = discovery
+		s.registry = discovery
 	}
 }
 
@@ -41,20 +41,18 @@ func WithGrpcDiscoverFunc(disFunc GrpcDiscoverFunc) Option {
 	}
 }
 
-func NewGRPCService(c *config.AppConfig, svc GRPCService, opts ...Option) *GrpcService {
+func NewGRPCService(c *config.AppConfig, svc GRPCService, logger logr.Logger, opts ...Option) *GrpcService {
 	d, err := discovery.NewConsulRegistry(c.Register.Addr())
 	if err != nil {
 		panic(err)
 	}
 	s := &GrpcService{
-		server: grpc.NewServer(),
-		logger: log.NewDevLogger("manager grpc service"),
-		cfg:    c,
-
-		sid:       xid.New().String(),
-		discovery: d,
-
-		grpcSvc: svc,
+		server:   grpc.NewServer(),
+		logger:   logger,
+		ac:       c,
+		sid:      xid.New().String(),
+		registry: d,
+		svc:      svc,
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -70,15 +68,13 @@ var (
 )
 
 type GrpcService struct {
-	server *grpc.Server
-	logger *zap.Logger
-	cfg    *config.AppConfig
-
-	sid       string
-	discovery discovery.Registry
-	disFunc   GrpcDiscoverFunc
-
-	grpcSvc GRPCService
+	server   *grpc.Server
+	logger   logr.Logger
+	ac       *config.AppConfig
+	sid      string
+	registry discovery.Registry
+	disFunc  GrpcDiscoverFunc
+	svc      GRPCService
 }
 
 func (s *GrpcService) RegisterGRPC(serviceName, addr string, serviceID string) error {
@@ -92,88 +88,126 @@ func (s *GrpcService) RegisterHTTP(serviceName, addr string, serviceID string) e
 }
 
 func (s *GrpcService) Discover() error {
-	//TODO implement me
-	panic("implement me")
-}
+	backoffSettings := backoff.NewExponentialBackOff()
+	backoffSettings.InitialInterval = 1 * time.Second
+	backoffSettings.MaxElapsedTime = 0 // 无限期重试
 
-func (s *GrpcService) Start(ctx context.Context) error {
-	if err := s.grpcSvc.Init(s.cfg); err != nil {
-		return err
-	}
-	// 进行服务发现注册
-	if err := s.discover(); err != nil {
-		return err
-	}
-
-	lisAddr := fmt.Sprintf("%s", s.cfg.GRPC.Addr())
-	var err error
-	// 启动 gRPC 服务器
-	lis, err := net.Listen("tcp", lisAddr)
-	if err != nil {
-		panic(err)
-	}
-
-	s.grpcSvc.Registry(s.server)
-	// 注册服务开启健康检查
-	grpc_health_v1.RegisterHealthServer(s.server, health.NewServer())
-	s.logger.Info("GRPC service start", zap.String("service", s.cfg.Register.Name), zap.String("addr", lisAddr))
-
-	return s.server.Serve(lis)
-}
-
-func (s *GrpcService) discover() error {
-	if s.cfg.Register.Register {
-		if err := s.register(); err != nil {
-			return err
-		}
-		s.logger.Info("Service registration successful", zap.String("service", s.cfg.Register.Name), zap.String("addr", s.cfg.GRPC.Addr()), zap.String("id", s.sid))
-	}
-
+	clients := make(map[string]*grpc.ClientConn)
+	var mu sync.Mutex // 用于对 clients 的并发访问进行保护
 	var wg sync.WaitGroup
-	//ch := make(chan ServiceInfo, len(s.ac.Discovers))
 
-	ss := make([]ServiceInfo, 0, len(s.cfg.Discovers))
+	// 控制并发数的信号量
+	sem := make(chan struct{}, 10) // 限制并发数为 10
 
-	for serviceName, c := range s.cfg.Discovers {
+	for serviceName, c := range s.ac.Discovers {
+		if c.Direct {
+			continue
+		}
+		sem <- struct{}{} // 获取信号量，限制并发数
 		wg.Add(1)
 		go func(serviceName string, c config.ServiceConfig) {
 			defer wg.Done()
-			for {
-				if c.Direct {
-					addr := c.Addr()
-					s.logger.Info("Service direct successful", zap.String("service", s.cfg.Register.Name), zap.String("addr", addr))
-					ss = append(ss, ServiceInfo{ServiceName: serviceName, Addr: addr})
-					//ch <- ServiceInfo{ServiceName: serviceName, Addr: addr}
-					break
-				}
-				addr, err := s.discovery.Discover(c.Name)
+			defer func() { <-sem }() // 释放信号量
+
+			retryFunc := func() error {
+				addr, err := s.registry.Discover(c.Name)
 				if err != nil {
-					s.logger.Info("Service discovery failed", zap.String("service", c.Name), zap.Error(err))
-					time.Sleep(15 * time.Second)
-					continue
+					s.logger.Error(err, "Service registry failed", "service", c.Name)
+					return err
 				}
-				s.logger.Info("Service discovery successful", zap.String("service", s.cfg.Register.Name), zap.String("addr", addr))
-				ss = append(ss, ServiceInfo{ServiceName: serviceName, Addr: addr})
-				//ch <- ServiceInfo{ServiceName: serviceName, Addr: addr}
-				break
+				s.logger.Info("Service registry success", "service", c.Name, "addr", addr)
+				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				if err != nil {
+					return err
+				}
+				mu.Lock()
+				clients[c.Name] = conn
+				mu.Unlock()
+				return nil
+			}
+			if err := backoff.Retry(retryFunc, backoffSettings); err != nil {
+				s.logger.Error(err, "Failed to initialize gRPC client for service after retries")
+				return
 			}
 		}(serviceName, c)
 	}
-
-	//go func() {
 	wg.Wait()
-	//close(ch)
-	//}()
+	return s.svc.DiscoverServices(clients)
+}
 
-	//for info := range ch {
-	//	if err := s.disFunc(info.ServiceName, info.Addr); err != nil {
-	//		s.logger.Warn("Failed to initialize gRPC client for", zap.String("service", info.ServiceName), zap.String("msg", err.Error()))
-	//	}
-	//}
+func (s *GrpcService) Start(ctx context.Context) error {
+	fmt.Println("sdbksfb")
+	if err := s.svc.Init(s.ac); err != nil {
+		return err
+	}
 
+	// 注册grpc服务
+	s.svc.Register(s.server)
+
+	if s.ac.Register.Register || s.ac.Register.Discover {
+		d, err := discovery.NewConsulRegistry(s.ac.Register.Addr())
+		if err != nil {
+			return err
+		}
+		s.registry = d
+	}
+
+	if s.ac.Register.Register {
+		// 注册服务到注册中心
+		if err := s.register(); err != nil {
+			return err
+		}
+		s.logger.Info("Service register success", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	}
+
+	if s.ac.Register.Discover {
+		go func() {
+			if err := s.discover(); err != nil {
+				s.logger.Error(err, "Service discover failed", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+			}
+		}()
+	}
+
+	lisAddr := fmt.Sprintf("%s", s.ac.GRPC.Addr())
+	lis, err := net.Listen("tcp", lisAddr)
+	if err != nil {
+		return err
+	}
+
+	serverShutdown := make(chan struct{})
+	go func() {
+		<-ctx.Done()
+		s.logger.Info("Shutting down grpcServer", "addr", lisAddr)
+		s.cancel()
+		s.server.GracefulStop()
+		close(serverShutdown)
+	}()
+
+	s.logger.Info("Starting  grpcServer", "addr", lisAddr)
+	if err := s.server.Serve(lis); err != nil {
+		if !errors.Is(err, grpc.ErrServerStopped) {
+			s.logger.Error(err, "failed to start grpcServer")
+		}
+	}
+
+	<-serverShutdown
 	return nil
 }
 
+func (s *GrpcService) discover() error {
+	return s.Discover()
+}
+
 func (s *GrpcService) register() error {
-	return s.discovery.RegisterGRPC(s.cfg.Register.Name, s.cfg.GRPC.Addr(), s.sid)
+	// 注册到注册中心要实现健康检查
+	s.svc.RegisterHealth(s.server)
+	return s.registry.RegisterGRPC(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+}
+
+func (s *GrpcService) cancel() error {
+	if err := s.registry.Cancel(s.sid); err != nil {
+		return err
+	}
+	s.logger.Info("Service unregister success", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	return nil
 }

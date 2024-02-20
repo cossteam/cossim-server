@@ -10,6 +10,7 @@ import (
 // HTTPService HTTP 服务的实例想要使用 manager 进行生命周期管理，必须实现该接口
 type HTTPService interface {
 	InternalDependency
+
 	// RegisterRoute 注册服务的路由
 	RegisterRoute(r gin.IRouter)
 
@@ -26,7 +27,19 @@ type HTTPService interface {
 // GRPCService GRPC 服务的实例想要使用 manager 进行生命周期管理，必须实现该接口
 type GRPCService interface {
 	InternalDependency
-	Registry(s *grpc.Server)
+
+	// Register 注册grpc服务
+	Register(s *grpc.Server)
+
+	// RegisterHealth 注册服务的健康检查
+	RegisterHealth(s *grpc.Server)
+
+	// Stop 进行一些后续的清理工作
+	Stop(ctx context.Context) error
+
+	// DiscoverServices 根据提供的服务名称和对应的 gRPC 客户端连接进行服务发现
+	// 参数 services 是一个映射，键是服务名称，值是对应的 gRPC 客户端连接
+	DiscoverServices(services map[string]*grpc.ClientConn) error
 }
 
 // Registry 是一个服务发现接口，定义了Manager服务注册和发现的方法

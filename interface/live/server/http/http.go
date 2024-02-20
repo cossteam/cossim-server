@@ -53,6 +53,7 @@ func (h *Handler) Version() string {
 // @title live服务
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
+	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	u := r.Group("/api/v1/live/user")
 	// 为Swagger路径添加不需要身份验证的中间件
 	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("live")))

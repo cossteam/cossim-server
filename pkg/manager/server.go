@@ -24,7 +24,7 @@ func (s *httpServer) Start(ctx context.Context) error {
 	serverShutdown := make(chan struct{})
 	go func() {
 		<-ctx.Done()
-		log.Info("shutting down httpServer")
+		log.Info("Shutting down httpServer")
 
 		if err := s.Server.Shutdown(ctx); err != nil {
 			log.Error(err, "error shutting down httpServer")
@@ -32,7 +32,7 @@ func (s *httpServer) Start(ctx context.Context) error {
 		close(serverShutdown)
 	}()
 
-	log.Info("starting httpServer")
+	log.Info("Starting httpServer")
 
 	if err := s.Server.Serve(s.Listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
@@ -55,14 +55,14 @@ func (s *grpcServer) Start(ctx context.Context) error {
 	serverShutdown := make(chan struct{})
 	go func() {
 		<-ctx.Done()
-		log.Info("shutting down grpcServer")
+		log.Info("Shutting down grpcServer")
 		if err := s.Server.Shutdown(context.Background()); err != nil {
 			log.Error(err, "error shutting down grpcServer")
 		}
 		close(serverShutdown)
 	}()
 
-	log.Info("starting grpcServer")
+	log.Info("Starting grpcServer")
 	if err := s.Server.Serve(s.Listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}

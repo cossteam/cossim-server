@@ -46,7 +46,11 @@ type controllerManager struct {
 
 	httpServer *server.HttpService
 
-	optsHttpServer HttpServer
+	grpcServer *server.GrpcService
+
+	optsHttpServer *HttpServer
+
+	optsGrpcServer *GrpcServer
 
 	// metricsServer is used to serve prometheus metrics
 	metricsServer metrics.Server
@@ -256,11 +260,10 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	//if cm.metricsServer != nil {
 	// Note: We are adding the metrics httpServer directly to HTTPServers here as matching on the
 	// metricsserver.Server interface in cm.runnables.Add would be very brittle.
-	if cm.runnables.HTTPServers != nil {
-		if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
-			return fmt.Errorf("failed to add metrics httpServer: %w", err)
-		}
-	}
+	//if cm.runnables.HTTPServers != nil {
+	//	if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
+	//		return fmt.Errorf("failed to add metrics httpServer: %w", err)
+	//	}
 	//}
 
 	// Serve health probes.
@@ -274,6 +277,18 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	if cm.pprofListener != nil {
 		if err := cm.addPprofServer(); err != nil {
 			return fmt.Errorf("failed to add pprof httpServer: %w", err)
+		}
+	}
+
+	if cm.runnables.HTTPServers != nil && cm.httpServer != nil {
+		if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
+			return fmt.Errorf("failed to add metrics httpServer: %w", err)
+		}
+	}
+
+	if cm.runnables.GRPCServers != nil && cm.grpcServer != nil {
+		if err := cm.runnables.GRPCServers.Add(cm.grpcServer, nil); err != nil {
+			return fmt.Errorf("failed to add metrics httpServer: %w", err)
 		}
 	}
 
@@ -313,20 +328,35 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 func (cm *controllerManager) reloadConfiguration() error {
 	cm.runnables.HTTPServers.StopAndWait(cm.internalCtx)
 	cm.runnables.GRPCServers.StopAndWait(cm.internalCtx)
+
 	errChan := make(chan error, 1)
 	cm.runnables = newRunnables(context.Background, errChan)
-	cm.httpServer = server.NewHttpService(cm.config, cm.optsHttpServer, cm.healthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
-	if cm.runnables.HTTPServers != nil {
+
+	if cm.httpServer != nil {
+		cm.httpServer = server.NewHttpService(cm.config, cm.optsHttpServer, cm.healthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
 		if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
-			return fmt.Errorf("failed to add metrics httpServer: %w", err)
+			return fmt.Errorf("failed to add metrics httpServers: %w", err)
 		}
 	}
 
-	//if cm.runnables.GRPCServers != nil {
-	//	if err := cm.runnables.GRPCServers.Add(cm.grpcServer, nil); err != nil {
-	//		return fmt.Errorf("failed to add metrics httpServer: %w", err)
-	//	}
-	//}
+	if cm.grpcServer != nil {
+		cm.grpcServer = server.NewGRPCService(cm.config, cm.optsGrpcServer, cm.GetLogger())
+		if err := cm.runnables.GRPCServers.Add(cm.grpcServer, nil); err != nil {
+			return fmt.Errorf("failed to add metrics grpcServers: %w", err)
+		}
+	}
+
+	if err := cm.runnables.HTTPServers.Start(cm.internalCtx); err != nil {
+		if err != nil {
+			return fmt.Errorf("failed to start HTTP servers: %w", err)
+		}
+	}
+
+	if err := cm.runnables.GRPCServers.Start(cm.internalCtx); err != nil {
+		if err != nil {
+			return fmt.Errorf("failed to start grpcServers: %w", err)
+		}
+	}
 
 	httpHealthProbeListener, err := (&Options{
 		newHealthProbeListener: defaultHealthProbeListener,
@@ -337,23 +367,9 @@ func (cm *controllerManager) reloadConfiguration() error {
 	cm.httpHealthProbeListener = httpHealthProbeListener
 
 	// Serve health probes.
-	if cm.httpHealthProbeListener != nil {
-		if err := cm.addHealthProbeServer(); err != nil {
-			return fmt.Errorf("failed to add health probe httpServer: %w", err)
-		}
+	if err := cm.addHealthProbeServer(); err != nil {
+		return fmt.Errorf("failed to add health probe httpServer: %w", err)
 	}
-
-	if err := cm.runnables.HTTPServers.Start(cm.internalCtx); err != nil {
-		if err != nil {
-			return fmt.Errorf("failed to start HTTP servers: %w", err)
-		}
-	}
-
-	//if err := cm.runnables.GRPCServers.Start(cm.internalCtx); err != nil {
-	//	if err != nil {
-	//		return fmt.Errorf("failed to start HTTP servers: %w", err)
-	//	}
-	//}
 
 	return nil
 }
