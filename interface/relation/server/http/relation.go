@@ -19,15 +19,15 @@ import (
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/blacklist [get]
-func blackList(c *gin.Context) {
+func (h *Handler) blackList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.BlackList(c, userID)
+	resp, err := h.svc.BlackList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -42,15 +42,15 @@ func blackList(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/friend_list [get]
-func friendList(c *gin.Context) {
+func (h *Handler) friendList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.FriendList(c, userID)
+	resp, err := h.svc.FriendList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -65,15 +65,15 @@ func friendList(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{data=[]usersorter.CustomGroupData} "status 0:正常状态；1:被封禁状态；2:被删除状态"
 // @Router /relation/group/list [get]
-func getUserGroupList(c *gin.Context) {
+func (h *Handler) getUserGroupList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.GetUserGroupList(c, userID)
+	resp, err := h.svc.GetUserGroupList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -88,15 +88,15 @@ func getUserGroupList(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
 // @Router /relation/user/request_list [get]
-func userRequestList(c *gin.Context) {
+func (h *Handler) userRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.UserRequestList(c, userID)
+	resp, err := h.svc.UserRequestList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -113,22 +113,22 @@ func userRequestList(c *gin.Context) {
 // @param request body model.DeleteBlacklistRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/delete_blacklist [post]
-func deleteBlacklist(c *gin.Context) {
+func (h *Handler) deleteBlacklist(c *gin.Context) {
 	req := new(model.DeleteBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	_, err = svc.DeleteBlacklist(c, userID, req.UserID)
+	_, err = h.svc.DeleteBlacklist(c, userID, req.UserID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -145,22 +145,22 @@ func deleteBlacklist(c *gin.Context) {
 // @param request body model.AddBlacklistRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/add_blacklist [post]
-func addBlacklist(c *gin.Context) {
+func (h *Handler) addBlacklist(c *gin.Context) {
 	req := new(model.AddBlacklistRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	_, err = svc.AddBlacklist(c, userID, req.UserID)
+	_, err = h.svc.AddBlacklist(c, userID, req.UserID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -177,22 +177,22 @@ func addBlacklist(c *gin.Context) {
 // @param request body model.DeleteFriendRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/delete_friend [post]
-func deleteFriend(c *gin.Context) {
+func (h *Handler) deleteFriend(c *gin.Context) {
 	req := new(model.DeleteFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	if err = svc.DeleteFriend(c, userID, req.UserID); err != nil {
+	if err = h.svc.DeleteFriend(c, userID, req.UserID); err != nil {
 		response.SetFail(c, "删除好友失败", nil)
 		return
 	}
@@ -208,28 +208,28 @@ func deleteFriend(c *gin.Context) {
 // @param request body model.ManageFriendRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/manage_friend [post]
-func manageFriend(c *gin.Context) {
+func (h *Handler) manageFriend(c *gin.Context) {
 	req := new(model.ManageFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	if err := req.Validator(); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	responseData, err := svc.ManageFriend(c, userID, req.RequestID, int32(req.Action), req.E2EPublicKey)
+	responseData, err := h.svc.ManageFriend(c, userID, req.RequestID, int32(req.Action), req.E2EPublicKey)
 	if err != nil {
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
@@ -246,10 +246,10 @@ func manageFriend(c *gin.Context) {
 // @param request body model.SendFriendRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/add_friend [post]
-func addFriend(c *gin.Context) {
+func (h *Handler) addFriend(c *gin.Context) {
 	req := new(model.SendFriendRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -258,7 +258,7 @@ func addFriend(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	resp, err := svc.SendFriendRequest(c, thisId, req)
+	resp, err := h.svc.SendFriendRequest(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -274,7 +274,7 @@ func addFriend(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/member [get]
-func getGroupMember(c *gin.Context) {
+func (h *Handler) getGroupMember(c *gin.Context) {
 	// 从请求中获取群聊ID
 	groupID := c.Query("group_id")
 	if groupID == "" {
@@ -290,12 +290,12 @@ func getGroupMember(c *gin.Context) {
 
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.GetGroupMember(c, uint32(gid), userID)
+	resp, err := h.svc.GetGroupMember(c, uint32(gid), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -314,15 +314,15 @@ func getGroupMember(c *gin.Context) {
 // @Param Authorization header string true "Bearer JWT"
 // @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=等待, 1=已通过, 2=已拒绝, 3=邀请发送者, 4=邀请接收者)"
 // @Router /relation/group/request_list [get]
-func groupRequestList(c *gin.Context) {
+func (h *Handler) groupRequestList(c *gin.Context) {
 	userID, err := http.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.GroupRequestList(c, userID)
+	resp, err := h.svc.GroupRequestList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -339,10 +339,10 @@ func groupRequestList(c *gin.Context) {
 // @param request body model.InviteGroupRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/invite [post]
-func inviteGroup(c *gin.Context) {
+func (h *Handler) inviteGroup(c *gin.Context) {
 	req := new(model.InviteGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -353,8 +353,8 @@ func inviteGroup(c *gin.Context) {
 		return
 	}
 
-	if err = svc.InviteGroup(c, uid, req); err != nil {
-		logger.Error("邀请好友加入群聊失败", zap.Error(err))
+	if err = h.svc.InviteGroup(c, uid, req); err != nil {
+		h.logger.Error("邀请好友加入群聊失败", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
@@ -370,10 +370,10 @@ func inviteGroup(c *gin.Context) {
 // @param request body model.JoinGroupRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/join [post]
-func joinGroup(c *gin.Context) {
+func (h *Handler) joinGroup(c *gin.Context) {
 	req := new(model.JoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -384,7 +384,7 @@ func joinGroup(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.JoinGroup(c, uid, req)
+	_, err = h.svc.JoinGroup(c, uid, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -401,16 +401,16 @@ func joinGroup(c *gin.Context) {
 // @param request body model.ManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/manage_join [post]
-func manageJoinGroup(c *gin.Context) {
+func (h *Handler) manageJoinGroup(c *gin.Context) {
 	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	if err := req.Validator(); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
@@ -431,8 +431,8 @@ func manageJoinGroup(c *gin.Context) {
 		msg = "拒绝加入群聊"
 	}
 
-	if err = svc.ManageJoinGroup(c, req.GroupID, req.ID, userID, status); err != nil {
-		logger.Error("用户管理群聊申请", zap.Error(err))
+	if err = h.svc.ManageJoinGroup(c, req.GroupID, req.ID, userID, status); err != nil {
+		h.logger.Error("用户管理群聊申请", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
@@ -448,16 +448,16 @@ func manageJoinGroup(c *gin.Context) {
 // @param request body model.ManageJoinGroupRequest true "Action (0: rejected, 1: joined)"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/admin/manage/join [post]
-func adminManageJoinGroup(c *gin.Context) {
+func (h *Handler) adminManageJoinGroup(c *gin.Context) {
 	req := new(model.ManageJoinGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
 	if err := req.Validator(); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
@@ -478,8 +478,8 @@ func adminManageJoinGroup(c *gin.Context) {
 		msg = "拒绝加入群聊"
 	}
 
-	if err = svc.AdminManageJoinGroup(c, req.ID, req.GroupID, adminID, status); err != nil {
-		logger.Error("管理员管理群聊申请", zap.Error(err))
+	if err = h.svc.AdminManageJoinGroup(c, req.ID, req.GroupID, adminID, status); err != nil {
+		h.logger.Error("管理员管理群聊申请", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
@@ -495,10 +495,10 @@ func adminManageJoinGroup(c *gin.Context) {
 // @param request body model.RemoveUserFromGroupRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/admin/manage/remove [post]
-func removeUserFromGroup(c *gin.Context) {
+func (h *Handler) removeUserFromGroup(c *gin.Context) {
 	req := new(model.RemoveUserFromGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -516,8 +516,8 @@ func removeUserFromGroup(c *gin.Context) {
 		}
 	}
 
-	if err = svc.RemoveUserFromGroup(c, req.GroupID, userID, req.Member); err != nil {
-		logger.Error("RemoveUserFromGroup Failed", zap.Error(err))
+	if err = h.svc.RemoveUserFromGroup(c, req.GroupID, userID, req.Member); err != nil {
+		h.logger.Error("RemoveUserFromGroup Failed", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
@@ -533,10 +533,10 @@ func removeUserFromGroup(c *gin.Context) {
 // @param request body model.QuitGroupRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/quit [post]
-func quitGroup(c *gin.Context) {
+func (h *Handler) quitGroup(c *gin.Context) {
 	req := new(model.QuitGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -547,7 +547,7 @@ func quitGroup(c *gin.Context) {
 		return
 	}
 
-	if err = svc.QuitGroup(c, req.GroupID, userID); err != nil {
+	if err = h.svc.QuitGroup(c, req.GroupID, userID); err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
@@ -564,10 +564,10 @@ func quitGroup(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /relation/user/switch/e2e/key [post]
-func switchUserE2EPublicKey(c *gin.Context) {
+func (h *Handler) switchUserE2EPublicKey(c *gin.Context) {
 	req := new(model.SwitchUserE2EPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -579,7 +579,7 @@ func switchUserE2EPublicKey(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.SwitchUserE2EPublicKey(c, thisId, req.UserId, req.PublicKey)
+	_, err = h.svc.SwitchUserE2EPublicKey(c, thisId, req.UserId, req.PublicKey)
 	if err != nil {
 		c.Error(err)
 		return
@@ -596,10 +596,10 @@ func switchUserE2EPublicKey(c *gin.Context) {
 // @param request body model.SetGroupSilentNotificationRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/group/silent [post]
-func setGroupSilentNotification(c *gin.Context) {
+func (h *Handler) setGroupSilentNotification(c *gin.Context) {
 	req := new(model.SetGroupSilentNotificationRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -615,7 +615,7 @@ func setGroupSilentNotification(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.SetGroupSilentNotification(c, req.GroupId, thisId, req.IsSilent)
+	_, err = h.svc.SetGroupSilentNotification(c, req.GroupId, thisId, req.IsSilent)
 	if err != nil {
 		c.Error(err)
 		return
@@ -632,10 +632,10 @@ func setGroupSilentNotification(c *gin.Context) {
 // @param request body model.SetUserSilentNotificationRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/user/silent [post]
-func setUserSilentNotification(c *gin.Context) {
+func (h *Handler) setUserSilentNotification(c *gin.Context) {
 	req := new(model.SetUserSilentNotificationRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -651,7 +651,7 @@ func setUserSilentNotification(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.UserSilentNotification(c, thisId, req.UserId, req.IsSilent)
+	_, err = h.svc.UserSilentNotification(c, thisId, req.UserId, req.IsSilent)
 	if err != nil {
 		c.Error(err)
 		return
@@ -668,10 +668,10 @@ func setUserSilentNotification(c *gin.Context) {
 // @param request body model.CloseOrOpenDialogRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/dialog/show [post]
-func closeOrOpenDialog(c *gin.Context) {
+func (h *Handler) closeOrOpenDialog(c *gin.Context) {
 	req := new(model.CloseOrOpenDialogRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -687,7 +687,7 @@ func closeOrOpenDialog(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.OpenOrCloseDialog(c, thisId, req)
+	_, err = h.svc.OpenOrCloseDialog(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -704,10 +704,10 @@ func closeOrOpenDialog(c *gin.Context) {
 // @param request body model.TopOrCancelTopDialogRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/dialog/top [post]
-func topOrCancelTopDialog(c *gin.Context) {
+func (h *Handler) topOrCancelTopDialog(c *gin.Context) {
 	req := new(model.TopOrCancelTopDialogRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -723,7 +723,7 @@ func topOrCancelTopDialog(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.TopOrCancelTopDialog(c, thisId, req)
+	_, err = h.svc.TopOrCancelTopDialog(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -740,10 +740,10 @@ func topOrCancelTopDialog(c *gin.Context) {
 // @param request body model.OpenUserBurnAfterReadingRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/user/burn/open [post]
-func openUserBurnAfterReading(c *gin.Context) {
+func (h *Handler) openUserBurnAfterReading(c *gin.Context) {
 	req := new(model.OpenUserBurnAfterReadingRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -759,7 +759,7 @@ func openUserBurnAfterReading(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.SetUserBurnAfterReading(c, thisId, req)
+	_, err = h.svc.SetUserBurnAfterReading(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -776,10 +776,10 @@ func openUserBurnAfterReading(c *gin.Context) {
 // @param request body model.OpenGroupBurnAfterReadingRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/group/burn/open [post]
-func openGroupBurnAfterReading(c *gin.Context) {
+func (h *Handler) openGroupBurnAfterReading(c *gin.Context) {
 	req := new(model.OpenGroupBurnAfterReadingRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -794,7 +794,7 @@ func openGroupBurnAfterReading(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	_, err = svc.SetGroupBurnAfterReading(c, thisId, req)
+	_, err = h.svc.SetGroupBurnAfterReading(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -811,10 +811,10 @@ func openGroupBurnAfterReading(c *gin.Context) {
 // @param request body model.CreateGroupAnnouncementRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/group/admin/announcement [post]
-func createGroupAnnouncement(c *gin.Context) {
+func (h *Handler) createGroupAnnouncement(c *gin.Context) {
 	req := new(model.CreateGroupAnnouncementRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -825,7 +825,7 @@ func createGroupAnnouncement(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.CreateGroupAnnouncement(c, thisId, req)
+	_, err = h.svc.CreateGroupAnnouncement(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -843,7 +843,7 @@ func createGroupAnnouncement(c *gin.Context) {
 // @Param group_id query string true "群聊id"
 // @Success		200 {object} model.Response{}
 // @Router /relation/group/announcement/list [get]
-func getGroupAnnouncementList(c *gin.Context) {
+func (h *Handler) getGroupAnnouncementList(c *gin.Context) {
 	var id = c.Query("group_id")
 	if id == "" {
 		response.SetFail(c, "参数验证失败", nil)
@@ -862,7 +862,7 @@ func getGroupAnnouncementList(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.GetGroupAnnouncementList(c, thisId, uint32(groupId))
+	resp, err := h.svc.GetGroupAnnouncementList(c, thisId, uint32(groupId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -880,10 +880,10 @@ func getGroupAnnouncementList(c *gin.Context) {
 // @param request body model.UpdateGroupAnnouncementRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/group/announcement/update [post]
-func updateGroupAnnouncement(c *gin.Context) {
+func (h *Handler) updateGroupAnnouncement(c *gin.Context) {
 	req := new(model.UpdateGroupAnnouncementRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -894,7 +894,7 @@ func updateGroupAnnouncement(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.UpdateGroupAnnouncement(c, thisID, req)
+	resp, err := h.svc.UpdateGroupAnnouncement(c, thisID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -912,10 +912,10 @@ func updateGroupAnnouncement(c *gin.Context) {
 // @param request body model.DeleteGroupAnnouncementRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /relation/group/announcement/delete [post]
-func deleteGroupAnnouncement(c *gin.Context) {
+func (h *Handler) deleteGroupAnnouncement(c *gin.Context) {
 	req := new(model.DeleteGroupAnnouncementRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -925,7 +925,7 @@ func deleteGroupAnnouncement(c *gin.Context) {
 		return
 	}
 
-	resp, err := svc.DeleteGroupAnnouncement(c, thisID, req)
+	resp, err := h.svc.DeleteGroupAnnouncement(c, thisID, req)
 	if err != nil {
 		c.Error(err)
 		return
