@@ -41,28 +41,49 @@ grpc:
 
 # 注册本服务
 register:
+  # 服务注册名称
   name: "msg_bff"
-  address: "consul"   # 注册中心地址
-  port: 8500            # 注册中心端口
+
+  # 注册中心地址
+  address: "consul"
+
+  # 注册中心端口
+  port: 8500
+
   tags: ["msg", "bff", "消息服务"]
+
+  # 启用服务发现 默认为true
+  #discover: true
+  # 启用服务注册 默认为true
+  #register: true
 
 discovers:
   msg:
     name: "msg_service"
     address: "msg_service"
     port: "10000"
+
+    # 不使用服务发现，使用addr直接连接
+    # 默认为false
+    #direct: false
+
   relation:
     name: "relation_service"
     address: "relation_service"
     port: "10001"
+    #direct: false
+
   user:
     name: "user_service"
     address: "user_service"
     port: "10002"
+    #direct: false
+
   group:
     name: "group_service"
     address: "group_service"
     port: "10005"
+    #direct: false
 
 encryption:
   enable: false

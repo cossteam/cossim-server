@@ -47,8 +47,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	}
 
 	//多端设备登录限制
-	if s.conf.MultipleDeviceLimit.Enable {
-		if len(keys) >= s.conf.MultipleDeviceLimit.Max {
+	if s.ac.MultipleDeviceLimit.Enable {
+		if len(keys) >= s.ac.MultipleDeviceLimit.Max {
 			fmt.Println("登录设备达到限制")
 			return nil, "", code.UserErrLoginFailed
 		}
@@ -161,7 +161,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		return "", err
 	}
 
-	if s.conf.Email.Enable {
+	if s.ac.Email.Enable {
 		//生成uuid
 		ekey := uuid.New().String()
 
@@ -474,7 +474,7 @@ func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{},
 		return nil, code.UserErrSendEmailCodeFailed
 	}
 
-	if s.conf.Email.Enable {
+	if s.ac.Email.Enable {
 		err := s.smtpClient.SendEmail(email, "重置pgp验证码(请妥善保管,有效时间30分钟)", code1)
 		if err != nil {
 			return nil, err

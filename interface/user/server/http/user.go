@@ -19,10 +19,10 @@ import (
 // @param request body model.LoginRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /user/login [post]
-func login(c *gin.Context) {
+func (h Handler) login(c *gin.Context) {
 	req := new(model.LoginRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -36,7 +36,7 @@ func login(c *gin.Context) {
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
 
-	resp, token, err := svc.Login(c, req, deviceType, c.ClientIP())
+	resp, token, err := h.svc.Login(c, req, deviceType, c.ClientIP())
 	if err != nil {
 		c.Error(err)
 		return
@@ -52,10 +52,10 @@ func login(c *gin.Context) {
 // @param request body model.LogoutRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /user/logout [post]
-func logout(c *gin.Context) {
+func (h Handler) logout(c *gin.Context) {
 	req := new(model.LogoutRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -71,7 +71,7 @@ func logout(c *gin.Context) {
 
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
-	if err = svc.Logout(c, thisId, token, req, deviceType); err != nil {
+	if err = h.svc.Logout(c, thisId, token, req, deviceType); err != nil {
 		c.Error(err)
 		return
 	}
@@ -86,10 +86,10 @@ func logout(c *gin.Context) {
 // @param request body model.RegisterRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /user/register [post]
-func register(c *gin.Context) {
+func (h Handler) register(c *gin.Context) {
 	req := new(model.RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -115,7 +115,7 @@ func register(c *gin.Context) {
 		return
 	}
 
-	userId, err := svc.Register(c, req)
+	userId, err := h.svc.Register(c, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -133,7 +133,7 @@ func register(c *gin.Context) {
 // @Param email query string true "用户邮箱"
 // @Success		200 {object} model.Response{data=model.UserInfoResponse} "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)"
 // @Router /user/search [get]
-func search(c *gin.Context) {
+func (h Handler) search(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
 		response.Fail(c, "参数错误", nil)
@@ -149,12 +149,12 @@ func search(c *gin.Context) {
 
 	userID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.Search(c, userID, email)
+	resp, err := h.svc.Search(c, userID, email)
 	if err != nil {
 		c.Error(err)
 		return
@@ -171,7 +171,7 @@ func search(c *gin.Context) {
 // @Param user_id query string true "用户id"
 // @Success		200 {object} model.Response{data=model.UserInfoResponse} "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)"
 // @Router /user/info [get]
-func getUserInfo(c *gin.Context) {
+func (h Handler) getUserInfo(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
 		response.Fail(c, "参数错误", nil)
@@ -180,12 +180,12 @@ func getUserInfo(c *gin.Context) {
 
 	thisID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
-		logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("token解析失败", zap.Error(err))
 		response.SetFail(c, "token解析失败", nil)
 		return
 	}
 
-	resp, err := svc.GetUserInfo(c, thisID, userId)
+	resp, err := h.svc.GetUserInfo(c, thisID, userId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -202,10 +202,10 @@ func getUserInfo(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/key/set [post]
-func setUserPublicKey(c *gin.Context) {
+func (h Handler) setUserPublicKey(c *gin.Context) {
 	req := new(model.SetPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -217,13 +217,13 @@ func setUserPublicKey(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.SetUserPublicKey(c, thisId, req.PublicKey)
+	_, err = h.svc.SetUserPublicKey(c, thisId, req.PublicKey)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "设置用户公钥成功", gin.H{"public_key": ThisKey})
+	response.SetSuccess(c, "设置用户公钥成功", gin.H{"public_key": h.key})
 }
 
 // @Summary 获取系统pgp公钥
@@ -234,8 +234,8 @@ func setUserPublicKey(c *gin.Context) {
 // @Param email query string false "邮箱"
 // @Success		200 {object} model.Response{}
 // @Router /user/system/key/get [get]
-func GetSystemPublicKey(c *gin.Context) {
-	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": ThisKey})
+func (h Handler) GetSystemPublicKey(c *gin.Context) {
+	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": h.key})
 }
 
 // @Summary 修改用户信息
@@ -246,10 +246,10 @@ func GetSystemPublicKey(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/info/modify [post]
-func modifyUserInfo(c *gin.Context) {
+func (h Handler) modifyUserInfo(c *gin.Context) {
 	req := new(model.UserInfoRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -261,7 +261,7 @@ func modifyUserInfo(c *gin.Context) {
 		return
 	}
 
-	if err = svc.ModifyUserInfo(c, thisId, req); err != nil {
+	if err = h.svc.ModifyUserInfo(c, thisId, req); err != nil {
 		c.Error(err)
 		return
 	}
@@ -277,10 +277,10 @@ func modifyUserInfo(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/password/modify [post]
-func modifyUserPassword(c *gin.Context) {
+func (h Handler) modifyUserPassword(c *gin.Context) {
 	req := new(model.PasswordRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -317,7 +317,7 @@ func modifyUserPassword(c *gin.Context) {
 		return
 	}
 
-	if err = svc.ModifyUserPassword(c, thisId, req); err != nil {
+	if err = h.svc.ModifyUserPassword(c, thisId, req); err != nil {
 		c.Error(err)
 		return
 	}
@@ -333,10 +333,10 @@ func modifyUserPassword(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/bundle/modify [post]
-func modifyUserSecretBundle(c *gin.Context) {
+func (h Handler) modifyUserSecretBundle(c *gin.Context) {
 	req := new(model.ModifyUserSecretBundleRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
@@ -348,7 +348,7 @@ func modifyUserSecretBundle(c *gin.Context) {
 		return
 	}
 
-	_, err = svc.ModifyUserSecretBundle(c, thisId, req)
+	_, err = h.svc.ModifyUserSecretBundle(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -364,7 +364,7 @@ func modifyUserSecretBundle(c *gin.Context) {
 // @Param user_id query string true "用户id"
 // @Success		200 {object} model.Response{}
 // @Router /user/bundle/get [get]
-func getUserSecretBundle(c *gin.Context) {
+func (h Handler) getUserSecretBundle(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
 		response.Fail(c, "参数错误", nil)
@@ -376,7 +376,7 @@ func getUserSecretBundle(c *gin.Context) {
 		return
 	}
 
-	bundle, err := svc.GetUserSecretBundle(c, userId)
+	bundle, err := h.svc.GetUserSecretBundle(c, userId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -391,13 +391,13 @@ func getUserSecretBundle(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /user/clients/get [get]
-func getUserLoginClients(c *gin.Context) {
+func (h Handler) getUserLoginClients(c *gin.Context) {
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	clients, err := svc.GetUserLoginClients(c, thisId)
+	clients, err := h.svc.GetUserLoginClients(c, thisId)
 
 	response.SetSuccess(c, "获取成功", clients)
 }
@@ -408,7 +408,7 @@ func getUserLoginClients(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /user/activate [get]
-func userActivate(c *gin.Context) {
+func (h Handler) userActivate(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
 		response.Fail(c, "参数错误", nil)
@@ -419,7 +419,7 @@ func userActivate(c *gin.Context) {
 		response.Fail(c, "参数错误", nil)
 		return
 	}
-	resp, err := svc.UserActivate(c, userId, key)
+	resp, err := h.svc.UserActivate(c, userId, key)
 	if err != nil {
 		c.Error(err)
 		return
@@ -434,15 +434,15 @@ func userActivate(c *gin.Context) {
 // @param request body model.ResetPublicKeyRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /user/public_key/reset [post]
-func resetUserPublicKey(c *gin.Context) {
+func (h Handler) resetUserPublicKey(c *gin.Context) {
 	req := new(model.ResetPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
-	resp, err := svc.ResetUserPublicKey(c, req)
+	resp, err := h.svc.ResetUserPublicKey(c, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -458,15 +458,15 @@ func resetUserPublicKey(c *gin.Context) {
 // @param request body model.SendEmailCodeRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /user/email/code/send [post]
-func sendEmailCode(c *gin.Context) {
+func (h Handler) sendEmailCode(c *gin.Context) {
 	req := new(model.SendEmailCodeRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
-	_, err := svc.SendEmailCode(c, req.Email)
+	_, err := h.svc.SendEmailCode(c, req.Email)
 	if err != nil {
 		c.Error(err)
 		return
