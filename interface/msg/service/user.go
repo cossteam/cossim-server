@@ -536,9 +536,9 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 		pool[uid] = make(map[string][]*client)
 	}
 
-	if s.conf.MultipleDeviceLimit.Enable {
+	if s.ac.MultipleDeviceLimit.Enable {
 		if _, ok := pool[uid][deviceType]; ok {
-			if len(pool[uid][deviceType]) == s.conf.MultipleDeviceLimit.Max {
+			if len(pool[uid][deviceType]) == s.ac.MultipleDeviceLimit.Max {
 				return
 			}
 		}
