@@ -3,14 +3,12 @@ package http
 import (
 	"context"
 	"github.com/cossim/coss-server/interface/storage/api/model"
-	conf "github.com/cossim/coss-server/interface/storage/config"
 	"github.com/cossim/coss-server/pkg/http/response"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
-	"github.com/minio/minio-go/v7"
-
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -26,7 +24,7 @@ import (
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files [post]
-func upload(c *gin.Context) {
+func (h *Handler) upload(c *gin.Context) {
 	//userID, err := http2.ParseTokenReUid(c)
 	//if err != nil {
 	//	log.Error("token解析失败", zap.Error(err))
@@ -41,7 +39,7 @@ func upload(c *gin.Context) {
 	}
 	_Type, err := strconv.Atoi(value)
 	if err != nil {
-		logger.Error("type解析失败", zap.Error(err))
+		h.logger.Error("type解析失败", zap.Error(err))
 		response.SetFail(c, "文件类型解析失败", nil)
 		return
 	}
@@ -63,26 +61,26 @@ func upload(c *gin.Context) {
 	//c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileSize)
 	file, err := c.FormFile("file")
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
 	if file.Size > maxFileSize {
-		logger.Error("文件大小超过限制", zap.Error(err))
+		h.logger.Error("文件大小超过限制", zap.Error(err))
 		response.SetFail(c, "文件大小超过限制", nil)
 		return
 	}
 
 	fileObj, err := file.Open()
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
 	bucket, err := myminio.GetBucketName(_Type)
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
@@ -99,20 +97,20 @@ func upload(c *gin.Context) {
 
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+fileExtension)
-	headerUrl, err := sp.Upload(context.Background(), key, fileObj, file.Size, opt)
+	headerUrl, err := h.sp.Upload(context.Background(), key, fileObj, file.Size, opt)
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
-	_, err = sp.GetUrl(context.Background(), key)
+	_, err = h.sp.GetUrl(context.Background(), key)
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
-	_, err = storageClient.Upload(context.Background(), &storagev1.UploadRequest{
+	_, err = h.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   "userID",
 		FileName: file.Filename,
 		Path:     key,
@@ -121,7 +119,7 @@ func upload(c *gin.Context) {
 		Size:     uint64(file.Size),
 	})
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
@@ -141,8 +139,8 @@ func upload(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/download/:type/:id [get]
-func download(c *gin.Context) {
-	targetURL := "http://" + conf.Conf.OSS["minio"].Addr()
+func (h *Handler) download(c *gin.Context) {
+	targetURL := "http://" + h.minioAddr
 	URL := c.Request.URL.String()
 	if strings.Contains(URL, downloadURL) {
 		URL = strings.Replace(URL, downloadURL, "", 1)
@@ -152,7 +150,7 @@ func download(c *gin.Context) {
 	// 创建一个代理请求
 	proxyReq, err := http.NewRequest(c.Request.Method, targetURL, c.Request.Body)
 	if err != nil {
-		logger.Error("Failed to create proxy request", zap.Error(err))
+		h.logger.Error("Failed to create proxy request", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create proxy request"})
 		return
 	}
@@ -170,7 +168,7 @@ func download(c *gin.Context) {
 	client := &http.Client{}
 	resp, err := client.Do(proxyReq)
 	if err != nil {
-		logger.Error("Failed to fetch response from service", zap.Error(err))
+		h.logger.Error("Failed to fetch response from service", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch response from service"})
 		return
 	}
@@ -194,7 +192,7 @@ func download(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/:id [get]
-func getFileInfo(c *gin.Context) {
+func (h *Handler) getFileInfo(c *gin.Context) {
 	//fileID := c.Query("file_id")
 	fileID := c.Param("id")
 	if fileID == "" {
@@ -202,7 +200,7 @@ func getFileInfo(c *gin.Context) {
 		return
 	}
 
-	info, err := storageClient.GetFileInfo(context.Background(), &storagev1.GetFileInfoRequest{FileID: fileID})
+	info, err := h.storageClient.GetFileInfo(context.Background(), &storagev1.GetFileInfoRequest{FileID: fileID})
 	if err != nil {
 		c.Error(err)
 		return
@@ -224,7 +222,7 @@ func getFileInfo(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/:id [delete]
-func deleteFile(c *gin.Context) {
+func (h *Handler) deleteFile(c *gin.Context) {
 	//req := &DeleteFileRequest{}
 	//if err := c.ShouldBindJSON(&req); err != nil {
 	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -236,22 +234,22 @@ func deleteFile(c *gin.Context) {
 		return
 	}
 
-	resp, err := storageClient.GetFileInfo(context.Background(), &storagev1.GetFileInfoRequest{FileID: fileID})
+	resp, err := h.storageClient.GetFileInfo(context.Background(), &storagev1.GetFileInfoRequest{FileID: fileID})
 	if err != nil {
-		logger.Error("获取文件信息失败", zap.Error(err))
+		h.logger.Error("获取文件信息失败", zap.Error(err))
 		response.SetFail(c, "删除文件失败，请重试", nil)
 		//c.Error(err)
 		return
 	}
 
-	if err = sp.Delete(context.Background(), resp.Path); err != nil {
-		logger.Error("oss删除文件失败", zap.Error(err))
+	if err = h.sp.Delete(context.Background(), resp.Path); err != nil {
+		h.logger.Error("oss删除文件失败", zap.Error(err))
 		response.SetFail(c, "删除文件失败，请重试", nil)
 		//c.Error(err)
 		return
 	}
 
-	_, err = storageClient.Delete(context.Background(), &storagev1.DeleteRequest{FileID: fileID})
+	_, err = h.storageClient.Delete(context.Background(), &storagev1.DeleteRequest{FileID: fileID})
 	if err != nil {
 		response.SetFail(c, "删除文件失败，请重试", nil)
 		//c.Error(err)
@@ -268,7 +266,7 @@ func deleteFile(c *gin.Context) {
 // @param type query integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/key [get]
-func getMultipartKey(c *gin.Context) {
+func (h *Handler) getMultipartKey(c *gin.Context) {
 	fileName := c.Query("file_name")
 	if fileName == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file_name is required"})
@@ -286,7 +284,7 @@ func getMultipartKey(c *gin.Context) {
 	// 获取桶名称
 	bucket, err := myminio.GetBucketName(t)
 	if err != nil {
-		logger.Error("获取桶失败", zap.Error(err))
+		h.logger.Error("获取桶失败", zap.Error(err))
 		response.SetFail(c, "获取分片id失败，请重试", nil)
 		return
 	}
@@ -303,7 +301,7 @@ func getMultipartKey(c *gin.Context) {
 
 	// 生成对象键
 	key := myminio.GenKey(bucket, fileID+fileExtension)
-	multipartUpload, err := sp.NewMultipartUpload(context.Background(), key, minio.PutObjectOptions{})
+	multipartUpload, err := h.sp.NewMultipartUpload(context.Background(), key, minio.PutObjectOptions{})
 	if err != nil {
 		return
 	}
@@ -320,58 +318,58 @@ func getMultipartKey(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/upload [post]
-func uploadMultipart(c *gin.Context) {
+func (h *Handler) uploadMultipart(c *gin.Context) {
 	//单次分片限制100m
 	maxFileSize := 100 * 1024 * 1024
 	file, err := c.FormFile("file")
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
 	if file.Size > int64(maxFileSize) {
-		logger.Error("文件大小超过限制", zap.Error(err))
+		h.logger.Error("文件大小超过限制", zap.Error(err))
 		response.SetFail(c, "文件大小超过限制", nil)
 		return
 	}
 
 	fileObj, err := file.Open()
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
 	uploadId := c.PostForm("upload_id")
 	if uploadId == "" {
-		logger.Error("upload_id is required", zap.Error(err))
+		h.logger.Error("upload_id is required", zap.Error(err))
 		response.SetFail(c, "upload_id is required", nil)
 		return
 	}
 	number := c.PostForm("part_number")
 	if uploadId == "" {
-		logger.Error("part_number is required", zap.Error(err))
+		h.logger.Error("part_number is required", zap.Error(err))
 		response.SetFail(c, "part_number is required", nil)
 		return
 	}
 	partNumber, err := strconv.Atoi(number)
 	if err != nil {
-		logger.Error("part_number解析失败", zap.Error(err))
+		h.logger.Error("part_number解析失败", zap.Error(err))
 		response.SetFail(c, "part_number解析失败", nil)
 		return
 	}
 
 	key := c.PostForm("key")
 	if key == "" {
-		logger.Error("key is required", zap.Error(err))
+		h.logger.Error("key is required", zap.Error(err))
 		response.SetFail(c, "key is required", nil)
 		return
 	}
 
-	err = sp.UploadPart(context.Background(), key, uploadId, partNumber, fileObj, file.Size, minio.PutObjectPartOptions{})
+	err = h.sp.UploadPart(context.Background(), key, uploadId, partNumber, fileObj, file.Size, minio.PutObjectPartOptions{})
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
@@ -386,28 +384,28 @@ func uploadMultipart(c *gin.Context) {
 // @param request body model.CompleteUploadRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/complete [post]
-func completeUploadMultipart(c *gin.Context) {
+func (h *Handler) completeUploadMultipart(c *gin.Context) {
 	req := new(model.CompleteUploadRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
-	headerUrl, err := sp.CompleteMultipartUpload(context.Background(), req.Key, req.UploadId)
+	headerUrl, err := h.sp.CompleteMultipartUpload(context.Background(), req.Key, req.UploadId)
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
-	info, err := sp.GetObjectInfo(context.Background(), req.Key, minio.GetObjectOptions{})
+	info, err := h.sp.GetObjectInfo(context.Background(), req.Key, minio.GetObjectOptions{})
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
-	_, err = storageClient.Upload(context.Background(), &storagev1.UploadRequest{
+	_, err = h.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   "userID",
 		FileName: req.FileName,
 		Path:     req.Key,
@@ -416,7 +414,7 @@ func completeUploadMultipart(c *gin.Context) {
 		Size:     uint64(info.Size),
 	})
 	if err != nil {
-		logger.Error("上传失败", zap.Error(err))
+		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
 		return
 	}
@@ -433,17 +431,17 @@ func completeUploadMultipart(c *gin.Context) {
 // @param request body model.AbortUploadRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/abort [post]
-func abortUploadMultipart(c *gin.Context) {
+func (h *Handler) abortUploadMultipart(c *gin.Context) {
 	req := new(model.AbortUploadRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数验证失败", zap.Error(err))
+		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
 
-	err := sp.AbortMultipartUpload(context.Background(), req.Key, req.UploadId)
+	err := h.sp.AbortMultipartUpload(context.Background(), req.Key, req.UploadId)
 	if err != nil {
-		logger.Error("清理失败", zap.Error(err))
+		h.logger.Error("清理失败", zap.Error(err))
 		response.SetFail(c, "清理失败", nil)
 		return
 	}
