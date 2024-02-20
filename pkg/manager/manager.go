@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cossim/coss-server/pkg/cluster"
+	//"github.com/cossim/coss-server/pkg/cluster"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/healthz"
@@ -21,7 +21,7 @@ import (
 // Manager initializes shared dependencies such as Caches and Clients, and provides them to Runnables.
 type Manager interface {
 	// Cluster holds a variety of methods to interact with a cluster.
-	cluster.Cluster
+	//cluster.Cluster
 
 	// Add will set requested dependencies on the component, and cause the component to be
 	// started when Start is called.  Add will inject any dependencies for which the argument
