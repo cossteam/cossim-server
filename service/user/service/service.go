@@ -56,6 +56,7 @@ func (s *Service) Version() string { return version.FullVersion() }
 
 func (s *Service) Register(srv *grpc.Server) {
 	api.RegisterUserServiceServer(srv, s)
+	api.RegisterUserLoginServiceServer(srv, s)
 }
 
 func (s *Service) RegisterHealth(srv *grpc.Server) {
