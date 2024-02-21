@@ -7,17 +7,19 @@ import (
 )
 
 type Repositories struct {
-	UR repository.UserRepository
-	db *gorm.DB
+	UR  repository.UserRepository
+	ULR repository.UserLoginRepository
+	db  *gorm.DB
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
-		UR: NewUserRepo(db),
-		db: db,
+		UR:  NewUserRepo(db),
+		ULR: NewUserLoginRepo(db),
+		db:  db,
 	}
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.User{})
+	return s.db.AutoMigrate(&entity.User{}, &entity.UserLogin{})
 }

@@ -527,10 +527,14 @@ const docTemplateuser = `{
         "model.LoginRequest": {
             "type": "object",
             "required": [
+                "driver_id",
                 "email",
                 "password"
             ],
             "properties": {
+                "driver_id": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -790,7 +794,7 @@ var SwaggerInfouser = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "coss-user服务",
+	Title:            "user服务",
 	Description:      "",
 	InfoInstanceName: "user",
 	SwaggerTemplate:  docTemplateuser,

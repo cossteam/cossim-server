@@ -846,6 +846,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/user/remark/set": {
+            "post": {
+                "description": "修改用户备注",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
+                ],
+                "summary": "修改好友备注",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetUserFriendRemarkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/user/request_list": {
             "get": {
                 "description": "好友申请列表",
@@ -1305,6 +1339,23 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "model.SetUserFriendRemarkRequest": {
+            "type": "object",
+            "required": [
+                "remark",
+                "user_id"
+            ],
+            "properties": {
+                "remark": {
+                    "description": "备注",
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "用户ID",
+                    "type": "string"
+                }
+            }
+        },
         "model.SetUserSilentNotificationRequest": {
             "type": "object",
             "required": [
@@ -1479,7 +1530,7 @@ var SwaggerInforelation = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "coss-relation-bff服务",
+	Title:            "relation服务",
 	Description:      "",
 	InfoInstanceName: "relation",
 	SwaggerTemplate:  docTemplaterelation,

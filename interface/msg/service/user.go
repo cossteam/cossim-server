@@ -21,7 +21,7 @@ import (
 	"time"
 )
 
-func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.SendUserMsgRequest) (interface{}, error) {
+func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId string, req *model.SendUserMsgRequest) (interface{}, error) {
 
 	if !model.IsAllowedConversationType(req.IsBurnAfterReadingType) {
 		return nil, code.MsgErrInsertUserMessageFailed
@@ -93,7 +93,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 		return nil, err
 	}
 
-	s.sendWsUserMsg(userID, req.ReceiverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
+	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
 		SenderId:           userID,
 		Content:            req.Content,
 		MsgType:            req.Type,
@@ -114,8 +114,11 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, req *model.Sen
 }
 
 // 推送私聊消息
-func (s *Service) sendWsUserMsg(senderId, receiverId string, silent relationgrpcv1.UserSilentNotificationType, msg *model.WsUserMsg) {
-	m := config.WsMsg{Uid: receiverId, Event: config.SendUserMessageEvent, SendAt: pkgtime.Now(),
+func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *model.WsUserMsg) {
+	sendFlag := false
+	receFlag := false
+
+	m := config.WsMsg{Uid: receiverId, DriverId: driverId, Event: config.SendUserMessageEvent, SendAt: pkgtime.Now(),
 		Data: msg,
 	}
 
@@ -138,6 +141,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, silent relationgrpc
 	//遍历该用户所有客户端
 	if _, ok := pool[receiverId]; ok {
 		if len(pool[receiverId]) > 0 {
+			receFlag = true
 			for _, c := range pool[receiverId] {
 				for _, c2 := range c {
 					m.Rid = c2.Rid
@@ -157,6 +161,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, silent relationgrpc
 	}
 	if _, ok := pool[senderId]; ok {
 		if len(pool[senderId]) > 0 {
+			sendFlag = true
 			for _, c := range pool[senderId] {
 				for _, c2 := range c {
 					m.Rid = c2.Rid
@@ -180,35 +185,51 @@ func (s *Service) sendWsUserMsg(senderId, receiverId string, silent relationgrpc
 			s.logger.Error("json解析失败", zap.Error(err))
 			return
 		}
-		message, err := Enc.GetSecretMessage(string(marshal), receiverId)
-		if err != nil {
-			return
-		}
-		err = rabbitMQClient.PublishEncryptedMessage(receiverId, message)
-		if err != nil {
-			s.logger.Error("发布消息失败", zap.Error(err))
-			return
+		if !receFlag {
+			message, err := Enc.GetSecretMessage(string(marshal), receiverId)
+			if err != nil {
+				s.logger.Error("加密消息失败", zap.Error(err))
+				return
+			}
+			err = rabbitMQClient.PublishEncryptedMessage(receiverId, message)
+			if err != nil {
+				s.logger.Error("发布消息失败", zap.Error(err))
+				return
+			}
 		}
 
-		message2, err := Enc.GetSecretMessage(string(marshal), senderId)
-		if err != nil {
-			return
+		if !sendFlag {
+			message, err := Enc.GetSecretMessage(string(marshal), senderId)
+			if err != nil {
+				s.logger.Error("加密消息失败", zap.Error(err))
+				return
+			}
+			err = rabbitMQClient.PublishEncryptedMessage(senderId, message)
+			if err != nil {
+				s.logger.Error("发布消息失败", zap.Error(err))
+				return
+			}
 		}
-		err = rabbitMQClient.PublishEncryptedMessage(senderId, message2)
+		return
+	}
+	fmt.Println("receFlag", receFlag, "sendFlag", sendFlag)
+	if !receFlag {
+		fmt.Println("推送离线消息1")
+
+		err := rabbitMQClient.PublishMessage(receiverId, m)
 		if err != nil {
 			s.logger.Error("发布消息失败", zap.Error(err))
 			return
 		}
 	}
-	err := rabbitMQClient.PublishMessage(receiverId, m)
-	if err != nil {
-		s.logger.Error("发布消息失败", zap.Error(err))
-		return
-	}
-	err = rabbitMQClient.PublishMessage(senderId, m)
-	if err != nil {
-		s.logger.Error("发布消息失败", zap.Error(err))
-		return
+	if !sendFlag {
+		fmt.Println("推送离线消息2")
+
+		err := rabbitMQClient.PublishMessage(senderId, m)
+		if err != nil {
+			s.logger.Error("发布消息失败", zap.Error(err))
+			return
+		}
 	}
 }
 
@@ -331,7 +352,6 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 			re.DialogName = info.Name
 			re.DialogType = 1
 			re.DialogUnreadCount = len(msgs.GroupMessages)
-			//re.UserId = v.OwnerId
 			re.GroupId = info.Id
 			re.DialogId = v.Id
 			re.DialogCreateAt = v.CreateAt
@@ -360,7 +380,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	return responseList, nil
 }
 
-func (s *Service) RecallUserMsg(ctx context.Context, userID string, msgID uint32) (interface{}, error) {
+func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId string, msgID uint32) (interface{}, error) {
 	//获取消息
 	msginfo, err := s.msgClient.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
 		MsgId: msgID,
@@ -378,6 +398,15 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, msgID uint32
 		return nil, code.MsgErrTimeoutExceededCannotRevoke
 	}
 
+	//判断是否在对话内
+	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+		DialogId: msginfo.DialogId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户对话信息失败", zap.Error(err))
+		return nil, err
+	}
+
 	// 调用相应的 gRPC 客户端方法来撤回用户消息
 	msg, err := s.msgClient.DeleteUserMessage(ctx, &msggrpcv1.DeleteUserMsgRequest{
 		MsgId: msgID,
@@ -387,10 +416,40 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, msgID uint32
 		return nil, err
 	}
 
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	wsm := model.WsUserOperatorMsg{
+		Id:                     msginfo.Id,
+		SenderId:               msginfo.SenderId,
+		ReceiverId:             msginfo.ReceiverId,
+		Content:                msginfo.Content,
+		Type:                   msginfo.Type,
+		ReplayId:               msginfo.ReplayId,
+		IsRead:                 msginfo.IsRead,
+		ReadAt:                 msginfo.ReadAt,
+		CreatedAt:              msginfo.CreatedAt,
+		DialogId:               msginfo.DialogId,
+		IsLabel:                model.LabelMsgType(msginfo.IsLabel),
+		IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
+		OperatorInfo: model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: info.UserId,
+		},
+	}
+
+	s.SendMsgToUsers(userIds.UserIds, driverId, config.RecallMsgEvent, wsm, true)
+
 	return msg.Id, nil
 }
 
-func (s *Service) EditUserMsg(c *gin.Context, userID string, msgID uint32, content string) (interface{}, error) {
+func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, msgID uint32, content string) (interface{}, error) {
 	//获取消息
 	msginfo, err := s.msgClient.GetUserMessageById(context.Background(), &msggrpcv1.GetUserMsgByIDRequest{
 		MsgId: msgID,
@@ -402,6 +461,15 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, msgID uint32, conte
 
 	if msginfo.SenderId != userID {
 		return nil, code.Unauthorized
+	}
+
+	//判断是否在对话内
+	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(c, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+		DialogId: msginfo.DialogId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户对话信息失败", zap.Error(err))
+		return nil, err
 	}
 
 	// 调用相应的 gRPC 客户端方法来编辑用户消息
@@ -416,10 +484,12 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, msgID uint32, conte
 		return nil, err
 	}
 
+	s.SendMsgToUsers(userIds.UserIds, driverId, config.EditMsgEvent, msginfo, true)
+
 	return msgID, nil
 }
 
-func (s *Service) ReadUserMsgs(ctx context.Context, userid string, dialogId uint32, msgids []uint32) (interface{}, error) {
+func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId string, dialogId uint32, msgids []uint32) (interface{}, error) {
 	ids, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: dialogId,
 	})
@@ -448,10 +518,52 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, dialogId uint
 		return nil, err
 	}
 
+	msgs, err := s.msgClient.GetUserMessagesByIds(ctx, &msggrpcv1.GetUserMessagesByIdsRequest{
+		MsgIds: msgids,
+		UserId: userid,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: userid,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var wsms []model.WsUserOperatorMsg
+	for _, msginfo := range msgs.UserMessages {
+		wsm := model.WsUserOperatorMsg{
+			Id:                     msginfo.Id,
+			SenderId:               msginfo.SenderId,
+			ReceiverId:             msginfo.ReceiverId,
+			Content:                msginfo.Content,
+			Type:                   msginfo.Type,
+			ReplayId:               msginfo.ReplayId,
+			IsRead:                 msginfo.IsRead,
+			ReadAt:                 msginfo.ReadAt,
+			CreatedAt:              msginfo.CreatedAt,
+			DialogId:               msginfo.DialogId,
+			IsLabel:                model.LabelMsgType(msginfo.IsLabel),
+			IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
+		}
+		wsms = append(wsms, wsm)
+	}
+
+	s.SendMsgToUsers(ids.UserIds, driverId, config.UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{
+		Avatar: info.Avatar,
+		Name:   info.NickName,
+		UserId: info.UserId,
+	}}, true)
+
 	return nil, nil
 }
 
-func (s *Service) LabelUserMessage(ctx context.Context, userID string, msgID uint32, label model.LabelMsgType) (interface{}, error) {
+// 标注私聊消息
+func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId string, msgID uint32, label model.LabelMsgType) (interface{}, error) {
 	// 获取用户消息
 	msginfo, err := s.msgClient.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
 		MsgId: msgID,
@@ -465,7 +577,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, msgID uin
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
-		s.logger.Error("获取用户消息失败", zap.Error(err))
+		s.logger.Error("获取用户对话信息失败", zap.Error(err))
 		return nil, err
 	}
 
@@ -489,6 +601,38 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, msgID uin
 		s.logger.Error("设置用户消息标注失败", zap.Error(err))
 		return nil, err
 	}
+
+	msginfo.IsLabel = msggrpcv1.MsgLabel(label)
+
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	wsm := model.WsUserOperatorMsg{
+		Id:                     msginfo.Id,
+		SenderId:               msginfo.SenderId,
+		ReceiverId:             msginfo.ReceiverId,
+		Content:                msginfo.Content,
+		Type:                   msginfo.Type,
+		ReplayId:               msginfo.ReplayId,
+		IsRead:                 msginfo.IsRead,
+		ReadAt:                 msginfo.ReadAt,
+		CreatedAt:              msginfo.CreatedAt,
+		DialogId:               msginfo.DialogId,
+		IsLabel:                model.LabelMsgType(msginfo.IsLabel),
+		IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
+		OperatorInfo: model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: info.UserId,
+		},
+	}
+
+	s.SendMsgToUsers(userIds.UserIds, driverId, config.LabelMsgEvent, wsm, true)
 
 	return nil, nil
 }
@@ -515,7 +659,7 @@ func (s *Service) GetUserLabelMsgList(ctx context.Context, userID string, dialog
 	return msgs, nil
 }
 
-func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string) {
+func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceType, token string) {
 	defer conn.Close()
 	//用户上线
 	wsRid++
@@ -529,6 +673,7 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 		Uid:            uid,
 		Rid:            wsRid,
 		queue:          messages,
+		DriverId:       driverId,
 		Rdb:            s.redisClient,
 		relationClient: s.relationUserClient,
 	}
@@ -620,8 +765,8 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, deviceType, token string)
 }
 
 // SendMsg 推送消息
-func (s *Service) SendMsg(uid string, event config.WSEventType, data interface{}, pushOffline bool) {
-	m := config.WsMsg{Uid: uid, Event: event, Rid: 0, Data: data, SendAt: pkgtime.Now()}
+func (s *Service) SendMsg(uid string, driverId string, event config.WSEventType, data interface{}, pushOffline bool) {
+	m := config.WsMsg{Uid: uid, DriverId: driverId, Event: event, Rid: 0, Data: data, SendAt: pkgtime.Now()}
 	_, ok := pool[uid]
 	if !pushOffline && !ok {
 		return
@@ -649,9 +794,9 @@ func (s *Service) SendMsg(uid string, event config.WSEventType, data interface{}
 }
 
 // SendMsgToUsers 推送多个用户消息
-func (s *Service) SendMsgToUsers(uids []string, event config.WSEventType, data interface{}) {
+func (s *Service) SendMsgToUsers(uids []string, driverId string, event config.WSEventType, data interface{}, pushOffline bool) {
 	for _, uid := range uids {
-		s.SendMsg(uid, event, data, true)
+		s.SendMsg(uid, driverId, event, data, pushOffline)
 	}
 }
 

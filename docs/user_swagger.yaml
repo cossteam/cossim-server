@@ -1,11 +1,14 @@
 definitions:
   model.LoginRequest:
     properties:
+      driver_id:
+        type: string
       email:
         type: string
       password:
         type: string
     required:
+    - driver_id
     - email
     - password
     type: object
@@ -175,7 +178,7 @@ definitions:
     - UserStatusUnknown
 info:
   contact: {}
-  title: coss-user服务
+  title: user服务
 paths:
   /user/activate:
     get:

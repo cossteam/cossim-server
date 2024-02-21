@@ -346,7 +346,7 @@ var SwaggerInfostorage = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "coss-storage-bff服务",
+	Title:            "storage服务",
 	Description:      "",
 	InfoInstanceName: "storage",
 	SwaggerTemplate:  docTemplatestorage,

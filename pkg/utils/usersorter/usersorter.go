@@ -19,6 +19,7 @@ type Group interface{}
 type CustomUserData struct {
 	UserID    string `json:"user_id"`
 	NickName  string `json:"nickname"`
+	Remark    string `json:"remark"`
 	Email     string `json:"email"`
 	Tel       string `json:"tel"`
 	Avatar    string `json:"avatar"`
@@ -56,9 +57,18 @@ func SortAndGroupUsers(data interface{}, fieldName string) map[string][]interfac
 
 	if list, ok := data.([]User); ok {
 		for _, v := range list {
-			_ = reflect.ValueOf(v).FieldByName(fieldName)
-			fieldValue := fieldOf(v, fieldName)
-			name := fmt.Sprintf("%v", fieldValue.Interface())
+			var name string
+
+			_ = reflect.ValueOf(v).FieldByName("Remark")
+			fieldValue2 := fieldOf(v, "Remark")
+			remark := fmt.Sprintf("%v", fieldValue2.Interface())
+			if remark != "" {
+				name = remark
+			} else {
+				_ = reflect.ValueOf(v).FieldByName(fieldName)
+				fieldValue := fieldOf(v, fieldName)
+				name = fmt.Sprintf("%v", fieldValue.Interface())
+			}
 
 			if isChinese(name) {
 				pinyinSlice := pinyin.Pinyin(name, pinyin.NewArgs())

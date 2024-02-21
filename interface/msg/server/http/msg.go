@@ -41,18 +41,19 @@ type client struct {
 // @Router /msg/ws [get]
 func (h *Handler) ws(c *gin.Context) {
 	var uid string
+	var driverId string
 	token := c.Query("token")
 	//判断设备类型
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
 
 	if token == "" {
-		id, err := pkghttp.ParseTokenReUid(c)
-		if err != nil {
-			h.logger.Error("token解析失败", zap.Error(err))
-			return
-		}
-		uid = id
+		//id, err := pkghttp.ParseTokenReUid(c)
+		//if err != nil {
+		//	h.logger.Error("token解析失败", zap.Error(err))
+		//	return
+		//}
+		//uid = id
 		return
 	} else {
 		_, c2, err := utils.ParseToken(token)
@@ -61,6 +62,7 @@ func (h *Handler) ws(c *gin.Context) {
 			return
 		}
 		uid = c2.UserId
+		driverId = c2.DriverId
 	}
 	if uid == "" {
 		return
@@ -72,7 +74,7 @@ func (h *Handler) ws(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	h.svc.Ws(conn, uid, deviceType, token)
+	h.svc.Ws(conn, uid, driverId, deviceType, token)
 
 }
 
@@ -96,7 +98,13 @@ func (h *Handler) sendUserMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.SendUserMsg(c, thisId, req)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.SendUserMsg(c, thisId, driverId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -129,7 +137,13 @@ func (h *Handler) sendGroupMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.SendGroupMsg(c, thisId, req)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.SendGroupMsg(c, thisId, driverId, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -291,7 +305,13 @@ func (h *Handler) editUserMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.EditUserMsg(c, thisId, req.MsgId, req.Content)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.EditUserMsg(c, thisId, driverId, req.MsgId, req.Content)
 	if err != nil {
 		c.Error(err)
 		return
@@ -321,7 +341,13 @@ func (h *Handler) editGroupMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.EditGroupMsg(c, thisId, req.MsgId, req.Content)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.EditGroupMsg(c, thisId, driverId, req.MsgId, req.Content)
 	if err != nil {
 		c.Error(err)
 		return
@@ -351,7 +377,13 @@ func (h *Handler) recallUserMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.RecallUserMsg(c, thisId, req.MsgId)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.RecallUserMsg(c, thisId, driverId, req.MsgId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -381,7 +413,13 @@ func (h *Handler) recallGroupMsg(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.RecallGroupMsg(c, thisId, req.MsgId)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.RecallGroupMsg(c, thisId, driverId, req.MsgId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -416,7 +454,13 @@ func (h *Handler) labelUserMessage(c *gin.Context) {
 		return
 	}
 
-	_, err = h.svc.LabelUserMessage(c, thisId, req.MsgID, req.IsLabel)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = h.svc.LabelUserMessage(c, thisId, driverId, req.MsgID, req.IsLabel)
 	if err != nil {
 		c.Error(err)
 		return
@@ -451,7 +495,13 @@ func (h *Handler) labelGroupMessage(c *gin.Context) {
 		return
 	}
 
-	_, err = h.svc.LabelGroupMessage(c, thisId, req.MsgID, req.IsLabel)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = h.svc.LabelGroupMessage(c, thisId, driverId, req.MsgID, req.IsLabel)
 	if err != nil {
 		c.Error(err)
 		return
@@ -553,7 +603,13 @@ func (h *Handler) readUserMsgs(c *gin.Context) {
 		return
 	}
 
-	_, err = h.svc.ReadUserMsgs(c, thisId, req.DialogId, req.MsgIds)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = h.svc.ReadUserMsgs(c, thisId, driverId, req.DialogId, req.MsgIds)
 	if err != nil {
 		c.Error(err)
 		return
@@ -609,7 +665,14 @@ func (h *Handler) setGroupMessagesRead(c *gin.Context) {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	_, err = h.svc.SetGroupMessagesRead(c, thisId, req)
+
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = h.svc.SetGroupMessagesRead(c, thisId, driverId, req)
 	if err != nil {
 		c.Error(err)
 		return

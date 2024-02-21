@@ -116,9 +116,9 @@ func (s *Service) ListenQueue() {
 			switch msg_query.Action {
 			//推送消息
 			case msg_queue.SendMessage:
-				s.SendMsg(wsm.Uid, wsm.Event, wsm.Data, true)
+				s.SendMsg(wsm.Uid, wsm.DriverId, wsm.Event, wsm.Data, true)
 			case msg_queue.LiveEvent:
-				s.SendMsg(wsm.Uid, wsm.Event, wsm.Data, false)
+				s.SendMsg(wsm.Uid, wsm.DriverId, wsm.Event, wsm.Data, false)
 			//强制断开ws
 			case msg_queue.UserWebsocketClose:
 				thismap, ok := wsm.Data.(map[string]interface{})
@@ -154,6 +154,7 @@ func (s *Service) Stop(ctx context.Context) error {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	fmt.Println("9999999999999999")
 	switch serviceName {
 	case "user_service":
 		s.userClient = usergrpcv1.NewUserServiceClient(conn)

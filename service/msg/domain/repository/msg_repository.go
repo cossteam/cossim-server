@@ -13,6 +13,7 @@ type MsgRepository interface {
 	GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.LastMessage, error)
 	UpdateUserMessage(msg entity.UserMessage) error
 	GetUserMsgByID(msgId uint32) (*entity.UserMessage, error)
+	GetUserMsgByIDs(msgIds []uint32) ([]*entity.UserMessage, error)
 	UpdateUserMsgColumn(msgId uint32, column string, value interface{}) error
 	GetUserMsgLabelByDialogId(dialogId uint32) ([]*entity.UserMessage, error)
 	SetUserMsgsReadStatus(msgIds []uint32, dialogId uint32) error

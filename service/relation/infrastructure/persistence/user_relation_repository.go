@@ -88,3 +88,7 @@ func (u *UserRelationRepo) SetUserFriendSilentNotification(uid, friendId string,
 func (u *UserRelationRepo) SetUserOpenBurnAfterReading(uid, friendId string, openBurnAfterReading entity.OpenBurnAfterReadingType) error {
 	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", uid, friendId).Update("open_burn_after_reading", openBurnAfterReading).Error
 }
+
+func (u *UserRelationRepo) SetFriendRemarkByUserIdAndFriendId(userId, friendId string, remark string) error {
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", userId, friendId).Update("remark", remark).Error
+}

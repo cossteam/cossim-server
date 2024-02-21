@@ -33,13 +33,14 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		s.logger.Error("user login failed", zap.Error(err))
 		return nil, "", err
 	}
+	fmt.Println("2222222222222")
 
-	token, err := utils.GenerateToken(resp.UserId, resp.Email)
+	token, err := utils.GenerateToken(resp.UserId, resp.Email, req.DriverId)
 	if err != nil {
 		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
-
+	fmt.Println("777777777777777")
 	keys, err := cache.ScanKeys(s.redisClient, resp.UserId+":"+driveType+":*")
 	if err != nil {
 		s.logger.Error("redis scan err", zap.Error(err))
@@ -55,8 +56,9 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 
 	}
 
+	id := len(keys) + 1
 	data := cache.UserInfo{
-		ID:         uint(len(keys)),
+		ID:         uint(id),
 		UserId:     resp.UserId,
 		Token:      token,
 		DriverType: driveType,
@@ -64,11 +66,19 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		ClientIP:   clientIp,
 	}
 
-	err = cache.SetKey(s.redisClient, resp.UserId+":"+driveType+":"+strconv.Itoa(len(keys)), data, 60*60*24*7*ostime.Second)
+	err = cache.SetKey(s.redisClient, resp.UserId+":"+driveType+":"+strconv.Itoa(id), data, 60*60*24*7*ostime.Second)
 	if err != nil {
 		return nil, "", err
 	}
 
+	_, err = s.userLoginClient.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
+		UserId:   resp.UserId,
+		DriverId: req.DriverId,
+		Token:    token,
+	})
+	if err != nil {
+		return nil, "", err
+	}
 	return &model.UserInfoResponse{
 		LoginNumber: data.ID,
 		Email:       resp.Email,

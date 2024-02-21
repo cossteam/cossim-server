@@ -76,6 +76,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	//设置用户静默通知
 	u.POST("/silent", h.setUserSilentNotification)
 	u.POST("/burn/open", h.openUserBurnAfterReading)
+	u.POST("/remark/set", h.setUserFriendRemark) //设置好友备注
 
 	g := api.Group("/group")
 	g.GET("/member", h.getGroupMember)

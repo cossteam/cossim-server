@@ -57,6 +57,7 @@ type UserServiceClient interface {
 	SetUserSecretBundle(ctx context.Context, in *SetUserSecretBundleRequest, opts ...grpc.CallOption) (*SetUserSecretBundleResponse, error)
 	// 获取用户密钥包
 	GetUserSecretBundle(ctx context.Context, in *GetUserSecretBundleRequest, opts ...grpc.CallOption) (*GetUserSecretBundleResponse, error)
+	// 激活用户
 	ActivateUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
 }
 
@@ -208,6 +209,7 @@ type UserServiceServer interface {
 	SetUserSecretBundle(context.Context, *SetUserSecretBundleRequest) (*SetUserSecretBundleResponse, error)
 	// 获取用户密钥包
 	GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error)
+	// 激活用户
 	ActivateUser(context.Context, *UserRequest) (*UserResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }

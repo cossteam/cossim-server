@@ -52,7 +52,7 @@ definitions:
     type: object
 info:
   contact: {}
-  title: coss-storage-bff服务
+  title: storage服务
 paths:
   /storage/files:
     post:

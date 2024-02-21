@@ -50,7 +50,7 @@ vet: ## Run go vet
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
-.PHONY: fmt
+.PHONY: test
 test: fmt vet## Run unittests
 	@go test -short ./...
 
@@ -140,7 +140,7 @@ endif
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
-docker-build: dep test ## Build docker image with the manager.
+docker-build: dep ## Build docker image with the manager.
 	#docker build -t ${IMG} .
 	# 根据传入的 ACTION 参数设置 BUILD_PATH
 	docker build --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \

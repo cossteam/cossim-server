@@ -553,3 +553,30 @@ func (s *Service) GetGroupUnreadMessages(ctx context.Context, in *v1.GetGroupUnr
 	//查询指定消息
 	return resp, nil
 }
+
+func (s *Service) GetUserMessagesByIds(ctx context.Context, in *v1.GetUserMessagesByIdsRequest) (*v1.GetUserMessagesByIdsResponse, error) {
+	resp := &v1.GetUserMessagesByIdsResponse{}
+	msgs, err := s.mr.GetUserMsgByIDs(in.MsgIds)
+	if err != nil {
+		return nil, status.Error(codes.Code(code.GetMsgErrGetUserMsgByIDFailed.Code()), err.Error())
+	}
+	if len(msgs) > 0 {
+		for _, msg := range msgs {
+			resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
+				Id:                     uint32(msg.ID),
+				SenderId:               msg.SendID,
+				ReceiverId:             msg.ReceiveID,
+				ReadAt:                 msg.ReadAt,
+				IsRead:                 int32(msg.IsRead),
+				Content:                msg.Content,
+				Type:                   uint32(int32(msg.Type)),
+				ReplayId:               uint64(msg.ReplyId),
+				DialogId:               uint32(msg.DialogId),
+				IsLabel:                v1.MsgLabel(msg.IsLabel),
+				IsBurnAfterReadingType: v1.BurnAfterReadingType(msg.IsBurnAfterReading),
+				CreatedAt:              msg.CreatedAt,
+			})
+		}
+	}
+	return resp, nil
+}

@@ -15,4 +15,5 @@ type UserRelationRepository interface {
 	UpdateRelationColumn(id uint, column string, value interface{}) error
 	SetUserFriendSilentNotification(uid, friendId string, silentNotification entity.SilentNotification) error
 	SetUserOpenBurnAfterReading(uid, friendId string, openBurnAfterReading entity.OpenBurnAfterReadingType) error
+	SetFriendRemarkByUserIdAndFriendId(userId, friendId string, remark string) error
 }

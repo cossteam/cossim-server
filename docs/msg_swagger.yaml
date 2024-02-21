@@ -196,7 +196,7 @@ definitions:
     type: object
 info:
   contact: {}
-  title: Swagger Example API
+  title: msg服务
 paths:
   /msg/after/get:
     post:
