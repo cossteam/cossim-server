@@ -834,7 +834,7 @@ var SwaggerInfolive = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Swagger Example API",
+	Title:            "live服务",
 	Description:      "",
 	InfoInstanceName: "live",
 	SwaggerTemplate:  docTemplatelive,

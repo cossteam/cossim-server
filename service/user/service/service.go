@@ -23,9 +23,11 @@ import (
 )
 
 type Service struct {
-	ac *pkgconfig.AppConfig
-	ur repository.UserRepository
+	ac  *pkgconfig.AppConfig
+	ur  repository.UserRepository
+	ulr repository.UserLoginRepository
 	api.UnimplementedUserServiceServer
+	api.UnimplementedUserLoginServiceServer
 }
 
 func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
@@ -40,6 +42,7 @@ func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
 	}
 
 	s.ur = infra.UR
+	s.ulr = infra.ULR
 	s.ac = cfg
 	return nil
 }

@@ -52,11 +52,11 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 					Avatar:   v.Avatar,
 					Status:   uint(v.Status),
 					DialogId: friend.DialogId,
+					Remark:   friend.Remark,
 				})
 				break
 			}
 		}
-
 	}
 
 	// Sort and group by specified field
@@ -513,6 +513,27 @@ func (s *Service) getUserInfo(ctx context.Context, userID string) (*userApi.User
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *model.SetUserFriendRemarkRequest) (interface{}, error) {
+	_, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userID,
+		FriendId: req.UserId,
+	})
+	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	_, err = s.userRelationClient.SetFriendRemark(ctx, &relationgrpcv1.SetFriendRemarkRequest{
+		UserId:   userID,
+		Remark:   req.Remark,
+		FriendId: req.UserId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 
 func (s *Service) publishServiceMessage(ctx context.Context, msg msgconfig.WsMsg) error {

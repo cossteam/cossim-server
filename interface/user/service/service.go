@@ -25,6 +25,7 @@ type Service struct {
 	ac              *pkgconfig.AppConfig
 	logger          *zap.Logger
 	userClient      user.UserServiceClient
+	userLoginClient user.UserLoginServiceClient
 	relClient       relationgrpcv1.UserRelationServiceClient
 	sp              storage.StorageProvider
 	redisClient     *redis.Client
@@ -59,6 +60,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	switch serviceName {
 	case "user_service":
 		s.userClient = user.NewUserServiceClient(conn)
+		s.userLoginClient = user.NewUserLoginServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("addr", conn.Target()))
 	case "relation_service":
 		s.relClient = relationgrpcv1.NewUserRelationServiceClient(conn)

@@ -33,6 +33,7 @@ const (
 	MsgService_DeleteGroupMessage_FullMethodName            = "/v1.MsgService/DeleteGroupMessage"
 	MsgService_GetUserMessageById_FullMethodName            = "/v1.MsgService/GetUserMessageById"
 	MsgService_GetGroupMessageById_FullMethodName           = "/v1.MsgService/GetGroupMessageById"
+	MsgService_GetUserMessagesByIds_FullMethodName          = "/v1.MsgService/GetUserMessagesByIds"
 	MsgService_GetGroupMessagesByIds_FullMethodName         = "/v1.MsgService/GetGroupMessagesByIds"
 	MsgService_SetUserMsgLabel_FullMethodName               = "/v1.MsgService/SetUserMsgLabel"
 	MsgService_SetGroupMsgLabel_FullMethodName              = "/v1.MsgService/SetGroupMsgLabel"
@@ -77,6 +78,8 @@ type MsgServiceClient interface {
 	GetUserMessageById(ctx context.Context, in *GetUserMsgByIDRequest, opts ...grpc.CallOption) (*UserMessage, error)
 	// 根据消息id获取群消息
 	GetGroupMessageById(ctx context.Context, in *GetGroupMsgByIDRequest, opts ...grpc.CallOption) (*GroupMessage, error)
+	// 根据多个消息id获取私聊消息
+	GetUserMessagesByIds(ctx context.Context, in *GetUserMessagesByIdsRequest, opts ...grpc.CallOption) (*GetUserMessagesByIdsResponse, error)
 	// 根据多个消息id获取群消息
 	GetGroupMessagesByIds(ctx context.Context, in *GetGroupMessagesByIdsRequest, opts ...grpc.CallOption) (*GetGroupMessagesByIdsResponse, error)
 	// 设置私聊消息标注状态
@@ -233,6 +236,15 @@ func (c *msgServiceClient) GetGroupMessageById(ctx context.Context, in *GetGroup
 	return out, nil
 }
 
+func (c *msgServiceClient) GetUserMessagesByIds(ctx context.Context, in *GetUserMessagesByIdsRequest, opts ...grpc.CallOption) (*GetUserMessagesByIdsResponse, error) {
+	out := new(GetUserMessagesByIdsResponse)
+	err := c.cc.Invoke(ctx, MsgService_GetUserMessagesByIds_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgServiceClient) GetGroupMessagesByIds(ctx context.Context, in *GetGroupMessagesByIdsRequest, opts ...grpc.CallOption) (*GetGroupMessagesByIdsResponse, error) {
 	out := new(GetGroupMessagesByIdsResponse)
 	err := c.cc.Invoke(ctx, MsgService_GetGroupMessagesByIds_FullMethodName, in, out, opts...)
@@ -355,6 +367,8 @@ type MsgServiceServer interface {
 	GetUserMessageById(context.Context, *GetUserMsgByIDRequest) (*UserMessage, error)
 	// 根据消息id获取群消息
 	GetGroupMessageById(context.Context, *GetGroupMsgByIDRequest) (*GroupMessage, error)
+	// 根据多个消息id获取私聊消息
+	GetUserMessagesByIds(context.Context, *GetUserMessagesByIdsRequest) (*GetUserMessagesByIdsResponse, error)
 	// 根据多个消息id获取群消息
 	GetGroupMessagesByIds(context.Context, *GetGroupMessagesByIdsRequest) (*GetGroupMessagesByIdsResponse, error)
 	// 设置私聊消息标注状态
@@ -423,6 +437,9 @@ func (UnimplementedMsgServiceServer) GetUserMessageById(context.Context, *GetUse
 }
 func (UnimplementedMsgServiceServer) GetGroupMessageById(context.Context, *GetGroupMsgByIDRequest) (*GroupMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessageById not implemented")
+}
+func (UnimplementedMsgServiceServer) GetUserMessagesByIds(context.Context, *GetUserMessagesByIdsRequest) (*GetUserMessagesByIdsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessagesByIds not implemented")
 }
 func (UnimplementedMsgServiceServer) GetGroupMessagesByIds(context.Context, *GetGroupMessagesByIdsRequest) (*GetGroupMessagesByIdsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessagesByIds not implemented")
@@ -719,6 +736,24 @@ func _MsgService_GetGroupMessageById_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_GetUserMessagesByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserMessagesByIdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetUserMessagesByIds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetUserMessagesByIds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetUserMessagesByIds(ctx, req.(*GetUserMessagesByIdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MsgService_GetGroupMessagesByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetGroupMessagesByIdsRequest)
 	if err := dec(in); err != nil {
@@ -961,6 +996,10 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupMessageById",
 			Handler:    _MsgService_GetGroupMessageById_Handler,
+		},
+		{
+			MethodName: "GetUserMessagesByIds",
+			Handler:    _MsgService_GetUserMessagesByIds_Handler,
 		},
 		{
 			MethodName: "GetGroupMessagesByIds",

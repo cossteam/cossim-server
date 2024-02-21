@@ -239,3 +239,8 @@ type UpdateGroupAnnouncementRequest struct {
 	Title   string `json:"title" binding:"required"`    // 公告标题
 	Content string `json:"content" binding:"required"`  // 公告内容
 }
+
+type SetUserFriendRemarkRequest struct {
+	UserId string `json:"user_id" binding:"required"` // 用户ID
+	Remark string `json:"remark" binding:"required"`  // 备注
+}

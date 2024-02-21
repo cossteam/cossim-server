@@ -235,6 +235,18 @@ definitions:
     required:
     - group_id
     type: object
+  model.SetUserFriendRemarkRequest:
+    properties:
+      remark:
+        description: 备注
+        type: string
+      user_id:
+        description: 用户ID
+        type: string
+    required:
+    - remark
+    - user_id
+    type: object
   model.SetUserSilentNotificationRequest:
     properties:
       is_silent:
@@ -348,7 +360,7 @@ definitions:
     type: object
 info:
   contact: {}
-  title: coss-relation-bff服务
+  title: relation服务
 paths:
   /relation/dialog/show:
     post:
@@ -880,6 +892,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 管理好友请求
+      tags:
+      - UserRelation
+  /relation/user/remark/set:
+    post:
+      consumes:
+      - application/json
+      description: 修改用户备注
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetUserFriendRemarkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 修改好友备注
       tags:
       - UserRelation
   /relation/user/request_list:

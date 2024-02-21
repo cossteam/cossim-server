@@ -38,3 +38,19 @@ type FriendOnlineStatusMsg struct {
 	UserId string `json:"user_id"`
 	Status int32  `json:"status"`
 }
+
+type WsUserOperatorMsg struct {
+	Id                     uint32               `json:"id"`
+	SenderId               string               `json:"sender_id"`
+	ReceiverId             string               `json:"receiver_id"`
+	Content                string               `json:"content"`
+	Type                   uint32               `json:"type"`
+	ReplayId               uint64               `json:"replay_id"`
+	IsRead                 int32                `json:"is_read"`
+	ReadAt                 int64                `json:"read_at"`
+	CreatedAt              int64                `json:"created_at"`
+	DialogId               uint32               `json:"dialog_id"`
+	IsLabel                LabelMsgType         `json:"is_label"`
+	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
+	OperatorInfo           SenderInfo           `json:"operator_info"`
+}

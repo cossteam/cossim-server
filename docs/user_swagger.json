@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "coss-user服务",
+        "title": "user服务",
         "contact": {}
     },
     "paths": {
@@ -517,10 +517,14 @@
         "model.LoginRequest": {
             "type": "object",
             "required": [
+                "driver_id",
                 "email",
                 "password"
             ],
             "properties": {
+                "driver_id": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },

@@ -35,7 +35,6 @@ func (h *Handler) login(c *gin.Context) {
 
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = constants.DetermineClientType(deviceType)
-
 	resp, token, err := h.svc.Login(c, req, deviceType, c.ClientIP())
 	if err != nil {
 		c.Error(err)

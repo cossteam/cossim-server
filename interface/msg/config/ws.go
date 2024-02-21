@@ -60,12 +60,25 @@ const (
 
 	//推送所有好友在线状态事件
 	PushAllFriendOnlineStatusEvent
+
+	//标注消息事件
+	LabelMsgEvent
+
+	//编辑消息事件
+	EditMsgEvent
+
+	//撤回消息事件
+	RecallMsgEvent
+
+	//私聊已读事件
+	UserMsgReadEvent
 )
 
 type WsMsg struct {
-	Uid    string      `json:"uid"`
-	Event  WSEventType `json:"event"`
-	Rid    int64       `json:"rid"`
-	SendAt int64       `json:"send_at"`
-	Data   interface{} `json:"data"`
+	Uid      string      `json:"uid"`
+	Event    WSEventType `json:"event"`
+	Rid      int64       `json:"rid"`
+	DriverId string      `json:"driverId"`
+	SendAt   int64       `json:"send_at"`
+	Data     interface{} `json:"data"`
 }

@@ -933,3 +933,34 @@ func (h *Handler) deleteGroupAnnouncement(c *gin.Context) {
 
 	response.SetSuccess(c, "删除成功", resp)
 }
+
+// 修改好友备注
+// @Summary 修改好友备注
+// @Description 修改用户备注
+// @Tags UserRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.SetUserFriendRemarkRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/user/remark/set [post]
+func (h *Handler) setUserFriendRemark(c *gin.Context) {
+	req := new(model.SetUserFriendRemarkRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = h.svc.SetUserFriendRemark(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "修改成功", nil)
+}

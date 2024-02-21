@@ -369,3 +369,11 @@ func (g *MsgRepo) GetGroupMsgIdsByDialogID(dialogID uint32) ([]uint32, error) {
 		Find(&msgIds).Error
 	return msgIds, err
 }
+
+func (g *MsgRepo) GetUserMsgByIDs(msgIds []uint32) ([]*entity.UserMessage, error) {
+	var userMessages []*entity.UserMessage
+	err := g.db.Model(&entity.UserMessage{}).
+		Where("id IN (?) AND deleted_at = 0", msgIds).
+		Find(&userMessages).Error
+	return userMessages, err
+}

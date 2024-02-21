@@ -70,6 +70,8 @@ message Friend {
   string UserId = 1;
   // @inject_tag: json:"dialog_id" form:"dialog_id"
   uint32 DialogId = 2;
+  // @inject_tag: json:"remark" form:"remark"
+  string Remark = 3;
 }
 
 message GetFriendListRequest {
@@ -163,6 +165,15 @@ message SetUserOpenBurnAfterReadingRequest {
   OpenBurnAfterReadingType  OpenBurnAfterReading = 3;
 }
 
+message SetFriendRemarkRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"remark"
+  string remark = 3;
+}
+
 service UserRelationService {
   // 添加好友
   rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
@@ -190,4 +201,6 @@ service UserRelationService {
   rpc SetFriendSilentNotification(SetFriendSilentNotificationRequest) returns (google.protobuf.Empty);
   // 设置阅后即焚开关
   rpc SetUserOpenBurnAfterReading(SetUserOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
+  // 设置好友备注
+  rpc SetFriendRemark(SetFriendRemarkRequest) returns (google.protobuf.Empty);
 }

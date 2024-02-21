@@ -911,7 +911,7 @@ var SwaggerInfomsg = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Swagger Example API",
+	Title:            "msg服务",
 	Description:      "",
 	InfoInstanceName: "msg",
 	SwaggerTemplate:  docTemplatemsg,

@@ -193,7 +193,7 @@ definitions:
     type: object
 info:
   contact: {}
-  title: Swagger Example API
+  title: live服务
 paths:
   /live/group/create:
     post:

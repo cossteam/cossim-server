@@ -10,17 +10,19 @@ var jwtKey = []byte("a_secret_create")
 const ExpirationTime = 30
 
 type Claims struct {
-	UserId string `json:"user_id"`
-	Email  string `json:"email"`
+	UserId   string `json:"user_id"`
+	Email    string `json:"email"`
+	DriverId string `json:"driver_id"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken 生成token
-func GenerateToken(userId, email string) (string, error) {
+func GenerateToken(userId, email string, driverId string) (string, error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		Claims{
 			UserId:           userId,
 			Email:            email,
+			DriverId:         driverId,
 			RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Duration(ExpirationTime) * 24 * time.Hour)}},
 		})
 	token, err := t.SignedString(jwtKey)

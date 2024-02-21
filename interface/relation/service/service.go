@@ -48,6 +48,7 @@ func New(ac *pkgconfig.AppConfig) *Service {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	fmt.Println("77777777")
 	switch serviceName {
 	case "user_service":
 		s.userClient = user.NewUserServiceClient(conn)

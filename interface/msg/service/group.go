@@ -17,10 +17,10 @@ import (
 )
 
 // 推送群聊消息
-func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, msg *model.WsGroupMsg) {
+func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId string, msg *model.WsGroupMsg) {
 	//发送群聊消息
 	for _, uid := range uIds {
-		m := config.WsMsg{Uid: uid, Event: config.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
+		m := config.WsMsg{Uid: uid, DriverId: driverId, Event: config.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
 		//查询是否静默通知
 		groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 			GroupId: uint32(msg.GroupId),
@@ -85,7 +85,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, msg *model.
 	}
 }
 
-func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.SendGroupMsgRequest) (interface{}, error) {
+func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId string, req *model.SendGroupMsgRequest) (interface{}, error) {
 
 	if !model.IsAllowedConversationType(req.IsBurnAfterReadingType) {
 		return nil, code.MsgErrInsertUserMessageFailed
@@ -152,7 +152,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 	if err != nil {
 		return nil, err
 	}
-	s.sendWsGroupMsg(ctx, uids.UserIds, &model.WsGroupMsg{
+	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &model.WsGroupMsg{
 		MsgId:              message.MsgId,
 		GroupId:            int64(req.GroupId),
 		SenderId:           userID,
@@ -174,7 +174,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, req *model.Se
 	return message.MsgId, nil
 }
 
-func (s *Service) EditGroupMsg(ctx context.Context, userID string, msgID uint32, content string) (interface{}, error) {
+func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId string, msgID uint32, content string) (interface{}, error) {
 	//获取消息
 	msginfo, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
 		MsgId: msgID,
@@ -185,6 +185,25 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, msgID uint32,
 	}
 	if msginfo.UserId != userID {
 		return nil, code.Unauthorized
+	}
+
+	//判断是否在对话内
+	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+		DialogId: msginfo.DialogId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户对话信息失败", zap.Error(err))
+		return nil, err
+	}
+	var found bool
+	for _, user := range userIds.UserIds {
+		if user == userID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, code.DialogErrGetDialogByIdFailed
 	}
 
 	// 调用相应的 gRPC 客户端方法来编辑群消息
@@ -199,10 +218,13 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, msgID uint32,
 		return nil, err
 	}
 
+	//TODO 开携程去推送
+	s.SendMsgToUsers(userIds.UserIds, driverId, config.EditMsgEvent, msginfo, true)
+
 	return msgID, nil
 }
 
-func (s *Service) RecallGroupMsg(ctx context.Context, userID string, msgID uint32) (interface{}, error) {
+func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId string, msgID uint32) (interface{}, error) {
 	//获取消息
 	msginfo, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
 		MsgId: msgID,
@@ -220,6 +242,24 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, msgID uint3
 		return nil, code.MsgErrTimeoutExceededCannotRevoke
 	}
 
+	//判断是否在对话内
+	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+		DialogId: msginfo.DialogId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户对话信息失败", zap.Error(err))
+		return nil, err
+	}
+	var found bool
+	for _, user := range userIds.UserIds {
+		if user == userID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, code.DialogErrGetDialogByIdFailed
+	}
 	// 调用相应的 gRPC 客户端方法来撤回群消息
 	msg, err := s.msgClient.DeleteGroupMessage(ctx, &msggrpcv1.DeleteGroupMsgRequest{
 		MsgId: msgID,
@@ -229,10 +269,12 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, msgID uint3
 		return nil, err
 	}
 
+	s.SendMsgToUsers(userIds.UserIds, driverId, config.RecallMsgEvent, msginfo, true)
+
 	return msg.Id, nil
 }
 
-func (s *Service) LabelGroupMessage(ctx context.Context, userID string, msgID uint32, label model.LabelMsgType) (interface{}, error) {
+func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId string, msgID uint32, label model.LabelMsgType) (interface{}, error) {
 	// 获取群聊消息
 	msginfo, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
 		MsgId: msgID,
@@ -272,6 +314,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, msgID ui
 		return nil, err
 	}
 
+	s.SendMsgToUsers(userIds.UserIds, driverId, config.LabelMsgEvent, msginfo, true)
 	return nil, nil
 }
 
@@ -330,7 +373,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 	return resp, nil
 }
 
-func (s *Service) SetGroupMessagesRead(c context.Context, id string, request *model.GroupMessageReadRequest) (interface{}, error) {
+func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId string, request *model.GroupMessageReadRequest) (interface{}, error) {
 	_, err := s.groupClient.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
 		Gid: request.GroupId,
 	})
@@ -394,7 +437,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, request *mo
 	//给消息发送者推送谁读了消息
 	for _, message := range msgs.GroupMessages {
 		if message.UserId != id {
-			s.SendMsg(message.UserId, config.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": id}, false)
+			s.SendMsg(message.UserId, driverId, config.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": id}, false)
 		}
 	}
 	return nil, nil

@@ -24,6 +24,7 @@ type client struct {
 	Uid            string //客户端所有者
 	Rid            int64  //客户端id
 	ClientType     string //客户端类型
+	DriverId       string //客户端id
 	queue          *amqp091.Channel
 	wsMutex        sync.Mutex
 	redisMutex     sync.Mutex
@@ -39,7 +40,7 @@ func (c *client) wsOnlineClients() {
 
 	//通知前端接收离线消息
 	//TODO 添加上线的设备类型
-	msg := config.WsMsg{Uid: c.Uid, Event: config.OnlineEvent, Rid: c.Rid, SendAt: pkgtime.Now()}
+	msg := config.WsMsg{Uid: c.Uid, DriverId: c.DriverId, Event: config.OnlineEvent, Rid: c.Rid, SendAt: pkgtime.Now()}
 	js, _ := json.Marshal(msg)
 	if Enc == nil {
 		log.Println("加密客户端错误", zap.Error(nil))
@@ -60,6 +61,7 @@ func (c *client) wsOnlineClients() {
 
 	err = c.pushAllFriendOnlineStatus()
 	if err != nil {
+		fmt.Println("推送好友在线状态失败：", err)
 		return
 	}
 
@@ -69,6 +71,7 @@ func (c *client) wsOnlineClients() {
 		fmt.Println("修改在线状态失败：", err)
 		return
 	}
+
 	for {
 		msg, ok, err := msg_queue.ConsumeMessages(c.Uid, c.queue)
 		if err != nil || !ok {
@@ -77,6 +80,7 @@ func (c *client) wsOnlineClients() {
 			_ = rabbitMQClient.DeleteEmptyQueue(c.Uid)
 			return
 		}
+
 		err = c.Conn.WriteMessage(websocket.TextMessage, msg.Body)
 		if err != nil {
 			fmt.Println("发送消息失败：", err)
@@ -93,10 +97,14 @@ func (c *client) wsOfflineClients() {
 		for i, c2 := range pool[c.Uid][c.ClientType] {
 			if c2.Rid == c.Rid {
 				pool[c.Uid][c.ClientType] = append(pool[c.Uid][c.ClientType][:i], pool[c.Uid][c.ClientType][i+1:]...)
+				if len(pool[c.Uid][c.ClientType]) == 0 {
+					delete(pool[c.Uid], c.ClientType)
+				}
 				break
 			}
 		}
 	}
+	fmt.Println("用户下线，清理poll")
 	err := c.reduceUserWsCount()
 	if err != nil {
 		fmt.Println("修改在线状态失败：", err)
@@ -220,6 +228,7 @@ func (c *client) pushFriendStatus(s status) error {
 
 // 获取所有好友在线状态
 func (c *client) pushAllFriendOnlineStatus() error {
+	fmt.Println("pushAllFriendOnlineStatus", c.relationClient)
 	//查询所有好友
 	list, err := c.relationClient.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: c.Uid})
 	if err != nil {

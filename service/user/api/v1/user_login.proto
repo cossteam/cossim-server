@@ -1,0 +1,42 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/service/user/api/v1";
+
+import "google/protobuf/empty.proto";
+
+message UserLogin {
+  // @inject_tag: json:"driver_id"
+  string DriverId = 1;
+  // @inject_tag: json:"token"
+  string Token = 2;
+  // @inject_tag: json:"user_id"
+  string UserId = 3;
+}
+
+message DriverIdAndUserId {
+  // @inject_tag: json:"driver_id"
+  string DriverId = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+message TokenUpdate {
+  // @inject_tag: json:"driver_id"
+  string DriverId = 1;
+  // @inject_tag: json:"token"
+  string Token = 2;
+  // @inject_tag: json:"user_id"
+  string UserId = 3;
+}
+
+message GetUserLoginByTokenRequest{
+  // @inject_tag: json:"token"
+  string Token = 1;
+}
+
+service UserLoginService {
+  rpc InsertUserLogin(UserLogin) returns (google.protobuf.Empty) {}
+  rpc GetUserLoginByToken(GetUserLoginByTokenRequest) returns (UserLogin) {}
+  rpc GetUserLoginByDriverIdAndUserId(DriverIdAndUserId) returns (UserLogin) {}
+  rpc UpdateUserLoginTokenByDriverId(TokenUpdate) returns (google.protobuf.Empty) {}
+}

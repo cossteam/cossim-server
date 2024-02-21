@@ -216,7 +216,7 @@ func (s *Service) GetFriendList(ctx context.Context, request *v1.GetFriendListRe
 	}
 
 	for _, friend := range friends {
-		resp.FriendList = append(resp.FriendList, &v1.Friend{UserId: friend.FriendID, DialogId: uint32(friend.DialogId)})
+		resp.FriendList = append(resp.FriendList, &v1.Friend{UserId: friend.FriendID, DialogId: uint32(friend.DialogId), Remark: friend.Remark})
 	}
 
 	return resp, nil
@@ -293,6 +293,14 @@ func (s *Service) SetUserOpenBurnAfterReading(ctx context.Context, in *v1.SetUse
 	var resp = &emptypb.Empty{}
 	if err := s.urr.SetUserOpenBurnAfterReading(in.UserId, in.FriendId, entity.OpenBurnAfterReadingType(in.OpenBurnAfterReading)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) SetFriendRemark(ctx context.Context, in *v1.SetFriendRemarkRequest) (*emptypb.Empty, error) {
+	var resp = &emptypb.Empty{}
+	if err := s.urr.SetFriendRemarkByUserIdAndFriendId(in.UserId, in.FriendId, in.Remark); err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrSetFriendRemarkFailed.Code()), err.Error())
 	}
 	return resp, nil
 }
