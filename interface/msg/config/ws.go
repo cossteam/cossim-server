@@ -72,6 +72,12 @@ const (
 
 	//私聊已读事件
 	UserMsgReadEvent
+
+	// 用户通话接受事件
+	UserCallAcceptEvent
+
+	// 群聊通话接受事件
+	GroupCallAcceptEvent
 )
 
 type WsMsg struct {
