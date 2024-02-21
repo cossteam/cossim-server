@@ -19,7 +19,7 @@ import (
 // @param request body model.LoginRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /user/login [post]
-func (h Handler) login(c *gin.Context) {
+func (h *Handler) login(c *gin.Context) {
 	req := new(model.LoginRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -52,7 +52,7 @@ func (h Handler) login(c *gin.Context) {
 // @param request body model.LogoutRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /user/logout [post]
-func (h Handler) logout(c *gin.Context) {
+func (h *Handler) logout(c *gin.Context) {
 	req := new(model.LogoutRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -86,7 +86,7 @@ func (h Handler) logout(c *gin.Context) {
 // @param request body model.RegisterRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /user/register [post]
-func (h Handler) register(c *gin.Context) {
+func (h *Handler) register(c *gin.Context) {
 	req := new(model.RegisterRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -133,7 +133,7 @@ func (h Handler) register(c *gin.Context) {
 // @Param email query string true "用户邮箱"
 // @Success		200 {object} model.Response{data=model.UserInfoResponse} "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)"
 // @Router /user/search [get]
-func (h Handler) search(c *gin.Context) {
+func (h *Handler) search(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
 		response.Fail(c, "参数错误", nil)
@@ -171,7 +171,7 @@ func (h Handler) search(c *gin.Context) {
 // @Param user_id query string true "用户id"
 // @Success		200 {object} model.Response{data=model.UserInfoResponse} "Status 用户状态 (0=未知状态, 1=正常状态, 2=被禁用, 3=已删除, 4=锁定状态) RelationStatus 用户关系状态 (0=不是好友, 1=是好友, 2=黑名单)"
 // @Router /user/info [get]
-func (h Handler) getUserInfo(c *gin.Context) {
+func (h *Handler) getUserInfo(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
 		response.Fail(c, "参数错误", nil)
@@ -202,7 +202,7 @@ func (h Handler) getUserInfo(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/key/set [post]
-func (h Handler) setUserPublicKey(c *gin.Context) {
+func (h *Handler) setUserPublicKey(c *gin.Context) {
 	req := new(model.SetPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -234,7 +234,7 @@ func (h Handler) setUserPublicKey(c *gin.Context) {
 // @Param email query string false "邮箱"
 // @Success		200 {object} model.Response{}
 // @Router /user/system/key/get [get]
-func (h Handler) GetSystemPublicKey(c *gin.Context) {
+func (h *Handler) GetSystemPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": h.key})
 }
 
@@ -246,7 +246,7 @@ func (h Handler) GetSystemPublicKey(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/info/modify [post]
-func (h Handler) modifyUserInfo(c *gin.Context) {
+func (h *Handler) modifyUserInfo(c *gin.Context) {
 	req := new(model.UserInfoRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -277,7 +277,7 @@ func (h Handler) modifyUserInfo(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/password/modify [post]
-func (h Handler) modifyUserPassword(c *gin.Context) {
+func (h *Handler) modifyUserPassword(c *gin.Context) {
 	req := new(model.PasswordRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -333,7 +333,7 @@ func (h Handler) modifyUserPassword(c *gin.Context) {
 // @Security BearerToken
 // @Success 200 {object} model.Response{}
 // @Router /user/bundle/modify [post]
-func (h Handler) modifyUserSecretBundle(c *gin.Context) {
+func (h *Handler) modifyUserSecretBundle(c *gin.Context) {
 	req := new(model.ModifyUserSecretBundleRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -364,7 +364,7 @@ func (h Handler) modifyUserSecretBundle(c *gin.Context) {
 // @Param user_id query string true "用户id"
 // @Success		200 {object} model.Response{}
 // @Router /user/bundle/get [get]
-func (h Handler) getUserSecretBundle(c *gin.Context) {
+func (h *Handler) getUserSecretBundle(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
 		response.Fail(c, "参数错误", nil)
@@ -391,7 +391,7 @@ func (h Handler) getUserSecretBundle(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /user/clients/get [get]
-func (h Handler) getUserLoginClients(c *gin.Context) {
+func (h *Handler) getUserLoginClients(c *gin.Context) {
 	thisId, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
@@ -408,7 +408,7 @@ func (h Handler) getUserLoginClients(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /user/activate [get]
-func (h Handler) userActivate(c *gin.Context) {
+func (h *Handler) userActivate(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
 		response.Fail(c, "参数错误", nil)
@@ -434,7 +434,7 @@ func (h Handler) userActivate(c *gin.Context) {
 // @param request body model.ResetPublicKeyRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /user/public_key/reset [post]
-func (h Handler) resetUserPublicKey(c *gin.Context) {
+func (h *Handler) resetUserPublicKey(c *gin.Context) {
 	req := new(model.ResetPublicKeyRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
@@ -458,7 +458,7 @@ func (h Handler) resetUserPublicKey(c *gin.Context) {
 // @param request body model.SendEmailCodeRequest true "request"
 // @Success 200 {object} model.Response{}
 // @Router /user/email/code/send [post]
-func (h Handler) sendEmailCode(c *gin.Context) {
+func (h *Handler) sendEmailCode(c *gin.Context) {
 	req := new(model.SendEmailCodeRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
