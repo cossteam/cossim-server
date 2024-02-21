@@ -161,10 +161,10 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 		return err
 	}
 	switch serviceName {
-	case "user":
+	case "user_service":
 		s.userClient = usergrpcv1.NewUserServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
-	case "relation":
+	case "relation_service":
 		s.relationGrpcServer = addr
 		s.dialogGrpcServer = addr
 		s.relationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
@@ -175,7 +175,7 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 
 		s.relationDialogClient = relationgrpcv1.NewDialogServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
-	case "group":
+	case "group_service":
 		s.groupGrpcServer = addr
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))

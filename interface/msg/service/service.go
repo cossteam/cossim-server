@@ -155,10 +155,10 @@ func (s *Service) Stop(ctx context.Context) error {
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
 	switch serviceName {
-	case "user":
+	case "user_service":
 		s.userClient = usergrpcv1.NewUserServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
-	case "relation":
+	case "relation_service":
 		s.relationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
 
@@ -167,10 +167,10 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 
 		s.relationDialogClient = relationgrpcv1.NewDialogServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
-	case "group":
+	case "group_service":
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
-	case "msg":
+	case "msg_service":
 		s.groupMsgClient = msggrpcv1.NewGroupMessageServiceClient(conn)
 		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
