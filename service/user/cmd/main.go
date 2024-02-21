@@ -28,9 +28,9 @@ func init() {
 	flag.BoolVar(&remoteConfig, "remote-config", false, "Load config from remote source")
 	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the config center")
 	flag.StringVar(&remoteConfigToken, "config-center-token", "", "Token for accessing the config center")
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to")
-	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":8081", "The address to bind the http health probe endpoint")
-	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":8082", "The address to bind the grpc health probe endpoint")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
+	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":9091", "The address to bind the http health probe endpoint")
+	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":9092", "The address to bind the grpc health probe endpoint")
 	flag.Parse()
 }
 
