@@ -5,71 +5,65 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
+	"github.com/cossim/coss-server/pkg/db"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/storage/minio"
+	"github.com/cossim/coss-server/pkg/version"
 	"github.com/cossim/coss-server/service/storage/api/v1"
+	api "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/cossim/coss-server/service/storage/domain/entity"
 	"github.com/cossim/coss-server/service/storage/domain/repository"
-	"github.com/rs/xid"
+	"github.com/cossim/coss-server/service/storage/infrastructure/persistence"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
-	"log"
 	"strconv"
 )
 
-var (
-	cfg    *pkgconfig.AppConfig
-	logger *zap.Logger
-)
-
-func NewService(fr repository.FileRepository, c *pkgconfig.AppConfig) *Service {
-	cfg = c
-	setupLogger()
-
-	return &Service{
-		fr:  fr,
-		ac:  c,
-		sid: xid.New().String(),
-	}
-}
-
 type Service struct {
-	fr repository.FileRepository
+	logger *zap.Logger
+	ac     *pkgconfig.AppConfig
+	fr     repository.FileRepository
 	v1.UnimplementedStorageServiceServer
-
-	ac        *pkgconfig.AppConfig
-	discovery discovery.Registry
-	sid       string
 }
 
-func (s *Service) Start(discover bool) {
-	if !discover {
-		return
-	}
-	d, err := discovery.NewConsulRegistry(s.ac.Register.Addr())
+func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
+	dbConn, err := db.NewMySQLFromDSN(cfg.MySQL.DSN).GetConnection()
 	if err != nil {
-		panic(err)
-	}
-	s.discovery = d
-	if err = s.discovery.RegisterGRPC(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid); err != nil {
-		panic(err)
-	}
-	log.Printf("Service registration successful ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
-}
-
-func (s *Service) Stop(discover bool) error {
-	if !discover {
-		return nil
-	}
-	if err := s.discovery.Cancel(s.sid); err != nil {
-		log.Printf("Failed to cancel service registration: %v", err)
 		return err
 	}
-	log.Printf("Service registration canceled ServiceName: %s  Addr: %s  ID: %s", s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+
+	infra := persistence.NewRepositories(dbConn)
+	if err = infra.Automigrate(); err != nil {
+		return err
+	}
+	s.fr = infra.FR
+	s.ac = cfg
+	s.logger = plog.NewDevLogger("storage_service")
 	return nil
 }
+
+func (s *Service) Name() string {
+	//TODO implement me
+	return "storage_service"
+}
+
+func (s *Service) Version() string { return version.FullVersion() }
+
+func (s *Service) Register(srv *grpc.Server) {
+	api.RegisterStorageServiceServer(srv, s)
+}
+
+func (s *Service) RegisterHealth(srv *grpc.Server) {
+	grpc_health_v1.RegisterHealthServer(srv, health.NewServer())
+}
+
+func (s *Service) Stop(ctx context.Context) error { return nil }
+
+func (s *Service) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
 
 func (s *Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.UploadResponse, error) {
 	resp := &v1.UploadResponse{}
@@ -91,7 +85,7 @@ func (s *Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Up
 	}
 
 	if err = s.fr.Create(file); err != nil {
-		logger.Error("创建文件记录失败", zap.Error(err))
+		s.logger.Error("创建文件记录失败", zap.Error(err))
 		return resp, status.Error(codes.Code(code.StorageErrCreateFileRecordFailed.Code()), err.Error())
 	}
 
@@ -101,7 +95,7 @@ func (s *Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Up
 func (s *Service) GetFileInfo(ctx context.Context, request *v1.GetFileInfoRequest) (*v1.GetFileInfoResponse, error) {
 	file, err := s.fr.GetByID(request.FileID)
 	if err != nil {
-		logger.Error("查询文件信息失败", zap.Error(err))
+		s.logger.Error("查询文件信息失败", zap.Error(err))
 		return nil, status.Error(codes.Code(code.StorageErrGetFileInfoFailed.Code()), err.Error())
 	}
 
@@ -122,19 +116,10 @@ func (s *Service) Delete(ctx context.Context, request *v1.DeleteRequest) (*v1.De
 	// 根据文件 ID 删除文件
 	err := s.fr.Delete(request.FileID)
 	if err != nil {
-		logger.Error("删除文件记录失败", zap.Error(err))
+		s.logger.Error("删除文件记录失败", zap.Error(err))
 		return nil, status.Error(codes.Code(code.StorageErrDeleteFileFailed.Code()), err.Error())
 	}
 
 	// 返回删除成功的响应
 	return &v1.DeleteResponse{}, nil
-}
-
-func (s *Service) Restart(discover bool) {
-	s.Stop(discover)
-	s.Start(discover)
-}
-
-func setupLogger() {
-	logger = plog.NewDevLogger("storage_svc")
 }
