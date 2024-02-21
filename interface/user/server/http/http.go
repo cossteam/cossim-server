@@ -29,7 +29,7 @@ type Handler struct {
 	key         string
 }
 
-func (h Handler) Init(cfg *pkgconfig.AppConfig) error {
+func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Redis.Addr(),
 		Password: cfg.Redis.Password, // no password set
@@ -48,18 +48,18 @@ func (h Handler) Init(cfg *pkgconfig.AppConfig) error {
 	return nil
 }
 
-func (h Handler) Name() string {
+func (h *Handler) Name() string {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (h Handler) Version() string {
+func (h *Handler) Version() string {
 	return version.FullVersion()
 }
 
 // @title user服务
 
-func (h Handler) RegisterRoute(r gin.IRouter) {
+func (h *Handler) RegisterRoute(r gin.IRouter) {
 	gin.SetMode(gin.ReleaseMode)
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
@@ -84,16 +84,16 @@ func (h Handler) RegisterRoute(r gin.IRouter) {
 	u.GET("/clients/get", h.getUserLoginClients)
 }
 
-func (h Handler) Health(r gin.IRouter) string {
+func (h *Handler) Health(r gin.IRouter) string {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (h Handler) Stop(ctx context.Context) error {
+func (h *Handler) Stop(ctx context.Context) error {
 	return h.svc.Stop(ctx)
 }
 
-func (h Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
+func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 	for k, v := range services {
 		if err := h.svc.HandlerGrpcClient(k, v); err != nil {
 			h.logger.Error("handler grpc client error", zap.String("name", k), zap.String("addr", v.Target()), zap.Error(err))

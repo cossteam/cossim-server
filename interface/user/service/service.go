@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/email"
 	"github.com/cossim/coss-server/pkg/email/smtp"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -23,10 +22,8 @@ import (
 
 // Service struct
 type Service struct {
-	ac     *pkgconfig.AppConfig
-	logger *zap.Logger
-
-	discovery       discovery.Registry
+	ac              *pkgconfig.AppConfig
+	logger          *zap.Logger
 	userClient      user.UserServiceClient
 	relClient       relationgrpcv1.UserRelationServiceClient
 	sp              storage.StorageProvider

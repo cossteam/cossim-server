@@ -162,10 +162,10 @@ func (s *HttpService) Discover() error {
 			retryFunc := func() error {
 				addr, err := s.registry.Discover(c.Name)
 				if err != nil {
-					s.logger.Error(err, "Service registry failed", "service", c.Name)
+					s.logger.Error(err, "Service discover failed", "service", c.Name)
 					return err
 				}
-				s.logger.Info("Service registry success", "service", c.Name, "addr", addr)
+				s.logger.Info("Service discover success", "service", c.Name, "addr", addr)
 				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 				if err != nil {
 					return err
