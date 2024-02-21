@@ -101,6 +101,13 @@ func (s *GrpcService) Discover() error {
 
 	for serviceName, c := range s.ac.Discovers {
 		if c.Direct {
+			conn, err := grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if err != nil {
+				return err
+			}
+			mu.Lock()
+			clients[c.Name] = conn
+			mu.Unlock()
 			continue
 		}
 		sem <- struct{}{} // 获取信号量，限制并发数
