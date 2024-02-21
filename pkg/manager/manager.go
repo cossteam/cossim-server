@@ -242,7 +242,7 @@ func setOptionsDefaults(opts Options) Options {
 	}
 
 	if opts.Http.HealthCheckAddress == "" {
-		opts.Http.HealthCheckAddress = defaultHealthProbeBindAddress
+		//opts.Http.HealthCheckAddress = defaultHealthProbeBindAddress
 	}
 
 	if opts.newHealthProbeListener == nil {
