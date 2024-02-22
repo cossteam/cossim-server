@@ -9,8 +9,7 @@ message AddFriendRequest {
   string UserId = 1;    // 用户id
   // @inject_tag: json:"friend_id"
   string FriendId = 2;  // 好友id
-  // @inject_tag: json:"dialog_id"
-  uint32 DialogId = 3;
+
 }
 
 message AddFriendResponse {

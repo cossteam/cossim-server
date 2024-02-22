@@ -26,6 +26,7 @@ type Authenticator struct {
 }
 
 const _queryUser = "SELECT * FROM users WHERE id = ?"
+const _queryAdmin = "SELECT * FROM admins WHERE user_id = ?"
 
 func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bool, error) {
 	token, claims, err := utils.ParseToken(tokenString)
@@ -36,11 +37,7 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 		ID     string `json:"id"`
 		Status int64  `json:"status"`
 	}
-	//data, err := cache.GetAllListValues(a.RDB, claims.UserId)
-	//if err != nil {
-	//	fmt.Println("error => ", err)
-	//	return false, err
-	//}
+
 	keys, err := cache.ScanKeys(a.RDB, claims.UserId+":"+driverType+":*")
 	if err != nil {
 		fmt.Println("error => ", err)
@@ -67,14 +64,6 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 		}
 	}
 
-	//users, err := cache.GetUserInfoList(data)
-	//if err != nil {
-	//	return false, err
-	//}
-	//for _, user := range users {
-	//	if user.Token == tokenString {
-	//	}
-	//}
 	if !found {
 		return false, errors.New("token not found")
 	}
@@ -88,6 +77,30 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 
 	if user.Status != 1 {
 		return false, errors.New("user status is abnormal")
+	}
+
+	return true, nil
+}
+
+func (a *Authenticator) ValidateAdminToken(tokenString string) (bool, error) {
+	token, claims, err := utils.ParseToken(tokenString)
+	if err != nil || !token.Valid {
+		return false, fmt.Errorf("token validation failed: %s", err.Error())
+	}
+	type User struct {
+		ID     string `json:"id"`
+		Status int64  `json:"status"`
+	}
+
+	var admin User
+	if err = a.DB.Raw(_queryAdmin, claims.UserId).Scan(&admin).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, errors.New("not admin")
+		}
+		return false, fmt.Errorf("error retrieving admin: %s", err.Error())
+	}
+	if admin.Status != 1 {
+		return false, errors.New("admin status is abnormal")
 	}
 
 	return true, nil

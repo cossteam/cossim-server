@@ -16,9 +16,13 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
+	"github.com/dtm-labs/client/dtmcli"
+	"github.com/dtm-labs/client/workflow"
 	"github.com/google/uuid"
+	"github.com/lithammer/shortuuid/v3"
 	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"strconv"
 	"strings"
 	ostime "time"
@@ -33,14 +37,12 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		s.logger.Error("user login failed", zap.Error(err))
 		return nil, "", err
 	}
-	fmt.Println("2222222222222")
 
 	token, err := utils.GenerateToken(resp.UserId, resp.Email, req.DriverId)
 	if err != nil {
 		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
-	fmt.Println("777777777777777")
 	keys, err := cache.ScanKeys(s.redisClient, resp.UserId+":"+driveType+":*")
 	if err != nil {
 		s.logger.Error("redis scan err", zap.Error(err))
@@ -155,19 +157,55 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	}
 
 	headerUrl.Host = s.gatewayAddress
-
 	headerUrl.Path = s.downloadURL + headerUrl.Path
 
-	resp, err := s.userClient.UserRegister(ctx, &usergrpcv1.UserRegisterRequest{
-		Email:           req.Email,
-		NickName:        req.Nickname,
-		Password:        utils.HashString(req.Password),
-		ConfirmPassword: req.ConfirmPass,
-		PublicKey:       req.PublicKey,
-		Avatar:          headerUrl.String(),
-	})
-	if err != nil {
-		s.logger.Error("failed to register user", zap.Error(err))
+	var UserId string
+	workflow.InitGrpc(s.dtmGrpcServer, s.userGrpcServer, grpc.NewServer())
+	gid := shortuuid.New()
+	wfName := "register_user_workflow_" + gid
+	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
+
+		resp, err := s.userClient.UserRegister(ctx, &usergrpcv1.UserRegisterRequest{
+			Email:           req.Email,
+			NickName:        req.Nickname,
+			Password:        utils.HashString(req.Password),
+			ConfirmPassword: req.ConfirmPass,
+			PublicKey:       req.PublicKey,
+			Avatar:          headerUrl.String(),
+		})
+		if err != nil {
+			s.logger.Error("failed to register user", zap.Error(err))
+			return err
+		}
+		UserId = resp.UserId
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err = s.userClient.CreateUserRollback(context.Background(), &usergrpcv1.CreateUserRollbackRequest{UserId: resp.UserId})
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
+		//TODO 系统账号统一管理
+		_, err = s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: "10001"})
+		if err != nil {
+			return err
+		}
+
+		//添加系统好友
+		_, err = s.relClient.AddFriend(ctx, &relationgrpcv1.AddFriendRequest{
+			UserId:   resp.UserId,
+			FriendId: "10001",
+		})
+		if err != nil {
+			return err
+		}
+
+		return err
+	}); err != nil {
+		return "", err
+	}
+	if err := workflow.Execute(wfName, gid, nil); err != nil {
 		return "", err
 	}
 
@@ -176,20 +214,20 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		ekey := uuid.New().String()
 
 		//保存到redis
-		err = cache.SetKey(s.redisClient, ekey, resp.UserId, 30*ostime.Minute)
+		err = cache.SetKey(s.redisClient, ekey, UserId, 30*ostime.Minute)
 		if err != nil {
 			return "", err
 		}
 
 		//注册成功发送邮件
-		err = s.smtpClient.SendEmail(req.Email, "欢迎注册", s.smtpClient.GenerateEmailVerificationContent("192.168.100.142:8080", resp.UserId, ekey))
+		err = s.smtpClient.SendEmail(req.Email, "欢迎注册", s.smtpClient.GenerateEmailVerificationContent(s.gatewayAddress+s.gatewayPort, UserId, ekey))
 		if err != nil {
 			s.logger.Error("failed to send email", zap.Error(err))
 			return "", err
 		}
 	}
 
-	return resp.UserId, nil
+	return UserId, nil
 }
 
 func (s *Service) Search(ctx context.Context, userID string, email string) (interface{}, error) {

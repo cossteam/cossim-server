@@ -132,6 +132,7 @@ type AppConfig struct {
 	OSS                 OssConfig                 `mapstructure:"oss" yaml:"oss"`
 	Email               EmailConfig               `mapstructure:"email" yaml:"email"`
 	Livekit             LivekitConfig             `mapstructure:"livekit" yaml:"livekit"`
+	AdminConfig         AdminConfig               `mapstructure:"admin" yaml:"admin"`
 }
 
 type EncryptionConfig struct {
@@ -172,6 +173,13 @@ type LivekitConfig struct {
 	ApiSecret string        `mapstructure:"secret_key" yaml:"secret_key"`
 	Timeout   time.Duration `mapstructure:"timeout" yaml:"timeout"`
 	Port      int           `mapstructure:"port" yaml:"port"`
+}
+
+type AdminConfig struct {
+	Email    string `mapstructure:"email" yaml:"email"`
+	Password string `mapstructure:"password" yaml:"password"`
+	NickName string `mapstructure:"nickname" yaml:"nickname"`
+	UserId   string `mapstructure:"user_id" yaml:"user_id"`
 }
 
 func (c LivekitConfig) Addr() string {

@@ -143,7 +143,6 @@ func (s *GrpcService) Discover() error {
 }
 
 func (s *GrpcService) Start(ctx context.Context) error {
-	fmt.Println("sdbksfb")
 	if err := s.svc.Init(s.ac); err != nil {
 		return err
 	}

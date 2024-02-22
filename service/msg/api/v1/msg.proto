@@ -431,9 +431,20 @@ message GetUserMessagesByIdsResponse{
   repeated UserMessage UserMessages = 1;
 }
 
+message SendMultiUserMsgRequest{
+  // @inject_tag: json:"msg_list"
+  repeated SendUserMsgRequest MsgList = 1;
+}
+
+message SendMultiUserMsgResponse{
+
+}
+
 service MsgService{
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
+  //群发私聊消息
+  rpc SendMultiUserMessage(SendMultiUserMsgRequest) returns(SendMultiUserMsgResponse);
   //发送群消息
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
   //获取用户消息列表

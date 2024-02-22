@@ -39,11 +39,16 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		npo := persistence.NewRepositories(tx)
 
+		dialog, err := npo.Dr.CreateDialog(request.UserId, entity.DialogType(v1.DialogType_USER_DIALOG), 0)
+		if err != nil {
+			return err
+		}
+
 		if _, err := npo.Urr.CreateRelation(&entity.UserRelation{
 			UserID:   request.GetUserId(),
 			FriendID: request.GetFriendId(),
 			Status:   entity.UserRelationStatus(v1.RelationStatus_RELATION_NORMAL),
-			DialogId: uint(request.DialogId),
+			DialogId: dialog.ID,
 		}); err != nil {
 			return err
 		}
@@ -51,8 +56,17 @@ func (s *Service) AddFriend(ctx context.Context, request *v1.AddFriendRequest) (
 			UserID:   request.GetFriendId(),
 			FriendID: request.GetUserId(),
 			Status:   entity.UserRelationStatus(v1.RelationStatus_RELATION_NORMAL),
-			DialogId: uint(request.DialogId),
+			DialogId: dialog.ID,
 		}); err != nil {
+			return err
+		}
+		_, err = npo.Dr.JoinDialog(dialog.ID, request.UserId)
+		if err != nil {
+			return err
+		}
+
+		_, err = npo.Dr.JoinDialog(dialog.ID, request.FriendId)
+		if err != nil {
 			return err
 		}
 		return nil

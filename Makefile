@@ -88,6 +88,8 @@ swag: ## Run unittests
 	$(foreach dir,$(INTERFACE_LIST), \
 		swag i -g http.go -dir interface/$(dir)/server/http,interface/$(dir)/api/model,interface/live/api/dto,pkg/utils/usersorter --instanceName $(dir); \
 	)
+	swag i -g http.go -dir admin/server/http,admin/api/model,pkg/utils/usersorter --instanceName admin
+
 
 #ifdef ACTION
 #ifdef NAME

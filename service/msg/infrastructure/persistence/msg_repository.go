@@ -377,3 +377,7 @@ func (g *MsgRepo) GetUserMsgByIDs(msgIds []uint32) ([]*entity.UserMessage, error
 		Find(&userMessages).Error
 	return userMessages, err
 }
+
+func (g *MsgRepo) InsertUserMessages(message []entity.UserMessage) error {
+	return g.db.Create(&message).Error
+}

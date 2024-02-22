@@ -27,6 +27,8 @@ var (
 	UserErrNewPasswordAndOldPasswordEqual = New(10022, "新密码和旧密码一致")
 	UserErrResetPublicKeyFailed           = New(10023, "重置公钥失败")
 	UserErrSendEmailCodeFailed            = New(10024, "发送邮箱验证码失败")
+	UserErrCreateUserFailed               = New(10025, "创建用户失败")
+	UserErrCreateUserRollbackFailed       = New(10026, "创建用户回滚失败")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")
@@ -117,6 +119,7 @@ var (
 	MsgErrGetGroupMsgListFailed                     = New(14020, "获取群聊消息列表失败")
 	DialogErrCloseOrOpenDialogFailed                = New(14021, "关闭或打开对话失败")
 	DialogErrGetDialogByIdFailed                    = New(14022, "获取对话信息失败")
+	MsgErrSendMultipleFailed                        = New(14023, "批量发送消息失败")
 
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed               = New(15000, "获取群聊信息失败")

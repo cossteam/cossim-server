@@ -580,3 +580,26 @@ func (s *Service) GetUserMessagesByIds(ctx context.Context, in *v1.GetUserMessag
 	}
 	return resp, nil
 }
+
+func (s *Service) SendMultiUserMessage(ctx context.Context, request *v1.SendMultiUserMsgRequest) (*v1.SendMultiUserMsgResponse, error) {
+	resp := &v1.SendMultiUserMsgResponse{}
+	if len(request.MsgList) > 0 {
+		list := make([]entity.UserMessage, 0)
+		for _, msg := range request.MsgList {
+			list = append(list, entity.UserMessage{
+				SendID:    msg.SenderId,
+				ReceiveID: msg.ReceiverId,
+				Content:   msg.Content,
+				Type:      entity.UserMessageType(msg.Type),
+				//ReplyId:            uint(msg.ReplayId),
+				DialogId: uint(msg.DialogId),
+				//IsBurnAfterReading: entity.BurnAfterReadingType(msg.IsBurnAfterReadingType),
+			})
+		}
+		err := s.mr.InsertUserMessages(list)
+		if err != nil {
+			return nil, status.Error(codes.Code(code.MsgErrSendMultipleFailed.Code()), err.Error())
+		}
+	}
+	return resp, nil
+}

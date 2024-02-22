@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	MsgService_SendUserMessage_FullMethodName               = "/v1.MsgService/SendUserMessage"
+	MsgService_SendMultiUserMessage_FullMethodName          = "/v1.MsgService/SendMultiUserMessage"
 	MsgService_SendGroupMessage_FullMethodName              = "/v1.MsgService/SendGroupMessage"
 	MsgService_GetUserMessageList_FullMethodName            = "/v1.MsgService/GetUserMessageList"
 	MsgService_GetLastMsgsForUserWithFriends_FullMethodName = "/v1.MsgService/GetLastMsgsForUserWithFriends"
@@ -52,6 +53,8 @@ const (
 type MsgServiceClient interface {
 	// 发送私聊消息
 	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
+	// 群发私聊消息
+	SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error)
 	// 发送群消息
 	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
 	// 获取用户消息列表
@@ -113,6 +116,15 @@ func NewMsgServiceClient(cc grpc.ClientConnInterface) MsgServiceClient {
 func (c *msgServiceClient) SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error) {
 	out := new(SendUserMsgResponse)
 	err := c.cc.Invoke(ctx, MsgService_SendUserMessage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error) {
+	out := new(SendMultiUserMsgResponse)
+	err := c.cc.Invoke(ctx, MsgService_SendMultiUserMessage_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -341,6 +353,8 @@ func (c *msgServiceClient) GetUnreadUserMsgs(ctx context.Context, in *GetUnreadU
 type MsgServiceServer interface {
 	// 发送私聊消息
 	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
+	// 群发私聊消息
+	SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error)
 	// 发送群消息
 	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
 	// 获取用户消息列表
@@ -398,6 +412,9 @@ type UnimplementedMsgServiceServer struct {
 
 func (UnimplementedMsgServiceServer) SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendUserMessage not implemented")
+}
+func (UnimplementedMsgServiceServer) SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendMultiUserMessage not implemented")
 }
 func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendGroupMessage not implemented")
@@ -498,6 +515,24 @@ func _MsgService_SendUserMessage_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServiceServer).SendUserMessage(ctx, req.(*SendUserMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_SendMultiUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendMultiUserMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).SendMultiUserMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_SendMultiUserMessage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).SendMultiUserMessage(ctx, req.(*SendMultiUserMsgRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -944,6 +979,10 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendUserMessage",
 			Handler:    _MsgService_SendUserMessage_Handler,
+		},
+		{
+			MethodName: "SendMultiUserMessage",
+			Handler:    _MsgService_SendMultiUserMessage_Handler,
 		},
 		{
 			MethodName: "SendGroupMessage",

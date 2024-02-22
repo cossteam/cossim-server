@@ -155,3 +155,7 @@ func (g *DialogRepo) GetDialogById(dialogID uint) (*entity.Dialog, error) {
 	}
 	return dialog, nil
 }
+
+func (g *DialogRepo) RealDeleteDialogById(dialogID uint) error {
+	return g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).Delete(&entity.Dialog{}).Error
+}
