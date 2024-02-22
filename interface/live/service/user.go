@@ -106,7 +106,7 @@ func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.UserRoomInf
 		return code.Unauthorized
 	}
 
-	if _, ok := roomInfo.Participants[uid]; ok {
+	if _, ok := roomInfo.Participants[uid]; ok && roomInfo.Participants[uid].Connected {
 		return code.LiveErrAlreadyInCall
 	}
 
@@ -159,6 +159,20 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 	token, err := s.GetAdminJoinToken(ctx, room.Room, user.NickName)
 	if err != nil {
 		return nil, code.LiveErrJoinCallFailed
+	}
+
+	for k := range room.Participants {
+		if k == uid && uid == room.SenderID {
+			continue
+		}
+		msg := msgconfig.WsMsg{Uid: k, Event: msgconfig.UserCallAcceptEvent, Data: map[string]interface{}{
+			"room":         room.Room,
+			"sender_id":    room.SenderID,
+			"recipient_id": room.RecipientID,
+		}}
+		if err = s.publishServiceMessage(ctx, msg); err != nil {
+			s.logger.Error("发送消息失败", zap.Error(err))
+		}
 	}
 
 	s.logger.Info("UserJoinRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", room.RecipientID))
