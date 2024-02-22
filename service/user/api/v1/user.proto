@@ -161,6 +161,39 @@ message GetUserSecretBundleResponse {
   string SecretBundle = 2;
 }
 
+message  CreateUserRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"nickname"
+  string NickName = 2;
+  // @inject_tag: json:"email"
+  string Email = 3;
+  // @inject_tag: json:"password"
+  string Password = 4;
+  // @inject_tag: json:"avatar"
+  string Avatar = 5;
+  // @inject_tag: json:"public_key"
+  string PublicKey = 6;
+  // @inject_tag: json:"status"
+  UserStatus Status = 7;
+  // 是否是机器人
+  uint32 IsBot = 8;
+}
+
+message CreateUserResponse {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message CreateUserRollbackRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message CreateUserRollbackResponse {
+
+}
+
 service UserService {
   //用户登录
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
@@ -183,5 +216,9 @@ service UserService {
   rpc GetUserSecretBundle (GetUserSecretBundleRequest) returns (GetUserSecretBundleResponse);
   //激活用户
   rpc ActivateUser (UserRequest) returns (UserResponse);
+  //创建用户
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+  //创建用户回滚
+  rpc CreateUserRollback (CreateUserRollbackRequest) returns (CreateUserRollbackResponse);
 }
 

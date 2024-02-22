@@ -32,6 +32,7 @@ var (
 	groupServiceURL     = new(string)
 	storageServiceURL   = new(string)
 	liveUserServiceURL  = new(string)
+	adminServiceURL     = new(string)
 )
 
 func Start(discover bool) {
@@ -162,6 +163,10 @@ func handlerGrpcClient(serviceName string, addr string) error {
 	case "live":
 		*liveUserServiceURL = "http://" + addr
 		logger.Info("gRPC client for group service initialized", zap.String("service", "live"), zap.String("addr", addr))
+	case "admin":
+		*adminServiceURL = "http://" + addr
+		logger.Info("gRPC client for group service initialized", zap.String("service", "admin"), zap.String("addr", addr))
+
 	}
 
 	return nil
@@ -184,6 +189,7 @@ func route(engine *gin.Engine) {
 		gateway.Any("/group/*path", proxyToService(groupServiceURL))
 		gateway.Any("/storage/*path", proxyToService(storageServiceURL))
 		gateway.Any("/live/*path", proxyToService(liveUserServiceURL))
+		gateway.Any("/admin/*path", proxyToService(adminServiceURL))
 	}
 }
 

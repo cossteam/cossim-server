@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	"github.com/cossim/coss-server/admin/server/http"
 	_ "github.com/cossim/coss-server/docs"
-	"github.com/cossim/coss-server/interface/user/server/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
@@ -31,6 +31,9 @@ func init() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
 	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":9091", "The address to bind the http health probe endpoint")
 	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":9092", "The address to bind the grpc health probe endpoint")
+	//flag.StringVar(&metricsAddr, "metrics-bind-address", ":11000", "The address the metric endpoint binds to")
+	//flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":11001", "The address to bind the http health probe endpoint")
+	//flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":11002", "The address to bind the grpc health probe endpoint")
 	flag.Parse()
 }
 
@@ -45,8 +48,8 @@ func main() {
 			RemoteConfigAddr:     remoteConfigAddr,
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
-			Key:                  "interface/user",
-			Keys:                 []string{discovery.CommonMySQLConfigKey, discovery.CommonRedisConfigKey},
+			Key:                  "interface/admin",
+			Keys:                 discovery.DefaultKeys,
 			Registry: ctrl.Registry{
 				Discover: discover,
 				Register: register,

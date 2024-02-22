@@ -13,4 +13,6 @@ type UserRepository interface {
 	SetUserSecretBundle(userId, secretBundle string) error
 	GetUserSecretBundle(userId string) (string, error)
 	UpdateUserColumn(userId string, column string, value interface{}) error
+	InsertAndUpdateUser(user *entity.User) error
+	DeleteUser(userId string) error
 }

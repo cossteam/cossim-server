@@ -1,0 +1,39 @@
+definitions:
+  model.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  model.SendAllNotificationRequest:
+    properties:
+      content:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: msg服务
+paths:
+  /admin/notification/send_all:
+    post:
+      consumes:
+      - application/json
+      description: 发送全体通知
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendAllNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 发送全体通知
+swagger: "2.0"

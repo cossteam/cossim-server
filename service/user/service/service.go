@@ -292,3 +292,29 @@ func (s *Service) ActivateUser(ctx context.Context, in *api.UserRequest) (*api.U
 	}
 	return resp, nil
 }
+
+func (s *Service) CreateUser(ctx context.Context, in *api.CreateUserRequest) (*api.CreateUserResponse, error) {
+	resp := &api.CreateUserResponse{}
+	if err := s.ur.InsertAndUpdateUser(&entity.User{
+		NickName:  in.NickName,
+		Email:     in.Email,
+		Password:  in.Password,
+		Avatar:    in.Avatar,
+		Status:    entity.UserStatus(in.Status),
+		ID:        in.UserId,
+		PublicKey: in.PublicKey,
+		Bot:       uint(in.IsBot),
+	}); err != nil {
+		return resp, status.Error(codes.Code(code.UserErrCreateUserFailed.Code()), err.Error())
+	}
+	resp.UserId = in.UserId
+	return resp, nil
+}
+
+func (s *Service) CreateUserRollback(ctx context.Context, in *api.CreateUserRollbackRequest) (*api.CreateUserRollbackResponse, error) {
+	resp := &api.CreateUserRollbackResponse{}
+	if err := s.ur.DeleteUser(in.UserId); err != nil {
+		return resp, status.Error(codes.Code(code.UserErrCreateUserRollbackFailed.Code()), err.Error())
+	}
+	return resp, nil
+}

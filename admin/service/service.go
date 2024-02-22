@@ -3,90 +3,77 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/admin/infrastructure/persistence"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/email"
-	"github.com/cossim/coss-server/pkg/email/smtp"
+	"github.com/cossim/coss-server/pkg/db"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils/os"
+	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
-	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"time"
 )
 
-// Service struct
 type Service struct {
-	ac              *pkgconfig.AppConfig
-	logger          *zap.Logger
-	userClient      user.UserServiceClient
-	userLoginClient user.UserLoginServiceClient
-	relClient       relationgrpcv1.UserRelationServiceClient
-	dialogClient    relationgrpcv1.DialogServiceClient
-	sp              storage.StorageProvider
-	redisClient     *redis.Client
-	smtpClient      email.EmailProvider
-	rabbitMQClient  *msg_queue.RabbitMQ
-	dtmGrpcServer   string
-	userGrpcServer  string
+	ac             *pkgconfig.AppConfig
+	repo           *persistence.Repositories
+	logger         *zap.Logger
+	userClient     user.UserServiceClient
+	relationClient relationgrpcv1.UserRelationServiceClient
+	msgClient      msggrpcv1.MsgServiceClient
+	rabbitMQClient *msg_queue.RabbitMQ
+	sp             storage.StorageProvider
 
-	sid             string
-	tokenExpiration time.Duration
-	appPath         string
-	downloadURL     string
-	gatewayAddress  string
-	gatewayPort     string
+	dtmGrpcServer  string
+	userGrpcServer string
+
+	gatewayAddress string
+	gatewayPort    string
+
+	sid         string
+	appPath     string
+	downloadURL string
 }
 
 func New(ac *pkgconfig.AppConfig) (s *Service) {
 	s = &Service{
-		ac:              ac,
-		logger:          plog.NewDefaultLogger("user_bff"),
-		sid:             xid.New().String(),
-		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
-		rabbitMQClient:  setRabbitMQProvider(ac),
-		//appPath:         path,
-		sp:            setMinIOProvider(ac),
-		dtmGrpcServer: ac.Dtm.Addr(),
-		downloadURL:   "/api/v1/storage/files/download",
-		smtpClient:    setupSmtpProvider(ac),
+		ac:             ac,
+		logger:         plog.NewDefaultLogger("admin_bff"),
+		sid:            xid.New().String(),
+		rabbitMQClient: setRabbitMQProvider(ac),
+		dtmGrpcServer:  ac.Dtm.Addr(),
+		sp:             setMinIOProvider(ac),
+		downloadURL:    "/api/v1/storage/files/download",
 	}
 	s.setLoadSystem()
-	s.setupRedis()
+	s.setupDBConn()
 	return s
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	fmt.Println("66666666666666666666666")
 	switch serviceName {
 	case "user_service":
 		s.userClient = user.NewUserServiceClient(conn)
-		s.userLoginClient = user.NewUserLoginServiceClient(conn)
 		s.userGrpcServer = conn.Target()
+		err := s.InitAdmin()
+		if err != nil {
+			return err
+		}
 		s.logger.Info("gRPC client for user service initialized", zap.String("addr", conn.Target()))
 	case "relation_service":
-		s.relClient = relationgrpcv1.NewUserRelationServiceClient(conn)
-		s.dialogClient = relationgrpcv1.NewDialogServiceClient(conn)
+		s.relationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("addr", conn.Target()))
+	case "msg_service":
+		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
+		s.logger.Info("gRPC client for msg service initialized", zap.String("addr", conn.Target()))
 	}
-
 	return nil
-}
-
-func (s *Service) setupRedis() {
-	s.redisClient = redis.NewClient(&redis.Options{
-		Addr:     s.ac.Redis.Addr(),
-		Password: s.ac.Redis.Password, // no password set
-		DB:       0,                   // use default DB
-		//Protocol: cfg,
-	})
-}
-
-func (s *Service) Ping() {
 }
 
 func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
@@ -97,22 +84,20 @@ func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 	return rmq
 }
 
-func setMinIOProvider(ac *pkgconfig.AppConfig) storage.StorageProvider {
-	var err error
-	sp, err := minio.NewMinIOStorage(ac.OSS["minio"].Addr(), ac.OSS["minio"].AccessKey, ac.OSS["minio"].SecretKey, ac.OSS["minio"].SSL)
-	if err != nil {
-		panic(err)
-	}
-
-	return sp
+func (s *Service) Stop(ctx context.Context) error {
+	return nil
 }
 
-func setupSmtpProvider(ac *pkgconfig.AppConfig) email.EmailProvider {
-	smtpStorage, err := smtp.NewSmtpStorage(ac.Email.SmtpServer, ac.Email.Port, ac.Email.Username, ac.Email.Password)
+func (s *Service) setupDBConn() {
+	dbConn, err := db.NewMySQLFromDSN(s.ac.MySQL.DSN).GetConnection()
 	if err != nil {
 		panic(err)
 	}
-	return smtpStorage
+	infra := persistence.NewRepositories(dbConn)
+	if err = infra.Automigrate(); err != nil {
+		panic(err)
+	}
+	s.repo = infra
 }
 
 func (s *Service) setLoadSystem() {
@@ -169,6 +154,12 @@ func (s *Service) setLoadSystem() {
 	s.gatewayAddress = s.gatewayAddress + ":" + s.gatewayPort
 }
 
-func (s *Service) Stop(ctx context.Context) error {
-	return nil
+func setMinIOProvider(ac *pkgconfig.AppConfig) storage.StorageProvider {
+	var err error
+	sp, err := minio.NewMinIOStorage(ac.OSS["minio"].Addr(), ac.OSS["minio"].AccessKey, ac.OSS["minio"].SecretKey, ac.OSS["minio"].SSL)
+	if err != nil {
+		panic(err)
+	}
+
+	return sp
 }

@@ -32,6 +32,8 @@ const (
 	UserService_SetUserSecretBundle_FullMethodName     = "/v1.UserService/SetUserSecretBundle"
 	UserService_GetUserSecretBundle_FullMethodName     = "/v1.UserService/GetUserSecretBundle"
 	UserService_ActivateUser_FullMethodName            = "/v1.UserService/ActivateUser"
+	UserService_CreateUser_FullMethodName              = "/v1.UserService/CreateUser"
+	UserService_CreateUserRollback_FullMethodName      = "/v1.UserService/CreateUserRollback"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -59,6 +61,10 @@ type UserServiceClient interface {
 	GetUserSecretBundle(ctx context.Context, in *GetUserSecretBundleRequest, opts ...grpc.CallOption) (*GetUserSecretBundleResponse, error)
 	// 激活用户
 	ActivateUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	// 创建用户
+	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
+	// 创建用户回滚
+	CreateUserRollback(ctx context.Context, in *CreateUserRollbackRequest, opts ...grpc.CallOption) (*CreateUserRollbackResponse, error)
 }
 
 type userServiceClient struct {
@@ -186,6 +192,24 @@ func (c *userServiceClient) ActivateUser(ctx context.Context, in *UserRequest, o
 	return out, nil
 }
 
+func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
+	out := new(CreateUserResponse)
+	err := c.cc.Invoke(ctx, UserService_CreateUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateUserRollback(ctx context.Context, in *CreateUserRollbackRequest, opts ...grpc.CallOption) (*CreateUserRollbackResponse, error) {
+	out := new(CreateUserRollbackResponse)
+	err := c.cc.Invoke(ctx, UserService_CreateUserRollback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -211,6 +235,10 @@ type UserServiceServer interface {
 	GetUserSecretBundle(context.Context, *GetUserSecretBundleRequest) (*GetUserSecretBundleResponse, error)
 	// 激活用户
 	ActivateUser(context.Context, *UserRequest) (*UserResponse, error)
+	// 创建用户
+	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
+	// 创建用户回滚
+	CreateUserRollback(context.Context, *CreateUserRollbackRequest) (*CreateUserRollbackResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -256,6 +284,12 @@ func (UnimplementedUserServiceServer) GetUserSecretBundle(context.Context, *GetU
 }
 func (UnimplementedUserServiceServer) ActivateUser(context.Context, *UserRequest) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ActivateUser not implemented")
+}
+func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
+}
+func (UnimplementedUserServiceServer) CreateUserRollback(context.Context, *CreateUserRollbackRequest) (*CreateUserRollbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateUserRollback not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -504,6 +538,42 @@ func _UserService_ActivateUser_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateUserRollback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateUserRollbackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateUserRollback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateUserRollback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateUserRollback(ctx, req.(*CreateUserRollbackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -562,6 +632,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ActivateUser",
 			Handler:    _UserService_ActivateUser_Handler,
+		},
+		{
+			MethodName: "CreateUser",
+			Handler:    _UserService_CreateUser_Handler,
+		},
+		{
+			MethodName: "CreateUserRollback",
+			Handler:    _UserService_CreateUserRollback_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

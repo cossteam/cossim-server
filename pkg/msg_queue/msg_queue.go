@@ -10,6 +10,7 @@ const (
 	UserService     ServiceType = "user_service"
 	RelationService ServiceType = "relation_service"
 	LiveUserService ServiceType = "live_user_service"
+	AdminService    ServiceType = "admin_service"
 )
 
 type ServiceActionType uint

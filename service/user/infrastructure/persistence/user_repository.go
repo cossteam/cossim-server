@@ -93,3 +93,11 @@ func (ur *UserRepo) UpdateUserColumn(userId string, column string, value interfa
 	}
 	return nil
 }
+
+func (ur *UserRepo) InsertAndUpdateUser(user *entity.User) error {
+	return ur.db.Where(entity.User{ID: user.ID}).Assign(entity.User{NickName: user.NickName, Password: user.Password, Email: user.Email, Avatar: user.Avatar}).FirstOrCreate(&user).Error
+}
+
+func (ur *UserRepo) DeleteUser(userId string) error {
+	return ur.db.Delete(&entity.User{ID: userId}).Error
+}
