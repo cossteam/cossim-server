@@ -66,7 +66,7 @@ func (g *DialogRepo) JoinBatchDialog(dialogID uint, userIDs []string) ([]*entity
 func (g *DialogRepo) GetUserDialogs(userID string) ([]uint, error) {
 	var dialogs []uint
 	if err := g.db.Model(&entity.DialogUser{}).
-		Where("user_id = ? AND is_show = ?", userID, entity.IsShow).
+		Where("user_id = ? AND is_show = ? AND deleted_at = 0", userID, entity.IsShow).
 		Pluck("dialog_id", &dialogs).Error; err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (g *DialogRepo) GetUserDialogs(userID string) ([]uint, error) {
 
 func (g *DialogRepo) GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error) {
 	var dialogUsers []*entity.Dialog
-	if err := g.db.Model(&entity.Dialog{}).Where("id IN (?)", dialogIDs).Find(&dialogUsers).Error; err != nil {
+	if err := g.db.Model(&entity.Dialog{}).Where("id IN (?) AND deleted_at = 0", dialogIDs).Find(&dialogUsers).Error; err != nil {
 		return nil, err
 	}
 	return dialogUsers, nil
@@ -83,14 +83,14 @@ func (g *DialogRepo) GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
 
 func (g *DialogRepo) GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUser, error) {
 	var dialogUsers []*entity.DialogUser
-	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id =?", dialogID).Find(&dialogUsers).Error; err != nil {
+	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id =? AND deleted_at = 0", dialogID).Find(&dialogUsers).Error; err != nil {
 		return nil, err
 	}
 	return dialogUsers, nil
 }
 func (g *DialogRepo) GetDialogUserByDialogIDAndUserID(dialogID uint, userID string) (*entity.DialogUser, error) {
 	var DialogUser *entity.DialogUser
-	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).First(&DialogUser).Error; err != nil {
+	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ? AND deleted_at = 0", dialogID, userID).First(&DialogUser).Error; err != nil {
 		return nil, err
 	}
 	return DialogUser, nil
@@ -98,7 +98,7 @@ func (g *DialogRepo) GetDialogUserByDialogIDAndUserID(dialogID uint, userID stri
 
 func (g *DialogRepo) GetDialogByGroupId(groupId uint) (*entity.Dialog, error) {
 	var dialog *entity.Dialog
-	if err := g.db.Model(&entity.Dialog{}).Where("group_id = ?", groupId).First(&dialog).Error; err != nil {
+	if err := g.db.Model(&entity.Dialog{}).Where("group_id = ? AND deleted_at = 0", groupId).First(&dialog).Error; err != nil {
 		return nil, err
 	}
 	return dialog, nil
@@ -126,7 +126,7 @@ func (g *DialogRepo) DeleteDialogUserByDialogIDAndUserID(dialogID uint, userIDs 
 
 func (g *DialogRepo) GetDialogByGroupIds(groupIds []uint) ([]*entity.Dialog, error) {
 	var dialogs []*entity.Dialog
-	if err := g.db.Model(&entity.Dialog{}).Where("group_id IN (?)", groupIds).Find(&dialogs).Error; err != nil {
+	if err := g.db.Model(&entity.Dialog{}).Where("group_id IN (?) AND deleted_at = 0", groupIds).Find(&dialogs).Error; err != nil {
 		return nil, err
 	}
 	return dialogs, nil
@@ -137,20 +137,20 @@ func (g *DialogRepo) UpdateDialogByDialogID(dialogID uint, updateFields map[stri
 }
 
 func (g *DialogRepo) UpdateDialogUserByDialogID(dialogID uint, updateFields map[string]interface{}) error {
-	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ?", dialogID).Unscoped().Updates(updateFields).Error
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND deleted_at = 0", dialogID).Unscoped().Updates(updateFields).Error
 }
 
 func (g *DialogRepo) UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error {
-	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Updates(updateFields).Error
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ? AND deleted_at = 0", dialogID, userID).Updates(updateFields).Error
 }
 
 func (g *DialogRepo) UpdateDialogUserColumnByDialogIDAndUserId(dialogID uint, userID string, column string, value interface{}) error {
-	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Update(column, value).Error
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ? AND deleted_at = 0", dialogID, userID).Update(column, value).Error
 }
 
 func (g *DialogRepo) GetDialogById(dialogID uint) (*entity.Dialog, error) {
 	var dialog *entity.Dialog
-	if err := g.db.Model(&entity.Dialog{}).Where("id = ?", dialogID).First(&dialog).Error; err != nil {
+	if err := g.db.Model(&entity.Dialog{}).Where("id = ? AND deleted_at = 0", dialogID).First(&dialog).Error; err != nil {
 		return nil, err
 	}
 	return dialog, nil
