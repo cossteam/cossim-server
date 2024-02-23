@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/service/relation/domain/entity"
 	"gorm.io/gorm"
@@ -55,7 +56,7 @@ func (u *UserRelationRepo) GetRelationByIDs(userId string, friendIds []string) (
 
 func (u *UserRelationRepo) GetRelationsByUserID(userId string) ([]*entity.UserRelation, error) {
 	var relations []*entity.UserRelation
-	if err := u.db.Where("user_id = ? AND status = ? AND deleted_at = 0 AND bot = 0", userId, entity.UserStatusNormal).Find(&relations).Error; err != nil {
+	if err := u.db.Where("user_id = ? AND status = ? AND deleted_at = 0 AND friend_id NOT IN (?)", userId, entity.UserStatusNormal, constants.SystemUserList).Find(&relations).Error; err != nil {
 		return nil, err
 	}
 	return relations, nil
