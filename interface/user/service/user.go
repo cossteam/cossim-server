@@ -12,6 +12,7 @@ import (
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/avatarbuilder"
+	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
@@ -73,6 +74,16 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
+	//推送登录提醒
+	//查询是否在该设备第一次登录
+	userLogin, err := s.userLoginClient.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
+		UserId:   resp.UserId,
+		DriverId: req.DriverId,
+	})
+	if err != nil {
+		s.logger.Error("failed to get user login by driver id and user id", zap.Error(err))
+	}
+
 	_, err = s.userLoginClient.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
 		UserId:   resp.UserId,
 		DriverId: req.DriverId,
@@ -81,6 +92,23 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	if err != nil {
 		return nil, "", err
 	}
+
+	fristLogin := false
+	if userLogin != nil {
+		if userLogin.DriverId == "" {
+			fristLogin = true
+		}
+	}
+	if fristLogin {
+		if clientIp == "127.0.0.1" {
+			clientIp = httputil.GetMyPublicIP()
+		}
+		info := httputil.OnlineIpInfo(clientIp)
+		result := fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s %s", clientIp, info.Country, info.RegionName, info.City)
+		msg := msgconfig.WsMsg{Uid: "10001", Event: msgconfig.SystemNotificationEvent, SendAt: time.Now(), Data: map[string]interface{}{"user_ids": []string{resp.UserId}, "content": result, "type": 1}}
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.UserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.Notice, msg)
+	}
+
 	return &model.UserInfoResponse{
 		LoginNumber: data.ID,
 		Email:       resp.Email,

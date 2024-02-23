@@ -17,7 +17,7 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	}
 	if info != nil {
@@ -29,7 +29,7 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 			LoginCount: info.LoginCount + 1,
 		})
 		if err != nil {
-			return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	} else {
 		err := s.ulr.InsertUserLogin(&entity.UserLogin{
@@ -40,7 +40,7 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 			LoginCount: 1,
 		})
 		if err != nil {
-			return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	}
 
@@ -48,16 +48,42 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 }
 
 func (s *Service) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginByTokenRequest) (*v1.UserLogin, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := &v1.UserLogin{}
+	info, err := s.ulr.GetUserLoginByToken(in.Token)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+		}
+	}
+	if info != nil {
+		resp.UserId = info.UserId
+		resp.Token = info.Token
+		resp.DriverId = info.DriverId
+	}
+	return resp, nil
 }
 
 func (s *Service) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.DriverIdAndUserId) (*v1.UserLogin, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := &v1.UserLogin{}
+	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return resp, status.Error(codes.Code(code.UserErrGetUserLoginByDriverIdAndUserIdFailed.Code()), err.Error())
+		}
+	}
+	if info != nil {
+		resp.UserId = info.UserId
+		resp.Token = info.Token
+		resp.DriverId = info.DriverId
+	}
+	return resp, nil
 }
 
 func (s *Service) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.TokenUpdate) (*emptypb.Empty, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := &emptypb.Empty{}
+	err := s.ulr.UpdateUserLoginTokenByDriverId(in.DriverId, in.Token, in.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.UserErrUpdateUserLoginTokenFailed.Code()), err.Error())
+	}
+	return resp, nil
 }
