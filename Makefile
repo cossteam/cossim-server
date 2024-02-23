@@ -25,6 +25,9 @@ ifeq ($(ACTION), interface)
 else ifeq ($(ACTION), service)
 	BUILD_PATH := ${DIR}/service/${NAME}
 	DOCKER_BUILD_PATH := "service/${NAME}"
+else ifeq ($(ACTION), admin)
+	BUILD_PATH := ${DIR}/admin
+	DOCKER_BUILD_PATH := "${NAME}"
 endif
 
 # 如果没有设置 BUILD_PATH，输出错误信息
