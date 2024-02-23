@@ -120,37 +120,13 @@ func (s *Service) ListenQueue() {
 			case msg_queue.LiveEvent:
 				s.SendMsg(wsm.Uid, wsm.DriverId, wsm.Event, wsm.Data, false)
 			case msg_queue.Notice:
+				fmt.Println("发送系统通知", wsm.Data)
 				data := wsm.Data.(map[string]interface{})
 				idsInterface := data["user_ids"].([]interface{})
 				ids := make([]string, len(idsInterface))
 
 				for i, id := range idsInterface {
 					ids[i] = id.(string)
-				}
-
-				UserId := "10001"
-				content := fmt.Sprintf("%s", data["content"])
-				////查询系统通知账号的所有好友
-				//list, err := s.relationUserClient.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: UserId})
-				//if err != nil {
-				//	s.logger.Error("发送系统通知失败", zap.Error(err))
-				//	return
-				//}
-				//给所有好友发送消息
-				msgList := make([]*msggrpcv1.SendUserMsgRequest, 0)
-				for _, v := range ids {
-					msgList = append(msgList, &msggrpcv1.SendUserMsgRequest{
-						SenderId:   UserId,
-						ReceiverId: v,
-						Content:    content,
-						Type:       1, //TODO 消息类型枚举
-					})
-				}
-
-				_, err = s.msgClient.SendMultiUserMessage(context.Background(), &msggrpcv1.SendMultiUserMsgRequest{MsgList: msgList})
-				if err != nil {
-					s.logger.Error("发送系统通知失败", zap.Error(err))
-					return
 				}
 
 				delete(data, "user_ids")
@@ -160,7 +136,7 @@ func (s *Service) ListenQueue() {
 			case msg_queue.UserWebsocketClose:
 				thismap, ok := wsm.Data.(map[string]interface{})
 				if !ok {
-					fmt.Println("msg_bff: 解析消息失败")
+					fmt.Println("解析消息失败：")
 					return
 				}
 				t := thismap["driver_type"]
@@ -168,7 +144,7 @@ func (s *Service) ListenQueue() {
 				//类型断言
 				driType, ok := t.(string)
 				if !ok {
-					fmt.Println("msg_bff: 解析消息失败")
+					fmt.Println("解析消息失败：")
 					return
 				}
 				rid := id.(float64)
@@ -191,6 +167,7 @@ func (s *Service) Stop(ctx context.Context) error {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	fmt.Println("9999999999999999")
 	switch serviceName {
 	case "user_service":
 		s.userClient = usergrpcv1.NewUserServiceClient(conn)
