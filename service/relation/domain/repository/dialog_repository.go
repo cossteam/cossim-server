@@ -13,6 +13,7 @@ type DialogRepository interface {
 	GetDialogById(dialogID uint) (*entity.Dialog, error)
 
 	GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUser, error)
+	GetDialogAllUsers(dialogID uint) ([]*entity.DialogUser, error)
 	GetDialogUserByDialogIDAndUserID(dialogID uint, userID string) (*entity.DialogUser, error)
 	GetDialogByGroupId(groupId uint) (*entity.Dialog, error)
 	GetDialogByGroupIds(groupIds []uint) ([]*entity.Dialog, error)

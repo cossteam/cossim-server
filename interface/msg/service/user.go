@@ -212,7 +212,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 		}
 		return
 	}
-	fmt.Println("receFlag", receFlag, "sendFlag", sendFlag)
 	if !receFlag {
 		fmt.Println("推送离线消息1")
 
@@ -293,7 +292,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		re.TopAt = int64(du.TopAt)
 		//用户
 		if v.Type == 0 {
-			users, _ := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+			users, _ := s.relationDialogClient.GetAllUsersInConversation(ctx, &relationgrpcv1.GetAllUsersInConversationRequest{
 				DialogId: v.Id,
 			})
 			if len(users.UserIds) == 0 {
