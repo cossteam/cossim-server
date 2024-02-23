@@ -45,7 +45,7 @@ func (h *Handler) ws(c *gin.Context) {
 	token := c.Query("token")
 	//判断设备类型
 	deviceType := c.Request.Header.Get("X-Device-Type")
-	deviceType = constants.DetermineClientType(deviceType)
+	deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
 
 	if token == "" {
 		//id, err := pkghttp.ParseTokenReUid(c)

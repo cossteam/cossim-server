@@ -1,4 +1,4 @@
-package config
+package constants
 
 type WSEventType int
 
@@ -87,4 +87,19 @@ type WsMsg struct {
 	DriverId string      `json:"driverId"`
 	SendAt   int64       `json:"send_at"`
 	Data     interface{} `json:"data"`
+}
+
+type OnlineEventData struct {
+	DriverType DriverType `json:"driver_type"`
+}
+
+type OfflineEventData struct {
+	Rid        int64      `json:"rid"`
+	DriverType DriverType `json:"driver_type"`
+}
+
+type SystemNotificationEventData struct {
+	UserIds []string `json:"user_ids,omitempty"`
+	Content string   `json:"content"`
+	Type    uint32   `json:"type"`
 }

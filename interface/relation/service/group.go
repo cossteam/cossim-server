@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
@@ -108,7 +108,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		GroupId: req.GroupID,
 	})
 	for _, id := range adminIds.UserIds {
-		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now()}
+		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now()}
 		//通知消息服务有消息需要发送
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 		if err != nil {
@@ -339,9 +339,9 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		return err
 	}
 
-	msg := msgconfig.WsMsg{
+	msg := constants.WsMsg{
 		Uid:    userID,
-		Event:  msgconfig.JoinGroupEvent,
+		Event:  constants.JoinGroupEvent,
 		Data:   map[string]interface{}{"group_id": groupID, "status": status},
 		SendAt: time.Now(),
 	}
@@ -394,9 +394,9 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 		return err
 	}
 
-	msg := msgconfig.WsMsg{
+	msg := constants.WsMsg{
 		Uid:    userID,
-		Event:  msgconfig.JoinGroupEvent,
+		Event:  constants.JoinGroupEvent,
 		Data:   map[string]interface{}{"group_id": groupID, "status": status},
 		SendAt: time.Now(),
 	}
@@ -588,7 +588,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		GroupId: req.GroupID,
 	})
 	for _, id := range adminIds.UserIds {
-		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": inviterId}, SendAt: time.Now()}
+		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": inviterId}, SendAt: time.Now()}
 		//通知消息服务有消息需要发送
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 		if err != nil {
@@ -598,7 +598,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 
 	// 给被邀请的用户推送
 	//for _, id := range req.Member {
-	//	msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "inviter_id": inviterId}, SendAt: time.Now()}
+	//	msg := constants.WsMsg{Uid: id, Event: constants.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "inviter_id": inviterId}, SendAt: time.Now()}
 	//	//通知消息服务有消息需要发送
 
 	//	err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)

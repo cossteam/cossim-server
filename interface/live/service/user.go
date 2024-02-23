@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	"github.com/cossim/coss-server/interface/live/api/model"
-	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
@@ -82,9 +82,9 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		return nil, err
 	}
 
-	msg := msgconfig.WsMsg{
+	msg := constants.WsMsg{
 		Uid:   recipientID,
-		Event: msgconfig.UserCallReqEvent,
+		Event: constants.UserCallReqEvent,
 		Data: map[string]interface{}{
 			"url":          s.livekitServer,
 			"sender_id":    senderID,
@@ -165,7 +165,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 		if k == uid && uid == room.SenderID {
 			continue
 		}
-		msg := msgconfig.WsMsg{Uid: k, Event: msgconfig.UserCallAcceptEvent, Data: map[string]interface{}{
+		msg := constants.WsMsg{Uid: k, Event: constants.UserCallAcceptEvent, Data: map[string]interface{}{
 			"room":         room.Room,
 			"sender_id":    room.SenderID,
 			"recipient_id": room.RecipientID,
@@ -303,7 +303,7 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, 
 		return nil, err
 	}
 
-	msg := msgconfig.WsMsg{Uid: room.SenderID, Event: msgconfig.UserCallRejectEvent, Data: map[string]interface{}{
+	msg := constants.WsMsg{Uid: room.SenderID, Event: constants.UserCallRejectEvent, Data: map[string]interface{}{
 		"url":          s.livekitServer,
 		"sender_id":    room.SenderID,
 		"recipient_id": room.RecipientID,
@@ -331,7 +331,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid string) (interface{}, e
 		if k == uid {
 			continue
 		}
-		msg := msgconfig.WsMsg{Uid: k, Event: msgconfig.UserCallEndEvent, Data: map[string]interface{}{
+		msg := constants.WsMsg{Uid: k, Event: constants.UserCallEndEvent, Data: map[string]interface{}{
 			"room":         room.Room,
 			"sender_id":    room.SenderID,
 			"recipient_id": room.RecipientID,
@@ -555,6 +555,6 @@ func (s *Service) GetAdminJoinToken(ctx context.Context, room, userName string) 
 	return jwt, nil
 }
 
-func (s *Service) publishServiceMessage(ctx context.Context, msg msgconfig.WsMsg) error {
+func (s *Service) publishServiceMessage(ctx context.Context, msg constants.WsMsg) error {
 	return s.mqClient.PublishServiceMessage(msg_queue.LiveUserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 }

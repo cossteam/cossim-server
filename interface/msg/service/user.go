@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/interface/msg/api/model"
-	"github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
@@ -118,7 +118,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 	sendFlag := false
 	receFlag := false
 
-	m := config.WsMsg{Uid: receiverId, DriverId: driverId, Event: config.SendUserMessageEvent, SendAt: pkgtime.Now(),
+	m := constants.WsMsg{Uid: receiverId, DriverId: driverId, Event: constants.SendUserMessageEvent, SendAt: pkgtime.Now(),
 		Data: msg,
 	}
 
@@ -135,7 +135,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 
 	//是否静默通知
 	if silent == relationgrpcv1.UserSilentNotificationType_UserSilent {
-		m.Event = config.SendSilentUserMessageEvent
+		m.Event = constants.SendSilentUserMessageEvent
 	}
 
 	//遍历该用户所有客户端
@@ -444,7 +444,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 		},
 	}
 
-	s.SendMsgToUsers(userIds.UserIds, driverId, config.RecallMsgEvent, wsm, true)
+	s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, wsm, true)
 
 	return msg.Id, nil
 }
@@ -484,7 +484,7 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 		return nil, err
 	}
 
-	s.SendMsgToUsers(userIds.UserIds, driverId, config.EditMsgEvent, msginfo, true)
+	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
 
 	return msgID, nil
 }
@@ -553,7 +553,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		wsms = append(wsms, wsm)
 	}
 
-	s.SendMsgToUsers(ids.UserIds, driverId, config.UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{
+	s.SendMsgToUsers(ids.UserIds, driverId, constants.UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{
 		Avatar: info.Avatar,
 		Name:   info.NickName,
 		UserId: info.UserId,
@@ -632,7 +632,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 		},
 	}
 
-	s.SendMsgToUsers(userIds.UserIds, driverId, config.LabelMsgEvent, wsm, true)
+	s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, wsm, true)
 
 	return nil, nil
 }
@@ -765,8 +765,8 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 }
 
 // SendMsg 推送消息
-func (s *Service) SendMsg(uid string, driverId string, event config.WSEventType, data interface{}, pushOffline bool) {
-	m := config.WsMsg{Uid: uid, DriverId: driverId, Event: event, Rid: 0, Data: data, SendAt: pkgtime.Now()}
+func (s *Service) SendMsg(uid string, driverId string, event constants.WSEventType, data interface{}, pushOffline bool) {
+	m := constants.WsMsg{Uid: uid, DriverId: driverId, Event: event, Rid: 0, Data: data, SendAt: pkgtime.Now()}
 	_, ok := pool[uid]
 	if !pushOffline && !ok {
 		return
@@ -794,7 +794,7 @@ func (s *Service) SendMsg(uid string, driverId string, event config.WSEventType,
 }
 
 // SendMsgToUsers 推送多个用户消息
-func (s *Service) SendMsgToUsers(uids []string, driverId string, event config.WSEventType, data interface{}, pushOffline bool) {
+func (s *Service) SendMsgToUsers(uids []string, driverId string, event constants.WSEventType, data interface{}, pushOffline bool) {
 	for _, uid := range uids {
 		s.SendMsg(uid, driverId, event, data, pushOffline)
 	}

@@ -1,19 +1,19 @@
 package constants
 
-type ClientType string
+type DriverType string
 
 const (
 	//移动客户端
-	MobileClient = "Mobile"
+	MobileClient DriverType = "Mobile"
 	//桌面客户端
-	DesktopClient = "Desktop"
+	DesktopClient DriverType = "Desktop"
 	// 未定义客户端类型,不带默认是未定义
-	UnDefinedClient = "UnDefined"
+	UnDefinedClient DriverType = "UnDefined"
 )
 
-func DetermineClientType(clientType string) string {
-	if clientType == "Mobile" || clientType == "Desktop" {
+func DetermineClientType(clientType DriverType) DriverType {
+	if clientType == MobileClient || clientType == DesktopClient {
 		return clientType
 	}
-	return "UnDefined"
+	return UnDefinedClient
 }

@@ -5,13 +5,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/cossim/coss-server/admin/domain/entity"
-	msgconfig "github.com/cossim/coss-server/interface/msg/config"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/avatarbuilder"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
@@ -156,28 +155,17 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 	if err != nil {
 		return nil, err
 	}
-	//给所有好友发送消息
-	msgList := make([]*msggrpcv1.SendUserMsgRequest, 0)
-	for _, v := range list.FriendList {
-		msgList = append(msgList, &msggrpcv1.SendUserMsgRequest{
-			SenderId:   UserId,
-			ReceiverId: v.UserId,
-			Content:    content,
-			Type:       1, //TODO 消息类型枚举
-		})
-	}
-
-	_, err = s.msgClient.SendMultiUserMessage(ctx, &msggrpcv1.SendMultiUserMsgRequest{MsgList: msgList})
-	if err != nil {
-		return nil, err
-	}
 
 	ids := make([]string, 0)
 	for _, v := range list.FriendList {
 		ids = append(ids, v.UserId)
 	}
 
-	err = s.publishServiceNoticeMessage(ctx, msgconfig.WsMsg{Uid: UserId, Event: msgconfig.SystemNotificationEvent, SendAt: time.Now(), Data: map[string]interface{}{"user_ids": ids, "content": content, "type": 1}})
+	err = s.publishServiceNoticeMessage(ctx, constants.WsMsg{Uid: UserId, Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: constants.SystemNotificationEventData{
+		UserIds: ids,
+		Content: content,
+		Type:    1,
+	}})
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +173,6 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 	return nil, nil
 }
 
-func (s *Service) publishServiceNoticeMessage(ctx context.Context, msg msgconfig.WsMsg) error {
+func (s *Service) publishServiceNoticeMessage(ctx context.Context, msg constants.WsMsg) error {
 	return s.rabbitMQClient.PublishServiceMessage(msg_queue.AdminService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.Notice, msg)
 }
