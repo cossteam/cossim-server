@@ -121,23 +121,29 @@ func (s *Service) ListenQueue() {
 				s.SendMsg(wsm.Uid, wsm.DriverId, wsm.Event, wsm.Data, false)
 			case msg_queue.Notice:
 				fmt.Println("发送系统通知", wsm.Data)
-				data := wsm.Data.(map[string]interface{})
-				idsInterface := data["user_ids"].([]interface{})
-				ids := make([]string, len(idsInterface))
-
-				for i, id := range idsInterface {
-					ids[i] = id.(string)
+				datamap := wsm.Data.(map[string]interface{})
+				//map解析成结构体
+				jsonData, err := json.Marshal(datamap)
+				if err != nil {
+					fmt.Println("Failed to marshal map to JSON:", err)
+					return
 				}
+				var data constants.SystemNotificationEventData
+				err = json.Unmarshal(jsonData, &data)
+				if err != nil {
+					fmt.Println("解析消息失败：", err)
+					return
+				}
+
 				UserId := "10001"
-				content := fmt.Sprintf("%s", data["content"])
 
 				msgList := make([]*msggrpcv1.SendUserMsgRequest, 0)
-				for _, v := range ids {
+				for _, v := range data.UserIds {
 					msgList = append(msgList, &msggrpcv1.SendUserMsgRequest{
 						SenderId:   UserId,
 						ReceiverId: v,
-						Content:    content,
-						Type:       1, //TODO 消息类型枚举
+						Content:    data.Content,
+						Type:       int32(data.Type), //TODO 消息类型枚举
 					})
 				}
 
@@ -147,8 +153,10 @@ func (s *Service) ListenQueue() {
 					return
 				}
 
-				delete(data, "user_ids")
-				s.SendMsgToUsers(ids, "", constants.SystemNotificationEvent, data, true)
+				sendIds := data.UserIds
+				data.UserIds = nil
+				//delete(data, "user_ids")
+				s.SendMsgToUsers(sendIds, "", constants.SystemNotificationEvent, data, true)
 
 			//强制断开ws
 			case msg_queue.UserWebsocketClose:

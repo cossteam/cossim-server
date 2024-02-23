@@ -105,7 +105,11 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		}
 		info := httputil.OnlineIpInfo(clientIp)
 		result := fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s %s", clientIp, info.Country, info.RegionName, info.City)
-		msg := constants.WsMsg{Uid: "10001", Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: map[string]interface{}{"user_ids": []string{resp.UserId}, "content": result, "type": 1}}
+		msg := constants.WsMsg{Uid: "10001", Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: constants.SystemNotificationEventData{
+			UserIds: []string{resp.UserId},
+			Content: result,
+			Type:    1,
+		}}
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.UserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.Notice, msg)
 	}
 
@@ -170,7 +174,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		return "", err
 	}
 
-	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Image))
+	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Other))
 	if err != nil {
 		return "", err
 	}
