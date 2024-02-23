@@ -43,6 +43,7 @@ const (
 	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
 	DialogService_CloseOrOpenDialog_FullMethodName                         = "/v1.DialogService/CloseOrOpenDialog"
 	DialogService_TopOrCancelTopDialog_FullMethodName                      = "/v1.DialogService/TopOrCancelTopDialog"
+	DialogService_GetAllUsersInConversation_FullMethodName                 = "/v1.DialogService/GetAllUsersInConversation"
 )
 
 // DialogServiceClient is the client API for DialogService service.
@@ -94,6 +95,8 @@ type DialogServiceClient interface {
 	CloseOrOpenDialog(ctx context.Context, in *CloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 置顶或者取消置顶对话
 	TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 获取对话用户（包括已退出对话）
+	GetAllUsersInConversation(ctx context.Context, in *GetAllUsersInConversationRequest, opts ...grpc.CallOption) (*GetAllUsersInConversationResponse, error)
 }
 
 type dialogServiceClient struct {
@@ -311,6 +314,15 @@ func (c *dialogServiceClient) TopOrCancelTopDialog(ctx context.Context, in *TopO
 	return out, nil
 }
 
+func (c *dialogServiceClient) GetAllUsersInConversation(ctx context.Context, in *GetAllUsersInConversationRequest, opts ...grpc.CallOption) (*GetAllUsersInConversationResponse, error) {
+	out := new(GetAllUsersInConversationResponse)
+	err := c.cc.Invoke(ctx, DialogService_GetAllUsersInConversation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DialogServiceServer is the server API for DialogService service.
 // All implementations must embed UnimplementedDialogServiceServer
 // for forward compatibility
@@ -360,6 +372,8 @@ type DialogServiceServer interface {
 	CloseOrOpenDialog(context.Context, *CloseOrOpenDialogRequest) (*emptypb.Empty, error)
 	// 置顶或者取消置顶对话
 	TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error)
+	// 获取对话用户（包括已退出对话）
+	GetAllUsersInConversation(context.Context, *GetAllUsersInConversationRequest) (*GetAllUsersInConversationResponse, error)
 	mustEmbedUnimplementedDialogServiceServer()
 }
 
@@ -435,6 +449,9 @@ func (UnimplementedDialogServiceServer) CloseOrOpenDialog(context.Context, *Clos
 }
 func (UnimplementedDialogServiceServer) TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TopOrCancelTopDialog not implemented")
+}
+func (UnimplementedDialogServiceServer) GetAllUsersInConversation(context.Context, *GetAllUsersInConversationRequest) (*GetAllUsersInConversationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllUsersInConversation not implemented")
 }
 func (UnimplementedDialogServiceServer) mustEmbedUnimplementedDialogServiceServer() {}
 
@@ -863,6 +880,24 @@ func _DialogService_TopOrCancelTopDialog_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_GetAllUsersInConversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllUsersInConversationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).GetAllUsersInConversation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_GetAllUsersInConversation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).GetAllUsersInConversation(ctx, req.(*GetAllUsersInConversationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DialogService_ServiceDesc is the grpc.ServiceDesc for DialogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -961,6 +996,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TopOrCancelTopDialog",
 			Handler:    _DialogService_TopOrCancelTopDialog_Handler,
+		},
+		{
+			MethodName: "GetAllUsersInConversation",
+			Handler:    _DialogService_GetAllUsersInConversation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

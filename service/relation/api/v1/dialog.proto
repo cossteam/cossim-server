@@ -241,6 +241,16 @@ message GetDialogByIdRequest{
   uint32 DialogId = 1;
 }
 
+message GetAllUsersInConversationRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+}
+
+message GetAllUsersInConversationResponse {
+  // @inject_tag: json:"user_ids"
+  repeated string UserIds = 1;
+}
+
 service DialogService {
   // CreateDialog 创建对话
   rpc CreateDialog(CreateDialogRequest) returns (CreateDialogResponse) {}
@@ -306,4 +316,7 @@ service DialogService {
 
   //置顶或者取消置顶对话
   rpc TopOrCancelTopDialog(TopOrCancelTopDialogRequest) returns (google.protobuf.Empty) {}
+
+  //获取对话用户（包括已退出对话）
+  rpc GetAllUsersInConversation(GetAllUsersInConversationRequest) returns (GetAllUsersInConversationResponse) {}
 }

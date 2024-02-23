@@ -88,6 +88,15 @@ func (g *DialogRepo) GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUs
 	}
 	return dialogUsers, nil
 }
+
+func (g *DialogRepo) GetDialogAllUsers(dialogID uint) ([]*entity.DialogUser, error) {
+	var dialogUsers []*entity.DialogUser
+	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id =?", dialogID).Find(&dialogUsers).Error; err != nil {
+		return nil, err
+	}
+	return dialogUsers, nil
+}
+
 func (g *DialogRepo) GetDialogUserByDialogIDAndUserID(dialogID uint, userID string) (*entity.DialogUser, error) {
 	var DialogUser *entity.DialogUser
 	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ? AND deleted_at = 0", dialogID, userID).First(&DialogUser).Error; err != nil {
