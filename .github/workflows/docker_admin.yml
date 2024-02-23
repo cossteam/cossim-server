@@ -12,7 +12,7 @@ on:
       - 'docs/admin*.*'
       - 'admin/**.go'
 jobs:
-  build_group_interface:
+  build_admin:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
