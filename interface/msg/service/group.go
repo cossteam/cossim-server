@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/cossim/coss-server/interface/msg/api/model"
-	"github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
@@ -20,7 +20,7 @@ import (
 func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId string, msg *model.WsGroupMsg) {
 	//发送群聊消息
 	for _, uid := range uIds {
-		m := config.WsMsg{Uid: uid, DriverId: driverId, Event: config.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
+		m := constants.WsMsg{Uid: uid, DriverId: driverId, Event: constants.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
 		//查询是否静默通知
 		groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 			GroupId: uint32(msg.GroupId),
@@ -33,7 +33,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 
 		//判断是否静默通知
 		if groupRelation.IsSilent == relationgrpcv1.GroupSilentNotificationType_GroupSilent {
-			m.Event = config.SendSilentGroupMessageEvent
+			m.Event = constants.SendSilentGroupMessageEvent
 		}
 
 		//在线则推送ws
@@ -219,7 +219,7 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	//TODO 开携程去推送
-	s.SendMsgToUsers(userIds.UserIds, driverId, config.EditMsgEvent, msginfo, true)
+	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
 
 	return msgID, nil
 }
@@ -269,7 +269,7 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		return nil, err
 	}
 
-	s.SendMsgToUsers(userIds.UserIds, driverId, config.RecallMsgEvent, msginfo, true)
+	s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
 
 	return msg.Id, nil
 }
@@ -314,7 +314,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 		return nil, err
 	}
 
-	s.SendMsgToUsers(userIds.UserIds, driverId, config.LabelMsgEvent, msginfo, true)
+	s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, msginfo, true)
 	return nil, nil
 }
 
@@ -437,7 +437,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 	//给消息发送者推送谁读了消息
 	for _, message := range msgs.GroupMessages {
 		if message.UserId != id {
-			s.SendMsg(message.UserId, driverId, config.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": id}, false)
+			s.SendMsg(message.UserId, driverId, constants.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": id}, false)
 		}
 	}
 	return nil, nil

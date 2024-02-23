@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
@@ -199,7 +199,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	}
 
 	wsMsgData := map[string]interface{}{"user_id": userID, "msg": req.Remark, "e2e_public_key": req.E2EPublicKey}
-	msg := msgconfig.WsMsg{Uid: req.UserId, Event: msgconfig.AddFriendEvent, Data: wsMsgData}
+	msg := constants.WsMsg{Uid: req.UserId, Event: constants.AddFriendEvent, Data: wsMsgData}
 
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("Failed to publish service message", zap.Error(err))
@@ -329,7 +329,7 @@ func (s *Service) SwitchUserE2EPublicKey(ctx context.Context, userID string, fri
 		UserId:    userID,
 		PublicKey: publicKey,
 	}
-	msg := msgconfig.WsMsg{Uid: friendID, Event: msgconfig.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now()}
+	msg := constants.WsMsg{Uid: friendID, Event: constants.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now()}
 
 	//通知消息服务有消息需要发送
 	if err := s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {
@@ -490,7 +490,7 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 	}
 
 	wsMsgData := map[string]interface{}{"user_id": userID, "status": status}
-	msg := msgconfig.WsMsg{Uid: targetID, Event: msgconfig.ManageFriendEvent, Data: wsMsgData}
+	msg := constants.WsMsg{Uid: targetID, Event: constants.ManageFriendEvent, Data: wsMsgData}
 	var responseData interface{}
 
 	if status == 1 {
@@ -536,7 +536,7 @@ func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *m
 	return nil, nil
 }
 
-func (s *Service) publishServiceMessage(ctx context.Context, msg msgconfig.WsMsg) error {
+func (s *Service) publishServiceMessage(ctx context.Context, msg constants.WsMsg) error {
 	return s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 }
 

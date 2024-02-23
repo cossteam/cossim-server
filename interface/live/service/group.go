@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	"github.com/cossim/coss-server/interface/live/api/model"
-	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
@@ -108,7 +108,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 			continue
 		}
 
-		msg := msgconfig.WsMsg{Uid: participants[i].UserID, Event: msgconfig.GroupCallReqEvent, Data: map[string]interface{}{
+		msg := constants.WsMsg{Uid: participants[i].UserID, Event: constants.GroupCallReqEvent, Data: map[string]interface{}{
 			"url":          s.livekitServer,
 			"group_id":     gid,
 			"room":         room.Name,
@@ -257,7 +257,7 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (
 	//	return nil, err
 	//}
 
-	msg := msgconfig.WsMsg{Uid: roomInfo.SenderID, Event: msgconfig.GroupCallRejectEvent, Data: map[string]interface{}{
+	msg := constants.WsMsg{Uid: roomInfo.SenderID, Event: constants.GroupCallRejectEvent, Data: map[string]interface{}{
 		"sender_id":    roomInfo.SenderID,
 		"recipient_id": uid,
 	}}
@@ -316,7 +316,7 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 		if k == uid {
 			continue
 		}
-		msg := msgconfig.WsMsg{Uid: k, Event: msgconfig.GroupCallEndEvent, Data: map[string]interface{}{
+		msg := constants.WsMsg{Uid: k, Event: constants.GroupCallEndEvent, Data: map[string]interface{}{
 			"sender_id":    roomInfo.SenderID,
 			"recipient_id": uid,
 		}}

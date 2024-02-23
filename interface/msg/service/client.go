@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cossim/coss-server/interface/msg/api/model"
-	"github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
@@ -40,7 +40,7 @@ func (c *client) wsOnlineClients() {
 
 	//通知前端接收离线消息
 	//TODO 添加上线的设备类型
-	msg := config.WsMsg{Uid: c.Uid, DriverId: c.DriverId, Event: config.OnlineEvent, Rid: c.Rid, SendAt: pkgtime.Now()}
+	msg := constants.WsMsg{Uid: c.Uid, DriverId: c.DriverId, Event: constants.OnlineEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: constants.OnlineEventData{DriverType: constants.DriverType(c.ClientType)}}
 	js, _ := json.Marshal(msg)
 	if Enc == nil {
 		log.Println("加密客户端错误", zap.Error(nil))
@@ -104,7 +104,6 @@ func (c *client) wsOfflineClients() {
 			}
 		}
 	}
-	fmt.Println("用户下线，清理poll")
 	err := c.reduceUserWsCount()
 	if err != nil {
 		fmt.Println("修改在线状态失败：", err)
@@ -199,7 +198,7 @@ func (c *client) pushFriendStatus(s status) error {
 	}
 	if len(list.FriendList) > 0 {
 		for _, friend := range list.FriendList {
-			msg := config.WsMsg{Uid: friend.UserId, Event: config.FriendUpdateOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: model.FriendOnlineStatusMsg{Status: int32(s), UserId: c.Uid}}
+			msg := constants.WsMsg{Uid: friend.UserId, Event: constants.FriendUpdateOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: model.FriendOnlineStatusMsg{Status: int32(s), UserId: c.Uid}}
 			js, _ := json.Marshal(msg)
 			if Enc == nil {
 				log.Println("加密客户端错误", zap.Error(nil))
@@ -263,7 +262,7 @@ func (c *client) pushAllFriendOnlineStatus() error {
 		}
 	}
 
-	msg := config.WsMsg{Uid: c.Uid, Event: config.PushAllFriendOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: friendList}
+	msg := constants.WsMsg{Uid: c.Uid, Event: constants.PushAllFriendOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: friendList}
 	js, _ := json.Marshal(msg)
 	if Enc == nil {
 		log.Println("加密客户端错误", zap.Error(nil))

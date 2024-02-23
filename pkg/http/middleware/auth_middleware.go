@@ -52,7 +52,7 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 		a := auth.NewAuthenticator(conn, rdb)
 
 		drive := ctx.GetHeader("X-Device-Type")
-		drive = constants.DetermineClientType(drive)
+		drive = string(constants.DetermineClientType(constants.DriverType(drive)))
 
 		is, err := a.ValidateToken(tokenString, drive)
 		if err != nil || !is {

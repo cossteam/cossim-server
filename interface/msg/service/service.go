@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/cossim/coss-server/interface/msg/config"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -106,7 +106,7 @@ func (s *Service) ListenQueue() {
 				fmt.Println("Failed to marshal map to JSON:", err)
 				return
 			}
-			var wsm config.WsMsg
+			var wsm constants.WsMsg
 			err = json.Unmarshal(jsonData, &wsm)
 			if err != nil {
 				fmt.Println("解析消息失败：", err)
@@ -128,9 +128,27 @@ func (s *Service) ListenQueue() {
 				for i, id := range idsInterface {
 					ids[i] = id.(string)
 				}
+				UserId := "10001"
+				content := fmt.Sprintf("%s", data["content"])
+
+				msgList := make([]*msggrpcv1.SendUserMsgRequest, 0)
+				for _, v := range ids {
+					msgList = append(msgList, &msggrpcv1.SendUserMsgRequest{
+						SenderId:   UserId,
+						ReceiverId: v,
+						Content:    content,
+						Type:       1, //TODO 消息类型枚举
+					})
+				}
+
+				_, err = s.msgClient.SendMultiUserMessage(context.Background(), &msggrpcv1.SendMultiUserMsgRequest{MsgList: msgList})
+				if err != nil {
+					s.logger.Error("发送系统通知失败", zap.Error(err))
+					return
+				}
 
 				delete(data, "user_ids")
-				s.SendMsgToUsers(ids, "", config.SystemNotificationEvent, data, true)
+				s.SendMsgToUsers(ids, "", constants.SystemNotificationEvent, data, true)
 
 			//强制断开ws
 			case msg_queue.UserWebsocketClose:
@@ -167,7 +185,6 @@ func (s *Service) Stop(ctx context.Context) error {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
-	fmt.Println("9999999999999999")
 	switch serviceName {
 	case "user_service":
 		s.userClient = usergrpcv1.NewUserServiceClient(conn)

@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/cossim/coss-server/interface/group/api/model"
-	msgconfig "github.com/cossim/coss-server/interface/msg/config"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
@@ -96,7 +96,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 
 	// 给被邀请的用户推送
 	for _, id := range req.Member {
-		msg := msgconfig.WsMsg{Uid: id, Event: msgconfig.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": groupID, "inviter_id": req.CreatorId}, SendAt: time.Now()}
+		msg := constants.WsMsg{Uid: id, Event: constants.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": groupID, "inviter_id": req.CreatorId}, SendAt: time.Now()}
 		//通知消息服务有消息需要发送
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	}
