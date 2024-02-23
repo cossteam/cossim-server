@@ -72,9 +72,9 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	api := r.Group("/api/v1/storage")
 	// 为Swagger路径添加不需要身份验证的中间件
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("storage")))
+	api.GET("/files/download/:type/:id", h.download)
 
 	api.Use(middleware.AuthMiddleware(h.redisClient))
-	api.GET("/files/download/:type/:id", h.download)
 	api.GET("/files/:id", h.getFileInfo)
 	api.POST("/files", h.upload)
 	api.DELETE("/files/:id", h.deleteFile)

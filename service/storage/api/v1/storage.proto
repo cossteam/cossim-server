@@ -30,6 +30,7 @@ enum FileType {
   Image = 1;    // 图片类型
   File = 2;     // 文件类型
   Video = 3;    // 视频类型
+  Other = 4;    // 其他类型
 }
 
 message GetFileInfoRequest {

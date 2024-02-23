@@ -108,7 +108,10 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		GroupId: req.GroupID,
 	})
 	for _, id := range adminIds.UserIds {
-		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": uid}, SendAt: time.Now()}
+		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: constants.JoinGroupEventData{
+			GroupId: req.GroupID,
+			UserId:  uid,
+		}, SendAt: time.Now()}
 		//通知消息服务有消息需要发送
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 		if err != nil {
@@ -342,7 +345,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 	msg := constants.WsMsg{
 		Uid:    userID,
 		Event:  constants.JoinGroupEvent,
-		Data:   map[string]interface{}{"group_id": groupID, "status": status},
+		Data:   constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)},
 		SendAt: time.Now(),
 	}
 	err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
@@ -397,7 +400,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 	msg := constants.WsMsg{
 		Uid:    userID,
 		Event:  constants.JoinGroupEvent,
-		Data:   map[string]interface{}{"group_id": groupID, "status": status},
+		Data:   constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)},
 		SendAt: time.Now(),
 	}
 	if err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {

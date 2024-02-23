@@ -103,3 +103,22 @@ type SystemNotificationEventData struct {
 	Content string   `json:"content"`
 	Type    uint32   `json:"type"`
 }
+
+type ManageFriendEventData struct {
+	UserId       string      `json:"user_id" binding:"required"`
+	Status       uint32      `json:"status" binding:"required"`
+	E2EPublicKey string      `json:"e2e_public_key,omitempty"`
+	TargetInfo   interface{} `json:"target_info,omitempty"`
+}
+
+type AddFriendEventData struct {
+	UserId       string `json:"user_id"`
+	Msg          string `json:"msg"`
+	E2EPublicKey string `json:"e2e_public_key,omitempty"`
+}
+
+type JoinGroupEventData struct {
+	GroupId uint32 `json:"group_id"`
+	UserId  string `json:"user_id"`
+	Status  uint32 `json:"status,omitempty"`
+}

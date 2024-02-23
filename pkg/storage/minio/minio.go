@@ -22,12 +22,16 @@ const FileBucket = "file"
 // AudioBucket 是音频桶的默认名称
 const AudioBucket = "audio"
 
+// 公开桶
+const PublicBucket = "public"
+
 var BucketList = map[storev1.FileType]string{
 	//storev1.FileType_Text:  FileBucket,
 	storev1.FileType_Voice: AudioBucket,
 	storev1.FileType_Image: FileBucket,
 	storev1.FileType_File:  FileBucket,
 	storev1.FileType_Video: AudioBucket,
+	storev1.FileType_Other: PublicBucket,
 	//storev1.FileType_EMOJI: FileBucket,
 	//storev1.FileType_Sticker: FileBucket,
 }
@@ -62,7 +66,7 @@ func NewMinIOStorage(endpoint, accessKey, secretKey string, useSSL bool, opts ..
 	}
 	c.coreClient = coreCli
 
-	for _, v := range []string{FileBucket, AudioBucket} {
+	for _, v := range []string{FileBucket, AudioBucket, PublicBucket} {
 		if err = c.CreateMinoBuket(v, 0); err != nil {
 			panic(err)
 		}
@@ -167,10 +171,22 @@ func (m *MinIOStorage) CreateMinoBuket(bucketName string, fileType int) error {
 	if err = m.client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{Region: bucketName}); err != nil {
 		return err
 	}
-	// 设置存储桶策略
-	if err = m.client.SetBucketPolicy(context.Background(), bucketName, string(policy.BucketPolicyReadWrite)); err != nil {
-		return err
+	if bucketName == PublicBucket {
+		//// 设置存储桶访问策略为公开读
+		policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + bucketName + `/*"]}]}`
+
+		err = m.client.SetBucketPolicy(context.Background(), bucketName, policy)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		// 设置存储桶策略
+		if err = m.client.SetBucketPolicy(context.Background(), bucketName, string(policy.BucketPolicyReadWrite)); err != nil {
+			return err
+		}
 	}
+
 	// 将存储桶名称与文件类型关联起来
 	//m.BucketList[storev1.FileType(fileType)] = bucketName
 	fmt.Printf("Successfully created %s bucket for file type %v\n", bucketName, fileType)

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
@@ -198,7 +197,11 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		return nil, err
 	}
 
-	wsMsgData := map[string]interface{}{"user_id": userID, "msg": req.Remark, "e2e_public_key": req.E2EPublicKey}
+	wsMsgData := constants.AddFriendEventData{
+		UserId:       userID,
+		Msg:          req.Remark,
+		E2EPublicKey: req.E2EPublicKey,
+	}
 	msg := constants.WsMsg{Uid: req.UserId, Event: constants.AddFriendEvent, Data: wsMsgData}
 
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
@@ -387,9 +390,6 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus) (uint32, error) {
 	var dialogId uint32
 	// 创建 DTM 分布式事务工作流
-	fmt.Println("s.dtmGrpcServer => ", s.dtmGrpcServer)
-	fmt.Println("s.relationGrpcServer => ", s.relationGrpcServer)
-
 	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "manage_friend_workflow_2_" + gid
@@ -489,13 +489,13 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 		return nil, err
 	}
 
-	wsMsgData := map[string]interface{}{"user_id": userID, "status": status}
+	wsMsgData := constants.ManageFriendEventData{UserId: userID, Status: uint32(status)}
 	msg := constants.WsMsg{Uid: targetID, Event: constants.ManageFriendEvent, Data: wsMsgData}
 	var responseData interface{}
 
 	if status == 1 {
-		wsMsgData["target_info"] = myInfo
-		wsMsgData["e2e_public_key"] = E2EPublicKey
+		wsMsgData.E2EPublicKey = E2EPublicKey
+		wsMsgData.TargetInfo = myInfo
 		responseData = targetInfo
 	}
 

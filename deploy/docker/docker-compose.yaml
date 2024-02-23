@@ -189,6 +189,7 @@ services:
       - ./config/pgp:/.cache
       - ./config/common/SourceHanSansSC-Medium.ttf:/.cache/SourceHanSansSC-Medium.ttf
     depends_on:
+      - dtm
       - redis
       - relation_service
       - user_service
