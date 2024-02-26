@@ -218,6 +218,7 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, err
 	}
 
+	msginfo.Content = content
 	//TODO 开携程去推送
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
 

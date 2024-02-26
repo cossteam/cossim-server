@@ -483,6 +483,7 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 		s.logger.Error("编辑用户消息失败", zap.Error(err))
 		return nil, err
 	}
+	msginfo.Content = content
 
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
 
