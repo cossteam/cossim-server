@@ -818,19 +818,31 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	}
 	var infos2 = make([]*msggrpcv1.GetGroupMsgIdAfterMsgRequest, 0)
 	var infos3 = make([]*msggrpcv1.GetUserMsgIdAfterMsgRequest, 0)
-	for i, i2 := range infos.Dialogs {
+	for _, i2 := range infos.Dialogs {
 		if i2.Type == uint32(model.GroupConversation) {
-			infos2 = append(infos2, &msggrpcv1.GetGroupMsgIdAfterMsgRequest{
-				DialogId: i2.Id,
-				MsgId:    request[i].MsgId,
-			})
+			for _, i3 := range request {
+				if i2.Id == i3.DialogId {
+					infos2 = append(infos2, &msggrpcv1.GetGroupMsgIdAfterMsgRequest{
+						DialogId: i2.Id,
+						MsgId:    i3.MsgId,
+					})
+					break
+				}
+			}
+
 		} else {
-			infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
-				DialogId: i2.Id,
-				MsgId:    request[i].MsgId,
-			})
+			for _, i3 := range request {
+				if i2.Id == i3.DialogId {
+					infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
+						DialogId: i2.Id,
+						MsgId:    i3.MsgId,
+					})
+					break
+				}
+			}
 		}
 	}
+
 	//获取群聊消息
 	grouplist, err := s.msgClient.GetGroupMsgIdAfterMsgList(ctx, &msggrpcv1.GetGroupMsgIdAfterMsgListRequest{
 		List: infos2,
@@ -871,7 +883,6 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			Messages: msgs,
 		})
 	}
-	fmt.Println("list2", infos3)
 	//获取私聊消息
 	userlist, err := s.msgClient.GetUserMsgIdAfterMsgList(ctx, &msggrpcv1.GetUserMsgIdAfterMsgListRequest{
 		List: infos3,
