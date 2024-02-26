@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"fmt"
 	"github.com/cossim/coss-server/service/user/domain/entity"
 	"gorm.io/gorm"
 )
@@ -15,7 +16,8 @@ func NewUserLoginRepo(db *gorm.DB) *UserLoginRepo {
 }
 
 func (u UserLoginRepo) InsertUserLogin(user *entity.UserLogin) error {
-	return u.db.Where(entity.UserLogin{UserId: user.UserId, DriverId: user.DriverId}).Assign(entity.UserLogin{LoginCount: user.LoginCount}).FirstOrCreate(&user).Error
+	fmt.Println("dricer_token", user.DriverToken)
+	return u.db.Where(entity.UserLogin{UserId: user.UserId, DriverId: user.DriverId}).Assign(entity.UserLogin{LoginCount: user.LoginCount, DriverToken: user.DriverToken}).FirstOrCreate(&user).Error
 }
 
 func (u UserLoginRepo) GetUserLoginByToken(token string) (*entity.UserLogin, error) {
@@ -38,4 +40,13 @@ func (u UserLoginRepo) GetUserLoginByDriverIdAndUserId(driverId, userId string) 
 
 func (u UserLoginRepo) UpdateUserLoginTokenByDriverId(driverId string, token string, userId string) error {
 	return u.db.Where("driver_id = ? AND user_id = ?", driverId, userId).Update("token", token).Error
+}
+
+func (u UserLoginRepo) GetUserDriverTokenByUserId(userId string) ([]string, error) {
+	var driverTokens []string
+	err := u.db.Where("user_id = ?", userId).Pluck("driver_token", &driverTokens).Error
+	if err != nil {
+		return nil, err
+	}
+	return driverTokens, err
 }

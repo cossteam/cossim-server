@@ -31,6 +31,7 @@ var (
 	UserErrCreateUserRollbackFailed              = New(10026, "创建用户回滚失败")
 	UserErrUpdateUserLoginTokenFailed            = New(10027, "更新用户登录令牌失败")
 	UserErrGetUserLoginByDriverIdAndUserIdFailed = New(10028, "获取用户登录信息失败")
+	UserErrGetUserDriverTokenByUserIdFailed      = New(10029, "获取用户登录设备令牌失败")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")

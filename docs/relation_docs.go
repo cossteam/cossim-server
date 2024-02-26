@@ -1322,7 +1322,8 @@ const docTemplaterelation = `{
         "model.SetGroupSilentNotificationRequest": {
             "type": "object",
             "required": [
-                "group_id"
+                "group_id",
+                "is_silent"
             ],
             "properties": {
                 "group_id": {
@@ -1359,6 +1360,7 @@ const docTemplaterelation = `{
         "model.SetUserSilentNotificationRequest": {
             "type": "object",
             "required": [
+                "is_silent",
                 "user_id"
             ],
             "properties": {

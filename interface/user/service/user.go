@@ -85,9 +85,10 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	}
 
 	_, err = s.userLoginClient.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
-		UserId:   resp.UserId,
-		DriverId: req.DriverId,
-		Token:    token,
+		UserId:      resp.UserId,
+		DriverId:    req.DriverId,
+		Token:       token,
+		DriverToken: req.DriverToken,
 	})
 	if err != nil {
 		return nil, "", err
