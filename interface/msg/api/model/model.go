@@ -80,16 +80,19 @@ type UserDialogListResponse struct {
 }
 
 type Message struct {
-	// 消息类型
-	MsgType uint `json:"msg_type"`
-	// 消息内容
-	Content string `json:"content"`
-	// 消息发送者
-	SenderId string `json:"sender_id"`
-	// 消息发送时间
-	SendTime int64 `json:"send_time"`
-	// 消息id
-	MsgId uint64 `json:"msg_id"`
+	GroupId                uint32               `json:"group_id,omitempty"`      //群聊id
+	MsgType                uint                 `json:"msg_type"`                // 消息类型
+	Content                string               `json:"content"`                 // 消息内容
+	SenderId               string               `json:"sender_id"`               // 消息发送者
+	SendTime               int64                `json:"send_time"`               // 消息发送时间
+	MsgId                  uint64               `json:"msg_id"`                  // 消息id
+	SenderInfo             SenderInfo           `json:"sender_info"`             // 消息发送者信息
+	ReceiverInfo           SenderInfo           `json:"receiver_info,omitempty"` // 消息接受者信息
+	AtAllUser              AtAllUserType        `json:"at_all_user,omitempty"`   // @全体用户
+	AtUsers                []string             `json:"at_users,omitempty"`      // @用户id
+	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`   // 是否阅后即焚
+	IsLabel                LabelMsgType         `json:"is_label"`                // 是否标记
+	ReplayId               uint32               `json:"replay_id"`               // 回复消息id
 }
 
 // EditUserMsgRequest represents the request structure for editing user message.
