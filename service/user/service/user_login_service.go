@@ -22,22 +22,24 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 	}
 	if info != nil {
 		err := s.ulr.InsertUserLogin(&entity.UserLogin{
-			UserId:     in.UserId,
-			Token:      in.Token,
-			DriverId:   in.DriverId,
-			LastAt:     time.Now(),
-			LoginCount: info.LoginCount + 1,
+			UserId:      in.UserId,
+			Token:       in.Token,
+			DriverId:    in.DriverId,
+			LastAt:      time.Now(),
+			DriverToken: in.DriverToken,
+			LoginCount:  info.LoginCount + 1,
 		})
 		if err != nil {
 			return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	} else {
 		err := s.ulr.InsertUserLogin(&entity.UserLogin{
-			UserId:     in.UserId,
-			Token:      in.Token,
-			DriverId:   in.DriverId,
-			LastAt:     time.Now(),
-			LoginCount: 1,
+			UserId:      in.UserId,
+			Token:       in.Token,
+			DriverId:    in.DriverId,
+			LastAt:      time.Now(),
+			DriverToken: in.DriverToken,
+			LoginCount:  1,
 		})
 		if err != nil {
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
@@ -84,6 +86,22 @@ func (s *Service) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.Tok
 	err := s.ulr.UpdateUserLoginTokenByDriverId(in.DriverId, in.Token, in.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.UserErrUpdateUserLoginTokenFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) GetUserDriverTokenByUserId(ctx context.Context, request *v1.GetUserDriverTokenByUserIdRequest) (*v1.GetUserDriverTokenByUserIdResponse, error) {
+	resp := &v1.GetUserDriverTokenByUserIdResponse{}
+	tokenList, err := s.ulr.GetUserDriverTokenByUserId(request.UserId)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return resp, status.Error(codes.Code(code.UserErrGetUserDriverTokenByUserIdFailed.Code()), err.Error())
+		}
+	}
+	if len(tokenList) > 0 {
+		for _, token := range tokenList {
+			resp.Token = append(resp.Token, token)
+		}
 	}
 	return resp, nil
 }

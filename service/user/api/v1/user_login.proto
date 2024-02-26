@@ -11,6 +11,8 @@ message UserLogin {
   string Token = 2;
   // @inject_tag: json:"user_id"
   string UserId = 3;
+  // @inject_tag: json:"driver_token"
+  string DriverToken = 4;
 }
 
 message DriverIdAndUserId {
@@ -19,6 +21,7 @@ message DriverIdAndUserId {
   // @inject_tag: json:"user_id"
   string UserId = 2;
 }
+
 
 message TokenUpdate {
   // @inject_tag: json:"driver_id"
@@ -34,9 +37,20 @@ message GetUserLoginByTokenRequest{
   string Token = 1;
 }
 
+message GetUserDriverTokenByUserIdRequest{
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
+message GetUserDriverTokenByUserIdResponse{
+  // @inject_tag: json:"tokens"
+  repeated string Token = 2;
+}
+
 service UserLoginService {
   rpc InsertUserLogin(UserLogin) returns (google.protobuf.Empty) {}
   rpc GetUserLoginByToken(GetUserLoginByTokenRequest) returns (UserLogin) {}
   rpc GetUserLoginByDriverIdAndUserId(DriverIdAndUserId) returns (UserLogin) {}
   rpc UpdateUserLoginTokenByDriverId(TokenUpdate) returns (google.protobuf.Empty) {}
+  rpc GetUserDriverTokenByUserId(GetUserDriverTokenByUserIdRequest) returns (GetUserDriverTokenByUserIdResponse) {}
 }

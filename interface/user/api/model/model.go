@@ -7,9 +7,10 @@ type Response struct {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	DriverId string `json:"driver_id" binding:"required"`
+	Email       string `json:"email" binding:"required"`
+	Password    string `json:"password" binding:"required"`
+	DriverId    string `json:"driver_id" binding:"required"`
+	DriverToken string `json:"driver_token" binding:"required""`
 }
 
 type LogoutRequest struct {

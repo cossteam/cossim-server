@@ -234,6 +234,7 @@ definitions:
         description: 是否开启静默通知
     required:
     - group_id
+    - is_silent
     type: object
   model.SetUserFriendRemarkRequest:
     properties:
@@ -257,6 +258,7 @@ definitions:
         description: 用户ID
         type: string
     required:
+    - is_silent
     - user_id
     type: object
   model.SilentNotificationType:

@@ -528,11 +528,15 @@ const docTemplateuser = `{
             "type": "object",
             "required": [
                 "driver_id",
+                "driver_token",
                 "email",
                 "password"
             ],
             "properties": {
                 "driver_id": {
+                    "type": "string"
+                },
+                "driver_token": {
                     "type": "string"
                 },
                 "email": {

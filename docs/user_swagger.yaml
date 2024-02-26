@@ -3,12 +3,15 @@ definitions:
     properties:
       driver_id:
         type: string
+      driver_token:
+        type: string
       email:
         type: string
       password:
         type: string
     required:
     - driver_id
+    - driver_token
     - email
     - password
     type: object
