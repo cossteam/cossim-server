@@ -51,15 +51,16 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
-	dialogs, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
-		DialogIds: []uint32{req.DialogId},
+	dialogs, err := s.relationDialogClient.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
+		DialogId: req.DialogId,
 	})
 	if err != nil {
 		s.logger.Error("获取会话失败", zap.Error(err))
 		return nil, err
 	}
-	if len(dialogs.Dialogs) == 0 {
-		return nil, code.DialogErrGetDialogUserByDialogIDAndUserIDFailed
+
+	if dialogs.Type != uint32(relationgrpcv1.DialogType_USER_DIALOG) {
+		return nil, code.DialogErrGetDialogByIdFailed
 	}
 
 	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
@@ -800,7 +801,7 @@ func (s *Service) SendMsgToUsers(uids []string, driverId string, event constants
 }
 
 // 获取对话落后信息
-func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMsg, userID string) ([]*model.GetDialogAfterMsgResponse, error) {
+func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMsg) ([]*model.GetDialogAfterMsgResponse, error) {
 	var responses = make([]*model.GetDialogAfterMsgResponse, 0)
 	dialogIds := make([]uint32, 0)
 	for _, v := range request {
@@ -808,7 +809,6 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	}
 
 	//TODO 验证是否在对话内
-
 	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: dialogIds,
 	})
@@ -841,12 +841,29 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	for _, i2 := range grouplist.Messages {
 		msgs := make([]*model.Message, 0)
 		for _, i3 := range i2.GroupMessages {
+			info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+				UserId: i3.UserId,
+			})
+			if err != nil {
+				return nil, err
+			}
 			msg := model.Message{}
+			msg.GroupId = i3.GroupId
 			msg.MsgId = uint64(i3.Id)
 			msg.MsgType = uint(i3.Type)
 			msg.Content = i3.Content
 			msg.SenderId = i3.UserId
 			msg.SendTime = i3.CreatedAt
+			msg.SenderInfo = model.SenderInfo{
+				Avatar: info.Avatar,
+				Name:   info.NickName,
+				UserId: info.UserId,
+			}
+			msg.AtUsers = i3.AtUsers
+			msg.AtAllUser = model.AtAllUserType(i3.AtAllUser)
+			msg.IsBurnAfterReadingType = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
+			msg.ReplayId = i3.ReplyId
+			msg.IsLabel = model.LabelMsgType(i3.IsLabel)
 			msgs = append(msgs, &msg)
 		}
 		responses = append(responses, &model.GetDialogAfterMsgResponse{
@@ -854,6 +871,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			Messages: msgs,
 		})
 	}
+	fmt.Println("list2", infos3)
 	//获取私聊消息
 	userlist, err := s.msgClient.GetUserMsgIdAfterMsgList(ctx, &msggrpcv1.GetUserMsgIdAfterMsgListRequest{
 		List: infos3,
@@ -864,12 +882,38 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	for _, i2 := range userlist.Messages {
 		msgs := make([]*model.Message, 0)
 		for _, i3 := range i2.UserMessages {
+			//查询发送者信息
+			info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+				UserId: i3.SenderId,
+			})
+			if err != nil {
+				return nil, err
+			}
+			info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+				UserId: i3.ReceiverId,
+			})
+			if err != nil {
+				return nil, err
+			}
 			msg := model.Message{}
 			msg.MsgId = uint64(i3.Id)
 			msg.MsgType = uint(i3.Type)
 			msg.Content = i3.Content
 			msg.SenderId = i3.SenderId
 			msg.SendTime = i3.CreatedAt
+			msg.SenderInfo = model.SenderInfo{
+				Avatar: info.Avatar,
+				Name:   info.NickName,
+				UserId: info.UserId,
+			}
+			msg.ReceiverInfo = model.SenderInfo{
+				Avatar: info2.Avatar,
+				Name:   info2.NickName,
+				UserId: info2.UserId,
+			}
+			msg.IsBurnAfterReadingType = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
+			msg.ReplayId = uint32(i3.ReplayId)
+			msg.IsLabel = model.LabelMsgType(i3.IsLabel)
 			msgs = append(msgs, &msg)
 		}
 		responses = append(responses, &model.GetDialogAfterMsgResponse{
