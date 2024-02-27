@@ -314,7 +314,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 		s.logger.Error("设置群聊消息标注失败", zap.Error(err))
 		return nil, err
 	}
-
+	msginfo.IsLabel = msggrpcv1.MsgLabel(label)
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, msginfo, true)
 	return nil, nil
 }
