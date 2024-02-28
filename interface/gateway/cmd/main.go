@@ -3,71 +3,66 @@ package main
 import (
 	"flag"
 	_ "github.com/cossim/coss-server/docs"
-	"github.com/cossim/coss-server/interface/gateway/config"
 	"github.com/cossim/coss-server/interface/gateway/server/http"
+	ctrl "github.com/cossim/coss-server/pkg/alias"
+	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/cossim/coss-server/pkg/healthz"
+	"github.com/cossim/coss-server/pkg/manager/signals"
 )
 
 var (
-	file              string
 	discover          bool
+	register          bool
 	remoteConfig      bool
 	remoteConfigAddr  string
 	remoteConfigToken string
+	metricsAddr       string
+	httpProbeAddr     string
+	grpcProbeAddr     string
 )
 
 func init() {
-	flag.StringVar(&file, "config", "/config/config.yaml", "Path to configuration file")
 	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
-	flag.BoolVar(&remoteConfig, "remote-config", false, "Load configuration from remote source")
-	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the configuration center")
-	flag.StringVar(&remoteConfigToken, "config-center-token", "", "Token for accessing the configuration center")
+	flag.BoolVar(&register, "register", false, "Enable service register")
+	flag.BoolVar(&remoteConfig, "remote-config", false, "Load config from remote source")
+	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the config center")
+	flag.StringVar(&remoteConfigToken, "config-center-token", "", "Token for accessing the config center")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
+	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":9091", "The address to bind the http health probe endpoint")
+	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":9092", "The address to bind the grpc health probe endpoint")
 	flag.Parse()
 }
 
 func main() {
-	ch := make(chan discovery.ConfigUpdate)
-	var err error
-	if !remoteConfig {
-		if err = config.LoadConfigFromFile(file); err != nil {
-			panic(err)
-		}
-	} else {
-		ch, err = discovery.LoadDefaultRemoteConfig(remoteConfigAddr, discovery.InterfaceConfigPrefix+"gateway", remoteConfigToken, config.Conf)
-		if err != nil {
-			panic(err)
-		}
+	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
+		Http: ctrl.HTTPServer{
+			HTTPService:        &http.Handler{},
+			HealthCheckAddress: httpProbeAddr,
+		},
+		Config: ctrl.Config{
+			LoadFromConfigCenter: remoteConfig,
+			RemoteConfigAddr:     remoteConfigAddr,
+			RemoteConfigToken:    remoteConfigToken,
+			Hot:                  true,
+			Key:                  "interface/gateway",
+			Keys:                 discovery.DefaultKeys,
+			Registry: ctrl.Registry{
+				Discover: discover,
+				Register: register,
+			},
+		},
+		MetricsBindAddress: metricsAddr,
+	})
+	if err != nil {
+		panic(err)
 	}
 
-	if config.Conf == nil {
-		panic("Config not initialized")
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		panic(err)
 	}
 
-	http.Start(discover)
-	go func() {
-		for {
-			select {
-			case _ = <-ch:
-				http.Stop()
-				http.Restart(discover)
-			}
-		}
-	}()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
-	for {
-		s := <-c
-		switch s {
-		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
-			http.Stop()
-			return
-		case syscall.SIGHUP:
-		default:
-			return
-		}
+	if err = mgr.Start(signals.SetupSignalHandler()); err != nil {
+		panic(err)
 	}
 }
