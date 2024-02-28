@@ -19,6 +19,7 @@ import (
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"sync"
 )
 
@@ -62,6 +63,12 @@ func New(ac *pkgconfig.AppConfig) *Service {
 	}
 	rabbitMQClient = mqClient
 
+	conn, err := grpc.Dial(ac.Push.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	pushClient := pushv1.NewPushServiceClient(conn)
+
 	setupEncryption(ac)
 
 	s := &Service{
@@ -69,6 +76,7 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		logger:      plog.NewDevLogger("msg_bff"),
 		sid:         xid.New().String(),
 		redisClient: setupRedis(ac),
+		pushClient:  pushClient,
 		//rabbitMQClient: mqClient,
 		//pool:     make(map[string]map[string][]*client),
 		//mqClient: mqClient,
@@ -199,6 +207,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	switch serviceName {
 	case "user_service":
 		s.userClient = usergrpcv1.NewUserServiceClient(conn)
+		s.userLoginClient = usergrpcv1.NewUserLoginServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "relation_service":
 		s.relationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
