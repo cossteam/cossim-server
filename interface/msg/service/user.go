@@ -8,6 +8,7 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
+	"github.com/cossim/coss-server/pkg/utils"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	groupApi "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
@@ -23,7 +24,6 @@ import (
 )
 
 func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId string, req *model.SendUserMsgRequest) (interface{}, error) {
-
 	if !model.IsAllowedConversationType(req.IsBurnAfterReadingType) {
 		return nil, code.MsgErrInsertUserMessageFailed
 	}
@@ -165,16 +165,23 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 							s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
 							continue
 						}
-						if constants.DriverType(r.Platform) != constants.MobileClient {
-							s.logger.Info("platform not mobile", zap.String("platform", r.Platform))
+						if constants.DriverType(r.ClientType) != constants.MobileClient {
+							s.logger.Info("client type not mobile", zap.String("client type", r.ClientType))
 							continue
 						}
+						text, err := utils.ExtractText(msg.Content)
+						if err != nil {
+							s.logger.Error("extract html text err", zap.Error(err))
+							continue
+						}
+						s.logger.Info("push message", zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
 						if _, err := s.pushClient.Push(context.Background(), &pushv1.PushRequest{
 							Platform:    r.Platform,
 							Tokens:      []string{r.DriverToken},
 							Title:       msg.SenderInfo.Name,
-							Message:     message,
+							Message:     text,
 							AppID:       appid,
+							Topic:       appid,
 							Development: true,
 						}); err != nil {
 							s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))

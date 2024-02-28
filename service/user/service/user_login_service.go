@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	v1 "github.com/cossim/coss-server/service/user/api/v1"
@@ -78,9 +79,13 @@ func (s *Service) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.Dr
 		}
 	}
 	if info != nil {
+		fmt.Println("GetUserLoginByDriverIdAndUserId info => ", info)
 		resp.UserId = info.UserId
 		resp.Token = info.Token
 		resp.DriverId = info.DriverId
+		resp.DriverToken = info.DriverToken
+		resp.Platform = info.Platform
+		resp.ClientType = info.ClientType
 	}
 	return resp, nil
 }
