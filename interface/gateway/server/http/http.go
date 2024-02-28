@@ -2,28 +2,23 @@ package http
 
 import (
 	"context"
-	"fmt"
-	"github.com/cossim/coss-server/interface/gateway/config"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
+	"github.com/cossim/coss-server/pkg/server"
+	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
 	"github.com/pretty66/websocketproxy"
-	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"io"
-	"log"
 	"net/http"
-	"sync"
-	"time"
 )
 
 var (
-	logger = plog.NewDevLogger("gateway")
-	server *http.Server
-	engine *gin.Engine
-	dis    discovery.Registry
+	_ server.HTTPService = &Handler{}
 
 	userServiceURL      = new(string)
 	relationServiceURL  = new(string)
@@ -35,167 +30,85 @@ var (
 	adminServiceURL     = new(string)
 )
 
-func Start(discover bool) {
-	engine = gin.New()
-	server = &http.Server{
-		Addr:    config.Conf.HTTP.Addr(),
-		Handler: engine,
-	}
-
-	if discover {
-		setDiscovery()
-	}
-	setupURLs(discover)
-	setupGin()
-
-	go func() {
-		logger.Info("Gin server is running on port", zap.String("addr", config.Conf.HTTP.Addr()))
-		if err := server.ListenAndServe(); err != nil {
-			logger.Info("Failed to start Gin server", zap.Error(err))
-			return
-		}
-	}()
+type Handler struct {
+	logger logr.Logger
 }
 
-func Restart(discover bool) error {
-	Start(discover)
+func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
+	logger := zapr.NewLogger(plog.NewDevLogger("gateway"))
+	h.logger = logger
 	return nil
 }
 
-func Stop() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
-		logger.Fatal("Server forced to shutdown", zap.Error(err))
+func (h *Handler) Name() string {
+	return "gateway"
+}
+
+func (h *Handler) Version() string {
+	return version.FullVersion()
+}
+
+func (h *Handler) RegisterRoute(r gin.IRouter) {
+	r.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(plog.NewDevLogger("gateway")))
+	gateway := r.Group("/api/v1")
+	{
+		gateway.Any("/user/*path", h.proxyToService(userServiceURL))
+		gateway.Any("/relation/*path", h.proxyToService(relationServiceURL))
+		gateway.Any("/msg/*path", h.proxyToService(messageServiceURL))
+		gateway.Any("/group/*path", h.proxyToService(groupServiceURL))
+		gateway.Any("/storage/*path", h.proxyToService(storageServiceURL))
+		gateway.Any("/live/*path", h.proxyToService(liveUserServiceURL))
+		gateway.Any("/admin/*path", h.proxyToService(adminServiceURL))
 	}
 }
 
-func setDiscovery() {
-	d, err := discovery.NewConsulRegistry(config.Conf.Register.Addr())
-	if err != nil {
-		panic(err)
-	}
-	dis = d
+func (h *Handler) Health(r gin.IRouter) string {
+	//TODO implement me
+	panic("implement me")
 }
 
-func setupURLs(d bool) {
-	if d {
-		go discover()
-	} else {
-		direct()
-	}
-	//userServiceURL = "http://" + cfg.Discovers["user"].Addr()
-	//relationServiceURL = "http://" + cfg.Discovers["relation"].Addr()
-	//messageServiceURL = "http://" + cfg.Discovers["msg"].Addr()
-	//messageWsServiceURL = "ws://" + cfg.Discovers["msg"].Addr() + "/api/v1/msg/ws"
-	//groupServiceURL = "http://" + cfg.Discovers["group"].Addr()
-	//storageServiceURL = "http://" + cfg.Discovers["storage"].Addr()
+func (h *Handler) Stop(ctx context.Context) error {
+	return nil
 }
 
-func discover() {
-	var wg sync.WaitGroup
-	type serviceInfo struct {
-		ServiceName string
-		Addr        string
+func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
+	for name, conn := range services {
+		h.handlerGrpcClient(name, conn)
 	}
-	ch := make(chan serviceInfo)
-
-	for serviceName, c := range config.Conf.Discovers {
-		if c.Direct {
-			continue
-		}
-		wg.Add(1)
-		go func(serviceName string, c pkgconfig.ServiceConfig) {
-			defer wg.Done()
-			for {
-				addr, err := dis.Discover(c.Name)
-				if err != nil {
-					log.Printf("Service discovery failed ServiceName: %s %v\n", c.Name, err)
-					time.Sleep(15 * time.Second)
-					continue
-				}
-				log.Printf("Service discovery successful ServiceName: %s  Addr: %s\n", c.Name, addr)
-
-				ch <- serviceInfo{ServiceName: serviceName, Addr: addr}
-				break
-			}
-		}(serviceName, c)
-	}
-
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
-
-	for info := range ch {
-		if err := handlerGrpcClient(info.ServiceName, info.Addr); err != nil {
-			log.Printf("Failed to initialize gRPC client for service: %s, Error: %v\n", info.ServiceName, err)
-		}
-	}
+	return nil
 }
 
-func direct() {
-	for serviceName, _ := range config.Conf.Discovers {
-		if err := handlerGrpcClient(serviceName, config.Conf.Discovers[serviceName].Addr()); err != nil {
-			panic(err)
-		}
-	}
-}
-
-func handlerGrpcClient(serviceName string, addr string) error {
+func (h *Handler) handlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
+	addr := conn.Target()
 	switch serviceName {
-	case "user":
+	case "user_bff":
 		*userServiceURL = "http://" + addr
-		logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", addr))
-	case "relation":
+		h.logger.Info("gRPC client for user service initialized", "service", "user", "addr", addr)
+	case "relation_bff":
 		*relationServiceURL = "http://" + addr
-		logger.Info("gRPC client for relation service initialized", zap.String("service", "relation"), zap.String("addr", addr))
-	case "group":
+		h.logger.Info("gRPC client for relation service initialized", "service", "relation", "addr", addr)
+	case "group_bff":
 		*groupServiceURL = "http://" + addr
-		logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", addr))
-	case "msg":
+		h.logger.Info("gRPC client for group service initialized", "service", "group", "addr", addr)
+	case "msg_bff":
 		*messageServiceURL = "http://" + addr
 		*messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
-		logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", addr))
-	case "storage":
+		h.logger.Info("gRPC client for group service initialized", "service", "msg", "addr", addr)
+	case "storage_bff":
 		*storageServiceURL = "http://" + addr
-		logger.Info("gRPC client for group service initialized", zap.String("service", "storage"), zap.String("addr", addr))
-	case "live":
+		h.logger.Info("gRPC client for group service initialized", "service", "storage", "addr", addr)
+	case "live_bff":
 		*liveUserServiceURL = "http://" + addr
-		logger.Info("gRPC client for group service initialized", zap.String("service", "live"), zap.String("addr", addr))
-	case "admin":
+		h.logger.Info("gRPC client for group service initialized", "service", "live", "addr", addr)
+	case "admin_bff":
 		*adminServiceURL = "http://" + addr
-		logger.Info("gRPC client for group service initialized", zap.String("service", "admin"), zap.String("addr", addr))
-
-	}
-
-	return nil
-}
-
-func setupGin() {
-	gin.SetMode(gin.ReleaseMode)
-	// 添加一些中间件或其他配置
-	engine.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(logger))
-	// 设置路由
-	route(engine)
-}
-
-func route(engine *gin.Engine) {
-	gateway := engine.Group("/api/v1")
-	{
-		gateway.Any("/user/*path", proxyToService(userServiceURL))
-		gateway.Any("/relation/*path", proxyToService(relationServiceURL))
-		gateway.Any("/msg/*path", proxyToService(messageServiceURL))
-		gateway.Any("/group/*path", proxyToService(groupServiceURL))
-		gateway.Any("/storage/*path", proxyToService(storageServiceURL))
-		gateway.Any("/live/*path", proxyToService(liveUserServiceURL))
-		gateway.Any("/admin/*path", proxyToService(adminServiceURL))
+		h.logger.Info("gRPC client for group service initialized", "service", "admin", "addr", addr)
 	}
 }
 
-func proxyToService(targetURL *string) gin.HandlerFunc {
+func (h *Handler) proxyToService(targetURL *string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		logger.Info("Received request", zap.Any("RequestHeaders", c.Request.Header), zap.String("RequestURL", c.Request.URL.String()))
+		h.logger.Info("Received request", "RequestHeader", c.Request.Header, "RequestURL", c.Request.URL.String())
 		if c.Request.Header.Get("Upgrade") == "websocket" {
 			wp, err := websocketproxy.NewProxy(*messageWsServiceURL, func(r *http.Request) error {
 				// 握手时设置cookie, 权限验证
@@ -205,7 +118,13 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 				return nil
 			})
 			if err != nil {
-				fmt.Println("websocketproxy err ", err)
+				h.logger.Error(err, "Failed to create websocket proxy")
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"code": http.StatusInternalServerError,
+					"msg":  err.Error(),
+					"data": nil,
+				})
+				return
 			}
 			wp.Proxy(c.Writer, c.Request)
 			return
@@ -213,7 +132,7 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 		// 创建一个代理请求
 		proxyReq, err := http.NewRequest(c.Request.Method, *targetURL+c.Request.URL.Path, c.Request.Body)
 		if err != nil {
-			logger.Error("Failed to create proxy request", zap.Error(err))
+			h.logger.Error(err, "Failed to create proxy request")
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  code.InternalServerError.Message(),
@@ -234,7 +153,7 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 		client := &http.Client{}
 		resp, err := client.Do(proxyReq)
 		if err != nil {
-			logger.Error("Failed to fetch response from service", zap.Error(err))
+			h.logger.Error(err, "Failed to fetch response from service")
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  code.InternalServerError.Message(),
@@ -244,7 +163,7 @@ func proxyToService(targetURL *string) gin.HandlerFunc {
 		}
 		defer resp.Body.Close()
 
-		logger.Info("Received response from service", zap.Any("ResponseHeaders", resp.Header), zap.String("TargetURL", *targetURL))
+		h.logger.Info("Received response from service", "ResponseHeaders", resp.Header, "TargetURL", *targetURL)
 
 		// 将 BFF 服务的响应返回给客户端
 		c.Status(resp.StatusCode)
