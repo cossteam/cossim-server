@@ -30,6 +30,12 @@ message_queue:
   address: "rabbitmq"
   port: "5672"
 
+push:
+  address: "push"
+  port: "7070"
+  platform_appid:
+    ios: com.hitosea.apptest
+    huawei: xxx.xxx.xxx
 
 http:
   address: "0.0.0.0"

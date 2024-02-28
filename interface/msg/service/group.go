@@ -11,6 +11,7 @@ import (
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
+	pushv1 "github.com/cossim/hipush/api/grpc/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -36,6 +37,15 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 			m.Event = constants.SendSilentGroupMessageEvent
 		}
 
+		var is bool
+		r, err := s.userLoginClient.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
+			DriverId: driverId,
+			UserId:   uid,
+		})
+		if err != nil {
+			s.logger.Error("获取用户登录信息失败", zap.Error(err))
+		}
+
 		//在线则推送ws
 		if _, ok := pool[uid]; ok {
 			for _, c := range pool[uid] {
@@ -51,6 +61,27 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 					if err != nil {
 						s.logger.Error("发布ws消息失败", zap.Error(err))
 						continue
+					}
+					appid, ok := s.ac.Push.PlatformAppID[r.Platform]
+					if !ok {
+						s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
+						continue
+					}
+					if constants.DriverType(r.Platform) != constants.MobileClient {
+						s.logger.Info("platform not mobile", zap.String("platform", r.Platform))
+						continue
+					}
+					if is {
+						if _, err := s.pushClient.Push(ctx, &pushv1.PushRequest{
+							Platform:    r.Platform,
+							Tokens:      []string{r.DriverToken},
+							Title:       msg.SenderInfo.Name,
+							Message:     message,
+							AppID:       appid,
+							Development: true,
+						}); err != nil {
+							s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
+						}
 					}
 				}
 			}

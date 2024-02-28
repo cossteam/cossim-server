@@ -27,6 +27,8 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 			DriverId:    in.DriverId,
 			LastAt:      time.Now(),
 			DriverToken: in.DriverToken,
+			ClientType:  in.ClientType,
+			Platform:    in.Platform,
 			LoginCount:  info.LoginCount + 1,
 		})
 		if err != nil {
@@ -39,6 +41,8 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 			DriverId:    in.DriverId,
 			LastAt:      time.Now(),
 			DriverToken: in.DriverToken,
+			ClientType:  in.ClientType,
+			Platform:    in.Platform,
 			LoginCount:  1,
 		})
 		if err != nil {

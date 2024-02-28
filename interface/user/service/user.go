@@ -74,8 +74,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
-	//推送登录提醒
-	//查询是否在该设备第一次登录
+	// 推送登录提醒
+	// 查询是否在该设备第一次登录
 	userLogin, err := s.userLoginClient.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
 		UserId:   resp.UserId,
 		DriverId: req.DriverId,
@@ -89,6 +89,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		DriverId:    req.DriverId,
 		Token:       token,
 		DriverToken: req.DriverToken,
+		ClientType:  driveType,
+		Platform:    req.Platform,
 	})
 	if err != nil {
 		return nil, "", err

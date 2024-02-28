@@ -13,6 +13,7 @@ import (
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
+	pushv1 "github.com/cossim/hipush/api/grpc/v1"
 	"github.com/goccy/go-json"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
@@ -36,10 +37,12 @@ type Service struct {
 	relationGroupClient  relationgrpcv1.GroupRelationServiceClient
 	relationDialogClient relationgrpcv1.DialogServiceClient
 	userClient           usergrpcv1.UserServiceClient
+	userLoginClient      usergrpcv1.UserLoginServiceClient
 	groupClient          groupgrpcv1.GroupServiceClient
 	msgClient            msggrpcv1.MsgServiceClient
 	groupMsgClient       msggrpcv1.GroupMessageServiceClient
 	redisClient          *redis.Client
+	pushClient           pushv1.PushServiceClient
 
 	//mqClient *msg_queue.RabbitMQ
 
