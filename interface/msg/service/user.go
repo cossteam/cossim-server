@@ -13,6 +13,7 @@ import (
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
+	pushv1 "github.com/cossim/hipush/api/grpc/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -123,16 +124,18 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 		Data: msg,
 	}
 
-	//userRelation, err := s.relationClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{UserId: receiverId, FriendId: senderId})
-	//if err != nil {
-	//	log.Error("获取用户关系失败", zap.Error(err))
-	//	return
-	//}
-	//
-	//if userRelation.Status != relationgrpcv1.RelationStatus_RELATION_STATUS_ADDED {
-	//	log.Error("不是好友")
-	//	return
-	//}
+	var is bool
+	r, err := s.userLoginClient.GetUserLoginByDriverIdAndUserId(context.Background(), &usergrpcv1.DriverIdAndUserId{
+		DriverId: driverId,
+		UserId:   receiverId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户登录信息失败", zap.Error(err))
+	}
+
+	if r.Platform != "" && r.DriverToken != "" && err == nil {
+		is = true
+	}
 
 	//是否静默通知
 	if silent == relationgrpcv1.UserSilentNotificationType_UserSilent {
@@ -155,6 +158,27 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 					if err != nil {
 						s.logger.Error("send msggrpcv1 err", zap.Error(err))
 						return
+					}
+					if is {
+						appid, ok := s.ac.Push.PlatformAppID[r.Platform]
+						if !ok {
+							s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
+							continue
+						}
+						if constants.DriverType(r.Platform) != constants.MobileClient {
+							s.logger.Info("platform not mobile", zap.String("platform", r.Platform))
+							continue
+						}
+						if _, err := s.pushClient.Push(context.Background(), &pushv1.PushRequest{
+							Platform:    r.Platform,
+							Tokens:      []string{r.DriverToken},
+							Title:       msg.SenderInfo.Name,
+							Message:     message,
+							AppID:       appid,
+							Development: true,
+						}); err != nil {
+							s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
+						}
 					}
 				}
 			}

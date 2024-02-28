@@ -9,11 +9,14 @@ definitions:
         type: string
       password:
         type: string
+      platform:
+        type: string
     required:
     - driver_id
     - driver_token
     - email
     - password
+    - platform
     type: object
   model.LogoutRequest:
     properties:

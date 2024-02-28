@@ -8,6 +8,8 @@ type UserLogin struct {
 	Token       string `gorm:"type:longtext;comment:登录token" json:"token"`
 	DriverId    string `gorm:"type:longtext;comment:登录设备id" json:"driver_id"`
 	DriverToken string `gorm:"type:varchar(255);comment:登录设备token" json:"driver_token"`
+	ClientType  string `gorm:"type:varchar(20);comment:客户端类型" json:"client_type"`
+	Platform    string `gorm:"type:varchar(50);comment:手机厂商" json:"platform"`
 }
 
 type BaseModel struct {

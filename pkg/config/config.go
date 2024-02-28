@@ -116,6 +116,17 @@ func (c OSSCommonConfig) Addr() string {
 
 type OssConfig map[string]OSSCommonConfig
 
+type PushConfig struct {
+	Address string `mapstructure:"address" yaml:"address"`
+	Port    int    `mapstructure:"port" yaml:"port"`
+	// 手机厂商对应的appid 例如ios对应com.hitosea.xxx
+	PlatformAppID map[string]string `mapstructure:"platform_appid" yaml:"platform_appid"`
+}
+
+func (c PushConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Address, c.Port)
+}
+
 type AppConfig struct {
 	Log                 LogConfig                 `mapstructure:"log" yaml:"log"`
 	MySQL               MySQLConfig               `mapstructure:"mysql" yaml:"mySQL"`
@@ -133,6 +144,7 @@ type AppConfig struct {
 	Email               EmailConfig               `mapstructure:"email" yaml:"email"`
 	Livekit             LivekitConfig             `mapstructure:"livekit" yaml:"livekit"`
 	AdminConfig         AdminConfig               `mapstructure:"admin" yaml:"admin"`
+	Push                PushConfig                `mapstructure:"push" yaml:"push"`
 }
 
 type EncryptionConfig struct {

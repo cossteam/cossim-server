@@ -530,7 +530,8 @@ const docTemplateuser = `{
                 "driver_id",
                 "driver_token",
                 "email",
-                "password"
+                "password",
+                "platform"
             ],
             "properties": {
                 "driver_id": {
@@ -543,6 +544,9 @@ const docTemplateuser = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "platform": {
                     "type": "string"
                 }
             }
