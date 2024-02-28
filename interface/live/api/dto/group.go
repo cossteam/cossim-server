@@ -44,9 +44,9 @@ type GroupShowResponse struct {
 }
 
 type GroupRejectRequest struct {
-	GroupID uint32     `json:"group_id" binding:"required"` // 群组的ID
-	Room    string     `json:"room" binding:"required"`     // 房间名称
-	Option  CallOption `json:"option"`
+	GroupID uint32 `json:"group_id" binding:"required"` // 群组的ID
+	//Room    string     `json:"room" binding:"required"`     // 房间名称
+	Option CallOption `json:"option"`
 }
 
 type GroupLeaveRequest struct {

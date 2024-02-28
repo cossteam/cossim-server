@@ -73,7 +73,7 @@ discovers:
   group:
     name: "group_service"
     address: "group_service"
-    port: "10005"
+    port: 10005
 
     # 不使用服务发现，使用addr直接连接
     # 默认为false
