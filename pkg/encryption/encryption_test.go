@@ -1,8 +1,6 @@
 package encryption_test
 
 import (
-	"github.com/wneessen/go-mail"
-	"log"
 	"testing"
 )
 
@@ -11,24 +9,24 @@ var colors = []uint32{
 }
 
 func TestEncryption(t *testing.T) {
-	m := mail.NewMsg()
-	if err := m.From("2318266924@qq.com"); err != nil {
-		log.Fatalf("failed to set From address: %s", err)
-	}
-	if err := m.To("2622788078@qq.com"); err != nil {
-		log.Fatalf("failed to set To address: %s", err)
-	}
-	m.Subject("老铁拉屎没纸")
-	m.SetBodyString(mail.TypeTextPlain, "Do you like this mail? I certainly do!")
-
-	c, err := mail.NewClient("smtp.qq.com", mail.WithPort(25), mail.WithSMTPAuth(mail.SMTPAuthPlain),
-		mail.WithUsername("2318266924@qq.com"), mail.WithPassword("zjnudhwoiuknecgh"))
-	if err != nil {
-		log.Fatalf("failed to create mail client: %s", err)
-	}
-	if err := c.DialAndSend(m); err != nil {
-		log.Fatalf("failed to send mail: %s", err)
-	}
+	//m := mail.NewMsg()
+	//if err := m.From("2318266924@qq.com"); err != nil {
+	//	log.Fatalf("failed to set From address: %s", err)
+	//}
+	//if err := m.To("2622788078@qq.com"); err != nil {
+	//	log.Fatalf("failed to set To address: %s", err)
+	//}
+	//m.Subject("老铁拉屎没纸")
+	//m.SetBodyString(mail.TypeTextPlain, "Do you like this mail? I certainly do!")
+	//
+	//c, err := mail.NewClient("smtp.qq.com", mail.WithPort(25), mail.WithSMTPAuth(mail.SMTPAuthPlain),
+	//	mail.WithUsername("2318266924@qq.com"), mail.WithPassword("zjnudhwoiuknecgh"))
+	//if err != nil {
+	//	log.Fatalf("failed to create mail client: %s", err)
+	//}
+	//if err := c.DialAndSend(m); err != nil {
+	//	log.Fatalf("failed to send mail: %s", err)
+	//}
 }
 
 //func min(a, b int64) int64 {
