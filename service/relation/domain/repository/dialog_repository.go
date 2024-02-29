@@ -32,4 +32,6 @@ type DialogRepository interface {
 	UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error
 	// UpdateDialogColumnByDialogID 根据会话ID更新会话信息
 	UpdateDialogUserColumnByDialogIDAndUserId(dialogID uint, userID string, column string, value interface{}) error
+	//根据对话id与多个uid更新会话成员信息
+	UpdateDialogUserByDialogIDAndUserIds(dialogID uint, userIDs []string, column string, value interface{}) error
 }

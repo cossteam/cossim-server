@@ -42,6 +42,7 @@ const (
 	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName       = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
 	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
 	DialogService_CloseOrOpenDialog_FullMethodName                         = "/v1.DialogService/CloseOrOpenDialog"
+	DialogService_BatchCloseOrOpenDialog_FullMethodName                    = "/v1.DialogService/BatchCloseOrOpenDialog"
 	DialogService_TopOrCancelTopDialog_FullMethodName                      = "/v1.DialogService/TopOrCancelTopDialog"
 	DialogService_GetAllUsersInConversation_FullMethodName                 = "/v1.DialogService/GetAllUsersInConversation"
 )
@@ -93,6 +94,8 @@ type DialogServiceClient interface {
 	DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// 关闭或者打开对话
 	CloseOrOpenDialog(ctx context.Context, in *CloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 批量打开或关闭对话
+	BatchCloseOrOpenDialog(ctx context.Context, in *BatchCloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 置顶或者取消置顶对话
 	TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取对话用户（包括已退出对话）
@@ -305,6 +308,15 @@ func (c *dialogServiceClient) CloseOrOpenDialog(ctx context.Context, in *CloseOr
 	return out, nil
 }
 
+func (c *dialogServiceClient) BatchCloseOrOpenDialog(ctx context.Context, in *BatchCloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, DialogService_BatchCloseOrOpenDialog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dialogServiceClient) TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, DialogService_TopOrCancelTopDialog_FullMethodName, in, out, opts...)
@@ -370,6 +382,8 @@ type DialogServiceServer interface {
 	DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// 关闭或者打开对话
 	CloseOrOpenDialog(context.Context, *CloseOrOpenDialogRequest) (*emptypb.Empty, error)
+	// 批量打开或关闭对话
+	BatchCloseOrOpenDialog(context.Context, *BatchCloseOrOpenDialogRequest) (*emptypb.Empty, error)
 	// 置顶或者取消置顶对话
 	TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error)
 	// 获取对话用户（包括已退出对话）
@@ -446,6 +460,9 @@ func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserIDRever
 }
 func (UnimplementedDialogServiceServer) CloseOrOpenDialog(context.Context, *CloseOrOpenDialogRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseOrOpenDialog not implemented")
+}
+func (UnimplementedDialogServiceServer) BatchCloseOrOpenDialog(context.Context, *BatchCloseOrOpenDialogRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchCloseOrOpenDialog not implemented")
 }
 func (UnimplementedDialogServiceServer) TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TopOrCancelTopDialog not implemented")
@@ -862,6 +879,24 @@ func _DialogService_CloseOrOpenDialog_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_BatchCloseOrOpenDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchCloseOrOpenDialogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).BatchCloseOrOpenDialog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_BatchCloseOrOpenDialog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).BatchCloseOrOpenDialog(ctx, req.(*BatchCloseOrOpenDialogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DialogService_TopOrCancelTopDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TopOrCancelTopDialogRequest)
 	if err := dec(in); err != nil {
@@ -992,6 +1027,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CloseOrOpenDialog",
 			Handler:    _DialogService_CloseOrOpenDialog_Handler,
+		},
+		{
+			MethodName: "BatchCloseOrOpenDialog",
+			Handler:    _DialogService_BatchCloseOrOpenDialog_Handler,
 		},
 		{
 			MethodName: "TopOrCancelTopDialog",

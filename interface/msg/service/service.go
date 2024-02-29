@@ -42,18 +42,14 @@ type Service struct {
 	groupClient          groupgrpcv1.GroupServiceClient
 	msgClient            msggrpcv1.MsgServiceClient
 	groupMsgClient       msggrpcv1.GroupMessageServiceClient
+	dtmGrpcServer        string
+	dialogGrpcServer     string
 	redisClient          *redis.Client
 	pushClient           pushv1.PushServiceClient
-
-	//mqClient *msg_queue.RabbitMQ
-
-	logger    *zap.Logger
-	sid       string
-	discovery discovery.Registry
-	ac        *pkgconfig.AppConfig
-	//Enc       encryption.Encryptor
-
-	//pool  map[string]map[string][]*client
+	logger               *zap.Logger
+	sid                  string
+	discovery            discovery.Registry
+	ac                   *pkgconfig.AppConfig
 }
 
 func New(ac *pkgconfig.AppConfig) *Service {
@@ -72,11 +68,12 @@ func New(ac *pkgconfig.AppConfig) *Service {
 	setupEncryption(ac)
 
 	s := &Service{
-		ac:          ac,
-		logger:      plog.NewDevLogger("msg_bff"),
-		sid:         xid.New().String(),
-		redisClient: setupRedis(ac),
-		pushClient:  pushClient,
+		ac:            ac,
+		logger:        plog.NewDevLogger("msg_bff"),
+		sid:           xid.New().String(),
+		redisClient:   setupRedis(ac),
+		pushClient:    pushClient,
+		dtmGrpcServer: ac.Dtm.Addr(),
 		//rabbitMQClient: mqClient,
 		//pool:     make(map[string]map[string][]*client),
 		//mqClient: mqClient,
@@ -217,6 +214,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
 
 		s.relationDialogClient = relationgrpcv1.NewDialogServiceClient(conn)
+		s.dialogGrpcServer = conn.Target()
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
 	case "group_service":
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)

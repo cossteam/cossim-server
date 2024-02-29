@@ -15,9 +15,13 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	pushv1 "github.com/cossim/hipush/api/grpc/v1"
+	"github.com/dtm-labs/client/dtmcli"
+	"github.com/dtm-labs/client/workflow"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"log"
 	"sort"
 	"time"
@@ -73,18 +77,74 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		return nil, err
 	}
 
-	message, err := s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
-		DialogId:               req.DialogId,
-		SenderId:               userID,
-		ReceiverId:             req.ReceiverId,
-		Content:                req.Content,
-		Type:                   int32(req.Type),
-		ReplayId:               uint64(req.ReplayId),
-		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
+	dialogUser2, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+		DialogId: req.DialogId,
+		UserId:   req.ReceiverId,
 	})
 	if err != nil {
-		s.logger.Error("发送消息失败", zap.Error(err))
-		return nil, code.MsgErrInsertUserMessageFailed
+		s.logger.Error("获取用户会话失败", zap.Error(err))
+		return nil, err
+	}
+
+	var message *msggrpcv1.SendUserMsgResponse
+	workflow.InitGrpc(s.dtmGrpcServer, s.dialogGrpcServer, grpc.NewServer())
+	gid := shortuuid.New()
+	wfName := "send_user_msg_workflow_" + gid
+	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
+		_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+			DialogId: req.DialogId,
+			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
+			UserId:   userID,
+		})
+		if err != nil {
+			return err
+		}
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+				DialogId: req.DialogId,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
+				UserId:   userID,
+			})
+			return err
+		})
+
+		_, err = s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+			DialogId: req.DialogId,
+			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
+			UserId:   dialogUser2.UserId,
+		})
+		if err != nil {
+			return err
+		}
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+				DialogId: req.DialogId,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
+				UserId:   dialogUser2.UserId,
+			})
+			return err
+		})
+
+		message, err = s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
+			DialogId:               req.DialogId,
+			SenderId:               userID,
+			ReceiverId:             req.ReceiverId,
+			Content:                req.Content,
+			Type:                   int32(req.Type),
+			ReplayId:               uint64(req.ReplayId),
+			IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
+		})
+		if err != nil {
+			s.logger.Error("发送消息失败", zap.Error(err))
+			return code.MsgErrInsertUserMessageFailed
+		}
+
+		return err
+	}); err != nil {
+		return "", err
+	}
+	if err := workflow.Execute(wfName, gid, nil); err != nil {
+		return "", err
 	}
 
 	//查询发送者信息

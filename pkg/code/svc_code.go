@@ -91,6 +91,7 @@ var (
 	RelationGroupErrUpdateGroupAnnouncementFailed          = New(13125, "更新群聊公告失败")
 	RelationGroupErrGroupAnnouncementNotFoundFailed        = New(13126, "群聊公告不存在")
 	RelationGroupErrGroupFull                              = New(13127, "群聊已满")
+	RelationErrGroupRequestAlreadyProcessed                = New(13128, "请求已存在")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

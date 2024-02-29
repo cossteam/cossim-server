@@ -392,3 +392,12 @@ func (s *Service) GetAllUsersInConversation(ctx context.Context, in *v1.GetAllUs
 	resp.UserIds = ids
 	return resp, nil
 }
+
+func (s *Service) BatchCloseOrOpenDialog(ctx context.Context, request *v1.BatchCloseOrOpenDialogRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	err := s.dr.UpdateDialogUserByDialogIDAndUserIds(uint(request.DialogId), request.UserIds, "is_show", request.Action)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrCloseOrOpenDialogFailed.Code()), err.Error())
+	}
+	return resp, nil
+}

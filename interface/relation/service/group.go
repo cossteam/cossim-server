@@ -76,6 +76,18 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, err
 	}
 
+	//查询是不是已经有邀请
+	id, err := s.groupJoinRequestClient.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
+		GroupId: req.GroupID,
+		UserId:  uid,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+	}
+	if id != nil && id.GroupId != 0 {
+		return nil, code.RelationErrGroupRequestAlreadyProcessed
+	}
+
 	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
 		return nil, code.GroupErrGroupStatusNotAvailable
 	}
@@ -425,7 +437,7 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 		return nil, errors.New("没有权限操作")
 	}
 
-	_, err = s.groupAnnouncementClient.CreateGroupAnnouncement(ctx, &relationgrpcv1.CreateGroupAnnouncementRequest{
+	resp, err := s.groupAnnouncementClient.CreateGroupAnnouncement(ctx, &relationgrpcv1.CreateGroupAnnouncementRequest{
 		GroupId: req.GroupId,
 		UserId:  userId,
 		Content: req.Content,
@@ -435,6 +447,38 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 	if err != nil {
 		return nil, err
 	}
+
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+		UserId: userId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//查询群成员
+	ds, err := s.groupRelationClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ds.UserIds {
+		if id == userId {
+			continue
+		}
+		msg := constants.WsMsg{Uid: id, Event: constants.CreateGroupAnnouncementEvent, Data: model.WsGroupRelationOperatorMsg{
+			Id:      resp.ID,
+			GroupId: req.GroupId,
+			Title:   req.Title,
+			Content: req.Content,
+			OperatorInfo: model.SenderInfo{
+				UserId: info.UserId,
+				Avatar: info.Avatar,
+				Name:   info.NickName,
+			},
+		}}
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	}
+
 	return nil, nil
 }
 
@@ -553,6 +597,20 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.GroupErrGroupStatusNotAvailable
 	}
 
+	for _, s2 := range req.Member {
+		//查询是不是已经有邀请
+		id, err := s.groupJoinRequestClient.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
+			GroupId: req.GroupID,
+			UserId:  s2,
+		})
+		if err != nil {
+			s.logger.Error("获取群聊信息失败", zap.Error(err))
+		}
+		if id != nil && id.GroupId != 0 {
+			return code.RelationErrGroupRequestAlreadyProcessed
+		}
+	}
+
 	relation1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: inviterId})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
@@ -600,12 +658,10 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	}
 
 	// 给被邀请的用户推送
-	//for _, id := range req.Member {
-	//	msg := constants.WsMsg{Uid: id, Event: constants.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "inviter_id": inviterId}, SendAt: time.Now()}
-	//	//通知消息服务有消息需要发送
-
-	//	err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	//}
+	for _, id := range req.Member {
+		msg := constants.WsMsg{Uid: id, Event: constants.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "inviter_id": inviterId}, SendAt: time.Now()}
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	}
 
 	return nil
 }
@@ -655,6 +711,37 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 	res, err := s.groupAnnouncementClient.UpdateGroupAnnouncement(ctx, &relationgrpcv1.UpdateGroupAnnouncementRequest{ID: req.Id, Title: req.Title, Content: req.Content})
 	if err != nil {
 		return nil, err
+	}
+
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+		UserId: userId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//查询群成员
+	ds, err := s.groupRelationClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+	for _, id := range ds.UserIds {
+		if id == userId {
+			continue
+		}
+		msg := constants.WsMsg{Uid: id, Event: constants.UpdateGroupAnnouncementEvent, Data: model.WsGroupRelationOperatorMsg{
+			Id:      req.Id,
+			GroupId: req.GroupId,
+			Title:   req.Title,
+			Content: req.Content,
+			OperatorInfo: model.SenderInfo{
+				UserId: info.UserId,
+				Avatar: info.Avatar,
+				Name:   info.NickName,
+			},
+		}}
+		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	}
 
 	return res, nil
