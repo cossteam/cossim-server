@@ -137,8 +137,7 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 }
 func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *model.SendFriendRequest) (interface{}, error) {
 	if req.UserId == userID {
-		err := errors.New("不能添加自己为好友")
-		return nil, err
+		return nil, code.RelationErrSendFriendRequestFailed
 	}
 	_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: req.UserId})
 	if err != nil {
@@ -193,8 +192,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	})
 	if err != nil {
 		s.logger.Error("添加好友失败", zap.Error(err))
-		err := errors.New("添加好友失败")
-		return nil, err
+		return nil, code.RelationErrSendFriendRequestFailed
 	}
 
 	wsMsgData := constants.AddFriendEventData{
