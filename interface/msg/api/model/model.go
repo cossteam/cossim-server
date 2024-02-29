@@ -186,7 +186,7 @@ func IsAllowedConversationType(isBurnAfterReading BurnAfterReadingType) bool {
 type GroupMessageReadRequest struct {
 	GroupId  uint32   `json:"group_id" binding:"required"`  // 群组ID
 	DialogId uint32   `json:"dialog_id" binding:"required"` // 会话ID
-	MsgIds   []uint32 `json:"msg_id" binding:"required"`    // 消息ID
+	MsgIds   []uint32 `json:"msg_ids" binding:"required"`   // 消息ID
 }
 
 type GetGroupMessageReadersResponse struct {

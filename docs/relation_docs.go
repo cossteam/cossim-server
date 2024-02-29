@@ -1045,8 +1045,7 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "content",
-                "group_id",
-                "title"
+                "group_id"
             ],
             "properties": {
                 "content": {

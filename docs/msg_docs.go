@@ -704,7 +704,7 @@ const docTemplatemsg = `{
             "required": [
                 "dialog_id",
                 "group_id",
-                "msg_id"
+                "msg_ids"
             ],
             "properties": {
                 "dialog_id": {
@@ -715,7 +715,7 @@ const docTemplatemsg = `{
                     "description": "群组ID",
                     "type": "integer"
                 },
-                "msg_id": {
+                "msg_ids": {
                     "description": "消息ID",
                     "type": "array",
                     "items": {

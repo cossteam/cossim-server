@@ -65,7 +65,7 @@ definitions:
       group_id:
         description: 群组ID
         type: integer
-      msg_id:
+      msg_ids:
         description: 消息ID
         items:
           type: integer
@@ -73,7 +73,7 @@ definitions:
     required:
     - dialog_id
     - group_id
-    - msg_id
+    - msg_ids
     type: object
   model.LabelGroupMessageRequest:
     properties:

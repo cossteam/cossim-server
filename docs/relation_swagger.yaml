@@ -48,7 +48,6 @@ definitions:
     required:
     - content
     - group_id
-    - title
     type: object
   model.DeleteBlacklistRequest:
     properties:
