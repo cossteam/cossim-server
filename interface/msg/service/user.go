@@ -202,55 +202,59 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 		m.Event = constants.SendSilentUserMessageEvent
 	}
 
-	//遍历该用户所有客户端
-	if _, ok := pool[receiverId]; ok {
-		if len(pool[receiverId]) > 0 {
-			receFlag = true
-			for _, c := range pool[receiverId] {
-				for _, c2 := range c {
-					m.Rid = c2.Rid
-					js, _ := json.Marshal(m)
-					message, err := Enc.GetSecretMessage(string(js), receiverId)
-					if err != nil {
-						return
-					}
-					err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-					if err != nil {
-						s.logger.Error("send msggrpcv1 err", zap.Error(err))
-						return
-					}
-					if is {
-						appid, ok := s.ac.Push.PlatformAppID[r.Platform]
-						if !ok {
-							s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
-							continue
-						}
-						if constants.DriverType(r.ClientType) != constants.MobileClient {
-							s.logger.Info("client type not mobile", zap.String("client type", r.ClientType))
-							continue
-						}
-						text, err := utils.ExtractText(msg.Content)
+	//接受者不为系统则推送
+	if !constants.IsSystemUser(constants.SystemUser(receiverId)) {
+		//遍历该用户所有客户端
+		if _, ok := pool[receiverId]; ok {
+			if len(pool[receiverId]) > 0 {
+				receFlag = true
+				for _, c := range pool[receiverId] {
+					for _, c2 := range c {
+						m.Rid = c2.Rid
+						js, _ := json.Marshal(m)
+						message, err := Enc.GetSecretMessage(string(js), receiverId)
 						if err != nil {
-							s.logger.Error("extract html text err", zap.Error(err))
-							continue
+							return
 						}
-						s.logger.Info("push message", zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
-						if _, err := s.pushClient.Push(context.Background(), &pushv1.PushRequest{
-							Platform:    r.Platform,
-							Tokens:      []string{r.DriverToken},
-							Title:       msg.SenderInfo.Name,
-							Message:     text,
-							AppID:       appid,
-							Topic:       appid,
-							Development: true,
-						}); err != nil {
-							s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
+						err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+						if err != nil {
+							s.logger.Error("send msggrpcv1 err", zap.Error(err))
+							return
+						}
+						if is {
+							appid, ok := s.ac.Push.PlatformAppID[r.Platform]
+							if !ok {
+								s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
+								continue
+							}
+							if constants.DriverType(r.ClientType) != constants.MobileClient {
+								s.logger.Info("client type not mobile", zap.String("client type", r.ClientType))
+								continue
+							}
+							text, err := utils.ExtractText(msg.Content)
+							if err != nil {
+								s.logger.Error("extract html text err", zap.Error(err))
+								continue
+							}
+							s.logger.Info("push message", zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
+							if _, err := s.pushClient.Push(context.Background(), &pushv1.PushRequest{
+								Platform:    r.Platform,
+								Tokens:      []string{r.DriverToken},
+								Title:       msg.SenderInfo.Name,
+								Message:     text,
+								AppID:       appid,
+								Topic:       appid,
+								Development: true,
+							}); err != nil {
+								s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
+							}
 						}
 					}
 				}
 			}
 		}
 	}
+
 	if _, ok := pool[senderId]; ok {
 		if len(pool[senderId]) > 0 {
 			sendFlag = true
@@ -305,8 +309,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 		return
 	}
 	if !receFlag {
-		fmt.Println("推送离线消息1")
-
 		err := rabbitMQClient.PublishMessage(receiverId, m)
 		if err != nil {
 			s.logger.Error("发布消息失败", zap.Error(err))
@@ -314,8 +316,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 		}
 	}
 	if !sendFlag {
-		fmt.Println("推送离线消息2")
-
 		err := rabbitMQClient.PublishMessage(senderId, m)
 		if err != nil {
 			s.logger.Error("发布消息失败", zap.Error(err))
