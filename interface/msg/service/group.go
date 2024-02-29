@@ -12,9 +12,13 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	pushv1 "github.com/cossim/hipush/api/grpc/v1"
+	"github.com/dtm-labs/client/dtmcli"
+	"github.com/dtm-labs/client/workflow"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 // 推送群聊消息
@@ -155,26 +159,59 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, code.DialogErrGetDialogUserByDialogIDAndUserIDFailed
 	}
 
-	message, err := s.msgClient.SendGroupMessage(ctx, &msggrpcv1.SendGroupMsgRequest{
-		DialogId:               req.DialogId,
-		GroupId:                req.GroupId,
-		UserId:                 userID,
-		Content:                req.Content,
-		Type:                   req.Type,
-		ReplayId:               req.ReplayId,
-		AtUsers:                req.AtUsers,
-		AtAllUser:              msggrpcv1.AtAllUserType(req.AtAllUser),
-		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
-	})
-	// 发送成功进行消息推送
-	if err != nil {
-		s.logger.Error("发送消息失败", zap.Error(err))
-		return nil, err
-	}
 	//查询群聊所有用户id
 	uids, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupId,
 	})
+
+	var message *msggrpcv1.SendGroupMsgResponse
+
+	workflow.InitGrpc(s.dtmGrpcServer, s.dialogGrpcServer, grpc.NewServer())
+	gid := shortuuid.New()
+	wfName := "send_group_msg_workflow_" + gid
+	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
+
+		_, err := s.relationDialogClient.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
+			DialogId: req.DialogId,
+			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
+			UserIds:  uids.UserIds,
+		})
+		if err != nil {
+			return err
+		}
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err := s.relationDialogClient.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
+				DialogId: req.DialogId,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
+				UserIds:  uids.UserIds,
+			})
+			return err
+		})
+
+		message, err = s.msgClient.SendGroupMessage(ctx, &msggrpcv1.SendGroupMsgRequest{
+			DialogId:               req.DialogId,
+			GroupId:                req.GroupId,
+			UserId:                 userID,
+			Content:                req.Content,
+			Type:                   req.Type,
+			ReplayId:               req.ReplayId,
+			AtUsers:                req.AtUsers,
+			AtAllUser:              msggrpcv1.AtAllUserType(req.AtAllUser),
+			IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
+		})
+		// 发送成功进行消息推送
+		if err != nil {
+			s.logger.Error("发送消息失败", zap.Error(err))
+			return err
+		}
+
+		return err
+	}); err != nil {
+		return "", err
+	}
+	if err := workflow.Execute(wfName, gid, nil); err != nil {
+		return "", err
+	}
 
 	//查询发送者信息
 	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{

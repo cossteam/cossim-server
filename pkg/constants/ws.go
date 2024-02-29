@@ -78,6 +78,12 @@ const (
 
 	// 群聊通话接受事件
 	GroupCallAcceptEvent
+
+	//创建群公告
+	CreateGroupAnnouncementEvent
+
+	//修改群公告
+	UpdateGroupAnnouncementEvent
 )
 
 type WsMsg struct {

@@ -224,7 +224,7 @@ func IsValidOpenBurnAfterReadingType(input OpenBurnAfterReadingType) bool {
 
 type CreateGroupAnnouncementRequest struct {
 	GroupId uint32 `json:"group_id" binding:"required"` // 群组ID
-	Title   string `json:"title" binding:"required"`    // 公告标题
+	Title   string `json:"title"`                       // 公告标题
 	Content string `json:"content" binding:"required"`  // 公告内容
 }
 
@@ -243,4 +243,18 @@ type UpdateGroupAnnouncementRequest struct {
 type SetUserFriendRemarkRequest struct {
 	UserId string `json:"user_id" binding:"required"` // 用户ID
 	Remark string `json:"remark" binding:"required"`  // 备注
+}
+
+type WsGroupRelationOperatorMsg struct {
+	Id           uint32     `json:"id" binding:"required"`       // 公告ID
+	GroupId      uint32     `json:"group_id" binding:"required"` // 群组ID
+	Title        string     `json:"title"`                       // 公告标题
+	Content      string     `json:"content" binding:"required"`  // 公告内容
+	OperatorInfo SenderInfo `json:"operator_info"`
+}
+
+type SenderInfo struct {
+	UserId string `json:"user_id"`
+	Avatar string `json:"avatar"`
+	Name   string `json:"name"`
 }

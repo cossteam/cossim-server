@@ -227,6 +227,17 @@ message CloseOrOpenDialogRequest {
   CloseOrOpenDialogType Action = 3;
 }
 
+message BatchCloseOrOpenDialogRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+  // @inject_tag: json:"user_ids"
+ repeated string UserIds = 2;
+  // @inject_tag: json:"action"
+  CloseOrOpenDialogType Action = 3;
+}
+
+
+
 message TopOrCancelTopDialogRequest{
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 1;
@@ -313,6 +324,9 @@ service DialogService {
 
   //关闭或者打开对话
   rpc CloseOrOpenDialog(CloseOrOpenDialogRequest) returns (google.protobuf.Empty) {}
+
+  //批量打开或关闭对话
+  rpc BatchCloseOrOpenDialog(BatchCloseOrOpenDialogRequest) returns (google.protobuf.Empty) {}
 
   //置顶或者取消置顶对话
   rpc TopOrCancelTopDialog(TopOrCancelTopDialogRequest) returns (google.protobuf.Empty) {}

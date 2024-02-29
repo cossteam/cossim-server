@@ -79,10 +79,10 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 			return err
 		}
 		DialogID = resp2.DialogId
-		//wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-		//	_, err = s.relationGroupClient.CreateGroupAndInviteUsersRevert(ctx, r22)
-		//	return err
-		//})
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err = s.relationGroupClient.CreateGroupAndInviteUsersRevert(ctx, r22)
+			return err
+		})
 
 		return err
 	}); err != nil {
