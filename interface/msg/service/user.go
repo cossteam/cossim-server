@@ -185,9 +185,8 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 	}
 
 	var is bool
-	r, err := s.userLoginClient.GetUserLoginByDriverIdAndUserId(context.Background(), &usergrpcv1.DriverIdAndUserId{
-		DriverId: driverId,
-		UserId:   receiverId,
+	r, err := s.userLoginClient.GetUserLoginByUserId(context.Background(), &usergrpcv1.GetUserLoginByUserIdRequest{
+		UserId: receiverId,
 	})
 	if err != nil {
 		s.logger.Error("获取用户登录信息失败", zap.Error(err))

@@ -48,3 +48,12 @@ func (u UserLoginRepo) GetUserDriverTokenByUserId(userId string) ([]string, erro
 	}
 	return driverTokens, err
 }
+
+func (u UserLoginRepo) GetUserByUserId(userId string) (*entity.UserLogin, error) {
+	var user *entity.UserLogin
+	err := u.db.Where("user_id = ?", userId).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

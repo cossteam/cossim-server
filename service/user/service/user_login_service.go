@@ -114,3 +114,20 @@ func (s *Service) GetUserDriverTokenByUserId(ctx context.Context, request *v1.Ge
 	}
 	return resp, nil
 }
+
+func (s *Service) GetUserLoginByUserId(ctx context.Context, in *v1.GetUserLoginByUserIdRequest) (*v1.UserLogin, error) {
+	resp := &v1.UserLogin{}
+	info, err := s.ulr.GetUserByUserId(in.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.UserErrCreateUserRollbackFailed.Code()), err.Error())
+	}
+	if info != nil {
+		resp.UserId = info.UserId
+		resp.Token = info.Token
+		resp.DriverId = info.DriverId
+		resp.DriverToken = info.DriverToken
+		resp.Platform = info.Platform
+		resp.ClientType = info.ClientType
+	}
+	return resp, nil
+}

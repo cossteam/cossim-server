@@ -46,7 +46,7 @@ func main() {
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
 			Key:                  "interface/msg",
-			Keys:                 discovery.DefaultKeys,
+			Keys:                 []string{discovery.CommonMySQLConfigKey, discovery.CommonRedisConfigKey, discovery.CommonMQConfigKey, discovery.CommonDtmConfigKey},
 			Registry: ctrl.Registry{
 				Discover: discover,
 				Register: register,
