@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
@@ -434,7 +433,7 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 	}
 
 	if relation.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
-		return nil, errors.New("没有权限操作")
+		return nil, code.Forbidden
 	}
 
 	resp, err := s.groupAnnouncementClient.CreateGroupAnnouncement(ctx, &relationgrpcv1.CreateGroupAnnouncementRequest{
@@ -486,11 +485,11 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 	gr1, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: adminID, GroupId: groupID})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
-		return errors.New("获取用户群组关系失败")
+		return code.RelationGroupErrGroupRelationFailed
 	}
 
 	if gr1.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
-		return errors.New("没有权限操作")
+		return code.Forbidden
 	}
 
 	relation, err := s.groupRelationClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: groupID, UserIds: userIDs})
@@ -500,7 +499,7 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 
 	for _, v := range relation.GroupRelationResponses {
 		if v.Identity != relationgrpcv1.GroupIdentity_IDENTITY_USER {
-			return errors.New("不能移除管理员")
+			return code.Forbidden
 		}
 	}
 
@@ -517,12 +516,12 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 	//查询用户是否在群聊中
 	_, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
 	if err != nil {
-		return errors.New("用户群聊状态不可用")
+		return code.RelationGroupErrGroupRelationFailed
 	}
 
 	dialog, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 	if err != nil {
-		return errors.New("获取群聊会话失败")
+		return code.DialogErrGetDialogByIdFailed
 	}
 
 	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: dialog.DialogId, UserId: userID}
@@ -537,7 +536,7 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 		return err
 	})
 	if err != nil {
-		return errors.New("退出群聊失败")
+		return code.RelationGroupErrLeaveGroupFailed
 	}
 
 	return nil
@@ -696,7 +695,7 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 	}
 
 	if relation.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
-		return nil, errors.New("没有权限操作")
+		return nil, code.Forbidden
 	}
 
 	an, err := s.groupAnnouncementClient.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
@@ -759,7 +758,7 @@ func (s *Service) DeleteGroupAnnouncement(ctx context.Context, userId string, re
 	}
 
 	if relation.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
-		return nil, errors.New("没有权限操作")
+		return nil, code.Forbidden
 	}
 
 	an, err := s.groupAnnouncementClient.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
