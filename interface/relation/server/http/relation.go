@@ -825,13 +825,13 @@ func (h *Handler) createGroupAnnouncement(c *gin.Context) {
 		return
 	}
 
-	_, err = h.svc.CreateGroupAnnouncement(c, thisId, req)
+	resp, err := h.svc.CreateGroupAnnouncement(c, thisId, req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "创建成功", nil)
+	response.SetSuccess(c, "创建成功", resp)
 }
 
 // 获取群公告
@@ -863,6 +863,51 @@ func (h *Handler) getGroupAnnouncementList(c *gin.Context) {
 	}
 
 	resp, err := h.svc.GetGroupAnnouncementList(c, thisId, uint32(groupId))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取成功", resp)
+}
+
+// 查询群公告详情
+// @Summary 查询群公告详情
+// @Description 查询群公告详情
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @Param id query string true "群公告id"
+// @Param group_id query string true "群id"
+// @Success		200 {object} model.Response{}
+// @Router /relation/group/announcement/detail [get]
+func (h *Handler) getGroupAnnouncementDetail(c *gin.Context) {
+	var id = c.Query("id")
+	var gid = c.Query("group_id")
+
+	if id == "" || gid == "" {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	aId, err := strconv.Atoi(id)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	groupId, err := strconv.Atoi(gid)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.GetGroupAnnouncementDetail(c, thisId, uint32(aId), uint32(groupId))
 	if err != nil {
 		c.Error(err)
 		return

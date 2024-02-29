@@ -493,6 +493,32 @@ paths:
       summary: 删除群公告
       tags:
       - GroupRelation
+  /relation/group/announcement/detail:
+    get:
+      consumes:
+      - application/json
+      description: 查询群公告详情
+      parameters:
+      - description: 群公告id
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: 群id
+        in: query
+        name: group_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 查询群公告详情
+      tags:
+      - GroupRelation
   /relation/group/announcement/list:
     get:
       consumes:

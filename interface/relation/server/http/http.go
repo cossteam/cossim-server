@@ -97,15 +97,20 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g.POST("/burn/open", h.openGroupBurnAfterReading)
 	//获取群聊公告列表
 	g.GET("/announcement/list", h.getGroupAnnouncementList)
-	g.POST("/announcement/update", h.updateGroupAnnouncement)
-	g.POST("/announcement/delete", h.deleteGroupAnnouncement)
+	//获取群公告详情
+	g.GET("/announcement/detail", h.getGroupAnnouncementDetail)
 
 	gg := api.Group("/group/admin")
 	// 管理员管理群聊申请
 	gg.POST("/manage/join", h.adminManageJoinGroup)
 	// 管理员移除群聊成员
 	gg.POST("/manage/remove", h.removeUserFromGroup)
+	//创建群公告
 	gg.POST("/announcement", h.createGroupAnnouncement)
+	//修改群公告
+	gg.POST("/announcement/update", h.updateGroupAnnouncement)
+	//删除群公告
+	gg.POST("/announcement/delete", h.deleteGroupAnnouncement)
 
 	d := api.Group("/dialog")
 	d.POST("/top", h.topOrCancelTopDialog)
