@@ -83,7 +83,6 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	if err != nil {
 		s.logger.Error("failed to get user login by driver id and user id", zap.Error(err))
 	}
-
 	_, err = s.userLoginClient.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
 		UserId:      resp.UserId,
 		DriverId:    req.DriverId,
@@ -186,7 +185,10 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	reader := bytes.NewReader(avatar)
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	headerUrl, err := s.sp.Upload(context.Background(), key, reader, reader.Size(), minio.PutObjectOptions{ContentType: "image/jpeg"})
+	headerUrl, err := s.sp.Upload(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+		Expires:     ostime.Now().AddDate(10, 0, 0),
+	})
 	if err != nil {
 		return "", err
 	}
@@ -202,7 +204,6 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	gid := shortuuid.New()
 	wfName := "register_user_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-
 		resp, err := s.userClient.UserRegister(ctx, &usergrpcv1.UserRegisterRequest{
 			Email:           req.Email,
 			NickName:        req.Nickname,

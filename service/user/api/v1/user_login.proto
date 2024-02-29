@@ -54,10 +54,17 @@ message GetUserDriverTokenByUserIdResponse{
   repeated string Token = 2;
 }
 
+message GetUserLoginByUserIdRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+}
+
 service UserLoginService {
   rpc InsertUserLogin(UserLogin) returns (google.protobuf.Empty) {}
   rpc GetUserLoginByToken(GetUserLoginByTokenRequest) returns (UserLogin) {}
   rpc GetUserLoginByDriverIdAndUserId(DriverIdAndUserId) returns (UserLogin) {}
   rpc UpdateUserLoginTokenByDriverId(TokenUpdate) returns (google.protobuf.Empty) {}
   rpc GetUserDriverTokenByUserId(GetUserDriverTokenByUserIdRequest) returns (GetUserDriverTokenByUserIdResponse) {}
+  // 根据用户ID获取登录信息
+  rpc GetUserLoginByUserId(GetUserLoginByUserIdRequest) returns (UserLogin) {}
 }
