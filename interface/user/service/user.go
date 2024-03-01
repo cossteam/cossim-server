@@ -187,7 +187,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	key := myminio.GenKey(bucket, fileID+".jpeg")
 	headerUrl, err := s.sp.Upload(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
 		ContentType: "image/jpeg",
-		Expires:     ostime.Now().AddDate(10, 0, 0),
+		Expires:     ostime.Now().AddDate(0, 0, 7),
 	})
 	if err != nil {
 		return "", err
