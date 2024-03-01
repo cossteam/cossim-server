@@ -924,7 +924,7 @@ func (h *Handler) getGroupAnnouncementDetail(c *gin.Context) {
 // @Produce  json
 // @param request body model.UpdateGroupAnnouncementRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /relation/group/announcement/update [post]
+// @Router /relation/group/admin/announcement/update [post]
 func (h *Handler) updateGroupAnnouncement(c *gin.Context) {
 	req := new(model.UpdateGroupAnnouncementRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -956,7 +956,7 @@ func (h *Handler) updateGroupAnnouncement(c *gin.Context) {
 // @Produce  json
 // @param request body model.DeleteGroupAnnouncementRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /relation/group/announcement/delete [post]
+// @Router /relation/group/admin/announcement/delete [post]
 func (h *Handler) deleteGroupAnnouncement(c *gin.Context) {
 	req := new(model.DeleteGroupAnnouncementRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -1008,4 +1008,80 @@ func (h *Handler) setUserFriendRemark(c *gin.Context) {
 	}
 
 	response.SetSuccess(c, "修改成功", nil)
+}
+
+// 设置群聊公告为已读
+// @Summary 设置群聊公告为已读
+// @Description 设置群聊公告为已读
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.ReadGroupAnnouncementRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/announcement/read [post]
+func (h *Handler) readGroupAnnouncement(c *gin.Context) {
+	req := new(model.ReadGroupAnnouncementRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	_, err = h.svc.ReadGroupAnnouncement(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", nil)
+}
+
+// 获取已读公告用户
+// @Summary 获取已读公告用户
+// @Description 获取已读公告用户
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param id query string true "id"
+// @param group_id query string true "group_id"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/announcement/read/list [get]
+func (h *Handler) getReadGroupAnnouncementList(c *gin.Context) {
+	var id = c.Query("id")
+	var gid = c.Query("group_id")
+
+	if id == "" || gid == "" {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	aId, err := strconv.Atoi(id)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	groupId, err := strconv.Atoi(gid)
+	if err != nil {
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	resp, err := h.svc.GetReadGroupAnnouncementUserList(c, thisID, uint32(aId), uint32(groupId))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取成功", resp)
 }

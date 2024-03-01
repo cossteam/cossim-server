@@ -188,12 +188,12 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 	r, err := s.userLoginClient.GetUserLoginByUserId(context.Background(), &usergrpcv1.GetUserLoginByUserIdRequest{
 		UserId: receiverId,
 	})
-	if err != nil {
+	if err == nil {
+		if r.Platform != "" && r.DriverToken != "" && err == nil {
+			is = true
+		}
+	} else {
 		s.logger.Error("获取用户登录信息失败", zap.Error(err))
-	}
-
-	if r.Platform != "" && r.DriverToken != "" && err == nil {
-		is = true
 	}
 
 	//是否静默通知
@@ -280,7 +280,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 			s.logger.Error("json解析失败", zap.Error(err))
 			return
 		}
-		if !receFlag {
+		if !receFlag && !constants.IsSystemUser(constants.SystemUser(receiverId)) {
 			message, err := Enc.GetSecretMessage(string(marshal), receiverId)
 			if err != nil {
 				s.logger.Error("加密消息失败", zap.Error(err))
@@ -307,7 +307,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 		}
 		return
 	}
-	if !receFlag {
+	if !receFlag && !constants.IsSystemUser(constants.SystemUser(receiverId)) {
 		err := rabbitMQClient.PublishMessage(receiverId, m)
 		if err != nil {
 			s.logger.Error("发布消息失败", zap.Error(err))

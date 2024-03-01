@@ -850,6 +850,96 @@ func (s *Service) DeleteGroupAnnouncement(ctx context.Context, userId string, re
 	return res, nil
 }
 
+// 设置群聊公告为已读
+func (s *Service) ReadGroupAnnouncement(ctx context.Context, userId string, req *model.ReadGroupAnnouncementRequest) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
+	if err != nil {
+		return nil, err
+	}
+
+	an, err := s.groupAnnouncementClient.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
+	if err != nil {
+		return nil, err
+	}
+
+	if an.AnnouncementInfo.GroupId != req.GroupId {
+		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
+	}
+
+	read, err := s.groupAnnouncementReadClient.MarkAnnouncementAsRead(ctx, &relationgrpcv1.MarkAnnouncementAsReadRequest{GroupId: req.GroupId, AnnouncementId: req.Id, UserIds: []string{userId}})
+	if err != nil {
+		return nil, err
+	}
+
+	return read, nil
+}
+
+// 获取读取群聊公告列表
+func (s *Service) GetReadGroupAnnouncementUserList(ctx context.Context, userId string, aid, groupId uint32) (interface{}, error) {
+	var response []*model.GetGroupAnnouncementReadUsersRequest
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
+	if err != nil {
+		return nil, err
+	}
+
+	an, err := s.groupAnnouncementClient.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: aid})
+	if err != nil {
+		return nil, err
+	}
+
+	if an.AnnouncementInfo.GroupId != groupId {
+		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
+	}
+
+	users, err := s.groupAnnouncementReadClient.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{GroupId: groupId, AnnouncementId: aid})
+	if err != nil {
+		return nil, err
+	}
+
+	var uids []string
+	if len(users.AnnouncementReadUsers) > 0 {
+		for _, user := range users.AnnouncementReadUsers {
+			uids = append(uids, user.UserId)
+		}
+	}
+
+	info, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users.AnnouncementReadUsers {
+		for _, value := range info.Users {
+			if user.UserId == value.UserId {
+				response = append(response, &model.GetGroupAnnouncementReadUsersRequest{
+					ID:             user.ID,
+					AnnouncementId: user.AnnouncementId,
+					GroupId:        user.GroupId,
+					UserId:         user.UserId,
+					ReadAt:         int64(user.ReadAt),
+					ReaderInfo: model.SenderInfo{
+						UserId: value.UserId,
+						Avatar: value.Avatar,
+						Name:   value.NickName,
+					},
+				})
+				break
+			}
+		}
+	}
+	return response, nil
+}
+
 func SwitchGroupRequestStatus(thisId, senderId, receiverId string, status relationgrpcv1.GroupRequestStatus) model.GroupRequestStatus {
 	result := model.GroupRequestStatus(status)
 	if status == relationgrpcv1.GroupRequestStatus_Invite {

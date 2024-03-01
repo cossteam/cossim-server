@@ -30,7 +30,7 @@ type UserInfoResponse struct {
 	UserId         string             `json:"user_id"`
 	Nickname       string             ` json:"nickname"`
 	Email          string             `json:"email"`
-	Tel            string             `json:"tel,omitempty"`
+	Tel            string             `json:"tel"`
 	Avatar         string             `json:"avatar"`
 	Signature      string             `json:"signature"`
 	Status         UserStatus         `json:"status"`
