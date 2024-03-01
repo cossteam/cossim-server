@@ -129,7 +129,7 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 获取群聊信息
-  /group/update/{gid}:
+  /group/update/:
     post:
       consumes:
       - application/json
