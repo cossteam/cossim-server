@@ -99,6 +99,10 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g.GET("/announcement/list", h.getGroupAnnouncementList)
 	//获取群公告详情
 	g.GET("/announcement/detail", h.getGroupAnnouncementDetail)
+	//设置群公告为已读
+	g.POST("/announcement/read", h.readGroupAnnouncement)
+	//获取群公告已读列表
+	g.GET("/announcement/read/list", h.getReadGroupAnnouncementList)
 
 	gg := api.Group("/group/admin")
 	// 管理员管理群聊申请

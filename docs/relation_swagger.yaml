@@ -191,6 +191,18 @@ definitions:
     required:
     - group_id
     type: object
+  model.ReadGroupAnnouncementRequest:
+    properties:
+      group_id:
+        description: 群组ID
+        type: integer
+      id:
+        description: 公告ID
+        type: integer
+    required:
+    - group_id
+    - id
+    type: object
   model.RemoveUserFromGroupRequest:
     properties:
       group_id:
@@ -427,6 +439,50 @@ paths:
       summary: 创建群公告(管理员)
       tags:
       - GroupRelation
+  /relation/group/admin/announcement/delete:
+    post:
+      consumes:
+      - application/json
+      description: 删除群公告
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteGroupAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 删除群公告
+      tags:
+      - GroupRelation
+  /relation/group/admin/announcement/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新群公告
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateGroupAnnouncementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 更新群公告
+      tags:
+      - GroupRelation
   /relation/group/admin/manage/join:
     post:
       consumes:
@@ -469,28 +525,6 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 将用户从群聊移除
-      tags:
-      - GroupRelation
-  /relation/group/announcement/delete:
-    post:
-      consumes:
-      - application/json
-      description: 删除群公告
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.DeleteGroupAnnouncementRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: 删除群公告
       tags:
       - GroupRelation
   /relation/group/announcement/detail:
@@ -540,18 +574,18 @@ paths:
       summary: 获取群公告
       tags:
       - GroupRelation
-  /relation/group/announcement/update:
+  /relation/group/announcement/read:
     post:
       consumes:
       - application/json
-      description: 更新群公告
+      description: 设置群聊公告为已读
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.UpdateGroupAnnouncementRequest'
+          $ref: '#/definitions/model.ReadGroupAnnouncementRequest'
       produces:
       - application/json
       responses:
@@ -559,7 +593,33 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Response'
-      summary: 更新群公告
+      summary: 设置群聊公告为已读
+      tags:
+      - GroupRelation
+  /relation/group/announcement/read/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取已读公告用户
+      parameters:
+      - description: id
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: group_id
+        in: query
+        name: group_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 获取已读公告用户
       tags:
       - GroupRelation
   /relation/group/burn/open:

@@ -268,3 +268,17 @@ type SenderInfo struct {
 	Avatar string `json:"avatar"`
 	Name   string `json:"name"`
 }
+
+type ReadGroupAnnouncementRequest struct {
+	GroupId uint32 `json:"group_id" binding:"required"` // 群组ID
+	Id      uint32 `json:"id" binding:"required"`       // 公告ID
+}
+
+type GetGroupAnnouncementReadUsersRequest struct {
+	ID             uint32     `json:"id" binding:"required"`              // 公告ID
+	GroupId        uint32     `json:"group_id" binding:"required"`        // 群组ID
+	AnnouncementId uint32     `json:"announcement_id" binding:"required"` // 公告ID
+	ReadAt         int64      `json:"read_at"`
+	UserId         string     `json:"user_id"`
+	ReaderInfo     SenderInfo `json:"reader_info"`
+}

@@ -17,15 +17,16 @@ import (
 
 // Service struct
 type Service struct {
-	dialogClient            relationgrpcv1.DialogServiceClient
-	groupRelationClient     relationgrpcv1.GroupRelationServiceClient
-	userRelationClient      relationgrpcv1.UserRelationServiceClient
-	userFriendRequestClient relationgrpcv1.UserFriendRequestServiceClient
-	groupAnnouncementClient relationgrpcv1.GroupAnnouncementServiceClient
-	groupJoinRequestClient  relationgrpcv1.GroupJoinRequestServiceClient
-	userClient              user.UserServiceClient
-	groupClient             groupgrpcv1.GroupServiceClient
-	rabbitMQClient          *msg_queue.RabbitMQ
+	dialogClient                relationgrpcv1.DialogServiceClient
+	groupRelationClient         relationgrpcv1.GroupRelationServiceClient
+	userRelationClient          relationgrpcv1.UserRelationServiceClient
+	userFriendRequestClient     relationgrpcv1.UserFriendRequestServiceClient
+	groupAnnouncementClient     relationgrpcv1.GroupAnnouncementServiceClient
+	groupAnnouncementReadClient relationgrpcv1.GroupAnnouncementReadServiceClient
+	groupJoinRequestClient      relationgrpcv1.GroupJoinRequestServiceClient
+	userClient                  user.UserServiceClient
+	groupClient                 groupgrpcv1.GroupServiceClient
+	rabbitMQClient              *msg_queue.RabbitMQ
 
 	logger    *zap.Logger
 	sid       string
@@ -56,22 +57,13 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		s.relationGrpcServer = conn.Target()
 		s.dialogGrpcServer = conn.Target()
 		s.userRelationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
-
 		s.userFriendRequestClient = relationgrpcv1.NewUserFriendRequestServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userFriendRequestRelation"), zap.String("addr", conn.Target()))
-
 		s.groupJoinRequestClient = relationgrpcv1.NewGroupJoinRequestServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupJoinRequestRelation"), zap.String("addr", conn.Target()))
-
 		s.groupRelationClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
-
 		s.groupAnnouncementClient = relationgrpcv1.NewGroupAnnouncementServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupAnnouncementRelation"), zap.String("addr", conn.Target()))
-
+		s.groupAnnouncementReadClient = relationgrpcv1.NewGroupAnnouncementReadServiceClient(conn)
 		s.dialogClient = relationgrpcv1.NewDialogServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
+		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
 	case "group_service":
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))

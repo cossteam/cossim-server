@@ -117,6 +117,74 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/group/admin/announcement/delete": {
+            "post": {
+                "description": "删除群公告",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "删除群公告",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteGroupAnnouncementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/admin/announcement/update": {
+            "post": {
+                "description": "更新群公告",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "更新群公告",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateGroupAnnouncementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/admin/manage/join": {
             "post": {
                 "description": "管理员管理加入群聊 action (0=拒绝, 1=同意)",
@@ -172,40 +240,6 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.RemoveUserFromGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/relation/group/announcement/delete": {
-            "post": {
-                "description": "删除群公告",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "GroupRelation"
-                ],
-                "summary": "删除群公告",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.DeleteGroupAnnouncementRequest"
                         }
                     }
                 ],
@@ -290,9 +324,9 @@ const docTemplaterelation = `{
                 }
             }
         },
-        "/relation/group/announcement/update": {
+        "/relation/group/announcement/read": {
             "post": {
-                "description": "更新群公告",
+                "description": "设置群聊公告为已读",
                 "consumes": [
                     "application/json"
                 ],
@@ -302,7 +336,7 @@ const docTemplaterelation = `{
                 "tags": [
                     "GroupRelation"
                 ],
-                "summary": "更新群公告",
+                "summary": "设置群聊公告为已读",
                 "parameters": [
                     {
                         "description": "request",
@@ -310,8 +344,47 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UpdateGroupAnnouncementRequest"
+                            "$ref": "#/definitions/model.ReadGroupAnnouncementRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/announcement/read/list": {
+            "get": {
+                "description": "获取已读公告用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "获取已读公告用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "group_id",
+                        "name": "group_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1306,6 +1379,23 @@ const docTemplaterelation = `{
             ],
             "properties": {
                 "group_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ReadGroupAnnouncementRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "id"
+            ],
+            "properties": {
+                "group_id": {
+                    "description": "群组ID",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "公告ID",
                     "type": "integer"
                 }
             }

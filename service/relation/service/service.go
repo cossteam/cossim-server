@@ -23,6 +23,7 @@ type Service struct {
 	ufqr repository.UserFriendRequestRepository
 	gar  repository.GroupAnnouncementRepository
 	gjqr repository.GroupJoinRequestRepository
+	garr repository.GroupAnnouncementReadRepository
 	dr   repository.DialogRepository
 	v1.UnimplementedUserRelationServiceServer
 	v1.UnimplementedGroupRelationServiceServer
@@ -30,6 +31,7 @@ type Service struct {
 	v1.UnimplementedUserFriendRequestServiceServer
 	v1.UnimplementedGroupJoinRequestServiceServer
 	v1.UnimplementedGroupAnnouncementServiceServer
+	v1.UnimplementedGroupAnnouncementReadServiceServer
 }
 
 func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
@@ -51,6 +53,7 @@ func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
 	s.gar = infra.GAr
 	s.gjqr = infra.Gjqr
 	s.dr = infra.Dr
+	s.garr = infra.Garr
 	return nil
 }
 
@@ -68,6 +71,7 @@ func (s *Service) Register(srv *grpc.Server) {
 	api.RegisterUserFriendRequestServiceServer(srv, s)
 	api.RegisterGroupJoinRequestServiceServer(srv, s)
 	api.RegisterGroupAnnouncementServiceServer(srv, s)
+	api.RegisterGroupAnnouncementReadServiceServer(srv, s)
 }
 
 func (s *Service) RegisterHealth(srv *grpc.Server) {
