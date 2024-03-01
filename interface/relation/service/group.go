@@ -478,7 +478,17 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	}
 
-	return nil, nil
+	return model.CreateGroupAnnouncementResponse{
+		Id:      resp.ID,
+		GroupId: req.GroupId,
+		Title:   req.Title,
+		Content: req.Content,
+		OperatorInfo: model.SenderInfo{
+			UserId: info.UserId,
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+		},
+	}, nil
 }
 
 func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, adminID string, userIDs []string) error {
@@ -680,7 +690,70 @@ func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, g
 	if err != nil {
 		return nil, err
 	}
-	return res.AnnouncementList, nil
+
+	var respList []model.CreateGroupAnnouncementResponse
+
+	for _, item := range res.AnnouncementList {
+		info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+			UserId: item.UserId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		respList = append(respList, model.CreateGroupAnnouncementResponse{
+			Id:       item.ID,
+			Title:    item.Title,
+			Content:  item.Content,
+			GroupId:  item.GroupId,
+			CreateAt: item.CreatedAt,
+			UpdateAt: item.UpdatedAt,
+			OperatorInfo: model.SenderInfo{
+				UserId: info.UserId,
+				Avatar: info.Avatar,
+				Name:   info.NickName,
+			},
+		})
+	}
+
+	return respList, nil
+}
+
+func (s *Service) GetGroupAnnouncementDetail(ctx context.Context, userId string, id, groupId uint32) (interface{}, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
+	if err != nil {
+		return nil, err
+	}
+
+	announcement, err := s.groupAnnouncementClient.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: id})
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+		UserId: announcement.AnnouncementInfo.UserId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return model.CreateGroupAnnouncementResponse{
+		Id:       announcement.AnnouncementInfo.ID,
+		Title:    announcement.AnnouncementInfo.Title,
+		Content:  announcement.AnnouncementInfo.Content,
+		GroupId:  announcement.AnnouncementInfo.GroupId,
+		CreateAt: announcement.AnnouncementInfo.CreatedAt,
+		UpdateAt: announcement.AnnouncementInfo.UpdatedAt,
+		OperatorInfo: model.SenderInfo{
+			UserId: info.UserId,
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+		},
+	}, nil
 }
 
 func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, req *model.UpdateGroupAnnouncementRequest) (interface{}, error) {
