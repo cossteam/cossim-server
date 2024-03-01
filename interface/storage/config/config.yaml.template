@@ -1,6 +1,7 @@
 system:
   environment: "dev" # dev、prod
   avatar_file_path: "/.cache/"
+  ssl: false # 是否启用ssl true的话不会使用port
   avatar_file_path_dev:
   gateway_address: "43.229.28.107"
   gateway_port: 8080

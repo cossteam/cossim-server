@@ -238,6 +238,17 @@ type CreateGroupAnnouncementResponse struct {
 	OperatorInfo SenderInfo `json:"operator_info"`
 }
 
+type GetGroupAnnouncementListResponse struct {
+	Id           uint32                                  `json:"id" binding:"required"`       // 公告ID
+	GroupId      uint32                                  `json:"group_id" binding:"required"` // 群组ID
+	Title        string                                  `json:"title"`                       // 公告标题
+	Content      string                                  `json:"content" binding:"required"`  // 公告内容
+	CreateAt     int64                                   `json:"create_at"`
+	UpdateAt     int64                                   `json:"update_at"`
+	OperatorInfo SenderInfo                              `json:"operator_info"`
+	ReadUserList []*GetGroupAnnouncementReadUsersRequest `json:"read_user_list"` // 已读用户列表
+}
+
 type DeleteGroupAnnouncementRequest struct {
 	Id      uint32 `json:"id" binding:"required"`       // 公告ID
 	GroupId uint32 `json:"group_id" binding:"required"` // 群组ID

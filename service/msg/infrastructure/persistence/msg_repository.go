@@ -119,7 +119,7 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 	var groupMessages []*entity.GroupMessage
 	for _, dialogId := range dialogIds {
 		var lastMsg entity.GroupMessage
-		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, uid as send_id, created_at").Order("created_at DESC").First(&lastMsg)
+		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, user_id as send_id, created_at").Order("created_at DESC").First(&lastMsg)
 		if lastMsg.ID != 0 {
 			groupMessages = append(groupMessages, &lastMsg)
 		}

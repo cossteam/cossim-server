@@ -166,7 +166,9 @@ func (s *Service) setLoadSystem() {
 		}
 		s.gatewayPort = gatewayPo
 	}
-	s.gatewayAddress = s.gatewayAddress + ":" + s.gatewayPort
+	if !s.ac.SystemConfig.Ssl {
+		s.gatewayAddress = s.gatewayAddress + ":" + s.gatewayPort
+	}
 }
 
 func (s *Service) Stop(ctx context.Context) error {
