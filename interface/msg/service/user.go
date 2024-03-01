@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -886,9 +887,15 @@ func (s *Service) SendMsg(uid string, driverId string, event constants.WSEventTy
 
 // SendMsgToUsers 推送多个用户消息
 func (s *Service) SendMsgToUsers(uids []string, driverId string, event constants.WSEventType, data interface{}, pushOffline bool) {
+	var wg sync.WaitGroup
 	for _, uid := range uids {
-		s.SendMsg(uid, driverId, event, data, pushOffline)
+		wg.Add(1)
+		go func(uid string) {
+			defer wg.Done()
+			s.SendMsg(uid, driverId, event, data, pushOffline)
+		}(uid)
 	}
+	wg.Wait()
 }
 
 // 获取对话落后信息

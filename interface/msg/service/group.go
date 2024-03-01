@@ -204,7 +204,23 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			s.logger.Error("发送消息失败", zap.Error(err))
 			return err
 		}
+		// 发送成功后添加自己的已读记录
+		data2 := &msggrpcv1.SetGroupMessageReadRequest{
+			MsgId:    message.MsgId,
+			GroupId:  message.GroupId,
+			DialogId: req.DialogId,
+			UserId:   userID,
+			ReadAt:   pkgtime.Now(),
+		}
 
+		var list []*msggrpcv1.SetGroupMessageReadRequest
+		list = append(list, data2)
+		_, err = s.groupMsgClient.SetGroupMessageRead(context.Background(), &msggrpcv1.SetGroupMessagesReadRequest{
+			List: list,
+		})
+		if err != nil {
+			return err
+		}
 		return err
 	}); err != nil {
 		return "", err
@@ -287,7 +303,6 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	msginfo.Content = content
-	//TODO 开携程去推送
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
 
 	return msgID, nil
