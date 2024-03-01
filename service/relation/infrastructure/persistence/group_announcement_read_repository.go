@@ -23,7 +23,7 @@ func (g *GroupAnnouncementReadRepo) MarkAnnouncementAsRead(groupId, announcement
 				UserId:         userId,
 				ReadAt:         time.Now(),
 			}
-			if err := tx.Save(&announcementRead).Error; err != nil {
+			if err := tx.Where(entity.GroupAnnouncementRead{AnnouncementId: announcementId, UserId: userId}).Assign(announcementRead).FirstOrCreate(&announcementRead).Error; err != nil {
 				return err
 			}
 		}
