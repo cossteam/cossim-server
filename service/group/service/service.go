@@ -133,6 +133,9 @@ func (s *Service) UpdateGroup(ctx context.Context, request *v1.UpdateGroupReques
 	resp := &v1.Group{}
 
 	group := &entity.Group{
+		BaseModel: entity.BaseModel{
+			ID: uint(request.Group.Id),
+		},
 		Type:            entity.GroupType(request.GetGroup().Type),
 		Status:          entity.GroupStatus(request.GetGroup().Status),
 		MaxMembersLimit: int(request.GetGroup().MaxMembersLimit),
