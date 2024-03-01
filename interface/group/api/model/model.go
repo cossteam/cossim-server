@@ -9,12 +9,10 @@ type Response struct {
 }
 
 type UpdateGroupRequest struct {
-	Type      uint32 `json:"type"`
-	Status    uint32 `json:"status"`
-	CreatorID string `json:"creator_id"`
-	Name      string `json:"name"`
-	Avatar    string `json:"avatar"`
-	GroupId   uint32 `json:"group_id"`
+	Type    uint32 `json:"type"`
+	Name    string `json:"name"`
+	Avatar  string `json:"avatar"`
+	GroupId uint32 `json:"group_id"`
 }
 
 type CreateGroupRequest struct {
