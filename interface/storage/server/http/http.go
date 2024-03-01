@@ -159,5 +159,7 @@ func setLoadSystem(ac *pkgconfig.AppConfig) {
 		}
 		gatewayPort = gatewayPo
 	}
-
+	if !ac.SystemConfig.Ssl {
+		gatewayAddress = gatewayAddress + ":" + gatewayPort
+	}
 }

@@ -691,7 +691,7 @@ func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, g
 		return nil, err
 	}
 
-	var respList []model.CreateGroupAnnouncementResponse
+	var respList []model.GetGroupAnnouncementListResponse
 
 	for _, item := range res.AnnouncementList {
 		info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
@@ -700,7 +700,36 @@ func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, g
 		if err != nil {
 			return nil, err
 		}
-		respList = append(respList, model.CreateGroupAnnouncementResponse{
+		//查询每条已读人数
+		users, err := s.groupAnnouncementReadClient.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{
+			GroupId:        item.GroupId,
+			AnnouncementId: item.ID,
+		})
+		if err != nil {
+			return nil, err
+		}
+		var readerInfos []*model.GetGroupAnnouncementReadUsersRequest
+		for _, ru := range users.AnnouncementReadUsers {
+			info2, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+				UserId: ru.UserId,
+			})
+			if err != nil {
+				return nil, err
+			}
+			readerInfos = append(readerInfos, &model.GetGroupAnnouncementReadUsersRequest{
+				UserId:         info2.UserId,
+				ID:             ru.ID,
+				ReadAt:         int64(ru.ReadAt),
+				GroupId:        ru.GroupId,
+				AnnouncementId: ru.AnnouncementId,
+				ReaderInfo: model.SenderInfo{
+					UserId: info2.UserId,
+					Avatar: info2.Avatar,
+					Name:   info2.NickName,
+				},
+			})
+		}
+		respList = append(respList, model.GetGroupAnnouncementListResponse{
 			Id:       item.ID,
 			Title:    item.Title,
 			Content:  item.Content,
@@ -712,6 +741,7 @@ func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, g
 				Avatar: info.Avatar,
 				Name:   info.NickName,
 			},
+			ReadUserList: readerInfos,
 		})
 	}
 
@@ -741,7 +771,37 @@ func (s *Service) GetGroupAnnouncementDetail(ctx context.Context, userId string,
 		return nil, err
 	}
 
-	return model.CreateGroupAnnouncementResponse{
+	//查询每条已读人数
+	users, err := s.groupAnnouncementReadClient.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{
+		GroupId:        groupId,
+		AnnouncementId: id,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var readerInfos []*model.GetGroupAnnouncementReadUsersRequest
+	for _, ru := range users.AnnouncementReadUsers {
+		info2, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+			UserId: ru.UserId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		readerInfos = append(readerInfos, &model.GetGroupAnnouncementReadUsersRequest{
+			UserId:         info2.UserId,
+			ID:             ru.ID,
+			ReadAt:         int64(ru.ReadAt),
+			GroupId:        ru.GroupId,
+			AnnouncementId: ru.AnnouncementId,
+			ReaderInfo: model.SenderInfo{
+				UserId: info2.UserId,
+				Avatar: info2.Avatar,
+				Name:   info2.NickName,
+			},
+		})
+	}
+
+	return model.GetGroupAnnouncementListResponse{
 		Id:       announcement.AnnouncementInfo.ID,
 		Title:    announcement.AnnouncementInfo.Title,
 		Content:  announcement.AnnouncementInfo.Content,
@@ -753,6 +813,7 @@ func (s *Service) GetGroupAnnouncementDetail(ctx context.Context, userId string,
 			Avatar: info.Avatar,
 			Name:   info.NickName,
 		},
+		ReadUserList: readerInfos,
 	}, nil
 }
 
