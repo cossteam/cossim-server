@@ -102,11 +102,11 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 }
 
 var (
-	downloadURL = "/api/v1/storage/files/download"
-
-	gatewayAddress string
-	gatewayPort    string
-	appPath        string
+	downloadURL     = "/api/v1/storage/files/download"
+	systemEnableSSL bool
+	gatewayAddress  string
+	gatewayPort     string
+	appPath         string
 )
 
 func setLoadSystem(ac *pkgconfig.AppConfig) {
@@ -162,4 +162,5 @@ func setLoadSystem(ac *pkgconfig.AppConfig) {
 	if !ac.SystemConfig.Ssl {
 		gatewayAddress = gatewayAddress + ":" + gatewayPort
 	}
+	systemEnableSSL = ac.SystemConfig.Ssl
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/cossim/coss-server/interface/storage/api/model"
 	"github.com/cossim/coss-server/pkg/http/response"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
+	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -110,11 +111,21 @@ func (h *Handler) upload(c *gin.Context) {
 		return
 	}
 
+	aUrl := headerUrl.String()
+	if systemEnableSSL {
+		aUrl, err = httputil.ConvertToHttps(headerUrl.String())
+		if err != nil {
+			h.logger.Error("上传失败", zap.Error(err))
+			response.SetFail(c, "上传失败", nil)
+			return
+		}
+	}
+
 	_, err = h.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   "userID",
 		FileName: file.Filename,
 		Path:     key,
-		Url:      headerUrl.String(),
+		Url:      aUrl,
 		Type:     storagev1.FileType(_Type),
 		Size:     uint64(file.Size),
 	})

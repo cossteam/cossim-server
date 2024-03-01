@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 type IPInfo struct {
@@ -52,4 +53,18 @@ func GetMyPublicIP() string {
 	defer resp.Body.Close()
 	content, _ := ioutil.ReadAll(resp.Body)
 	return string(content)
+}
+
+func ConvertToHttps(httpUrl string) (string, error) {
+	// 解析原始 URL
+	u, err := url.Parse(httpUrl)
+	if err != nil {
+		return "", err
+	}
+
+	// 将 Scheme 替换为 HTTPS
+	u.Scheme = "https"
+
+	// 返回转换后的 URL 字符串
+	return u.String(), nil
 }
