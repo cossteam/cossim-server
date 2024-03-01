@@ -41,7 +41,8 @@ services:
       MINIO_ROOT_PASSWORD: Hitosea@123..
     volumes:
     - ./data/var/lib/minio:/data
-    command: server /data --console-address ":9001"
+    - ./data/var/lib/certs:/certs
+    command: server /data --console-address "coss.gezi.vip:9001" --certs-dir /certs
   rabbitmq:
     image: "rabbitmq:management"
     container_name: cossim_rabbitmq
