@@ -40,6 +40,7 @@ func (h *Handler) login(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+
 	c.Set("user_id", resp.UserId)
 	response.SetSuccess(c, "登录成功", gin.H{"token": token, "user_info": resp})
 }

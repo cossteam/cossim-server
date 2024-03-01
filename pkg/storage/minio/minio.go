@@ -42,7 +42,7 @@ func NewMinIOStorage(endpoint, accessKey, secretKey string, useSSL bool, opts ..
 		AccessKey:        accessKey,
 		SecretKey:        secretKey,
 		UseSSL:           useSSL,
-		PresignedExpires: time.Hour * 24,
+		PresignedExpires: time.Hour * 24 * 365 * 10,
 		BucketList:       BucketList,
 	}
 	for _, opt := range opts {
