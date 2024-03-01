@@ -57,7 +57,7 @@ func (h *Handler) GroupCreate(c *gin.Context) {
 func (h *Handler) GroupJoin(c *gin.Context) {
 	req := new(dto.GroupJoinRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.SetFail(c, "参数验证失败", nil)
+		response.Fail(c, "参数验证失败", nil)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) GroupJoin(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "加入群聊通话成功", resp)
+	response.Success(c, "加入群聊通话成功", resp)
 }
 
 // GroupShow

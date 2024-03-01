@@ -121,7 +121,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	d.POST("/show", h.closeOrOpenDialog)
 }
 
-func (h Handler) Health(r gin.IRouter) string {
+func (h *Handler) Health(r gin.IRouter) string {
 	//TODO implement me
 	panic("implement me")
 }

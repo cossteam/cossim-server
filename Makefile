@@ -1,5 +1,7 @@
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 
+BUILDPLATFORM := linux/amd64,linux/arm64,linux/arm/v8
+
 MAIN_FILE=cmd/main.go
 NAME= ""
 DIR := $(shell pwd)
@@ -170,17 +172,16 @@ PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 .PHONY: docker-buildx
 docker-buildx: test ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
-	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
+	#sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
 	- docker buildx create --name project-v3-builder
 	docker buildx use project-v3-builder
-	-# docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
-	- docker buildx build --load --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \
+	- docker buildx build --load --platform $(PLATFORMS) --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \
              --build-arg BUILD_COMMIT="${BUILD_COMMIT}" \
              --build-arg BUILD_TIME="${BUILD_TIME}" \
              --build-arg BUILD_GO_VERSION="${BUILD_GO_VERSION}" \
              --build-arg BUILD_PATH="${DOCKER_BUILD_PATH}" \
              --build-arg VERSION_PATH="${VERSION_PATH}" \
               --build-arg MAIN_FILE="${MAIN_FILE}" \
-             -t "${IMG}" -f Dockerfile.cross .
+             -t "${IMG}" -f Dockerfile .
 	- docker buildx rm project-v3-builder
-	rm Dockerfile.cross
+	#rm Dockerfile.cross

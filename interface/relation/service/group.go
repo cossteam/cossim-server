@@ -476,6 +476,9 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 			},
 		}}
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		if err != nil {
+			s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
+		}
 	}
 
 	return model.CreateGroupAnnouncementResponse{
