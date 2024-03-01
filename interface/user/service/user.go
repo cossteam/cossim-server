@@ -198,6 +198,14 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	headerUrl.Host = s.gatewayAddress
 	headerUrl.Path = s.downloadURL + headerUrl.Path
 
+	aUrl := headerUrl.String()
+	if s.ac.SystemConfig.Ssl {
+		aUrl, err = httputil.ConvertToHttps(headerUrl.String())
+		if err != nil {
+			return "", err
+		}
+	}
+
 	var UserId string
 	workflow.InitGrpc(s.dtmGrpcServer, s.userGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
@@ -209,7 +217,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 			Password:        utils.HashString(req.Password),
 			ConfirmPassword: req.ConfirmPass,
 			PublicKey:       req.PublicKey,
-			Avatar:          headerUrl.String(),
+			Avatar:          aUrl,
 		})
 		if err != nil {
 			s.logger.Error("failed to register user", zap.Error(err))
