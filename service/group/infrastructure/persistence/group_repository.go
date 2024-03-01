@@ -33,7 +33,7 @@ func (repo *GroupRepo) GetBatchGetGroupInfoByIDs(groupIds []uint) ([]*entity.Gro
 }
 
 func (repo *GroupRepo) UpdateGroup(group *entity.Group) (*entity.Group, error) {
-	result := repo.db.Updates(group)
+	result := repo.db.Where("id = ?", group.ID).Updates(group)
 	if result.Error != nil {
 		return nil, result.Error
 	}

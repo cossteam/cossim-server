@@ -81,7 +81,7 @@ func (h *Handler) getBatchGroupInfoByIDs(c *gin.Context) {
 // @Produce  json
 // @Param request body model.UpdateGroupRequest true "请求体"
 // @Success 200 {object} model.Response{}
-// @Router /group/update/{gid} [post]
+// @Router /group/update/ [post]
 func (h *Handler) updateGroup(c *gin.Context) {
 	req := new(model.UpdateGroupRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -139,7 +139,7 @@ const docTemplategroup = `{
                 }
             }
         },
-        "/group/update/{gid}": {
+        "/group/update/": {
             "post": {
                 "description": "更新群聊信息",
                 "consumes": [
