@@ -95,6 +95,52 @@ type Message struct {
 	ReplayId               uint32               `json:"replay_id"`               // 回复消息id
 }
 
+type UserMessage struct {
+	MsgId                  uint32               `json:"msg_id"`
+	SenderId               string               `json:"sender_id"`
+	ReceiverId             string               `json:"receiver_id"`
+	Content                string               `json:"content"`
+	Type                   uint32               `json:"type"`
+	ReplayId               uint64               `json:"replay_id"`
+	IsRead                 int32                `json:"is_read"`
+	ReadAt                 int64                `json:"read_at"`
+	CreatedAt              int64                `json:"created_at"`
+	DialogId               uint32               `json:"dialog_id"`
+	IsLabel                LabelMsgType         `json:"is_label"`
+	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
+	SenderInfo             SenderInfo           `json:"sender_info"`
+	ReceiverInfo           SenderInfo           `json:"receiver_info"`
+}
+
+type GetUserMsgListResponse struct {
+	UserMessages []*UserMessage `json:"user_messages"`
+	Total        int32          `json:"total"`
+	CurrentPage  int32          `json:"current_page"`
+}
+
+type GroupMessage struct {
+	MsgId                  uint32               `protobuf:"varint,1,opt,name=Id,proto3" json:"msg_id"`
+	GroupId                uint32               `protobuf:"varint,2,opt,name=Group_id,json=GroupId,proto3" json:"group_id"`
+	Type                   uint32               `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
+	ReplyId                uint32               `protobuf:"varint,4,opt,name=Reply_id,json=ReplyId,proto3" json:"reply_id"`
+	ReadCount              int32                `protobuf:"varint,5,opt,name=Read_count,json=ReadCount,proto3" json:"read_count"`
+	UserId                 string               `protobuf:"bytes,6,opt,name=UserId,proto3" json:"user_id"`
+	Content                string               `protobuf:"bytes,7,opt,name=Content,proto3" json:"content"`
+	CreatedAt              int64                `protobuf:"varint,8,opt,name=Created_at,json=CreatedAt,proto3" json:"created_at"`
+	DialogId               uint32               `protobuf:"varint,9,opt,name=Dialog_id,json=DialogId,proto3" json:"dialog_id"`
+	IsLabel                LabelMsgType         `protobuf:"varint,10,opt,name=IsLabel,proto3,enum=v1.MsgLabel" json:"is_label"`
+	IsBurnAfterReadingType BurnAfterReadingType `protobuf:"varint,11,opt,name=IsBurnAfterReadingType,proto3,enum=v1.BurnAfterReadingType" json:"is_burn_after_reading"`
+	AtUsers                []string             `protobuf:"bytes,12,rep,name=AtUsers,proto3" json:"at_users"`
+	AtAllUser              AtAllUserType        `protobuf:"varint,13,opt,name=AtAllUser,proto3,enum=v1.AtAllUserType" json:"at_all_user"`
+	SenderInfo             SenderInfo           `json:"sender_info"`
+}
+
+type GetGroupMsgListResponse struct {
+	GroupMessages []*GroupMessage `protobuf:"bytes,1,rep,name=GroupMessages,proto3" json:"group_messages"`
+	Total         int32           `protobuf:"varint,2,opt,name=Total,proto3" json:"total"`
+	CurrentPage   int32           `protobuf:"varint,3,opt,name=CurrentPage,proto3" json:"current_page"`
+}
+
 // EditUserMsgRequest represents the request structure for editing user message.
 type EditUserMsgRequest struct {
 	MsgId uint32 `json:"msg_id" binding:"required"` // Message ID
