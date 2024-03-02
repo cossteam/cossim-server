@@ -337,8 +337,52 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 		s.logger.Error("获取用户消息列表失败", zap.Error(err))
 		return nil, err
 	}
+	resp := &model.GetUserMsgListResponse{}
+	resp.CurrentPage = msg.CurrentPage
+	resp.Total = msg.Total
 
-	return msg, nil
+	msgList := make([]*model.UserMessage, 0)
+	for _, v := range msg.UserMessages {
+		info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			UserId: v.SenderId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			UserId: v.ReceiverId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		msgList = append(msgList, &model.UserMessage{
+			MsgId:                  v.Id,
+			SenderId:               v.SenderId,
+			ReceiverId:             v.ReceiverId,
+			Content:                v.Content,
+			Type:                   v.Type,
+			ReplayId:               v.ReplayId,
+			IsRead:                 v.IsRead,
+			ReadAt:                 v.ReadAt,
+			CreatedAt:              v.CreatedAt,
+			DialogId:               v.DialogId,
+			IsLabel:                model.LabelMsgType(v.IsLabel),
+			IsBurnAfterReadingType: model.BurnAfterReadingType(v.IsBurnAfterReadingType),
+			SenderInfo: model.SenderInfo{
+				Name:   info.NickName,
+				UserId: info.UserId,
+				Avatar: info.Avatar,
+			},
+			ReceiverInfo: model.SenderInfo{
+				UserId: info2.UserId,
+				Avatar: info2.Avatar,
+				Name:   info2.NickName,
+			},
+		})
+	}
+	resp.UserMessages = msgList
+
+	return resp, nil
 }
 
 func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interface{}, error) {

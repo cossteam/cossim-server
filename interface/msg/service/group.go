@@ -441,7 +441,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		return nil, err
 	}
 
-	resp, err := s.msgClient.GetGroupMessageList(c, &msggrpcv1.GetGroupMsgListRequest{
+	msg, err := s.msgClient.GetGroupMessageList(c, &msggrpcv1.GetGroupMsgListRequest{
 		GroupId:  int32(request.GroupId),
 		UserId:   request.UserId,
 		Content:  request.Content,
@@ -453,6 +453,42 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		s.logger.Error("获取群聊消息列表失败", zap.Error(err))
 		return nil, err
 	}
+
+	resp := &model.GetGroupMsgListResponse{}
+	resp.CurrentPage = msg.CurrentPage
+	resp.Total = msg.Total
+
+	msgList := make([]*model.GroupMessage, 0)
+	for _, v := range msg.GroupMessages {
+		info, err := s.userClient.UserInfo(c, &usergrpcv1.UserInfoRequest{
+			UserId: v.UserId,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		msgList = append(msgList, &model.GroupMessage{
+			MsgId:                  v.Id,
+			Content:                v.Content,
+			GroupId:                v.GroupId,
+			Type:                   v.Type,
+			CreatedAt:              v.CreatedAt,
+			DialogId:               v.DialogId,
+			IsLabel:                model.LabelMsgType(v.IsLabel),
+			ReadCount:              v.ReadCount,
+			ReplyId:                v.ReplyId,
+			UserId:                 v.UserId,
+			AtUsers:                v.AtUsers,
+			AtAllUser:              model.AtAllUserType(v.AtAllUser),
+			IsBurnAfterReadingType: model.BurnAfterReadingType(v.IsBurnAfterReadingType),
+			SenderInfo: model.SenderInfo{
+				Name:   info.NickName,
+				UserId: info.UserId,
+				Avatar: info.Avatar,
+			},
+		})
+	}
+	resp.GroupMessages = msgList
 
 	return resp, nil
 }
