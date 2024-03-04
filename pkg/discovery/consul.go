@@ -405,7 +405,7 @@ func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig
 
 	fmt.Println("newValue => ", newValue)
 
-	err = yaml.Unmarshal([]byte(newValue), &ac)
+	err = yaml.Unmarshal([]byte(newValue), ac)
 	if err != nil {
 		return nil, err
 	}
