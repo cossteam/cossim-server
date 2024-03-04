@@ -6,7 +6,7 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/hashicorp/consul/api"
 	"github.com/mitchellh/mapstructure"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -402,10 +402,15 @@ func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig
 	//if err = v.Unmarshal(ac); err != nil {
 	//	return nil, err
 	//}
+
+	fmt.Println("newValue => ", newValue)
+
 	err = yaml.Unmarshal([]byte(newValue), &ac)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("ac => ", ac)
 
 	for _, v := range DefaultKeys {
 		newValue, err = m.cc.Get(v)
