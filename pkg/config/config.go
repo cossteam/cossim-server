@@ -22,7 +22,7 @@ type MySQLConfig struct {
 	Username string        `mapstructure:"username" yaml:"username"`
 	Password string        `mapstructure:"password" yaml:"password"`
 	Database string        `mapstructure:"database" yaml:"database"`
-	Opts     yaml.MapSlice `yaml:"opts"`
+	Opts     yaml.MapSlice `mapstructure:"opts" yaml:"opts"`
 }
 
 func (c MySQLConfig) Addr() string {
