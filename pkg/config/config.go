@@ -15,9 +15,12 @@ type LogConfig struct {
 }
 
 type MySQLConfig struct {
-	DSN     string `mapstructure:"dsn" yaml:"dsn"`
-	Address string `mapstructure:"address" yaml:"address"`
-	Port    int    `mapstructure:"port" yaml:"port"`
+	DSN      string `mapstructure:"dsn" yaml:"dsn"`
+	Address  string `mapstructure:"address" yaml:"address"`
+	Port     int    `mapstructure:"port" yaml:"port"`
+	Username string `mapstructure:"username" yaml:"username"`
+	Password string `mapstructure:"password" yaml:"password"`
+	Database string `mapstructure:"database" yaml:"database"`
 }
 
 func (c MySQLConfig) Addr() string {

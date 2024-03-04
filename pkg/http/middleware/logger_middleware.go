@@ -24,6 +24,8 @@ func GinLogger(lg *zap.Logger) gin.HandlerFunc {
 			gin.SetMode(gin.ReleaseMode)
 		case zap.WarnLevel, zap.ErrorLevel, zap.DPanicLevel, zap.PanicLevel, zap.FatalLevel:
 			gin.SetMode(gin.ReleaseMode)
+		default:
+			gin.SetMode(gin.ReleaseMode)
 		}
 
 		cost := time.Since(start)
