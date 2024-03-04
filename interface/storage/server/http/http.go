@@ -45,7 +45,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		//Protocol: cfg,
 	})
 	h.redisClient = rdb
-	h.logger = plog.NewDevLogger("storage_bff")
+	h.logger = plog.NewDefaultLogger("storage_bff", int8(cfg.Log.Level))
 	sp, err := minio.NewMinIOStorage(cfg.OSS["minio"].Addr(), cfg.OSS["minio"].AccessKey, cfg.OSS["minio"].SecretKey, cfg.OSS["minio"].SSL)
 	if err != nil {
 		return err

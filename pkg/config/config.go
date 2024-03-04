@@ -10,7 +10,7 @@ import (
 
 type LogConfig struct {
 	Stdout bool   `mapstructure:"stdout" yaml:"stdout"`
-	V      int    `mapstructure:"v" yaml:"v"`
+	Level  int    `mapstructure:"level" yaml:"level"`
 	Format string `mapstructure:"format" yaml:"format"`
 }
 

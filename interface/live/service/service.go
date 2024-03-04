@@ -61,7 +61,7 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		mqClient: setRabbitMQProvider(ac),
 		ac:       ac,
 		sid:      xid.New().String(),
-		logger:   plog.NewDevLogger("live_user_bff"),
+		logger:   plog.NewDefaultLogger("live_user_bff", int8(ac.Log.Level)),
 	}
 }
 

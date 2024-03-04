@@ -69,7 +69,7 @@ func New(ac *pkgconfig.AppConfig) *Service {
 
 	s := &Service{
 		ac:            ac,
-		logger:        plog.NewDevLogger("msg_bff"),
+		logger:        plog.NewDefaultLogger("msg_bff", int8(ac.Log.Level)),
 		sid:           xid.New().String(),
 		redisClient:   setupRedis(ac),
 		pushClient:    pushClient,

@@ -37,7 +37,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		//Protocol: cfg,
 	})
 	h.redisClient = rdb
-	h.logger = plog.NewDevLogger("relation_bff")
+	h.logger = plog.NewDefaultLogger("user_bff", int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg)
 

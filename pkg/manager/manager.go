@@ -259,7 +259,7 @@ func setOptionsDefaults(opts Options) Options {
 	}
 
 	if opts.Logger.GetSink() == nil {
-		opts.Logger = zapr.NewLogger(plog.NewLogger("console", int8(zapcore.DebugLevel)))
+		opts.Logger = zapr.NewLogger(plog.NewLogger("console", int8(zapcore.ErrorLevel), true))
 	}
 
 	if opts.BaseContext == nil {

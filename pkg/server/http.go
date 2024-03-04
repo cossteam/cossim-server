@@ -7,6 +7,8 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
+	"github.com/cossim/coss-server/pkg/http/middleware"
+	"github.com/cossim/coss-server/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
 	"github.com/rs/xid"
@@ -43,7 +45,8 @@ func NewHttpService(c *config.AppConfig, svc HTTPService, healthAddr string, log
 		healthAddr: c.HTTP.Address + healthAddr,
 	}
 
-	handler := gin.Default()
+	handler := gin.New()
+	handler.Use(middleware.GinLogger(log.NewLogger(c.Log.Format, int8(c.Log.Level), true)))
 	s.handler = handler
 	s.server = &http.Server{
 		Handler:           handler,

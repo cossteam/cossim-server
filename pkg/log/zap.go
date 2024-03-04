@@ -6,21 +6,17 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func NewLogger(format string, level int8) *zap.Logger {
-	return setLogger(format, zapcore.Level(level))
+func NewLogger(format string, level int8, stdout bool) *zap.Logger {
+	return setLogger(format, zapcore.Level(level), stdout)
 }
 
-func NewDefaultLogger(serviceName string) *zap.Logger {
-	return setLogger("console", zapcore.InfoLevel)
-}
-
-func NewDevLogger(serviceName string) *zap.Logger {
-	logger := setLogger("console", zapcore.DebugLevel)
+func NewDefaultLogger(serviceName string, level int8) *zap.Logger {
+	logger := setLogger("console", zapcore.Level(level), true)
 	logger.With(zap.String("serviceName", serviceName))
 	return logger
 }
 
-func setLogger(encoding string, level zapcore.Level) *zap.Logger {
+func setLogger(encoding string, level zapcore.Level, stdout bool) *zap.Logger {
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",

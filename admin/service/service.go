@@ -43,7 +43,7 @@ type Service struct {
 func New(ac *pkgconfig.AppConfig) (s *Service) {
 	s = &Service{
 		ac:             ac,
-		logger:         plog.NewDefaultLogger("admin_bff"),
+		logger:         plog.NewDefaultLogger("admin_bff", int8(ac.Log.Level)),
 		sid:            xid.New().String(),
 		rabbitMQClient: setRabbitMQProvider(ac),
 		dtmGrpcServer:  ac.Dtm.Addr(),
@@ -56,7 +56,6 @@ func New(ac *pkgconfig.AppConfig) (s *Service) {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
-	fmt.Println("66666666666666666666666")
 	switch serviceName {
 	case "user_service":
 		s.userClient = user.NewUserServiceClient(conn)
