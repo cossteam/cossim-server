@@ -276,7 +276,7 @@ func LoadConfig() (config *AppConfig, configErr error) {
 func GetConfigOrDie() *AppConfig {
 	config, err := LoadConfig()
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return config
 }
