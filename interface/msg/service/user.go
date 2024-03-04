@@ -501,6 +501,20 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					SendTime: msg.CreatedAt,
 					MsgType:  uint(msg.Type),
 				}
+				if msg.SenderId != "" {
+					info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+						UserId: msg.SenderId,
+					})
+					if err != nil {
+						fmt.Println(err)
+						break
+					}
+					re.LastMessage.SenderInfo = model.SenderInfo{
+						UserId: info.UserId,
+						Avatar: info.Avatar,
+						Name:   info.NickName,
+					}
+				}
 				break
 			}
 		}
