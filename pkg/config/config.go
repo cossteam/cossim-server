@@ -248,6 +248,9 @@ func loadConfig(filePath string) (*AppConfig, error) {
 	//if err := v.ReadInConfig(); err != nil {
 	//	return nil, fmt.Errorf("failed to read config file: %v", err)
 	//}
+	if filePath == "" {
+		return nil, nil
+	}
 	yamlFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
