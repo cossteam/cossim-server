@@ -6,7 +6,6 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/hashicorp/consul/api"
 	"github.com/mitchellh/mapstructure"
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
@@ -395,12 +394,16 @@ func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig
 		return nil, err
 	}
 
-	v := viper.New()
-	v.SetConfigType("yaml")
-	if err = v.ReadConfig(strings.NewReader(newValue)); err != nil {
-		return nil, err
-	}
-	if err = v.Unmarshal(ac); err != nil {
+	//v := viper.New()
+	//v.SetConfigType("yaml")
+	//if err = v.ReadConfig(strings.NewReader(newValue)); err != nil {
+	//	return nil, err
+	//}
+	//if err = v.Unmarshal(ac); err != nil {
+	//	return nil, err
+	//}
+	err = yaml.Unmarshal([]byte(newValue), &ac)
+	if err != nil {
 		return nil, err
 	}
 

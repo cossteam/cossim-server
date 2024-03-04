@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/utils"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -72,20 +73,28 @@ const (
 	DefaultMaxIdleTime = "4h"
 )
 
-func NewMySQL(host, port, username, password, database string, level int64, opts map[string]string) (*MySQL, error) {
+func NewMySQL(host, port, username, password, database string, level int64, opts yaml.MapSlice) (*MySQL, error) {
 	if host == "" || port == "" || username == "" || password == "" || database == "" {
 		return nil, fmt.Errorf("required fields are missing")
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?", username, password, host, port, database)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, database)
 
-	for k, v := range opts {
-		dsn += fmt.Sprintf("%s=%s&", k, v)
-	}
-
-	// Remove the trailing "&" if there are options
+	// Check if there are options
 	if len(opts) > 0 {
-		dsn = dsn[:len(dsn)-1]
+		dsn += "?"
+
+		// Iterate through options
+		for i, entry := range opts {
+			key := entry.Key.(string)
+			value := entry.Value.(string)
+			dsn += fmt.Sprintf("%s=%s", key, value)
+
+			// Add "&" if it's not the last option
+			if i < len(opts)-1 {
+				dsn += "&"
+			}
+		}
 	}
 
 	logLevel := logger.Default.LogMode(-1)

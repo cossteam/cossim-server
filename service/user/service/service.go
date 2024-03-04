@@ -32,7 +32,10 @@ type Service struct {
 }
 
 func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
-	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), map[string]string{"allowNativePasswords": "true", "timeout": "800ms", "readTimeout": "200ms", "writeTimeout": "800ms", "parseTime": "true", "loc": "Local", "charset": "utf8mb4"})
+	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if err != nil {
+		return err
+	}
 	if err != nil {
 		return err
 	}

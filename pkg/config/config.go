@@ -3,7 +3,8 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"os"
 	"time"
 )
@@ -15,12 +16,13 @@ type LogConfig struct {
 }
 
 type MySQLConfig struct {
-	DSN      string `mapstructure:"dsn" yaml:"dsn"`
-	Address  string `mapstructure:"address" yaml:"address"`
-	Port     int    `mapstructure:"port" yaml:"port"`
-	Username string `mapstructure:"username" yaml:"username"`
-	Password string `mapstructure:"password" yaml:"password"`
-	Database string `mapstructure:"database" yaml:"database"`
+	DSN      string        `mapstructure:"dsn" yaml:"dsn"`
+	Address  string        `mapstructure:"address" yaml:"address"`
+	Port     int           `mapstructure:"port" yaml:"port"`
+	Username string        `mapstructure:"username" yaml:"username"`
+	Password string        `mapstructure:"password" yaml:"password"`
+	Database string        `mapstructure:"database" yaml:"database"`
+	Opts     yaml.MapSlice `yaml:"opts"`
 }
 
 func (c MySQLConfig) Addr() string {
@@ -132,7 +134,7 @@ func (c PushConfig) Addr() string {
 
 type AppConfig struct {
 	Log                 LogConfig                 `mapstructure:"log" yaml:"log"`
-	MySQL               MySQLConfig               `mapstructure:"mysql" yaml:"mySQL"`
+	MySQL               MySQLConfig               `mapstructure:"mysql" yaml:"mysql"`
 	Redis               RedisConfig               `mapstructure:"redis" yaml:"redis"`
 	HTTP                HTTPConfig                `mapstructure:"http" yaml:"http"`
 	GRPC                GRPCConfig                `mapstructure:"grpc" yaml:"grpc"`
@@ -228,26 +230,30 @@ func RegisterFlags(fs *flag.FlagSet) {
 
 // loadConfig loads the configuration from the specified file path or the default file path.
 func loadConfig(filePath string) (*AppConfig, error) {
-	v := viper.New()
-	v.SetConfigType("yaml")
-
-	// Read configuration from environment variables
-	v.AutomaticEnv()
-
-	// Read the configuration file
-	if filePath != "" {
-		v.SetConfigFile(filePath)
-	} else {
-		//return nil, fmt.Errorf("config file path is empty")
-		return nil, nil
-	}
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config file: %v", err)
+	//v := viper.New()
+	//v.SetConfigType("yaml")
+	//
+	//// Read configuration from environment variables
+	//v.AutomaticEnv()
+	//
+	//// Read the configuration file
+	//if filePath != "" {
+	//	v.SetConfigFile(filePath)
+	//} else {
+	//	//return nil, fmt.Errorf("config file path is empty")
+	//	return nil, nil
+	//}
+	//
+	//if err := v.ReadInConfig(); err != nil {
+	//	return nil, fmt.Errorf("failed to read config file: %v", err)
+	//}
+	yamlFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
 	}
 
 	var config AppConfig
-	if err := v.Unmarshal(&config); err != nil {
+	if err := yaml.Unmarshal(yamlFile, &config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
 	}
 
