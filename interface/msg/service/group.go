@@ -460,6 +460,20 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 
 	msgList := make([]*model.GroupMessage, 0)
 	for _, v := range msg.GroupMessages {
+		ReadAt := 0
+		//查询是否已读
+		msgRead, err := s.groupMsgClient.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
+			MsgId:  v.Id,
+			UserId: request.UserId,
+		})
+		if err != nil {
+			s.logger.Error("获取群聊消息是否已读失败", zap.Error(err))
+		}
+		if msgRead != nil {
+			ReadAt = int(msgRead.ReadAt)
+		}
+
+		//查询信息
 		info, err := s.userClient.UserInfo(c, &usergrpcv1.UserInfoRequest{
 			UserId: v.UserId,
 		})
@@ -479,6 +493,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 			ReplyId:                v.ReplyId,
 			UserId:                 v.UserId,
 			AtUsers:                v.AtUsers,
+			ReadAt:                 int64(ReadAt),
 			AtAllUser:              model.AtAllUserType(v.AtAllUser),
 			IsBurnAfterReadingType: model.BurnAfterReadingType(v.IsBurnAfterReadingType),
 			SenderInfo: model.SenderInfo{

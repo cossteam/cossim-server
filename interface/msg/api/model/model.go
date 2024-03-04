@@ -132,6 +132,7 @@ type GroupMessage struct {
 	IsBurnAfterReadingType BurnAfterReadingType `protobuf:"varint,11,opt,name=IsBurnAfterReadingType,proto3,enum=v1.BurnAfterReadingType" json:"is_burn_after_reading"`
 	AtUsers                []string             `protobuf:"bytes,12,rep,name=AtUsers,proto3" json:"at_users"`
 	AtAllUser              AtAllUserType        `protobuf:"varint,13,opt,name=AtAllUser,proto3,enum=v1.AtAllUserType" json:"at_all_user"`
+	ReadAt                 int64                `json:"read_at"`
 	SenderInfo             SenderInfo           `json:"sender_info"`
 }
 
