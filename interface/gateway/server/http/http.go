@@ -51,7 +51,7 @@ func (h *Handler) Version() string {
 }
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
-	r.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(plog.NewLogger("gateway", int8(h.cfg.Log.Level), true)))
+	r.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(plog.NewLogger(h.cfg.Log.Format, int8(h.cfg.Log.Level), true)))
 	gateway := r.Group("/api/v1")
 	{
 		gateway.Any("/user/*path", h.proxyToService(userServiceURL))
