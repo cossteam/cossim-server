@@ -221,7 +221,6 @@ func RegisterFlags(fs *flag.FlagSet) {
 	if fs == nil {
 		fs = flag.CommandLine
 	}
-	//
 	if f := fs.Lookup(ConfigFlagName); f != nil {
 		configPath = f.Value.String()
 	} else {
