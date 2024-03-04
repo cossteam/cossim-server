@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/utils"
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -19,8 +20,8 @@ type MySQL struct {
 	UserName string `toml:"username" env:"MYSQL_USERNAME"`
 	Password string `toml:"password" env:"MYSQL_PASSWORD"`
 	Database string `toml:"database" env:"MYSQL_DATABASE"`
-
-	Dsn string
+	Level    logger.Interface
+	Dsn      string
 	// 因为使用的是 Mysql的连接池，需要对连接池做一些规划配置
 	// 控制当前程序的 Mysql打开的连接数
 	MaxOpenConn int `toml:"max_open_conn" env:"MYSQL_MAX_OPEN_CONN"`
@@ -71,21 +72,39 @@ const (
 	DefaultMaxIdleTime = "4h"
 )
 
-func NewMySQL(host, port, username, password, database string, opts ...Option) (*MySQL, error) {
+func NewMySQL(host, port, username, password, database string, level int64, opts map[string]string) (*MySQL, error) {
 	if host == "" || port == "" || username == "" || password == "" || database == "" {
 		return nil, fmt.Errorf("required fields are missing")
 	}
 
-	c := &MySQL{
-		Host:     host,
-		Port:     port,
-		UserName: username,
-		Password: password,
-		Database: database,
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?", username, password, host, port, database)
+
+	for k, v := range opts {
+		dsn += fmt.Sprintf("%s=%s&", k, v)
 	}
 
-	for _, opt := range opts {
-		opt(c)
+	// Remove the trailing "&" if there are options
+	if len(opts) > 0 {
+		dsn = dsn[:len(dsn)-1]
+	}
+
+	logLevel := logger.Default.LogMode(-1)
+	switch level {
+	case int64(zap.DebugLevel):
+		logLevel = logger.Default.LogMode(logger.Info)
+	case int64(zap.InfoLevel):
+		logLevel = logger.Default.LogMode(logger.Info)
+	case int64(zap.WarnLevel):
+		logLevel = logger.Default.LogMode(logger.Warn)
+	case int64(zap.ErrorLevel):
+		logLevel = logger.Default.LogMode(logger.Error)
+	default:
+		logLevel = logger.Default.LogMode(logger.Silent)
+	}
+
+	c := &MySQL{
+		Dsn:   dsn,
+		Level: logLevel,
 	}
 
 	// Set default values if not provided in options
@@ -140,9 +159,9 @@ func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 	return c
 }
 
-func GenerateMysqlDSN(rootUsername, rootPassword, addr, database string) string {
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true", rootUsername, rootPassword, addr, database)
-}
+//func GenerateMysqlDSN(rootUsername, rootPassword, addr, database string) string {
+//	return fmt.Sprintf("%s:%s@tcp(%s)/%s?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true", rootUsername, rootPassword, addr, database)
+//}
 
 func (m *MySQL) GetConnection() (*gorm.DB, error) {
 	m.lock.Lock() // 锁住临界区，保证线程安全
@@ -164,11 +183,11 @@ func (m *MySQL) getDBConn() (*gorm.DB, error) {
 	if m.Dsn != "" {
 		dsn = m.Dsn
 	} else {
-		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&multiStatements=true",
-			m.UserName, m.Password, m.Host, m.Port, m.Database)
+		return nil, fmt.Errorf("连接Mysql error: dsn is nil")
 	}
+
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: m.Level,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("连接Mysql：%s，error：%s", dsn, err.Error())

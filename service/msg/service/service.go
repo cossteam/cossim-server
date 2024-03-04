@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/version"
@@ -15,6 +14,7 @@ import (
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"gorm.io/gorm"
+	"strconv"
 )
 
 type Service struct {
@@ -28,8 +28,12 @@ type Service struct {
 }
 
 func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
-	fmt.Println("cfg.MySQL.DSN => ", cfg.MySQL.DSN)
-	dbConn, err := db.NewMySQLFromDSN(cfg.MySQL.DSN).GetConnection()
+	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), map[string]string{"allowNativePasswords": "true", "timeout": "800ms", "readTimeout": "200ms", "writeTimeout": "800ms", "parseTime": "true", "loc": "Local", "charset": "utf8mb4"})
+	if err != nil {
+		return err
+	}
+
+	dbConn, err := mysql.GetConnection()
 	if err != nil {
 		return err
 	}
