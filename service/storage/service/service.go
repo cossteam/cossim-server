@@ -42,7 +42,7 @@ func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
 	}
 	s.fr = infra.FR
 	s.ac = cfg
-	s.logger = plog.NewDevLogger("storage_service")
+	s.logger = plog.NewDefaultLogger("storage_service", int8(cfg.Log.Level))
 	return nil
 }
 

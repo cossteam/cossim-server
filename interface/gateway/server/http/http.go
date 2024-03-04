@@ -32,11 +32,13 @@ var (
 
 type Handler struct {
 	logger logr.Logger
+	cfg    *pkgconfig.AppConfig
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	logger := zapr.NewLogger(plog.NewDevLogger("gateway"))
+	logger := zapr.NewLogger(plog.NewDefaultLogger("gateway", int8(cfg.Log.Level)))
 	h.logger = logger
+	h.cfg = cfg
 	return nil
 }
 
@@ -49,7 +51,7 @@ func (h *Handler) Version() string {
 }
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
-	r.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(plog.NewDevLogger("gateway")))
+	r.Use(middleware.CORSMiddleware(), middleware.RecoveryMiddleware(), middleware.GRPCErrorMiddleware(plog.NewLogger("gateway", int8(h.cfg.Log.Level), true)))
 	gateway := r.Group("/api/v1")
 	{
 		gateway.Any("/user/*path", h.proxyToService(userServiceURL))

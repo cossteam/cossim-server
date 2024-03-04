@@ -41,7 +41,7 @@ type Service struct {
 func New(ac *pkgconfig.AppConfig) *Service {
 	return &Service{
 		rabbitMQClient: setRabbitMQProvider(ac),
-		logger:         plog.NewDevLogger("relation_bff"),
+		logger:         plog.NewDefaultLogger("relation_bff", int8(ac.Log.Level)),
 		ac:             ac,
 		sid:            xid.New().String(),
 		dtmGrpcServer:  ac.Dtm.Addr(),

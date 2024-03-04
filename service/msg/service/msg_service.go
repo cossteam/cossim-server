@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/service/msg/api/dataTransformers"
@@ -121,7 +120,6 @@ func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLas
 		}
 	}
 	result, err := s.mr.GetLastMsgsByDialogIDs(ids)
-	fmt.Println("result", result)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())
 	}

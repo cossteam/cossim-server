@@ -31,6 +31,9 @@ func init() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
 	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":9091", "The address to bind the http health probe endpoint")
 	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":9092", "The address to bind the grpc health probe endpoint")
+	//flag.StringVar(&metricsAddr, "metrics-bind-address", ":15000", "The address the metric endpoint binds to")
+	//flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":15001", "The address to bind the http health probe endpoint")
+	//flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":15002", "The address to bind the grpc health probe endpoint")
 	flag.Parse()
 }
 

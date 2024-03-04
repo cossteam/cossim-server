@@ -40,7 +40,7 @@ type Service struct {
 }
 
 func New(ac *pkgconfig.AppConfig) *Service {
-	logger := setupLogger()
+	logger := setupLogger(ac)
 	rabbitMQClient := setRabbitMQProvider(ac)
 
 	return &Service{
@@ -184,8 +184,8 @@ func (s *Service) handlerGrpcClient(serviceName string, addr string) error {
 	return nil
 }
 
-func setupLogger() *zap.Logger {
-	return plog.NewDevLogger("group_bff")
+func setupLogger(c *pkgconfig.AppConfig) *zap.Logger {
+	return plog.NewDefaultLogger("group_bff", int8(c.Log.Level))
 }
 
 func setRabbitMQProvider(c *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
