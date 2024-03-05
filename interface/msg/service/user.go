@@ -386,6 +386,8 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 }
 
 func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interface{}, error) {
+	//查询缓存中是否有
+
 	//获取对话id
 	ids, err := s.relationDialogClient.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
 		UserId: userID,
@@ -394,7 +396,6 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		s.logger.Error("获取用户会话id", zap.Error(err))
 		return nil, err
 	}
-
 	//获取对话信息
 	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
@@ -403,7 +404,6 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		s.logger.Error("获取用户会话信息", zap.Error(err))
 		return nil, err
 	}
-
 	//获取最后一条消息
 	dialogIds, err := s.msgClient.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
 		DialogIds: ids.DialogIds,
@@ -843,14 +843,14 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 
 	//todo 加锁
 	//更新登录信息
-	keys, err := cache.ScanKeys(s.redisClient, cli.Uid+":"+deviceType+":*")
+	keys, err := s.redisClient.ScanKeys(cli.Uid + ":" + deviceType + ":*")
 	if err != nil {
 		s.logger.Error("获取用户信息失败1", zap.Error(err))
 		return
 	}
 
 	for _, key := range keys {
-		v, err := cache.GetKey(s.redisClient, key)
+		v, err := s.redisClient.GetKey(key)
 		if err != nil {
 			s.logger.Error("获取用户信息失败", zap.Error(err))
 			return
@@ -864,7 +864,7 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 		if info.Token == token {
 			info.Rid = cli.Rid
 			resp := cache.GetUserInfoToInterfaces(info)
-			err := cache.SetKey(s.redisClient, key, resp, 60*60*24*7*time.Second)
+			err := s.redisClient.SetKey(key, resp, 60*60*24*7*time.Second)
 			if err != nil {
 				s.logger.Error("保存用户信息失败", zap.Error(err))
 				return
@@ -878,14 +878,14 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 		if err != nil {
 			s.logger.Error("读取消息失败", zap.Error(err))
 			//删除redis里的rid
-			keys, err := cache.ScanKeys(s.redisClient, cli.Uid+":"+deviceType+":*")
+			keys, err := s.redisClient.ScanKeys(cli.Uid + ":" + deviceType + ":*")
 			if err != nil {
 				s.logger.Error("获取用户信息失败1", zap.Error(err))
 				return
 			}
 
 			for _, key := range keys {
-				v, err := cache.GetKey(s.redisClient, key)
+				v, err := s.redisClient.GetKey(key)
 				if err != nil {
 					s.logger.Error("获取用户信息失败", zap.Error(err))
 					return
@@ -899,7 +899,7 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 				if info.Token == token {
 					info.Rid = 0
 					resp := cache.GetUserInfoToInterfaces(info)
-					err := cache.SetKey(s.redisClient, key, resp, 60*60*24*7*time.Second)
+					err := s.redisClient.SetKey(key, resp, 60*60*24*7*time.Second)
 					if err != nil {
 						s.logger.Error("保存用户信息失败", zap.Error(err))
 						return

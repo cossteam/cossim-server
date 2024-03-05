@@ -6,7 +6,6 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -16,13 +15,13 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func NewAuthenticator(db *gorm.DB, rdb *redis.Client) *Authenticator {
+func NewAuthenticator(db *gorm.DB, rdb *cache.RedisClient) *Authenticator {
 	return &Authenticator{db, rdb}
 }
 
 type Authenticator struct {
 	DB  *gorm.DB
-	RDB *redis.Client
+	RDB *cache.RedisClient
 }
 
 const _queryUser = "SELECT * FROM users WHERE id = ?"
@@ -38,7 +37,7 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 		Status int64  `json:"status"`
 	}
 
-	keys, err := cache.ScanKeys(a.RDB, claims.UserId+":"+driverType+":*")
+	keys, err := a.RDB.ScanKeys(claims.UserId + ":" + driverType + ":*")
 	if err != nil {
 		fmt.Println("error => ", err)
 		return false, err
@@ -50,7 +49,7 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 	var found = false
 
 	for _, key := range keys {
-		v, err := cache.GetKey(a.RDB, key)
+		v, err := a.RDB.GetKey(key)
 		if err != nil {
 			return false, err
 		}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/email"
 	"github.com/cossim/coss-server/pkg/email/smtp"
@@ -13,7 +14,6 @@ import (
 	"github.com/cossim/coss-server/pkg/utils/os"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	user "github.com/cossim/coss-server/service/user/api/v1"
-	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -29,7 +29,7 @@ type Service struct {
 	relClient       relationgrpcv1.UserRelationServiceClient
 	dialogClient    relationgrpcv1.DialogServiceClient
 	sp              storage.StorageProvider
-	redisClient     *redis.Client
+	redisClient     *cache.RedisClient
 	smtpClient      email.EmailProvider
 	rabbitMQClient  *msg_queue.RabbitMQ
 	dtmGrpcServer   string
@@ -57,7 +57,7 @@ func New(ac *pkgconfig.AppConfig) (s *Service) {
 		smtpClient:    setupSmtpProvider(ac),
 	}
 	s.setLoadSystem()
-	s.setupRedis()
+	s.setupRedisClient()
 	return s
 }
 
@@ -77,13 +77,8 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	return nil
 }
 
-func (s *Service) setupRedis() {
-	s.redisClient = redis.NewClient(&redis.Options{
-		Addr:     s.ac.Redis.Addr(),
-		Password: s.ac.Redis.Password, // no password set
-		DB:       0,                   // use default DB
-		//Protocol: cfg,
-	})
+func (s *Service) setupRedisClient() {
+	s.redisClient = cache.NewRedisClient(s.ac.Redis.Addr(), s.ac.Redis.Port, s.ac.Redis.Password)
 }
 
 func (s *Service) Ping() {

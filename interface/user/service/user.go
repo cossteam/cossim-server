@@ -44,7 +44,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
-	keys, err := cache.ScanKeys(s.redisClient, resp.UserId+":"+driveType+":*")
+	keys, err := s.redisClient.ScanKeys(resp.UserId + ":" + driveType + ":*")
 	if err != nil {
 		s.logger.Error("redis scan err", zap.Error(err))
 		return nil, "", code.UserErrErrLogoutFailed
@@ -69,7 +69,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		ClientIP:   clientIp,
 	}
 
-	err = cache.SetKey(s.redisClient, resp.UserId+":"+driveType+":"+strconv.Itoa(id), data, 60*60*24*7*ostime.Second)
+	err = s.redisClient.SetKey(resp.UserId+":"+driveType+":"+strconv.Itoa(id), data, 60*60*24*7*ostime.Second)
 	if err != nil {
 		return nil, "", err
 	}
@@ -126,7 +126,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 }
 
 func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest, driverType string) error {
-	value, err := cache.GetKey(s.redisClient, userID+":"+driverType+":"+strconv.Itoa(int(request.LoginNumber)))
+	value, err := s.redisClient.GetKey(userID + ":" + driverType + ":" + strconv.Itoa(int(request.LoginNumber)))
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 	}
 
 	//删除客户端信息
-	err = cache.DelKey(s.redisClient, userID+":"+driverType+":"+strconv.Itoa(int(request.LoginNumber)))
+	err = s.redisClient.DelKey(userID + ":" + driverType + ":" + strconv.Itoa(int(request.LoginNumber)))
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		ekey := uuid.New().String()
 
 		//保存到redis
-		err = cache.SetKey(s.redisClient, ekey, UserId, 30*ostime.Minute)
+		err = s.redisClient.SetKey(ekey, UserId, 30*ostime.Minute)
 		if err != nil {
 			return "", err
 		}
@@ -450,7 +450,7 @@ func (s *Service) GetUserSecretBundle(ctx context.Context, userID string) (*mode
 
 func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*model.GetUserLoginClientsResponse, error) {
 
-	values, err := cache.GetAllListValues(s.redisClient, userID)
+	values, err := s.redisClient.GetAllListValues(userID)
 	if err != nil {
 		s.logger.Error("获取用户登录客户端失败：", zap.Error(err))
 		return nil, code.UserErrGetUserLoginClientsFailed
@@ -473,7 +473,7 @@ func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*mo
 }
 
 func (s *Service) UserActivate(ctx context.Context, userID string, key string) (interface{}, error) {
-	value, err := cache.GetKey(s.redisClient, key)
+	value, err := s.redisClient.GetKey(key)
 	if err != nil {
 		s.logger.Error("激活用户失败", zap.Error(err))
 		return nil, code.UserErrActivateUserFailed
@@ -494,7 +494,7 @@ func (s *Service) UserActivate(ctx context.Context, userID string, key string) (
 	}
 
 	//删除缓存
-	err = cache.DelKey(s.redisClient, key)
+	err = s.redisClient.DelKey(key)
 	if err != nil {
 		s.logger.Error("激活用户失败", zap.Error(err))
 		return nil, code.UserErrActivateUserFailed
@@ -505,7 +505,7 @@ func (s *Service) UserActivate(ctx context.Context, userID string, key string) (
 
 func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublicKeyRequest) (interface{}, error) {
 	//查询redis是否存在该验证码
-	value, err := cache.GetKey(s.redisClient, req.Code)
+	value, err := s.redisClient.GetKey(req.Code)
 	if err != nil {
 		s.logger.Error("重置用户公钥失败", zap.Error(err))
 		return nil, code.UserErrResetPublicKeyFailed
@@ -531,7 +531,7 @@ func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublic
 		return nil, err
 	}
 
-	err = cache.DelKey(s.redisClient, req.Code)
+	err = s.redisClient.DelKey(req.Code)
 	if err != nil {
 		s.logger.Error("重置用户公钥失败", zap.Error(err))
 		return nil, code.UserErrResetPublicKeyFailed
@@ -554,7 +554,7 @@ func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{},
 	code1 := utils.RandomNum()
 
 	//设置验证码(30分钟超时)
-	err = cache.SetKey(s.redisClient, code1, info.UserId, 30*ostime.Minute)
+	err = s.redisClient.SetKey(code1, info.UserId, 30*ostime.Minute)
 	if err != nil {
 		s.logger.Error("发送邮箱验证码失败", zap.Error(err))
 		return nil, code.UserErrSendEmailCodeFailed
