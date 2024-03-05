@@ -3,15 +3,15 @@ package middleware
 import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/auth"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"net/http"
 	"strings"
 )
 
-func AdminAuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
+func AdminAuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取 authorization header
 		tokenString := ""

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"github.com/cossim/coss-server/interface/group/service"
+	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -10,7 +11,6 @@ import (
 	"github.com/cossim/coss-server/pkg/server"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ var (
 )
 
 type Handler struct {
-	redisClient *redis.Client
+	redisClient *cache.RedisClient
 	logger      *zap.Logger
 	enc         encryption.Encryptor
 	svc         *service.Service
@@ -32,13 +32,7 @@ type Handler struct {
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr(),
-		Password: cfg.Redis.Password, // no password set
-		DB:       0,                  // use default DB
-		//Protocol: cfg,
-	})
-	h.redisClient = rdb
+	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("group_bff", int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg)
@@ -47,6 +41,10 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 
 func (h *Handler) Name() string {
 	return "group_bff"
+}
+
+func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
+	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
 func (h *Handler) Version() string {

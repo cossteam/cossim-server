@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/discovery"
@@ -15,7 +16,6 @@ import (
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	pushv1 "github.com/cossim/hipush/api/grpc/v1"
 	"github.com/goccy/go-json"
-	"github.com/redis/go-redis/v9"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -44,7 +44,7 @@ type Service struct {
 	groupMsgClient       msggrpcv1.GroupMessageServiceClient
 	dtmGrpcServer        string
 	dialogGrpcServer     string
-	redisClient          *redis.Client
+	redisClient          *cache.RedisClient
 	pushClient           pushv1.PushServiceClient
 	logger               *zap.Logger
 	sid                  string
@@ -228,13 +228,8 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	return nil
 }
 
-func setupRedis(ac *pkgconfig.AppConfig) *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:     ac.Redis.Addr(),
-		Password: ac.Redis.Password, // no password set
-		DB:       0,                 // use default DB
-		//Protocol: cfg,
-	})
+func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
+	return cache.NewRedisClient(ac.Redis.Addr(), ac.Redis.Password)
 }
 
 func setupEncryption(ac *pkgconfig.AppConfig) {

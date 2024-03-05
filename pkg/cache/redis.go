@@ -22,8 +22,21 @@ func (i UserInfo) MarshalBinary() ([]byte, error) {
 	return json.Marshal(i)
 }
 
-func SetHMapKey(client *redis.Client, key string, data map[string]string) error {
-	err := client.HMSet(context.Background(), key, data).Err()
+type RedisClient struct {
+	Client *redis.Client
+}
+
+func NewRedisClient(address string, password string) *RedisClient {
+	client := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s", address),
+		Password: password,
+		DB:       0,
+	})
+	return &RedisClient{Client: client}
+}
+
+func (r *RedisClient) SetHMapKey(key string, data map[string]string) error {
+	err := r.Client.HMSet(context.Background(), key, data).Err()
 	if err != nil {
 		return err
 	}
@@ -31,32 +44,32 @@ func SetHMapKey(client *redis.Client, key string, data map[string]string) error 
 	return nil
 }
 
-func GetHMapKey(client *redis.Client, key string) (map[string]string, error) {
-	data, err := client.HGetAll(context.Background(), key).Result()
+func (r *RedisClient) GetHMapKey(key string) (map[string]string, error) {
+	data, err := r.Client.HGetAll(context.Background(), key).Result()
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-func DeleteHMapKey(client *redis.Client, userID string) error {
-	err := client.HDel(context.Background(), userID).Err()
+func (r *RedisClient) DeleteHMapKey(userID string) error {
+	err := r.Client.HDel(context.Background(), userID).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func DeleteKeyField(client *redis.Client, key string, field string) error {
-	err := client.HDel(context.Background(), key, field).Err()
+func (r *RedisClient) DeleteKeyField(key string, field string) error {
+	err := r.Client.HDel(context.Background(), key, field).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func AddToList(client *redis.Client, key string, values []interface{}) error {
-	err := client.RPush(context.Background(), key, values).Err()
+func (r *RedisClient) AddToList(key string, values []interface{}) error {
+	err := r.Client.RPush(context.Background(), key, values).Err()
 	if err != nil {
 		return err
 	}
@@ -64,8 +77,8 @@ func AddToList(client *redis.Client, key string, values []interface{}) error {
 }
 
 // GetList 获取 Redis List 中指定范围的元素
-func GetList(client *redis.Client, key string, start int64, stop int64) ([]string, error) {
-	data, err := client.LRange(context.Background(), key, start, stop).Result()
+func (r *RedisClient) GetList(key string, start int64, stop int64) ([]string, error) {
+	data, err := r.Client.LRange(context.Background(), key, start, stop).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +86,8 @@ func GetList(client *redis.Client, key string, start int64, stop int64) ([]strin
 }
 
 // DeleteList 删除 Redis 中的 List
-func DeleteList(client *redis.Client, key string) error {
-	err := client.Del(context.Background(), key).Err()
+func (r *RedisClient) DeleteList(key string) error {
+	err := r.Client.Del(context.Background(), key).Err()
 	if err != nil {
 		return err
 	}
@@ -82,8 +95,8 @@ func DeleteList(client *redis.Client, key string) error {
 }
 
 // GetAllListValues 获取指定键的所有值
-func GetAllListValues(client *redis.Client, key string) ([]string, error) {
-	values, err := client.LRange(context.Background(), key, 0, -1).Result()
+func (r *RedisClient) GetAllListValues(key string) ([]string, error) {
+	values, err := r.Client.LRange(context.Background(), key, 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +104,8 @@ func GetAllListValues(client *redis.Client, key string) ([]string, error) {
 }
 
 // RemoveFromList 从 Redis List 中删除指定元素
-func RemoveFromList(client *redis.Client, key string, count int64, value interface{}) error {
-	err := client.LRem(context.Background(), key, count, value).Err()
+func (r *RedisClient) RemoveFromList(key string, count int64, value interface{}) error {
+	err := r.Client.LRem(context.Background(), key, count, value).Err()
 	if err != nil {
 		return err
 	}
@@ -100,8 +113,8 @@ func RemoveFromList(client *redis.Client, key string, count int64, value interfa
 }
 
 // 设置 Redis 键的过期时间（以秒为单位）
-func SetKeyExpiration(client *redis.Client, key string, expiration time.Duration) error {
-	err := client.Expire(context.Background(), key, expiration).Err()
+func (r *RedisClient) SetKeyExpiration(key string, expiration time.Duration) error {
+	err := r.Client.Expire(context.Background(), key, expiration).Err()
 	if err != nil {
 		return err
 	}
@@ -109,8 +122,8 @@ func SetKeyExpiration(client *redis.Client, key string, expiration time.Duration
 }
 
 // 设置 Redis 键在指定时间点过期
-func SetKeyExpirationAt(client *redis.Client, key string, expiration time.Time) error {
-	err := client.ExpireAt(context.Background(), key, expiration).Err()
+func (r *RedisClient) SetKeyExpirationAt(key string, expiration time.Time) error {
+	err := r.Client.ExpireAt(context.Background(), key, expiration).Err()
 	if err != nil {
 		return err
 	}
@@ -166,24 +179,24 @@ func CategorizeByDriveType(data []*UserInfo) map[string][]*UserInfo {
 	return result
 }
 
-func SetKey(client *redis.Client, key string, data interface{}, expiration time.Duration) error {
-	err := client.Set(context.Background(), key, data, expiration).Err()
+func (r *RedisClient) SetKey(key string, data interface{}, expiration time.Duration) error {
+	err := r.Client.Set(context.Background(), key, data, expiration).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetKey(client *redis.Client, key string) (interface{}, error) {
-	data, err := client.Get(context.Background(), key).Result()
+func (r *RedisClient) GetKey(key string) (interface{}, error) {
+	data, err := r.Client.Get(context.Background(), key).Result()
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-func DelKey(client *redis.Client, key string) error {
-	err := client.Del(context.Background(), key).Err()
+func (r *RedisClient) DelKey(key string) error {
+	err := r.Client.Del(context.Background(), key).Err()
 	if err != nil {
 		return err
 	}
@@ -191,30 +204,29 @@ func DelKey(client *redis.Client, key string) error {
 }
 
 // UpdateKeyExpiration 更新键的过期时间
-func UpdateKeyExpiration(client *redis.Client, key string, expiration time.Duration) error {
-	remaining, err := client.TTL(context.Background(), key).Result()
+func (r *RedisClient) UpdateKeyExpiration(key string, expiration time.Duration) error {
+	remaining, err := r.Client.TTL(context.Background(), key).Result()
 	if err != nil {
 		return err
 	}
-	fmt.Println("remaining => ", remaining)
 	// 如果键不存在或已过期，返回错误
 	if remaining < 0 && remaining != -1 {
 		return fmt.Errorf("key does not exist or has expired")
 	}
 	// 使用 EXPIRE 命令更新键的过期时间
-	return client.Expire(context.Background(), key, expiration).Err()
+	return r.Client.Expire(context.Background(), key, expiration).Err()
 }
 
-func ScanKeys(client *redis.Client, pattern string) ([]string, error) {
-	keys, err := client.Keys(context.Background(), pattern).Result()
+func (r *RedisClient) ScanKeys(pattern string) ([]string, error) {
+	keys, err := r.Client.Keys(context.Background(), pattern).Result()
 	if err != nil {
 		return nil, err
 	}
 	return keys, nil
 }
 
-func ExistsKey(client *redis.Client, key string) (bool, error) {
-	exists, err := client.Exists(context.Background(), key).Result()
+func (r *RedisClient) ExistsKey(key string) (bool, error) {
+	exists, err := r.Client.Exists(context.Background(), key).Result()
 	if err != nil {
 		return false, err
 	}

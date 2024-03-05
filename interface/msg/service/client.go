@@ -12,7 +12,6 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/gorilla/websocket"
 	"github.com/rabbitmq/amqp091-go"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"log"
 	"strconv"
@@ -28,7 +27,7 @@ type client struct {
 	queue          *amqp091.Channel
 	wsMutex        sync.Mutex
 	redisMutex     sync.Mutex
-	Rdb            *redis.Client
+	Rdb            *cache.RedisClient
 	relationClient relationgrpcv1.UserRelationServiceClient
 }
 
@@ -114,7 +113,7 @@ func (c *client) wsOfflineClients() {
 func (c *client) addUserWsCount() error {
 	c.redisMutex.Lock()
 	defer c.redisMutex.Unlock()
-	exists, err := cache.ExistsKey(c.Rdb, c.Uid)
+	exists, err := c.Rdb.ExistsKey(c.Uid)
 	if err != nil {
 		return err
 	}
@@ -126,9 +125,9 @@ func (c *client) addUserWsCount() error {
 	}
 
 	if !exists {
-		return cache.SetKey(c.Rdb, c.Uid, 1, 0)
+		return c.Rdb.SetKey(c.Uid, 1, 0)
 	} else {
-		value, err := cache.GetKey(c.Rdb, c.Uid)
+		value, err := c.Rdb.GetKey(c.Uid)
 		if err != nil {
 			return err
 		}
@@ -138,14 +137,14 @@ func (c *client) addUserWsCount() error {
 			return err
 		}
 		num++
-		return cache.SetKey(c.Rdb, c.Uid, num, 0)
+		return c.Rdb.SetKey(c.Uid, num, 0)
 	}
 }
 
 func (c *client) reduceUserWsCount() error {
 	c.redisMutex.Lock()
 	defer c.redisMutex.Unlock()
-	exists, err := cache.ExistsKey(c.Rdb, c.Uid)
+	exists, err := c.Rdb.ExistsKey(c.Uid)
 	if err != nil {
 		return err
 	}
@@ -157,7 +156,7 @@ func (c *client) reduceUserWsCount() error {
 		}
 		return nil
 	} else {
-		value, err := cache.GetKey(c.Rdb, c.Uid)
+		value, err := c.Rdb.GetKey(c.Uid)
 		if err != nil {
 			return err
 		}
@@ -173,10 +172,10 @@ func (c *client) reduceUserWsCount() error {
 			if err != nil {
 				return err
 			}
-			return cache.DelKey(c.Rdb, c.Uid)
+			return c.Rdb.DelKey(c.Uid)
 		} else {
 			num--
-			return cache.SetKey(c.Rdb, c.Uid, num, 0)
+			return c.Rdb.SetKey(c.Uid, num, 0)
 		}
 	}
 }
@@ -237,12 +236,12 @@ func (c *client) pushAllFriendOnlineStatus() error {
 
 	if len(list.FriendList) > 0 {
 		for _, friend := range list.FriendList {
-			exists, err := cache.ExistsKey(c.Rdb, friend.UserId)
+			exists, err := c.Rdb.ExistsKey(friend.UserId)
 			if err != nil {
 				return err
 			}
 			if exists {
-				value, err := cache.GetKey(c.Rdb, friend.UserId)
+				value, err := c.Rdb.GetKey(friend.UserId)
 				if err != nil {
 					return err
 				}

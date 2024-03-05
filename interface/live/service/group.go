@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	"github.com/cossim/coss-server/interface/live/api/model"
-	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
@@ -124,7 +123,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 	if err != nil {
 		return nil, err
 	}
-	if err = cache.SetKey(s.redisClient, liveGroupPrefix+room.Name+":"+strconv.FormatUint(uint64(gid), 10), ToJSONString, s.liveTimeout); err != nil {
+	if err = s.redisClient.SetKey(liveGroupPrefix+room.Name+":"+strconv.FormatUint(uint64(gid), 10), ToJSONString, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
 	}
@@ -159,7 +158,7 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*d
 	if err != nil {
 		return nil, code.LiveErrJoinCallFailed
 	}
-	if err = cache.SetKey(s.redisClient, key, ToJSONString, 0); err != nil {
+	if err = s.redisClient.SetKey(key, ToJSONString, 0); err != nil {
 		s.logger.Error("更新房间信息失败", zap.Error(err))
 		return nil, err
 	}
@@ -304,7 +303,7 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 			return nil, err
 		}
 		fmt.Println("111111111")
-		if err = cache.SetKey(s.redisClient, key, ToJSONString, 0); err != nil {
+		if err = s.redisClient.SetKey(key, ToJSONString, 0); err != nil {
 			s.logger.Error("更新房间信息失败", zap.Error(err))
 			return nil, err
 		}
@@ -342,7 +341,7 @@ func (s *Service) getGroupRedisRoom(ctx context.Context, gid uint32) (*model.Gro
 
 func (s *Service) isEitherGroupInCall(ctx context.Context, gid uint32) (bool, error) {
 	pattern := liveGroupPrefix + "*:" + strconv.FormatUint(uint64(gid), 10)
-	keys, err := s.redisClient.Keys(ctx, pattern).Result()
+	keys, err := s.redisClient.Client.Keys(ctx, pattern).Result()
 	if err != nil {
 		return false, err
 	}
@@ -361,7 +360,7 @@ func (s *Service) deleteGroupRoom(ctx context.Context, room string, key string) 
 		return nil, code.LiveErrLeaveCallFailed
 	}
 
-	_, err = s.redisClient.Del(ctx, key).Result()
+	_, err = s.redisClient.Client.Del(ctx, key).Result()
 	if err != nil {
 		s.logger.Error("删除房间信息失败", zap.Error(err))
 	}

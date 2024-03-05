@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -15,7 +16,6 @@ import (
 	"github.com/cossim/coss-server/pkg/version"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -29,7 +29,7 @@ var (
 type Handler struct {
 	sp            storage.StorageProvider
 	storageClient storagev1.StorageServiceClient
-	redisClient   *redis.Client
+	redisClient   *cache.RedisClient
 	logger        *zap.Logger
 	enc           encryption.Encryptor
 	discover      discovery.Registry
@@ -38,13 +38,7 @@ type Handler struct {
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr(),
-		Password: cfg.Redis.Password, // no password set
-		DB:       0,                  // use default DB
-		//Protocol: cfg,
-	})
-	h.redisClient = rdb
+	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("storage_bff", int8(cfg.Log.Level))
 	sp, err := minio.NewMinIOStorage(cfg.OSS["minio"].Addr(), cfg.OSS["minio"].AccessKey, cfg.OSS["minio"].SecretKey, cfg.OSS["minio"].SSL)
 	if err != nil {
@@ -63,6 +57,10 @@ func (h *Handler) Name() string {
 
 func (h *Handler) Version() string {
 	return version.FullVersion()
+}
+
+func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
+	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
 // @title storage服务
@@ -90,7 +88,7 @@ func (h *Handler) Health(r gin.IRouter) string {
 }
 
 func (h *Handler) Stop(ctx context.Context) error {
-	return h.redisClient.Close()
+	return nil
 }
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {

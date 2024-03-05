@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	"github.com/cossim/coss-server/interface/live/api/model"
-	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
@@ -73,11 +72,11 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	if err != nil {
 		return nil, err
 	}
-	if err = cache.SetKey(s.redisClient, liveUserPrefix+senderID, roomInfo, s.liveTimeout); err != nil {
+	if err = s.redisClient.SetKey(liveUserPrefix+senderID, roomInfo, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
 	}
-	if err = cache.SetKey(s.redisClient, liveUserPrefix+recipientID, roomInfo, s.liveTimeout); err != nil {
+	if err = s.redisClient.SetKey(liveUserPrefix+recipientID, roomInfo, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err))
 		return nil, err
 	}
@@ -146,7 +145,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 		s.logger.Error("更新房间信息失败", zap.Error(err))
 		return nil, code.LiveErrJoinCallFailed
 	}
-	if err = cache.SetKey(s.redisClient, liveUserPrefix+uid, ToJSONString, 365*24*time.Hour); err != nil {
+	if err = s.redisClient.SetKey(liveUserPrefix+uid, ToJSONString, 365*24*time.Hour); err != nil {
 		s.logger.Error("更新房间信息失败", zap.Error(err))
 		return nil, err
 	}
@@ -184,7 +183,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 }
 
 func (s *Service) joinRoom(userName string, room *livekit.Room) (string, error) {
-	//roomCache, err := cache.GetKey(s.redisClient, room.Sid)
+	//roomCache, err := s.redisClient.GetKey(room.Sid)
 	//if err != nil {
 	//	return "", err
 	//}
@@ -363,11 +362,11 @@ func (s *Service) deleteUserRoom(ctx context.Context, room, uid string) (interfa
 		return nil, err
 	}
 
-	if err = cache.DelKey(s.redisClient, liveUserPrefix+userRoom.SenderID); err != nil {
+	if err = s.redisClient.DelKey(liveUserPrefix + userRoom.SenderID); err != nil {
 		s.logger.Error("删除房间信息失败", zap.Error(err))
 	}
 
-	if err = cache.DelKey(s.redisClient, liveUserPrefix+userRoom.RecipientID); err != nil {
+	if err = s.redisClient.DelKey(liveUserPrefix + userRoom.RecipientID); err != nil {
 		s.logger.Error("删除房间信息失败", zap.Error(err))
 	}
 
@@ -380,7 +379,7 @@ func (s *Service) deleteUserRoom(ctx context.Context, room, uid string) (interfa
 
 func (s *Service) deleteRedisRoomByPrefix(ctx context.Context, prefix, roomID string) error {
 	pattern := prefix + roomID + ":*"
-	keys, err := s.redisClient.Keys(ctx, pattern).Result()
+	keys, err := s.redisClient.Client.Keys(ctx, pattern).Result()
 	if err != nil {
 		return err
 	}
@@ -389,7 +388,7 @@ func (s *Service) deleteRedisRoomByPrefix(ctx context.Context, prefix, roomID st
 		return nil
 	}
 
-	_, err = s.redisClient.Del(ctx, keys...).Result()
+	_, err = s.redisClient.Client.Del(ctx, keys...).Result()
 	if err != nil {
 		return err
 	}
@@ -399,7 +398,7 @@ func (s *Service) deleteRedisRoomByPrefix(ctx context.Context, prefix, roomID st
 
 func (s *Service) deleteGroupCallByRoomID(ctx context.Context, roomID string) error {
 	pattern := liveGroupPrefix + roomID + ":*"
-	keys, err := s.redisClient.Keys(ctx, pattern).Result()
+	keys, err := s.redisClient.Client.Keys(ctx, pattern).Result()
 	if err != nil {
 		return err
 	}
@@ -408,7 +407,7 @@ func (s *Service) deleteGroupCallByRoomID(ctx context.Context, roomID string) er
 		return nil
 	}
 
-	_, err = s.redisClient.Del(ctx, keys...).Result()
+	_, err = s.redisClient.Client.Del(ctx, keys...).Result()
 	if err != nil {
 		return err
 	}
@@ -440,7 +439,7 @@ func (s *Service) isInCall(ctx context.Context, id string) (bool, error) {
 	//}
 	//return len(keys) > 0, nil
 	pattern := liveUserPrefix + id
-	count, err := s.redisClient.Exists(ctx, pattern).Result()
+	count, err := s.redisClient.Client.Exists(ctx, pattern).Result()
 	if err != nil {
 		return false, err
 	}
@@ -448,7 +447,7 @@ func (s *Service) isInCall(ctx context.Context, id string) (bool, error) {
 }
 
 func (s *Service) getRedisUserRoom(ctx context.Context, uid string) (*model.UserRoomInfo, error) {
-	room, err := cache.GetKey(s.redisClient, liveUserPrefix+uid)
+	room, err := s.redisClient.GetKey(liveUserPrefix + uid)
 	if err != nil {
 		return nil, code.LiveErrCallNotFound.Reason(err)
 	}
@@ -474,7 +473,7 @@ func (s *Service) getRedisRoomWithPrefix(ctx context.Context, prefix, key string
 	if len(keys) == 0 {
 		return "", code.LiveErrCallNotFound
 	}
-	room, err := cache.GetKey(s.redisClient, keys[0])
+	room, err := s.redisClient.GetKey(keys[0])
 	if err != nil {
 		return "", code.LiveErrCallNotFound.Reason(err)
 	}
@@ -488,7 +487,7 @@ func (s *Service) scanKeysWithPrefixAndContent(ctx context.Context, pattern stri
 	var cursor uint64 = 0
 	var keys []string
 	for {
-		result, _, err := s.redisClient.Scan(ctx, cursor, pattern, 10).Result()
+		result, _, err := s.redisClient.Client.Scan(ctx, cursor, pattern, 10).Result()
 		if err != nil {
 			return nil, err
 		}
@@ -506,14 +505,14 @@ func (s *Service) scanKeysWithPrefixAndContent(ctx context.Context, pattern stri
 
 func (s *Service) deleteRedisLiveUser(ctx context.Context, userID string) error {
 	pattern := liveUserPrefix + "*:" + userID + ":*"
-	keys, err := s.redisClient.Keys(ctx, pattern).Result()
+	keys, err := s.redisClient.Client.Keys(ctx, pattern).Result()
 	if err != nil {
 		return err
 	}
 	if len(keys) == 0 {
 		return nil
 	}
-	_, err = s.redisClient.Del(ctx, keys...).Result()
+	_, err = s.redisClient.Client.Del(ctx, keys...).Result()
 	if err != nil {
 		return err
 	}
