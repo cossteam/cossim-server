@@ -18,4 +18,5 @@ type StorageProvider interface {
 	UploadPart(ctx context.Context, key string, uploadId string, partNumber int, reader io.Reader, size int64, opt minio.PutObjectPartOptions) error
 	AbortMultipartUpload(ctx context.Context, key string, uploadId string) error
 	GetObjectInfo(ctx context.Context, key string, opt minio.GetObjectOptions) (minio.ObjectInfo, error)
+	UploadAvatar(ctx context.Context, key string, reader io.Reader, size int64, opt minio.PutObjectOptions) error
 }

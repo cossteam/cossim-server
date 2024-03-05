@@ -76,19 +76,19 @@ discovers:
   relation:
     name: "relation_service"
     address: "relation_service"
-    port: "10001"
+    port: 10001
     #direct: false
 
   user:
     name: "user_service"
     address: "user_service"
-    port: "10002"
+    port: 10002
     #direct: false
 
   group:
     name: "group_service"
     address: "group_service"
-    port: "10005"
+    port: 10005
     #direct: false
 
 encryption:
