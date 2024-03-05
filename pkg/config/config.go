@@ -258,7 +258,7 @@ func loadConfig(filePath string) (*AppConfig, error) {
 		log.Printf("error reading config file: %v", err)
 		return nil, nil
 	}
-
+	//
 	var config AppConfig
 	if err := yaml.Unmarshal(yamlFile, &config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
