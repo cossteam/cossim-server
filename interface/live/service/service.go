@@ -86,5 +86,5 @@ func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 	return rmq
 }
 func setupRedisClient(cfg *pkgconfig.AppConfig) *cache.RedisClient {
-	return cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Port, cfg.Redis.Password)
+	return cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }

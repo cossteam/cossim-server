@@ -386,7 +386,15 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 }
 
 func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interface{}, error) {
-	//查询缓存中是否有
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
+	if err != nil {
+		fmt.Println("err:", err.Error())
+		return nil, code.DialogErrGetUserDialogListFailed
+	}
+	if len(values) > 0 {
+		return values, nil
+	}
 
 	//获取对话id
 	ids, err := s.relationDialogClient.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
@@ -525,6 +533,20 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	sort.Slice(responseList, func(i, j int) bool {
 		return responseList[i].LastMessage.SendTime > responseList[j].LastMessage.SendTime
 	})
+
+	// 创建一个新的[]interface{}类型的数组
+	var interfaceList []interface{}
+
+	// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
+	for _, dialog := range responseList {
+		interfaceList = append(interfaceList, dialog)
+	}
+
+	//存储到缓存
+	err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
+	if err != nil {
+		return nil, err
+	}
 
 	return responseList, nil
 }

@@ -60,7 +60,7 @@ func (h *Handler) Version() string {
 }
 
 func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
-	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Port, cfg.Redis.Password)
+	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
 // @title storage服务

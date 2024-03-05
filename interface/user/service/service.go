@@ -78,7 +78,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 }
 
 func (s *Service) setupRedisClient() {
-	s.redisClient = cache.NewRedisClient(s.ac.Redis.Addr(), s.ac.Redis.Port, s.ac.Redis.Password)
+	s.redisClient = cache.NewRedisClient(s.ac.Redis.Addr(), s.ac.Redis.Password)
 }
 
 func (s *Service) Ping() {

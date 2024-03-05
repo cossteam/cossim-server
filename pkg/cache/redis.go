@@ -26,9 +26,9 @@ type RedisClient struct {
 	Client *redis.Client
 }
 
-func NewRedisClient(address string, port int, password string) *RedisClient {
+func NewRedisClient(address string, password string) *RedisClient {
 	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", address, port),
+		Addr:     fmt.Sprintf("%s", address),
 		Password: password,
 		DB:       0,
 	})

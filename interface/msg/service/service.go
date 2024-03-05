@@ -229,7 +229,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 }
 
 func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
-	return cache.NewRedisClient(ac.Redis.Addr(), ac.Redis.Port, ac.Redis.Password)
+	return cache.NewRedisClient(ac.Redis.Addr(), ac.Redis.Password)
 }
 
 func setupEncryption(ac *pkgconfig.AppConfig) {

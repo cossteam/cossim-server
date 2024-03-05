@@ -72,5 +72,5 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 }
 
 func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
-	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Port, cfg.Redis.Password)
+	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
