@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type Response struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
@@ -241,4 +243,13 @@ type GetGroupMessageReadersResponse struct {
 	Avatar string `json:"avatar"`
 	Name   string `json:"name"`
 	//ReadAt int64  `json:"read_at"`
+}
+
+func (udlr UserDialogListResponse) MarshalBinary() ([]byte, error) {
+	// 将UserDialogListResponse对象转换为二进制数据
+	data, err := json.Marshal(udlr)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

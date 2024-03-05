@@ -389,11 +389,24 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	//查询是否有缓存
 	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
 	if err != nil {
-		fmt.Println("err:", err.Error())
+		s.logger.Error("err:" + err.Error())
 		return nil, code.DialogErrGetUserDialogListFailed
 	}
 	if len(values) > 0 {
-		return values, nil
+		// 类型转换
+		var responseList []model.UserDialogListResponse
+		for _, v := range values {
+			// 在这里根据实际的数据结构进行解析
+			// 这里假设你的缓存数据是 JSON 字符串，需要解析为 UserDialogListResponse 类型
+			var dialog model.UserDialogListResponse
+			err := json.Unmarshal([]byte(v), &dialog)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			responseList = append(responseList, dialog)
+		}
+		return responseList, nil
 	}
 
 	//获取对话id
@@ -545,7 +558,14 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	//存储到缓存
 	err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
 	if err != nil {
-		return nil, err
+		s.logger.Error("err:" + err.Error())
+		return nil, code.DialogErrGetUserDialogListFailed
+	}
+	//设置key过期时间
+	err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*time.Hour)
+	if err != nil {
+		s.logger.Error("err:" + err.Error())
+		return nil, code.DialogErrGetUserDialogListFailed
 	}
 
 	return responseList, nil
