@@ -140,16 +140,6 @@ func (m *MinIOStorage) UploadAvatar(ctx context.Context, key string, reader io.R
 		return err
 	}
 
-	reqParams := make(url.Values)
-
-	presignedURL, err := m.client.PresignedGetObject(ctx, bucketName, objectName, m.PresignedExpires, reqParams)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("presignedURL => ", presignedURL.String())
-	fmt.Println("uri", presignedURL.Path)
-
 	return nil
 }
 
