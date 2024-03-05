@@ -129,6 +129,30 @@ func (m *MinIOStorage) Upload(ctx context.Context, key string, reader io.Reader,
 	return presignedURL, nil
 }
 
+func (m *MinIOStorage) UploadAvatar(ctx context.Context, key string, reader io.Reader, size int64, opt minio.PutObjectOptions) error {
+	bucketName, objectName, err := ParseKey(key)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.client.PutObject(ctx, bucketName, objectName, reader, size, opt)
+	if err != nil {
+		return err
+	}
+
+	reqParams := make(url.Values)
+
+	presignedURL, err := m.client.PresignedGetObject(ctx, bucketName, objectName, m.PresignedExpires, reqParams)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("presignedURL => ", presignedURL.String())
+	fmt.Println("uri", presignedURL.Path)
+
+	return nil
+}
+
 func (m *MinIOStorage) GetUrl(ctx context.Context, key string) (string, error) {
 	bucketName, objectName, err := ParseKey(key)
 	if err != nil {

@@ -125,7 +125,8 @@ func (s *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 	//添加用户
 	_, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err == nil {
-		return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), code.UserErrEmailAlreadyRegistered.Message())
+		//return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), code.UserErrEmailAlreadyRegistered.Message())
+		return resp, status.Error(codes.Aborted, err.Error())
 	}
 	userInfo, err := s.ur.InsertUser(&entity.User{
 		Email:     request.Email,
@@ -138,7 +139,8 @@ func (s *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 		ID:     utils.GenUUid(),
 	})
 	if err != nil {
-		return resp, status.Error(codes.Code(code.UserErrRegistrationFailed.Code()), err.Error())
+		//return resp, status.Error(codes.Code(code.UserErrRegistrationFailed.Code()), err.Error())
+		return resp, status.Error(codes.Aborted, err.Error())
 	}
 	resp.UserId = userInfo.ID
 	return resp, nil
@@ -149,7 +151,8 @@ func (s *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*
 	userInfo, err := s.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			//return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			return resp, status.Error(codes.Aborted, err.Error())
 		}
 		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}

@@ -185,22 +185,16 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	reader := bytes.NewReader(avatar)
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	headerUrl, err := s.sp.Upload(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
+	err = s.sp.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
 		ContentType: "image/jpeg",
 	})
 	if err != nil {
 		return "", err
 	}
-	if err != nil {
-		return "", err
-	}
 
-	headerUrl.Host = s.gatewayAddress
-	headerUrl.Path = s.downloadURL + headerUrl.Path
-
-	aUrl := headerUrl.String()
+	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, key)
 	if s.ac.SystemConfig.Ssl {
-		aUrl, err = httputil.ConvertToHttps(headerUrl.String())
+		aUrl, err = httputil.ConvertToHttps(aUrl)
 		if err != nil {
 			return "", err
 		}
@@ -211,7 +205,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	gid := shortuuid.New()
 	wfName := "register_user_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		resp, err := s.userClient.UserRegister(ctx, &usergrpcv1.UserRegisterRequest{
+		resp, err := s.userClient.UserRegister(wf.Context, &usergrpcv1.UserRegisterRequest{
 			Email:           req.Email,
 			NickName:        req.Nickname,
 			Password:        utils.HashString(req.Password),
@@ -224,24 +218,21 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 			return err
 		}
 		UserId = resp.UserId
+
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.userClient.CreateUserRollback(context.Background(), &usergrpcv1.CreateUserRollbackRequest{UserId: resp.UserId})
-			if err != nil {
-				return err
-			}
-			return nil
+			_, err = s.userClient.CreateUserRollback(wf.Context, &usergrpcv1.CreateUserRollbackRequest{UserId: resp.UserId})
+			return err
 		})
 
 		//TODO 系统账号统一管理
-		_, err = s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: "10001"})
+		_, err = s.userClient.UserInfo(wf.Context, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
 		if err != nil {
 			return err
 		}
-
 		//添加系统好友
-		_, err = s.relClient.AddFriend(ctx, &relationgrpcv1.AddFriendRequest{
+		_, err = s.relClient.AddFriend(wf.Context, &relationgrpcv1.AddFriendRequest{
 			UserId:   resp.UserId,
-			FriendId: "10001",
+			FriendId: constants.SystemNotification,
 		})
 		if err != nil {
 			return err
@@ -251,8 +242,9 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	}); err != nil {
 		return "", err
 	}
+
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		return "", err
+		return "", code.UserErrRegistrationFailed
 	}
 
 	if s.ac.Email.Enable {

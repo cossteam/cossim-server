@@ -59,28 +59,27 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	wfName := "create_group_workflow_" + gid
 	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		// 创建群聊
-		resp1, err = s.groupClient.CreateGroup(ctx, r1)
+		resp1, err = s.groupClient.CreateGroup(wf.Context, r1)
 		if err != nil {
 			return err
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.groupClient.CreateGroupRevert(ctx, &groupgrpcv1.CreateGroupRequest{Group: &groupgrpcv1.Group{
+			_, err = s.groupClient.CreateGroupRevert(wf.Context, &groupgrpcv1.CreateGroupRequest{Group: &groupgrpcv1.Group{
 				Id: resp1.Id,
 			}})
 			return err
 		})
 		groupID = resp1.Id
-
 		r22.GroupId = groupID
 		r22.Member = req.Member
 		r22.UserID = req.CreatorId
-		resp2, err := s.relationGroupClient.CreateGroupAndInviteUsers(ctx, r22)
+		resp2, err := s.relationGroupClient.CreateGroupAndInviteUsers(wf.Context, r22)
 		if err != nil {
 			return err
 		}
 		DialogID = resp2.DialogId
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.relationGroupClient.CreateGroupAndInviteUsersRevert(ctx, r22)
+			_, err = s.relationGroupClient.CreateGroupAndInviteUsersRevert(wf.Context, r22)
 			return err
 		})
 

@@ -143,7 +143,7 @@ type AppConfig struct {
 	Register            RegistryConfig            `mapstructure:"register" yaml:"register"`
 	Discovers           DiscoversConfig           `mapstructure:"discovers" yaml:"discovers"`
 	Encryption          EncryptionConfig          `mapstructure:"encryption" yaml:"encryption"`
-	MessageQueue        MessageQueueConfig        `mapstructure:"message_queue" yaml:"messageQueue"`
+	MessageQueue        MessageQueueConfig        `mapstructure:"message_queue" yaml:"message_queue"`
 	MultipleDeviceLimit MultipleDeviceLimitConfig `mapstructure:"multiple_device_limit" yaml:"multiple_device_limit"`
 	SystemConfig        SystemConfig              `mapstructure:"system" yaml:"system"`
 	Dtm                 DtmConfig                 `mapstructure:"dtm" yaml:"dtm"`
@@ -282,6 +282,7 @@ func LoadConfig() (config *AppConfig, configErr error) {
 func GetConfigOrDie() *AppConfig {
 	config, err := LoadConfig()
 	if err != nil {
+		log.Printf("failed to load config: %v", err)
 		return nil
 	}
 	return config
