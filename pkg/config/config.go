@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
 	"os"
 	"time"
 )
@@ -249,11 +250,13 @@ func loadConfig(filePath string) (*AppConfig, error) {
 	//	return nil, fmt.Errorf("failed to read config file: %v", err)
 	//}
 	if filePath == "" {
+		log.Printf("config file path is empty")
 		return nil, nil
 	}
 	yamlFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		panic(err)
+		log.Printf("error reading config file: %v", err)
+		return nil, nil
 	}
 
 	var config AppConfig
