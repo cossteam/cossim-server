@@ -274,12 +274,9 @@ definitions:
         type: string
       open_burn_after_reading_time_out:
         type: integer
-      user_id:
-        type: string
     required:
     - friend_id
     - open_burn_after_reading_time_out
-    - user_id
     type: object
   model.SetUserSilentNotificationRequest:
     properties:
@@ -601,14 +598,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: 设置群聊阅后即焚消息销毁时间
+      description: 设置群聊公告为已读
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.SetGroupOpenBurnAfterReadingTimeOutRequest'
+          $ref: '#/definitions/model.ReadGroupAnnouncementRequest'
       produces:
       - application/json
       responses:
@@ -616,7 +613,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Response'
-      summary: 设置群聊阅后即焚消息销毁时间
+      summary: 设置群聊公告为已读
       tags:
       - GroupRelation
   /relation/group/announcement/read/list:
@@ -665,6 +662,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: '是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)'
+      tags:
+      - GroupRelation
+  /relation/group/burn/timeout/set:
+    post:
+      consumes:
+      - application/json
+      description: 设置群聊阅后即焚消息销毁时间
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetGroupOpenBurnAfterReadingTimeOutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 设置群聊阅后即焚消息销毁时间
       tags:
       - GroupRelation
   /relation/group/invite:
@@ -921,6 +940,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: '是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)'
+      tags:
+      - UserRelation
+  /relation/user/burn/timeout/set:
+    post:
+      consumes:
+      - application/json
+      description: 设置好友阅后即焚消息销毁时间
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetUserOpenBurnAfterReadingTimeOutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 设置好友阅后即焚消息销毁时间
       tags:
       - UserRelation
   /relation/user/delete_blacklist:

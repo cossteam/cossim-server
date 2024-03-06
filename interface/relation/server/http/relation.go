@@ -1094,7 +1094,7 @@ func (h *Handler) getReadGroupAnnouncementList(c *gin.Context) {
 // @Produce  json
 // @param request body model.SetUserOpenBurnAfterReadingTimeOutRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /relation/group/announcement/read [post]
+// @Router /relation/user/burn/timeout/set [post]
 func (h *Handler) setUserOpenBurnAfterReadingTimeOut(c *gin.Context) {
 	req := new(model.SetUserOpenBurnAfterReadingTimeOutRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -1125,7 +1125,7 @@ func (h *Handler) setUserOpenBurnAfterReadingTimeOut(c *gin.Context) {
 // @Produce  json
 // @param request body model.SetGroupOpenBurnAfterReadingTimeOutRequest true "request"
 // @Success 200 {object} model.Response{}
-// @Router /relation/group/announcement/read [post]
+// @Router /relation/group/burn/timeout/set [post]
 func (h *Handler) setGroupOpenBurnAfterReadingTimeOut(c *gin.Context) {
 	req := new(model.SetGroupOpenBurnAfterReadingTimeOutRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {

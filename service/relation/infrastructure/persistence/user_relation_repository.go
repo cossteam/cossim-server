@@ -84,17 +84,17 @@ func (u *UserRelationRepo) UpdateRelationColumn(id uint, column string, value in
 }
 
 func (u *UserRelationRepo) SetUserFriendSilentNotification(uid, friendId string, silentNotification entity.SilentNotification) error {
-	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", uid, friendId).Update("silent_notification", silentNotification).Error
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ? AND deleted_at = 0", uid, friendId).Update("silent_notification", silentNotification).Error
 }
 
 func (u *UserRelationRepo) SetUserOpenBurnAfterReading(uid, friendId string, openBurnAfterReading entity.OpenBurnAfterReadingType) error {
-	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", uid, friendId).Update("open_burn_after_reading", openBurnAfterReading).Error
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ? AND deleted_at = 0", uid, friendId).Update("open_burn_after_reading", openBurnAfterReading).Error
 }
 
 func (u *UserRelationRepo) SetFriendRemarkByUserIdAndFriendId(userId, friendId string, remark string) error {
-	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", userId, friendId).Update("remark", remark).Error
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).Update("remark", remark).Error
 }
 
 func (u *UserRelationRepo) SetUserOpenBurnAfterReadingTimeOUt(uid, friendId string, burnAfterReadingTimeOut int64) error {
-	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", uid, friendId).Update("burn_after_reading_time_out", burnAfterReadingTimeOut).Error
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ? AND deleted_at = 0", uid, friendId).Update("burn_after_reading_time_out", burnAfterReadingTimeOut).Error
 }

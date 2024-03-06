@@ -326,7 +326,7 @@ const docTemplaterelation = `{
         },
         "/relation/group/announcement/read": {
             "post": {
-                "description": "设置群聊阅后即焚消息销毁时间",
+                "description": "设置群聊公告为已读",
                 "consumes": [
                     "application/json"
                 ],
@@ -336,7 +336,7 @@ const docTemplaterelation = `{
                 "tags": [
                     "GroupRelation"
                 ],
-                "summary": "设置群聊阅后即焚消息销毁时间",
+                "summary": "设置群聊公告为已读",
                 "parameters": [
                     {
                         "description": "request",
@@ -344,7 +344,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SetGroupOpenBurnAfterReadingTimeOutRequest"
+                            "$ref": "#/definitions/model.ReadGroupAnnouncementRequest"
                         }
                     }
                 ],
@@ -418,6 +418,40 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.OpenGroupBurnAfterReadingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/group/burn/timeout/set": {
+            "post": {
+                "description": "设置群聊阅后即焚消息销毁时间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "设置群聊阅后即焚消息销毁时间",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetGroupOpenBurnAfterReadingTimeOutRequest"
                         }
                     }
                 ],
@@ -823,6 +857,40 @@ const docTemplaterelation = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.OpenUserBurnAfterReadingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/relation/user/burn/timeout/set": {
+            "post": {
+                "description": "设置好友阅后即焚消息销毁时间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
+                ],
+                "summary": "设置好友阅后即焚消息销毁时间",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetUserOpenBurnAfterReadingTimeOutRequest"
                         }
                     }
                 ],
@@ -1503,8 +1571,7 @@ const docTemplaterelation = `{
             "type": "object",
             "required": [
                 "friend_id",
-                "open_burn_after_reading_time_out",
-                "user_id"
+                "open_burn_after_reading_time_out"
             ],
             "properties": {
                 "friend_id": {
@@ -1512,9 +1579,6 @@ const docTemplaterelation = `{
                 },
                 "open_burn_after_reading_time_out": {
                     "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },

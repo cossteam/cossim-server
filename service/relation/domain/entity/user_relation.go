@@ -10,7 +10,7 @@ type UserRelation struct {
 	Label                   []string                 `gorm:"type:varchar(255);comment:标签" json:"label"`
 	SilentNotification      SilentNotification       `gorm:"comment:是否开启静默通知" json:"silent_notification"`
 	OpenBurnAfterReading    OpenBurnAfterReadingType `gorm:"default:0;comment:是否开启阅后即焚消息" json:"open_burn_after_reading"`
-	BurnAfterReadingTimeOut int64                    `gorm:"comment:阅后即焚时间" json:"burn_after_reading_time_out"`
+	BurnAfterReadingTimeOut int64                    `gorm:"default:10;comment:阅后即焚时间" json:"burn_after_reading_time_out"`
 }
 
 type SilentNotification uint

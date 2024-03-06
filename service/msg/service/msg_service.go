@@ -338,6 +338,9 @@ func (s *Service) SetUserMsgsReadStatus(ctx context.Context, in *v1.SetUserMsgsR
 			rids = append(rids, uint32(msg.ID))
 		}
 	}
+	if in.OpenBurnAfterReadingTimeOut == 0 {
+		in.OpenBurnAfterReadingTimeOut = 10
+	}
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		npo := persistence.NewRepositories(tx)
 		if err := npo.Mr.SetUserMsgsReadStatus(in.MsgIds, in.DialogId); err != nil {
