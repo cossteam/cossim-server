@@ -345,6 +345,11 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		}
 	}
 
+	req, err := s.groupJoinRequestClient.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
+	if err != nil {
+		return err
+	}
+
 	_, err = s.groupJoinRequestClient.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
 		ID:     requestID,
 		Status: status,
@@ -353,8 +358,32 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		return err
 	}
 
+	if status == relationgrpcv1.GroupRequestStatus_Accepted {
+		dialogInfo, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+		if err != nil {
+			s.logger.Error("获取群聊对话信息失败", zap.Error(err))
+			return code.RelationGroupErrManageJoinFailed
+		}
+
+		re := model.UserDialogListResponse{
+			DialogId:       dialogInfo.DialogId,
+			GroupId:        groupID,
+			DialogType:     model.ConversationType(dialogInfo.Type),
+			DialogName:     info.Name,
+			DialogAvatar:   info.Avatar,
+			DialogCreateAt: dialogInfo.CreateAt,
+		}
+
+		//更新缓存
+		err = s.updateRedisUserDialogList(req.UserId, re)
+		if err != nil {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return code.RelationGroupErrManageJoinFailed
+		}
+	}
+
 	msg := constants.WsMsg{
-		Uid:    userID,
+		Uid:    req.UserId,
 		Event:  constants.JoinGroupEvent,
 		Data:   constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)},
 		SendAt: time.Now(),
@@ -368,7 +397,6 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 }
 
 func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID uint32, userID string, status relationgrpcv1.GroupRequestStatus) error {
-
 	_, err := s.groupJoinRequestClient.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{GroupId: groupID, UserId: userID})
 	if err != nil {
 		s.logger.Error("找不到入群请求", zap.Error(err))
@@ -400,12 +428,41 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 		}
 	}
 
+	req, err := s.groupJoinRequestClient.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
+	if err != nil {
+		return err
+	}
+
 	_, err = s.groupJoinRequestClient.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
 		ID:     requestID,
 		Status: status,
 	})
 	if err != nil {
 		return err
+	}
+
+	if status == relationgrpcv1.GroupRequestStatus_Accepted {
+		dialogInfo, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+		if err != nil {
+			s.logger.Error("获取群聊对话信息失败", zap.Error(err))
+			return code.RelationGroupErrManageJoinFailed
+		}
+
+		re := model.UserDialogListResponse{
+			DialogId:       dialogInfo.DialogId,
+			GroupId:        groupID,
+			DialogType:     model.ConversationType(dialogInfo.Type),
+			DialogName:     info.Name,
+			DialogAvatar:   info.Avatar,
+			DialogCreateAt: dialogInfo.CreateAt,
+		}
+
+		//更新缓存
+		err = s.updateRedisUserDialogList(req.UserId, re)
+		if err != nil {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return code.RelationGroupErrManageJoinFailed
+		}
 	}
 
 	msg := constants.WsMsg{
@@ -549,6 +606,12 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 		return err
 	})
 	if err != nil {
+		return code.RelationGroupErrLeaveGroupFailed
+	}
+
+	err = s.removeRedisUserDialogList(userID, dialog.DialogId)
+	if err != nil {
+		s.logger.Error("退出群聊失败", zap.Error(err))
 		return code.RelationGroupErrLeaveGroupFailed
 	}
 

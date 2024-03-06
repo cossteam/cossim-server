@@ -229,6 +229,14 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return "", err
 	}
 
+	go func() {
+		err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
+		if err != nil {
+			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+			return
+		}
+	}()
+
 	//查询发送者信息
 	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
@@ -302,6 +310,14 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, err
 	}
 
+	go func() {
+		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+		if err != nil {
+			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+			return
+		}
+	}()
+
 	msginfo.Content = content
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
 
@@ -321,8 +337,9 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	if msginfo.UserId != userID {
 		return nil, code.Unauthorized
 	}
+
 	//判断发送时间是否超过两分钟
-	if pkgtime.Now()-msginfo.CreatedAt > 120 {
+	if pkgtime.IsTimeDifferenceGreaterThanTwoMinutes(pkgtime.Now(), msginfo.CreatedAt) {
 		return nil, code.MsgErrTimeoutExceededCannotRevoke
 	}
 
@@ -352,6 +369,14 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		s.logger.Error("撤回群消息失败", zap.Error(err))
 		return nil, err
 	}
+
+	go func() {
+		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+		if err != nil {
+			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+			return
+		}
+	}()
 
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
 
@@ -636,4 +661,100 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 	}
 
 	return response, nil
+}
+
+func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) error {
+	//获取最后一条消息，更新缓存
+	lastMsg, err := s.msgClient.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+		DialogIds: []uint32{dialogId},
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(lastMsg.LastMsgs) == 0 {
+		return nil
+	}
+	lm := lastMsg.LastMsgs[0]
+
+	//查询发送者信息
+	info, err := s.userClient.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+		UserId: lm.SenderId,
+	})
+	if err != nil {
+		return err
+	}
+
+	//获取对话信息
+	dialogInfo, err := s.relationDialogClient.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
+		DialogId: dialogId,
+	})
+	if err != nil {
+		return err
+	}
+
+	if dialogInfo.Type != uint32(relationgrpcv1.DialogType_GROUP_DIALOG) {
+		return nil
+	}
+
+	ginfo, err := s.groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{
+		Gid: dialogInfo.GroupId,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, userId := range userIds {
+		dialogUser, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+			DialogId: dialogId,
+			UserId:   userId,
+		})
+		if err != nil {
+			return err
+		}
+
+		msgs, err := s.msgClient.GetGroupUnreadMessages(context.Background(), &msggrpcv1.GetGroupUnreadMessagesRequest{
+			UserId:   userId,
+			DialogId: dialogId,
+		})
+		if err != nil {
+			return err
+		}
+
+		dialogName := ginfo.Name
+
+		re := model.UserDialogListResponse{
+			DialogId:          dialogId,
+			GroupId:           dialogInfo.GroupId,
+			DialogType:        model.ConversationType(dialogInfo.Type),
+			DialogName:        dialogName,
+			DialogAvatar:      ginfo.Avatar,
+			DialogUnreadCount: len(msgs.GroupMessages),
+			LastMessage: model.Message{
+				MsgType:  uint(lm.Type),
+				Content:  lm.Content,
+				SenderId: lm.SenderId,
+				SendTime: lm.CreatedAt,
+				MsgId:    uint64(lm.Id),
+				SenderInfo: model.SenderInfo{
+					UserId: info.UserId,
+					Name:   info.NickName,
+					Avatar: info.Avatar,
+				},
+				IsBurnAfterReadingType: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
+				IsLabel:                model.LabelMsgType(lm.IsLabel),
+				ReplayId:               lm.ReplyId,
+				AtUsers:                lm.AtUsers,
+				AtAllUser:              model.AtAllUserType(lm.AtAllUser),
+			},
+			DialogCreateAt: dialogInfo.CreateAt,
+			TopAt:          int64(dialogUser.TopAt),
+		}
+		err = s.updateRedisUserDialogList(userId, re)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

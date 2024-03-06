@@ -1,6 +1,9 @@
 package model
 
-import "errors"
+import (
+	"encoding/json"
+	"errors"
+)
 
 type Response struct {
 	Code int         `json:"code"`
@@ -292,4 +295,74 @@ type GetGroupAnnouncementReadUsersRequest struct {
 	ReadAt         int64      `json:"read_at"`
 	UserId         string     `json:"user_id"`
 	ReaderInfo     SenderInfo `json:"reader_info"`
+}
+
+type ConversationType uint
+
+const (
+	UserConversation ConversationType = iota
+	GroupConversation
+)
+
+type UserDialogListResponse struct {
+	DialogId uint32 `json:"dialog_id"`
+	UserId   string `json:"user_id,omitempty"`
+	GroupId  uint32 `json:"group_id,omitempty"`
+	// 会话类型
+	DialogType ConversationType `json:"dialog_type"`
+	// 会话名称
+	DialogName string `json:"dialog_name"`
+	// 会话头像
+	DialogAvatar string `json:"dialog_avatar"`
+	// 会话未读消息数
+	DialogUnreadCount int     `json:"dialog_unread_count"`
+	LastMessage       Message `json:"last_message"`
+
+	DialogCreateAt int64 `json:"dialog_create_at"`
+	TopAt          int64 `json:"top_at"`
+}
+type Message struct {
+	GroupId                uint32               `json:"group_id,omitempty"`      //群聊id
+	MsgType                uint                 `json:"msg_type"`                // 消息类型
+	Content                string               `json:"content"`                 // 消息内容
+	SenderId               string               `json:"sender_id"`               // 消息发送者
+	SendTime               int64                `json:"send_time"`               // 消息发送时间
+	MsgId                  uint64               `json:"msg_id"`                  // 消息id
+	SenderInfo             SenderInfo           `json:"sender_info"`             // 消息发送者信息
+	ReceiverInfo           SenderInfo           `json:"receiver_info,omitempty"` // 消息接受者信息
+	AtAllUser              AtAllUserType        `json:"at_all_user,omitempty"`   // @全体用户
+	AtUsers                []string             `json:"at_users,omitempty"`      // @用户id
+	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`   // 是否阅后即焚
+	IsLabel                LabelMsgType         `json:"is_label"`                // 是否标记
+	ReplayId               uint32               `json:"replay_id"`               // 回复消息id
+}
+
+type BurnAfterReadingType uint
+
+const (
+	NotBurnAfterReading BurnAfterReadingType = iota //非阅后即焚
+	IsBurnAfterReading                              //阅后即焚消息
+)
+
+type LabelMsgType uint
+
+const (
+	NotLabel LabelMsgType = iota //不标注
+	IsLabel                      //标注
+)
+
+type AtAllUserType uint
+
+const (
+	NotAtAllUser = iota
+	AtAllUser
+)
+
+func (udlr UserDialogListResponse) MarshalBinary() ([]byte, error) {
+	// 将UserDialogListResponse对象转换为二进制数据
+	data, err := json.Marshal(udlr)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

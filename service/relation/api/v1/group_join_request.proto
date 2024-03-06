@@ -91,6 +91,28 @@ message ManageGroupJoinRequestByIDRequest{
   GroupRequestStatus Status = 2;
 }
 
+message GetGroupJoinRequestByIDRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+message GetGroupJoinRequestByIDResponse {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"user_id"
+  string UserId = 3;
+  // @inject_tag: json:"inviter_id"
+  string InviterId = 4;
+  // @inject_tag: json:"created_at"
+  uint64 CreatedAt = 5;
+  //  @inject_tag: json:"status"
+  GroupRequestStatus Status = 6;
+  // @inject_tag: json:"remark"
+  string Remark = 7;
+}
+
 service GroupJoinRequestService {
   // 获取用户加入群聊列表
   rpc GetGroupJoinRequestListByUserId(GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse) {}
@@ -102,4 +124,6 @@ service GroupJoinRequestService {
   rpc InviteJoinGroup(InviteJoinGroupRequest) returns (JoinGroupResponse) {}
   // 用户管理入群邀请
   rpc ManageGroupJoinRequestByID(ManageGroupJoinRequestByIDRequest) returns (google.protobuf.Empty) {}
+  //根据请求id获取申请
+  rpc GetGroupJoinRequestByID(GetGroupJoinRequestByIDRequest) returns (GetGroupJoinRequestByIDResponse) {}
 }

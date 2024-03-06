@@ -128,7 +128,7 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 	var userMessages []*entity.UserMessage
 	for _, dialogId := range dialogIds {
 		var lastMsg entity.UserMessage
-		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, send_id, created_at").Order("created_at DESC").First(&lastMsg)
+		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, send_id,receive_id, created_at").Order("created_at DESC").First(&lastMsg)
 		if lastMsg.ID != 0 {
 			userMessages = append(userMessages, &lastMsg)
 		}
@@ -145,6 +145,10 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 			SenderId:           groupMsg.UserID,
 			CreateAt:           groupMsg.CreatedAt,
 			IsBurnAfterReading: groupMsg.IsBurnAfterReading,
+			AtUsers:            groupMsg.AtUsers,
+			AtAllUser:          groupMsg.AtAllUser,
+			ReplyId:            groupMsg.ReplyId,
+			IsLabel:            entity.MessageLabelType(groupMsg.IsLabel),
 		})
 	}
 	for _, userMsg := range userMessages {
@@ -154,8 +158,11 @@ func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.L
 			Content:            userMsg.Content,
 			Type:               uint(userMsg.Type),
 			SenderId:           userMsg.SendID,
+			ReceiverId:         userMsg.ReceiveID,
 			CreateAt:           userMsg.CreatedAt,
 			IsBurnAfterReading: userMsg.IsBurnAfterReading,
+			ReplyId:            userMsg.ReplyId,
+			IsLabel:            entity.MessageLabelType(userMsg.IsLabel),
 		})
 	}
 	return result, nil

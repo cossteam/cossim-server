@@ -191,3 +191,19 @@ func (s *Service) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageG
 
 	return resp, nil
 }
+
+func (s *Service) GetGroupJoinRequestByID(ctx context.Context, request *v1.GetGroupJoinRequestByIDRequest) (*v1.GetGroupJoinRequestByIDResponse, error) {
+	resp := &v1.GetGroupJoinRequestByIDResponse{}
+
+	req, err := s.gjqr.GetGroupJoinRequestByRequestID(uint(request.ID))
+	if err != nil {
+		return nil, status.Error(codes.Code(code.RelationErrGetGroupJoinRequestFailed.Code()), err.Error())
+	}
+	resp.GroupId = uint32(req.GroupID)
+	resp.UserId = req.UserID
+	resp.Status = v1.GroupRequestStatus(req.Status)
+	resp.CreatedAt = uint64(req.CreatedAt)
+	resp.InviterId = req.Inviter
+	resp.Remark = req.Remark
+	return resp, nil
+}

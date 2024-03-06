@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
@@ -18,6 +20,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	ostime "time"
 )
 
 func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, error) {
@@ -246,6 +249,57 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	if err != nil {
 		return nil, err
 	}
+
+	if action == 1 {
+		relation2, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
+		if err != nil {
+			if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
+				s.logger.Error("获取好友关系失败", zap.Error(err))
+				return nil, code.RelationErrConfirmFriendFailed
+			}
+		}
+		dialogInfo, err := s.dialogClient.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{DialogId: relation.DialogId})
+		if err != nil {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, code.RelationErrConfirmFriendFailed
+		}
+
+		info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.UserId})
+		if err != nil {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, code.RelationErrConfirmFriendFailed
+		}
+
+		info2, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.FriendId})
+		if err != nil {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, code.RelationErrConfirmFriendFailed
+		}
+
+		re := model.UserDialogListResponse{
+			DialogId:       relation2.DialogId,
+			UserId:         info2.UserId,
+			DialogType:     model.ConversationType(dialogInfo.Type),
+			DialogName:     info2.NickName,
+			DialogAvatar:   info2.Avatar,
+			DialogCreateAt: dialogInfo.CreateAt,
+		}
+		//更新缓存
+		err = s.updateRedisUserDialogList(info.UserId, re)
+		if err != nil {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, code.RelationErrConfirmFriendFailed
+		}
+		re.UserId = info.UserId
+		re.DialogName = info.NickName
+		re.DialogAvatar = info.Avatar
+		err = s.updateRedisUserDialogList(info2.UserId, re)
+		if err != nil {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, code.RelationErrConfirmFriendFailed
+		}
+	}
+
 	// 向用户推送通知
 	resp, err := s.sendFriendManagementNotification(ctx, userId, qs.SenderId, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
@@ -286,6 +340,15 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		return err
 	}
 
+	err = s.removeRedisUserDialogList(relation.UserId, relation.DialogId)
+	if err != nil {
+		s.logger.Error("删除用户好友失败", zap.Error(err))
+		return code.RelationErrDeleteFriendFailed
+	}
+	//err = s.removeRedisUserDialogList(relation.FriendId, relation.DialogId)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 
@@ -558,4 +621,130 @@ func (s *Service) convertStatusToRelationStatus(status uint32) relationgrpcv1.Fr
 	default:
 		return relationgrpcv1.FriendRequestStatus_FriendRequestStatus_REJECT
 	}
+}
+
+// 更新redis里的对话列表数据
+func (s *Service) updateRedisUserDialogList(userID string, msg model.UserDialogListResponse) error {
+	//判断key是否存在，存在才继续
+	f, err := s.redisClient.ExistsKey(fmt.Sprintf("dialog:%s", userID))
+	if err != nil {
+		return err
+	}
+	if !f {
+		return nil
+	}
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
+	if err != nil {
+		return err
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []model.UserDialogListResponse
+		for _, v := range values {
+			// 在这里根据实际的数据结构进行解析
+			// 这里假设你的缓存数据是 JSON 字符串，需要解析为 UserDialogListResponse 类型
+			var dialog model.UserDialogListResponse
+			err := json.Unmarshal([]byte(v), &dialog)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			responseList = append(responseList, dialog)
+		}
+
+		for i, v := range responseList {
+			if v.DialogId == msg.DialogId {
+				//替换该位置的
+				responseList[i] = msg
+			}
+		}
+
+		//保存回redis
+		// 创建一个新的[]interface{}类型的数组
+		var interfaceList []interface{}
+
+		// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
+		for _, dialog := range responseList {
+			interfaceList = append(interfaceList, dialog)
+		}
+
+		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			return err
+		}
+
+		//存储到缓存
+		err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
+		if err != nil {
+			return err
+		}
+		//设置key过期时间
+		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*ostime.Hour)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) error {
+	//判断key是否存在，存在才继续
+	f, err := s.redisClient.ExistsKey(fmt.Sprintf("dialog:%s", userID))
+	if err != nil {
+		return err
+	}
+	if !f {
+		return nil
+	}
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
+	if err != nil {
+		return err
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []model.UserDialogListResponse
+		for _, v := range values {
+			// 在这里根据实际的数据结构进行解析
+			// 这里假设你的缓存数据是 JSON 字符串，需要解析为 UserDialogListResponse 类型
+			var dialog model.UserDialogListResponse
+			err := json.Unmarshal([]byte(v), &dialog)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				return err
+			}
+			for i, v := range responseList {
+				if v.DialogId == dialogID {
+					//替换该位置的
+					responseList = append(responseList[:i], responseList[i+1:]...)
+				}
+			}
+			//保存回redis
+			// 创建一个新的[]interface{}类型的数组
+			var interfaceList []interface{}
+
+			// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
+			for _, dialog := range responseList {
+				interfaceList = append(interfaceList, dialog)
+			}
+
+			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+			if err != nil {
+				return err
+			}
+
+			//存储到缓存
+			err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
+			if err != nil {
+				return err
+			}
+			//设置key过期时间
+			err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*ostime.Hour)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

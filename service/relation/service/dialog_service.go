@@ -312,6 +312,8 @@ func (s *Service) GetDialogByGroupId(ctx context.Context, in *v1.GetDialogByGrou
 	}
 	resp.DialogId = uint32(dialog.ID)
 	resp.GroupId = uint32(dialog.GroupId)
+	resp.Type = uint32(dialog.Type)
+	resp.CreateAt = dialog.CreatedAt
 	return resp, nil
 }
 
