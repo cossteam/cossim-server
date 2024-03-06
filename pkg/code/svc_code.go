@@ -95,6 +95,7 @@ var (
 	RelationErrGroupAnnouncementReadFailed                 = New(13129, "设置群聊公告已读失败")
 	RelationErrGetGroupAnnouncementReadUsersFailed         = New(13130, "获取已读群聊公告用户失败")
 	RelationErrGetGroupAnnouncementReadFailed              = New(13131, "获取已读群聊公告失败")
+	RelationErrGetGroupJoinRequestFailed                   = New(13132, "获取进群申请失败")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

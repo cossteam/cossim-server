@@ -131,6 +131,14 @@ message GetDialogByGroupIdResponse {
   uint32 DialogId = 1;
   //  @inject_tag: json:"group_id"
   uint32 GroupId = 2;
+  //  @inject_tag: json:"type"
+  uint32 Type = 3;
+  //  @inject_tag: json:"is_show"
+  uint32 IsShow = 4;
+  //  @inject_tag: json:"top_at"
+  uint64 TopAt = 5;
+  //  @inject_tag: json:"create_at"
+  int64 CreateAt = 6;
 }
 
 message GetDialogByGroupIdsRequest {

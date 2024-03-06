@@ -26,8 +26,13 @@ type LastMessage struct {
 	Content            string                      `json:"msg"`
 	Type               uint                        `json:"msg_type"`
 	SenderId           string                      `json:"sender_id"`
+	ReceiverId         string                      `json:"receiver_id"`
 	CreateAt           int64                       `json:"create_at"`
 	IsBurnAfterReading entity.BurnAfterReadingType `json:"is_burn_after_reading"`
+	AtUsers            []string                    `json:"at_users"`
+	AtAllUser          entity.AtAllUserType        `json:"at_all_user"`
+	IsLabel            entity.MessageLabelType     `json:"is_label"`
+	ReplyId            uint                        `json:"reply_id"`
 }
 
 type GroupMsgList struct {

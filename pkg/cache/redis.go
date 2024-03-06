@@ -68,8 +68,18 @@ func (r *RedisClient) DeleteKeyField(key string, field string) error {
 	return nil
 }
 
+// 添加到 List右边
 func (r *RedisClient) AddToList(key string, values []interface{}) error {
 	err := r.Client.RPush(context.Background(), key, values).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 添加到List左边
+func (r *RedisClient) AddToListLeft(key string, values []interface{}) error {
+	err := r.Client.LPush(context.Background(), key, values).Err()
 	if err != nil {
 		return err
 	}

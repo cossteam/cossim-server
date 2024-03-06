@@ -1316,6 +1316,18 @@ type LastMsg struct {
 	CreatedAt int64 `protobuf:"varint,5,opt,name=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"sender_id"
 	SenderId string `protobuf:"bytes,6,opt,name=SenderId,proto3" json:"sender_id"`
+	// @inject_tag: json:"receiver_id"
+	ReceiverId string `protobuf:"bytes,7,opt,name=ReceiverId,proto3" json:"receiver_id"`
+	// @inject_tag: json:"is_burn_after_reading"
+	IsBurnAfterReadingType BurnAfterReadingType `protobuf:"varint,8,opt,name=IsBurnAfterReadingType,proto3,enum=v1.BurnAfterReadingType" json:"is_burn_after_reading"`
+	// @inject_tag: json:"at_users"
+	AtUsers []string `protobuf:"bytes,9,rep,name=AtUsers,proto3" json:"at_users"`
+	// @inject_tag: json:"at_all_user"
+	AtAllUser AtAllUserType `protobuf:"varint,10,opt,name=AtAllUser,proto3,enum=v1.AtAllUserType" json:"at_all_user"`
+	// @inject_tag: json:"is_label"
+	IsLabel MsgLabel `protobuf:"varint,11,opt,name=IsLabel,proto3,enum=v1.MsgLabel" json:"is_label"`
+	// @inject_tag: json:"reply_id"
+	ReplyId uint32 `protobuf:"varint,12,opt,name=Reply_id,json=ReplyId,proto3" json:"reply_id"`
 }
 
 func (x *LastMsg) Reset() {
@@ -1390,6 +1402,48 @@ func (x *LastMsg) GetSenderId() string {
 		return x.SenderId
 	}
 	return ""
+}
+
+func (x *LastMsg) GetReceiverId() string {
+	if x != nil {
+		return x.ReceiverId
+	}
+	return ""
+}
+
+func (x *LastMsg) GetIsBurnAfterReadingType() BurnAfterReadingType {
+	if x != nil {
+		return x.IsBurnAfterReadingType
+	}
+	return BurnAfterReadingType_NotBurnAfterReading
+}
+
+func (x *LastMsg) GetAtUsers() []string {
+	if x != nil {
+		return x.AtUsers
+	}
+	return nil
+}
+
+func (x *LastMsg) GetAtAllUser() AtAllUserType {
+	if x != nil {
+		return x.AtAllUser
+	}
+	return AtAllUserType_NotAtAllUser
+}
+
+func (x *LastMsg) GetIsLabel() MsgLabel {
+	if x != nil {
+		return x.IsLabel
+	}
+	return MsgLabel_NotLabel
+}
+
+func (x *LastMsg) GetReplyId() uint32 {
+	if x != nil {
+		return x.ReplyId
+	}
+	return 0
 }
 
 type GetLastMsgsResponse struct {
@@ -3614,7 +3668,7 @@ var file_api_v1_msg_proto_rawDesc = []byte{
 	0x20, 0x03, 0x28, 0x09, 0x52, 0x08, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x49, 0x64, 0x22, 0x2d,
 	0x0a, 0x10, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x4d, 0x73, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x03, 0x28, 0x0d, 0x52, 0x07, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x22, 0x9d, 0x01,
+	0x20, 0x03, 0x28, 0x0d, 0x52, 0x07, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x49, 0x64, 0x22, 0x9d, 0x03,
 	0x0a, 0x07, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x02, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x44, 0x69, 0x61,
 	0x6c, 0x6f, 0x67, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x44, 0x69, 0x61,
@@ -3624,7 +3678,23 @@ var file_api_v1_msg_proto_rawDesc = []byte{
 	0x65, 0x6e, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74,
 	0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41,
 	0x74, 0x12, 0x1a, 0x0a, 0x08, 0x53, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x49, 0x64, 0x18, 0x06, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x08, 0x53, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x49, 0x64, 0x22, 0x3e, 0x0a,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x53, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1e, 0x0a,
+	0x0a, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x72, 0x49, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0a, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x50, 0x0a,
+	0x16, 0x49, 0x73, 0x42, 0x75, 0x72, 0x6e, 0x41, 0x66, 0x74, 0x65, 0x72, 0x52, 0x65, 0x61, 0x64,
+	0x69, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x18, 0x2e,
+	0x76, 0x31, 0x2e, 0x42, 0x75, 0x72, 0x6e, 0x41, 0x66, 0x74, 0x65, 0x72, 0x52, 0x65, 0x61, 0x64,
+	0x69, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x52, 0x16, 0x49, 0x73, 0x42, 0x75, 0x72, 0x6e, 0x41,
+	0x66, 0x74, 0x65, 0x72, 0x52, 0x65, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x54, 0x79, 0x70, 0x65, 0x12,
+	0x18, 0x0a, 0x07, 0x41, 0x74, 0x55, 0x73, 0x65, 0x72, 0x73, 0x18, 0x09, 0x20, 0x03, 0x28, 0x09,
+	0x52, 0x07, 0x41, 0x74, 0x55, 0x73, 0x65, 0x72, 0x73, 0x12, 0x2f, 0x0a, 0x09, 0x41, 0x74, 0x41,
+	0x6c, 0x6c, 0x55, 0x73, 0x65, 0x72, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x76,
+	0x31, 0x2e, 0x41, 0x74, 0x41, 0x6c, 0x6c, 0x55, 0x73, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52,
+	0x09, 0x41, 0x74, 0x41, 0x6c, 0x6c, 0x55, 0x73, 0x65, 0x72, 0x12, 0x26, 0x0a, 0x07, 0x49, 0x73,
+	0x4c, 0x61, 0x62, 0x65, 0x6c, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0c, 0x2e, 0x76, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x52, 0x07, 0x49, 0x73, 0x4c, 0x61, 0x62,
+	0x65, 0x6c, 0x12, 0x19, 0x0a, 0x08, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x0c,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x49, 0x64, 0x22, 0x3e, 0x0a,
 	0x13, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x08, 0x4c, 0x61, 0x73, 0x74, 0x4d, 0x73, 0x67, 0x73,
 	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x61, 0x73, 0x74,
@@ -4064,83 +4134,86 @@ var file_api_v1_msg_proto_depIdxs = []int32{
 	7,  // 8: v1.GetUserMsgListResponse.UserMessages:type_name -> v1.UserMessage
 	7,  // 9: v1.UserMessages.UserMessages:type_name -> v1.UserMessage
 	8,  // 10: v1.GroupMessages.GroupMessages:type_name -> v1.GroupMessage
-	18, // 11: v1.GetLastMsgsResponse.LastMsgs:type_name -> v1.LastMsg
-	7,  // 12: v1.EditUserMsgRequest.UserMessage:type_name -> v1.UserMessage
-	8,  // 13: v1.EditGroupMsgRequest.GroupMessage:type_name -> v1.GroupMessage
-	2,  // 14: v1.SetUserMsgLabelRequest.IsLabel:type_name -> v1.MsgLabel
-	2,  // 15: v1.SetGroupMsgLabelRequest.IsLabel:type_name -> v1.MsgLabel
-	7,  // 16: v1.GetUserMsgLabelByDialogIdResponse.MsgList:type_name -> v1.UserMessage
-	8,  // 17: v1.GetGroupMsgLabelByDialogIdResponse.MsgList:type_name -> v1.GroupMessage
-	3,  // 18: v1.SetUserMsgReadStatusRequest.IsRead:type_name -> v1.ReadType
-	7,  // 19: v1.GetUnreadUserMsgsResponse.UserMessages:type_name -> v1.UserMessage
-	41, // 20: v1.GetUserMsgIdAfterMsgListRequest.list:type_name -> v1.GetUserMsgIdAfterMsgRequest
-	7,  // 21: v1.GetUserMsgIdAfterMsgResponse.UserMessages:type_name -> v1.UserMessage
-	43, // 22: v1.GetUserMsgIdAfterMsgListResponse.messages:type_name -> v1.GetUserMsgIdAfterMsgResponse
-	45, // 23: v1.GetGroupMsgIdAfterMsgListRequest.list:type_name -> v1.GetGroupMsgIdAfterMsgRequest
-	8,  // 24: v1.GetGroupMsgIdAfterMsgResponse.GroupMessages:type_name -> v1.GroupMessage
-	47, // 25: v1.GetGroupMsgIdAfterMsgListResponse.messages:type_name -> v1.GetGroupMsgIdAfterMsgResponse
-	8,  // 26: v1.GetGroupMessagesByIdsResponse.GroupMessages:type_name -> v1.GroupMessage
-	8,  // 27: v1.GetGroupMsgListResponse.GroupMessages:type_name -> v1.GroupMessage
-	8,  // 28: v1.GetGroupUnreadMessagesResponse.GroupMessages:type_name -> v1.GroupMessage
-	7,  // 29: v1.GetUserMessagesByIdsResponse.UserMessages:type_name -> v1.UserMessage
-	4,  // 30: v1.SendMultiUserMsgRequest.MsgList:type_name -> v1.SendUserMsgRequest
-	4,  // 31: v1.MsgService.SendUserMessage:input_type -> v1.SendUserMsgRequest
-	57, // 32: v1.MsgService.SendMultiUserMessage:input_type -> v1.SendMultiUserMsgRequest
-	5,  // 33: v1.MsgService.SendGroupMessage:input_type -> v1.SendGroupMsgRequest
-	6,  // 34: v1.MsgService.GetUserMessageList:input_type -> v1.GetUserMsgListRequest
-	16, // 35: v1.MsgService.GetLastMsgsForUserWithFriends:input_type -> v1.UserMsgsRequest
-	17, // 36: v1.MsgService.GetLastMsgsForGroupsWithIDs:input_type -> v1.GroupMsgsRequest
-	20, // 37: v1.MsgService.GetLastMsgsByDialogIds:input_type -> v1.GetLastMsgsByDialogIdsRequest
-	21, // 38: v1.MsgService.EditUserMessage:input_type -> v1.EditUserMsgRequest
-	22, // 39: v1.MsgService.DeleteUserMessage:input_type -> v1.DeleteUserMsgRequest
-	42, // 40: v1.MsgService.GetUserMsgIdAfterMsgList:input_type -> v1.GetUserMsgIdAfterMsgListRequest
-	49, // 41: v1.MsgService.GetGroupMessageList:input_type -> v1.GetGroupMsgListRequest
-	23, // 42: v1.MsgService.EditGroupMessage:input_type -> v1.EditGroupMsgRequest
-	24, // 43: v1.MsgService.DeleteGroupMessage:input_type -> v1.DeleteGroupMsgRequest
-	25, // 44: v1.MsgService.GetUserMessageById:input_type -> v1.GetUserMsgByIDRequest
-	26, // 45: v1.MsgService.GetGroupMessageById:input_type -> v1.GetGroupMsgByIDRequest
-	55, // 46: v1.MsgService.GetUserMessagesByIds:input_type -> v1.GetUserMessagesByIdsRequest
-	50, // 47: v1.MsgService.GetGroupMessagesByIds:input_type -> v1.GetGroupMessagesByIdsRequest
-	27, // 48: v1.MsgService.SetUserMsgLabel:input_type -> v1.SetUserMsgLabelRequest
-	28, // 49: v1.MsgService.SetGroupMsgLabel:input_type -> v1.SetGroupMsgLabelRequest
-	31, // 50: v1.MsgService.GetUserMsgLabelByDialogId:input_type -> v1.GetUserMsgLabelByDialogIdRequest
-	32, // 51: v1.MsgService.GetGroupMsgLabelByDialogId:input_type -> v1.GetGroupMsgLabelByDialogIdRequest
-	46, // 52: v1.MsgService.GetGroupMsgIdAfterMsgList:input_type -> v1.GetGroupMsgIdAfterMsgListRequest
-	53, // 53: v1.MsgService.GetGroupUnreadMessages:input_type -> v1.GetGroupUnreadMessagesRequest
-	35, // 54: v1.MsgService.SetUserMsgsReadStatus:input_type -> v1.SetUserMsgsReadStatusRequest
-	37, // 55: v1.MsgService.SetUserMsgReadStatus:input_type -> v1.SetUserMsgReadStatusRequest
-	39, // 56: v1.MsgService.GetUnreadUserMsgs:input_type -> v1.GetUnreadUserMsgsRequest
-	10, // 57: v1.MsgService.SendUserMessage:output_type -> v1.SendUserMsgResponse
-	58, // 58: v1.MsgService.SendMultiUserMessage:output_type -> v1.SendMultiUserMsgResponse
-	11, // 59: v1.MsgService.SendGroupMessage:output_type -> v1.SendGroupMsgResponse
-	9,  // 60: v1.MsgService.GetUserMessageList:output_type -> v1.GetUserMsgListResponse
-	14, // 61: v1.MsgService.GetLastMsgsForUserWithFriends:output_type -> v1.UserMessages
-	15, // 62: v1.MsgService.GetLastMsgsForGroupsWithIDs:output_type -> v1.GroupMessages
-	19, // 63: v1.MsgService.GetLastMsgsByDialogIds:output_type -> v1.GetLastMsgsResponse
-	7,  // 64: v1.MsgService.EditUserMessage:output_type -> v1.UserMessage
-	7,  // 65: v1.MsgService.DeleteUserMessage:output_type -> v1.UserMessage
-	44, // 66: v1.MsgService.GetUserMsgIdAfterMsgList:output_type -> v1.GetUserMsgIdAfterMsgListResponse
-	52, // 67: v1.MsgService.GetGroupMessageList:output_type -> v1.GetGroupMsgListResponse
-	8,  // 68: v1.MsgService.EditGroupMessage:output_type -> v1.GroupMessage
-	8,  // 69: v1.MsgService.DeleteGroupMessage:output_type -> v1.GroupMessage
-	7,  // 70: v1.MsgService.GetUserMessageById:output_type -> v1.UserMessage
-	8,  // 71: v1.MsgService.GetGroupMessageById:output_type -> v1.GroupMessage
-	56, // 72: v1.MsgService.GetUserMessagesByIds:output_type -> v1.GetUserMessagesByIdsResponse
-	51, // 73: v1.MsgService.GetGroupMessagesByIds:output_type -> v1.GetGroupMessagesByIdsResponse
-	29, // 74: v1.MsgService.SetUserMsgLabel:output_type -> v1.SetUserMsgLabelResponse
-	30, // 75: v1.MsgService.SetGroupMsgLabel:output_type -> v1.SetGroupMsgLabelResponse
-	33, // 76: v1.MsgService.GetUserMsgLabelByDialogId:output_type -> v1.GetUserMsgLabelByDialogIdResponse
-	34, // 77: v1.MsgService.GetGroupMsgLabelByDialogId:output_type -> v1.GetGroupMsgLabelByDialogIdResponse
-	48, // 78: v1.MsgService.GetGroupMsgIdAfterMsgList:output_type -> v1.GetGroupMsgIdAfterMsgListResponse
-	54, // 79: v1.MsgService.GetGroupUnreadMessages:output_type -> v1.GetGroupUnreadMessagesResponse
-	36, // 80: v1.MsgService.SetUserMsgsReadStatus:output_type -> v1.SetUserMsgsReadStatusResponse
-	38, // 81: v1.MsgService.SetUserMsgReadStatus:output_type -> v1.SetUserMsgReadStatusResponse
-	40, // 82: v1.MsgService.GetUnreadUserMsgs:output_type -> v1.GetUnreadUserMsgsResponse
-	57, // [57:83] is the sub-list for method output_type
-	31, // [31:57] is the sub-list for method input_type
-	31, // [31:31] is the sub-list for extension type_name
-	31, // [31:31] is the sub-list for extension extendee
-	0,  // [0:31] is the sub-list for field type_name
+	1,  // 11: v1.LastMsg.IsBurnAfterReadingType:type_name -> v1.BurnAfterReadingType
+	0,  // 12: v1.LastMsg.AtAllUser:type_name -> v1.AtAllUserType
+	2,  // 13: v1.LastMsg.IsLabel:type_name -> v1.MsgLabel
+	18, // 14: v1.GetLastMsgsResponse.LastMsgs:type_name -> v1.LastMsg
+	7,  // 15: v1.EditUserMsgRequest.UserMessage:type_name -> v1.UserMessage
+	8,  // 16: v1.EditGroupMsgRequest.GroupMessage:type_name -> v1.GroupMessage
+	2,  // 17: v1.SetUserMsgLabelRequest.IsLabel:type_name -> v1.MsgLabel
+	2,  // 18: v1.SetGroupMsgLabelRequest.IsLabel:type_name -> v1.MsgLabel
+	7,  // 19: v1.GetUserMsgLabelByDialogIdResponse.MsgList:type_name -> v1.UserMessage
+	8,  // 20: v1.GetGroupMsgLabelByDialogIdResponse.MsgList:type_name -> v1.GroupMessage
+	3,  // 21: v1.SetUserMsgReadStatusRequest.IsRead:type_name -> v1.ReadType
+	7,  // 22: v1.GetUnreadUserMsgsResponse.UserMessages:type_name -> v1.UserMessage
+	41, // 23: v1.GetUserMsgIdAfterMsgListRequest.list:type_name -> v1.GetUserMsgIdAfterMsgRequest
+	7,  // 24: v1.GetUserMsgIdAfterMsgResponse.UserMessages:type_name -> v1.UserMessage
+	43, // 25: v1.GetUserMsgIdAfterMsgListResponse.messages:type_name -> v1.GetUserMsgIdAfterMsgResponse
+	45, // 26: v1.GetGroupMsgIdAfterMsgListRequest.list:type_name -> v1.GetGroupMsgIdAfterMsgRequest
+	8,  // 27: v1.GetGroupMsgIdAfterMsgResponse.GroupMessages:type_name -> v1.GroupMessage
+	47, // 28: v1.GetGroupMsgIdAfterMsgListResponse.messages:type_name -> v1.GetGroupMsgIdAfterMsgResponse
+	8,  // 29: v1.GetGroupMessagesByIdsResponse.GroupMessages:type_name -> v1.GroupMessage
+	8,  // 30: v1.GetGroupMsgListResponse.GroupMessages:type_name -> v1.GroupMessage
+	8,  // 31: v1.GetGroupUnreadMessagesResponse.GroupMessages:type_name -> v1.GroupMessage
+	7,  // 32: v1.GetUserMessagesByIdsResponse.UserMessages:type_name -> v1.UserMessage
+	4,  // 33: v1.SendMultiUserMsgRequest.MsgList:type_name -> v1.SendUserMsgRequest
+	4,  // 34: v1.MsgService.SendUserMessage:input_type -> v1.SendUserMsgRequest
+	57, // 35: v1.MsgService.SendMultiUserMessage:input_type -> v1.SendMultiUserMsgRequest
+	5,  // 36: v1.MsgService.SendGroupMessage:input_type -> v1.SendGroupMsgRequest
+	6,  // 37: v1.MsgService.GetUserMessageList:input_type -> v1.GetUserMsgListRequest
+	16, // 38: v1.MsgService.GetLastMsgsForUserWithFriends:input_type -> v1.UserMsgsRequest
+	17, // 39: v1.MsgService.GetLastMsgsForGroupsWithIDs:input_type -> v1.GroupMsgsRequest
+	20, // 40: v1.MsgService.GetLastMsgsByDialogIds:input_type -> v1.GetLastMsgsByDialogIdsRequest
+	21, // 41: v1.MsgService.EditUserMessage:input_type -> v1.EditUserMsgRequest
+	22, // 42: v1.MsgService.DeleteUserMessage:input_type -> v1.DeleteUserMsgRequest
+	42, // 43: v1.MsgService.GetUserMsgIdAfterMsgList:input_type -> v1.GetUserMsgIdAfterMsgListRequest
+	49, // 44: v1.MsgService.GetGroupMessageList:input_type -> v1.GetGroupMsgListRequest
+	23, // 45: v1.MsgService.EditGroupMessage:input_type -> v1.EditGroupMsgRequest
+	24, // 46: v1.MsgService.DeleteGroupMessage:input_type -> v1.DeleteGroupMsgRequest
+	25, // 47: v1.MsgService.GetUserMessageById:input_type -> v1.GetUserMsgByIDRequest
+	26, // 48: v1.MsgService.GetGroupMessageById:input_type -> v1.GetGroupMsgByIDRequest
+	55, // 49: v1.MsgService.GetUserMessagesByIds:input_type -> v1.GetUserMessagesByIdsRequest
+	50, // 50: v1.MsgService.GetGroupMessagesByIds:input_type -> v1.GetGroupMessagesByIdsRequest
+	27, // 51: v1.MsgService.SetUserMsgLabel:input_type -> v1.SetUserMsgLabelRequest
+	28, // 52: v1.MsgService.SetGroupMsgLabel:input_type -> v1.SetGroupMsgLabelRequest
+	31, // 53: v1.MsgService.GetUserMsgLabelByDialogId:input_type -> v1.GetUserMsgLabelByDialogIdRequest
+	32, // 54: v1.MsgService.GetGroupMsgLabelByDialogId:input_type -> v1.GetGroupMsgLabelByDialogIdRequest
+	46, // 55: v1.MsgService.GetGroupMsgIdAfterMsgList:input_type -> v1.GetGroupMsgIdAfterMsgListRequest
+	53, // 56: v1.MsgService.GetGroupUnreadMessages:input_type -> v1.GetGroupUnreadMessagesRequest
+	35, // 57: v1.MsgService.SetUserMsgsReadStatus:input_type -> v1.SetUserMsgsReadStatusRequest
+	37, // 58: v1.MsgService.SetUserMsgReadStatus:input_type -> v1.SetUserMsgReadStatusRequest
+	39, // 59: v1.MsgService.GetUnreadUserMsgs:input_type -> v1.GetUnreadUserMsgsRequest
+	10, // 60: v1.MsgService.SendUserMessage:output_type -> v1.SendUserMsgResponse
+	58, // 61: v1.MsgService.SendMultiUserMessage:output_type -> v1.SendMultiUserMsgResponse
+	11, // 62: v1.MsgService.SendGroupMessage:output_type -> v1.SendGroupMsgResponse
+	9,  // 63: v1.MsgService.GetUserMessageList:output_type -> v1.GetUserMsgListResponse
+	14, // 64: v1.MsgService.GetLastMsgsForUserWithFriends:output_type -> v1.UserMessages
+	15, // 65: v1.MsgService.GetLastMsgsForGroupsWithIDs:output_type -> v1.GroupMessages
+	19, // 66: v1.MsgService.GetLastMsgsByDialogIds:output_type -> v1.GetLastMsgsResponse
+	7,  // 67: v1.MsgService.EditUserMessage:output_type -> v1.UserMessage
+	7,  // 68: v1.MsgService.DeleteUserMessage:output_type -> v1.UserMessage
+	44, // 69: v1.MsgService.GetUserMsgIdAfterMsgList:output_type -> v1.GetUserMsgIdAfterMsgListResponse
+	52, // 70: v1.MsgService.GetGroupMessageList:output_type -> v1.GetGroupMsgListResponse
+	8,  // 71: v1.MsgService.EditGroupMessage:output_type -> v1.GroupMessage
+	8,  // 72: v1.MsgService.DeleteGroupMessage:output_type -> v1.GroupMessage
+	7,  // 73: v1.MsgService.GetUserMessageById:output_type -> v1.UserMessage
+	8,  // 74: v1.MsgService.GetGroupMessageById:output_type -> v1.GroupMessage
+	56, // 75: v1.MsgService.GetUserMessagesByIds:output_type -> v1.GetUserMessagesByIdsResponse
+	51, // 76: v1.MsgService.GetGroupMessagesByIds:output_type -> v1.GetGroupMessagesByIdsResponse
+	29, // 77: v1.MsgService.SetUserMsgLabel:output_type -> v1.SetUserMsgLabelResponse
+	30, // 78: v1.MsgService.SetGroupMsgLabel:output_type -> v1.SetGroupMsgLabelResponse
+	33, // 79: v1.MsgService.GetUserMsgLabelByDialogId:output_type -> v1.GetUserMsgLabelByDialogIdResponse
+	34, // 80: v1.MsgService.GetGroupMsgLabelByDialogId:output_type -> v1.GetGroupMsgLabelByDialogIdResponse
+	48, // 81: v1.MsgService.GetGroupMsgIdAfterMsgList:output_type -> v1.GetGroupMsgIdAfterMsgListResponse
+	54, // 82: v1.MsgService.GetGroupUnreadMessages:output_type -> v1.GetGroupUnreadMessagesResponse
+	36, // 83: v1.MsgService.SetUserMsgsReadStatus:output_type -> v1.SetUserMsgsReadStatusResponse
+	38, // 84: v1.MsgService.SetUserMsgReadStatus:output_type -> v1.SetUserMsgReadStatusResponse
+	40, // 85: v1.MsgService.GetUnreadUserMsgs:output_type -> v1.GetUnreadUserMsgsResponse
+	60, // [60:86] is the sub-list for method output_type
+	34, // [34:60] is the sub-list for method input_type
+	34, // [34:34] is the sub-list for extension type_name
+	34, // [34:34] is the sub-list for extension extendee
+	0,  // [0:34] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_msg_proto_init() }

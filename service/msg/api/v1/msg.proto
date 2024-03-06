@@ -193,6 +193,18 @@ message LastMsg {
   int64 CreatedAt = 5;
   // @inject_tag: json:"sender_id"
   string SenderId = 6;
+  // @inject_tag: json:"receiver_id"
+  string ReceiverId = 7;
+  // @inject_tag: json:"is_burn_after_reading"
+  BurnAfterReadingType IsBurnAfterReadingType = 8;
+  // @inject_tag: json:"at_users"
+  repeated string AtUsers = 9;
+  // @inject_tag: json:"at_all_user"
+  AtAllUserType AtAllUser = 10;
+  // @inject_tag: json:"is_label"
+  MsgLabel IsLabel = 11;
+  // @inject_tag: json:"reply_id"
+  uint32 Reply_id = 12;
 }
 
 message GetLastMsgsResponse {

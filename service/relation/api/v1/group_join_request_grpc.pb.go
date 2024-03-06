@@ -25,6 +25,7 @@ const (
 	GroupJoinRequestService_JoinGroup_FullMethodName                             = "/v1.GroupJoinRequestService/JoinGroup"
 	GroupJoinRequestService_InviteJoinGroup_FullMethodName                       = "/v1.GroupJoinRequestService/InviteJoinGroup"
 	GroupJoinRequestService_ManageGroupJoinRequestByID_FullMethodName            = "/v1.GroupJoinRequestService/ManageGroupJoinRequestByID"
+	GroupJoinRequestService_GetGroupJoinRequestByID_FullMethodName               = "/v1.GroupJoinRequestService/GetGroupJoinRequestByID"
 )
 
 // GroupJoinRequestServiceClient is the client API for GroupJoinRequestService service.
@@ -41,6 +42,8 @@ type GroupJoinRequestServiceClient interface {
 	InviteJoinGroup(ctx context.Context, in *InviteJoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
 	// 用户管理入群邀请
 	ManageGroupJoinRequestByID(ctx context.Context, in *ManageGroupJoinRequestByIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 根据请求id获取申请
+	GetGroupJoinRequestByID(ctx context.Context, in *GetGroupJoinRequestByIDRequest, opts ...grpc.CallOption) (*GetGroupJoinRequestByIDResponse, error)
 }
 
 type groupJoinRequestServiceClient struct {
@@ -96,6 +99,15 @@ func (c *groupJoinRequestServiceClient) ManageGroupJoinRequestByID(ctx context.C
 	return out, nil
 }
 
+func (c *groupJoinRequestServiceClient) GetGroupJoinRequestByID(ctx context.Context, in *GetGroupJoinRequestByIDRequest, opts ...grpc.CallOption) (*GetGroupJoinRequestByIDResponse, error) {
+	out := new(GetGroupJoinRequestByIDResponse)
+	err := c.cc.Invoke(ctx, GroupJoinRequestService_GetGroupJoinRequestByID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupJoinRequestServiceServer is the server API for GroupJoinRequestService service.
 // All implementations must embed UnimplementedGroupJoinRequestServiceServer
 // for forward compatibility
@@ -110,6 +122,8 @@ type GroupJoinRequestServiceServer interface {
 	InviteJoinGroup(context.Context, *InviteJoinGroupRequest) (*JoinGroupResponse, error)
 	// 用户管理入群邀请
 	ManageGroupJoinRequestByID(context.Context, *ManageGroupJoinRequestByIDRequest) (*emptypb.Empty, error)
+	// 根据请求id获取申请
+	GetGroupJoinRequestByID(context.Context, *GetGroupJoinRequestByIDRequest) (*GetGroupJoinRequestByIDResponse, error)
 	mustEmbedUnimplementedGroupJoinRequestServiceServer()
 }
 
@@ -131,6 +145,9 @@ func (UnimplementedGroupJoinRequestServiceServer) InviteJoinGroup(context.Contex
 }
 func (UnimplementedGroupJoinRequestServiceServer) ManageGroupJoinRequestByID(context.Context, *ManageGroupJoinRequestByIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ManageGroupJoinRequestByID not implemented")
+}
+func (UnimplementedGroupJoinRequestServiceServer) GetGroupJoinRequestByID(context.Context, *GetGroupJoinRequestByIDRequest) (*GetGroupJoinRequestByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupJoinRequestByID not implemented")
 }
 func (UnimplementedGroupJoinRequestServiceServer) mustEmbedUnimplementedGroupJoinRequestServiceServer() {
 }
@@ -236,6 +253,24 @@ func _GroupJoinRequestService_ManageGroupJoinRequestByID_Handler(srv interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupJoinRequestService_GetGroupJoinRequestByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupJoinRequestByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupJoinRequestServiceServer).GetGroupJoinRequestByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupJoinRequestService_GetGroupJoinRequestByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupJoinRequestServiceServer).GetGroupJoinRequestByID(ctx, req.(*GetGroupJoinRequestByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupJoinRequestService_ServiceDesc is the grpc.ServiceDesc for GroupJoinRequestService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -262,6 +297,10 @@ var GroupJoinRequestService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ManageGroupJoinRequestByID",
 			Handler:    _GroupJoinRequestService_ManageGroupJoinRequestByID_Handler,
+		},
+		{
+			MethodName: "GetGroupJoinRequestByID",
+			Handler:    _GroupJoinRequestService_GetGroupJoinRequestByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

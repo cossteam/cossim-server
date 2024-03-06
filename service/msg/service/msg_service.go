@@ -127,12 +127,18 @@ func (s *Service) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLas
 	if len(result) > 0 {
 		for _, m := range result {
 			resp.LastMsgs = append(resp.LastMsgs, &v1.LastMsg{
-				Id:        uint32(m.ID),
-				Type:      uint32(m.Type),
-				CreatedAt: m.CreateAt,
-				Content:   m.Content,
-				SenderId:  m.SenderId,
-				DialogId:  uint32(m.DialogId),
+				Id:                     uint32(m.ID),
+				Type:                   uint32(m.Type),
+				CreatedAt:              m.CreateAt,
+				Content:                m.Content,
+				SenderId:               m.SenderId,
+				DialogId:               uint32(m.DialogId),
+				ReceiverId:             m.ReceiverId,
+				IsBurnAfterReadingType: v1.BurnAfterReadingType(m.IsBurnAfterReading),
+				AtUsers:                m.AtUsers,
+				AtAllUser:              v1.AtAllUserType(m.AtAllUser),
+				IsLabel:                v1.MsgLabel(m.IsLabel),
+				ReplyId:                uint32(m.ReplyId),
 			})
 		}
 	}
