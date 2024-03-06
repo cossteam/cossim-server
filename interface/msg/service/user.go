@@ -784,7 +784,9 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 	}
 
 	found := false
-	for _, v := range ids.UserIds {
+	index := 0
+	for i, v := range ids.UserIds {
+		index = i
 		if v == userid {
 			found = true
 			break
@@ -794,9 +796,20 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		return nil, code.NotFound
 	}
 
+	targetId := append(ids.UserIds[:index], ids.UserIds[index+1:]...)
+
+	relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userid,
+		FriendId: targetId[0],
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = s.msgClient.SetUserMsgsReadStatus(ctx, &msggrpcv1.SetUserMsgsReadStatusRequest{
-		MsgIds:   msgids,
-		DialogId: dialogId,
+		MsgIds:                      msgids,
+		DialogId:                    dialogId,
+		OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
 	})
 	if err != nil {
 		s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))

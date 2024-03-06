@@ -79,6 +79,8 @@ message GetGroupRelationResponse {
   string Remark = 11; //群聊备注
   // @inject_tag: json:"open_burn_after_reading"
   OpenBurnAfterReadingType  OpenBurnAfterReading = 12;
+  // @inject_tag: json:"open_burn_after_reading_time_out"
+  int64 OpenBurnAfterReadingTimeOut = 13;
 }
 
 enum OpenBurnAfterReadingType {
@@ -223,9 +225,17 @@ message SetGroupOpenBurnAfterReadingRequest {
   OpenBurnAfterReadingType  OpenBurnAfterReading = 3;
 }
 
+message SetGroupOpenBurnAfterReadingTimeOutRequest{
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"open_burn_after_reading_time_out"
+  int64 OpenBurnAfterReadingTimeOut = 3;
+}
+
 
 service GroupRelationService {
-
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
 
@@ -249,7 +259,6 @@ service GroupRelationService {
 
   // 退出群聊回滚操作
   rpc LeaveGroupRevert(LeaveGroupRequest) returns (LeaveGroupResponse);
-
 
   // 获取用户与群聊关系信息
   rpc GetGroupRelation (GetGroupRelationRequest) returns (GetGroupRelationResponse);
@@ -283,4 +292,7 @@ service GroupRelationService {
 
   // 设置阅后即焚开关
   rpc SetGroupOpenBurnAfterReading(SetGroupOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
+
+  // 设置阅后即焚超时时间
+  rpc SetGroupOpenBurnAfterReadingTimeOut(SetGroupOpenBurnAfterReadingTimeOutRequest) returns (google.protobuf.Empty);
 }

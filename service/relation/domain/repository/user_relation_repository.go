@@ -16,4 +16,5 @@ type UserRelationRepository interface {
 	SetUserFriendSilentNotification(uid, friendId string, silentNotification entity.SilentNotification) error
 	SetUserOpenBurnAfterReading(uid, friendId string, openBurnAfterReading entity.OpenBurnAfterReadingType) error
 	SetFriendRemarkByUserIdAndFriendId(userId, friendId string, remark string) error
+	SetUserOpenBurnAfterReadingTimeOUt(uid, friendId string, burnAfterReadingTimeOut int64) error
 }

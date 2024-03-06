@@ -26,4 +26,5 @@ type GroupRelationRepository interface {
 
 	SetUserGroupSilentNotification(gid uint32, uid string, silentNotification entity.SilentNotification) error
 	SetUserGroupOpenBurnAfterReading(gid uint32, uid string, openBurnAfterReading entity.OpenBurnAfterReadingType) error
+	SetUserGroupOpenBurnAfterReadingTimeOUt(gid uint32, uid string, burnAfterReadingTimeOut int64) error
 }

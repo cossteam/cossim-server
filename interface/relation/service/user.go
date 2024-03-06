@@ -748,3 +748,25 @@ func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) erro
 	}
 	return nil
 }
+
+func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, userID string, req *model.SetUserOpenBurnAfterReadingTimeOutRequest) error {
+	_, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userID,
+		FriendId: req.UserId,
+	})
+	if err != nil {
+		s.logger.Error("获取好友关系失败", zap.Error(err))
+		return err
+	}
+
+	_, err = s.userRelationClient.SetUserOpenBurnAfterReadingTimeOut(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingTimeOutRequest{
+		UserId:                      userID,
+		FriendId:                    req.UserId,
+		OpenBurnAfterReadingTimeOut: req.OpenBurnAfterReadingTimeOut,
+	})
+	if err != nil {
+		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))
+		return err
+	}
+	return nil
+}

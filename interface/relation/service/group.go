@@ -1078,3 +1078,31 @@ func SwitchGroupRequestStatus(thisId, senderId, receiverId string, status relati
 	}
 	return result
 }
+
+func (s *Service) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, userID string, req *model.SetGroupOpenBurnAfterReadingTimeOutRequest) error {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+		return err
+	}
+
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		UserId:  userID,
+		GroupId: req.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
+		return err
+	}
+
+	_, err = s.groupRelationClient.SetGroupOpenBurnAfterReadingTimeOut(ctx, &relationgrpcv1.SetGroupOpenBurnAfterReadingTimeOutRequest{
+		UserId:                      userID,
+		GroupId:                     req.GroupId,
+		OpenBurnAfterReadingTimeOut: req.OpenBurnAfterReadingTimeOut,
+	})
+	if err != nil {
+		s.logger.Error("设置群聊消息阅后即焚时间失败", zap.Error(err))
+		return err
+	}
+	return nil
+}

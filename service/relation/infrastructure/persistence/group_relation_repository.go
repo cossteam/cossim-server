@@ -133,3 +133,7 @@ func (repo *GroupRelationRepo) SetUserGroupSilentNotification(gid uint32, uid st
 func (repo *GroupRelationRepo) SetUserGroupOpenBurnAfterReading(gid uint32, uid string, openBurnAfterReading entity.OpenBurnAfterReadingType) error {
 	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND user_id = ?", gid, uid).Update("open_burn_after_reading", openBurnAfterReading).Error
 }
+
+func (repo *GroupRelationRepo) SetUserGroupOpenBurnAfterReadingTimeOUt(gid uint32, uid string, burnAfterReadingTimeOut int64) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND user_id = ?", gid, uid).Update("burn_after_reading_time_out", burnAfterReadingTimeOut).Error
+}

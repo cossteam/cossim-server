@@ -74,6 +74,8 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	//设置用户静默通知
 	u.POST("/silent", h.setUserSilentNotification)
 	u.POST("/burn/open", h.openUserBurnAfterReading)
+	u.POST("/burn/timeout/set", h.setUserOpenBurnAfterReadingTimeOut)
+
 	u.POST("/remark/set", h.setUserFriendRemark) //设置好友备注
 
 	g := api.Group("/group")
@@ -93,6 +95,8 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g.POST("/silent", h.setGroupSilentNotification)
 	//关闭或打开阅后即焚消息
 	g.POST("/burn/open", h.openGroupBurnAfterReading)
+	g.POST("/burn/timeout/set", h.setGroupOpenBurnAfterReadingTimeOut)
+
 	//获取群聊公告列表
 	g.GET("/announcement/list", h.getGroupAnnouncementList)
 	//获取群公告详情

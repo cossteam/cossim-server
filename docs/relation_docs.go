@@ -326,7 +326,7 @@ const docTemplaterelation = `{
         },
         "/relation/group/announcement/read": {
             "post": {
-                "description": "设置群聊公告为已读",
+                "description": "设置群聊阅后即焚消息销毁时间",
                 "consumes": [
                     "application/json"
                 ],
@@ -336,7 +336,7 @@ const docTemplaterelation = `{
                 "tags": [
                     "GroupRelation"
                 ],
-                "summary": "设置群聊公告为已读",
+                "summary": "设置群聊阅后即焚消息销毁时间",
                 "parameters": [
                     {
                         "description": "request",
@@ -344,7 +344,7 @@ const docTemplaterelation = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ReadGroupAnnouncementRequest"
+                            "$ref": "#/definitions/model.SetGroupOpenBurnAfterReadingTimeOutRequest"
                         }
                     }
                 ],
@@ -1447,6 +1447,21 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "model.SetGroupOpenBurnAfterReadingTimeOutRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "open_burn_after_reading_time_out"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "integer"
+                },
+                "open_burn_after_reading_time_out": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.SetGroupSilentNotificationRequest": {
             "type": "object",
             "required": [
@@ -1480,6 +1495,25 @@ const docTemplaterelation = `{
                 },
                 "user_id": {
                     "description": "用户ID",
+                    "type": "string"
+                }
+            }
+        },
+        "model.SetUserOpenBurnAfterReadingTimeOutRequest": {
+            "type": "object",
+            "required": [
+                "friend_id",
+                "open_burn_after_reading_time_out",
+                "user_id"
+            ],
+            "properties": {
+                "friend_id": {
+                    "type": "string"
+                },
+                "open_burn_after_reading_time_out": {
+                    "type": "integer"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

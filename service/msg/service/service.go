@@ -18,11 +18,12 @@ import (
 )
 
 type Service struct {
-	db   *gorm.DB
-	ac   *pkgconfig.AppConfig
-	sid  string
-	mr   repository.MsgRepository
-	gmrr repository.GroupMsgReadRepository
+	db       *gorm.DB
+	ac       *pkgconfig.AppConfig
+	sid      string
+	mr       repository.MsgRepository
+	gmrr     repository.GroupMsgReadRepository
+	stopFunc func()
 	v1.UnimplementedMsgServiceServer
 	v1.UnimplementedGroupMessageServiceServer
 }
@@ -36,6 +37,8 @@ func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
 	dbConn, err := mysql.GetConnection()
 	if err != nil {
 		return err
+	}
+	s.stopFunc = func() {
 	}
 
 	infra := persistence.NewRepositories(dbConn)

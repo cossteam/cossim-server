@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/service/msg/api/dataTransformers"
@@ -11,6 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+	"time"
 )
 
 func (s *Service) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRequest) (*v1.SendUserMsgResponse, error) {
@@ -342,10 +344,15 @@ func (s *Service) SetUserMsgsReadStatus(ctx context.Context, in *v1.SetUserMsgsR
 			return err
 		}
 		if len(rids) > 0 {
-			err := npo.Mr.LogicalDeleteUserMessages(rids)
-			if err != nil {
-				return err
-			}
+			//起一个携程，定时器根据超时时间删除
+			go func(rpo *persistence.Repositories) {
+				time.Sleep(time.Duration(in.OpenBurnAfterReadingTimeOut) * time.Second)
+				err := rpo.Mr.LogicalDeleteUserMessages(rids)
+				if err != nil {
+					fmt.Println(err.Error())
+					return
+				}
+			}(npo)
 		}
 
 		return nil
