@@ -1085,3 +1085,65 @@ func (h *Handler) getReadGroupAnnouncementList(c *gin.Context) {
 
 	response.SetSuccess(c, "获取成功", resp)
 }
+
+// 设置好友阅后即焚消息销毁时间
+// @Summary 设置好友阅后即焚消息销毁时间
+// @Description 设置好友阅后即焚消息销毁时间
+// @Tags UserRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.SetUserOpenBurnAfterReadingTimeOutRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/announcement/read [post]
+func (h *Handler) setUserOpenBurnAfterReadingTimeOut(c *gin.Context) {
+	req := new(model.SetUserOpenBurnAfterReadingTimeOutRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	err = h.svc.SetUserOpenBurnAfterReadingTimeOut(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", nil)
+}
+
+// 设置群聊阅后即焚消息销毁时间
+// @Summary 设置群聊阅后即焚消息销毁时间
+// @Description 设置群聊阅后即焚消息销毁时间
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.SetGroupOpenBurnAfterReadingTimeOutRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/announcement/read [post]
+func (h *Handler) setGroupOpenBurnAfterReadingTimeOut(c *gin.Context) {
+	req := new(model.SetGroupOpenBurnAfterReadingTimeOutRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	err = h.svc.SetGroupOpenBurnAfterReadingTimeOut(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", nil)
+}

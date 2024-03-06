@@ -144,6 +144,7 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	resp.GroupNickname = relation.GroupNickname
 	resp.JoinMethod = uint32(relation.EntryMethod)
 	resp.Inviter = relation.Inviter
+	resp.OpenBurnAfterReadingTimeOut = relation.BurnAfterReadingTimeOut
 	return resp, nil
 }
 
@@ -340,6 +341,14 @@ func (s *Service) SetGroupOpenBurnAfterReading(ctx context.Context, in *v1.SetGr
 	var resp = &emptypb.Empty{}
 	if err := s.grr.SetUserGroupOpenBurnAfterReading(in.GroupId, in.UserId, entity.OpenBurnAfterReadingType(in.OpenBurnAfterReading)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupRrrSetUserGroupOpenBurnAfterReadingFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, request *v1.SetGroupOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	if err := s.grr.SetUserGroupOpenBurnAfterReadingTimeOUt(request.GroupId, request.UserId, request.OpenBurnAfterReadingTimeOut); err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrSetUserGroupOpenBurnAfterReadingTimeOutFailed.Code()), err.Error())
 	}
 	return resp, nil
 }

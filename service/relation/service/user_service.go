@@ -273,6 +273,7 @@ func (s *Service) GetUserRelation(ctx context.Context, request *v1.GetUserRelati
 	resp.OpenBurnAfterReading = v1.OpenBurnAfterReadingType(relation.OpenBurnAfterReading)
 	resp.Remark = relation.Remark
 	resp.IsSilent = v1.UserSilentNotificationType(relation.SilentNotification)
+	resp.OpenBurnAfterReadingTimeOut = relation.BurnAfterReadingTimeOut
 	return resp, nil
 }
 
@@ -315,6 +316,15 @@ func (s *Service) SetFriendRemark(ctx context.Context, in *v1.SetFriendRemarkReq
 	var resp = &emptypb.Empty{}
 	if err := s.urr.SetFriendRemarkByUserIdAndFriendId(in.UserId, in.FriendId, in.Remark); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetFriendRemarkFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, request *v1.SetUserOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	err := s.urr.SetUserOpenBurnAfterReadingTimeOUt(request.UserId, request.FriendId, request.OpenBurnAfterReadingTimeOut)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingTimeOutFailed.Code()), err.Error())
 	}
 	return resp, nil
 }

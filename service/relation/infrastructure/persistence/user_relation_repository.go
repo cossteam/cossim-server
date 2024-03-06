@@ -94,3 +94,7 @@ func (u *UserRelationRepo) SetUserOpenBurnAfterReading(uid, friendId string, ope
 func (u *UserRelationRepo) SetFriendRemarkByUserIdAndFriendId(userId, friendId string, remark string) error {
 	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", userId, friendId).Update("remark", remark).Error
 }
+
+func (u *UserRelationRepo) SetUserOpenBurnAfterReadingTimeOUt(uid, friendId string, burnAfterReadingTimeOut int64) error {
+	return u.db.Model(&entity.UserRelation{}).Where("user_id = ? AND friend_id = ?", uid, friendId).Update("burn_after_reading_time_out", burnAfterReadingTimeOut).Error
+}

@@ -20,20 +20,21 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserRelationService_AddFriend_FullMethodName                   = "/v1.UserRelationService/AddFriend"
-	UserRelationService_ManageFriend_FullMethodName                = "/v1.UserRelationService/ManageFriend"
-	UserRelationService_ManageFriendRevert_FullMethodName          = "/v1.UserRelationService/ManageFriendRevert"
-	UserRelationService_DeleteFriend_FullMethodName                = "/v1.UserRelationService/DeleteFriend"
-	UserRelationService_DeleteFriendRevert_FullMethodName          = "/v1.UserRelationService/DeleteFriendRevert"
-	UserRelationService_AddBlacklist_FullMethodName                = "/v1.UserRelationService/AddBlacklist"
-	UserRelationService_DeleteBlacklist_FullMethodName             = "/v1.UserRelationService/DeleteBlacklist"
-	UserRelationService_GetFriendList_FullMethodName               = "/v1.UserRelationService/GetFriendList"
-	UserRelationService_GetBlacklist_FullMethodName                = "/v1.UserRelationService/GetBlacklist"
-	UserRelationService_GetUserRelation_FullMethodName             = "/v1.UserRelationService/GetUserRelation"
-	UserRelationService_GetUserRelationByUserIds_FullMethodName    = "/v1.UserRelationService/GetUserRelationByUserIds"
-	UserRelationService_SetFriendSilentNotification_FullMethodName = "/v1.UserRelationService/SetFriendSilentNotification"
-	UserRelationService_SetUserOpenBurnAfterReading_FullMethodName = "/v1.UserRelationService/SetUserOpenBurnAfterReading"
-	UserRelationService_SetFriendRemark_FullMethodName             = "/v1.UserRelationService/SetFriendRemark"
+	UserRelationService_AddFriend_FullMethodName                          = "/v1.UserRelationService/AddFriend"
+	UserRelationService_ManageFriend_FullMethodName                       = "/v1.UserRelationService/ManageFriend"
+	UserRelationService_ManageFriendRevert_FullMethodName                 = "/v1.UserRelationService/ManageFriendRevert"
+	UserRelationService_DeleteFriend_FullMethodName                       = "/v1.UserRelationService/DeleteFriend"
+	UserRelationService_DeleteFriendRevert_FullMethodName                 = "/v1.UserRelationService/DeleteFriendRevert"
+	UserRelationService_AddBlacklist_FullMethodName                       = "/v1.UserRelationService/AddBlacklist"
+	UserRelationService_DeleteBlacklist_FullMethodName                    = "/v1.UserRelationService/DeleteBlacklist"
+	UserRelationService_GetFriendList_FullMethodName                      = "/v1.UserRelationService/GetFriendList"
+	UserRelationService_GetBlacklist_FullMethodName                       = "/v1.UserRelationService/GetBlacklist"
+	UserRelationService_GetUserRelation_FullMethodName                    = "/v1.UserRelationService/GetUserRelation"
+	UserRelationService_GetUserRelationByUserIds_FullMethodName           = "/v1.UserRelationService/GetUserRelationByUserIds"
+	UserRelationService_SetFriendSilentNotification_FullMethodName        = "/v1.UserRelationService/SetFriendSilentNotification"
+	UserRelationService_SetUserOpenBurnAfterReading_FullMethodName        = "/v1.UserRelationService/SetUserOpenBurnAfterReading"
+	UserRelationService_SetUserOpenBurnAfterReadingTimeOut_FullMethodName = "/v1.UserRelationService/SetUserOpenBurnAfterReadingTimeOut"
+	UserRelationService_SetFriendRemark_FullMethodName                    = "/v1.UserRelationService/SetFriendRemark"
 )
 
 // UserRelationServiceClient is the client API for UserRelationService service.
@@ -66,6 +67,8 @@ type UserRelationServiceClient interface {
 	SetFriendSilentNotification(ctx context.Context, in *SetFriendSilentNotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 设置阅后即焚开关
 	SetUserOpenBurnAfterReading(ctx context.Context, in *SetUserOpenBurnAfterReadingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 设置阅后即焚超时时间
+	SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, in *SetUserOpenBurnAfterReadingTimeOutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 设置好友备注
 	SetFriendRemark(ctx context.Context, in *SetFriendRemarkRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -195,6 +198,15 @@ func (c *userRelationServiceClient) SetUserOpenBurnAfterReading(ctx context.Cont
 	return out, nil
 }
 
+func (c *userRelationServiceClient) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, in *SetUserOpenBurnAfterReadingTimeOutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserRelationService_SetUserOpenBurnAfterReadingTimeOut_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userRelationServiceClient) SetFriendRemark(ctx context.Context, in *SetFriendRemarkRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, UserRelationService_SetFriendRemark_FullMethodName, in, out, opts...)
@@ -234,6 +246,8 @@ type UserRelationServiceServer interface {
 	SetFriendSilentNotification(context.Context, *SetFriendSilentNotificationRequest) (*emptypb.Empty, error)
 	// 设置阅后即焚开关
 	SetUserOpenBurnAfterReading(context.Context, *SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error)
+	// 设置阅后即焚超时时间
+	SetUserOpenBurnAfterReadingTimeOut(context.Context, *SetUserOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error)
 	// 设置好友备注
 	SetFriendRemark(context.Context, *SetFriendRemarkRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserRelationServiceServer()
@@ -281,6 +295,9 @@ func (UnimplementedUserRelationServiceServer) SetFriendSilentNotification(contex
 }
 func (UnimplementedUserRelationServiceServer) SetUserOpenBurnAfterReading(context.Context, *SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetUserOpenBurnAfterReading not implemented")
+}
+func (UnimplementedUserRelationServiceServer) SetUserOpenBurnAfterReadingTimeOut(context.Context, *SetUserOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUserOpenBurnAfterReadingTimeOut not implemented")
 }
 func (UnimplementedUserRelationServiceServer) SetFriendRemark(context.Context, *SetFriendRemarkRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetFriendRemark not implemented")
@@ -532,6 +549,24 @@ func _UserRelationService_SetUserOpenBurnAfterReading_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserRelationService_SetUserOpenBurnAfterReadingTimeOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserOpenBurnAfterReadingTimeOutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserRelationServiceServer).SetUserOpenBurnAfterReadingTimeOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserRelationService_SetUserOpenBurnAfterReadingTimeOut_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserRelationServiceServer).SetUserOpenBurnAfterReadingTimeOut(ctx, req.(*SetUserOpenBurnAfterReadingTimeOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserRelationService_SetFriendRemark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetFriendRemarkRequest)
 	if err := dec(in); err != nil {
@@ -608,6 +643,10 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetUserOpenBurnAfterReading",
 			Handler:    _UserRelationService_SetUserOpenBurnAfterReading_Handler,
+		},
+		{
+			MethodName: "SetUserOpenBurnAfterReadingTimeOut",
+			Handler:    _UserRelationService_SetUserOpenBurnAfterReadingTimeOut_Handler,
 		},
 		{
 			MethodName: "SetFriendRemark",

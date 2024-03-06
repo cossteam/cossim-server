@@ -224,17 +224,11 @@ const docTemplategroup = `{
                 "avatar": {
                     "type": "string"
                 },
-                "creator_id": {
-                    "type": "string"
-                },
                 "group_id": {
                     "type": "integer"
                 },
                 "name": {
                     "type": "string"
-                },
-                "status": {
-                    "type": "integer"
                 },
                 "type": {
                     "type": "integer"

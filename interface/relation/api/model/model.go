@@ -366,3 +366,14 @@ func (udlr UserDialogListResponse) MarshalBinary() ([]byte, error) {
 	}
 	return data, nil
 }
+
+type SetUserOpenBurnAfterReadingTimeOutRequest struct {
+	UserId                      string `json:"user_id" binding:"required"`
+	OpenBurnAfterReadingTimeOut int64  `json:"open_burn_after_reading_time_out" binding:"required"`
+	FriendId                    string `json:"friend_id" binding:"required"`
+}
+
+type SetGroupOpenBurnAfterReadingTimeOutRequest struct {
+	GroupId                     uint32 `json:"group_id" binding:"required"`
+	OpenBurnAfterReadingTimeOut int64  `json:"open_burn_after_reading_time_out" binding:"required"`
+}

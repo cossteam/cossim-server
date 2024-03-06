@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/utils"
 	"go.uber.org/zap"
@@ -34,10 +33,9 @@ type MySQL struct {
 	MaxIdleTime string `toml:"max_idle_time" env:"MYSQL_MAX_idle_TIME"`
 	// 作为私有变量，用于控制DetDB
 	lock sync.Mutex
-}
 
-var mysqlDb *gorm.DB
-var lock sync.Mutex
+	conn *gorm.DB
+}
 
 type Option func(*MySQL)
 
@@ -114,6 +112,7 @@ func NewMySQL(host, port, username, password, database string, level int64, opts
 	c := &MySQL{
 		Dsn:   dsn,
 		Level: logLevel,
+		lock:  sync.Mutex{},
 	}
 
 	// Set default values if not provided in options
@@ -145,7 +144,8 @@ func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 	}
 
 	c := &MySQL{
-		Dsn: dsn,
+		Dsn:  dsn,
+		lock: sync.Mutex{},
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -168,22 +168,18 @@ func NewMySQLFromDSN(dsn string, opts ...Option) *MySQL {
 	return c
 }
 
-//func GenerateMysqlDSN(rootUsername, rootPassword, addr, database string) string {
-//	return fmt.Sprintf("%s:%s@tcp(%s)/%s?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4&multiStatements=true", rootUsername, rootPassword, addr, database)
-//}
-
 func (m *MySQL) GetConnection() (*gorm.DB, error) {
 	m.lock.Lock() // 锁住临界区，保证线程安全
 	defer m.lock.Unlock()
 
-	if mysqlDb == nil {
+	if m.conn == nil {
 		conn, err := m.getDBConn()
 		if err != nil {
 			return nil, err
 		}
-		mysqlDb = conn
+		m.conn = conn
 	}
-	return mysqlDb, nil
+	return m.conn, nil
 }
 
 // gorm获取数据库连接
@@ -226,14 +222,4 @@ func (m *MySQL) getDBConn() (*gorm.DB, error) {
 		return nil, fmt.Errorf("ping mysql %s，error：%s", dsn, err.Error())
 	}
 	return db, nil
-}
-
-func GetConnection() (*gorm.DB, error) {
-	lock.Lock() // 锁住临界区，保证线程安全
-	defer lock.Unlock()
-
-	if mysqlDb != nil {
-		return mysqlDb, nil
-	}
-	return mysqlDb, errors.New("mysql connection is nil")
 }

@@ -32,7 +32,6 @@ func (s *Service) SetGroupMessageRead(ctx context.Context, in *v1.SetGroupMessag
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		npo := persistence.NewRepositories(tx)
 		msgs, err := npo.Mr.GetGroupMsgsByIDs(msgids)
-
 		//修改已读数量
 		for _, v := range msgs {
 			v.ReadCount++
@@ -41,7 +40,6 @@ func (s *Service) SetGroupMessageRead(ctx context.Context, in *v1.SetGroupMessag
 				return err
 			}
 		}
-
 		err = npo.Gmrr.SetGroupMsgReadByMsgs(reads)
 		if err != nil {
 			return status.Error(codes.Code(code.GroupErrSetGroupMsgReadFailed.Code()), err.Error())

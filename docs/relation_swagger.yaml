@@ -234,6 +234,16 @@ definitions:
     required:
     - user_id
     type: object
+  model.SetGroupOpenBurnAfterReadingTimeOutRequest:
+    properties:
+      group_id:
+        type: integer
+      open_burn_after_reading_time_out:
+        type: integer
+    required:
+    - group_id
+    - open_burn_after_reading_time_out
+    type: object
   model.SetGroupSilentNotificationRequest:
     properties:
       group_id:
@@ -256,6 +266,19 @@ definitions:
         type: string
     required:
     - remark
+    - user_id
+    type: object
+  model.SetUserOpenBurnAfterReadingTimeOutRequest:
+    properties:
+      friend_id:
+        type: string
+      open_burn_after_reading_time_out:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - friend_id
+    - open_burn_after_reading_time_out
     - user_id
     type: object
   model.SetUserSilentNotificationRequest:
@@ -578,14 +601,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: 设置群聊公告为已读
+      description: 设置群聊阅后即焚消息销毁时间
       parameters:
       - description: request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.ReadGroupAnnouncementRequest'
+          $ref: '#/definitions/model.SetGroupOpenBurnAfterReadingTimeOutRequest'
       produces:
       - application/json
       responses:
@@ -593,7 +616,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Response'
-      summary: 设置群聊公告为已读
+      summary: 设置群聊阅后即焚消息销毁时间
       tags:
       - GroupRelation
   /relation/group/announcement/read/list:
