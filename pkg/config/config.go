@@ -188,7 +188,7 @@ type EmailConfig struct {
 
 type LivekitConfig struct {
 	Address   string        `mapstructure:"address" yaml:"address"`
-	Url       string        `mapstructure:"url" yaml:"livekit_server"`
+	Url       string        `mapstructure:"url" yaml:"url"`
 	ApiKey    string        `mapstructure:"api_key" yaml:"api_key"`
 	ApiSecret string        `mapstructure:"secret_key" yaml:"secret_key"`
 	Timeout   time.Duration `mapstructure:"timeout" yaml:"timeout"`
