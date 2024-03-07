@@ -7,7 +7,7 @@ on:
       - 'main'
       - 'master'
     paths:
-      - 'pkg/config/**.go'
+      - 'pkg/**/*.go'
       - 'interface/gateway/**.go'
 jobs:
   build_gateway:

@@ -7,8 +7,7 @@ on:
        - 'main'
        - 'master'
     paths:
-      - 'pkg/config/**.go'
-      - 'pkg/http/**.go'
+      - 'pkg/**/*.go'
       - 'docs/storage*.*'
       - 'interface/storage/**.go'
 jobs:
