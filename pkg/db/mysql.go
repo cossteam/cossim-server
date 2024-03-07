@@ -34,8 +34,12 @@ type MySQL struct {
 	// 作为私有变量，用于控制DetDB
 	lock sync.Mutex
 
-	conn *gorm.DB
+	//conn *gorm.DB
 }
+
+var (
+	dbConn *gorm.DB
+)
 
 type Option func(*MySQL)
 
@@ -172,14 +176,14 @@ func (m *MySQL) GetConnection() (*gorm.DB, error) {
 	m.lock.Lock() // 锁住临界区，保证线程安全
 	defer m.lock.Unlock()
 
-	if m.conn == nil {
+	if dbConn == nil {
 		conn, err := m.getDBConn()
 		if err != nil {
 			return nil, err
 		}
-		m.conn = conn
+		dbConn = conn
 	}
-	return m.conn, nil
+	return dbConn, nil
 }
 
 // gorm获取数据库连接
