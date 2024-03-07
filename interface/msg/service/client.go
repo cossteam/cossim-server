@@ -211,11 +211,14 @@ func (c *client) pushFriendStatus(s status) error {
 
 			for _, v := range pool[friend.UserId] {
 				for _, cc := range v {
-					err := cc.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-					if err != nil {
-						log.Println("发送消息失败：", err)
-						break
+					if cc.Conn != nil && cc.Conn.WriteMessage(websocket.PingMessage, nil) != websocket.ErrCloseSent {
+						err := cc.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+						if err != nil {
+							log.Println("发送消息失败：", err)
+							break
+						}
 					}
+
 				}
 			}
 		}
@@ -227,6 +230,10 @@ func (c *client) pushFriendStatus(s status) error {
 // 获取所有好友在线状态
 func (c *client) pushAllFriendOnlineStatus() error {
 	fmt.Println("pushAllFriendOnlineStatus", c.relationClient)
+	if c.Conn == nil || c.Conn.WriteMessage(websocket.PingMessage, nil) != nil {
+		log.Println("连接已关闭，不再推送消息")
+		return nil
+	}
 	//查询所有好友
 	list, err := c.relationClient.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: c.Uid})
 	if err != nil {

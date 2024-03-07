@@ -24,7 +24,6 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"sort"
-	"sync"
 	"time"
 )
 
@@ -92,39 +91,44 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	gid := shortuuid.New()
 	wfName := "send_user_msg_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
-			DialogId: req.DialogId,
-			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
-			UserId:   userID,
-		})
-		if err != nil {
-			return err
-		}
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+		if dialogUser.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
 			_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
 				DialogId: req.DialogId,
-				Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
 				UserId:   userID,
 			})
-			return err
-		})
+			if err != nil {
+				return err
+			}
 
-		_, err = s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
-			DialogId: req.DialogId,
-			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
-			UserId:   dialogUser2.UserId,
-		})
-		if err != nil {
-			return err
+			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+				_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+					DialogId: req.DialogId,
+					Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
+					UserId:   userID,
+				})
+				return err
+			})
 		}
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+
+		if dialogUser2.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
+			_, err = s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
 				DialogId: req.DialogId,
-				Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
 				UserId:   dialogUser2.UserId,
 			})
-			return err
-		})
+			if err != nil {
+				return err
+			}
+			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+				_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+					DialogId: req.DialogId,
+					Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
+					UserId:   dialogUser2.UserId,
+				})
+				return err
+			})
+		}
 
 		message, err = s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
 			DialogId:               req.DialogId,
@@ -238,15 +242,16 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 
 	//推送
 	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
-		SenderId:           userID,
-		Content:            req.Content,
-		MsgType:            req.Type,
-		ReplayId:           req.ReplayId,
-		MsgId:              message.MsgId,
-		ReceiverId:         req.ReceiverId,
-		SendAt:             pkgtime.Now(),
-		DialogId:           req.DialogId,
-		IsBurnAfterReading: req.IsBurnAfterReadingType,
+		SenderId:                userID,
+		Content:                 req.Content,
+		MsgType:                 req.Type,
+		ReplayId:                req.ReplayId,
+		MsgId:                   message.MsgId,
+		ReceiverId:              req.ReceiverId,
+		SendAt:                  pkgtime.Now(),
+		DialogId:                req.DialogId,
+		IsBurnAfterReading:      req.IsBurnAfterReadingType,
+		BurnAfterReadingTimeOut: userRelationStatus1.OpenBurnAfterReadingTimeOut,
 		SenderInfo: model.SenderInfo{
 			Avatar: info.Avatar,
 			Name:   info.NickName,
@@ -418,6 +423,13 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 		s.logger.Error("获取用户消息列表失败", zap.Error(err))
 		return nil, err
 	}
+	//查询关系
+	relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserId})
+	if err != nil {
+		s.logger.Error("获取用户关系失败", zap.Error(err))
+		return nil, err
+	}
+
 	resp := &model.GetUserMsgListResponse{}
 	resp.CurrentPage = msg.CurrentPage
 	resp.Total = msg.Total
@@ -437,18 +449,19 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 			return nil, err
 		}
 		msgList = append(msgList, &model.UserMessage{
-			MsgId:                  v.Id,
-			SenderId:               v.SenderId,
-			ReceiverId:             v.ReceiverId,
-			Content:                v.Content,
-			Type:                   v.Type,
-			ReplayId:               v.ReplayId,
-			IsRead:                 v.IsRead,
-			ReadAt:                 v.ReadAt,
-			CreatedAt:              v.CreatedAt,
-			DialogId:               v.DialogId,
-			IsLabel:                model.LabelMsgType(v.IsLabel),
-			IsBurnAfterReadingType: model.BurnAfterReadingType(v.IsBurnAfterReadingType),
+			MsgId:                   v.Id,
+			SenderId:                v.SenderId,
+			ReceiverId:              v.ReceiverId,
+			Content:                 v.Content,
+			Type:                    v.Type,
+			ReplayId:                v.ReplayId,
+			IsRead:                  v.IsRead,
+			ReadAt:                  v.ReadAt,
+			CreatedAt:               v.CreatedAt,
+			DialogId:                v.DialogId,
+			IsLabel:                 model.LabelMsgType(v.IsLabel),
+			IsBurnAfterReadingType:  model.BurnAfterReadingType(v.IsBurnAfterReadingType),
+			BurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
 			SenderInfo: model.SenderInfo{
 				Name:   info.NickName,
 				UserId: info.UserId,
@@ -1093,18 +1106,22 @@ func (s *Service) SendMsg(uid string, driverId string, event constants.WSEventTy
 
 // SendMsgToUsers 推送多个用户消息
 func (s *Service) SendMsgToUsers(uids []string, driverId string, event constants.WSEventType, data interface{}, pushOffline bool) {
-	var wg sync.WaitGroup
-	var lock = sync.Mutex{}
+	//var wg sync.WaitGroup
+	//var lock = sync.Mutex{}
+	//for _, uid := range uids {
+	//	wg.Add(1)
+	//	go func(uid string) {
+	//		defer lock.Unlock()
+	//		defer wg.Done()
+	//		lock.Lock()
+	//		s.SendMsg(uid, driverId, event, data, pushOffline)
+	//	}(uid)
+	//}
+	//wg.Wait()
+
 	for _, uid := range uids {
-		wg.Add(1)
-		go func(uid string) {
-			defer lock.Unlock()
-			defer wg.Done()
-			lock.Lock()
-			s.SendMsg(uid, driverId, event, data, pushOffline)
-		}(uid)
+		s.SendMsg(uid, driverId, event, data, pushOffline)
 	}
-	wg.Wait()
 }
 
 // 获取对话落后信息

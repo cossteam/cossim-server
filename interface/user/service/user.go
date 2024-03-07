@@ -215,7 +215,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		})
 		if err != nil {
 			s.logger.Error("failed to register user", zap.Error(err))
-			return err
+			return code.UserErrEmailAlreadyRegistered
 		}
 		UserId = resp.UserId
 
@@ -229,13 +229,15 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		if err != nil {
 			return err
 		}
+
 		//添加系统好友
 		_, err = s.relClient.AddFriend(wf.Context, &relationgrpcv1.AddFriendRequest{
 			UserId:   resp.UserId,
 			FriendId: constants.SystemNotification,
 		})
 		if err != nil {
-			return err
+			s.logger.Error("failed to register user", zap.Error(err))
+			return code.UserErrRegistrationFailed
 		}
 
 		return err
@@ -244,7 +246,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	}
 
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		return "", code.UserErrRegistrationFailed
+		return "", err
 	}
 
 	if s.ac.Email.Enable {

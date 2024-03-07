@@ -126,7 +126,7 @@ func (s *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 	_, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err == nil {
 		//return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), code.UserErrEmailAlreadyRegistered.Message())
-		return resp, status.Error(codes.Aborted, err.Error())
+		return resp, status.Error(codes.Aborted, code.UserErrEmailAlreadyRegistered.Message())
 	}
 	userInfo, err := s.ur.InsertUser(&entity.User{
 		Email:     request.Email,

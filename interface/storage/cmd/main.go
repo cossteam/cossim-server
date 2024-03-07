@@ -23,7 +23,7 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&discover, "discover", true, "Enable service discovery")
+	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
 	flag.BoolVar(&register, "register", false, "Enable service register")
 	flag.BoolVar(&remoteConfig, "remote-config", false, "Load config from remote source")
 	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the config center")
