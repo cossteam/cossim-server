@@ -7,7 +7,7 @@ on:
        - 'main'
        - 'master'
     paths:
-      - 'pkg/config/**.go'
+      - 'pkg/**/*.go'
       - 'service/msg/**.go'
 jobs:
   build_msg_service:
