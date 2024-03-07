@@ -1,16 +1,17 @@
 package model
 
 type WsUserMsg struct {
-	MsgId              uint32               `json:"msg_id"`
-	SenderId           string               `json:"sender_id"`
-	ReceiverId         string               `json:"receiver_id"`
-	Content            string               `json:"content"`
-	MsgType            uint                 `json:"msgType"`
-	ReplayId           uint                 `json:"reply_id"`
-	SendAt             int64                `json:"send_at"`
-	DialogId           uint32               `json:"dialog_id"`
-	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`
-	SenderInfo         SenderInfo           `json:"sender_info"`
+	MsgId                   uint32               `json:"msg_id"`
+	SenderId                string               `json:"sender_id"`
+	ReceiverId              string               `json:"receiver_id"`
+	Content                 string               `json:"content"`
+	MsgType                 uint                 `json:"msgType"`
+	ReplayId                uint                 `json:"reply_id"`
+	SendAt                  int64                `json:"send_at"`
+	DialogId                uint32               `json:"dialog_id"`
+	IsBurnAfterReading      BurnAfterReadingType `json:"is_burn_after_reading"`
+	BurnAfterReadingTimeOut int64                `json:"burn_after_reading_time_out"`
+	SenderInfo              SenderInfo           `json:"sender_info"`
 }
 
 type WsGroupMsg struct {

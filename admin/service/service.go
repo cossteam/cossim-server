@@ -72,6 +72,10 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
 		s.logger.Info("gRPC client for msg service initialized", zap.String("addr", conn.Target()))
 	}
+	err := s.InitAdmin()
+	if err != nil {
+		panic(err)
+	}
 	return nil
 }
 

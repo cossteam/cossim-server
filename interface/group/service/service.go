@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -25,6 +26,7 @@ type Service struct {
 	relationUserClient   relationgrpcv1.UserRelationServiceClient
 	userClient           usergrpcv1.UserServiceClient
 	rabbitMQClient       *msg_queue.RabbitMQ
+	redisClient          *cache.RedisClient
 
 	logger    *zap.Logger
 	sid       string
@@ -45,6 +47,7 @@ func New(ac *pkgconfig.AppConfig) *Service {
 
 	return &Service{
 		rabbitMQClient: rabbitMQClient,
+		redisClient:    setupRedis(ac),
 		logger:         logger,
 		conf:           ac,
 		sid:            xid.New().String(),
@@ -69,6 +72,10 @@ func (s *Service) Start() error {
 		s.direct()
 	}
 	return nil
+}
+
+func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
+	return cache.NewRedisClient(ac.Redis.Addr(), ac.Redis.Password)
 }
 
 func (s *Service) Stop() error {

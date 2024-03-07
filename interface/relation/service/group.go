@@ -165,6 +165,9 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 		s.logger.Error("获取用户群聊列表失败", zap.Error(err))
 		return nil, err
 	}
+	if len(ids.GroupId) == 0 {
+		return []string{}, nil
+	}
 
 	ds, err := s.groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
 	if err != nil {

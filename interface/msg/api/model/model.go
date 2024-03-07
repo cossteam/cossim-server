@@ -98,20 +98,21 @@ type Message struct {
 }
 
 type UserMessage struct {
-	MsgId                  uint32               `json:"msg_id"`
-	SenderId               string               `json:"sender_id"`
-	ReceiverId             string               `json:"receiver_id"`
-	Content                string               `json:"content"`
-	Type                   uint32               `json:"type"`
-	ReplayId               uint64               `json:"replay_id"`
-	IsRead                 int32                `json:"is_read"`
-	ReadAt                 int64                `json:"read_at"`
-	CreatedAt              int64                `json:"created_at"`
-	DialogId               uint32               `json:"dialog_id"`
-	IsLabel                LabelMsgType         `json:"is_label"`
-	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
-	SenderInfo             SenderInfo           `json:"sender_info"`
-	ReceiverInfo           SenderInfo           `json:"receiver_info"`
+	MsgId                   uint32               `json:"msg_id"`
+	SenderId                string               `json:"sender_id"`
+	ReceiverId              string               `json:"receiver_id"`
+	Content                 string               `json:"content"`
+	Type                    uint32               `json:"type"`
+	ReplayId                uint64               `json:"replay_id"`
+	IsRead                  int32                `json:"is_read"`
+	ReadAt                  int64                `json:"read_at"`
+	CreatedAt               int64                `json:"created_at"`
+	DialogId                uint32               `json:"dialog_id"`
+	IsLabel                 LabelMsgType         `json:"is_label"`
+	IsBurnAfterReadingType  BurnAfterReadingType `json:"is_burn_after_reading"`
+	BurnAfterReadingTimeOut int64                `json:"burn_after_reading_time_out"`
+	SenderInfo              SenderInfo           `json:"sender_info"`
+	ReceiverInfo            SenderInfo           `json:"receiver_info"`
 }
 
 type GetUserMsgListResponse struct {
