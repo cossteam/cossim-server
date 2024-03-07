@@ -24,6 +24,29 @@ import (
 )
 
 func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, error) {
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
+	if err != nil {
+		s.logger.Error("err:" + err.Error())
+		return nil, code.RelationErrGetFriendListFailed
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []usersorter.User
+		for _, v := range values {
+			var friend usersorter.CustomUserData
+			err := json.Unmarshal([]byte(v), &friend)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			responseList = append(responseList, friend)
+		}
+		groupedUsers := usersorter.SortAndGroupUsers(responseList, "NickName")
+
+		return groupedUsers, nil
+	}
+
 	// 获取好友列表
 	friendListResp, err := s.userRelationClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: userID})
 	if err != nil {
@@ -61,8 +84,30 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 		}
 	}
 
+	var result []interface{}
+
+	// Assuming data2 is a slice or array of a specific type
+	for _, item := range data {
+		result = append(result, item)
+	}
+
+	//存储到缓存
+	err = s.redisClient.AddToList(fmt.Sprintf("friend:%s", userID), result)
+	if err != nil {
+		s.logger.Error("err:" + err.Error())
+		return nil, code.RelationErrGetFriendListFailed
+	}
+
+	//设置key过期时间
+	err = s.redisClient.SetKeyExpiration(fmt.Sprintf("friend:%s", userID), 3*24*ostime.Hour)
+	if err != nil {
+		s.logger.Error("err:" + err.Error())
+		return nil, code.RelationErrGetFriendListFailed
+	}
+
 	// Sort and group by specified field
 	groupedUsers := usersorter.SortAndGroupUsers(data, "NickName")
+
 	return groupedUsers, nil
 }
 
@@ -298,6 +343,20 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return nil, code.RelationErrConfirmFriendFailed
 		}
+
+		err = s.updateRedisFriendList(userId, usersorter.CustomUserData{
+			UserID:    info2.UserId,
+			NickName:  info2.NickName,
+			Email:     info2.Email,
+			Tel:       info2.Tel,
+			Avatar:    info2.Avatar,
+			Signature: info2.Signature,
+			Status:    uint(info2.Status),
+			DialogId:  relation2.DialogId,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// 向用户推送通知
@@ -345,10 +404,11 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		s.logger.Error("删除用户好友失败", zap.Error(err))
 		return code.RelationErrDeleteFriendFailed
 	}
-	//err = s.removeRedisUserDialogList(relation.FriendId, relation.DialogId)
-	//if err != nil {
-	//	return err
-	//}
+	err = s.removeRedisFriendList(relation.UserId, relation.FriendId)
+	if err != nil {
+		s.logger.Error("删除用户好友失败", zap.Error(err))
+		return code.RelationErrDeleteFriendFailed
+	}
 	return nil
 }
 
@@ -767,6 +827,115 @@ func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, userID
 	if err != nil {
 		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))
 		return err
+	}
+	return nil
+}
+
+func (s *Service) updateRedisFriendList(userID string, msg usersorter.CustomUserData) error {
+	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("friend:%s", userID))
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
+	if err != nil {
+		return err
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []usersorter.User
+		responseList = append(responseList, msg)
+		for _, v := range values {
+			var friend usersorter.CustomUserData
+			err := json.Unmarshal([]byte(v), &friend)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			responseList = append(responseList, friend)
+		}
+
+		var result []interface{}
+
+		// Assuming data2 is a slice or array of a specific type
+		for _, item := range responseList {
+			result = append(result, item)
+		}
+
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+		if err != nil {
+			return err
+		}
+
+		//存储到缓存
+		err = s.redisClient.AddToList(fmt.Sprintf("friend:%s", userID), result)
+		if err != nil {
+			return err
+		}
+
+		//设置key过期时间
+		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("friend:%s", userID), 3*24*ostime.Hour)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) removeRedisFriendList(userID string, friendID string) error {
+	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("friend:%s", userID))
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
+	if err != nil {
+		return err
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []usersorter.User
+		for _, v := range values {
+			var friend usersorter.CustomUserData
+			err := json.Unmarshal([]byte(v), &friend)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			if friend.UserID != friendID {
+				responseList = append(responseList, friend)
+			}
+		}
+
+		var result []interface{}
+
+		// Assuming data2 is a slice or array of a specific type
+		for _, item := range responseList {
+			result = append(result, item)
+		}
+
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+		if err != nil {
+			return err
+		}
+
+		//存储到缓存
+		err = s.redisClient.AddToList(fmt.Sprintf("friend:%s", userID), result)
+		if err != nil {
+			return err
+		}
+
+		//设置key过期时间
+		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("friend:%s", userID), 3*24*ostime.Hour)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

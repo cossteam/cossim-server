@@ -19,6 +19,7 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"sync"
 )
 
 // 推送群聊消息
@@ -229,7 +230,10 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return "", err
 	}
 
+	wg := sync.WaitGroup{}
 	go func() {
+		defer wg.Done()
+		wg.Add(1)
 		err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
 		if err != nil {
 			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
@@ -262,6 +266,8 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			UserId: userID,
 		},
 	})
+
+	wg.Wait()
 
 	return message.MsgId, nil
 }
@@ -310,7 +316,10 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, err
 	}
 
+	wg := sync.WaitGroup{}
 	go func() {
+		defer wg.Done()
+		wg.Add(1)
 		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
 		if err != nil {
 			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
@@ -320,7 +329,7 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 
 	msginfo.Content = content
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
-
+	wg.Wait()
 	return msgID, nil
 }
 
@@ -370,7 +379,10 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		return nil, err
 	}
 
+	wg := sync.WaitGroup{}
 	go func() {
+		defer wg.Done()
+		wg.Add(1)
 		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
 		if err != nil {
 			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
@@ -380,6 +392,7 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
 
+	wg.Wait()
 	return msg.Id, nil
 }
 
