@@ -799,8 +799,8 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 	found := false
 	index := 0
 	for i, v := range ids.UserIds {
-		index = i
 		if v == userid {
+			index = i
 			found = true
 			break
 		}
@@ -809,11 +809,20 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		return nil, code.NotFound
 	}
 
-	targetId := append(ids.UserIds[:index], ids.UserIds[index+1:]...)
+	if len(ids.UserIds) == 1 {
+		return nil, code.SetMsgErrSetUserMsgReadStatusFailed
+	}
+
+	targetId := ""
+	if index == 0 {
+		targetId = ids.UserIds[1]
+	} else {
+		targetId = ids.UserIds[0]
+	}
 
 	relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userid,
-		FriendId: targetId[0],
+		FriendId: targetId,
 	})
 	if err != nil {
 		return nil, err
@@ -862,6 +871,71 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 			IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
 		}
 		wsms = append(wsms, wsm)
+	}
+
+	userMsgs, err := s.msgClient.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
+		UserId:   userid,
+		DialogId: dialogId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userid))
+	if err != nil {
+		return nil, err
+	}
+	if len(values) > 0 {
+		var responseList []model.UserDialogListResponse
+		for _, v := range values {
+			var dialog model.UserDialogListResponse
+			err := json.Unmarshal([]byte(v), &dialog)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+
+			if dialog.DialogId == dialogId {
+				fmt.Println("dialogId", dialog.DialogId)
+				dialog.DialogUnreadCount = len(userMsgs.UserMessages)
+				fmt.Println("修改未读消息为", dialog.DialogUnreadCount)
+			}
+			responseList = append(responseList, dialog)
+		}
+
+		//fmt.Println("查询未读消息", len(userMsgs.UserMessages))
+		//fmt.Println("对话个数", len(responseList))
+		//for _, v := range responseList {
+		//
+		//}
+
+		//保存回redis
+		//创建一个新的[]interface{}类型的数组
+		var interfaceList []interface{}
+
+		// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
+		for _, dialog := range responseList {
+			fmt.Println("未读消息", dialog.DialogUnreadCount)
+			fmt.Println("dialogId2", dialog.DialogId)
+			interfaceList = append(interfaceList, dialog)
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userid))
+		if err != nil {
+			return nil, err
+		}
+
+		//存储到缓存
+		err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userid), interfaceList)
+		if err != nil {
+			return nil, err
+		}
+		//设置key过期时间
+		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userid), 3*24*time.Hour)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	s.SendMsgToUsers(ids.UserIds, driverId, constants.UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{

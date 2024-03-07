@@ -167,8 +167,15 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	if sf.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
 		return 0, code.Forbidden
 	}
-
 	dialog, err := s.relationDialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+	if err != nil {
+		return 0, err
+	}
+
+	//查询所有群员
+	relation, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
+		GroupId: groupID,
+	})
 	if err != nil {
 		return 0, err
 	}
@@ -210,19 +217,13 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 		return 0, code.GroupErrDeleteGroupFailed
 	}
 
-	//查询所有群员
-	relation, err := s.relationGroupClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{
-		GroupId: groupID,
-	})
-	if err != nil {
-		return 0, err
-	}
-	for _, res := range relation.GroupRelationResponses {
-		err := s.removeRedisGroupList(res.UserId, groupID)
+	for _, res := range relation.UserIds {
+		err := s.removeRedisGroupList(res, groupID)
 		if err != nil {
 			return 0, err
 		}
-		err = s.removeRedisUserDialogList(res.UserId, dialog.DialogId)
+
+		err = s.removeRedisUserDialogList(res, dialog.DialogId)
 		if err != nil {
 			return 0, err
 		}

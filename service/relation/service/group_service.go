@@ -150,7 +150,6 @@ func (s *Service) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 
 func (s *Service) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatchGroupRelationRequest) (*v1.GetBatchGroupRelationResponse, error) {
 	resp := &v1.GetBatchGroupRelationResponse{}
-
 	grs, err := s.grr.GetUserGroupByIDs(request.GroupId, request.UserIds)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
