@@ -55,6 +55,7 @@ func (s *Service) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 			IsRead:     int32(m.IsRead),
 			ReadAt:     m.ReadAt,
 			CreatedAt:  m.CreatedAt,
+			DialogId:   uint32(m.DialogId),
 		})
 	}
 	resp.Total = total
