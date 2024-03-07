@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
@@ -15,6 +17,7 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
+	ostime "time"
 )
 
 func (s *Service) GetGroupMember(ctx context.Context, gid uint32, userID string) (interface{}, error) {
@@ -133,6 +136,29 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 }
 
 func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interface{}, error) {
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("group:%s", userID))
+	if err != nil {
+		s.logger.Error("err:" + err.Error())
+		return nil, code.RelationErrGetFriendListFailed
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []usersorter.Group
+		for _, v := range values {
+			var friend usersorter.CustomGroupData
+			err := json.Unmarshal([]byte(v), &friend)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			responseList = append(responseList, friend)
+		}
+		groupedUsers := usersorter.SortAndGroupUsers(responseList, "Name")
+
+		return groupedUsers, nil
+	}
+
 	// 获取用户群聊列表
 	ids, err := s.groupRelationClient.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
 	if err != nil {
@@ -166,7 +192,27 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 				break
 			}
 		}
+	}
 
+	var result []interface{}
+
+	// Assuming data2 is a slice or array of a specific type
+	for _, item := range data {
+		result = append(result, item)
+	}
+
+	//存储到缓存
+	err = s.redisClient.AddToList(fmt.Sprintf("group:%s", userID), result)
+	if err != nil {
+		s.logger.Error("err:" + err.Error())
+		return nil, code.RelationErrGetFriendListFailed
+	}
+
+	//设置key过期时间
+	err = s.redisClient.SetKeyExpiration(fmt.Sprintf("group:%s", userID), 3*24*ostime.Hour)
+	if err != nil {
+		s.logger.Error("err:" + err.Error())
+		return nil, code.RelationErrGetFriendListFailed
 	}
 
 	return usersorter.SortAndGroupUsers(data, "Name"), nil
@@ -380,6 +426,13 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return code.RelationGroupErrManageJoinFailed
 		}
+		err = s.updateRedisGroupList(req.UserId, usersorter.CustomGroupData{
+			GroupID:  groupID,
+			Name:     info.Name,
+			Avatar:   info.Avatar,
+			Status:   uint(info.Status),
+			DialogId: dialogInfo.DialogId,
+		})
 	}
 
 	msg := constants.WsMsg{
@@ -463,6 +516,14 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return code.RelationGroupErrManageJoinFailed
 		}
+
+		err = s.updateRedisGroupList(req.UserId, usersorter.CustomGroupData{
+			GroupID:  groupID,
+			Name:     info.Name,
+			Avatar:   info.Avatar,
+			Status:   uint(info.Status),
+			DialogId: dialogInfo.DialogId,
+		})
 	}
 
 	msg := constants.WsMsg{
@@ -573,6 +634,14 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 		}
 	}
 
+	for _, d := range userIDs {
+		err = s.removeRedisGroupList(d, groupID)
+		if err != nil {
+			s.logger.Error("退出群聊失败", zap.Error(err))
+			return code.RelationGroupErrGroupRelationFailed
+		}
+	}
+
 	//删除用户群聊关系
 	_, err = s.groupRelationClient.RemoveGroupRelationByGroupIdAndUserIDs(ctx, &relationgrpcv1.RemoveGroupRelationByGroupIdAndUserIDsRequest{GroupId: groupID, UserIDs: userIDs})
 	if err != nil {
@@ -584,9 +653,13 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 
 func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) error {
 	//查询用户是否在群聊中
-	_, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
+	relation, err := s.groupRelationClient.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
 	if err != nil {
 		return code.RelationGroupErrGroupRelationFailed
+	}
+
+	if relation.Identity == relationgrpcv1.GroupIdentity_IDENTITY_OWNER {
+		return code.RelationGroupErrGroupOwnerCantLeaveGroupFailed
 	}
 
 	dialog, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
@@ -615,52 +688,14 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 		return code.RelationGroupErrLeaveGroupFailed
 	}
 
+	err = s.removeRedisGroupList(userID, groupID)
+	if err != nil {
+		s.logger.Error("退出群聊失败", zap.Error(err))
+		return code.RelationGroupErrLeaveGroupFailed
+	}
+
 	return nil
 }
-
-//func (s *Service) validateAdminGroupRelationStatus(relation *relationgrpcv1.GetGroupRelationResponse, status relationgrpcv1.GroupRelationStatus) error {
-//	switch status {
-//	case relationgrpcv1.GroupRelationStatus_GroupStatusJoined:
-//		if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusApplying {
-//			return errors.New("没有申请记录")
-//		}
-//
-//		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-//			return errors.New("已经在群里了")
-//		}
-//
-//	case relationgrpcv1.GroupRelationStatus_GroupStatusReject:
-//		if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusApplying {
-//			return errors.New("没有处于申请中")
-//		}
-//	default:
-//		return errors.New("用户状态异常")
-//	}
-//
-//	return nil
-//}
-//
-//func (s *Service) validateGroupRelationStatus(relation *relationgrpcv1.GetGroupRelationResponse, status relationgrpcv1.GetGroupRelationRequest) error {
-//	switch status {
-//	case relationgrpcv1.GroupRelationStatus_GroupStatusJoined:
-//		fmt.Println("relation => ", relation)
-//		if relation.Status == relationgrpcv1.GroupRelationStatus_GroupStatusJoined {
-//			return code.RelationGroupErrAlreadyInGroup
-//		}
-//		if relation.Status != relatio  ngrpcv1.GroupRelationStatus_GroupStatusPending {
-//			return errors.New("没有待处理的群聊申请记录")
-//		}
-//
-//	//case relationgrpcv1.GroupRelationStatus_GroupStatusReject:
-//	//	if relation.Status != relationgrpcv1.GroupRelationStatus_GroupStatusPending {
-//	//		return errors.New("群聊申请状态异常")
-//	//	}
-//	default:
-//		return errors.New("群聊申请状态异常")
-//	}
-//
-//	return nil
-//}
 
 func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.InviteGroupRequest) error {
 	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
@@ -1103,6 +1138,115 @@ func (s *Service) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, userI
 	if err != nil {
 		s.logger.Error("设置群聊消息阅后即焚时间失败", zap.Error(err))
 		return err
+	}
+	return nil
+}
+
+func (s *Service) updateRedisGroupList(userID string, msg usersorter.CustomGroupData) error {
+	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("group:%s", userID))
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("group:%s", userID))
+	if err != nil {
+		return err
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []usersorter.Group
+		responseList = append(responseList, msg)
+		for _, v := range values {
+			var friend usersorter.CustomGroupData
+			err := json.Unmarshal([]byte(v), &friend)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			responseList = append(responseList, friend)
+		}
+
+		var result []interface{}
+
+		// Assuming data2 is a slice or array of a specific type
+		for _, item := range responseList {
+			result = append(result, item)
+		}
+
+		err := s.redisClient.DelKey(fmt.Sprintf("group:%s", userID))
+		if err != nil {
+			return err
+		}
+
+		//存储到缓存
+		err = s.redisClient.AddToList(fmt.Sprintf("group:%s", userID), result)
+		if err != nil {
+			return err
+		}
+
+		//设置key过期时间
+		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("group:%s", userID), 3*24*ostime.Hour)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) removeRedisGroupList(userID string, groupID uint32) error {
+	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("group:%s", userID))
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return nil
+	}
+	//查询是否有缓存
+	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("group:%s", userID))
+	if err != nil {
+		return err
+	}
+	if len(values) > 0 {
+		// 类型转换
+		var responseList []usersorter.Group
+		for _, v := range values {
+			var group usersorter.CustomGroupData
+			err := json.Unmarshal([]byte(v), &group)
+			if err != nil {
+				fmt.Println("Error decoding cached data:", err)
+				continue
+			}
+			if group.GroupID != groupID {
+				responseList = append(responseList, group)
+			}
+		}
+
+		var result []interface{}
+
+		// Assuming data2 is a slice or array of a specific type
+		for _, item := range responseList {
+			result = append(result, item)
+		}
+
+		err := s.redisClient.DelKey(fmt.Sprintf("group:%s", userID))
+		if err != nil {
+			return err
+		}
+
+		//存储到缓存
+		err = s.redisClient.AddToList(fmt.Sprintf("group:%s", userID), result)
+		if err != nil {
+			return err
+		}
+
+		//设置key过期时间
+		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("group:%s", userID), 3*24*ostime.Hour)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package usersorter
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"reflect"
@@ -13,7 +14,25 @@ import (
 // User is an interface for user data
 type User interface{}
 
+func (udlr CustomUserData) MarshalBinary() ([]byte, error) {
+	// 将UserDialogListResponse对象转换为二进制数据
+	data, err := json.Marshal(udlr)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 type Group interface{}
+
+func (udlr CustomGroupData) MarshalBinary() ([]byte, error) {
+	// 将UserDialogListResponse对象转换为二进制数据
+	data, err := json.Marshal(udlr)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
 
 // CustomUserData Custom struct implementing the User interface
 type CustomUserData struct {
