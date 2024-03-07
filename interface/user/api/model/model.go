@@ -40,9 +40,10 @@ type UserInfoResponse struct {
 }
 
 type Preferences struct {
-	SilentNotification   SilentNotification       `json:"silent_notification"`
-	Remark               string                   ` json:"remark"`
-	OpenBurnAfterReading OpenBurnAfterReadingType `json:"open_burn_after_reading"`
+	SilentNotification          SilentNotification       `json:"silent_notification"`
+	Remark                      string                   ` json:"remark"`
+	OpenBurnAfterReading        OpenBurnAfterReadingType `json:"open_burn_after_reading"`
+	OpenBurnAfterReadingTimeOut int64                    `json:"open_burn_after_reading_time_out"`
 }
 
 type OpenBurnAfterReadingType uint
