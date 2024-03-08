@@ -15,7 +15,6 @@ import (
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
 	"go.uber.org/zap"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -465,6 +464,7 @@ func (s *Service) getRedisRoomWithPrefix(ctx context.Context, prefix, key string
 	s.logger.Info("scanKeysWithPrefixAndContent", zap.String("pattern", pattern))
 	keys, err := s.scanKeysWithPrefixAndContent(ctx, pattern)
 	if err != nil {
+		s.logger.Error("scanKeysWithPrefixAndContent", zap.Error(err))
 		return "", err
 	}
 	if len(keys) > 1 {
@@ -487,18 +487,15 @@ func (s *Service) scanKeysWithPrefixAndContent(ctx context.Context, pattern stri
 	var cursor uint64 = 0
 	var keys []string
 	for {
-		result, _, err := s.redisClient.Client.Scan(ctx, cursor, pattern, 10).Result()
+		result, nextCursor, err := s.redisClient.Client.Scan(ctx, cursor, pattern, 10).Result()
 		if err != nil {
 			return nil, err
 		}
-		if len(result) == 0 {
-			break
-		}
 		keys = append(keys, result...)
-		cursor, _ = strconv.ParseUint(result[0], 10, 64)
-		if cursor == 0 {
+		if nextCursor == 0 {
 			break
 		}
+		cursor = nextCursor
 	}
 	return keys, nil
 }
