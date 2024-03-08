@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/cossim/coss-server/interface/msg/api/model"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
@@ -19,6 +20,7 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"reflect"
 	"sync"
 )
 
@@ -610,6 +612,20 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 	if err != nil {
 		return nil, err
 	}
+
+	userMsgs, err := s.msgClient.GetGroupUnreadMessages(c, &msggrpcv1.GetGroupUnreadMessagesRequest{
+		UserId:   id,
+		DialogId: request.DialogId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", id), request.DialogId, "DialogUnreadCount", len(userMsgs.GroupMessages))
+	if err != nil {
+		return nil, err
+	}
+
 	//给消息发送者推送谁读了消息
 	for _, message := range msgs.GroupMessages {
 		if message.UserId != id {
@@ -769,6 +785,83 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 		err = s.updateRedisUserDialogList(userId, re)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) updateCacheDialogFieldValue(key string, dialogId uint32, field string, value interface{}) error {
+	exists, err := s.redisClient.ExistsKey(key)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return nil
+	}
+
+	length, err := s.redisClient.GetListLength(key)
+	if err != nil {
+		return err
+	}
+
+	// 每次处理的元素数量
+	batchSize := 10
+
+	for start := 0; start < int(length); start += batchSize {
+		// 获取当前批次的元素
+		values, err := s.redisClient.GetList(key, int64(start), int64(start+batchSize-1))
+		if err != nil {
+			return err
+		}
+
+		if len(values) > 0 {
+			for i, v := range values {
+				var dialog model.UserDialogListResponse
+				err := json.Unmarshal([]byte(v), &dialog)
+				if err != nil {
+					fmt.Println("Error decoding cached data:", err)
+					continue
+				}
+				if dialog.DialogId == dialogId {
+					// 获取结构体的反射值
+					valueOfDialog := reflect.ValueOf(&dialog).Elem()
+
+					structField := valueOfDialog.FieldByName(field)
+
+					// 获取字段的反射值
+					if structField.IsValid() {
+						// 检查字段类型并设置对应类型的值
+						switch structField.Kind() {
+						case reflect.String:
+							structField.SetString(value.(string))
+						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+							// 调整类型断言，确保匹配实际类型
+							structField.SetInt(int64(value.(int)))
+						// 可以根据需要添加其他类型的处理
+						default:
+							fmt.Printf("Unsupported field type: %s\n", structField.Kind())
+							return nil
+						}
+					} else {
+						fmt.Printf("Field %s not found in UserDialogListResponse\n", field)
+						return nil
+					}
+
+					// Marshal updated struct and update the list element
+					marshal, err := json.Marshal(&dialog)
+					if err != nil {
+						return err
+					}
+
+					err = s.redisClient.UpdateListElement(key, int64(start+i), string(marshal))
+					if err != nil {
+						return err
+					}
+					break
+				}
+			}
 		}
 	}
 

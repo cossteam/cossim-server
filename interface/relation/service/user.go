@@ -908,116 +908,86 @@ func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, userID
 }
 
 func (s *Service) updateRedisFriendList(userID string, msg usersorter.CustomUserData) error {
-	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("friend:%s", userID))
+	key := fmt.Sprintf("friend:%s", userID)
+	exists, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
 		return nil
 	}
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
+
+	err = s.redisClient.AddToListLeft(key, []interface{}{msg})
 	if err != nil {
 		return err
-	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []usersorter.User
-		responseList = append(responseList, msg)
-		for _, v := range values {
-			var friend usersorter.CustomUserData
-			err := json.Unmarshal([]byte(v), &friend)
-			if err != nil {
-				fmt.Println("Error decoding cached data:", err)
-				continue
-			}
-			responseList = append(responseList, friend)
-		}
-
-		var result []interface{}
-
-		// Assuming data2 is a slice or array of a specific type
-		for _, item := range responseList {
-			result = append(result, item)
-		}
-
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			return err
-		}
-
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("friend:%s", userID), result)
-		if err != nil {
-			return err
-		}
-
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("friend:%s", userID), 3*24*ostime.Hour)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
 
 func (s *Service) removeRedisFriendList(userID string, friendID string) error {
-	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("friend:%s", userID))
+	key := fmt.Sprintf("friend:%s", userID)
+	//判断key是否存在，存在才继续
+	f, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
-	if !exists {
+	if !f {
 		return nil
 	}
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
+
+	length, err := s.redisClient.GetListLength(key)
 	if err != nil {
 		return err
 	}
-	if len(values) > 0 {
-		if len(values) == 1 {
-			err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+
+	if length > 10 {
+		for i := int64(0); i < length; i += 10 {
+			stop := i + 9
+			if stop >= length {
+				stop = length - 1
+			}
+
+			// 获取当前范围内的元素
+			values, err := s.redisClient.GetList(key, i, stop)
 			if err != nil {
 				return err
 			}
-			return nil
+
+			// 遍历当前范围内的元素
+			for j, v := range values {
+				var user usersorter.CustomUserData
+				err := json.Unmarshal([]byte(v), &user)
+				if err != nil {
+					fmt.Println("Error decoding cached data:", err)
+					return err
+				}
+				if user.UserID == friendID {
+					// 弹出指定位置的元素
+					_, err := s.redisClient.PopListElement(key, i+int64(j))
+					if err != nil {
+						return err
+					}
+				}
+			}
 		}
-		// 类型转换
-		var responseList []usersorter.User
-		for _, v := range values {
-			var friend usersorter.CustomUserData
-			err := json.Unmarshal([]byte(v), &friend)
+	} else {
+		values, err := s.redisClient.GetAllListValues(key)
+		if err != nil {
+			return err
+		}
+		for i, v := range values {
+			var user usersorter.CustomUserData
+			err := json.Unmarshal([]byte(v), &user)
 			if err != nil {
 				fmt.Println("Error decoding cached data:", err)
-				continue
+				return err
 			}
-			if friend.UserID != friendID {
-				responseList = append(responseList, friend)
+			if user.UserID == friendID {
+				_, err := s.redisClient.PopListElement(key, int64(i))
+				if err != nil {
+					return err
+				}
 			}
-		}
-
-		var result []interface{}
-
-		// Assuming data2 is a slice or array of a specific type
-		for _, item := range responseList {
-			result = append(result, item)
-		}
-
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			return err
-		}
-
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("friend:%s", userID), result)
-		if err != nil {
-			return err
-		}
-
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("friend:%s", userID), 3*24*ostime.Hour)
-		if err != nil {
-			return err
 		}
 	}
 	return nil

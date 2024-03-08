@@ -20,7 +20,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"sync"
-	ostime "time"
 )
 
 func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*model.CreateGroupResponse, error) {
@@ -356,190 +355,116 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32, userID stri
 }
 
 func (s *Service) insertRedisGroupList(userID string, msg usersorter.CustomGroupData) error {
-	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("group:%s", userID))
+	key := fmt.Sprintf("group:%s", userID)
+	exists, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
 		return nil
 	}
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("group:%s", userID))
+
+	err = s.redisClient.AddToListLeft(key, []interface{}{msg})
 	if err != nil {
 		return err
-	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []usersorter.Group
-		responseList = append(responseList, msg)
-		for _, v := range values {
-			var friend usersorter.CustomGroupData
-			err := json.Unmarshal([]byte(v), &friend)
-			if err != nil {
-				fmt.Println("Error decoding cached data:", err)
-				continue
-			}
-			responseList = append(responseList, friend)
-		}
-
-		var result []interface{}
-
-		// Assuming data2 is a slice or array of a specific type
-		for _, item := range responseList {
-			result = append(result, item)
-		}
-
-		err := s.redisClient.DelKey(fmt.Sprintf("group:%s", userID))
-		if err != nil {
-			return err
-		}
-
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("group:%s", userID), result)
-		if err != nil {
-			return err
-		}
-
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("group:%s", userID), 3*24*ostime.Hour)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
 
 func (s *Service) removeRedisGroupList(userID string, groupID uint32) error {
-	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("group:%s", userID))
+	key := fmt.Sprintf("group:%s", userID)
+	//判断key是否存在，存在才继续
+	f, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
-	if !exists {
+	if !f {
 		return nil
 	}
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("group:%s", userID))
+
+	length, err := s.redisClient.GetListLength(key)
 	if err != nil {
 		return err
 	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []usersorter.Group
-		if len(values) == 1 {
-			err := s.redisClient.DelKey(fmt.Sprintf("group:%s", userID))
+
+	if length > 10 {
+		for i := int64(0); i < length; i += 10 {
+			stop := i + 9
+			if stop >= length {
+				stop = length - 1
+			}
+
+			// 获取当前范围内的元素
+			values, err := s.redisClient.GetList(key, i, stop)
 			if err != nil {
 				return err
 			}
-			return nil
+
+			// 遍历当前范围内的元素
+			for j, v := range values {
+				var group usersorter.CustomGroupData
+				err := json.Unmarshal([]byte(v), &group)
+				if err != nil {
+					fmt.Println("Error decoding cached data:", err)
+					return err
+				}
+				if group.GroupID == groupID {
+					// 弹出指定位置的元素
+					_, err := s.redisClient.PopListElement(key, i+int64(j))
+					if err != nil {
+						return err
+					}
+				}
+			}
 		}
-		for _, v := range values {
+	} else {
+		values, err := s.redisClient.GetAllListValues(key)
+		if err != nil {
+			return err
+		}
+		for i, v := range values {
 			var group usersorter.CustomGroupData
 			err := json.Unmarshal([]byte(v), &group)
 			if err != nil {
 				fmt.Println("Error decoding cached data:", err)
-				continue
+				return err
 			}
-			if group.GroupID != groupID {
-				responseList = append(responseList, group)
+			if group.GroupID == groupID {
+				_, err := s.redisClient.PopListElement(key, int64(i))
+				if err != nil {
+					return err
+				}
 			}
-		}
-
-		var result []interface{}
-
-		// Assuming data2 is a slice or array of a specific type
-		for _, item := range responseList {
-			result = append(result, item)
-		}
-
-		err := s.redisClient.DelKey(fmt.Sprintf("group:%s", userID))
-		if err != nil {
-			return err
-		}
-
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("group:%s", userID), result)
-		if err != nil {
-			return err
-		}
-
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("group:%s", userID), 3*24*ostime.Hour)
-		if err != nil {
-			return err
 		}
 	}
+
 	return nil
 }
 
 // 更新redis里的对话列表数据
 func (s *Service) insertRedisUserDialogList(userID string, msg model.UserDialogListResponse) error {
+	key := fmt.Sprintf("dialog:%s", userID)
 	//判断key是否存在，存在才继续
-	f, err := s.redisClient.ExistsKey(fmt.Sprintf("dialog:%s", userID))
+	f, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
 	if !f {
 		return nil
 	}
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
+
+	err = s.redisClient.AddToListLeft(key, []interface{}{msg})
 	if err != nil {
 		return err
 	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []model.UserDialogListResponse
-		responseList = append(responseList, msg)
-		for _, v := range values {
-			// 在这里根据实际的数据结构进行解析
-			// 这里假设你的缓存数据是 JSON 字符串，需要解析为 UserDialogListResponse 类型
-			var dialog model.UserDialogListResponse
-			err := json.Unmarshal([]byte(v), &dialog)
-			if err != nil {
-				fmt.Println("Error decoding cached data:", err)
-				continue
-			}
-			responseList = append(responseList, dialog)
-		}
 
-		for i, v := range responseList {
-			if v.DialogId == msg.DialogId {
-				//替换该位置的
-				responseList[i] = msg
-			}
-		}
-
-		//保存回redis
-		// 创建一个新的[]interface{}类型的数组
-		var interfaceList []interface{}
-
-		// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
-		for _, dialog := range responseList {
-			interfaceList = append(interfaceList, dialog)
-		}
-
-		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return err
-		}
-
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
-		if err != nil {
-			return err
-		}
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*ostime.Hour)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
 func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) error {
+	key := fmt.Sprintf("dialog:%s", userID)
 	//判断key是否存在，存在才继续
-	f, err := s.redisClient.ExistsKey(fmt.Sprintf("dialog:%s", userID))
+	f, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
@@ -547,58 +472,61 @@ func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) erro
 		return nil
 	}
 
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
+	length, err := s.redisClient.GetListLength(key)
 	if err != nil {
 		return err
 	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []model.UserDialogListResponse
-		if len(values) == 1 {
-			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+
+	if length > 10 {
+		for i := int64(0); i < length; i += 10 {
+			stop := i + 9
+			if stop >= length {
+				stop = length - 1
+			}
+
+			// 获取当前范围内的元素
+			values, err := s.redisClient.GetList(key, i, stop)
 			if err != nil {
 				return err
 			}
-			return nil
+
+			// 遍历当前范围内的元素
+			for j, v := range values {
+				var dialog model.UserDialogListResponse
+				err := json.Unmarshal([]byte(v), &dialog)
+				if err != nil {
+					fmt.Println("Error decoding cached data:", err)
+					return err
+				}
+				if dialog.DialogId == dialogID {
+					// 弹出指定位置的元素
+					_, err := s.redisClient.PopListElement(key, i+int64(j))
+					if err != nil {
+						return err
+					}
+				}
+			}
 		}
-		for _, v := range values {
+	} else {
+		values, err := s.redisClient.GetAllListValues(key)
+		if err != nil {
+			return err
+		}
+		for i, v := range values {
 			var dialog model.UserDialogListResponse
 			err := json.Unmarshal([]byte(v), &dialog)
 			if err != nil {
 				fmt.Println("Error decoding cached data:", err)
 				return err
 			}
-			if dialog.DialogId != dialogID {
-				responseList = append(responseList, dialog)
+			if dialog.DialogId == dialogID {
+				_, err := s.redisClient.PopListElement(key, int64(i))
+				if err != nil {
+					return err
+				}
 			}
 		}
-		if len(responseList) == 0 {
-			return nil
-		}
-		//保存回redis
-		// 创建一个新的[]interface{}类型的数组
-		var interfaceList []interface{}
-
-		// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
-		for _, dialog := range responseList {
-			interfaceList = append(interfaceList, dialog)
-		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return err
-		}
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
-		if err != nil {
-			return err
-		}
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*ostime.Hour)
-		if err != nil {
-			return err
-		}
 	}
+
 	return nil
 }
