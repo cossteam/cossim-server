@@ -474,3 +474,53 @@ func (h *Handler) sendEmailCode(c *gin.Context) {
 
 	response.SetSuccess(c, "验证码发送成功,请到邮箱查看", nil)
 }
+
+// @Summary 修改用户头像
+// @Description 修改用户头像
+// @Accept  json
+// @Produce  json
+// @param file formData file true "头像文件"
+// @Success		200 {object} model.Response{}
+// @Router /user/avatar/modify [post]
+func (h *Handler) modifyUserAvatar(c *gin.Context) {
+	userId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	// Parse form data
+	if err := c.Request.ParseMultipartForm(25 << 20); // 25 MB limit
+	err != nil {
+		response.SetFail(c, "Failed to parse form data", nil)
+		return
+	}
+
+	// Get the file from the form data
+	file, handler, err := c.Request.FormFile("file")
+	if err != nil {
+		response.SetFail(c, "Error retrieving the file", nil)
+		return
+	}
+	defer file.Close()
+
+	// Check file type
+	contentType := handler.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		response.SetFail(c, "Unsupported file type. Only JPEG and PNG are allowed.", nil)
+		return
+	}
+
+	// Check file size
+	if handler.Size > 25<<20 { // 25 MB limit
+		response.SetFail(c, "File size exceeds the limit. Maximum allowed size is 25 MB.", nil)
+		return
+	}
+
+	if err := h.svc.ModifyUserAvatar(c, userId, file); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": userId})
+}

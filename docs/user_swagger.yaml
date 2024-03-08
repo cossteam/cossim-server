@@ -58,6 +58,8 @@ definitions:
     properties:
       open_burn_after_reading:
         $ref: '#/definitions/model.OpenBurnAfterReadingType'
+      open_burn_after_reading_time_out:
+        type: integer
       remark:
         type: string
       silent_notification:
@@ -199,6 +201,25 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 激活账号
+  /user/avatar/modify:
+    post:
+      consumes:
+      - application/json
+      description: 修改用户头像
+      parameters:
+      - description: 头像文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 修改用户头像
   /user/bundle/get:
     get:
       consumes:
