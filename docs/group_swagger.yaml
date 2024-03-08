@@ -44,6 +44,30 @@ info:
   contact: {}
   title: coss-user服务
 paths:
+  /group/avatar/modify:
+    post:
+      consumes:
+      - application/json
+      description: 修改群聊头像
+      parameters:
+      - description: 头像文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 群聊id
+        in: formData
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 修改群聊头像
   /group/create:
     post:
       consumes:

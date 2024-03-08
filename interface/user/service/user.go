@@ -575,22 +575,22 @@ func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{},
 }
 
 // 修改用户头像
-func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar multipart.File) error {
+func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar multipart.File) (string, error) {
 	_, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	data, err := ioutil.ReadAll(avatar)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Other))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// 将字节数组转换为 io.Reader
@@ -601,14 +601,14 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 		ContentType: "image/jpeg",
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, key)
 	if s.ac.SystemConfig.Ssl {
 		aUrl, err = httputil.ConvertToHttps(aUrl)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -617,8 +617,25 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 		Avatar: aUrl,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	//查询所有好友
+	friends, err := s.relClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
+		UserId: userID,
+	})
+
+	for _, friend := range friends.FriendList {
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", friend.UserId))
+		if err != nil {
+			return "", err
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", friend.UserId))
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return aUrl, nil
 }

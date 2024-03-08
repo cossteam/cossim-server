@@ -346,7 +346,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 		re.UserId = info.UserId
 		re.DialogName = info.NickName
 		re.DialogAvatar = info.Avatar
-		err = s.updateRedisUserDialogList(info2.UserId, re)
+		err = s.insertRedisUserDialogList(info2.UserId, re)
 		if err != nil {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return nil, code.RelationErrConfirmFriendFailed

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,17 +9,25 @@ import (
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	myminio "github.com/cossim/coss-server/pkg/storage/minio"
+	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
+	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
+	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/dtmgrpc"
 	"github.com/dtm-labs/client/workflow"
+	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid/v3"
+	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"io/ioutil"
+	"mime/multipart"
 	"sync"
 )
 
@@ -529,4 +538,90 @@ func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) erro
 	}
 
 	return nil
+}
+
+func (s *Service) ModifyGroupAvatar(ctx context.Context, userID string, groupID uint32, avatar multipart.File) (string, error) {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+		Gid: groupID,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		UserId:  userID,
+		GroupId: groupID,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_OWNER && relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
+		return "", code.Forbidden
+	}
+
+	_, err = s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	data, err := ioutil.ReadAll(avatar)
+	if err != nil {
+		return "", err
+	}
+
+	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Other))
+	if err != nil {
+		return "", err
+	}
+
+	// 将字节数组转换为 io.Reader
+	reader := bytes.NewReader(data)
+	fileID := uuid.New().String()
+	key := myminio.GenKey(bucket, fileID+".jpeg")
+	err = s.sp.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, key)
+	if s.conf.SystemConfig.Ssl {
+		aUrl, err = httputil.ConvertToHttps(aUrl)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	_, err = s.groupClient.UpdateGroup(ctx, &groupgrpcv1.UpdateGroupRequest{
+		Group: &groupgrpcv1.Group{
+			Id:     groupID,
+			Avatar: aUrl,
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	//获取所有群成员
+	members, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
+		GroupId: groupID,
+	})
+
+	for _, id := range members.UserIds {
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
+		if err != nil {
+			return "", err
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("group:%s", id))
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return aUrl, nil
 }

@@ -28,6 +28,30 @@ dtm:
   address: "dtm"
   port: 36790
 
+
+oss:
+  minio:
+    name: "minio"
+    address: "minio"
+    port: 9000
+    accessKey: "E003IlrA7X83C5hmS6oV"
+    secretKey: "Ns7lKyU9JWPpQ21L6z6SMOMzx1ZgX2dxFQTRKZcs"
+    ssl: false
+    presignedExpires: ""
+    dial: "3000ms"
+    timeout: "5000ms"
+
+system:
+  environment: "dev" # dev、prod
+  ssl: false # 是否启用ssl true的话不会使用port
+  avatar_file_path:
+  avatar_file_path_dev:
+  gateway_address: "coss.gezi.vip1"
+  gateway_port: 8080
+  gateway_address_dev: "127.0.0.1"
+  gateway_port_dev: 8080
+
+
 http:
   address: "0.0.0.0"
   port: 8084
