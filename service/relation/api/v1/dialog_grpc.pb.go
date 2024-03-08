@@ -45,6 +45,7 @@ const (
 	DialogService_BatchCloseOrOpenDialog_FullMethodName                    = "/v1.DialogService/BatchCloseOrOpenDialog"
 	DialogService_TopOrCancelTopDialog_FullMethodName                      = "/v1.DialogService/TopOrCancelTopDialog"
 	DialogService_GetAllUsersInConversation_FullMethodName                 = "/v1.DialogService/GetAllUsersInConversation"
+	DialogService_GetDialogTargetUserId_FullMethodName                     = "/v1.DialogService/GetDialogTargetUserId"
 )
 
 // DialogServiceClient is the client API for DialogService service.
@@ -100,6 +101,8 @@ type DialogServiceClient interface {
 	TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取对话用户（包括已退出对话）
 	GetAllUsersInConversation(ctx context.Context, in *GetAllUsersInConversationRequest, opts ...grpc.CallOption) (*GetAllUsersInConversationResponse, error)
+	// 查询对话对方userId
+	GetDialogTargetUserId(ctx context.Context, in *GetDialogTargetUserIdRequest, opts ...grpc.CallOption) (*GetDialogTargetUserIdResponse, error)
 }
 
 type dialogServiceClient struct {
@@ -335,6 +338,15 @@ func (c *dialogServiceClient) GetAllUsersInConversation(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *dialogServiceClient) GetDialogTargetUserId(ctx context.Context, in *GetDialogTargetUserIdRequest, opts ...grpc.CallOption) (*GetDialogTargetUserIdResponse, error) {
+	out := new(GetDialogTargetUserIdResponse)
+	err := c.cc.Invoke(ctx, DialogService_GetDialogTargetUserId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DialogServiceServer is the server API for DialogService service.
 // All implementations must embed UnimplementedDialogServiceServer
 // for forward compatibility
@@ -388,6 +400,8 @@ type DialogServiceServer interface {
 	TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error)
 	// 获取对话用户（包括已退出对话）
 	GetAllUsersInConversation(context.Context, *GetAllUsersInConversationRequest) (*GetAllUsersInConversationResponse, error)
+	// 查询对话对方userId
+	GetDialogTargetUserId(context.Context, *GetDialogTargetUserIdRequest) (*GetDialogTargetUserIdResponse, error)
 	mustEmbedUnimplementedDialogServiceServer()
 }
 
@@ -469,6 +483,9 @@ func (UnimplementedDialogServiceServer) TopOrCancelTopDialog(context.Context, *T
 }
 func (UnimplementedDialogServiceServer) GetAllUsersInConversation(context.Context, *GetAllUsersInConversationRequest) (*GetAllUsersInConversationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllUsersInConversation not implemented")
+}
+func (UnimplementedDialogServiceServer) GetDialogTargetUserId(context.Context, *GetDialogTargetUserIdRequest) (*GetDialogTargetUserIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDialogTargetUserId not implemented")
 }
 func (UnimplementedDialogServiceServer) mustEmbedUnimplementedDialogServiceServer() {}
 
@@ -933,6 +950,24 @@ func _DialogService_GetAllUsersInConversation_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DialogService_GetDialogTargetUserId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDialogTargetUserIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DialogServiceServer).GetDialogTargetUserId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DialogService_GetDialogTargetUserId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DialogServiceServer).GetDialogTargetUserId(ctx, req.(*GetDialogTargetUserIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DialogService_ServiceDesc is the grpc.ServiceDesc for DialogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1039,6 +1074,10 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllUsersInConversation",
 			Handler:    _DialogService_GetAllUsersInConversation_Handler,
+		},
+		{
+			MethodName: "GetDialogTargetUserId",
+			Handler:    _DialogService_GetDialogTargetUserId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

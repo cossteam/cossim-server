@@ -82,19 +82,19 @@ type UserDialogListResponse struct {
 }
 
 type Message struct {
-	GroupId                uint32               `json:"group_id,omitempty"`      //群聊id
-	MsgType                uint                 `json:"msg_type"`                // 消息类型
-	Content                string               `json:"content"`                 // 消息内容
-	SenderId               string               `json:"sender_id"`               // 消息发送者
-	SendTime               int64                `json:"send_time"`               // 消息发送时间
-	MsgId                  uint64               `json:"msg_id"`                  // 消息id
-	SenderInfo             SenderInfo           `json:"sender_info"`             // 消息发送者信息
-	ReceiverInfo           SenderInfo           `json:"receiver_info,omitempty"` // 消息接受者信息
-	AtAllUser              AtAllUserType        `json:"at_all_user,omitempty"`   // @全体用户
-	AtUsers                []string             `json:"at_users,omitempty"`      // @用户id
-	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`   // 是否阅后即焚
-	IsLabel                LabelMsgType         `json:"is_label"`                // 是否标记
-	ReplayId               uint32               `json:"replay_id"`               // 回复消息id
+	GroupId            uint32               `json:"group_id,omitempty"`      //群聊id
+	MsgType            uint                 `json:"msg_type"`                // 消息类型
+	Content            string               `json:"content"`                 // 消息内容
+	SenderId           string               `json:"sender_id"`               // 消息发送者
+	SendTime           int64                `json:"send_time"`               // 消息发送时间
+	MsgId              uint64               `json:"msg_id"`                  // 消息id
+	SenderInfo         SenderInfo           `json:"sender_info"`             // 消息发送者信息
+	ReceiverInfo       SenderInfo           `json:"receiver_info,omitempty"` // 消息接受者信息
+	AtAllUser          AtAllUserType        `json:"at_all_user,omitempty"`   // @全体用户
+	AtUsers            []string             `json:"at_users,omitempty"`      // @用户id
+	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`   // 是否阅后即焚
+	IsLabel            LabelMsgType         `json:"is_label"`                // 是否标记
+	ReplayId           uint32               `json:"replay_id"`               // 回复消息id
 }
 
 type UserMessage struct {
@@ -136,6 +136,7 @@ type GroupMessage struct {
 	AtUsers                []string             `protobuf:"bytes,12,rep,name=AtUsers,proto3" json:"at_users"`
 	AtAllUser              AtAllUserType        `protobuf:"varint,13,opt,name=AtAllUser,proto3,enum=v1.AtAllUserType" json:"at_all_user"`
 	ReadAt                 int64                `json:"read_at"`
+	IsRead                 int32                `json:"is_read"`
 	SenderInfo             SenderInfo           `json:"sender_info"`
 }
 

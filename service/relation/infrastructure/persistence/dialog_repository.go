@@ -172,3 +172,11 @@ func (g *DialogRepo) RealDeleteDialogById(dialogID uint) error {
 func (g *DialogRepo) UpdateDialogUserByDialogIDAndUserIds(dialogID uint, userIDs []string, column string, value interface{}) error {
 	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id IN (?) AND deleted_at = 0", dialogID, userIDs).Update(column, value).Error
 }
+
+func (g *DialogRepo) GetDialogTargetUserId(dialogID uint, userID string) ([]string, error) {
+	var userId []string
+	if err := g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id != ? AND deleted_at = 0", dialogID, userID).Pluck("user_id", &userId).Error; err != nil {
+		return nil, err
+	}
+	return userId, nil
+}

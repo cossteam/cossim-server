@@ -403,3 +403,13 @@ func (s *Service) BatchCloseOrOpenDialog(ctx context.Context, request *v1.BatchC
 	}
 	return resp, nil
 }
+
+func (s *Service) GetDialogTargetUserId(ctx context.Context, request *v1.GetDialogTargetUserIdRequest) (*v1.GetDialogTargetUserIdResponse, error) {
+	resp := &v1.GetDialogTargetUserIdResponse{}
+	userIDs, err := s.dr.GetDialogTargetUserId(uint(request.DialogId), request.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.DialogErrGetTargetIdFailed.Code()), err.Error())
+	}
+	resp.UserIds = userIDs
+	return resp, nil
+}

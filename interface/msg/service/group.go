@@ -499,6 +499,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 	msgList := make([]*model.GroupMessage, 0)
 	for _, v := range msg.GroupMessages {
 		ReadAt := 0
+		isRead := 0
 		//查询是否已读
 		msgRead, err := s.groupMsgClient.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
 			MsgId:  v.Id,
@@ -509,6 +510,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		}
 		if msgRead != nil {
 			ReadAt = int(msgRead.ReadAt)
+			isRead = 1
 		}
 
 		//查询信息
@@ -532,6 +534,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 			UserId:                 v.UserId,
 			AtUsers:                v.AtUsers,
 			ReadAt:                 int64(ReadAt),
+			IsRead:                 int32(isRead),
 			AtAllUser:              model.AtAllUserType(v.AtAllUser),
 			IsBurnAfterReadingType: model.BurnAfterReadingType(v.IsBurnAfterReadingType),
 			SenderInfo: model.SenderInfo{
@@ -754,11 +757,11 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 					Name:   info.NickName,
 					Avatar: info.Avatar,
 				},
-				IsBurnAfterReadingType: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
-				IsLabel:                model.LabelMsgType(lm.IsLabel),
-				ReplayId:               lm.ReplyId,
-				AtUsers:                lm.AtUsers,
-				AtAllUser:              model.AtAllUserType(lm.AtAllUser),
+				IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
+				IsLabel:            model.LabelMsgType(lm.IsLabel),
+				ReplayId:           lm.ReplyId,
+				AtUsers:            lm.AtUsers,
+				AtAllUser:          model.AtAllUserType(lm.AtAllUser),
 			},
 			DialogCreateAt: dialogInfo.CreateAt,
 			TopAt:          int64(dialogUser.TopAt),

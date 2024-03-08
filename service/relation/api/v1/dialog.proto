@@ -270,6 +270,18 @@ message GetAllUsersInConversationResponse {
   repeated string UserIds = 1;
 }
 
+message GetDialogTargetUserIdRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+message GetDialogTargetUserIdResponse {
+  // @inject_tag: json:"user_ids"
+  repeated string UserIds = 1;
+}
+
 service DialogService {
   // CreateDialog 创建对话
   rpc CreateDialog(CreateDialogRequest) returns (CreateDialogResponse) {}
@@ -341,4 +353,7 @@ service DialogService {
 
   //获取对话用户（包括已退出对话）
   rpc GetAllUsersInConversation(GetAllUsersInConversationRequest) returns (GetAllUsersInConversationResponse) {}
+
+  //查询对话对方userId
+  rpc GetDialogTargetUserId(GetDialogTargetUserIdRequest) returns (GetDialogTargetUserIdResponse) {}
 }

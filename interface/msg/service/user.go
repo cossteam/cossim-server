@@ -212,9 +212,9 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 				Name:   info2.NickName,
 				Avatar: info2.Avatar,
 			},
-			IsBurnAfterReadingType: req.IsBurnAfterReadingType,
-			IsLabel:                0,
-			ReplayId:               uint32(req.ReplayId),
+			IsBurnAfterReading: req.IsBurnAfterReadingType,
+			IsLabel:            0,
+			ReplayId:           uint32(req.ReplayId),
 		},
 		DialogCreateAt: dialogs.CreateAt,
 		TopAt:          int64(dialogUser.TopAt),
@@ -1271,7 +1271,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			}
 			msg.AtUsers = i3.AtUsers
 			msg.AtAllUser = model.AtAllUserType(i3.AtAllUser)
-			msg.IsBurnAfterReadingType = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
+			msg.IsBurnAfterReading = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
 			msg.ReplayId = i3.ReplyId
 			msg.IsLabel = model.LabelMsgType(i3.IsLabel)
 			msgs = append(msgs, &msg)
@@ -1320,7 +1320,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 				Name:   info2.NickName,
 				UserId: info2.UserId,
 			}
-			msg.IsBurnAfterReadingType = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
+			msg.IsBurnAfterReading = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
 			msg.ReplayId = uint32(i3.ReplayId)
 			msg.IsLabel = model.LabelMsgType(i3.IsLabel)
 			msgs = append(msgs, &msg)
@@ -1444,9 +1444,9 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 				Name:   info2.NickName,
 				Avatar: info2.Avatar,
 			},
-			IsBurnAfterReadingType: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
-			IsLabel:                model.LabelMsgType(lm.IsLabel),
-			ReplayId:               lm.ReplyId,
+			IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
+			IsLabel:            model.LabelMsgType(lm.IsLabel),
+			ReplayId:           lm.ReplyId,
 		},
 		DialogCreateAt: dialogInfo.CreateAt,
 		TopAt:          int64(dialogUser.TopAt),
