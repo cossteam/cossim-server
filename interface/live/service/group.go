@@ -100,7 +100,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 			continue
 		}
 
-		//redisRoom.Participants[participants[i].UserID] = &model.ActiveParticipant{}
+		redisRoom.Participants[participants[i].UserID] = &model.ActiveParticipant{}
 		participants[i].UserName = memberUser.NickName
 
 		if participants[i].UserID == uid {
@@ -377,7 +377,7 @@ func (s *Service) checkGroupRoom(ctx context.Context, roomInfo *model.GroupRoomI
 		return code.LiveErrMaxParticipantsExceeded
 	}
 
-	if _, ok := roomInfo.Participants[uid]; ok {
+	if ps, ok := roomInfo.Participants[uid]; ok && ps.Connected {
 		return code.LiveErrAlreadyInCall
 	}
 
