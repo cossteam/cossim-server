@@ -131,6 +131,7 @@ var (
 	DialogErrCloseOrOpenDialogFailed                = New(14021, "关闭或打开对话失败")
 	DialogErrGetDialogByIdFailed                    = New(14022, "获取对话信息失败")
 	MsgErrSendMultipleFailed                        = New(14023, "批量发送消息失败")
+	DialogErrGetTargetIdFailed                      = New(14024, "获取对话目标成员id失败")
 
 	// 群组服务错误码定义
 	GroupErrGetGroupInfoByGidFailed               = New(15000, "获取群聊信息失败")

@@ -424,7 +424,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		}
 
 		//更新缓存
-		err = s.updateRedisUserDialogList(req.UserId, re)
+		err = s.insertRedisUserDialogList(req.UserId, re)
 		if err != nil {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return code.RelationGroupErrManageJoinFailed
@@ -514,7 +514,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 		}
 
 		//更新缓存
-		err = s.updateRedisUserDialogList(req.UserId, re)
+		err = s.insertRedisUserDialogList(req.UserId, re)
 		if err != nil {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return code.RelationGroupErrManageJoinFailed
