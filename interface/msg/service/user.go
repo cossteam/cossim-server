@@ -881,61 +881,10 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		return nil, err
 	}
 
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userid))
+	err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", userid), dialogId, "DialogUnreadCount", len(userMsgs.UserMessages))
 	if err != nil {
+		s.logger.Error("更新用户对话未读消息数量失败", zap.Error(err))
 		return nil, err
-	}
-	if len(values) > 0 {
-		var responseList []model.UserDialogListResponse
-		for _, v := range values {
-			var dialog model.UserDialogListResponse
-			err := json.Unmarshal([]byte(v), &dialog)
-			if err != nil {
-				fmt.Println("Error decoding cached data:", err)
-				continue
-			}
-
-			if dialog.DialogId == dialogId {
-				fmt.Println("dialogId", dialog.DialogId)
-				dialog.DialogUnreadCount = len(userMsgs.UserMessages)
-				fmt.Println("修改未读消息为", dialog.DialogUnreadCount)
-			}
-			responseList = append(responseList, dialog)
-		}
-
-		//fmt.Println("查询未读消息", len(userMsgs.UserMessages))
-		//fmt.Println("对话个数", len(responseList))
-		//for _, v := range responseList {
-		//
-		//}
-
-		//保存回redis
-		//创建一个新的[]interface{}类型的数组
-		var interfaceList []interface{}
-
-		// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
-		for _, dialog := range responseList {
-			fmt.Println("未读消息", dialog.DialogUnreadCount)
-			fmt.Println("dialogId2", dialog.DialogId)
-			interfaceList = append(interfaceList, dialog)
-		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userid))
-		if err != nil {
-			return nil, err
-		}
-
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userid), interfaceList)
-		if err != nil {
-			return nil, err
-		}
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userid), 3*24*time.Hour)
-		if err != nil {
-			return nil, err
-		}
-
 	}
 
 	s.SendMsgToUsers(ids.UserIds, driverId, constants.UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{
@@ -1475,65 +1424,69 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 
 // 更新redis里的对话列表数据
 func (s *Service) updateRedisUserDialogList(userID string, msg model.UserDialogListResponse) error {
-	//判断key是否存在，存在才继续
-	f, err := s.redisClient.ExistsKey(fmt.Sprintf("dialog:%s", userID))
+	key := fmt.Sprintf("dialog:%s", userID)
+	// 判断key是否存在，存在才继续
+	exists, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
-	if !f {
+	if !exists {
 		return nil
 	}
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
+
+	found := false
+
+	// 每次处理的元素数量
+	batchSize := 10
+
+	// 获取列表长度
+	length, err := s.redisClient.GetListLength(key)
 	if err != nil {
 		return err
 	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []model.UserDialogListResponse
-		for _, v := range values {
-			// 在这里根据实际的数据结构进行解析
-			// 这里假设你的缓存数据是 JSON 字符串，需要解析为 UserDialogListResponse 类型
-			var dialog model.UserDialogListResponse
-			err := json.Unmarshal([]byte(v), &dialog)
-			if err != nil {
-				fmt.Println("Error decoding cached data:", err)
-				continue
-			}
-			responseList = append(responseList, dialog)
-		}
 
-		for i, v := range responseList {
-			if v.DialogId == msg.DialogId {
-				//替换该位置的
-				responseList[i] = msg
-			}
-		}
-
-		//保存回redis
-		// 创建一个新的[]interface{}类型的数组
-		var interfaceList []interface{}
-
-		// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
-		for _, dialog := range responseList {
-			interfaceList = append(interfaceList, dialog)
-		}
-
-		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+	for start := 0; start < int(length); start += batchSize {
+		// 获取当前批次的元素
+		values, err := s.redisClient.GetList(key, int64(start), int64(start+batchSize-1))
 		if err != nil {
 			return err
 		}
 
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
-		if err != nil {
-			return err
+		if len(values) > 0 {
+			// 类型转换
+			var responseList []model.UserDialogListResponse
+			for _, v := range values {
+				var dialog model.UserDialogListResponse
+				err := json.Unmarshal([]byte(v), &dialog)
+				if err != nil {
+					fmt.Println("Error decoding cached data:", err)
+					continue
+				}
+				responseList = append(responseList, dialog)
+			}
+
+			for i, v := range responseList {
+				if v.DialogId == msg.DialogId {
+					found = true
+					marshal, err := json.Marshal(&msg)
+					if err != nil {
+						return err
+					}
+					err = s.redisClient.UpdateListElement(key, int64(start+i), string(marshal))
+					if err != nil {
+						return err
+					}
+				}
+			}
 		}
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*time.Hour)
+	}
+	//找不到则插入
+	if !found {
+		err := s.redisClient.AddToListLeft(key, []interface{}{msg})
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

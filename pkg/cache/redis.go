@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"sync"
@@ -107,6 +108,37 @@ func (r *RedisClient) GetList(key string, start int64, stop int64) ([]string, er
 	return data, nil
 }
 
+// GetListLength 获取指定列表的长度
+func (r *RedisClient) GetListLength(key string) (int64, error) {
+	// 使用 LLEN 命令获取列表长度
+	length, err := r.Client.LLen(context.Background(), key).Result()
+	if err != nil {
+		return 0, err
+	}
+	return length, nil
+}
+
+func (r *RedisClient) UpdateListElement(key string, index int64, newValue string) error {
+	// 使用 LIndex 获取指定位置的元素
+	currentValue, err := r.Client.LIndex(context.Background(), key, index).Result()
+	if err != nil {
+		return err
+	}
+
+	// 如果当前元素不存在，返回错误或者执行其他逻辑
+	if currentValue == "" {
+		return errors.New("Element not found at the specified index")
+	}
+
+	// 使用 LSet 设置新值到指定位置
+	err = r.Client.LSet(context.Background(), key, index, newValue).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteList 删除 Redis 中的 List
 func (r *RedisClient) DeleteList(key string) error {
 	r.lock.Lock()
@@ -127,15 +159,25 @@ func (r *RedisClient) GetAllListValues(key string) ([]string, error) {
 	return values, nil
 }
 
-// RemoveFromList 从 Redis List 中删除指定元素
-func (r *RedisClient) RemoveFromList(key string, count int64, value interface{}) error {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	err := r.Client.LRem(context.Background(), key, count, value).Err()
+func (r *RedisClient) PopListElement(key string, index int64) (string, error) {
+	// 使用 LIndex 获取指定位置的元素
+	element, err := r.Client.LIndex(context.Background(), key, index).Result()
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+
+	// 如果当前元素不存在，返回错误或者执行其他逻辑
+	if element == "" {
+		return "", errors.New("Element not found at the specified index")
+	}
+
+	// 使用 LRem 删除指定位置的元素
+	_, err = r.Client.LRem(context.Background(), key, 1, element).Result()
+	if err != nil {
+		return "", err
+	}
+
+	return element, nil
 }
 
 // 设置 Redis 键的过期时间（以秒为单位）
