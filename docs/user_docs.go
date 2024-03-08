@@ -35,6 +35,35 @@ const docTemplateuser = `{
                 }
             }
         },
+        "/user/avatar/modify": {
+            "post": {
+                "description": "修改用户头像",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "修改用户头像",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "头像文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/bundle/get": {
             "get": {
                 "description": "获取用户密钥包",
@@ -609,6 +638,9 @@ const docTemplateuser = `{
             "properties": {
                 "open_burn_after_reading": {
                     "$ref": "#/definitions/model.OpenBurnAfterReadingType"
+                },
+                "open_burn_after_reading_time_out": {
+                    "type": "integer"
                 },
                 "remark": {
                     "type": "string"

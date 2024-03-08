@@ -24,6 +24,8 @@ import (
 	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"io/ioutil"
+	"mime/multipart"
 	"strconv"
 	"strings"
 	ostime "time"
@@ -570,4 +572,53 @@ func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{},
 		}
 	}
 	return nil, err
+}
+
+// 修改用户头像
+func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar multipart.File) error {
+	_, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return err
+	}
+
+	data, err := ioutil.ReadAll(avatar)
+	if err != nil {
+		return err
+	}
+
+	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Other))
+	if err != nil {
+		return err
+	}
+
+	// 将字节数组转换为 io.Reader
+	reader := bytes.NewReader(data)
+	fileID := uuid.New().String()
+	key := myminio.GenKey(bucket, fileID+".jpeg")
+	err = s.sp.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+	})
+	if err != nil {
+		return err
+	}
+
+	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, key)
+	if s.ac.SystemConfig.Ssl {
+		aUrl, err = httputil.ConvertToHttps(aUrl)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = s.userClient.ModifyUserInfo(ctx, &usergrpcv1.User{
+		UserId: userID,
+		Avatar: aUrl,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

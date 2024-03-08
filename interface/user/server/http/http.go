@@ -80,6 +80,8 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/bundle/modify", h.modifyUserSecretBundle)
 	u.GET("/bundle/get", h.getUserSecretBundle)
 	u.GET("/clients/get", h.getUserLoginClients)
+	//修改用户头像
+	u.POST("/avatar/modify", h.modifyUserAvatar)
 }
 
 func (h *Handler) Health(r gin.IRouter) string {
