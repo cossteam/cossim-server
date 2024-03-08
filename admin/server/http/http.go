@@ -37,7 +37,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 }
 
 func (h *Handler) Name() string {
-	return "msg_bff"
+	return "admin_bff"
 }
 
 func (h *Handler) Version() string {
