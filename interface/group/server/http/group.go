@@ -188,3 +188,68 @@ func (h *Handler) deleteGroup(c *gin.Context) {
 
 	response.SetSuccess(c, "删除群聊成功", gin.H{"group_id": groupId})
 }
+
+// @Summary 修改群聊头像
+// @Description 修改群聊头像
+// @Accept  json
+// @Produce  json
+// @param file formData file true "头像文件"
+// @param group_id formData int64 true "群聊id"
+// @Success		200 {object} model.Response{}
+// @Router /group/avatar/modify [post]
+func (h *Handler) modifyGroupAvatar(c *gin.Context) {
+	gid, _ := c.GetPostForm("group_id")
+
+	if gid == "" {
+		response.SetFail(c, "群聊ID不能为空", nil)
+		return
+	}
+
+	groupId, err := strconv.Atoi(gid)
+	if err != nil {
+		response.SetFail(c, "群聊ID错误", nil)
+		return
+	}
+
+	userId, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	// Parse form data
+	if err := c.Request.ParseMultipartForm(25 << 20); // 25 MB limit
+	err != nil {
+		response.SetFail(c, "Failed to parse form data", nil)
+		return
+	}
+
+	// Get the file from the form data
+	file, handler, err := c.Request.FormFile("file")
+	if err != nil {
+		response.SetFail(c, "Error retrieving the file", nil)
+		return
+	}
+	defer file.Close()
+
+	// Check file type
+	contentType := handler.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		response.SetFail(c, "Unsupported file type. Only JPEG and PNG are allowed.", nil)
+		return
+	}
+
+	// Check file size
+	if handler.Size > 25<<20 { // 25 MB limit
+		response.SetFail(c, "File size exceeds the limit. Maximum allowed size is 25 MB.", nil)
+		return
+	}
+
+	url, err := h.svc.ModifyGroupAvatar(c, userId, uint32(groupId), file)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "修改成功", gin.H{"group_id": userId, "avatar": url})
+}

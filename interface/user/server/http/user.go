@@ -517,10 +517,11 @@ func (h *Handler) modifyUserAvatar(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.ModifyUserAvatar(c, userId, file); err != nil {
+	url, err := h.svc.ModifyUserAvatar(c, userId, file)
+	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "修改成功", gin.H{"user_id": userId})
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": userId, "avatar": url})
 }

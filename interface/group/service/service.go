@@ -7,6 +7,9 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	"github.com/cossim/coss-server/pkg/storage"
+	"github.com/cossim/coss-server/pkg/storage/minio"
+	"github.com/cossim/coss-server/pkg/utils/os"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
@@ -27,6 +30,7 @@ type Service struct {
 	userClient           usergrpcv1.UserServiceClient
 	rabbitMQClient       *msg_queue.RabbitMQ
 	redisClient          *cache.RedisClient
+	sp                   storage.StorageProvider
 
 	logger    *zap.Logger
 	sid       string
@@ -37,6 +41,10 @@ type Service struct {
 	relationGrpcServer string
 	dialogGrpcServer   string
 	groupGrpcServer    string
+	downloadURL        string
+	gatewayAddress     string
+	gatewayPort        string
+	appPath            string
 
 	dis bool
 }
@@ -44,16 +52,19 @@ type Service struct {
 func New(ac *pkgconfig.AppConfig) *Service {
 	logger := setupLogger(ac)
 	rabbitMQClient := setRabbitMQProvider(ac)
-
-	return &Service{
+	svc := &Service{
 		rabbitMQClient: rabbitMQClient,
 		redisClient:    setupRedis(ac),
+		downloadURL:    "/api/v1/storage/files/download",
+		sp:             setMinIOProvider(ac),
 		logger:         logger,
 		conf:           ac,
 		sid:            xid.New().String(),
 		dtmGrpcServer:  ac.Dtm.Addr(),
 		dis:            false,
 	}
+	svc.setLoadSystem()
+	return svc
 }
 
 func (s *Service) Start() error {
@@ -76,6 +87,16 @@ func (s *Service) Start() error {
 
 func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
 	return cache.NewRedisClient(ac.Redis.Addr(), ac.Redis.Password)
+}
+
+func setMinIOProvider(ac *pkgconfig.AppConfig) storage.StorageProvider {
+	var err error
+	sp, err := minio.NewMinIOStorage(ac.OSS["minio"].Addr(), ac.OSS["minio"].AccessKey, ac.OSS["minio"].SecretKey, ac.OSS["minio"].SSL)
+	if err != nil {
+		panic(err)
+	}
+
+	return sp
 }
 
 func (s *Service) Stop() error {
@@ -201,4 +222,59 @@ func setRabbitMQProvider(c *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 		panic(err)
 	}
 	return rmq
+}
+
+func (s *Service) setLoadSystem() {
+	env := s.conf.SystemConfig.Environment
+	if env == "" {
+		env = "dev"
+	}
+
+	switch env {
+	case "prod":
+		path := s.conf.SystemConfig.AvatarFilePath
+		if path == "" {
+			path = "/.catch/"
+		}
+		s.appPath = path
+
+		gatewayAdd := s.conf.SystemConfig.GatewayAddress
+		if gatewayAdd == "" {
+			gatewayAdd = "43.229.28.107"
+		}
+
+		s.gatewayAddress = gatewayAdd
+
+		gatewayPo := s.conf.SystemConfig.GatewayPort
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		s.gatewayPort = gatewayPo
+	default:
+		path := s.conf.SystemConfig.AvatarFilePathDev
+		if path == "" {
+			npath, err := os.GetPackagePath()
+			if err != nil {
+				panic(err)
+			}
+			path = npath + "deploy/docker/config/common/"
+		}
+		s.appPath = path
+
+		gatewayAdd := s.conf.SystemConfig.GatewayAddressDev
+		if gatewayAdd == "" {
+			gatewayAdd = "127.0.0.1"
+		}
+
+		s.gatewayAddress = gatewayAdd
+
+		gatewayPo := s.conf.SystemConfig.GatewayPortDev
+		if gatewayPo == "" {
+			gatewayPo = "8080"
+		}
+		s.gatewayPort = gatewayPo
+	}
+	if !s.conf.SystemConfig.Ssl {
+		s.gatewayAddress = s.gatewayAddress + ":" + s.gatewayPort
+	}
 }

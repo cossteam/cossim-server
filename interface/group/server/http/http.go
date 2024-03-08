@@ -67,6 +67,8 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g.POST("/delete", h.deleteGroup)
 	// 更新群聊信息
 	g.POST("/update", h.updateGroup)
+	//修改群聊头像
+	g.POST("/avatar/modify", h.modifyGroupAvatar)
 }
 
 func (h *Handler) Health(r gin.IRouter) string {
