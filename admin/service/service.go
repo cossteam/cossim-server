@@ -17,6 +17,7 @@ import (
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"strconv"
 )
 
 type Service struct {
@@ -88,10 +89,16 @@ func (s *Service) Stop(ctx context.Context) error {
 }
 
 func (s *Service) setupDBConn() {
-	dbConn, err := db.NewMySQLFromDSN(s.ac.MySQL.DSN).GetConnection()
+	mysql, err := db.NewMySQL(s.ac.MySQL.Address, strconv.Itoa(s.ac.MySQL.Port), s.ac.MySQL.Username, s.ac.MySQL.Password, s.ac.MySQL.Database, int64(s.ac.Log.Level), s.ac.MySQL.Opts)
 	if err != nil {
 		panic(err)
 	}
+
+	dbConn, err := mysql.GetConnection()
+	if err != nil {
+		panic(err)
+	}
+
 	infra := persistence.NewRepositories(dbConn)
 	if err = infra.Automigrate(); err != nil {
 		panic(err)
