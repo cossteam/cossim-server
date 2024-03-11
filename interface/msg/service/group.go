@@ -232,17 +232,6 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return "", err
 	}
 
-	wg := sync.WaitGroup{}
-	go func() {
-		defer wg.Done()
-		wg.Add(1)
-		err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
-		if err != nil {
-			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-			return
-		}
-	}()
-
 	//查询发送者信息
 	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
@@ -269,7 +258,19 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		},
 	})
 
-	wg.Wait()
+	if s.cache {
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
+			if err != nil {
+				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+				return
+			}
+		}()
+		wg.Wait()
+	}
 
 	return message.MsgId, nil
 }
@@ -318,20 +319,23 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, err
 	}
 
-	wg := sync.WaitGroup{}
-	go func() {
-		defer wg.Done()
-		wg.Add(1)
-		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
-		if err != nil {
-			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-			return
-		}
-	}()
-
 	msginfo.Content = content
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
-	wg.Wait()
+
+	if s.cache {
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+			if err != nil {
+				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+				return
+			}
+		}()
+		wg.Wait()
+	}
+
 	return msgID, nil
 }
 
@@ -381,20 +385,22 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		return nil, err
 	}
 
-	wg := sync.WaitGroup{}
-	go func() {
-		defer wg.Done()
-		wg.Add(1)
-		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
-		if err != nil {
-			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-			return
-		}
-	}()
-
 	s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
 
-	wg.Wait()
+	if s.cache {
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+			if err != nil {
+				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+				return
+			}
+		}()
+		wg.Wait()
+	}
+
 	return msg.Id, nil
 }
 
@@ -613,23 +619,25 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 		return nil, err
 	}
 
-	userMsgs, err := s.msgClient.GetGroupUnreadMessages(c, &msggrpcv1.GetGroupUnreadMessagesRequest{
-		UserId:   id,
-		DialogId: request.DialogId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", id), request.DialogId, "DialogUnreadCount", len(userMsgs.GroupMessages))
-	if err != nil {
-		return nil, err
-	}
-
 	//给消息发送者推送谁读了消息
 	for _, message := range msgs.GroupMessages {
 		if message.UserId != id {
 			s.SendMsg(message.UserId, driverId, constants.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": id}, false)
+		}
+	}
+
+	if s.cache {
+		userMsgs, err := s.msgClient.GetGroupUnreadMessages(c, &msggrpcv1.GetGroupUnreadMessagesRequest{
+			UserId:   id,
+			DialogId: request.DialogId,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", id), request.DialogId, "DialogUnreadCount", len(userMsgs.GroupMessages))
+		if err != nil {
+			return nil, err
 		}
 	}
 	return nil, nil

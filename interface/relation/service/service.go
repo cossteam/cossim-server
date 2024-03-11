@@ -40,10 +40,11 @@ type Service struct {
 	dtmGrpcServer      string
 	relationGrpcServer string
 	dialogGrpcServer   string
+	cache              bool
 }
 
 func New(ac *pkgconfig.AppConfig) *Service {
-	return &Service{
+	s := &Service{
 		rabbitMQClient: setRabbitMQProvider(ac),
 		redisClient:    setupRedis(ac),
 		logger:         plog.NewDefaultLogger("relation_bff", int8(ac.Log.Level)),
@@ -51,6 +52,8 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		sid:            xid.New().String(),
 		dtmGrpcServer:  ac.Dtm.Addr(),
 	}
+	s.cache = s.setCacheConfig()
+	return s
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
@@ -94,4 +97,11 @@ func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 
 func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
 	return cache.NewRedisClient(ac.Redis.Addr(), ac.Redis.Password)
+}
+
+func (s *Service) setCacheConfig() bool {
+	if s.redisClient == nil && s.ac.Cache.Enable {
+		panic("redis is nil")
+	}
+	return s.ac.Cache.Enable
 }

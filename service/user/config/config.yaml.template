@@ -1,6 +1,6 @@
 log:
   stdout: true
-  v: -1
+  level: -1
   file: "logs/app.log"
   format: "console" # console、json
 

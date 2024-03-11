@@ -1,6 +1,6 @@
 log:
   stdout: true
-  v: -1
+  level: -1
   file: "logs/app.log"
   format: "console" # console、json
 
@@ -28,6 +28,9 @@ dtm:
   address: "dtm"
   port: 36790
 
+
+cache:
+  enable: true
 
 oss:
   minio:

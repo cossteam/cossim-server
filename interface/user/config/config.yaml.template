@@ -10,7 +10,7 @@ system:
 
 log:
   stdout: true
-  v: -1
+  level: -1
   file: "logs/app.log"
   format: "console" # console、json
 
@@ -20,6 +20,10 @@ email:
   port: 25
   username: ""
   password: ""
+
+
+cache:
+  enable: true
 
 mysql:
   address: "mysql"

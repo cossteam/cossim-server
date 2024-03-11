@@ -50,6 +50,7 @@ type Service struct {
 	sid                  string
 	discovery            discovery.Registry
 	ac                   *pkgconfig.AppConfig
+	cache                bool
 }
 
 func New(ac *pkgconfig.AppConfig) *Service {
@@ -82,6 +83,7 @@ func New(ac *pkgconfig.AppConfig) *Service {
 	// 监听服务消息队列
 	go s.ListenQueue()
 
+	s.cache = s.setCacheConfig()
 	return s
 }
 
@@ -241,4 +243,11 @@ func setupEncryption(ac *pkgconfig.AppConfig) {
 	}
 
 	Enc = enc
+}
+
+func (s *Service) setCacheConfig() bool {
+	if s.redisClient == nil && s.ac.Cache.Enable {
+		panic("redis is nil")
+	}
+	return s.ac.Cache.Enable
 }
