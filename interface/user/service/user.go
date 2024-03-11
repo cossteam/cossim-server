@@ -620,21 +620,24 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 		return "", err
 	}
 
-	//查询所有好友
-	friends, err := s.relClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
-		UserId: userID,
-	})
+	if s.cache {
+		//查询所有好友
+		friends, err := s.relClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
+			UserId: userID,
+		})
 
-	for _, friend := range friends.FriendList {
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", friend.UserId))
-		if err != nil {
-			return "", err
+		for _, friend := range friends.FriendList {
+			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", friend.UserId))
+			if err != nil {
+				return "", err
+			}
+
+			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", friend.UserId))
+			if err != nil {
+				return "", err
+			}
 		}
 
-		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", friend.UserId))
-		if err != nil {
-			return "", err
-		}
 	}
 
 	return aUrl, nil

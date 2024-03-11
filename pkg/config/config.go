@@ -152,6 +152,7 @@ type AppConfig struct {
 	Livekit             LivekitConfig             `mapstructure:"livekit" yaml:"livekit"`
 	AdminConfig         AdminConfig               `mapstructure:"admin" yaml:"admin"`
 	Push                PushConfig                `mapstructure:"push" yaml:"push"`
+	Cache               CacheConfig               `mapstructure:"cache" yaml:"cache"`
 }
 
 type EncryptionConfig struct {
@@ -200,6 +201,10 @@ type AdminConfig struct {
 	Password string `mapstructure:"password" yaml:"password"`
 	NickName string `mapstructure:"nickname" yaml:"nickname"`
 	UserId   string `mapstructure:"user_id" yaml:"user_id"`
+}
+
+type CacheConfig struct {
+	Enable bool `mapstructure:"enable" yaml:"enable"`
 }
 
 func (c LivekitConfig) Addr() string {

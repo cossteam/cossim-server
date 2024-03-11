@@ -1,6 +1,6 @@
 log:
   stdout: true
-  v: -1
+  level: -1
   file: "logs/app.log"
   format: "console" # console、json
 
@@ -22,6 +22,9 @@ message_queue:
   password: ""
   address: "rabbitmq"
   port: "5672"
+
+cache:
+  enable: true
 
 dtm:
   name: "dtm"

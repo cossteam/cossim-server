@@ -46,7 +46,8 @@ type Service struct {
 	gatewayPort        string
 	appPath            string
 
-	dis bool
+	dis   bool
+	cache bool
 }
 
 func New(ac *pkgconfig.AppConfig) *Service {
@@ -63,6 +64,7 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		dtmGrpcServer:  ac.Dtm.Addr(),
 		dis:            false,
 	}
+	svc.cache = svc.setCacheConfig()
 	svc.setLoadSystem()
 	return svc
 }
@@ -222,6 +224,13 @@ func setRabbitMQProvider(c *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 		panic(err)
 	}
 	return rmq
+}
+
+func (s *Service) setCacheConfig() bool {
+	if s.redisClient == nil && s.conf.Cache.Enable {
+		panic("redis is nil")
+	}
+	return s.conf.Cache.Enable
 }
 
 func (s *Service) setLoadSystem() {

@@ -41,6 +41,7 @@ type Service struct {
 	downloadURL     string
 	gatewayAddress  string
 	gatewayPort     string
+	cache           bool
 }
 
 func New(ac *pkgconfig.AppConfig) (s *Service) {
@@ -58,6 +59,7 @@ func New(ac *pkgconfig.AppConfig) (s *Service) {
 	}
 	s.setLoadSystem()
 	s.setupRedisClient()
+	s.cache = s.setCacheConfig()
 	return s
 }
 
@@ -75,6 +77,13 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	}
 
 	return nil
+}
+
+func (s *Service) setCacheConfig() bool {
+	if s.redisClient == nil && s.ac.Cache.Enable {
+		panic("redis is nil")
+	}
+	return s.ac.Cache.Enable
 }
 
 func (s *Service) setupRedisClient() {

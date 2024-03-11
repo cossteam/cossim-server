@@ -1,6 +1,6 @@
 log:
   stdout: true
-  v: -1
+  level: -1
   file: "logs/app.log"
   format: "console" # console、json
 
@@ -22,6 +22,10 @@ redis:
   port: 6379
   password: "Hitosea@123.."
 #  protocol: 3
+
+
+cache:
+  enable: true
 
 message_queue:
   name: "rabbitmq"

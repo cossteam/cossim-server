@@ -302,7 +302,8 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	if err != nil {
 		return nil, err
 	}
-	if action == 1 {
+
+	if action == 1 && s.cache {
 		relation2, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
 		if err != nil {
 			if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
@@ -377,16 +378,18 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 }
 
 func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) error {
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
-	if err != nil {
-		s.logger.Error("err:" + err.Error())
-		return code.RelationErrDeleteFriendFailed
-	}
-	if len(values) == 1 {
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+	if s.cache {
+		//查询是否有缓存
+		values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
 		if err != nil {
+			s.logger.Error("err:" + err.Error())
 			return code.RelationErrDeleteFriendFailed
+		}
+		if len(values) == 1 {
+			err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+			if err != nil {
+				return code.RelationErrDeleteFriendFailed
+			}
 		}
 	}
 
@@ -413,16 +416,20 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		return err
 	}
 
-	err = s.removeRedisUserDialogList(relation.UserId, relation.DialogId)
-	if err != nil {
-		s.logger.Error("删除用户好友失败", zap.Error(err))
-		return code.RelationErrDeleteFriendFailed
+	if s.cache {
+		err = s.removeRedisUserDialogList(relation.UserId, relation.DialogId)
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return code.RelationErrDeleteFriendFailed
+		}
+
+		err = s.removeRedisFriendList(relation.UserId, relation.FriendId)
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return code.RelationErrDeleteFriendFailed
+		}
 	}
-	err = s.removeRedisFriendList(relation.UserId, relation.FriendId)
-	if err != nil {
-		s.logger.Error("删除用户好友失败", zap.Error(err))
-		return code.RelationErrDeleteFriendFailed
-	}
+
 	return nil
 }
 

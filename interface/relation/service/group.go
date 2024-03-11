@@ -136,27 +136,29 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 }
 
 func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interface{}, error) {
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("group:%s", userID))
-	if err != nil {
-		s.logger.Error("err:" + err.Error())
-		return nil, code.RelationErrGetFriendListFailed
-	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []usersorter.Group
-		for _, v := range values {
-			var friend usersorter.CustomGroupData
-			err := json.Unmarshal([]byte(v), &friend)
-			if err != nil {
-				fmt.Println("Error decoding cached data:", err)
-				continue
-			}
-			responseList = append(responseList, friend)
+	if s.cache {
+		//查询是否有缓存
+		values, err := s.redisClient.GetAllListValues(fmt.Sprintf("group:%s", userID))
+		if err != nil {
+			s.logger.Error("err:" + err.Error())
+			return nil, code.RelationErrGetFriendListFailed
 		}
-		groupedUsers := usersorter.SortAndGroupUsers(responseList, "Name")
+		if len(values) > 0 {
+			// 类型转换
+			var responseList []usersorter.Group
+			for _, v := range values {
+				var friend usersorter.CustomGroupData
+				err := json.Unmarshal([]byte(v), &friend)
+				if err != nil {
+					fmt.Println("Error decoding cached data:", err)
+					continue
+				}
+				responseList = append(responseList, friend)
+			}
+			groupedUsers := usersorter.SortAndGroupUsers(responseList, "Name")
 
-		return groupedUsers, nil
+			return groupedUsers, nil
+		}
 	}
 
 	// 获取用户群聊列表
@@ -197,25 +199,27 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 		}
 	}
 
-	var result []interface{}
+	if s.cache {
+		var result []interface{}
 
-	// Assuming data2 is a slice or array of a specific type
-	for _, item := range data {
-		result = append(result, item)
-	}
+		// Assuming data2 is a slice or array of a specific type
+		for _, item := range data {
+			result = append(result, item)
+		}
 
-	//存储到缓存
-	err = s.redisClient.AddToList(fmt.Sprintf("group:%s", userID), result)
-	if err != nil {
-		s.logger.Error("err:" + err.Error())
-		return nil, code.RelationErrGetFriendListFailed
-	}
+		//存储到缓存
+		err = s.redisClient.AddToList(fmt.Sprintf("group:%s", userID), result)
+		if err != nil {
+			s.logger.Error("err:" + err.Error())
+			return nil, code.RelationErrGetFriendListFailed
+		}
 
-	//设置key过期时间
-	err = s.redisClient.SetKeyExpiration(fmt.Sprintf("group:%s", userID), 3*24*ostime.Hour)
-	if err != nil {
-		s.logger.Error("err:" + err.Error())
-		return nil, code.RelationErrGetFriendListFailed
+		//设置key过期时间
+		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("group:%s", userID), 3*24*ostime.Hour)
+		if err != nil {
+			s.logger.Error("err:" + err.Error())
+			return nil, code.RelationErrGetFriendListFailed
+		}
 	}
 
 	return usersorter.SortAndGroupUsers(data, "Name"), nil
@@ -407,7 +411,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		return err
 	}
 
-	if status == relationgrpcv1.GroupRequestStatus_Accepted {
+	if status == relationgrpcv1.GroupRequestStatus_Accepted && s.cache {
 		dialogInfo, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 		if err != nil {
 			s.logger.Error("获取群聊对话信息失败", zap.Error(err))
@@ -497,7 +501,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 		return err
 	}
 
-	if status == relationgrpcv1.GroupRequestStatus_Accepted {
+	if status == relationgrpcv1.GroupRequestStatus_Accepted && s.cache {
 		dialogInfo, err := s.dialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 		if err != nil {
 			s.logger.Error("获取群聊对话信息失败", zap.Error(err))
