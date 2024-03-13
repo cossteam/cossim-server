@@ -173,4 +173,5 @@ var (
 	LiveErrMediaTimeout             = New(16021, "媒体超时")
 	LiveErrMediaDisconnected        = New(16022, "媒体断开连接")
 	LiveErrMediaError               = New(16023, "媒体错误")
+	LiveErrRejectCallFailed         = New(16024, "拒绝通话失败")
 )
