@@ -307,12 +307,13 @@ func loadConfigFromRemote(opts Options, upCh chan<- discovery.ConfigUpdate) (*co
 		return nil, err
 	}
 
-	c, err := cc.Get(opts.Config.Key)
+	c, err := cc.Get(opts.Config.Key, opts.Config.Keys...)
 	if err != nil {
 		return nil, err
 	}
 
 	if opts.Config.Hot {
+		fmt.Println("Watch keys => ", opts.Config.Keys)
 		if err := cc.Watch(c, upCh, opts.Config.Key, opts.Config.Keys...); err != nil {
 			return nil, err
 		}

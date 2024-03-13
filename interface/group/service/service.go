@@ -93,7 +93,7 @@ func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
 
 func setMinIOProvider(ac *pkgconfig.AppConfig) storage.StorageProvider {
 	var err error
-	sp, err := minio.NewMinIOStorage(ac.OSS["minio"].Addr(), ac.OSS["minio"].AccessKey, ac.OSS["minio"].SecretKey, ac.OSS["minio"].SSL)
+	sp, err := minio.NewMinIOStorage(ac.OSS.Addr(), ac.OSS.AccessKey, ac.OSS.SecretKey, ac.OSS.SSL)
 	if err != nil {
 		panic(err)
 	}
