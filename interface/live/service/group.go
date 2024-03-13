@@ -238,46 +238,56 @@ func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string) (*d
 	return resp, nil
 }
 
+// GroupRejectRoom handles the rejection of a group call by a user.
+// It checks the user's group relation, ensures the user is not the sender of the call,
+// and that the user is a participant in the call and not already connected.
+// Then it sends a rejection message to all participants in the call.
 func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (interface{}, error) {
+	// Check the user's group relation
 	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
-		s.logger.Error("获取用户群组关系失败", zap.Error(err))
+		s.logger.Error("Failed to retrieve user's group relation", zap.Error(err))
 		return nil, err
 	}
 
+	// Retrieve room information
 	roomInfo, _, err := s.getGroupRedisRoom(ctx, gid)
 	if err != nil {
 		return nil, err
 	}
 
+	// Check if the user is the sender of the call
 	if roomInfo.SenderID == uid {
-		s.logger.Warn("无法拒绝自己发起的通话", zap.String("uid", uid), zap.Int("gid", int(gid)))
+		s.logger.Warn("Cannot reject a call initiated by the user", zap.String("uid", uid), zap.Uint32("gid", gid))
 		return nil, code.LiveErrRejectCallFailed
 	}
 
+	// Check if the user is a participant in the call
 	pp, ok := roomInfo.Participants[uid]
 	if !ok {
-		s.logger.Warn("无法拒绝通话，没有在通话参与者中", zap.String("uid", uid), zap.Int("gid", int(gid)))
+		s.logger.Warn("User is not a participant in the call", zap.String("uid", uid), zap.Uint32("gid", gid))
 		return nil, code.LiveErrRejectCallFailed
 	}
 
+	// Check if the user is already connected to the call
 	if pp.Connected {
-		s.logger.Warn("无法拒绝通话，已经处于通话状态", zap.String("uid", uid), zap.Int("gid", int(gid)))
+		s.logger.Warn("User is already connected to the call", zap.String("uid", uid), zap.Uint32("gid", gid))
 		return nil, code.LiveErrRejectCallFailed
 	}
 
-	//_, err = s.deleteUserRoom(ctx, room)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	msg := constants.WsMsg{Uid: roomInfo.SenderID, Event: constants.GroupCallRejectEvent, Data: map[string]interface{}{
-		"sender_id":    roomInfo.SenderID,
-		"recipient_id": uid,
-	}}
-	if err = s.publishServiceMessage(ctx, msg); err != nil {
-		s.logger.Error("发送消息失败", zap.Error(err))
-		return nil, err
+	// Send rejection message to all participants in the call
+	for id := range roomInfo.Participants {
+		msg := constants.WsMsg{
+			Uid:   id,
+			Event: constants.GroupCallRejectEvent,
+			Data: map[string]interface{}{
+				"sender_id":    roomInfo.SenderID,
+				"recipient_id": id,
+			},
+		}
+		if err = s.publishServiceMessage(ctx, msg); err != nil {
+			s.logger.Error("Failed to send rejection message", zap.Error(err))
+		}
 	}
 
 	return nil, nil
