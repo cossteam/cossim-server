@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"runtime/debug"
 )
 
 func RecoveryMiddleware() gin.HandlerFunc {
@@ -15,6 +16,8 @@ func RecoveryMiddleware() gin.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Printf("recover error: %v\n", err)
+				// 打印堆栈信息
+				debug.PrintStack()
 				//if e, ok := err.(error); ok {
 				//	response.Fail(ctx, code.Cause(e).Message(), nil)
 				//	ctx.Abort()

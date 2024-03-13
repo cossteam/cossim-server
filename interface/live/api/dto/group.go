@@ -3,7 +3,7 @@ package dto
 type GroupCallRequest struct {
 	GroupID uint32     `json:"group_id" binding:"required"` // 群组的ID
 	Member  []string   `json:"member"`                      // 成员ids
-	Option  CallOption `json:"option"`
+	Option  CallOption `json:"option,omitempty"`
 }
 
 type GroupCallResponse struct {
@@ -16,7 +16,7 @@ type GroupCallResponse struct {
 type GroupJoinRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"` // 群组的ID
 	//Room    string     `json:"room" binding:"required"`     // 房间名称
-	Option CallOption `json:"option"`
+	Option CallOption `json:"option,omitempty"`
 }
 
 type GroupJoinResponse struct {
@@ -27,7 +27,7 @@ type GroupJoinResponse struct {
 type GroupShowRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"` // 群组的ID
 	//Room    string     `json:"room" binding:"required"`     // 房间名称
-	Option CallOption `json:"option"`
+	Option CallOption `json:"option,omitempty"`
 }
 
 type GroupShowResponse struct {
@@ -46,12 +46,12 @@ type GroupShowResponse struct {
 type GroupRejectRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"` // 群组的ID
 	//Room    string     `json:"room" binding:"required"`     // 房间名称
-	Option CallOption `json:"option"`
+	Option CallOption `json:"option,omitempty"`
 }
 
 type GroupLeaveRequest struct {
 	GroupID uint32 `json:"group_id" binding:"required"` // 群组的ID
 	//Room    string     `json:"room" binding:"required"`     // 房间名称
 	Force  bool       `json:"force"` // 是否要结束整个通话
-	Option CallOption `json:"option"`
+	Option CallOption `json:"option,omitempty"`
 }
