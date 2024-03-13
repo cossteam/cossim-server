@@ -21,6 +21,14 @@ func GetContentTypeOption(fileExt string) minio.PutObjectOptions {
 		contentType = "image/png"
 	case ".gif":
 		contentType = "image/gif"
+	case ".mp3":
+		contentType = "audio/mpeg"
+	case ".wav":
+		contentType = "audio/wav"
+	case ".mp4":
+		contentType = "video/mp4"
+	case ".avi":
+		contentType = "video/x-msvideo"
 	// 添加其他文件类型的判断逻辑
 	default:
 		contentType = "application/octet-stream" // 默认使用二进制流的ContentType
