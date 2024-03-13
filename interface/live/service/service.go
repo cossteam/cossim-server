@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	liveUserPrefix  = "liveUser:"
-	liveGroupPrefix = "liveGroup:"
+	liveUserPrefix  = "live.User."
+	liveGroupPrefix = "live.Group."
+	liveRoomPrefix  = "live.Room."
 )
 
 type Service struct {

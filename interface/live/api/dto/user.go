@@ -53,12 +53,14 @@ type UserShowResponse struct {
 	StartAt            int64              `json:"start_at"` // 创建房间时间
 	Duration           int64              `json:"duration"` // 房间持续时间
 	Room               string             `json:"room"`     // 房间名称
+	Type               string             `json:"type"`     // 房间类型 model.RoomType user、group
 	Status             string             `json:"status,omitempty"`
 	VideoCallRecordURL string             `json:"video_call_record_url,omitempty"`
 	Participant        []*ParticipantInfo `json:"participant"`
 }
 
 type ParticipantInfo struct {
+	//Uid         string           `json:"uid,omitempty"`       // 用户id
 	Sid         string           `json:"sid,omitempty"`       // 房间id
 	Identity    string           `json:"identity,omitempty"`  // 用户昵称
 	State       ParticipantState `json:"state,omitempty"`     // 用户状态

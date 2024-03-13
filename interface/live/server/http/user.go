@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -39,8 +38,6 @@ func (h *Handler) UserCreate(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-
-	fmt.Println("enc => ", h.enc)
 
 	response.Success(c, "创建通话成功", resp)
 }
@@ -101,7 +98,7 @@ func (h *Handler) UserShow(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "获取通话信息成功", resp)
+	response.Success(c, "获取通话信息成功", resp)
 }
 
 // UserReject

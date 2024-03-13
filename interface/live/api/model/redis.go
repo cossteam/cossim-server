@@ -5,6 +5,42 @@ import (
 	"fmt"
 )
 
+type RoomType string
+
+const (
+	GroupRoomType = "group"
+	UserRoomType  = "user"
+)
+
+type Room struct {
+	Room string `json:"room"`
+}
+
+func (r *Room) ToJSONString() (string, error) {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+type RoomInfo struct {
+	Room            string                        `json:"room"`
+	Type            RoomType                      `json:"type"`
+	SenderID        string                        `json:"sender_id"`
+	NumParticipants uint32                        `json:"num_participants"`
+	MaxParticipants uint32                        `json:"max_participants"`
+	Participants    map[string]*ActiveParticipant `json:"participants"`
+}
+
+func (r *RoomInfo) ToJSONString() (string, error) {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
 type UserRoomInfo struct {
 	Room            string                        `json:"room"`
 	SenderID        string                        `json:"sender_id"`
