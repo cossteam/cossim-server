@@ -95,7 +95,7 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 	if _, ok := services["storage_service"]; !ok {
 		return errors.New("storage service not found")
 	}
-	h.storageClient = storagev1.NewStorageServiceClient(services["storage"])
+	h.storageClient = storagev1.NewStorageServiceClient(services["storage_service"])
 	return nil
 }
 
