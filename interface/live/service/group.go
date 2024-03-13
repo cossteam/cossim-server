@@ -245,10 +245,25 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (
 		return nil, err
 	}
 
-	roomInfo := &model.UserRoomInfo{}
-	_, _, err = s.getGroupRedisRoom(ctx, gid)
+	roomInfo, _, err := s.getGroupRedisRoom(ctx, gid)
 	if err != nil {
 		return nil, err
+	}
+
+	if roomInfo.SenderID == uid {
+		s.logger.Warn("无法拒绝自己发起的通话", zap.String("uid", uid), zap.Int("gid", int(gid)))
+		return nil, code.LiveErrRejectCallFailed
+	}
+
+	pp, ok := roomInfo.Participants[uid]
+	if !ok {
+		s.logger.Warn("无法拒绝通话，没有在通话参与者中", zap.String("uid", uid), zap.Int("gid", int(gid)))
+		return nil, code.LiveErrRejectCallFailed
+	}
+
+	if pp.Connected {
+		s.logger.Warn("无法拒绝通话，已经处于通话状态", zap.String("uid", uid), zap.Int("gid", int(gid)))
+		return nil, code.LiveErrRejectCallFailed
 	}
 
 	//_, err = s.deleteUserRoom(ctx, room)
@@ -281,11 +296,11 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 	}
 
 	if roomInfo.SenderID != uid && force {
-		return nil, code.Unauthorized
+		return nil, code.Forbidden
 	}
 
 	if _, ok := roomInfo.Participants[uid]; !ok {
-		return nil, code.Unauthorized
+		return nil, code.Forbidden
 	}
 
 	if force || roomInfo.NumParticipants-1 == 0 || roomInfo.NumParticipants == 0 {
