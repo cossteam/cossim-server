@@ -121,7 +121,7 @@ func (c OSSCommonConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", c.Address, c.Port)
 }
 
-type OssConfig map[string]OSSCommonConfig
+type OssConfig OSSCommonConfig
 
 type PushConfig struct {
 	Address string `mapstructure:"address" yaml:"address"`
@@ -147,7 +147,7 @@ type AppConfig struct {
 	MultipleDeviceLimit MultipleDeviceLimitConfig `mapstructure:"multiple_device_limit" yaml:"multiple_device_limit"`
 	SystemConfig        SystemConfig              `mapstructure:"system" yaml:"system"`
 	Dtm                 DtmConfig                 `mapstructure:"dtm" yaml:"dtm"`
-	OSS                 OssConfig                 `mapstructure:"oss" yaml:"oss"`
+	OSS                 OSSCommonConfig           `mapstructure:"oss" yaml:"oss"`
 	Email               EmailConfig               `mapstructure:"email" yaml:"email"`
 	Livekit             LivekitConfig             `mapstructure:"livekit" yaml:"livekit"`
 	AdminConfig         AdminConfig               `mapstructure:"admin" yaml:"admin"`

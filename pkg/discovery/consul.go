@@ -412,7 +412,7 @@ func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig
 
 	fmt.Println("ac => ", ac)
 
-	for _, v := range DefaultKeys {
+	for _, v := range keys {
 		newValue, err = m.cc.Get(v)
 		if err != nil {
 			return nil, err
