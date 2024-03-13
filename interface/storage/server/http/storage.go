@@ -111,6 +111,12 @@ func (h *Handler) upload(c *gin.Context) {
 		return
 	}
 
+	headerUrl.Host = gatewayAddress
+	if !systemEnableSSL {
+		headerUrl.Host = gatewayAddress + ":" + gatewayPort
+	}
+	headerUrl.Path = downloadURL + headerUrl.Path
+
 	aUrl := headerUrl.String()
 	if systemEnableSSL {
 		aUrl, err = httputil.ConvertToHttps(headerUrl.String())
@@ -135,10 +141,8 @@ func (h *Handler) upload(c *gin.Context) {
 		return
 	}
 
-	headerUrl.Host = gatewayAddress + ":" + gatewayPort
-	headerUrl.Path = downloadURL + headerUrl.Path
 	response.SetSuccess(c, "上传成功", gin.H{
-		"url":     headerUrl.String(),
+		"url":     aUrl,
 		"file_id": fileID,
 	})
 }
