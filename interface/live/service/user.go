@@ -29,17 +29,14 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		return nil, code.LiveErrAlreadyInCall
 	}
 
-	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-		UserId:   senderID,
-		FriendId: recipientID,
-	})
-	if err != nil {
-		s.logger.Error("获取用户关系失败", zap.Error(err))
+	// Check sender's relationship with recipient
+	if err := s.checkUserRelation(ctx, senderID, recipientID); err != nil {
 		return nil, err
 	}
 
-	if rel.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-		return nil, code.RelationUserErrFriendRelationNotFound
+	// Check recipient's relationship with sender
+	if err := s.checkUserRelation(ctx, recipientID, senderID); err != nil {
+		return nil, err
 	}
 
 	room, err := s.roomService.CreateRoom(ctx, &livekit.CreateRoomRequest{
@@ -97,6 +94,24 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 		Url: s.livekitServer,
 		//Token: senderToken,
 	}, nil
+}
+
+// checkUserRelation checks the relationship status between two users
+func (s *Service) checkUserRelation(ctx context.Context, userID, friendID string) error {
+	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userID,
+		FriendId: friendID,
+	})
+	if err != nil {
+		s.logger.Error("Failed to get user relation", zap.Error(err))
+		return err
+	}
+
+	if rel.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return code.RelationUserErrFriendRelationNotFound
+	}
+
+	return nil
 }
 
 func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.UserRoomInfo, uid, roomName string) error {
