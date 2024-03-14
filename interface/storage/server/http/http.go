@@ -11,7 +11,6 @@ import (
 	"github.com/cossim/coss-server/pkg/server"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
-	"github.com/cossim/coss-server/pkg/utils/os"
 	"github.com/cossim/coss-server/pkg/version"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
@@ -102,7 +101,6 @@ var (
 	systemEnableSSL bool
 	gatewayAddress  string
 	gatewayPort     string
-	appPath         string
 )
 
 func setLoadSystem(ac *pkgconfig.AppConfig) {
@@ -113,12 +111,6 @@ func setLoadSystem(ac *pkgconfig.AppConfig) {
 
 	switch env {
 	case "prod":
-		path := ac.SystemConfig.AvatarFilePath
-		if path == "" {
-			path = "/.catch/"
-		}
-		appPath = path
-
 		gatewayAdd := ac.SystemConfig.GatewayAddress
 		if gatewayAdd == "" {
 			gatewayAdd = "43.229.28.107"
@@ -132,15 +124,6 @@ func setLoadSystem(ac *pkgconfig.AppConfig) {
 		}
 		gatewayPort = gatewayPo
 	default:
-		path := ac.SystemConfig.AvatarFilePathDev
-		if path == "" {
-			npath, err := os.GetPackagePath()
-			if err != nil {
-				panic(err)
-			}
-			path = npath + "deploy/docker/config/common/"
-		}
-		appPath = path
 
 		gatewayAdd := ac.SystemConfig.GatewayAddressDev
 		if gatewayAdd == "" {

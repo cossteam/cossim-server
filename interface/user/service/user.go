@@ -11,7 +11,7 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
-	"github.com/cossim/coss-server/pkg/utils/avatarbuilder"
+	"github.com/cossim/coss-server/pkg/utils/avatar"
 	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
@@ -22,8 +22,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/minio/minio-go/v7"
+	"github.com/o1egl/govatar"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"image/png"
 	"io/ioutil"
 	"mime/multipart"
 	"strconv"
@@ -173,7 +175,14 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		req.Nickname = req.Email
 	}
 
-	avatar, err := avatarbuilder.GenerateAvatar(req.Nickname, s.appPath)
+	img, err := govatar.Generate(avatar.RandomGender())
+	if err != nil {
+		return "", err
+	}
+
+	// 将图像编码为PNG格式
+	var buf bytes.Buffer
+	err = png.Encode(&buf, img)
 	if err != nil {
 		return "", err
 	}
@@ -184,7 +193,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	}
 
 	// 将字节数组转换为 io.Reader
-	reader := bytes.NewReader(avatar)
+	reader := bytes.NewReader(buf.Bytes())
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
 	err = s.sp.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
@@ -217,7 +226,10 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		})
 		if err != nil {
 			s.logger.Error("failed to register user", zap.Error(err))
-			return code.UserErrEmailAlreadyRegistered
+			if strings.Contains(err.Error(), "邮箱已被注册") {
+				return code.UserErrEmailAlreadyRegistered
+			}
+			return err
 		}
 		UserId = resp.UserId
 

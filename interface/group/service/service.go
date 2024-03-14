@@ -9,7 +9,6 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
-	"github.com/cossim/coss-server/pkg/utils/os"
 	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
@@ -44,7 +43,6 @@ type Service struct {
 	downloadURL        string
 	gatewayAddress     string
 	gatewayPort        string
-	appPath            string
 
 	dis   bool
 	cache bool
@@ -241,12 +239,6 @@ func (s *Service) setLoadSystem() {
 
 	switch env {
 	case "prod":
-		path := s.conf.SystemConfig.AvatarFilePath
-		if path == "" {
-			path = "/.catch/"
-		}
-		s.appPath = path
-
 		gatewayAdd := s.conf.SystemConfig.GatewayAddress
 		if gatewayAdd == "" {
 			gatewayAdd = "43.229.28.107"
@@ -260,16 +252,6 @@ func (s *Service) setLoadSystem() {
 		}
 		s.gatewayPort = gatewayPo
 	default:
-		path := s.conf.SystemConfig.AvatarFilePathDev
-		if path == "" {
-			npath, err := os.GetPackagePath()
-			if err != nil {
-				panic(err)
-			}
-			path = npath + "deploy/docker/config/common/"
-		}
-		s.appPath = path
-
 		gatewayAdd := s.conf.SystemConfig.GatewayAddressDev
 		if gatewayAdd == "" {
 			gatewayAdd = "127.0.0.1"

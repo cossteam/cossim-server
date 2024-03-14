@@ -9,7 +9,6 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
-	"github.com/cossim/coss-server/pkg/utils/avatarbuilder"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
@@ -19,7 +18,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/minio/minio-go/v7"
+	"github.com/o1egl/govatar"
 	"google.golang.org/grpc"
+	"image/png"
 )
 
 func (s *Service) CreateAdmin(admin *entity.Admin) (interface{}, error) {
@@ -37,10 +38,16 @@ func (s *Service) InitAdmin() error {
 	Password := "123123a"
 	Email2 := "tz@bot.com"
 
-	fmt.Println("userclient", s.userClient)
-	avatar, err := avatarbuilder.GenerateAvatar(Email, s.appPath)
+	img, err := govatar.GenerateForUsername(govatar.MALE, Email2)
 	if err != nil {
 		return err
+	}
+
+	// 将图像编码为PNG格式
+	var buf bytes.Buffer
+	err = png.Encode(&buf, img)
+	if err != nil {
+		panic(err)
 	}
 
 	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Image))
@@ -49,7 +56,7 @@ func (s *Service) InitAdmin() error {
 	}
 
 	// 将字节数组转换为 io.Reader
-	reader := bytes.NewReader(avatar)
+	reader := bytes.NewReader(buf.Bytes())
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
 	headerUrl, err := s.sp.Upload(context.Background(), key, reader, reader.Size(), minio.PutObjectOptions{ContentType: "image/jpeg"})
