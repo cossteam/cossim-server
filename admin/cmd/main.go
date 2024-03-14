@@ -50,7 +50,12 @@ func main() {
 			Hot:                  true,
 			Key:                  "interface/admin",
 			//Keys:                 discovery.DefaultKeys,
-			Keys: []string{discovery.CommonMySQLConfigKey, discovery.CommonRedisConfigKey, discovery.CommonOssConfigKey},
+			Keys: []string{
+				discovery.CommonMySQLConfigKey,
+				discovery.CommonRedisConfigKey,
+				discovery.CommonOssConfigKey,
+				discovery.CommonMQConfigKey,
+			},
 			Registry: ctrl.Registry{
 				Discover: discover,
 				Register: register,
