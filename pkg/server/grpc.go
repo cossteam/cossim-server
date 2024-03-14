@@ -210,10 +210,9 @@ func (s *GrpcService) register() error {
 	return s.registry.RegisterGRPC(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
 }
 
-func (s *GrpcService) cancel() error {
+func (s *GrpcService) cancel() {
 	if err := s.registry.Cancel(s.sid); err != nil {
-		return err
+		s.logger.Error(err, "Service unregister failed", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 	}
 	s.logger.Info("Service unregister success", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
-	return nil
 }
