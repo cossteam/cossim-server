@@ -91,7 +91,7 @@ func (s *HttpService) Start(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
 		s.logger.Info("shutting down httpServer", "addr", s.addr)
-
+		s.cancel()
 		if err := s.server.Shutdown(ctx); err != nil {
 			s.logger.Error(err, "error shutting down httpServer")
 		}
@@ -110,15 +110,9 @@ func (s *HttpService) Start(ctx context.Context) error {
 	return nil
 }
 
-//func (s *HttpService) Stop(_ context.Context) error {
-//	s.logger.Info(fmt.Sprintf("%s http service try stop", s.ac.RegisterGRPC.Name), "addr", s.addr)
-//	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-//	defer cancel()
-//	if err := s.server.Shutdown(ctx); err != nil {
-//		s.logger.Info(fmt.Sprintf("%s http service try stop failed", s.ac.RegisterGRPC.Name), "msg", err.Error(), "addr", s.addr)
-//	}
-//	return nil
-//}
+func (s *HttpService) Stop(_ context.Context) error {
+	return nil
+}
 
 func (s *HttpService) RegisterGRPC(serviceName, addr string, serviceID string) error {
 	//TODO implement me
@@ -186,6 +180,13 @@ func (s *HttpService) Discover() error {
 	}
 	wg.Wait()
 	return s.svc.DiscoverServices(clients)
+}
+
+func (s *HttpService) cancel() {
+	if err := s.registry.Cancel(s.sid); err != nil {
+		s.logger.Error(err, "Service unregister failed", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	}
+	s.logger.Info("Service unregister success", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 }
 
 func (s *HttpService) Health() string {
