@@ -171,8 +171,6 @@ type MultipleDeviceLimitConfig struct {
 type SystemConfig struct {
 	Environment       string `mapstructure:"environment" yaml:"environment"`
 	Ssl               bool   `mapstructure:"ssl" yaml:"ssl"`
-	AvatarFilePath    string `mapstructure:"avatar_file_path" yaml:"avatar_file_path"`
-	AvatarFilePathDev string `mapstructure:"avatar_file_path_dev" yaml:"avatar_file_path_dev"`
 	GatewayAddress    string `mapstructure:"gateway_address" yaml:"gateway_address"`
 	GatewayPort       string `mapstructure:"gateway_port" yaml:"gateway_port"`
 	GatewayAddressDev string `mapstructure:"gateway_address_dev" yaml:"gateway_address_dev"`
