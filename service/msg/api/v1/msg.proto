@@ -455,6 +455,24 @@ message SendMultiUserMsgResponse{
 
 }
 
+message  DeleteUserMsgByDialogIdRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+}
+
+message  DeleteUserMsgByDialogIdResponse {
+
+}
+
+message DeleteGroupMsgByDialogIdRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+}
+
+message  DeleteGroupMsgByDialogIdResponse {
+
+}
+
 service MsgService{
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
@@ -512,6 +530,16 @@ service MsgService{
   rpc SetUserMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
   //获取私聊对话未读消息
   rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
-  //删除多条私聊消息
-//  rpc DeleteUserMsgs(DeleteUserMsgsRequest) returns (DeleteUserMsgsResponse);
+  //确认根据对话id删除私聊消息
+  rpc ConfirmDeleteUserMessageByDialogId(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
+  //确认根据对话id删除群聊消息
+  rpc ConfirmDeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+  //根据对话id删除私聊消息
+  rpc DeleteUserMessageByDialogId(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
+  //根据对话id删除群聊消息
+  rpc DeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+  //根据对话id删除私聊消息回滚
+  rpc DeleteUserMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
+  //根据对话id删除群聊消息回滚
+  rpc DeleteGroupMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
 }

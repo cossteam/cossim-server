@@ -388,3 +388,28 @@ func (g *MsgRepo) GetUserMsgByIDs(msgIds []uint32) ([]*entity.UserMessage, error
 func (g *MsgRepo) InsertUserMessages(message []entity.UserMessage) error {
 	return g.db.Create(&message).Error
 }
+
+func (g *MsgRepo) DeleteUserMessagesByDialogID(dialogId uint32) error {
+	return g.db.Model(&entity.UserMessage{}).Where("dialog_id = ?", dialogId).Update("deleted_at", time.Now()).Error
+}
+
+func (g *MsgRepo) DeleteGroupMessagesByDialogID(dialogId uint32) error {
+	return g.db.Model(&entity.GroupMessage{}).Where("dialog_id = ?", dialogId).Update("deleted_at", time.Now()).Error
+}
+
+func (g *MsgRepo) UpdateUserMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error {
+	return g.db.Model(&entity.UserMessage{}).Where("dialog_id = ?", dialogId).Update(column, value).Error
+}
+
+func (g *MsgRepo) UpdateGroupMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error {
+	return g.db.Model(&entity.GroupMessage{}).Where("dialog_id = ?", dialogId).Update(column, value).Error
+}
+
+func (g *MsgRepo) PhysicalDeleteUserMessagesByDialogID(dialogId uint32) error {
+	return g.db.Where("dialog_id = ?", dialogId).Delete(&entity.UserMessage{}).Error
+
+}
+
+func (g *MsgRepo) PhysicalDeleteGroupMessagesByDialogID(dialogId uint32) error {
+	return g.db.Where("dialog_id = ?", dialogId).Delete(&entity.GroupMessage{}).Error
+}

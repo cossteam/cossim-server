@@ -11,6 +11,7 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
+	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
@@ -401,6 +402,7 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 
 	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID}
 	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: friendID}
+	r3 := &msggrpcv1.DeleteUserMsgByDialogIdRequest{DialogId: relation.DialogId}
 	gid := shortuuid.New()
 	// tcc
 	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
@@ -409,7 +411,13 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		if err != nil {
 			return err
 		}
+
 		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r)
+		if err != nil {
+			return err
+		}
+
+		err = tcc.CallBranch(r3, s.msgGrpcServer+msggrpcv1.MsgService_DeleteUserMessageByDialogId_FullMethodName, s.msgGrpcServer+msggrpcv1.MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName, s.msgGrpcServer+msggrpcv1.MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName, r)
 		return err
 	}); err != nil {
 		s.logger.Error("TCC DeleteFriend", zap.Error(err))
@@ -417,13 +425,23 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 	}
 
 	if s.cache {
-		err = s.removeRedisUserDialogList(relation.UserId, relation.DialogId)
+		//err = s.removeRedisUserDialogList(relation.UserId, relation.DialogId)
+		//if err != nil {
+		//	s.logger.Error("删除用户好友失败", zap.Error(err))
+		//	return code.RelationErrDeleteFriendFailed
+		//}
+		//
+		//err = s.removeRedisFriendList(relation.UserId, relation.FriendId)
+		//if err != nil {
+		//	s.logger.Error("删除用户好友失败", zap.Error(err))
+		//	return code.RelationErrDeleteFriendFailed
+		//}
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", relation.UserId))
 		if err != nil {
 			s.logger.Error("删除用户好友失败", zap.Error(err))
 			return code.RelationErrDeleteFriendFailed
 		}
-
-		err = s.removeRedisFriendList(relation.UserId, relation.FriendId)
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", relation.UserId))
 		if err != nil {
 			s.logger.Error("删除用户好友失败", zap.Error(err))
 			return code.RelationErrDeleteFriendFailed

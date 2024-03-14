@@ -19,32 +19,38 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MsgService_SendUserMessage_FullMethodName               = "/v1.MsgService/SendUserMessage"
-	MsgService_SendMultiUserMessage_FullMethodName          = "/v1.MsgService/SendMultiUserMessage"
-	MsgService_SendGroupMessage_FullMethodName              = "/v1.MsgService/SendGroupMessage"
-	MsgService_GetUserMessageList_FullMethodName            = "/v1.MsgService/GetUserMessageList"
-	MsgService_GetLastMsgsForUserWithFriends_FullMethodName = "/v1.MsgService/GetLastMsgsForUserWithFriends"
-	MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName   = "/v1.MsgService/GetLastMsgsForGroupsWithIDs"
-	MsgService_GetLastMsgsByDialogIds_FullMethodName        = "/v1.MsgService/GetLastMsgsByDialogIds"
-	MsgService_EditUserMessage_FullMethodName               = "/v1.MsgService/EditUserMessage"
-	MsgService_DeleteUserMessage_FullMethodName             = "/v1.MsgService/DeleteUserMessage"
-	MsgService_GetUserMsgIdAfterMsgList_FullMethodName      = "/v1.MsgService/GetUserMsgIdAfterMsgList"
-	MsgService_GetGroupMessageList_FullMethodName           = "/v1.MsgService/GetGroupMessageList"
-	MsgService_EditGroupMessage_FullMethodName              = "/v1.MsgService/EditGroupMessage"
-	MsgService_DeleteGroupMessage_FullMethodName            = "/v1.MsgService/DeleteGroupMessage"
-	MsgService_GetUserMessageById_FullMethodName            = "/v1.MsgService/GetUserMessageById"
-	MsgService_GetGroupMessageById_FullMethodName           = "/v1.MsgService/GetGroupMessageById"
-	MsgService_GetUserMessagesByIds_FullMethodName          = "/v1.MsgService/GetUserMessagesByIds"
-	MsgService_GetGroupMessagesByIds_FullMethodName         = "/v1.MsgService/GetGroupMessagesByIds"
-	MsgService_SetUserMsgLabel_FullMethodName               = "/v1.MsgService/SetUserMsgLabel"
-	MsgService_SetGroupMsgLabel_FullMethodName              = "/v1.MsgService/SetGroupMsgLabel"
-	MsgService_GetUserMsgLabelByDialogId_FullMethodName     = "/v1.MsgService/GetUserMsgLabelByDialogId"
-	MsgService_GetGroupMsgLabelByDialogId_FullMethodName    = "/v1.MsgService/GetGroupMsgLabelByDialogId"
-	MsgService_GetGroupMsgIdAfterMsgList_FullMethodName     = "/v1.MsgService/GetGroupMsgIdAfterMsgList"
-	MsgService_GetGroupUnreadMessages_FullMethodName        = "/v1.MsgService/GetGroupUnreadMessages"
-	MsgService_SetUserMsgsReadStatus_FullMethodName         = "/v1.MsgService/SetUserMsgsReadStatus"
-	MsgService_SetUserMsgReadStatus_FullMethodName          = "/v1.MsgService/SetUserMsgReadStatus"
-	MsgService_GetUnreadUserMsgs_FullMethodName             = "/v1.MsgService/GetUnreadUserMsgs"
+	MsgService_SendUserMessage_FullMethodName                      = "/v1.MsgService/SendUserMessage"
+	MsgService_SendMultiUserMessage_FullMethodName                 = "/v1.MsgService/SendMultiUserMessage"
+	MsgService_SendGroupMessage_FullMethodName                     = "/v1.MsgService/SendGroupMessage"
+	MsgService_GetUserMessageList_FullMethodName                   = "/v1.MsgService/GetUserMessageList"
+	MsgService_GetLastMsgsForUserWithFriends_FullMethodName        = "/v1.MsgService/GetLastMsgsForUserWithFriends"
+	MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName          = "/v1.MsgService/GetLastMsgsForGroupsWithIDs"
+	MsgService_GetLastMsgsByDialogIds_FullMethodName               = "/v1.MsgService/GetLastMsgsByDialogIds"
+	MsgService_EditUserMessage_FullMethodName                      = "/v1.MsgService/EditUserMessage"
+	MsgService_DeleteUserMessage_FullMethodName                    = "/v1.MsgService/DeleteUserMessage"
+	MsgService_GetUserMsgIdAfterMsgList_FullMethodName             = "/v1.MsgService/GetUserMsgIdAfterMsgList"
+	MsgService_GetGroupMessageList_FullMethodName                  = "/v1.MsgService/GetGroupMessageList"
+	MsgService_EditGroupMessage_FullMethodName                     = "/v1.MsgService/EditGroupMessage"
+	MsgService_DeleteGroupMessage_FullMethodName                   = "/v1.MsgService/DeleteGroupMessage"
+	MsgService_GetUserMessageById_FullMethodName                   = "/v1.MsgService/GetUserMessageById"
+	MsgService_GetGroupMessageById_FullMethodName                  = "/v1.MsgService/GetGroupMessageById"
+	MsgService_GetUserMessagesByIds_FullMethodName                 = "/v1.MsgService/GetUserMessagesByIds"
+	MsgService_GetGroupMessagesByIds_FullMethodName                = "/v1.MsgService/GetGroupMessagesByIds"
+	MsgService_SetUserMsgLabel_FullMethodName                      = "/v1.MsgService/SetUserMsgLabel"
+	MsgService_SetGroupMsgLabel_FullMethodName                     = "/v1.MsgService/SetGroupMsgLabel"
+	MsgService_GetUserMsgLabelByDialogId_FullMethodName            = "/v1.MsgService/GetUserMsgLabelByDialogId"
+	MsgService_GetGroupMsgLabelByDialogId_FullMethodName           = "/v1.MsgService/GetGroupMsgLabelByDialogId"
+	MsgService_GetGroupMsgIdAfterMsgList_FullMethodName            = "/v1.MsgService/GetGroupMsgIdAfterMsgList"
+	MsgService_GetGroupUnreadMessages_FullMethodName               = "/v1.MsgService/GetGroupUnreadMessages"
+	MsgService_SetUserMsgsReadStatus_FullMethodName                = "/v1.MsgService/SetUserMsgsReadStatus"
+	MsgService_SetUserMsgReadStatus_FullMethodName                 = "/v1.MsgService/SetUserMsgReadStatus"
+	MsgService_GetUnreadUserMsgs_FullMethodName                    = "/v1.MsgService/GetUnreadUserMsgs"
+	MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName   = "/v1.MsgService/ConfirmDeleteUserMessageByDialogId"
+	MsgService_ConfirmDeleteGroupMessageByDialogId_FullMethodName  = "/v1.MsgService/ConfirmDeleteGroupMessageByDialogId"
+	MsgService_DeleteUserMessageByDialogId_FullMethodName          = "/v1.MsgService/DeleteUserMessageByDialogId"
+	MsgService_DeleteGroupMessageByDialogId_FullMethodName         = "/v1.MsgService/DeleteGroupMessageByDialogId"
+	MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName  = "/v1.MsgService/DeleteUserMessageByDialogIdRollback"
+	MsgService_DeleteGroupMessageByDialogIdRollback_FullMethodName = "/v1.MsgService/DeleteGroupMessageByDialogIdRollback"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -103,6 +109,18 @@ type MsgServiceClient interface {
 	SetUserMsgReadStatus(ctx context.Context, in *SetUserMsgReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgReadStatusResponse, error)
 	// 获取私聊对话未读消息
 	GetUnreadUserMsgs(ctx context.Context, in *GetUnreadUserMsgsRequest, opts ...grpc.CallOption) (*GetUnreadUserMsgsResponse, error)
+	// 确认根据对话id删除私聊消息
+	ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
+	// 确认根据对话id删除群聊消息
+	ConfirmDeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error)
+	// 根据对话id删除私聊消息
+	DeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
+	// 根据对话id删除群聊消息
+	DeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error)
+	// 根据对话id删除私聊消息回滚
+	DeleteUserMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
+	// 根据对话id删除群聊消息回滚
+	DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error)
 }
 
 type msgServiceClient struct {
@@ -347,6 +365,60 @@ func (c *msgServiceClient) GetUnreadUserMsgs(ctx context.Context, in *GetUnreadU
 	return out, nil
 }
 
+func (c *msgServiceClient) ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error) {
+	out := new(DeleteUserMsgByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) ConfirmDeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error) {
+	out := new(DeleteGroupMsgByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_ConfirmDeleteGroupMessageByDialogId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) DeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error) {
+	out := new(DeleteUserMsgByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_DeleteUserMessageByDialogId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) DeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error) {
+	out := new(DeleteGroupMsgByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_DeleteGroupMessageByDialogId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) DeleteUserMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error) {
+	out := new(DeleteUserMsgByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error) {
+	out := new(DeleteGroupMsgByDialogIdResponse)
+	err := c.cc.Invoke(ctx, MsgService_DeleteGroupMessageByDialogIdRollback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations must embed UnimplementedMsgServiceServer
 // for forward compatibility
@@ -403,6 +475,18 @@ type MsgServiceServer interface {
 	SetUserMsgReadStatus(context.Context, *SetUserMsgReadStatusRequest) (*SetUserMsgReadStatusResponse, error)
 	// 获取私聊对话未读消息
 	GetUnreadUserMsgs(context.Context, *GetUnreadUserMsgsRequest) (*GetUnreadUserMsgsResponse, error)
+	// 确认根据对话id删除私聊消息
+	ConfirmDeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
+	// 确认根据对话id删除群聊消息
+	ConfirmDeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
+	// 根据对话id删除私聊消息
+	DeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
+	// 根据对话id删除群聊消息
+	DeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
+	// 根据对话id删除私聊消息回滚
+	DeleteUserMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
+	// 根据对话id删除群聊消息回滚
+	DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
 	mustEmbedUnimplementedMsgServiceServer()
 }
 
@@ -487,6 +571,24 @@ func (UnimplementedMsgServiceServer) SetUserMsgReadStatus(context.Context, *SetU
 }
 func (UnimplementedMsgServiceServer) GetUnreadUserMsgs(context.Context, *GetUnreadUserMsgsRequest) (*GetUnreadUserMsgsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUnreadUserMsgs not implemented")
+}
+func (UnimplementedMsgServiceServer) ConfirmDeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfirmDeleteUserMessageByDialogId not implemented")
+}
+func (UnimplementedMsgServiceServer) ConfirmDeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfirmDeleteGroupMessageByDialogId not implemented")
+}
+func (UnimplementedMsgServiceServer) DeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessageByDialogId not implemented")
+}
+func (UnimplementedMsgServiceServer) DeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessageByDialogId not implemented")
+}
+func (UnimplementedMsgServiceServer) DeleteUserMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessageByDialogIdRollback not implemented")
+}
+func (UnimplementedMsgServiceServer) DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessageByDialogIdRollback not implemented")
 }
 func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
@@ -969,6 +1071,114 @@ func _MsgService_GetUnreadUserMsgs_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_ConfirmDeleteUserMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserMsgByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).ConfirmDeleteUserMessageByDialogId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).ConfirmDeleteUserMessageByDialogId(ctx, req.(*DeleteUserMsgByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_ConfirmDeleteGroupMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupMsgByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).ConfirmDeleteGroupMessageByDialogId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_ConfirmDeleteGroupMessageByDialogId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).ConfirmDeleteGroupMessageByDialogId(ctx, req.(*DeleteGroupMsgByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_DeleteUserMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserMsgByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).DeleteUserMessageByDialogId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_DeleteUserMessageByDialogId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).DeleteUserMessageByDialogId(ctx, req.(*DeleteUserMsgByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_DeleteGroupMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupMsgByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).DeleteGroupMessageByDialogId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_DeleteGroupMessageByDialogId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).DeleteGroupMessageByDialogId(ctx, req.(*DeleteGroupMsgByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_DeleteUserMessageByDialogIdRollback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserMsgByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).DeleteUserMessageByDialogIdRollback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).DeleteUserMessageByDialogIdRollback(ctx, req.(*DeleteUserMsgByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_DeleteGroupMessageByDialogIdRollback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserMsgByDialogIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).DeleteGroupMessageByDialogIdRollback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_DeleteGroupMessageByDialogIdRollback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).DeleteGroupMessageByDialogIdRollback(ctx, req.(*DeleteUserMsgByDialogIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1079,6 +1289,30 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUnreadUserMsgs",
 			Handler:    _MsgService_GetUnreadUserMsgs_Handler,
+		},
+		{
+			MethodName: "ConfirmDeleteUserMessageByDialogId",
+			Handler:    _MsgService_ConfirmDeleteUserMessageByDialogId_Handler,
+		},
+		{
+			MethodName: "ConfirmDeleteGroupMessageByDialogId",
+			Handler:    _MsgService_ConfirmDeleteGroupMessageByDialogId_Handler,
+		},
+		{
+			MethodName: "DeleteUserMessageByDialogId",
+			Handler:    _MsgService_DeleteUserMessageByDialogId_Handler,
+		},
+		{
+			MethodName: "DeleteGroupMessageByDialogId",
+			Handler:    _MsgService_DeleteGroupMessageByDialogId_Handler,
+		},
+		{
+			MethodName: "DeleteUserMessageByDialogIdRollback",
+			Handler:    _MsgService_DeleteUserMessageByDialogIdRollback_Handler,
+		},
+		{
+			MethodName: "DeleteGroupMessageByDialogIdRollback",
+			Handler:    _MsgService_DeleteGroupMessageByDialogIdRollback_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

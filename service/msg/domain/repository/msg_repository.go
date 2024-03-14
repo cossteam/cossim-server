@@ -24,6 +24,7 @@ type MsgRepository interface {
 	//批量查询阅后即焚消息id
 	GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogId uint32) ([]*entity.UserMessage, error)
 	GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error)
+	UpdateUserMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error
 
 	//群聊
 	GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error)
@@ -36,12 +37,21 @@ type MsgRepository interface {
 	GetGroupMsgLabelByDialogId(dialogId uint32) ([]*entity.GroupMessage, error)
 	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error)
 	GetGroupMsgIdsByDialogID(dialogId uint32) ([]uint32, error)
+	UpdateGroupMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error
 
 	//删除
 	PhysicalDeleteGroupMessage(msgId uint32) error
 	PhysicalDeleteUserMessage(msgId uint32) error
 	LogicalDeleteGroupMessage(msgId uint32) error
 	LogicalDeleteUserMessage(msgId uint32) error
+
+	//根据对话id删除消息
+	DeleteUserMessagesByDialogID(dialogId uint32) error
+	DeleteGroupMessagesByDialogID(dialogId uint32) error
+	//真实删除
+	PhysicalDeleteUserMessagesByDialogID(dialogId uint32) error
+	PhysicalDeleteGroupMessagesByDialogID(dialogId uint32) error
+
 	//批量删除私聊消息
 	PhysicalDeleteUserMessages(msgIds []uint32) error
 	PhysicalDeleteGroupMessages(msgIds []uint32) error

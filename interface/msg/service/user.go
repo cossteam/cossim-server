@@ -643,7 +643,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		return responseList[i].LastMessage.SendTime > responseList[j].LastMessage.SendTime
 	})
 
-	if s.cache {
+	if s.cache && len(responseList) > 0 {
 		// 创建一个新的[]interface{}类型的数组
 		var interfaceList []interface{}
 

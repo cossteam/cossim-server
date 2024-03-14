@@ -14,7 +14,6 @@ import (
 
 func AuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
 		//头像请求跳过验证
 		if strings.HasPrefix(ctx.FullPath(), "/api/v1/storage/files/download/") {
 			fileType := ctx.Param("type")
@@ -22,8 +21,8 @@ func AuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
 				ctx.Next()
 				return
 			}
-
 		}
+
 		// 获取 authorization header
 		tokenString := ""
 		if ctx.GetHeader("Authorization") != "" {

@@ -39,6 +39,7 @@ type Service struct {
 
 	dtmGrpcServer      string
 	relationGrpcServer string
+	msgGrpcServer      string
 	dialogGrpcServer   string
 	cache              bool
 }
@@ -76,6 +77,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	case "msg_service":
+		s.msgGrpcServer = conn.Target()
 		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
 		s.logger.Info("gRPC client for msg service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
 	}
