@@ -640,7 +640,6 @@ func (s *Service) DeleteGroupMessageByDialogId(ctx context.Context, in *v1.Delet
 
 func (s *Service) ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteUserMsgByDialogIdResponse, error) {
 	resp := &v1.DeleteUserMsgByDialogIdResponse{}
-	fmt.Println("确认删除")
 	err := s.mr.PhysicalDeleteUserMessagesByDialogID(in.DialogId)
 	if err != nil {
 		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete user msg: %v", err))
@@ -661,7 +660,7 @@ func (s *Service) DeleteUserMessageByDialogIdRollback(ctx context.Context, in *v
 	resp := &v1.DeleteUserMsgByDialogIdResponse{}
 	err := s.mr.UpdateUserMsgColumnByDialogId(in.DialogId, "deleted_at", 0)
 	if err != nil {
-		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete user msg: %v", err))
+		return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
 	}
 	return resp, err
 }
@@ -670,7 +669,7 @@ func (s *Service) DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *
 	resp := &v1.DeleteGroupMsgByDialogIdResponse{}
 	err := s.mr.UpdateGroupMsgColumnByDialogId(in.DialogId, "deleted_at", 0)
 	if err != nil {
-		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete group msg: %v", err))
+		return resp, status.Error(codes.Code(code.MsgErrDeleteGroupMessageFailed.Code()), err.Error())
 	}
 	return resp, err
 }

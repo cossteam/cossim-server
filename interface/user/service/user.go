@@ -241,7 +241,8 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		//TODO 系统账号统一管理
 		_, err = s.userClient.UserInfo(wf.Context, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
 		if err != nil {
-			return err
+			s.logger.Error("failed to register user", zap.Error(err))
+			return code.UserErrRegistrationFailed
 		}
 
 		//添加系统好友

@@ -154,7 +154,7 @@ func (g *DialogRepo) UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID s
 }
 
 func (g *DialogRepo) UpdateDialogUserColumnByDialogIDAndUserId(dialogID uint, userID string, column string, value interface{}) error {
-	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ? AND deleted_at = 0", dialogID, userID).Update(column, value).Error
+	return g.db.Model(&entity.DialogUser{}).Where("dialog_id = ? AND user_id = ?", dialogID, userID).Update(column, value).Error
 }
 
 func (g *DialogRepo) GetDialogById(dialogID uint) (*entity.Dialog, error) {
