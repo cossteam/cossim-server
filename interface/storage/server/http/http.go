@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -32,7 +31,6 @@ type Handler struct {
 	redisClient   *cache.RedisClient
 	logger        *zap.Logger
 	enc           encryption.Encryptor
-	discover      discovery.Registry
 	sid           string
 	minioAddr     string
 }
