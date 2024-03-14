@@ -295,9 +295,7 @@ func (s *Service) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, reque
 func (s *Service) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
 	resp := &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
 
-	if err := s.dr.UpdateDialogUserByDialogIDAndUserID(uint(request.DialogId), request.UserId, map[string]interface{}{
-		"deleted_at": 0,
-	}); err != nil {
+	if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(request.DialogId), request.UserId, "deleted_at", 0); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrGetDialogUserByDialogIDAndUserIDFailed.Code()), err.Error())
 	}
 

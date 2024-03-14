@@ -15,12 +15,10 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	userApi "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
-	"github.com/dtm-labs/client/dtmgrpc"
 	"github.com/dtm-labs/client/workflow"
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 	ostime "time"
 )
 
@@ -404,38 +402,51 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: friendID}
 	r3 := &msggrpcv1.DeleteUserMsgByDialogIdRequest{DialogId: relation.DialogId}
 	gid := shortuuid.New()
-	// tcc
-	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
-		r := &emptypb.Empty{}
-		err = tcc.CallBranch(r1, s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.dialogGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r)
+	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
+	wfName := "delete_relation_workflow_" + gid
+	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
+		_, err := s.dialogClient.DeleteDialogUserByDialogIDAndUserID(wf.Context, r1)
 		if err != nil {
 			return err
 		}
 
-		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriend_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.UserRelationService_DeleteFriendRevert_FullMethodName, r)
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err := s.dialogClient.DeleteDialogUserByDialogIDAndUserIDRevert(wf.Context, r1)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
+		_, err = s.userRelationClient.DeleteFriend(wf.Context, r2)
 		if err != nil {
 			return err
 		}
 
-		err = tcc.CallBranch(r3, s.msgGrpcServer+msggrpcv1.MsgService_DeleteUserMessageByDialogId_FullMethodName, s.msgGrpcServer+msggrpcv1.MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName, s.msgGrpcServer+msggrpcv1.MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName, r)
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err := s.userRelationClient.DeleteFriendRevert(wf.Context, r2)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
+		_, err = s.msgClient.ConfirmDeleteUserMessageByDialogId(wf.Context, r3)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}); err != nil {
-		s.logger.Error("TCC DeleteFriend", zap.Error(err))
+		return code.RelationErrDeleteFriendFailed
+	}
+
+	if err := workflow.Execute(wfName, gid, nil); err != nil {
 		return err
 	}
 
 	if s.cache {
-		//err = s.removeRedisUserDialogList(relation.UserId, relation.DialogId)
-		//if err != nil {
-		//	s.logger.Error("删除用户好友失败", zap.Error(err))
-		//	return code.RelationErrDeleteFriendFailed
-		//}
-		//
-		//err = s.removeRedisFriendList(relation.UserId, relation.FriendId)
-		//if err != nil {
-		//	s.logger.Error("删除用户好友失败", zap.Error(err))
-		//	return code.RelationErrDeleteFriendFailed
-		//}
+
 		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", relation.UserId))
 		if err != nil {
 			s.logger.Error("删除用户好友失败", zap.Error(err))
