@@ -7,7 +7,6 @@ import (
 	storev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/minio/minio-go/v7/pkg/policy"
 	"io"
 	"net/url"
 	"sort"
@@ -185,20 +184,27 @@ func (m *MinIOStorage) CreateMinoBuket(bucketName string, fileType int) error {
 	if err = m.client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{Region: bucketName}); err != nil {
 		return err
 	}
-	if bucketName == PublicBucket {
-		//// 设置存储桶访问策略为公开读
-		policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + bucketName + `/*"]}]}`
+	//if bucketName == PublicBucket {
+	//	//// 设置存储桶访问策略为公开读
+	//	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + bucketName + `/*"]}]}`
+	//
+	//	err = m.client.SetBucketPolicy(context.Background(), bucketName, policy)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//} else {
+	//	// 设置存储桶策略
+	//	if err = m.client.SetBucketPolicy(context.Background(), bucketName, string(policy.BucketPolicyReadWrite)); err != nil {
+	//		return err
+	//	}
+	//}
+	//// 统一设置存储桶访问策略为公开读
+	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + bucketName + `/*"]}]}`
 
-		err = m.client.SetBucketPolicy(context.Background(), bucketName, policy)
-		if err != nil {
-			return err
-		}
-
-	} else {
-		// 设置存储桶策略
-		if err = m.client.SetBucketPolicy(context.Background(), bucketName, string(policy.BucketPolicyReadWrite)); err != nil {
-			return err
-		}
+	err = m.client.SetBucketPolicy(context.Background(), bucketName, policy)
+	if err != nil {
+		return err
 	}
 
 	// 将存储桶名称与文件类型关联起来

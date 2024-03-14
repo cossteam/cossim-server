@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
+	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
@@ -50,7 +51,7 @@ func (s *Service) InitAdmin() error {
 		panic(err)
 	}
 
-	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Image))
+	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Other))
 	if err != nil {
 		return err
 	}
@@ -59,18 +60,18 @@ func (s *Service) InitAdmin() error {
 	reader := bytes.NewReader(buf.Bytes())
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	headerUrl, err := s.sp.Upload(context.Background(), key, reader, reader.Size(), minio.PutObjectOptions{ContentType: "image/jpeg"})
-	if err != nil {
-		return err
-	}
+	err = s.sp.UploadAvatar(context.Background(), key, reader, reader.Size(), minio.PutObjectOptions{ContentType: "image/jpeg"})
 	if err != nil {
 		return err
 	}
 
-	headerUrl.Host = s.gatewayAddress
-	fmt.Println(s.gatewayAddress)
-
-	headerUrl.Path = s.downloadURL + headerUrl.Path
+	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, key)
+	if s.ac.SystemConfig.Ssl {
+		aUrl, err = httputil.ConvertToHttps(aUrl)
+		if err != nil {
+			return err
+		}
+	}
 
 	workflow.InitGrpc(s.dtmGrpcServer, s.userGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
@@ -82,7 +83,7 @@ func (s *Service) InitAdmin() error {
 			Password: utils.HashString(Password),
 			Email:    Email,
 			NickName: Email,
-			Avatar:   headerUrl.String(),
+			Avatar:   aUrl,
 			Status:   usergrpcv1.UserStatus_USER_STATUS_NORMAL,
 			//Status:   usergrpcv1.UserStatus_USER_STATUS_LOCK, //锁定账户
 
@@ -96,7 +97,7 @@ func (s *Service) InitAdmin() error {
 			Password: utils.HashString(Password),
 			Email:    Email2,
 			NickName: "系统通知",
-			Avatar:   headerUrl.String(),
+			Avatar:   aUrl,
 			IsBot:    1,
 			Status:   usergrpcv1.UserStatus_USER_STATUS_NORMAL,
 			//Status:   usergrpcv1.UserStatus_USER_STATUS_LOCK, //锁定账户

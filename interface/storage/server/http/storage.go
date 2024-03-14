@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/interface/storage/api/model"
 	"github.com/cossim/coss-server/pkg/http/response"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
@@ -86,7 +87,7 @@ func (h *Handler) upload(c *gin.Context) {
 
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+fileExtension)
-	headerUrl, err := h.sp.Upload(context.Background(), key, fileObj, file.Size, opt)
+	_, err = h.sp.Upload(context.Background(), key, fileObj, file.Size, opt)
 	if err != nil {
 		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
@@ -99,21 +100,31 @@ func (h *Handler) upload(c *gin.Context) {
 		return
 	}
 
-	headerUrl.Host = gatewayAddress
-	if !systemEnableSSL {
-		headerUrl.Host = gatewayAddress + ":" + gatewayPort
-	}
-	headerUrl.Path = downloadURL + headerUrl.Path
-
-	aUrl := headerUrl.String()
+	aUrl := fmt.Sprintf("http://%s%s/%s", gatewayAddress, downloadURL, key)
 	if systemEnableSSL {
-		aUrl, err = httputil.ConvertToHttps(headerUrl.String())
+		aUrl, err = httputil.ConvertToHttps(aUrl)
 		if err != nil {
 			h.logger.Error("上传失败", zap.Error(err))
 			response.SetFail(c, "上传失败", nil)
 			return
 		}
 	}
+
+	//headerUrl.Host = gatewayAddress
+	//if !systemEnableSSL {
+	//	headerUrl.Host = gatewayAddress + ":" + gatewayPort
+	//}
+	//headerUrl.Path = downloadURL + headerUrl.Path
+	//
+	//aUrl := headerUrl.String()
+	//if systemEnableSSL {
+	//	aUrl, err = httputil.ConvertToHttps(headerUrl.String())
+	//	if err != nil {
+	//		h.logger.Error("上传失败", zap.Error(err))
+	//		response.SetFail(c, "上传失败", nil)
+	//		return
+	//	}
+	//}
 
 	_, err = h.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   "userID",
