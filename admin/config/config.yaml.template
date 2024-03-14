@@ -22,7 +22,7 @@ email:
 
 http:
   address: "0.0.0.0"
-  port: 8086
+  port: 8087
 
 register:
   name: "admin_bff"
@@ -39,7 +39,17 @@ log:
 mysql:
   address: "mysql"
   port: 33066
-  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
+  username: "root"
+  password: "888888"
+  database: "coss"
+  opts:
+    allowNativePasswords: "true"
+    timeout: "800ms"
+    readTimeout: "200ms"
+    writeTimeout: "800ms"
+    parseTime: "true"
+    loc: "Local"
+    charset: "utf8mb4"
 
 redis:
   proto: "tcp"
@@ -58,7 +68,7 @@ message_queue:
   username: "root"
   password: "Hitosea@123.."
   address: "rabbitmq"
-  port: "5672"
+  port: 5672
 
 oss:
   minio:
@@ -76,15 +86,15 @@ discovers:
   user:
     name: "user_service"
     address: "user_service"
-    port: "10004"
-    direct: true
+    port: 10004
+    #direct: true
   relation:
     name: "relation_service"
     address: "relation_service"
-    port: "10002"
-    direct: true
+    port: 10002
+    #direct: true
   msg:
     name: "msg_service"
     address: "msg_service"
-    port: "10001"
-    direct: true
+    port: 10001
+    #direct: true

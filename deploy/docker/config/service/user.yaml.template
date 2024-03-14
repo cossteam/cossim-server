@@ -6,9 +6,9 @@ log:
 
 mysql:
   address: "mysql"
-  port: 33066
+  port: 3306
   username: "root"
-  password: "888888"
+  password: "Hitosea@123.."
   database: "coss"
   opts:
     allowNativePasswords: "true"

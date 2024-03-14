@@ -5,7 +5,7 @@ admin:
   user_id : "10000"
 
 system:
-  environment: "dev" # dev、prod
+  environment: "prod" # dev、prod
   avatar_file_path: "/.cache/"
   avatar_file_path_dev:
   gateway_address: "43.229.28.107"
@@ -22,7 +22,7 @@ email:
 
 http:
   address: "0.0.0.0"
-  port: 8086
+  port: 8087
 
 register:
   name: "admin_bff"
@@ -38,8 +38,18 @@ log:
 
 mysql:
   address: "mysql"
-  port: 33066
-  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
+  port: 3306
+  username: "root"
+  password: "Hitosea@123.."
+  database: "coss"
+  opts:
+    allowNativePasswords: "true"
+    timeout: "800ms"
+    readTimeout: "200ms"
+    writeTimeout: "800ms"
+    parseTime: "true"
+    loc: "Local"
+    charset: "utf8mb4"
 
 redis:
   proto: "tcp"
@@ -58,15 +68,15 @@ message_queue:
   username: "root"
   password: "Hitosea@123.."
   address: "rabbitmq"
-  port: "5672"
+  port: 5672
 
 oss:
   minio:
     name: "minio"
     address: "minio"
     port: 9000
-    accessKey: "E003IlrA7X83C5hmS6oV"
-    secretKey: "Ns7lKyU9JWPpQ21L6z6SMOMzx1ZgX2dxFQTRKZcs"
+    accessKey: "root"
+    secretKey: "Hitosea@123.."
     ssl: false
     presignedExpires: ""
     dial: "3000ms"
@@ -76,15 +86,15 @@ discovers:
   user:
     name: "user_service"
     address: "user_service"
-    port: "10004"
+    port: 10004
     direct: true
   relation:
     name: "relation_service"
     address: "relation_service"
-    port: "10002"
+    port: 10002
     direct: true
   msg:
     name: "msg_service"
     address: "msg_service"
-    port: "10001"
+    port: 10001
     direct: true

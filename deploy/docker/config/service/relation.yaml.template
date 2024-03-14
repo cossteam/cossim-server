@@ -6,9 +6,9 @@ log:
 
 mysql:
   address: "mysql"
-  port: 33066
+  port: 3306
   username: "root"
-  password: "888888"
+  password: "Hitosea@123.."
   database: "coss"
   opts:
     allowNativePasswords: "true"
@@ -28,8 +28,8 @@ redis:
 
 message_queue:
   name: "rabbitmq"
-  username: ""
-  password: ""
+  username: "root"
+  password: "Hitosea@123.."
   address: "rabbitmq"
   port: 5672
 

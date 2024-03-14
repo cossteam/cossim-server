@@ -7,14 +7,7 @@ log:
 mysql:
   address: "mysql"
   port: 3306
-  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4"
-
-message_queue:
-  name: "rabbitmq"
-  username: ""
-  password: ""
-  address: "rabbitmq"
-  port: "5672"
+  dsn: "root:Hitosea@123..@tcp(mysql:33066)/coss?allowNativePasswords=true&parseTime=true&loc=Local&charset=utf8mb4"
 
 redis:
   proto: "tcp"
@@ -32,11 +25,11 @@ message_queue:
   username: "root"
   password: "Hitosea@123.."
   address: "rabbitmq"
-  port: "5672"
+  port: 5672
 
 push:
   address: "push"
-  port: "7070"
+  port: 7070
   platform_appid:
     ios: com.hitosea.apptest
     huawei: xxx.xxx.xxx
@@ -53,15 +46,11 @@ grpc:
 register:
   # 服务注册名称
   name: "msg_bff"
-
   # 注册中心地址
   address: "consul"
-
   # 注册中心端口
   port: 8500
-
   tags: ["msg", "bff", "消息服务"]
-
   # 启用服务发现 默认为true
   #discover: true
   # 启用服务注册 默认为true
@@ -71,8 +60,8 @@ discovers:
   msg:
     name: "msg_service"
     address: "msg_service"
-    port: "10000"
-
+    port: 10000
+    direct: true
     # 不使用服务发现，使用addr直接连接
     # 默认为false
     #direct: false
@@ -82,11 +71,12 @@ discovers:
     address: "relation_service"
     port: 10001
     #direct: false
-
+    direct: true
   user:
     name: "user_service"
     address: "user_service"
     port: 10002
+    direct: true
     #direct: false
 
   group:
@@ -105,3 +95,15 @@ encryption:
 multiple_device_limit:
   enable: false
   max: 1
+
+oss:
+  minio:
+    name: "minio"
+    address: "minio"
+    port: 9000
+    accessKey: "root"
+    secretKey: "Hitosea@123.."
+    ssl: false
+    presignedExpires: ""
+    dial: "3000ms"
+    timeout: "5000ms"

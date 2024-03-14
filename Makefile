@@ -18,7 +18,14 @@ BUILD_PATH := ""
 DOCKER_BUILD_PATH := ""
 ACTION := ""
 
+CONFIG_PATH := "deploy/docker/config"
+DOCKER_COMPOSE_PATH := "deploy/docker"
+
 INTERFACE_LIST ?= group msg relation storage user live
+
+CONSUL_HOST := "127.0.0.1:8500"
+CONSUL_SSL := false
+CONSUL_TOKEN := ""
 
 # 根据传入的 ACTION 参数设置 BUILD_PATH
 ifeq ($(ACTION), interface)
@@ -66,28 +73,34 @@ INTERFACE_DIR := ./interface
 
 .PHONY: run stop
 
-run: run_service run_interface
+run: config_init
+	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml up -d
 
+restart:
+	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml restart
 stop:
-	@trap 'echo "Stopping service..." && pkill -P $$ && exit' INT ; sleep infinity
+	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml down
 
-run_service:
-	@for dir in $(shell ls -d $(SERVICE_DIR)/*); do \
-		if [ -f "$$dir/Makefile" ]; then \
-			(cd $$dir && make run &); \
-		else \
-			echo "No Makefile found in $$dir"; \
-		fi \
-	done
 
-run_interface:
-	@for dir in $(shell ls -d $(INTERFACE_DIR)/*); do \
-		if [ -f "$$dir/Makefile" ]; then \
-			(cd $$dir && make run &); \
-		else \
-			echo "No Makefile found in $$dir"; \
-		fi \
-	done
+
+
+#run_service:
+#	@for dir in $(shell ls -d $(SERVICE_DIR)/*); do \
+#		if [ -f "$$dir/Makefile" ]; then \
+#			(cd $$dir && make run &); \
+#		else \
+#			echo "No Makefile found in $$dir"; \
+#		fi \
+#	done
+#
+#run_interface:
+#	@for dir in $(shell ls -d $(INTERFACE_DIR)/*); do \
+#		if [ -f "$$dir/Makefile" ]; then \
+#			(cd $$dir && make run &); \
+#		else \
+#			echo "No Makefile found in $$dir"; \
+#		fi \
+#	done
 
 swag: ## Run unittests
 	$(foreach dir,$(INTERFACE_LIST), \
@@ -96,35 +109,38 @@ swag: ## Run unittests
 	swag i -g http.go -dir admin/server/http,admin/api/model,pkg/utils/usersorter --instanceName admin
 
 
-#ifdef ACTION
-#ifdef NAME
-#	@echo "Running make run in ${ACTION}/${NAME} directory"
-#	@if [ -f "${ACTION}/${NAME}/Makefile" ]; then \
-#		(cd ${ACTION}/${NAME} && make run); \
-#	else \
-#		echo "No Makefile found in ${ACTION}/${NAME} directory"; \
-#	fi
-#else
-#	@echo "Running make run in all ${ACTION} directories"
-#	@for dir in $(shell ls -d ${ACTION}/*); do \
-#		if [ -f "$$dir/Makefile" ]; then \
-#			(cd $$dir && make run); \
-#		else \
-#			echo "No Makefile found in $$dir"; \
-#		fi \
-#	done
-#endif
-#else
-#	@echo "Running make run in all directories"
-#	@for dir in $(shell ls -d */); do \
-#		if [ -f "$$dir/Makefile" ]; then \
-#			(cd $$dir && make run); \
-#		else \
-#			echo "No Makefile found in $$dir"; \
-#		fi \
-#	done
-#endif
+.PHONY: config_init config_clear
+config_init: ## Initialize config files
+	@config_path=$(CONFIG_PATH) && \
+	for template_file in $$(find $${config_path} -type f -name '*.template'); do \
+		if [ -e "$$template_file" ]; then \
+			new_file="$${template_file%.template}"; \
+			if [ ! -e "$$new_file" ]; then \
+				cp "$$template_file" "$$new_file"; \
+				echo "Copied $$template_file to $$new_file"; \
+			else \
+				echo "File $$new_file already exists, skipping copy"; \
+			fi \
+		fi \
+	done
 
+config_clear: ## Clear YAML and JSON files in config_path
+	@config_path=$(CONFIG_PATH) && \
+	find $${config_path} \( -name '*.yaml' -o -name '*.yml' -o -name '*.json' \) -type f -exec rm -f {} \; && \
+	echo "Cleared YAML and JSON files in $${config_path}"
+
+#.PHONY: common dev prod
+#common: config_init
+#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 up -d
+#
+#dev: common
+#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.dev.yaml up -d
+#
+#prod: common
+#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.prod.yaml up -d
+#
+#stop:
+#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.prod.yaml down
 
 # 构建指定grpc服务  make build-service ACTION=service NAME="user"
 build-service: dep ## Build the binary file

@@ -1,16 +1,6 @@
-system:
-  environment: "dev" # dev、prod
-  avatar_file_path: "/.cache/"
-  ssl: false # 是否启用ssl true的话不会使用port
-  avatar_file_path_dev:
-  gateway_address: "43.229.28.107"
-  gateway_port: 8080
-  gateway_address_dev: "127.0.0.1"
-  gateway_port_dev: 8080
-
 log:
   stdout: true
-  v: -1
+  level: -1
   file: "logs/app.log"
   format: "console" # console、json
 
@@ -20,7 +10,7 @@ mysql:
   dsn: "root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
 
 http:
-  address: "0.0.0.0"
+  addr: "0.0.0.0"
   port: 8085
 
 oss:
@@ -28,10 +18,29 @@ oss:
     name: "minio"
     address: "minio"
     port: 9000
-    accessKey: ""
-    secretKey: ""
+    accessKey: "E003IlrA7X83C5hmS6oV"
+    secretKey: "Ns7lKyU9JWPpQ21L6z6SMOMzx1ZgX2dxFQTRKZcs"
     ssl: false
     presignedExpires: ""
+    dial: "3000ms"
+    timeout: "5000ms"
+
+system:
+  environment: "prod"
+  ssl: true # 是否启用ssl true的话不会使用port
+  avatar_file_path: "/.cache"
+  avatar_file_path_dev:
+  gateway_address: "coss.gezi.vip"
+  gateway_port: 8080
+  gateway_address_dev: "127.0.0.1"
+  gateway_port_dev: 8080
+
+email:
+    enable: false
+    smtp_server: "smtp.gmail.com"
+    port: 587
+    username: "max.mustermann@example.com"
+    password: "Hitosea@123.."
 
 redis:
   proto: "tcp"
@@ -42,34 +51,19 @@ redis:
 
 # 注册本服务
 register:
-  # 服务注册名称
   name: "storage_bff"
-
-  # 注册中心地址
-  address: "consul"
-
-  # 注册中心端口
-  port: 8500
-
+  address: "consul"   # 注册中心地址
+  port: 8500            # 注册中心端口
   tags: ["storage", "bff"]
-
-  # 启用服务发现 默认为true
-  #discover: true
-  # 启用服务注册 默认为true
-  #register: true
 
 discovers:
   storage:
     name: "storage_service"
     address: "storage_service"
     port: 10006
-
-    # 不使用服务发现，使用addr直接连接
-    # 默认为false
-    #direct: false
-
+    direct: true
   gateway:
     name: "gateway"
     address: "gateway"
     port: 8080
-    #direct: false
+    direct: true

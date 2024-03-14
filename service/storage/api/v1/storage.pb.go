@@ -31,6 +31,26 @@ const (
 	FileType_Other FileType = 4 // 其他类型
 )
 
+// GetMaxFileSize 获取文件类型对应的最大文件大小限制
+func GetMaxFileSize(_Type FileType) int64 {
+	var maxFileSize int64
+	switch _Type {
+	case FileType_Voice:
+		// 设置 FileType_Voice 的大小限制为 500MB
+		maxFileSize = 500 << 20
+	case FileType_Image:
+		// 设置 FileType_Image 的大小限制为 25MB
+		maxFileSize = 25 << 20
+	case FileType_Video:
+		// 设置 FileType_Video 的大小限制为 500MB
+		maxFileSize = 500 << 20
+	default:
+		// 默认设置为 500MB
+		maxFileSize = 500 << 20
+	}
+	return maxFileSize
+}
+
 // Enum value maps for FileType.
 var (
 	FileType_name = map[int32]string{

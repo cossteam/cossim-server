@@ -46,20 +46,8 @@ func (h *Handler) upload(c *gin.Context) {
 	}
 
 	// 文件大小限制
-	var maxFileSize int64
-	switch storagev1.FileType(_Type) {
-	case storagev1.FileType_Video:
-		// 设置 FileType_Video 的大小限制为 500MB
-		maxFileSize = 500 << 20
-	case storagev1.FileType_Image:
-		// 设置 FileType_Image 的大小限制为 100MB
-		maxFileSize = 100 << 20
-	default:
-		// 默认设置为 8MB
-		maxFileSize = 8 << 20
-	}
-	// 文件大小限制 30MB
-	//c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileSize)
+	maxFileSize := storagev1.GetMaxFileSize(storagev1.FileType(_Type))
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		h.logger.Error("上传失败", zap.Error(err))

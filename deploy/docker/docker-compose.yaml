@@ -102,11 +102,7 @@ services:
   gateway:
     container_name: cossim_gateway
     image: hub.hitosea.com/cossim/gateway-interface
-    volumes:
-      - ./config/interface/gateway.yaml:/config/config.yaml
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--remote-config"
       - "--config-center-addr"
@@ -120,15 +116,12 @@ services:
     container_name: cossim_msg_bff
     image: hub.hitosea.com/cossim/msg-interface
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
     volumes:
-      - ./config/interface/msg.yaml:/config/config.yaml
       - ./config/pgp:/.cache
     depends_on:
       - dtm
@@ -145,17 +138,13 @@ services:
     container_name: cossim_admin_bff
     image: hub.hitosea.com/cossim/admin-admin
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
     volumes:
-      - ./config/interface/admin.yaml:/config/config.yaml
       - ./config/pgp:/.cache
-      - ./config/common/SourceHanSansSC-Medium.ttf:/.cache/SourceHanSansSC-Medium.ttf
     depends_on:
       - dtm
       - redis
@@ -171,15 +160,12 @@ services:
     container_name: cossim_relation_bff
     image: hub.hitosea.com/cossim/relation-interface
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
     volumes:
-      - ./config/interface/relation.yaml:/config/config.yaml
       - ./config/pgp:/.cache
     depends_on:
       mysql:
@@ -191,17 +177,13 @@ services:
     container_name: cossim_user_bff
     image: hub.hitosea.com/cossim/user-interface
     command:
-    - "--config"
-    - "/config/config.yaml"
     - "--discover"
     - "--register"
     - "--remote-config"
     - "--config-center-addr"
     - "consul:8500"
     volumes:
-      - ./config/interface/user.yaml:/config/config.yaml
       - ./config/pgp:/.cache
-      - ./config/common/SourceHanSansSC-Medium.ttf:/.cache/SourceHanSansSC-Medium.ttf
     depends_on:
       - dtm
       - redis
@@ -214,15 +196,12 @@ services:
     container_name: cossim_group_bff
     image: hub.hitosea.com/cossim/group-interface
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
     volumes:
-      - ./config/interface/group.yaml:/config/config.yaml
       - ./config/pgp:/.cache
     depends_on:
       - dtm
@@ -246,7 +225,6 @@ services:
       - "consul:8500"
     volumes:
       - ./config/pgp:/.cache
-      - ./config/common/SourceHanSansSC-Medium.ttf:/.cache/SourceHanSansSC-Medium.ttf
     depends_on:
       - consul
       - minio
@@ -278,15 +256,11 @@ services:
     container_name: cossim_msg_service
     image: hub.hitosea.com/cossim/msg-service
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
-    volumes:
-      - ./config/service/msg.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
@@ -297,15 +271,11 @@ services:
     container_name: cossim_relation_service
     image: hub.hitosea.com/cossim/relation-service
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
-    volumes:
-      - ./config/service/relation.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
@@ -316,15 +286,11 @@ services:
     container_name: cossim_user_service
     image: hub.hitosea.com/cossim/user-service
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
-    volumes:
-      - ./config/service/user.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
@@ -335,15 +301,11 @@ services:
     container_name: cossim_group_service
     image: hub.hitosea.com/cossim/group-service
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
-    volumes:
-      - ./config/service/group.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy
@@ -354,15 +316,11 @@ services:
     container_name: cossim_storage_service
     image: hub.hitosea.com/cossim/storage-service
     command:
-      - "--config"
-      - "/config/config.yaml"
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
-    volumes:
-      - ./config/service/storage.yaml:/config/config.yaml
     depends_on:
       mysql:
         condition: service_healthy

@@ -58,6 +58,7 @@ discovers:
     name: "user_service"
     address: "user_service"
     port: 10002
+    direct: true
 
     # 不使用服务发现，使用addr直接连接
     # 默认为false
@@ -66,6 +67,7 @@ discovers:
     name: "relation_service"
     address: "relation_service"
     port: 10001
+    direct: true
 
     # 不使用服务发现，使用addr直接连接
     # 默认为false
@@ -74,6 +76,7 @@ discovers:
     name: "group_service"
     address: "group_service"
     port: 10005
+    direct: true
 
     # 不使用服务发现，使用addr直接连接
     # 默认为false

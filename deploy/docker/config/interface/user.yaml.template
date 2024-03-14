@@ -1,5 +1,5 @@
 system:
-  environment: "dev" # dev、prod
+  environment: "prod" # dev、prod
   ssl: false # 是否启用ssl true的话不会使用port
   avatar_file_path: "/.cache/"
   avatar_file_path_dev:
@@ -28,7 +28,7 @@ cache:
 mysql:
   address: "mysql"
   port: 3306
-  dsn: "root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
+  dsn: "root:Hitosea@123..@tcp(mysql:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4"
 
 redis:
   proto: "tcp"
@@ -72,17 +72,22 @@ discovers:
   user:
     name: "user_service"
     address: "user_service"
-    port: "10002"
-
+    port: 10002
     # 不使用服务发现，使用addr直接连接
     # 默认为false
-    #direct: false
-
+    direct: true
   relation:
     name: "relation_service"
     address: "relation_service"
-    port: "10001"
-    #direct: false
+    port: 10001
+    direct: true
+
+message_queue:
+  name: "rabbitmq"
+  username: "root"
+  password: "Hitosea@123.."
+  address: "rabbitmq"
+  port: 5672
 
 encryption:
   enabled: false
@@ -94,3 +99,15 @@ encryption:
 multiple_device_limit:
   enable: false
   max: 1
+
+oss:
+  minio:
+    name: "minio"
+    address: "minio"
+    port: 9000
+    accessKey: "root"
+    secretKey: "Hitosea@123.."
+    ssl: false
+    presignedExpires: ""
+    dial: "3000ms"
+    timeout: "5000ms"
