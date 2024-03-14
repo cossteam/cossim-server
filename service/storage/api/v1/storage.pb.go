@@ -40,7 +40,7 @@ func GetMaxFileSize(_Type FileType) int64 {
 		maxFileSize = 500 << 20
 	case FileType_Image:
 		// 设置 FileType_Image 的大小限制为 25MB
-		maxFileSize = 25 << 20
+		maxFileSize = 500 << 20
 	case FileType_Video:
 		// 设置 FileType_Video 的大小限制为 500MB
 		maxFileSize = 500 << 20
