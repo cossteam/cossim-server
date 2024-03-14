@@ -6,21 +6,20 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/interface/relation/api/model"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
-	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
+	"go.uber.org/zap"
 	ostime "time"
 )
 
 func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request *model.CloseOrOpenDialogRequest) (interface{}, error) {
-	dialogInfo, err := s.dialogClient.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
+	_, err := s.dialogClient.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
 		DialogId: request.DialogId,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	dialogUser, err := s.dialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.dialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: request.DialogId,
 		UserId:   userId,
 	})
@@ -36,105 +35,111 @@ func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request 
 	if err != nil {
 		return nil, err
 	}
-	if request.Action == model.CloseDialog {
-		err := s.removeRedisUserDialogList(userId, request.DialogId)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		id, err := s.dialogClient.GetDialogTargetUserId(ctx, &relationgrpcv1.GetDialogTargetUserIdRequest{
-			DialogId: request.DialogId,
-			UserId:   userId,
-		})
-		if err != nil {
-			return nil, err
-		}
-		if len(id.UserIds) == 1 {
-			info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-				UserId: id.UserIds[0],
-			})
-			if err != nil {
-				return nil, err
-			}
+	//if request.Action == model.CloseDialog {
+	//	err := s.removeRedisUserDialogList(userId, request.DialogId)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//} else {
+	//	id, err := s.dialogClient.GetDialogTargetUserId(ctx, &relationgrpcv1.GetDialogTargetUserIdRequest{
+	//		DialogId: request.DialogId,
+	//		UserId:   userId,
+	//	})
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	if len(id.UserIds) == 1 {
+	//		info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//			UserId: id.UserIds[0],
+	//		})
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//
+	//		info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//			UserId: userId,
+	//		})
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//
+	//		relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	//			UserId:   userId,
+	//			FriendId: info2.UserId,
+	//		})
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//
+	//		name := info2.NickName
+	//		if relation.Remark != "" {
+	//			name = relation.Remark
+	//		}
+	//
+	//		//查询最后一条消息
+	//		lastMsg, err := s.msgClient.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+	//			DialogIds: []uint32{request.DialogId},
+	//		})
+	//
+	//		lm := lastMsg.LastMsgs[0]
+	//
+	//		lastmsg := model.Message{
+	//			MsgType:            uint(lm.Type),
+	//			Content:            lm.Content,
+	//			SenderId:           lm.SenderId,
+	//			SendTime:           lm.CreatedAt,
+	//			MsgId:              uint64(lm.Id),
+	//			IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
+	//			IsLabel:            model.LabelMsgType(lm.IsLabel),
+	//			ReplayId:           lm.ReplyId,
+	//		}
+	//		if lm.SenderId == info.UserId {
+	//			lastmsg.SenderInfo = model.SenderInfo{
+	//				Name:   info.NickName,
+	//				Avatar: info.Avatar,
+	//				UserId: info.UserId,
+	//			}
+	//			lastmsg.ReceiverInfo = model.SenderInfo{
+	//				Name:   info2.NickName,
+	//				Avatar: info2.Avatar,
+	//				UserId: info2.UserId,
+	//			}
+	//		} else {
+	//			lastmsg.SenderInfo = model.SenderInfo{
+	//				Name:   info2.NickName,
+	//				Avatar: info2.Avatar,
+	//				UserId: info2.UserId,
+	//			}
+	//			lastmsg.ReceiverInfo = model.SenderInfo{
+	//				Name:   info.NickName,
+	//				Avatar: info.Avatar,
+	//				UserId: info.UserId,
+	//			}
+	//		}
+	//
+	//		re := model.UserDialogListResponse{
+	//			DialogId:       dialogInfo.Id,
+	//			UserId:         info2.UserId,
+	//			DialogType:     model.ConversationType(dialogInfo.Type),
+	//			DialogName:     name,
+	//			DialogAvatar:   info2.Avatar,
+	//			DialogCreateAt: dialogInfo.CreateAt,
+	//			TopAt:          int64(dialogUser.TopAt),
+	//			LastMessage:    lastmsg,
+	//		}
+	//
+	//		err = s.insertRedisUserDialogList(userId, re)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//	}
+	//
+	//}
 
-			info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-				UserId: userId,
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			relation, err := s.userRelationClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-				UserId:   userId,
-				FriendId: info2.UserId,
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			name := info2.NickName
-			if relation.Remark != "" {
-				name = relation.Remark
-			}
-
-			//查询最后一条消息
-			lastMsg, err := s.msgClient.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
-				DialogIds: []uint32{request.DialogId},
-			})
-
-			lm := lastMsg.LastMsgs[0]
-
-			lastmsg := model.Message{
-				MsgType:            uint(lm.Type),
-				Content:            lm.Content,
-				SenderId:           lm.SenderId,
-				SendTime:           lm.CreatedAt,
-				MsgId:              uint64(lm.Id),
-				IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
-				IsLabel:            model.LabelMsgType(lm.IsLabel),
-				ReplayId:           lm.ReplyId,
-			}
-			if lm.SenderId == info.UserId {
-				lastmsg.SenderInfo = model.SenderInfo{
-					Name:   info.NickName,
-					Avatar: info.Avatar,
-					UserId: info.UserId,
-				}
-				lastmsg.ReceiverInfo = model.SenderInfo{
-					Name:   info2.NickName,
-					Avatar: info2.Avatar,
-					UserId: info2.UserId,
-				}
-			} else {
-				lastmsg.SenderInfo = model.SenderInfo{
-					Name:   info2.NickName,
-					Avatar: info2.Avatar,
-					UserId: info2.UserId,
-				}
-				lastmsg.ReceiverInfo = model.SenderInfo{
-					Name:   info.NickName,
-					Avatar: info.Avatar,
-					UserId: info.UserId,
-				}
-			}
-
-			re := model.UserDialogListResponse{
-				DialogId:       dialogInfo.Id,
-				UserId:         info2.UserId,
-				DialogType:     model.ConversationType(dialogInfo.Type),
-				DialogName:     name,
-				DialogAvatar:   info2.Avatar,
-				DialogCreateAt: dialogInfo.CreateAt,
-				TopAt:          int64(dialogUser.TopAt),
-				LastMessage:    lastmsg,
-			}
-
-			err = s.insertRedisUserDialogList(userId, re)
-			if err != nil {
-				return nil, err
-			}
-		}
-
+	err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userId))
+	if err != nil {
+		s.logger.Error("删除用户好友失败", zap.Error(err))
+		return nil, err
 	}
 
 	return nil, nil

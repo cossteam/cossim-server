@@ -596,11 +596,11 @@ func (s *Service) GetUserMessagesByIds(ctx context.Context, in *v1.GetUserMessag
 	return resp, nil
 }
 
-func (s *Service) SendMultiUserMessage(ctx context.Context, request *v1.SendMultiUserMsgRequest) (*v1.SendMultiUserMsgResponse, error) {
+func (s *Service) SendMultiUserMessage(ctx context.Context, in *v1.SendMultiUserMsgRequest) (*v1.SendMultiUserMsgResponse, error) {
 	resp := &v1.SendMultiUserMsgResponse{}
-	if len(request.MsgList) > 0 {
+	if len(in.MsgList) > 0 {
 		list := make([]entity.UserMessage, 0)
-		for _, msg := range request.MsgList {
+		for _, msg := range in.MsgList {
 			list = append(list, entity.UserMessage{
 				SendID:    msg.SenderId,
 				ReceiveID: msg.ReceiverId,
@@ -617,4 +617,60 @@ func (s *Service) SendMultiUserMessage(ctx context.Context, request *v1.SendMult
 		}
 	}
 	return resp, nil
+}
+
+func (s *Service) DeleteUserMessageByDialogId(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteUserMsgByDialogIdResponse, error) {
+	resp := &v1.DeleteUserMsgByDialogIdResponse{}
+	fmt.Println("尝试删除")
+	err := s.mr.DeleteUserMessagesByDialogID(in.DialogId)
+	if err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete user msg: %v", err))
+	}
+	return resp, err
+}
+
+func (s *Service) DeleteGroupMessageByDialogId(ctx context.Context, in *v1.DeleteGroupMsgByDialogIdRequest) (*v1.DeleteGroupMsgByDialogIdResponse, error) {
+	resp := &v1.DeleteGroupMsgByDialogIdResponse{}
+	err := s.mr.DeleteGroupMessagesByDialogID(in.DialogId)
+	if err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete group msg: %v", err))
+	}
+	return resp, err
+}
+
+func (s *Service) ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteUserMsgByDialogIdResponse, error) {
+	resp := &v1.DeleteUserMsgByDialogIdResponse{}
+	fmt.Println("确认删除")
+	err := s.mr.PhysicalDeleteUserMessagesByDialogID(in.DialogId)
+	if err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete user msg: %v", err))
+	}
+	return resp, err
+}
+
+func (s *Service) ConfirmDeleteGroupMessageByDialogId(ctx context.Context, in *v1.DeleteGroupMsgByDialogIdRequest) (*v1.DeleteGroupMsgByDialogIdResponse, error) {
+	resp := &v1.DeleteGroupMsgByDialogIdResponse{}
+	err := s.mr.PhysicalDeleteGroupMessagesByDialogID(in.DialogId)
+	if err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete group msg: %v", err))
+	}
+	return resp, err
+}
+
+func (s *Service) DeleteUserMessageByDialogIdRollback(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteUserMsgByDialogIdResponse, error) {
+	resp := &v1.DeleteUserMsgByDialogIdResponse{}
+	err := s.mr.UpdateUserMsgColumnByDialogId(in.DialogId, "deleted_at", 0)
+	if err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete user msg: %v", err))
+	}
+	return resp, err
+}
+
+func (s *Service) DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteGroupMsgByDialogIdResponse, error) {
+	resp := &v1.DeleteGroupMsgByDialogIdResponse{}
+	err := s.mr.UpdateGroupMsgColumnByDialogId(in.DialogId, "deleted_at", 0)
+	if err != nil {
+		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete group msg: %v", err))
+	}
+	return resp, err
 }
