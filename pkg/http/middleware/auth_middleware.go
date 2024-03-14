@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/db"
+	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -13,6 +14,16 @@ import (
 
 func AuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+
+		//头像请求跳过验证
+		if strings.HasPrefix(ctx.FullPath(), "/api/v1/storage/files/download/") {
+			fileType := ctx.Param("type")
+			if fileType == minio.PublicBucket {
+				ctx.Next()
+				return
+			}
+
+		}
 		// 获取 authorization header
 		tokenString := ""
 		if ctx.GetHeader("Authorization") != "" {
