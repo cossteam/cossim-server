@@ -24,6 +24,7 @@ const (
 	UserService_UserInfo_FullMethodName                = "/v1.UserService/UserInfo"
 	UserService_GetBatchUserInfo_FullMethodName        = "/v1.UserService/GetBatchUserInfo"
 	UserService_GetUserInfoByEmail_FullMethodName      = "/v1.UserService/GetUserInfoByEmail"
+	UserService_GetUserInfoByCossId_FullMethodName     = "/v1.UserService/GetUserInfoByCossId"
 	UserService_GetUserPublicKey_FullMethodName        = "/v1.UserService/GetUserPublicKey"
 	UserService_SetUserPublicKey_FullMethodName        = "/v1.UserService/SetUserPublicKey"
 	UserService_ModifyUserInfo_FullMethodName          = "/v1.UserService/ModifyUserInfo"
@@ -50,6 +51,8 @@ type UserServiceClient interface {
 	GetBatchUserInfo(ctx context.Context, in *GetBatchUserInfoRequest, opts ...grpc.CallOption) (*GetBatchUserInfoResponse, error)
 	// 根据email获取用户信息
 	GetUserInfoByEmail(ctx context.Context, in *GetUserInfoByEmailRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
+	// 根据cossId获取用户信息
+	GetUserInfoByCossId(ctx context.Context, in *GetUserInfoByCossIdlRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
 	GetUserPublicKey(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*GetUserPublicKeyResponse, error)
 	SetUserPublicKey(ctx context.Context, in *SetPublicKeyRequest, opts ...grpc.CallOption) (*UserResponse, error)
 	ModifyUserInfo(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
@@ -114,6 +117,15 @@ func (c *userServiceClient) GetBatchUserInfo(ctx context.Context, in *GetBatchUs
 func (c *userServiceClient) GetUserInfoByEmail(ctx context.Context, in *GetUserInfoByEmailRequest, opts ...grpc.CallOption) (*UserInfoResponse, error) {
 	out := new(UserInfoResponse)
 	err := c.cc.Invoke(ctx, UserService_GetUserInfoByEmail_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUserInfoByCossId(ctx context.Context, in *GetUserInfoByCossIdlRequest, opts ...grpc.CallOption) (*UserInfoResponse, error) {
+	out := new(UserInfoResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserInfoByCossId_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -224,6 +236,8 @@ type UserServiceServer interface {
 	GetBatchUserInfo(context.Context, *GetBatchUserInfoRequest) (*GetBatchUserInfoResponse, error)
 	// 根据email获取用户信息
 	GetUserInfoByEmail(context.Context, *GetUserInfoByEmailRequest) (*UserInfoResponse, error)
+	// 根据cossId获取用户信息
+	GetUserInfoByCossId(context.Context, *GetUserInfoByCossIdlRequest) (*UserInfoResponse, error)
 	GetUserPublicKey(context.Context, *UserRequest) (*GetUserPublicKeyResponse, error)
 	SetUserPublicKey(context.Context, *SetPublicKeyRequest) (*UserResponse, error)
 	ModifyUserInfo(context.Context, *User) (*UserResponse, error)
@@ -260,6 +274,9 @@ func (UnimplementedUserServiceServer) GetBatchUserInfo(context.Context, *GetBatc
 }
 func (UnimplementedUserServiceServer) GetUserInfoByEmail(context.Context, *GetUserInfoByEmailRequest) (*UserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfoByEmail not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserInfoByCossId(context.Context, *GetUserInfoByCossIdlRequest) (*UserInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfoByCossId not implemented")
 }
 func (UnimplementedUserServiceServer) GetUserPublicKey(context.Context, *UserRequest) (*GetUserPublicKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserPublicKey not implemented")
@@ -390,6 +407,24 @@ func _UserService_GetUserInfoByEmail_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).GetUserInfoByEmail(ctx, req.(*GetUserInfoByEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetUserInfoByCossId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserInfoByCossIdlRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserInfoByCossId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserInfoByCossId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserInfoByCossId(ctx, req.(*GetUserInfoByCossIdlRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -600,6 +635,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserInfoByEmail",
 			Handler:    _UserService_GetUserInfoByEmail_Handler,
+		},
+		{
+			MethodName: "GetUserInfoByCossId",
+			Handler:    _UserService_GetUserInfoByCossId_Handler,
 		},
 		{
 			MethodName: "GetUserPublicKey",

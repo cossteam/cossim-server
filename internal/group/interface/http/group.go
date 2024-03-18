@@ -79,7 +79,7 @@ func (h *Handler) getBatchGroupInfoByIDs(c *gin.Context) {
 // @Description 更新群聊信息
 // @Accept  json
 // @Produce  json
-// @Param request body model.UpdateGroupRequest true "请求体"
+// @Param request body model.UpdateGroupRequest true "0(公开群);1(私密群)""
 // @Success 200 {object} model.Response{}
 // @Router /group/update/ [post]
 func (h *Handler) updateGroup(c *gin.Context) {

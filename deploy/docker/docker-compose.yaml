@@ -19,8 +19,8 @@ services:
       MYSQL_PASSWORD: "Hitosea@123.."
       MYSQL_TCP_PORT: '3306'
       MYSQL_ROOT_HOST: '%'
-#      MARIADB_AUTO_UPGRADE: 'true'
-#      MARIADB_DISABLE_UPGRADE_BACKUP: 'true'
+    #      MARIADB_AUTO_UPGRADE: 'true'
+    #      MARIADB_DISABLE_UPGRADE_BACKUP: 'true'
     healthcheck:
       test: mysqladmin ping -h mysql -P 3306 -p$$MYSQL_ROOT_PASSWORD
       interval: 5s
@@ -40,7 +40,7 @@ services:
       MINIO_ROOT_USER: root
       MINIO_ROOT_PASSWORD: Hitosea@123..
     volumes:
-    - ./data/var/lib/minio:/data
+      - ./data/var/lib/minio:/data
     command: server /data --console-address ":9001"
   rabbitmq:
     image: "rabbitmq:management"
@@ -177,11 +177,11 @@ services:
     container_name: cossim_user_bff
     image: hub.hitosea.com/cossim/user-interface
     command:
-    - "--discover"
-    - "--register"
-    - "--remote-config"
-    - "--config-center-addr"
-    - "consul:8500"
+      - "--discover"
+      - "--register"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
     volumes:
       - ./config/pgp:/.cache
     depends_on:
@@ -289,9 +289,9 @@ services:
         condition: service_healthy
     environment:
       CONSUL_HTTP_TOKEN:
+    restart: on-failure
     volumes:
       - ./config/pgp:/.cache
-    restart: on-failure
   storage_service:
     container_name: cossim_storage_service
     image: hub.hitosea.com/cossim/storage-service

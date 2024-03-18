@@ -126,6 +126,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		Nickname:    resp.NickName,
 		Avatar:      resp.Avatar,
 		Signature:   resp.Signature,
+		CossId:      resp.CossId,
 	}, token, nil
 }
 
@@ -299,6 +300,7 @@ func (s *Service) Search(ctx context.Context, userID string, email string) (inte
 		Email:     r.Email,
 		Avatar:    r.Avatar,
 		Signature: r.Signature,
+		CossId:    r.CossId,
 		Status:    model.UserStatus(r.Status),
 	}
 
@@ -337,6 +339,7 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 		Email:     r.Email,
 		Avatar:    r.Avatar,
 		Signature: r.Signature,
+		CossId:    r.CossId,
 		Status:    model.UserStatus(r.Status),
 	}
 
@@ -377,6 +380,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 		Tel:       req.Tel,
 		Avatar:    req.Avatar,
 		Signature: req.Signature,
+		CossId:    req.CossId,
 		//Action:    user.UserStatus(req.Action),
 	})
 	if err != nil {

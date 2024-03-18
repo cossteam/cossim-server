@@ -19,7 +19,7 @@ type UpdateGroupRequest struct {
 }
 
 type CreateGroupRequest struct {
-	Type   uint32   `json:"type"`
+	Type   uint32   `json:"type"` // Type 群聊类型
 	Name   string   `json:"name" binding:"required"`
 	Avatar string   `json:"avatar"`
 	Member []string `json:"member"`
@@ -100,8 +100,8 @@ const (
 type GroupTypeMemberLimit uint
 
 const (
-	DefaultGroup   = 1000
-	EncryptedGroup = 500
+	DefaultGroup   = 1000 //默认群
+	EncryptedGroup = 500  //加密群
 )
 
 type SenderInfo struct {

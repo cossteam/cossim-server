@@ -187,7 +187,7 @@ const docTemplategroup = `{
                 "summary": "更新群聊信息",
                 "parameters": [
                     {
-                        "description": "请求体",
+                        "description": "0(公开群);1(私密群)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -227,6 +227,7 @@ const docTemplategroup = `{
                     "type": "string"
                 },
                 "type": {
+                    "description": "Type 群聊类型",
                     "type": "integer"
                 }
             }

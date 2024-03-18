@@ -79,13 +79,20 @@ func (s *Service) DiscoverServices(services map[string]*grpc.ClientConn) error {
 // 用户登录
 func (s *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	resp := &api.UserLoginResponse{}
-
+	userInfo := &entity.User{}
 	userInfo, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			userInfo, err = s.ur.GetUserInfoByCossID(request.Email)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), code.UserErrNotExistOrPassword.Message())
+				}
+				return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+			}
+
+			//return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
-		return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 
 	if userInfo.Password != request.Password {
@@ -113,6 +120,7 @@ func (s *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 			Tel:       userInfo.Tel,
 			Avatar:    userInfo.Avatar,
 			Signature: userInfo.Signature,
+			CossId:    userInfo.CossID,
 		}, nil
 	default:
 		return resp, status.Error(codes.Code(code.UserErrStatusException.Code()), code.UserErrStatusException.Message())
@@ -164,6 +172,7 @@ func (s *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*
 		Avatar:    userInfo.Avatar,
 		Signature: userInfo.Signature,
 		Status:    api.UserStatus(userInfo.Status),
+		CossId:    userInfo.CossID,
 	}
 	return resp, nil
 }
@@ -184,6 +193,7 @@ func (s *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUse
 			Avatar:    user.Avatar,
 			Signature: user.Signature,
 			Status:    api.UserStatus(user.Status),
+			CossId:    user.CossID,
 		})
 	}
 
@@ -192,13 +202,20 @@ func (s *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUse
 
 func (s *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
+	userInfo := &entity.User{}
 	userInfo, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			userInfo, err = s.ur.GetUserInfoByCossID(request.Email)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+				}
+				return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
+			}
 		}
-		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
+
 	resp = &api.UserInfoResponse{
 		UserId:    userInfo.ID,
 		NickName:  userInfo.NickName,
@@ -207,6 +224,7 @@ func (s *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserIn
 		Avatar:    userInfo.Avatar,
 		Signature: userInfo.Signature,
 		Status:    api.UserStatus(userInfo.Status),
+		CossId:    userInfo.CossID,
 	}
 	return resp, nil
 }
@@ -235,6 +253,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserRe
 		ID:        in.UserId,
 		NickName:  in.NickName,
 		Avatar:    in.Avatar,
+		CossID:    in.CossId,
 		Signature: in.Signature,
 		Status:    entity.UserStatus(in.Status),
 		Tel:       in.Tel,
@@ -327,6 +346,21 @@ func (s *Service) CreateUserRollback(ctx context.Context, in *api.CreateUserRoll
 	resp := &api.CreateUserRollbackResponse{}
 	if err := s.ur.DeleteUser(in.UserId); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrCreateUserRollbackFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Service) GetUserInfoByCossId(ctx context.Context, in *api.GetUserInfoByCossIdlRequest) (*api.UserInfoResponse, error) {
+	resp := &api.UserInfoResponse{}
+	if userInfo, err := s.ur.GetUserInfoByCossID(in.CossId); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
+		}
+		return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
+	} else {
+		resp = &api.UserInfoResponse{
+			UserId: userInfo.ID,
+		}
 	}
 	return resp, nil
 }

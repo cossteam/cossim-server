@@ -28,6 +28,7 @@ type RegisterRequest struct {
 
 type UserInfoResponse struct {
 	UserId         string             `json:"user_id"`
+	CossId         string             `json:"coss_id"`
 	Nickname       string             ` json:"nickname"`
 	Email          string             `json:"email"`
 	Tel            string             `json:"tel"`
@@ -124,6 +125,7 @@ type UserInfoRequest struct {
 	Tel       string `json:"tel"`
 	Avatar    string `json:"avatar"`
 	Signature string `json:"signature"`
+	CossId    string `json:"coss_id"`
 }
 
 type PasswordRequest struct {
