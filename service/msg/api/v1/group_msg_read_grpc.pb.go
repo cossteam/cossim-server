@@ -71,7 +71,7 @@ func (c *groupMessageServiceClient) GetGroupMessageReadByMsgIdAndUserId(ctx cont
 	return out, nil
 }
 
-// GroupMessageServiceServer is the server API for GroupMessageService service.
+// GroupMessageServiceServer is the interface API for GroupMessageService service.
 // All implementations must embed UnimplementedGroupMessageServiceServer
 // for forward compatibility
 type GroupMessageServiceServer interface {

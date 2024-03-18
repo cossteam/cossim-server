@@ -90,7 +90,7 @@ func (c *groupAnnouncementServiceClient) DeleteGroupAnnouncement(ctx context.Con
 	return out, nil
 }
 
-// GroupAnnouncementServiceServer is the server API for GroupAnnouncementService service.
+// GroupAnnouncementServiceServer is the interface API for GroupAnnouncementService service.
 // All implementations must embed UnimplementedGroupAnnouncementServiceServer
 // for forward compatibility
 type GroupAnnouncementServiceServer interface {

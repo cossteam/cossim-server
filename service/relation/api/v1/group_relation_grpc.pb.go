@@ -276,7 +276,7 @@ func (c *groupRelationServiceClient) SetGroupOpenBurnAfterReadingTimeOut(ctx con
 	return out, nil
 }
 
-// GroupRelationServiceServer is the server API for GroupRelationService service.
+// GroupRelationServiceServer is the interface API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
 type GroupRelationServiceServer interface {

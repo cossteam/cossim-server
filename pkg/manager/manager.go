@@ -157,7 +157,7 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	// Set default values for options fields
 	opts = setOptionsDefaults(opts)
 
-	upCh := make(chan discovery.ConfigUpdate, 1)
+	upCh := make(chan discovery.ConfigUpdate)
 	if opts.Config.LoadFromConfigCenter {
 		newCfg, err := loadConfigFromRemote(opts, upCh)
 		if err != nil {
