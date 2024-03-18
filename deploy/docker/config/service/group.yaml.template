@@ -4,53 +4,53 @@ log:
   file: "logs/app.log"
   format: "console" # console、json
 
-mysql:
-  address: "mysql"
-  port: 3306
-  username: "root"
-  password: "Hitosea@123.."
-  database: "coss"
-  opts:
-    allowNativePasswords: "true"
-    timeout: "800ms"
-    readTimeout: "200ms"
-    writeTimeout: "800ms"
-    parseTime: "true"
-    loc: "Local"
-    charset: "utf8mb4"
+system:
+  environment: "prod" # dev、prod
+  ssl: true # 是否启用ssl true的话不会使用port
+  avatar_file_path:
+  avatar_file_path_dev:
+  gateway_address: "coss.gezi.vip"
+  gateway_port: 8080
+  gateway_address_dev: "127.0.0.1"
+  gateway_port_dev: 8080
 
-message_queue:
-  name: "rabbitmq"
-  username: "root"
-  password: "Hitosea@123.."
-  addr: "rabbitmq:5672"
-  port: 5672
-
-redis:
-  proto: "tcp"
-  address: "redis"
-  port: 6379
-  password: "Hitosea@123.."
-#  protocol: 3
+http:
+  address: "group_service"
+  port: 8084
 
 grpc:
-  address: "0.0.0.0"
-  port: 10005
+  address: "group_service"
+  port: 10000
 
 # 注册本服务
 register:
-  # 服务注册名称
   name: "group_service"
+  address: "consul"     # 注册中心地址
+  port: 8500            # 注册中心端口
+  tags: ["group_relation", "service", "群组服务"]
 
-  # 注册中心地址
-  address: "consul"
 
-  # 注册中心端口
-  port: 8500
+cache:
+  enable: true
 
-  tags: ["group", "service", "群组服务"]
+discovers:
+  relation:
+    name: "relation_service"
+    address: "relation_service"
+    port: 10002
+  user:
+    name: "user_service"
+    address: "user_service"
+    port: 10004
+  msg:
+    name: "msg_service"
+    address: "msg_service"
+    port: 10001
 
-  # 启用服务发现 默认为true
-  #discover: true
-  # 启用服务注册 默认为true
-  #register: true
+encryption:
+  enable: false
+  name: coss-im
+  email: max.mustermann@example.com
+  passphrase: LongSecret
+  rsaBits: 2048
+

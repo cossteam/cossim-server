@@ -89,7 +89,7 @@ func (h *Handler) handlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
 	case "relation_bff":
 		*relationServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for relation service initialized", "service", "relation", "addr", addr)
-	case "group_bff":
+	case "group_service":
 		*groupServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for group service initialized", "service", "group", "addr", addr)
 	case "msg_bff":
