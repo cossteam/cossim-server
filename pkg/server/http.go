@@ -37,7 +37,7 @@ type HttpService struct {
 
 func NewHttpService(c *config.AppConfig, svc HTTPService, healthAddr string, logger logr.Logger) *HttpService {
 	s := &HttpService{
-		logger:     logger.WithValues("kind", "http server", "name", c.Register.Name),
+		logger:     logger.WithValues("kind", "http server", "name", c.HTTP.Name),
 		ac:         c,
 		svc:        svc,
 		addr:       c.HTTP.Addr(),
@@ -74,7 +74,7 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	if s.ac.Register.Register {
-		if err := s.RegisterHTTP(s.ac.Register.Name, s.ac.HTTP.Addr(), s.sid); err != nil {
+		if err := s.RegisterHTTP(s.ac.HTTP.Name, s.ac.HTTP.Addr(), s.sid); err != nil {
 			return err
 		}
 	}
@@ -100,8 +100,8 @@ func (s *HttpService) Start(ctx context.Context) error {
 	s.logger.Info("starting httpServer", "addr", s.ac.HTTP.Addr())
 	if err := s.server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
-			s.logger.Error(err, fmt.Sprintf("启动 [%s] http服务失败：%v", s.ac.Register.Name, err))
-			return fmt.Errorf("启动 [%s] http服务失败：%v", s.ac.Register.Name, err)
+			s.logger.Error(err, fmt.Sprintf("启动 [%s] http服务失败：%v", s.ac.HTTP.Name, err))
+			return fmt.Errorf("启动 [%s] http服务失败：%v", s.ac.HTTP.Name, err)
 		}
 		return nil
 	}
@@ -184,9 +184,9 @@ func (s *HttpService) Discover() error {
 
 func (s *HttpService) cancel() {
 	if err := s.registry.Cancel(s.sid); err != nil {
-		s.logger.Error(err, "Service unregister failed", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+		s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 	}
-	s.logger.Info("Service unregister success", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	s.logger.Info("Service unregister success", "service", s.ac.HTTP.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 }
 
 func (s *HttpService) Health() string {
