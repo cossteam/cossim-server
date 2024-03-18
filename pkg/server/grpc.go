@@ -163,13 +163,13 @@ func (s *GrpcService) Start(ctx context.Context) error {
 		if err := s.register(); err != nil {
 			return err
 		}
-		s.logger.Info("Service register success", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+		s.logger.Info("Service register success", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 	}
 
 	if s.ac.Register.Discover {
 		go func() {
 			if err := s.discover(); err != nil {
-				s.logger.Error(err, "Service discover failed", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+				s.logger.Error(err, "Service discover failed", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 			}
 		}()
 	}
@@ -207,12 +207,12 @@ func (s *GrpcService) discover() error {
 func (s *GrpcService) register() error {
 	// 注册到注册中心要实现健康检查
 	s.svc.RegisterHealth(s.server)
-	return s.registry.RegisterGRPC(s.ac.Register.Name, s.ac.GRPC.Addr(), s.sid)
+	return s.registry.RegisterGRPC(s.ac.GRPC.Name, s.ac.GRPC.Addr(), s.sid)
 }
 
 func (s *GrpcService) cancel() {
 	if err := s.registry.Cancel(s.sid); err != nil {
-		s.logger.Error(err, "Service unregister failed", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+		s.logger.Error(err, "Service unregister failed", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 	}
-	s.logger.Info("Service unregister success", "service", s.ac.Register.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	s.logger.Info("Service unregister success", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 }

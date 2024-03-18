@@ -55,7 +55,7 @@ func main() {
 			RemoteConfigAddr:     remoteConfigAddr,
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
-			Key:                  "interface/group",
+			Key:                  "service/group",
 			//Keys:                 discovery.DefaultKeys,
 			Keys: []string{
 				discovery.CommonMySQLConfigKey,

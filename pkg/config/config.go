@@ -43,6 +43,7 @@ func (c RedisConfig) Addr() string {
 }
 
 type HTTPConfig struct {
+	Name    string `mapstructure:"name" yaml:"name"`
 	Address string `mapstructure:"address" yaml:"address"`
 	Port    int    `mapstructure:"port" yaml:"port"`
 }
@@ -52,6 +53,7 @@ func (c HTTPConfig) Addr() string {
 }
 
 type GRPCConfig struct {
+	Name    string `mapstructure:"name" yaml:"name"`
 	Address string `mapstructure:"address" yaml:"address"`
 	Port    int    `mapstructure:"port" yaml:"port"`
 }
