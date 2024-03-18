@@ -8,7 +8,6 @@ import (
 	"github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"regexp"
 	"strings"
 )
 
@@ -26,12 +25,13 @@ func (h *Handler) login(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	// 正则表达式匹配邮箱格式
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	if !emailRegex.MatchString(req.Email) {
-		response.SetFail(c, "邮箱格式不正确", nil)
-		return
-	}
+
+	//// 正则表达式匹配邮箱格式
+	//emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	//if !emailRegex.MatchString(req.Email) {
+	//	response.SetFail(c, "邮箱格式不正确", nil)
+	//	return
+	//}
 
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
@@ -140,12 +140,12 @@ func (h *Handler) search(c *gin.Context) {
 		return
 	}
 
-	// 正则表达式匹配邮箱格式
-	emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
-	if isMatch, _ := emailRegex.MatchString(email); !isMatch {
-		response.SetFail(c, "邮箱格式不正确", nil)
-		return
-	}
+	//// 正则表达式匹配邮箱格式
+	//emailRegex := regexp2.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`, 0)
+	//if isMatch, _ := emailRegex.MatchString(email); !isMatch {
+	//	response.SetFail(c, "邮箱格式不正确", nil)
+	//	return
+	//}
 
 	userID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {

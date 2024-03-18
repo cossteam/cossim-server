@@ -10,6 +10,7 @@ definitions:
       name:
         type: string
       type:
+        description: Type 群聊类型
         type: integer
     required:
     - name
@@ -155,7 +156,7 @@ paths:
       - application/json
       description: 更新群聊信息
       parameters:
-      - description: 请求体
+      - description: 0(公开群);1(私密群)
         in: body
         name: request
         required: true

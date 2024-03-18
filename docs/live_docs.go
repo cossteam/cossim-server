@@ -700,7 +700,7 @@ const docTemplatelive = `{
                     "type": "string"
                 },
                 "sid": {
-                    "description": "房间id",
+                    "description": "Uid         string           ` + "`" + `json:\"uid,omitempty\"` + "`" + `       // 用户id",
                     "type": "string"
                 },
                 "state": {
@@ -818,6 +818,10 @@ const docTemplatelive = `{
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "房间类型 model.RoomType user、group",
                     "type": "string"
                 },
                 "video_call_record_url": {

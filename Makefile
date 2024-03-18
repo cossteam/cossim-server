@@ -109,7 +109,8 @@ swag: ## Run unittests
 	$(foreach dir,$(INTERFACE_LIST), \
 		swag i -g http.go -dir interface/$(dir)/server/http,interface/$(dir)/api/model,interface/live/api/dto,pkg/utils/usersorter --instanceName $(dir); \
 	)
-	swag i -g http.go -dir admin/server/http,admin/api/model,pkg/utils/usersorter --instanceName admin
+	swag i -g http.go -dir internal/admin/interface/http,internal/admin/api/model,pkg/utils/usersorter --instanceName admin
+	swag i -g http.go -dir internal/group/interface/http,internal/group/api/http/model,pkg/utils/usersorter --instanceName group
 
 
 .PHONY: config_init config_clear

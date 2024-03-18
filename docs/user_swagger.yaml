@@ -132,6 +132,8 @@ definitions:
     properties:
       avatar:
         type: string
+      coss_id:
+        type: string
       nickname:
         type: string
       signature:
@@ -142,6 +144,8 @@ definitions:
   model.UserInfoResponse:
     properties:
       avatar:
+        type: string
+      coss_id:
         type: string
       email:
         type: string

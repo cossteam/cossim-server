@@ -22,6 +22,8 @@ message UserLoginResponse {
   string Avatar=5;
   // @inject_tag: json:"signature"
   string Signature=6;
+  // @inject_tag: json:"coss_id"
+  string CossId=7;
 }
 
 message UserRegisterRequest {
@@ -73,6 +75,8 @@ message UserInfoResponse {
   string Signature=6;
   // @inject_tag: json:"status"
   UserStatus Status = 7;
+  // @inject_tag: json:"coss_id"
+  string CossId=8;
 }
 
 message GetBatchUserInfoRequest {
@@ -88,6 +92,7 @@ message GetBatchUserInfoResponse {
   // @inject_tag: json:"users" form:"users"
   repeated UserInfoResponse Users = 1;
 }
+
 message UserRequest {
   // @inject_tag: json:"user_id"
   string UserId = 1;
@@ -129,6 +134,8 @@ message User {
   string Signature=6;
   // @inject_tag: json:"status"
   UserStatus Status = 7;
+  // @inject_tag: json:"coss_id"
+  string CossId=8;
 }
 message GetUserPasswordByUserIdResponse {
   // @inject_tag: json:"user_id"
@@ -194,6 +201,11 @@ message CreateUserRollbackResponse {
 
 }
 
+message GetUserInfoByCossIdlRequest{
+  // @inject_tag: json:"coss_id"
+  string CossId = 1;
+}
+
 service UserService {
   //用户登录
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
@@ -205,6 +217,8 @@ service UserService {
   rpc GetBatchUserInfo(GetBatchUserInfoRequest) returns (GetBatchUserInfoResponse);
   //根据email获取用户信息
   rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
+  //根据cossId获取用户信息
+  rpc GetUserInfoByCossId(GetUserInfoByCossIdlRequest) returns (UserInfoResponse);
   rpc GetUserPublicKey (UserRequest) returns (GetUserPublicKeyResponse);
   rpc SetUserPublicKey (SetPublicKeyRequest) returns (UserResponse);
   rpc ModifyUserInfo(User) returns (UserResponse);

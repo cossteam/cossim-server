@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/sony/sonyflake"
 	"golang.org/x/net/html"
 	"math/rand"
 	"strings"
@@ -74,4 +75,13 @@ func SliceDifference(slice1, slice2 []uint32) []uint32 {
 	}
 
 	return diff
+}
+
+func GenCossID() (string, error) {
+	flake := sonyflake.NewSonyflake(sonyflake.Settings{})
+	id, err := flake.NextID()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("coss_id_%x", id), nil
 }

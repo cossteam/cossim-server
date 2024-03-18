@@ -749,6 +749,9 @@ const docTemplateuser = `{
                 "avatar": {
                     "type": "string"
                 },
+                "coss_id": {
+                    "type": "string"
+                },
                 "nickname": {
                     "type": "string"
                 },
@@ -764,6 +767,9 @@ const docTemplateuser = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "type": "string"
+                },
+                "coss_id": {
                     "type": "string"
                 },
                 "email": {

@@ -101,3 +101,8 @@ func (ur *UserRepo) InsertAndUpdateUser(user *entity.User) error {
 func (ur *UserRepo) DeleteUser(userId string) error {
 	return ur.db.Delete(&entity.User{ID: userId}).Error
 }
+
+func (ur *UserRepo) GetUserInfoByCossID(cossId string) (*entity.User, error) {
+	var user entity.User
+	return &user, ur.db.Where("coss_id = ?", cossId).First(&user).Error
+}
