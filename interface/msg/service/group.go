@@ -529,6 +529,20 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 			return nil, err
 		}
 
+		sendRelation, err := s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+			GroupId: request.GroupId,
+			UserId:  v.UserId,
+		})
+		if err != nil {
+			s.logger.Error("获取群聊关系失败", zap.Error(err))
+			return nil, err
+		}
+
+		name := info.NickName
+		if sendRelation != nil && sendRelation.Remark != "" {
+			name = sendRelation.Remark
+		}
+
 		msgList = append(msgList, &model.GroupMessage{
 			MsgId:                  v.Id,
 			Content:                v.Content,
@@ -546,7 +560,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 			AtAllUser:              model.AtAllUserType(v.AtAllUser),
 			IsBurnAfterReadingType: model.BurnAfterReadingType(v.IsBurnAfterReadingType),
 			SenderInfo: model.SenderInfo{
-				Name:   info.NickName,
+				Name:   name,
 				UserId: info.UserId,
 				Avatar: info.Avatar,
 			},
