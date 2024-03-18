@@ -73,8 +73,6 @@ message GetGroupRelationResponse {
   GroupSilentNotificationType IsSilent = 8; //是否静默通知
   // @inject_tag: json:"inviter"
   string Inviter = 9; //邀请人
-  // @inject_tag: json:"group_nickname"
-  string GroupNickname = 10; //群聊昵称
   // @inject_tag: json:"remark"
   string Remark = 11; //群聊备注
   // @inject_tag: json:"open_burn_after_reading"

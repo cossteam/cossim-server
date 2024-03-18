@@ -1174,6 +1174,14 @@ func (s *Service) SetGroupUserRemark(ctx context.Context, userID string, req *mo
 		s.logger.Error("设置群聊用户备注失败", zap.Error(err))
 		return err
 	}
+
+	if s.cache {
+		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			s.logger.Error("设置群聊用户备注失败", zap.Error(err))
+			return err
+		}
+	}
 	return nil
 }
 

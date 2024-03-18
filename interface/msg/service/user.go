@@ -450,6 +450,26 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 		if err != nil {
 			return nil, err
 		}
+
+		sendinfo := model.SenderInfo{
+			Name:   info.NickName,
+			UserId: info.UserId,
+			Avatar: info.Avatar,
+		}
+
+		receinfo := model.SenderInfo{
+			Name:   info2.NickName,
+			UserId: info2.UserId,
+			Avatar: info2.Avatar,
+		}
+
+		name := relation.Remark
+		if v.SenderId == userID {
+			receinfo.Name = name
+		} else {
+			sendinfo.Name = name
+		}
+
 		msgList = append(msgList, &model.UserMessage{
 			MsgId:                   v.Id,
 			SenderId:                v.SenderId,
@@ -464,16 +484,8 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 			IsLabel:                 model.LabelMsgType(v.IsLabel),
 			IsBurnAfterReadingType:  model.BurnAfterReadingType(v.IsBurnAfterReadingType),
 			BurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
-			SenderInfo: model.SenderInfo{
-				Name:   info.NickName,
-				UserId: info.UserId,
-				Avatar: info.Avatar,
-			},
-			ReceiverInfo: model.SenderInfo{
-				UserId: info2.UserId,
-				Avatar: info2.Avatar,
-				Name:   info2.NickName,
-			},
+			SenderInfo:              sendinfo,
+			ReceiverInfo:            receinfo,
 		})
 	}
 	resp.UserMessages = msgList
@@ -630,6 +642,21 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 						UserId: info.UserId,
 						Avatar: info.Avatar,
 						Name:   info.NickName,
+					}
+					if v.Type == 1 {
+						//查询群聊备注
+						relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: v.GroupId, UserId: userID})
+						if err != nil {
+							return nil, err
+						}
+						re.LastMessage.SenderInfo.Name = relation.Remark
+					} else if v.Type == 0 && msg.SenderId != userID {
+						//查询用户备注
+						relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: msg.SenderId})
+						if err != nil {
+							return nil, err
+						}
+						re.LastMessage.SenderInfo.Name = relation.Remark
 					}
 				}
 				break
