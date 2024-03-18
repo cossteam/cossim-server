@@ -8,7 +8,6 @@ type GroupRelation struct {
 	JoinedAt                int64                    `gorm:"comment:加入时间" json:"joined_at"`
 	MuteEndTime             int64                    `gorm:"comment:禁言结束时间" json:"mute_end_time"`
 	UserID                  string                   `gorm:"type:varchar(64);comment:用户ID" json:"user_id"`
-	GroupNickname           string                   `gorm:"comment:群昵称" json:"group_nickname"`
 	Inviter                 string                   `gorm:"type:varchar(64);comment:邀请人id" json:"inviter"`
 	Remark                  string                   `gorm:"type:varchar(255);comment:添加群聊备注" json:"remark"`
 	Label                   []string                 `gorm:"type:varchar(255);comment:标签" json:"label"`

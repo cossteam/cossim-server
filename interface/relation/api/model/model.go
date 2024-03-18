@@ -26,6 +26,11 @@ type GroupRequestListResponse struct {
 	Remark          string             `json:"remark" description:"申请消息"`
 }
 
+type SetGroupUserRemarkRequest struct {
+	GroupId uint32 `json:"group_id" binding:"required"`
+	Remark  string `json:"remark" description:"备注信息"`
+}
+
 type GroupRequestStatus uint32
 
 const (

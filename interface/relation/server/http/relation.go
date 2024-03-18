@@ -1147,3 +1147,34 @@ func (h *Handler) setGroupOpenBurnAfterReadingTimeOut(c *gin.Context) {
 
 	response.SetSuccess(c, "设置成功", nil)
 }
+
+// 设置自己在群聊内的名称
+// @Summary 设置自己在群聊内的名称
+// @Description 设置自己在群聊内的名称
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.SetGroupUserRemarkRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/remark/set [post]
+func (h *Handler) setGroupUserRemark(c *gin.Context) {
+	req := new(model.SetGroupUserRemarkRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	err = h.svc.SetGroupUserRemark(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置成功", nil)
+}

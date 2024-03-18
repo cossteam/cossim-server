@@ -665,6 +665,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/group/remark/set": {
+            "post": {
+                "description": "设置自己在群聊内的名称",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "设置自己在群聊内的名称",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetGroupUserRemarkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/request_list": {
             "get": {
                 "security": [
@@ -1547,6 +1581,20 @@ const docTemplaterelation = `{
                             "$ref": "#/definitions/model.SilentNotificationType"
                         }
                     ]
+                }
+            }
+        },
+        "model.SetGroupUserRemarkRequest": {
+            "type": "object",
+            "required": [
+                "group_id"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "integer"
+                },
+                "remark": {
+                    "type": "string"
                 }
             }
         },

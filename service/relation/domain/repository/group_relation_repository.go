@@ -19,6 +19,7 @@ type GroupRelationRepository interface {
 	GetJoinRequestListByID(gid uint32) ([]*entity.GroupRelation, error)
 	DeleteGroupRelationByID(gid uint32) error
 	GetGroupAdminIds(gid uint32) ([]string, error) // 获取群聊管理员
+	SetUserGroupRemark(gid uint32, uid string, remark string) error
 
 	// UpdateGroupRelationByGroupID 根据群聊id更新群聊的所有用户信息
 	UpdateGroupRelationByGroupID(dialogID uint32, updateFields map[string]interface{}) error

@@ -40,6 +40,7 @@ const (
 	GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_FullMethodName      = "/v1.GroupRelationService/RemoveGroupRelationByGroupIdAndUserIDs"
 	GroupRelationService_SetGroupOpenBurnAfterReading_FullMethodName                = "/v1.GroupRelationService/SetGroupOpenBurnAfterReading"
 	GroupRelationService_SetGroupOpenBurnAfterReadingTimeOut_FullMethodName         = "/v1.GroupRelationService/SetGroupOpenBurnAfterReadingTimeOut"
+	GroupRelationService_SetGroupUserRemark_FullMethodName                          = "/v1.GroupRelationService/SetGroupUserRemark"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -86,6 +87,8 @@ type GroupRelationServiceClient interface {
 	SetGroupOpenBurnAfterReading(ctx context.Context, in *SetGroupOpenBurnAfterReadingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 设置阅后即焚超时时间
 	SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, in *SetGroupOpenBurnAfterReadingTimeOutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 设置群聊用户备注
+	SetGroupUserRemark(ctx context.Context, in *SetGroupUserRemarkRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type groupRelationServiceClient struct {
@@ -276,7 +279,16 @@ func (c *groupRelationServiceClient) SetGroupOpenBurnAfterReadingTimeOut(ctx con
 	return out, nil
 }
 
-// GroupRelationServiceServer is the interface API for GroupRelationService service.
+func (c *groupRelationServiceClient) SetGroupUserRemark(ctx context.Context, in *SetGroupUserRemarkRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupRelationService_SetGroupUserRemark_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// GroupRelationServiceServer is the server API for GroupRelationService service.
 // All implementations must embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
 type GroupRelationServiceServer interface {
@@ -320,6 +332,8 @@ type GroupRelationServiceServer interface {
 	SetGroupOpenBurnAfterReading(context.Context, *SetGroupOpenBurnAfterReadingRequest) (*emptypb.Empty, error)
 	// 设置阅后即焚超时时间
 	SetGroupOpenBurnAfterReadingTimeOut(context.Context, *SetGroupOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error)
+	// 设置群聊用户备注
+	SetGroupUserRemark(context.Context, *SetGroupUserRemarkRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGroupRelationServiceServer()
 }
 
@@ -386,6 +400,9 @@ func (UnimplementedGroupRelationServiceServer) SetGroupOpenBurnAfterReading(cont
 }
 func (UnimplementedGroupRelationServiceServer) SetGroupOpenBurnAfterReadingTimeOut(context.Context, *SetGroupOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGroupOpenBurnAfterReadingTimeOut not implemented")
+}
+func (UnimplementedGroupRelationServiceServer) SetGroupUserRemark(context.Context, *SetGroupUserRemarkRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetGroupUserRemark not implemented")
 }
 func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
 
@@ -760,6 +777,24 @@ func _GroupRelationService_SetGroupOpenBurnAfterReadingTimeOut_Handler(srv inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_SetGroupUserRemark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetGroupUserRemarkRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).SetGroupUserRemark(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_SetGroupUserRemark_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).SetGroupUserRemark(ctx, req.(*SetGroupUserRemarkRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -846,6 +881,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetGroupOpenBurnAfterReadingTimeOut",
 			Handler:    _GroupRelationService_SetGroupOpenBurnAfterReadingTimeOut_Handler,
+		},
+		{
+			MethodName: "SetGroupUserRemark",
+			Handler:    _GroupRelationService_SetGroupUserRemark_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

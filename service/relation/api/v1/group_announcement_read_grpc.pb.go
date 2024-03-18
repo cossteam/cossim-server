@@ -68,7 +68,7 @@ func (c *groupAnnouncementReadServiceClient) GetAnnouncementReadByUserId(ctx con
 	return out, nil
 }
 
-// GroupAnnouncementReadServiceServer is the interface API for GroupAnnouncementReadService service.
+// GroupAnnouncementReadServiceServer is the server API for GroupAnnouncementReadService service.
 // All implementations must embed UnimplementedGroupAnnouncementReadServiceServer
 // for forward compatibility
 type GroupAnnouncementReadServiceServer interface {
