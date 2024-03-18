@@ -1,6 +1,6 @@
 syntax = "proto3";
 package v1;
-option go_package = "github.com/cossim/coss-server/service/msg/api/v1";
+option go_package = "github.com/cossim/coss-interface/service/msg/api/v1";
 
 // 设置群聊消息已读请求
 message SetGroupMessageReadRequest {

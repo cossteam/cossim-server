@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
@@ -10,7 +11,6 @@ import (
 	"github.com/cossim/coss-server/pkg/encryption"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
-	groupgrpcv1 "github.com/cossim/coss-server/service/group/api/v1"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"

@@ -1,0 +1,87 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-interface/service/group/api/v1";
+
+message Group {
+  // @inject_tag: json:"id"
+  uint32 Id = 1;
+  // @inject_tag: json:"type"
+  GroupType Type = 2;
+  // @inject_tag: json:"status"
+  GroupStatus Status = 3;
+  // @inject_tag: json:"max_members_limit"
+  int32 Max_members_limit = 4;
+  // @inject_tag: json:"creator_id"
+  string Creator_id = 5;
+  // @inject_tag: json:"name"
+  string Name = 6;
+  // @inject_tag: json:"avatar"
+  string Avatar = 7;
+  // @inject_tag: json:"member"
+  repeated string Member = 8; // 创建群聊的时候邀请的成员
+}
+
+message GetGroupInfoRequest {
+  // @inject_tag: json:"gid"
+  uint32 Gid = 1;
+}
+
+message GetBatchGroupInfoRequest {
+  // @inject_tag: json:"group_ids"
+  repeated uint32 Group_ids = 1;
+}
+
+message GetBatchGroupInfoResponse {
+  // @inject_tag: json:"groups"
+  repeated Group groups = 1;
+}
+
+message UpdateGroupRequest {
+  // @inject_tag: json:"group"
+  Group group = 1;
+}
+
+message CreateGroupRequest {
+  // @inject_tag: json:"group"
+  Group group = 1;
+}
+
+message DeleteGroupRequest {
+  // @inject_tag: json:"gid"
+  uint32 Gid = 1;
+}
+
+message EmptyResponse {}
+
+enum GroupStatus {
+  GROUP_STATUS_NORMAL = 0;   // 正常状态
+  GROUP_STATUS_LOCKED = 1;   // 锁定状态
+  GROUP_STATUS_DELETED = 2;  // 删除状态
+}
+enum GroupType {
+  TypeDefault  = 0; // 公开群
+  TypeEncrypted = 1; // 私有群
+}
+
+service GroupService {
+  // 通过群组ID获取群组信息
+  rpc GetGroupInfoByGid (GetGroupInfoRequest) returns (Group);
+
+  // 批量通过群组ID获取群组信息
+  rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
+
+  // 更新群组信息
+  rpc UpdateGroup (UpdateGroupRequest) returns (Group);
+
+  // 创建群组
+  rpc CreateGroup (CreateGroupRequest) returns (Group);
+
+  // CreateGroup回滚操作
+  rpc CreateGroupRevert (CreateGroupRequest) returns (Group);
+
+  // 删除群组
+  rpc DeleteGroup(DeleteGroupRequest) returns (EmptyResponse);
+
+  // 删除群组回滚操作
+  rpc DeleteGroupRevert(DeleteGroupRequest) returns (EmptyResponse);
+}
