@@ -136,7 +136,7 @@ services:
     restart: on-failure
   admin_bff:
     container_name: cossim_admin_bff
-    image: hub.hitosea.com/cossim/admin-admin
+    image: hub.hitosea.com/cossim/admin-internal
     command:
       - "--discover"
       - "--register"
@@ -189,28 +189,6 @@ services:
       - redis
       - relation_service
       - user_service
-    environment:
-      CONSUL_HTTP_TOKEN:
-    restart: on-failure
-  group_bff:
-    container_name: cossim_group_bff
-    image: hub.hitosea.com/cossim/group-interface
-    command:
-      - "--discover"
-      - "--register"
-      - "--remote-config"
-      - "--config-center-addr"
-      - "consul:8500"
-    volumes:
-      - ./config/pgp:/.cache
-    depends_on:
-      - dtm
-      - redis
-      - rabbitmq
-      - group_service
-      - relation_service
-      - user_service
-      - msg_service
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
@@ -299,7 +277,7 @@ services:
     restart: on-failure
   group_service:
     container_name: cossim_group_service
-    image: hub.hitosea.com/cossim/group-service
+    image: hub.hitosea.com/cossim/group-internal
     command:
       - "--discover"
       - "--register"
@@ -311,6 +289,8 @@ services:
         condition: service_healthy
     environment:
       CONSUL_HTTP_TOKEN:
+    volumes:
+      - ./config/pgp:/.cache
     restart: on-failure
   storage_service:
     container_name: cossim_storage_service
