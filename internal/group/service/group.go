@@ -350,7 +350,6 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32, userID stri
 		SilentNotification:   model.SilentNotification(relation.IsSilent),
 		Remark:               relation.Remark,
 		EntryMethod:          model.EntryMethod(relation.JoinMethod),
-		GroupNickname:        relation.GroupNickname,
 		Inviter:              relation.Inviter,
 		JoinedAt:             relation.JoinTime,
 		MuteEndTime:          relation.MuteEndTime,
