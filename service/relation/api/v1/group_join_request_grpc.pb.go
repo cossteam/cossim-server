@@ -108,7 +108,7 @@ func (c *groupJoinRequestServiceClient) GetGroupJoinRequestByID(ctx context.Cont
 	return out, nil
 }
 
-// GroupJoinRequestServiceServer is the interface API for GroupJoinRequestService service.
+// GroupJoinRequestServiceServer is the server API for GroupJoinRequestService service.
 // All implementations must embed UnimplementedGroupJoinRequestServiceServer
 // for forward compatibility
 type GroupJoinRequestServiceServer interface {

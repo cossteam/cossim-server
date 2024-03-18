@@ -256,6 +256,15 @@ definitions:
     required:
     - group_id
     type: object
+  model.SetGroupUserRemarkRequest:
+    properties:
+      group_id:
+        type: integer
+      remark:
+        type: string
+    required:
+    - group_id
+    type: object
   model.SetUserFriendRemarkRequest:
     properties:
       remark:
@@ -811,6 +820,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 退出群聊
+      tags:
+      - GroupRelation
+  /relation/group/remark/set:
+    post:
+      consumes:
+      - application/json
+      description: 设置自己在群聊内的名称
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetGroupUserRemarkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 设置自己在群聊内的名称
       tags:
       - GroupRelation
   /relation/group/request_list:

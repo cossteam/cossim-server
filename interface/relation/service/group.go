@@ -1149,6 +1149,34 @@ func (s *Service) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, userI
 	return nil
 }
 
+func (s *Service) SetGroupUserRemark(ctx context.Context, userID string, req *model.SetGroupUserRemarkRequest) error {
+	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+		return err
+	}
+
+	_, err = s.groupRelationClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		UserId:  userID,
+		GroupId: req.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊关系失败", zap.Error(err))
+		return err
+	}
+
+	_, err = s.groupRelationClient.SetGroupUserRemark(ctx, &relationgrpcv1.SetGroupUserRemarkRequest{
+		UserId:  userID,
+		GroupId: req.GroupId,
+		Remark:  req.Remark,
+	})
+	if err != nil {
+		s.logger.Error("设置群聊用户备注失败", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
 func (s *Service) updateRedisGroupList(userID string, msg usersorter.CustomGroupData) error {
 	key := fmt.Sprintf("group:%s", userID)
 	exists, err := s.redisClient.ExistsKey(key)

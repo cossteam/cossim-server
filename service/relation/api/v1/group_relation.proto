@@ -1,6 +1,6 @@
 syntax = "proto3";
 package v1;
-option go_package = "github.com/cossim/coss-interface/service/relation/api/v1";
+option go_package = "github.com/cossim/coss-server/service/relation/api/v1";
 import "google/protobuf/empty.proto";
 
 message UserGroupRequest {
@@ -234,6 +234,14 @@ message SetGroupOpenBurnAfterReadingTimeOutRequest{
   int64 OpenBurnAfterReadingTimeOut = 3;
 }
 
+message SetGroupUserRemarkRequest{
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 2;
+  // @inject_tag: json:"remark"
+  string Remark = 3;
+}
 
 service GroupRelationService {
   // 获取群聊成员ID列表
@@ -295,4 +303,7 @@ service GroupRelationService {
 
   // 设置阅后即焚超时时间
   rpc SetGroupOpenBurnAfterReadingTimeOut(SetGroupOpenBurnAfterReadingTimeOutRequest) returns (google.protobuf.Empty);
+
+  //设置群聊用户备注
+  rpc SetGroupUserRemark(SetGroupUserRemarkRequest) returns (google.protobuf.Empty);
 }

@@ -347,7 +347,7 @@ func (c *dialogServiceClient) GetDialogTargetUserId(ctx context.Context, in *Get
 	return out, nil
 }
 
-// DialogServiceServer is the interface API for DialogService service.
+// DialogServiceServer is the server API for DialogService service.
 // All implementations must embed UnimplementedDialogServiceServer
 // for forward compatibility
 type DialogServiceServer interface {

@@ -137,3 +137,7 @@ func (repo *GroupRelationRepo) SetUserGroupOpenBurnAfterReading(gid uint32, uid 
 func (repo *GroupRelationRepo) SetUserGroupOpenBurnAfterReadingTimeOUt(gid uint32, uid string, burnAfterReadingTimeOut int64) error {
 	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND user_id = ?", gid, uid).Update("burn_after_reading_time_out", burnAfterReadingTimeOut).Error
 }
+
+func (repo *GroupRelationRepo) SetUserGroupRemark(gid uint32, uid string, remark string) error {
+	return repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND user_id = ?", gid, uid).Update("remark", remark).Error
+}
