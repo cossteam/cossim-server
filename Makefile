@@ -37,6 +37,9 @@ else ifeq ($(ACTION), service)
 else ifeq ($(ACTION), admin)
 	BUILD_PATH := ${DIR}/admin
 	DOCKER_BUILD_PATH := "${NAME}"
+else ifeq ($(ACTION), internal)
+	BUILD_PATH := ${DIR}/internal/${NAME}
+	DOCKER_BUILD_PATH := "internal/${NAME}"
 endif
 
 # 如果没有设置 BUILD_PATH，输出错误信息
