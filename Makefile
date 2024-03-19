@@ -113,6 +113,8 @@ swag: ## Run unittests
 	swag i -g http.go -dir internal/group/interface/http,internal/group/api/http/model,pkg/utils/usersorter --instanceName group
 	swag i -g http.go -dir internal/storage/interface/http,internal/storage/api/http/model,pkg/utils/usersorter --instanceName storage
 	swag i -g http.go -dir internal/user/interface/http,internal/user/api/http/model,pkg/utils/usersorter --instanceName user
+	swag i -g http.go -dir internal/relation/interface/http,internal/relation/api/http/model,pkg/utils/usersorter --instanceName relation
+
 
 
 
