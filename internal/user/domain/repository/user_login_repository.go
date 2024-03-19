@@ -1,6 +1,6 @@
 package repository
 
-import "github.com/cossim/coss-server/service/user/domain/entity"
+import "github.com/cossim/coss-server/internal/user/domain/entity"
 
 type UserLoginRepository interface {
 	InsertUserLogin(user *entity.UserLogin) error

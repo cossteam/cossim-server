@@ -1,19 +1,19 @@
-package service
+package grpc
 
 import (
 	"context"
 	"fmt"
+	v1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
-	v1 "github.com/cossim/coss-server/service/user/api/v1"
-	"github.com/cossim/coss-server/service/user/domain/entity"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 )
 
-func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*emptypb.Empty, error) {
+func (s *Handler) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *Service) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 	return resp, nil
 }
 
-func (s *Service) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginByTokenRequest) (*v1.UserLogin, error) {
+func (s *Handler) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginByTokenRequest) (*v1.UserLogin, error) {
 	resp := &v1.UserLogin{}
 	info, err := s.ulr.GetUserLoginByToken(in.Token)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *Service) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginBy
 	return resp, nil
 }
 
-func (s *Service) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.DriverIdAndUserId) (*v1.UserLogin, error) {
+func (s *Handler) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.DriverIdAndUserId) (*v1.UserLogin, error) {
 	resp := &v1.UserLogin{}
 	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *Service) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.Dr
 	return resp, nil
 }
 
-func (s *Service) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.TokenUpdate) (*emptypb.Empty, error) {
+func (s *Handler) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.TokenUpdate) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	err := s.ulr.UpdateUserLoginTokenByDriverId(in.DriverId, in.Token, in.UserId)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *Service) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.Tok
 	return resp, nil
 }
 
-func (s *Service) GetUserDriverTokenByUserId(ctx context.Context, request *v1.GetUserDriverTokenByUserIdRequest) (*v1.GetUserDriverTokenByUserIdResponse, error) {
+func (s *Handler) GetUserDriverTokenByUserId(ctx context.Context, request *v1.GetUserDriverTokenByUserIdRequest) (*v1.GetUserDriverTokenByUserIdResponse, error) {
 	resp := &v1.GetUserDriverTokenByUserIdResponse{}
 	tokenList, err := s.ulr.GetUserDriverTokenByUserId(request.UserId)
 	if err != nil {
@@ -115,7 +115,7 @@ func (s *Service) GetUserDriverTokenByUserId(ctx context.Context, request *v1.Ge
 	return resp, nil
 }
 
-func (s *Service) GetUserLoginByUserId(ctx context.Context, in *v1.GetUserLoginByUserIdRequest) (*v1.UserLogin, error) {
+func (s *Handler) GetUserLoginByUserId(ctx context.Context, in *v1.GetUserLoginByUserIdRequest) (*v1.UserLogin, error) {
 	var resp = &v1.UserLogin{}
 	info, err := s.ulr.GetUserByUserId(in.UserId)
 	if err != nil {

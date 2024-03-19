@@ -1,19 +1,19 @@
-package service
+package grpc
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	api "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
+	"github.com/cossim/coss-server/internal/user/domain/repository"
+	"github.com/cossim/coss-server/internal/user/infrastructure/persistence"
+	"github.com/cossim/coss-server/internal/user/utils"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/version"
-	api "github.com/cossim/coss-server/service/user/api/v1"
-	"github.com/cossim/coss-server/service/user/domain/entity"
-	"github.com/cossim/coss-server/service/user/domain/repository"
-	"github.com/cossim/coss-server/service/user/infrastructure/persistence"
-	"github.com/cossim/coss-server/service/user/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health"
@@ -23,7 +23,7 @@ import (
 	"strconv"
 )
 
-type Service struct {
+type Handler struct {
 	ac  *pkgconfig.AppConfig
 	ur  repository.UserRepository
 	ulr repository.UserLoginRepository
@@ -31,7 +31,7 @@ type Service struct {
 	api.UnimplementedUserLoginServiceServer
 }
 
-func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
+func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
 	if err != nil {
 		return err
@@ -56,28 +56,28 @@ func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
 	return nil
 }
 
-func (s *Service) Name() string {
+func (s *Handler) Name() string {
 	//TODO implement me
 	return "user_service"
 }
 
-func (s *Service) Version() string { return version.FullVersion() }
+func (s *Handler) Version() string { return version.FullVersion() }
 
-func (s *Service) Register(srv *grpc.Server) {
+func (s *Handler) Register(srv *grpc.Server) {
 	api.RegisterUserServiceServer(srv, s)
 	api.RegisterUserLoginServiceServer(srv, s)
 }
 
-func (s *Service) RegisterHealth(srv *grpc.Server) {
+func (s *Handler) RegisterHealth(srv *grpc.Server) {
 	grpc_health_v1.RegisterHealthServer(srv, health.NewServer())
 }
 
-func (s *Service) Stop(ctx context.Context) error { return nil }
+func (s *Handler) Stop(ctx context.Context) error { return nil }
 
-func (s *Service) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
+func (s *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
 
 // 用户登录
-func (s *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
+func (s *Handler) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	resp := &api.UserLoginResponse{}
 	userInfo := &entity.User{}
 	userInfo, err := s.ur.GetUserInfoByEmail(request.Email)
@@ -128,7 +128,7 @@ func (s *Service) UserLogin(ctx context.Context, request *api.UserLoginRequest) 
 }
 
 // 用户注册
-func (s *Service) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
+func (s *Handler) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
 	resp := &api.UserRegisterResponse{}
 	//添加用户
 	_, err := s.ur.GetUserInfoByEmail(request.Email)
@@ -154,7 +154,7 @@ func (s *Service) UserRegister(ctx context.Context, request *api.UserRegisterReq
 	return resp, nil
 }
 
-func (s *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
+func (s *Handler) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
 	userInfo, err := s.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
@@ -177,7 +177,7 @@ func (s *Service) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*
 	return resp, nil
 }
 
-func (s *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
+func (s *Handler) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
 	resp := &api.GetBatchUserInfoResponse{}
 	users, err := s.ur.GetBatchGetUserInfoByIDs(request.UserIds)
 	if err != nil {
@@ -200,7 +200,7 @@ func (s *Service) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUse
 	return resp, nil
 }
 
-func (s *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
+func (s *Handler) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
 	userInfo := &entity.User{}
 	userInfo, err := s.ur.GetUserInfoByEmail(request.Email)
@@ -229,7 +229,7 @@ func (s *Service) GetUserInfoByEmail(ctx context.Context, request *api.GetUserIn
 	return resp, nil
 }
 
-func (s *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
+func (s *Handler) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
 	key, err := s.ur.GetUserPublicKey(in.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -240,14 +240,14 @@ func (s *Service) GetUserPublicKey(ctx context.Context, in *api.UserRequest) (*a
 	return &api.GetUserPublicKeyResponse{PublicKey: key}, nil
 }
 
-func (s *Service) SetUserPublicKey(ctx context.Context, in *api.SetPublicKeyRequest) (*api.UserResponse, error) {
+func (s *Handler) SetUserPublicKey(ctx context.Context, in *api.SetPublicKeyRequest) (*api.UserResponse, error) {
 	if err := s.ur.SetUserPublicKey(in.UserId, in.PublicKey); err != nil {
 		return &api.UserResponse{}, status.Error(codes.Code(code.UserErrSaveUserPublicKeyFailed.Code()), err.Error())
 	}
 	return &api.UserResponse{UserId: in.UserId}, nil
 }
 
-func (s *Service) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserResponse, error) {
+func (s *Handler) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserResponse, error) {
 	resp := &api.UserResponse{}
 	user, err := s.ur.UpdateUser(&entity.User{
 		ID:        in.UserId,
@@ -265,7 +265,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserRe
 	return resp, nil
 }
 
-func (s *Service) ModifyUserPassword(ctx context.Context, in *api.ModifyUserPasswordRequest) (*api.UserResponse, error) {
+func (s *Handler) ModifyUserPassword(ctx context.Context, in *api.ModifyUserPasswordRequest) (*api.UserResponse, error) {
 	resp := &api.UserResponse{}
 	user, err := s.ur.UpdateUser(&entity.User{
 		ID:       in.UserId,
@@ -278,7 +278,7 @@ func (s *Service) ModifyUserPassword(ctx context.Context, in *api.ModifyUserPass
 	return resp, nil
 }
 
-func (s *Service) GetUserPasswordByUserId(ctx context.Context, in *api.UserRequest) (*api.GetUserPasswordByUserIdResponse, error) {
+func (s *Handler) GetUserPasswordByUserId(ctx context.Context, in *api.UserRequest) (*api.GetUserPasswordByUserIdResponse, error) {
 	resp := &api.GetUserPasswordByUserIdResponse{}
 	userInfo, err := s.ur.GetUserInfoByUid(in.UserId)
 	if err != nil {
@@ -294,7 +294,7 @@ func (s *Service) GetUserPasswordByUserId(ctx context.Context, in *api.UserReque
 	return resp, nil
 }
 
-func (s *Service) SetUserSecretBundle(ctx context.Context, in *api.SetUserSecretBundleRequest) (*api.SetUserSecretBundleResponse, error) {
+func (s *Handler) SetUserSecretBundle(ctx context.Context, in *api.SetUserSecretBundleRequest) (*api.SetUserSecretBundleResponse, error) {
 	var resp = &api.SetUserSecretBundleResponse{}
 	if err := s.ur.SetUserSecretBundle(in.UserId, in.SecretBundle); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrSetUserSecretBundleFailed.Code()), err.Error())
@@ -302,7 +302,7 @@ func (s *Service) SetUserSecretBundle(ctx context.Context, in *api.SetUserSecret
 	return resp, nil
 }
 
-func (s *Service) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecretBundleRequest) (*api.GetUserSecretBundleResponse, error) {
+func (s *Handler) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecretBundleRequest) (*api.GetUserSecretBundleResponse, error) {
 	var resp = &api.GetUserSecretBundleResponse{}
 	secretBundle, err := s.ur.GetUserSecretBundle(in.UserId)
 	if err != nil {
@@ -316,7 +316,7 @@ func (s *Service) GetUserSecretBundle(ctx context.Context, in *api.GetUserSecret
 	return resp, nil
 }
 
-func (s *Service) ActivateUser(ctx context.Context, in *api.UserRequest) (*api.UserResponse, error) {
+func (s *Handler) ActivateUser(ctx context.Context, in *api.UserRequest) (*api.UserResponse, error) {
 	var resp = &api.UserResponse{UserId: in.UserId}
 	if err := s.ur.UpdateUserColumn(in.UserId, "email_verity", entity.Activated); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrActivateUserFailed.Code()), err.Error())
@@ -324,7 +324,7 @@ func (s *Service) ActivateUser(ctx context.Context, in *api.UserRequest) (*api.U
 	return resp, nil
 }
 
-func (s *Service) CreateUser(ctx context.Context, in *api.CreateUserRequest) (*api.CreateUserResponse, error) {
+func (s *Handler) CreateUser(ctx context.Context, in *api.CreateUserRequest) (*api.CreateUserResponse, error) {
 	resp := &api.CreateUserResponse{}
 	if err := s.ur.InsertAndUpdateUser(&entity.User{
 		NickName:  in.NickName,
@@ -342,7 +342,7 @@ func (s *Service) CreateUser(ctx context.Context, in *api.CreateUserRequest) (*a
 	return resp, nil
 }
 
-func (s *Service) CreateUserRollback(ctx context.Context, in *api.CreateUserRollbackRequest) (*api.CreateUserRollbackResponse, error) {
+func (s *Handler) CreateUserRollback(ctx context.Context, in *api.CreateUserRollbackRequest) (*api.CreateUserRollbackResponse, error) {
 	resp := &api.CreateUserRollbackResponse{}
 	if err := s.ur.DeleteUser(in.UserId); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrCreateUserRollbackFailed.Code()), err.Error())
@@ -350,7 +350,7 @@ func (s *Service) CreateUserRollback(ctx context.Context, in *api.CreateUserRoll
 	return resp, nil
 }
 
-func (s *Service) GetUserInfoByCossId(ctx context.Context, in *api.GetUserInfoByCossIdlRequest) (*api.UserInfoResponse, error) {
+func (s *Handler) GetUserInfoByCossId(ctx context.Context, in *api.GetUserInfoByCossIdlRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
 	if userInfo, err := s.ur.GetUserInfoByCossID(in.CossId); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

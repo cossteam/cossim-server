@@ -1,6 +1,6 @@
 syntax = "proto3";
 package v1;
-option go_package = "github.com/cossim/coss-server/service/storage/api/v1";
+option go_package = "github.com/cossim/coss-server/internal/storage/api/v1";
 
 message UploadRequest {
   // @inject_tag: json:"user_id"

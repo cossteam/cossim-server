@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cossim/coss-server/interface/user/api/model"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
+	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/api/http/model"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
@@ -16,7 +17,6 @@ import (
 	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
-	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
 	"github.com/google/uuid"
@@ -80,14 +80,14 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 
 	// 推送登录提醒
 	// 查询是否在该设备第一次登录
-	userLogin, err := s.userLoginClient.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
+	userLogin, err := s.userClient.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
 		UserId:   resp.UserId,
 		DriverId: req.DriverId,
 	})
 	if err != nil {
 		s.logger.Error("failed to get user login by driver id and user id", zap.Error(err))
 	}
-	_, err = s.userLoginClient.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
+	_, err = s.userClient.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
 		UserId:      resp.UserId,
 		DriverId:    req.DriverId,
 		Token:       token,

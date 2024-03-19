@@ -1,6 +1,6 @@
 package repository
 
-import "github.com/cossim/coss-server/service/user/domain/entity"
+import "github.com/cossim/coss-server/internal/user/domain/entity"
 
 type UserRepository interface {
 	GetUserInfoByEmail(email string) (*entity.User, error)

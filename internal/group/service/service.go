@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	mgrpc "github.com/cossim/coss-server/internal/group/interface/grpc"
+	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
@@ -11,7 +12,6 @@ import (
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
-	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

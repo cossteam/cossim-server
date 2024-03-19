@@ -1,7 +1,7 @@
 package persistence
 
 import (
-	"github.com/cossim/coss-server/service/user/domain/entity"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"gorm.io/gorm"
 )
 

@@ -2,12 +2,12 @@ package service
 
 import (
 	grpchandler "github.com/cossim/coss-server/internal/storage/interface/grpc"
+	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
-	usergrpcv1 "github.com/cossim/coss-server/service/user/api/v1"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
