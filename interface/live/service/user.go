@@ -3,21 +3,26 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/cossim/coss-server/interface/live/api/dto"
 	"github.com/cossim/coss-server/interface/live/api/model"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
+	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
 	"go.uber.org/zap"
 	"strings"
+	"time"
 )
 
-func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID string) (*dto.UserCallResponse, error) {
+func (s *Service) CreateUserCall(ctx context.Context, senderID string, req *dto.UserCallRequest) (*dto.UserCallResponse, error) {
+	recipientID := req.UserID
 	inCall, err := s.isEitherUserInCall(ctx, senderID, recipientID)
 	if err != nil {
 		s.logger.Error("获取通话状态失败", zap.Error(err))
@@ -92,6 +97,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 			"url":          s.livekitServer,
 			"sender_id":    senderID,
 			"recipient_id": recipientID,
+			"option":       req.Option,
 		}}
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("发送消息失败", zap.Error(err))
@@ -103,53 +109,10 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID, recipientID stri
 	}, nil
 }
 
-// checkUserRelation checks the relationship status between two users
-func (s *Service) checkUserRelation(ctx context.Context, userID, friendID string) error {
-	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-		UserId:   userID,
-		FriendId: friendID,
-	})
-	if err != nil {
-		s.logger.Error("Failed to get user relation", zap.Error(err))
-		return err
-	}
-
-	if rel.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-		return code.RelationUserErrFriendRelationNotFound
-	}
-
-	return nil
-}
-
-func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.RoomInfo, uid string) error {
-	if _, ok := roomInfo.Participants[uid]; !ok {
-		return code.Forbidden
-	}
-
-	if _, ok := roomInfo.Participants[uid]; ok && roomInfo.Participants[uid].Connected {
-		return code.LiveErrAlreadyInCall
-	}
-
-	if roomInfo.NumParticipants+1 > roomInfo.MaxParticipants {
-		return code.LiveErrMaxParticipantsExceeded
-	}
-
-	room, err := s.getLivekitRoom(ctx, roomInfo.Room, nil)
-	if err != nil {
-		return err
-	}
-
-	if room.NumParticipants+1 > room.MaxParticipants {
-		return code.LiveErrMaxParticipantsExceeded
-	}
-
-	return nil
-}
-
 func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinResponse, error) {
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
-		s.logger.Error("更新用户房间记录失败", zap.Error(err))
+		s.logger.Error("获取房间信息失败", zap.Error(err))
 		return nil, code.LiveErrJoinCallFailed
 	}
 
@@ -161,22 +124,23 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 	room.Participants[uid] = &model.ActiveParticipant{
 		Connected: true,
 	}
-	ToJSONString, err := room.ToJSONString()
+	roomStr, err := room.ToJSONString()
 	if err != nil {
 		s.logger.Error("更新用户房间记录失败", zap.Error(err))
 		return nil, code.LiveErrJoinCallFailed
 	}
-	if err = s.redisClient.SetKey(liveUserPrefix+uid, ToJSONString, 0); err != nil {
-		s.logger.Error("更新用户房间记录失败", zap.Error(err))
-		return nil, err
-	}
-	roomStr, err := room.ToJSONString()
-	if err != nil {
-		return nil, err
-	}
-	if err = s.redisClient.SetKey(liveRoomPrefix+room.Room, roomStr, 0); err != nil {
-		s.logger.Error("更新房间信息失败", zap.Error(err), zap.String("room", room.Room))
-		return nil, err
+
+	if room.NumParticipants == 2 {
+		for k := range room.Participants {
+			if err = s.redisClient.UpdateKeyExpiration(liveUserPrefix+k, 0); err != nil {
+				s.logger.Error("更新用户房间记录失败", zap.Error(err))
+				return nil, err
+			}
+		}
+		if err = s.redisClient.SetKey(liveRoomPrefix+room.Room, roomStr, 0); err != nil {
+			s.logger.Error("更新房间信息失败", zap.Error(err), zap.String("room", room.Room))
+			return nil, err
+		}
 	}
 
 	user, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: uid})
@@ -211,55 +175,6 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 	}, nil
 }
 
-func (s *Service) joinRoom(userName string, room *livekit.Room) (string, error) {
-	//roomCache, err := s.redisClient.GetKey(room.Sid)
-	//if err != nil {
-	//	return "", err
-	//}
-	//data := &model.UserRoomInfo{}
-	//if err = data.FromMap(roomCache); err != nil {
-	//	return "", err
-	//}
-
-	//s.lock.Lock()
-	//if _, ok := data.Participants[room.Sid]; ok {
-	//	s.lock.Unlock()
-	//	return "", code.LiveErrUserAlreadyInCall
-	//}
-	//data.Participants[room.Sid] = &model.ActiveParticipant{
-	//	Connected: true,
-	//}
-	//s.lock.Unlock()
-
-	token := s.roomService.CreateToken().SetIdentity(userName).AddGrant(&auth.VideoGrant{
-		Room:     room.Name,
-		RoomJoin: true,
-	})
-	jwt, err := token.ToJWT()
-	if err != nil {
-		return "", err
-	}
-
-	return jwt, err
-}
-
-func (s *Service) getLivekitRoom(ctx context.Context, room string, callback func(ctx context.Context, room string)) (*livekit.Room, error) {
-	rooms, err := s.roomService.ListRooms(ctx, &livekit.ListRoomsRequest{Names: []string{room}})
-	if err != nil {
-		s.logger.Error("获取房间信息失败", zap.Error(err))
-		return nil, code.LiveErrGetCallInfoFailed
-	}
-
-	if len(rooms.Rooms) == 0 {
-		if callback != nil {
-			callback(ctx, room)
-		}
-		return nil, code.LiveErrCallNotFound
-	}
-
-	return rooms.Rooms[0], nil
-}
-
 func (s *Service) GetUserRoom(ctx context.Context, uid string) (*dto.UserShowResponse, error) {
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
@@ -271,9 +186,13 @@ func (s *Service) GetUserRoom(ctx context.Context, uid string) (*dto.UserShowRes
 		return nil, code.Forbidden
 	}
 
-	livekitRoom, err := s.getLivekitRoom(ctx, room.Room, func(ctx context.Context, room string) {
-		s.deleteUserRoom(ctx, room, uid)
-	})
+	livekitRoom, err := s.getLivekitRoom(ctx, room.Room)
+	if err != nil || livekitRoom == nil {
+		if _, err := s.deleteUserRoom(ctx, room); err != nil {
+			s.logger.Error("删除群聊房间信息失败", zap.Error(err))
+			return nil, code.LiveErrGetCallInfoFailed
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -312,6 +231,254 @@ func (s *Service) GetUserRoom(ctx context.Context, uid string) (*dto.UserShowRes
 	return resp, nil
 }
 
+func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, error) {
+	room, err := s.getRedisUserRoom(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := room.Participants[uid]; !ok {
+		return nil, code.Forbidden
+	}
+
+	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: uid, FriendId: room.SenderID})
+	if err != nil {
+		return nil, err
+	}
+
+	if rel.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
+
+	_, err = s.deleteUserRoom(ctx, room)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := constants.WsMsg{Uid: room.SenderID, Event: constants.UserCallRejectEvent, Data: map[string]interface{}{
+		"url":          s.livekitServer,
+		"sender_id":    room.SenderID,
+		"recipient_id": uid,
+	}}
+	if err = s.publishServiceMessage(ctx, msg); err != nil {
+		s.logger.Error("发送消息失败", zap.Error(err))
+	}
+
+	s.logger.Info("UserRejectRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", uid))
+
+	return nil, nil
+}
+
+func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (interface{}, error) {
+	room, err := s.getRedisUserRoom(ctx, uid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user room: %w", err)
+	}
+
+	if _, ok := room.Participants[uid]; !ok {
+		return nil, code.Forbidden
+	}
+
+	livekitRoom, err := s.getLivekitRoom(ctx, room.Room)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Livekit room: %w", err)
+	}
+
+	formatDuration := func(duration time.Duration) string {
+		minutes := int(duration.Minutes())
+		seconds := int(duration.Seconds()) % 60
+		return fmt.Sprintf("%02d:%02d", minutes, seconds)
+	}
+
+	creationTime := time.Unix(livekitRoom.CreationTime, 0)
+	duration := time.Since(creationTime)
+	content := fmt.Sprintf("通话时长：%s", formatDuration(duration))
+
+	var (
+		senderID                    string
+		receiverId                  string
+		did                         uint32
+		isBurnAfterReading          relationgrpcv1.OpenBurnAfterReadingType
+		OpenBurnAfterReadingTimeOut int64
+	)
+
+	// Find receiver ID
+	for k := range room.Participants {
+		if k == room.SenderID {
+			senderID = k
+		} else {
+			receiverId = k
+		}
+	}
+
+	s.logger.Info("UserLeaveRoom", zap.String("room", room.Room), zap.String("挂断用户", uid), zap.String("被挂断用户", receiverId), zap.String("通话时长", content), zap.String("创建者", senderID))
+	_, err = s.deleteUserRoom(ctx, room)
+	if err != nil {
+		return nil, err
+	}
+
+	rel1, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: senderID, FriendId: receiverId})
+	if err != nil {
+		return nil, err
+	}
+	if rel1.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
+
+	// 获取对话ID、烧毁模式和烧毁超时时间
+	did = rel1.DialogId
+	isBurnAfterReading = rel1.OpenBurnAfterReading
+	OpenBurnAfterReadingTimeOut = rel1.OpenBurnAfterReadingTimeOut
+
+	rel2, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: receiverId, FriendId: senderID})
+	if err != nil {
+		return nil, err
+	}
+	if rel2.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
+
+	message, err := s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
+		DialogId:               did,
+		SenderId:               senderID,
+		ReceiverId:             receiverId,
+		Content:                content,
+		Type:                   1,
+		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(isBurnAfterReading),
+	})
+	if err != nil {
+		s.logger.Error("发送消息失败", zap.Error(err))
+		return nil, code.LiveErrLeaveCallFailed
+	}
+
+	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: senderID,
+	})
+	if err != nil {
+		s.logger.Error("获取用户信息失败", zap.Error(err))
+		return nil, code.LiveErrLeaveCallFailed
+	}
+
+	for k := range room.Participants {
+		msgContent := constants.WsMsg{
+			Uid:      k,
+			Event:    constants.SendUserMessageEvent,
+			DriverId: driverId,
+			Data: &constants.WsUserMsg{
+				SenderId:                senderID,
+				Content:                 content,
+				MsgType:                 1,
+				MsgId:                   message.MsgId,
+				ReceiverId:              receiverId,
+				SendAt:                  pkgtime.Now(),
+				DialogId:                did,
+				IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
+				BurnAfterReadingTimeOut: OpenBurnAfterReadingTimeOut,
+				SenderInfo: constants.SenderInfo{
+					Avatar: info.Avatar,
+					Name:   info.NickName,
+					UserId: senderID,
+				},
+			},
+		}
+		if err := s.publishServiceMessage(ctx, msgContent); err != nil {
+			s.logger.Error("发送消息失败", zap.Error(err))
+		}
+
+		// 发送用户结束通话事件消息
+		endCallMsg := constants.WsMsg{
+			Uid:   k,
+			Event: constants.UserCallEndEvent,
+			Data: map[string]interface{}{
+				"room":         room.Room,
+				"sender_id":    senderID,
+				"recipient_id": receiverId,
+			},
+		}
+		if err := s.publishServiceMessage(ctx, endCallMsg); err != nil {
+			s.logger.Error("发送消息失败", zap.Error(err))
+		}
+	}
+
+	// 清除缓存
+	if s.cache {
+		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", senderID)); err != nil {
+			return nil, err
+		}
+		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", receiverId)); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
+}
+
+// checkUserRelation checks the relationship status between two users
+func (s *Service) checkUserRelation(ctx context.Context, userID, friendID string) error {
+	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   userID,
+		FriendId: friendID,
+	})
+	if err != nil {
+		s.logger.Error("Failed to get user relation", zap.Error(err))
+		return err
+	}
+
+	if rel.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return code.RelationUserErrFriendRelationNotFound
+	}
+
+	return nil
+}
+
+func (s *Service) checkUserRoom(ctx context.Context, roomInfo *model.RoomInfo, uid string) error {
+	if _, ok := roomInfo.Participants[uid]; !ok {
+		return code.Forbidden
+	}
+
+	if _, ok := roomInfo.Participants[uid]; ok && roomInfo.Participants[uid].Connected {
+		return code.LiveErrAlreadyInCall
+	}
+
+	if roomInfo.NumParticipants+1 > roomInfo.MaxParticipants {
+		return code.LiveErrMaxParticipantsExceeded
+	}
+
+	room, err := s.getLivekitRoom(ctx, roomInfo.Room)
+	if err != nil {
+		return err
+	}
+
+	if room.NumParticipants+1 > room.MaxParticipants {
+		return code.LiveErrMaxParticipantsExceeded
+	}
+
+	return nil
+}
+
+func (s *Service) joinRoom(userName string, room *livekit.Room) (string, error) {
+	token := s.roomService.CreateToken().SetIdentity(userName).AddGrant(&auth.VideoGrant{
+		Room:     room.Name,
+		RoomJoin: true,
+	})
+
+	return token.ToJWT()
+}
+
+func (s *Service) getLivekitRoom(ctx context.Context, room string) (*livekit.Room, error) {
+	rooms, err := s.roomService.ListRooms(ctx, &livekit.ListRoomsRequest{Names: []string{room}})
+	if err != nil {
+		s.logger.Error("获取房间信息失败", zap.Error(err))
+		return nil, code.LiveErrGetCallInfoFailed
+	}
+
+	if len(rooms.Rooms) == 0 {
+		return nil, code.LiveErrCallNotFound
+	}
+
+	return rooms.Rooms[0], nil
+}
+
 func (s *Service) getRedisRoom(ctx context.Context, uid string) (*model.RoomInfo, error) {
 	room, err := s.redisClient.GetKey(uid)
 	if err != nil {
@@ -334,95 +501,23 @@ func (s *Service) getRedisRoom(ctx context.Context, uid string) (*model.RoomInfo
 	return d2, nil
 }
 
-func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, error) {
-	room, err := s.getRedisUserRoom(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := room.Participants[uid]; !ok {
-		return nil, code.Forbidden
-	}
-
-	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: uid, FriendId: room.SenderID})
-	if err != nil {
-		return nil, err
-	}
-
-	if rel.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-		return nil, code.RelationUserErrFriendRelationNotFound
-	}
-
-	_, err = s.deleteUserRoom(ctx, room.Room, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := constants.WsMsg{Uid: room.SenderID, Event: constants.UserCallRejectEvent, Data: map[string]interface{}{
-		"url":          s.livekitServer,
-		"sender_id":    room.SenderID,
-		"recipient_id": uid,
-	}}
-	if err = s.publishServiceMessage(ctx, msg); err != nil {
-		s.logger.Error("发送消息失败", zap.Error(err))
-	}
-
-	s.logger.Info("UserRejectRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", uid))
-
-	return nil, nil
-}
-
-func (s *Service) UserLeaveRoom(ctx context.Context, uid string) (interface{}, error) {
-	room, err := s.getRedisUserRoom(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := room.Participants[uid]; !ok {
-		return nil, code.Forbidden
-	}
-
-	for k := range room.Participants {
-		if k == uid {
-			continue
-		}
-		msg := constants.WsMsg{Uid: k, Event: constants.UserCallEndEvent, Data: map[string]interface{}{
-			"room":         room.Room,
-			"sender_id":    room.SenderID,
-			"recipient_id": k,
-		}}
-		if err = s.publishServiceMessage(ctx, msg); err != nil {
-			s.logger.Error("发送消息失败", zap.Error(err))
-		}
-	}
-
-	s.logger.Info("UserLeaveRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("uid", uid))
-
-	return s.deleteUserRoom(ctx, room.Room, uid)
-}
-
-func (s *Service) deleteUserRoom(ctx context.Context, room, uid string) (interface{}, error) {
+func (s *Service) deleteUserRoom(ctx context.Context, room *model.RoomInfo) (interface{}, error) {
 	_, err := s.roomService.DeleteRoom(ctx, &livekit.DeleteRoomRequest{
-		Room: room,
+		Room: room.Room,
 	})
 	if err != nil && !strings.Contains(err.Error(), "room not found") {
 		s.logger.Error("error deleting room", zap.Error(err))
 		return nil, code.LiveErrLeaveCallFailed
 	}
 
-	userRoom, err := s.getRedisUserRoom(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	for id, _ := range userRoom.Participants {
+	for id, _ := range room.Participants {
 		if err = s.redisClient.DelKey(liveUserPrefix + id); err != nil {
 			s.logger.Error("删除用户房间信息", zap.Error(err))
 		}
 	}
 
-	if err = s.redisClient.DelKey(liveRoomPrefix + userRoom.Room); err != nil {
-		s.logger.Error("删除房间失败", zap.Error(err), zap.String("room", room))
+	if err = s.redisClient.DelKey(liveRoomPrefix + room.Room); err != nil {
+		s.logger.Error("删除房间失败", zap.Error(err), zap.String("room", room.Room))
 	}
 
 	return nil, nil

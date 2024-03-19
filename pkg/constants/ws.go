@@ -128,3 +128,52 @@ type JoinGroupEventData struct {
 	UserId  string `json:"user_id"`
 	Status  uint32 `json:"status,omitempty"`
 }
+
+type BurnAfterReadingType uint
+
+const (
+	NotBurnAfterReading BurnAfterReadingType = iota //非阅后即焚
+	IsBurnAfterReading                              //阅后即焚消息
+)
+
+type SenderInfo struct {
+	UserId string `json:"user_id"`
+	Avatar string `json:"avatar"`
+	Name   string `json:"name"`
+}
+
+type AtAllUserType uint
+
+const (
+	NotAtAllUser = iota
+	AtAllUser
+)
+
+type WsUserMsg struct {
+	MsgId                   uint32               `json:"msg_id"`
+	SenderId                string               `json:"sender_id"`
+	ReceiverId              string               `json:"receiver_id"`
+	Content                 string               `json:"content"`
+	MsgType                 uint                 `json:"msgType"`
+	ReplayId                uint                 `json:"reply_id"`
+	SendAt                  int64                `json:"send_at"`
+	DialogId                uint32               `json:"dialog_id"`
+	IsBurnAfterReading      BurnAfterReadingType `json:"is_burn_after_reading"`
+	BurnAfterReadingTimeOut int64                `json:"burn_after_reading_time_out"`
+	SenderInfo              SenderInfo           `json:"sender_info"`
+}
+
+type WsGroupMsg struct {
+	MsgId              uint32               `json:"msg_id"`
+	GroupId            int64                `json:"group_id"`
+	SenderId           string               `json:"sender_id"`
+	Content            string               `json:"content"`
+	MsgType            uint                 `json:"msgType"`
+	ReplayId           uint                 `json:"reply_id"`
+	SendAt             int64                `json:"send_at"`
+	DialogId           uint32               `json:"dialog_id"`
+	AtUsers            []string             `json:"at_users"`
+	AtAllUser          AtAllUserType        `json:"at_all_users"`
+	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`
+	SenderInfo         SenderInfo           `json:"sender_info"`
+}

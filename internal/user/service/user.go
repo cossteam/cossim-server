@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
@@ -28,6 +29,7 @@ import (
 	"image/png"
 	"io/ioutil"
 	"mime/multipart"
+	"regexp"
 	"strconv"
 	"strings"
 	ostime "time"
@@ -373,6 +375,27 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 }
 
 func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.UserInfoRequest) error {
+
+	//判断coosid是否存在
+	if req.CossId != "" {
+		pattern := "^[a-zA-Z0-9_]{10,20}$"
+		if !regexp.MustCompile(pattern).MatchString(req.CossId) {
+			return code.UserErrCossIdFormat
+		}
+		info, err := s.userClient.GetUserInfoByCossId(ctx, &usergrpcv1.GetUserInfoByCossIdlRequest{
+			CossId: req.CossId,
+		})
+		if err != nil {
+			c := code.Cause(err)
+			fmt.Println("ModifyUserInfo c => ", c.Message())
+			if !errors.Is(c, code.UserErrNotExist) {
+				return err
+			}
+		}
+		if info.UserId != "" {
+			return code.UserErrCossIdAlreadyRegistered
+		}
+	}
 	// 调用服务端设置用户公钥的方法
 	_, err := s.userClient.ModifyUserInfo(ctx, &usergrpcv1.User{
 		UserId:    userID,

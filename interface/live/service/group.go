@@ -248,9 +248,14 @@ func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string) (*d
 		return nil, code.LiveErrGetCallInfoFailed
 	}
 
-	livekitRoom, err := s.getLivekitRoom(ctx, room.Room, func(ctx context.Context, room string) {
-		s.deleteGroupRoom(ctx, room, key)
-	})
+	livekitRoom, err := s.getLivekitRoom(ctx, room.Room)
+	if err != nil || livekitRoom == nil {
+		if _, err := s.deleteGroupRoom(ctx, room.Room, key); err != nil {
+			s.logger.Error("删除群聊房间信息失败", zap.Error(err))
+			return nil, code.LiveErrGetCallInfoFailed
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -371,6 +376,7 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 		return nil, code.LiveErrUserNotInCall
 	}
 
+	// 如果是最后一个离开的用户，那么删除房间
 	if force || roomInfo.NumParticipants-1 == 0 || roomInfo.NumParticipants == 0 {
 		_, err = s.deleteGroupRoom(ctx, roomInfo.Room, key)
 		if err != nil {
@@ -451,7 +457,7 @@ func (s *Service) isEitherGroupInCall(ctx context.Context, gid string) (bool, er
 
 func (s *Service) deleteGroupRoom(ctx context.Context, room string, key string) (interface{}, error) {
 	_, err := s.roomService.DeleteRoom(ctx, &livekit.DeleteRoomRequest{
-		Room: room, // 房间名称
+		Room: room,
 	})
 	if err != nil && !strings.Contains(err.Error(), "room not found") {
 		s.logger.Error("error deleting room", zap.Error(err))
@@ -461,6 +467,10 @@ func (s *Service) deleteGroupRoom(ctx context.Context, room string, key string) 
 	_, err = s.redisClient.Client.Del(ctx, key).Result()
 	if err != nil {
 		s.logger.Error("删除房间信息失败", zap.Error(err))
+	}
+
+	if err = s.redisClient.DelKey(liveRoomPrefix + room); err != nil {
+		s.logger.Error("删除房间失败", zap.Error(err), zap.String("room", room))
 	}
 
 	return nil, nil
@@ -479,7 +489,7 @@ func (s *Service) checkGroupRoom(ctx context.Context, roomInfo *model.RoomInfo, 
 		return code.LiveErrAlreadyInCall
 	}
 
-	room, err := s.getLivekitRoom(ctx, roomName, nil)
+	room, err := s.getLivekitRoom(ctx, roomName)
 	if err != nil {
 		return err
 	}
