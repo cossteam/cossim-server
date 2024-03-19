@@ -1,7 +1,7 @@
 package dataTransformers
 
 import (
-	"github.com/cossim/coss-server/service/msg/domain/entity"
+	"github.com/cossim/coss-server/internal/msg/domain/entity"
 )
 
 type UserMsgListResponse struct {
