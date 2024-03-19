@@ -1,0 +1,218 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/internal/relation/api/grpc/v1";
+import "google/protobuf/empty.proto";
+import "api/v1/group_relation.proto";
+
+message AddFriendRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;    // 用户id
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;  // 好友id
+
+}
+
+message AddFriendResponse {
+  // Add any necessary fields here for the response
+}
+
+message ManageFriendRequest {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id" form:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"dialog_id" form:"dialog_id"
+  uint32 DialogId = 3;
+  // @inject_tag: json:"status" form:"status"
+  RelationStatus Status = 4;
+}
+
+message ManageFriendResponse {
+  // Add any necessary fields here for the response
+}
+
+message DeleteFriendRequest {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id" form:"friend_id"
+  string FriendId = 2;
+}
+
+message DeleteFriendResponse {
+  // Add any necessary fields here for the response
+}
+
+message AddBlacklistRequest {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id" form:"friend_id"
+  string FriendId = 2;
+}
+
+message AddBlacklistResponse {
+  // Add any necessary fields here for the response
+}
+
+message DeleteBlacklistRequest {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id" form:"friend_id"
+  string FriendId = 2;
+}
+
+message DeleteBlacklistResponse {
+  // Add any necessary fields here for the response
+}
+
+message Friend {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"dialog_id" form:"dialog_id"
+  uint32 DialogId = 2;
+  // @inject_tag: json:"remark" form:"remark"
+  string Remark = 3;
+}
+
+message GetFriendListRequest {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+}
+
+message GetFriendListResponse {
+  // @inject_tag: json:"friend_list" form:"friend_list"
+  repeated Friend FriendList = 1;
+}
+
+message Blacklist {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+}
+
+message GetBlacklistRequest {
+  // @inject_tag: json:"user_id" form:"user_id"
+  string UserId = 1;
+}
+
+message GetBlacklistResponse {
+  // @inject_tag: json:"blacklist" form:"blacklist"
+  repeated Blacklist Blacklist = 1;
+}
+
+message GetUserRelationRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+}
+
+enum RelationStatus {
+  RELATION_STATUS_BLOCKED = 0;    // 已拉黑
+  RELATION_NORMAL = 1;            // 正常
+  RELATION_STATUS_DELETED = 2;    // 已删除
+}
+
+message GetUserRelationResponse {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  //  @inject_tag: json:"dialog_id"
+  uint32 DialogId = 3;
+  // @inject_tag: json:"status"
+  RelationStatus Status = 4;
+  // @inject_tag: json:"is_silent"
+  UserSilentNotificationType IsSilent = 5;
+  // @inject_tag: json:"open_burn_after_reading"
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 6;
+  // @inject_tag: json:"remark"
+  string remark = 7;
+  //  @inject_tag: json:"open_burn_after_reading_time_out"
+  int64 OpenBurnAfterReadingTimeOut = 8;
+}
+
+message GetUserRelationByUserIdsRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;    // 用户id
+  // @inject_tag: json:"friend_ids"
+  repeated string FriendIds = 2; // 好友id列表
+}
+
+message GetUserRelationByUserIdsResponse {
+  repeated GetUserRelationResponse Users = 1;
+}
+
+enum UserSilentNotificationType {
+  // @inject_tag: json:"not_silent"
+  UserNotSilent = 0;
+  // @inject_tag: json:"silent"
+  UserSilent = 1;
+}
+
+message SetFriendSilentNotificationRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"is_silent"
+  UserSilentNotificationType IsSilent = 3;
+}
+
+message SetUserOpenBurnAfterReadingRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"open_burn_after_reading"
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 3;
+}
+
+message SetFriendRemarkRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"remark"
+  string remark = 3;
+}
+
+message SetUserOpenBurnAfterReadingTimeOutRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;
+  // @inject_tag: json:"open_burn_after_reading_time_out"
+  int64 OpenBurnAfterReadingTimeOut = 3;
+}
+
+service UserRelationService {
+  // 添加好友
+  rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
+  // 管理好友
+  rpc ManageFriend(ManageFriendRequest) returns (ManageFriendResponse);
+  // 管理好友回滚
+  rpc ManageFriendRevert(ManageFriendRequest) returns (ManageFriendResponse);
+  // 删除好友
+  rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
+  // 删除好友回滚
+  rpc DeleteFriendRevert(DeleteFriendRequest) returns (DeleteFriendResponse);
+  // 添加黑名单
+  rpc AddBlacklist(AddBlacklistRequest) returns (AddBlacklistResponse);
+  // 移出黑名单
+  rpc DeleteBlacklist(DeleteBlacklistRequest) returns (DeleteBlacklistResponse);
+  // 获取好友列表
+  rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
+  // 获取黑名单列表
+  rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
+  // 获取用户关系
+  rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
+  // 批量获取用户关系
+  rpc GetUserRelationByUserIds(GetUserRelationByUserIdsRequest) returns (GetUserRelationByUserIdsResponse);
+  // 设置好友静默通知
+  rpc SetFriendSilentNotification(SetFriendSilentNotificationRequest) returns (google.protobuf.Empty);
+  // 设置阅后即焚开关
+  rpc SetUserOpenBurnAfterReading(SetUserOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
+  // 设置阅后即焚超时时间
+  rpc SetUserOpenBurnAfterReadingTimeOut(SetUserOpenBurnAfterReadingTimeOutRequest) returns (google.protobuf.Empty);
+  // 设置好友备注
+  rpc SetFriendRemark(SetFriendRemarkRequest) returns (google.protobuf.Empty);
+}

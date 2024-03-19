@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	user "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
@@ -10,7 +11,6 @@ import (
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
-	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	lksdk "github.com/livekit/server-sdk-go"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
