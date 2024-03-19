@@ -2,7 +2,8 @@ package http
 
 import (
 	"context"
-	"github.com/cossim/coss-server/interface/user/service"
+	grpchandler "github.com/cossim/coss-server/internal/user/interface/grpc"
+	"github.com/cossim/coss-server/internal/user/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -27,13 +28,14 @@ type Handler struct {
 	svc         *service.Service
 	enc         encryption.Encryptor
 	key         string
+	UserClient  *grpchandler.Handler
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("user_bff", int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	h.svc = service.New(cfg)
+	h.svc = service.New(cfg, h.UserClient)
 
 	if err := h.enc.ReadKeyPair(); err != nil {
 		return err

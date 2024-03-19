@@ -173,25 +173,6 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  user_bff:
-    container_name: cossim_user_bff
-    image: hub.hitosea.com/cossim/user-interface
-    command:
-      - "--discover"
-      - "--register"
-      - "--remote-config"
-      - "--config-center-addr"
-      - "consul:8500"
-    volumes:
-      - ./config/pgp:/.cache
-    depends_on:
-      - dtm
-      - redis
-      - relation_service
-      - user_service
-    environment:
-      CONSUL_HTTP_TOKEN:
-    restart: on-failure
   live_bff:
     container_name: cossim_live_bff
     image: hub.hitosea.com/cossim/live-interface
@@ -243,13 +224,15 @@ services:
     restart: on-failure
   user_service:
     container_name: cossim_user_service
-    image: hub.hitosea.com/cossim/user-service
+    image: hub.hitosea.com/cossim/user-internal
     command:
       - "--discover"
       - "--register"
       - "--remote-config"
       - "--config-center-addr"
       - "consul:8500"
+    volumes:
+      - ./config/pgp:/.cache
     depends_on:
       mysql:
         condition: service_healthy

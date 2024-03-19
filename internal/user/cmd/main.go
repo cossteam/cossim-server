@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	_ "github.com/cossim/coss-server/docs"
-	"github.com/cossim/coss-server/interface/user/server/http"
+	"github.com/cossim/coss-server/internal/user/interface/grpc"
+	"github.com/cossim/coss-server/internal/user/interface/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
@@ -31,16 +32,18 @@ func init() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
 	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":9091", "The address to bind the http health probe endpoint")
 	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":9092", "The address to bind the grpc health probe endpoint")
-	//flag.StringVar(&metricsAddr, "metrics-bind-address", ":11000", "The address the metric endpoint binds to")
-	//flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":11001", "The address to bind the http health probe endpoint")
-	//flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":11002", "The address to bind the grpc health probe endpoint")
 	flag.Parse()
 }
 
 func main() {
+	svc := &grpc.Handler{}
 	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
+		Grpc: ctrl.GRPCServer{
+			GRPCService:         svc,
+			HealthzCheckAddress: grpcProbeAddr,
+		},
 		Http: ctrl.HTTPServer{
-			HTTPService:        &http.Handler{},
+			HTTPService:        &http.Handler{UserClient: svc},
 			HealthCheckAddress: httpProbeAddr,
 		},
 		Config: ctrl.Config{
@@ -48,7 +51,7 @@ func main() {
 			RemoteConfigAddr:     remoteConfigAddr,
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
-			Key:                  "interface/user",
+			Key:                  "service/user",
 			Keys: []string{
 				discovery.CommonMySQLConfigKey,
 				discovery.CommonRedisConfigKey,

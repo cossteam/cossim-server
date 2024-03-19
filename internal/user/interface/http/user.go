@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/cossim/coss-server/interface/user/api/model"
+	"github.com/cossim/coss-server/internal/user/api/http/model"
 	"github.com/cossim/coss-server/pkg/constants"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"

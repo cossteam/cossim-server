@@ -1,6 +1,6 @@
 syntax = "proto3";
 package v1;
-option go_package = "github.com/cossim/coss-server/service/user/api/v1";
+option go_package = "github.com/cossim/coss-server/internal/user/api/v1";
 
 message UserLoginRequest {
   // @inject_tag: json:"email"
