@@ -57,6 +57,7 @@ func main() {
 				discovery.CommonRedisConfigKey,
 				discovery.CommonOssConfigKey,
 				discovery.CommonMQConfigKey,
+				discovery.CommonDtmConfigKey,
 			},
 			Registry: ctrl.Registry{
 				Discover: discover,
