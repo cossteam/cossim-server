@@ -9,6 +9,7 @@ on:
     paths:
       - 'pkg/**/*.go'
       - 'docs/live*.*'
+      - 'cmd/live/**.go'
       - 'internal/live/**.go'
 jobs:
   build_live_service:

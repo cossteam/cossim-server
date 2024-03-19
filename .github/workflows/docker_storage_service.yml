@@ -9,6 +9,7 @@ on:
     paths:
       - 'pkg/**/*.go'
       - 'docs/storage*.*'
+      - 'cmd/storage/**.go'
       - 'internal/storage/**.go'
 jobs:
   build_storage_service:

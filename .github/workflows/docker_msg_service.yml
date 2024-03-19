@@ -9,6 +9,7 @@ on:
     paths:
       - 'pkg/**/*.go'
       - 'docs/msg*.*'
+      - 'cmd/msg/**.go'
       - 'internal/msg/**.go'
 jobs:
   build_msg_service:

@@ -9,6 +9,7 @@ on:
     paths:
       - 'pkg/**/*.go'
       - 'docs/admin*.*'
+      - 'cmd/admin/**.go'
       - 'internal/admin/**.go'
 jobs:
   build_admin:

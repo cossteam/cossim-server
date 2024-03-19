@@ -9,6 +9,7 @@ on:
     paths:
       - 'pkg/**/*.go'
       - 'docs/relation*.*'
+      - 'cmd/relation/**.go'
       - 'internal/relation/**.go'
 jobs:
   build_relation_service:
