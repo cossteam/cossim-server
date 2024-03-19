@@ -9,7 +9,7 @@ on:
     paths:
       - 'pkg/**/*.go'
       - 'docs/admin*.*'
-      - 'admin/**.go'
+      - 'internal/admin/**.go'
 jobs:
   build_admin:
     runs-on: ubuntu-latest

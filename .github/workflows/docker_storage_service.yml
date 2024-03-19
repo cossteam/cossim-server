@@ -8,7 +8,8 @@ on:
        - 'master'
     paths:
       - 'pkg/**/*.go'
-      - 'service/storage/**.go'
+      - 'docs/storage*.*'
+      - 'internal/storage/**.go'
 jobs:
   build_storage_service:
     runs-on: ubuntu-latest
