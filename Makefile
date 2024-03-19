@@ -111,6 +111,8 @@ swag: ## Run unittests
 	)
 	swag i -g http.go -dir internal/admin/interface/http,internal/admin/api/model,pkg/utils/usersorter --instanceName admin
 	swag i -g http.go -dir internal/group/interface/http,internal/group/api/http/model,pkg/utils/usersorter --instanceName group
+	swag i -g http.go -dir internal/storage/interface/http,internal/storage/api/http/model,pkg/utils/usersorter --instanceName storage
+
 
 
 .PHONY: config_init config_clear

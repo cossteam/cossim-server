@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"github.com/cossim/coss-server/service/storage/domain/entity"
-	"github.com/cossim/coss-server/service/storage/domain/repository"
+	"github.com/cossim/coss-server/internal/storage/domain/entity"
+	"github.com/cossim/coss-server/internal/storage/domain/repository"
 	"gorm.io/gorm"
 )
 

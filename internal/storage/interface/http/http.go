@@ -2,17 +2,15 @@ package http
 
 import (
 	"context"
-	"errors"
+	grpcinter "github.com/cossim/coss-server/internal/storage/interface/grpc"
+	"github.com/cossim/coss-server/internal/storage/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/server"
-	"github.com/cossim/coss-server/pkg/storage"
-	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/version"
-	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -25,26 +23,21 @@ var (
 )
 
 type Handler struct {
-	sp            storage.StorageProvider
-	storageClient storagev1.StorageServiceClient
+	StorageClient *grpcinter.Handler
 	redisClient   *cache.RedisClient
 	logger        *zap.Logger
 	enc           encryption.Encryptor
 	sid           string
+	svc           *service.Service
 	minioAddr     string
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("storage_bff", int8(cfg.Log.Level))
-	sp, err := minio.NewMinIOStorage(cfg.OSS.Addr(), cfg.OSS.AccessKey, cfg.OSS.SecretKey, cfg.OSS.SSL)
-	if err != nil {
-		return err
-	}
-	h.sp = sp
-	setLoadSystem(cfg)
 	h.minioAddr = cfg.OSS.Addr()
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	h.svc = service.New(cfg, h.StorageClient)
 	return h.enc.ReadKeyPair()
 }
 
@@ -89,10 +82,6 @@ func (h *Handler) Stop(ctx context.Context) error {
 }
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
-	if _, ok := services["storage_service"]; !ok {
-		return errors.New("storage service not found")
-	}
-	h.storageClient = storagev1.NewStorageServiceClient(services["storage_service"])
 	return nil
 }
 
@@ -102,44 +91,3 @@ var (
 	gatewayAddress  string
 	gatewayPort     string
 )
-
-func setLoadSystem(ac *pkgconfig.AppConfig) {
-	env := ac.SystemConfig.Environment
-	if env == "" {
-		env = "dev"
-	}
-
-	switch env {
-	case "prod":
-		gatewayAdd := ac.SystemConfig.GatewayAddress
-		if gatewayAdd == "" {
-			gatewayAdd = "43.229.28.107"
-		}
-
-		gatewayAddress = gatewayAdd
-
-		gatewayPo := ac.SystemConfig.GatewayPort
-		if gatewayPo == "" {
-			gatewayPo = "8080"
-		}
-		gatewayPort = gatewayPo
-	default:
-
-		gatewayAdd := ac.SystemConfig.GatewayAddressDev
-		if gatewayAdd == "" {
-			gatewayAdd = "127.0.0.1"
-		}
-
-		gatewayAddress = gatewayAdd
-
-		gatewayPo := ac.SystemConfig.GatewayPortDev
-		if gatewayPo == "" {
-			gatewayPo = "8080"
-		}
-		gatewayPort = gatewayPo
-	}
-	if !ac.SystemConfig.Ssl {
-		gatewayAddress = gatewayAddress + ":" + gatewayPort
-	}
-	systemEnableSSL = ac.SystemConfig.Ssl
-}

@@ -1,5 +1,5 @@
 PROJECT_NAME=group
-MAIN_FILE=main.go
+MAIN_FILE=cmd/main.go
 PKG := "github.com/cossim/coss-server/service/$(PROJECT_NAME)"
 MOD_DIR := $(shell go env GOMODCACHE)
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
