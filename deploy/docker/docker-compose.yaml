@@ -101,7 +101,7 @@ services:
     restart: on-failure
   gateway:
     container_name: cossim_gateway
-    image: hub.hitosea.com/cossim/gateway-interface
+    image: hub.hitosea.com/cossim/gateway-internal
     command:
       - "--discover"
       - "--remote-config"
@@ -109,28 +109,6 @@ services:
       - "consul:8500"
     ports:
       - "8080:8080"
-    environment:
-      CONSUL_HTTP_TOKEN:
-    restart: on-failure
-  msg_bff:
-    container_name: cossim_msg_bff
-    image: hub.hitosea.com/cossim/msg-interface
-    command:
-      - "--discover"
-      - "--register"
-      - "--remote-config"
-      - "--config-center-addr"
-      - "consul:8500"
-    volumes:
-      - ./config/pgp:/.cache
-    depends_on:
-      - dtm
-      - redis
-      - rabbitmq
-      - group_service
-      - relation_service
-      - user_service
-      - msg_service
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
@@ -158,7 +136,7 @@ services:
     restart: on-failure
   live_bff:
     container_name: cossim_live_bff
-    image: hub.hitosea.com/cossim/live-interface
+    image: hub.hitosea.com/cossim/live-internal
     command:
       - "--discover"
       - "--register"
@@ -177,7 +155,7 @@ services:
     restart: on-failure
   msg_service:
     container_name: cossim_msg_service
-    image: hub.hitosea.com/cossim/msg-service
+    image: hub.hitosea.com/cossim/msg-internal
     command:
       - "--discover"
       - "--register"
@@ -187,6 +165,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    volumes:
+      - ./config/pgp:/.cache
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
