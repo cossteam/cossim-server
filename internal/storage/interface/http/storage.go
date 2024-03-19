@@ -2,15 +2,11 @@ package http
 
 import (
 	"context"
-	"fmt"
-	"github.com/cossim/coss-server/interface/storage/api/model"
+	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/storage/api/http/model"
+	http2 "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
-	myminio "github.com/cossim/coss-server/pkg/storage/minio"
-	httputil "github.com/cossim/coss-server/pkg/utils/http"
-	storagev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -27,18 +23,19 @@ import (
 // @Success		200 {object} model.Response{}
 // @Router /storage/files [post]
 func (h *Handler) upload(c *gin.Context) {
-	//userID, err := http2.ParseTokenReUid(c)
-	//if err != nil {
-	//	log.Error("token解析失败", zap.Error(err))
-	//	response.SetFail(c, "token解析失败", nil)
-	//	return
-	//}
+	userID, err := http2.ParseTokenReUid(c)
+	if err != nil {
+		h.logger.Error("token解析失败", zap.Error(err))
+		response.SetFail(c, "token解析失败", nil)
+		return
+	}
 
 	// 获取表单中的整数字段，如果字段不存在或无法解析为整数，则使用默认值 0
 	value := c.PostForm("type")
 	if value == "" {
 		value = "2"
 	}
+
 	_Type, err := strconv.Atoi(value)
 	if err != nil {
 		h.logger.Error("type解析失败", zap.Error(err))
@@ -48,102 +45,25 @@ func (h *Handler) upload(c *gin.Context) {
 
 	// 文件大小限制
 	maxFileSize := storagev1.GetMaxFileSize(storagev1.FileType(_Type))
-
 	file, err := c.FormFile("file")
 	if err != nil {
 		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
+
 	if file.Size > maxFileSize {
 		h.logger.Error("文件大小超过限制", zap.Error(err))
 		response.SetFail(c, "文件大小超过限制", nil)
 		return
 	}
 
-	fileObj, err := file.Open()
+	resp, err := h.svc.Upload(c, userID, file, _Type)
 	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
-	bucket, err := myminio.GetBucketName(_Type)
-	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
-		return
-	}
-	lastDotIndex := strings.LastIndex(file.Filename, ".")
-	fileExtension := ""
-
-	if lastDotIndex == -1 || lastDotIndex == len(file.Filename)-1 {
-		fileExtension = ""
-	} else {
-		fileExtension = file.Filename[strings.LastIndex(file.Filename, "."):]
-	}
-
-	opt := model.GetContentTypeOption(fileExtension)
-
-	fileID := uuid.New().String()
-	key := myminio.GenKey(bucket, fileID+fileExtension)
-	_, err = h.sp.Upload(context.Background(), key, fileObj, file.Size, opt)
-	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
-		return
-	}
-	_, err = h.sp.GetUrl(context.Background(), key)
-	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
-		return
-	}
-
-	aUrl := fmt.Sprintf("http://%s%s/%s", gatewayAddress, downloadURL, key)
-	if systemEnableSSL {
-		aUrl, err = httputil.ConvertToHttps(aUrl)
-		if err != nil {
-			h.logger.Error("上传失败", zap.Error(err))
-			response.SetFail(c, "上传失败", nil)
-			return
-		}
-	}
-
-	//headerUrl.Host = gatewayAddress
-	//if !systemEnableSSL {
-	//	headerUrl.Host = gatewayAddress + ":" + gatewayPort
-	//}
-	//headerUrl.Path = downloadURL + headerUrl.Path
-	//
-	//aUrl := headerUrl.String()
-	//if systemEnableSSL {
-	//	aUrl, err = httputil.ConvertToHttps(headerUrl.String())
-	//	if err != nil {
-	//		h.logger.Error("上传失败", zap.Error(err))
-	//		response.SetFail(c, "上传失败", nil)
-	//		return
-	//	}
-	//}
-
-	_, err = h.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
-		UserID:   "userID",
-		FileName: file.Filename,
-		Path:     key,
-		Url:      aUrl,
-		Type:     storagev1.FileType(_Type),
-		Size:     uint64(file.Size),
-	})
-	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
-		return
-	}
-
-	response.SetSuccess(c, "上传成功", gin.H{
-		"url":     aUrl,
-		"file_id": fileID,
-	})
+	response.SetSuccess(c, "上传成功", resp)
 }
 
 // download
@@ -188,8 +108,6 @@ func (h *Handler) download(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	//log.Info("Received response from service", zap.Any("ResponseHeaders", resp.Header), zap.String("TargetURL", targetURL))
-
 	// 将 BFF 服务的响应返回给客户端
 	c.Status(resp.StatusCode)
 	for h, val := range resp.Header {
@@ -214,17 +132,11 @@ func (h *Handler) getFileInfo(c *gin.Context) {
 		return
 	}
 
-	info, err := h.storageClient.GetFileInfo(context.Background(), &storagev1.GetFileInfoRequest{FileID: fileID})
+	info, err := h.svc.GetFileInfo(context.Background(), &model.GetFileInfoRequest{FileId: fileID})
 	if err != nil {
 		c.Error(err)
 		return
 	}
-
-	URL := info.Url
-	if strings.Contains(URL, "http://minio:9000") {
-		URL = strings.Replace(URL, "http://minio:9000", "http://gateway:8080/api/v1/storage/files", 1)
-	}
-	info.Url = URL
 
 	response.SetSuccess(c, "获取文件信息成功", info)
 }
@@ -248,25 +160,8 @@ func (h *Handler) deleteFile(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.storageClient.GetFileInfo(context.Background(), &storagev1.GetFileInfoRequest{FileID: fileID})
+	err := h.svc.DeleteFile(context.Background(), fileID)
 	if err != nil {
-		h.logger.Error("获取文件信息失败", zap.Error(err))
-		response.SetFail(c, "删除文件失败，请重试", nil)
-		//c.Error(err)
-		return
-	}
-
-	if err = h.sp.Delete(context.Background(), resp.Path); err != nil {
-		h.logger.Error("oss删除文件失败", zap.Error(err))
-		response.SetFail(c, "删除文件失败，请重试", nil)
-		//c.Error(err)
-		return
-	}
-
-	_, err = h.storageClient.Delete(context.Background(), &storagev1.DeleteRequest{FileID: fileID})
-	if err != nil {
-		response.SetFail(c, "删除文件失败，请重试", nil)
-		//c.Error(err)
 		return
 	}
 
@@ -295,32 +190,16 @@ func (h *Handler) getMultipartKey(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "type is required"})
 		return
 	}
-	// 获取桶名称
-	bucket, err := myminio.GetBucketName(t)
-	if err != nil {
-		h.logger.Error("获取桶失败", zap.Error(err))
-		response.SetFail(c, "获取分片id失败，请重试", nil)
-		return
-	}
 
-	// 生成文件ID和文件扩展名
-	lastDotIndex := strings.LastIndex(fileName, ".")
-	fileExtension := ""
-	if lastDotIndex == -1 || lastDotIndex == len(fileName)-1 {
-		fileExtension = ""
-	} else {
-		fileExtension = fileName[lastDotIndex:]
-	}
-	fileID := uuid.New().String()
-
-	// 生成对象键
-	key := myminio.GenKey(bucket, fileID+fileExtension)
-	multipartUpload, err := h.sp.NewMultipartUpload(context.Background(), key, minio.PutObjectOptions{})
+	resp, err := h.svc.GetMultipartUploadKey(context.Background(), &model.GetMultipartUploadKeyRequest{
+		FileName: fileName,
+		Type:     model.FileType(t),
+	})
 	if err != nil {
 		return
 	}
 
-	response.SetSuccess(c, "获取文件信息成功", gin.H{"upload_id": multipartUpload, "type": t, "key": key})
+	response.SetSuccess(c, "获取文件信息成功", resp)
 }
 
 // @Summary 上传分片
@@ -345,13 +224,6 @@ func (h *Handler) uploadMultipart(c *gin.Context) {
 	if file.Size > int64(maxFileSize) {
 		h.logger.Error("文件大小超过限制", zap.Error(err))
 		response.SetFail(c, "文件大小超过限制", nil)
-		return
-	}
-
-	fileObj, err := file.Open()
-	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
@@ -381,7 +253,14 @@ func (h *Handler) uploadMultipart(c *gin.Context) {
 		return
 	}
 
-	err = h.sp.UploadPart(context.Background(), key, uploadId, partNumber, fileObj, file.Size, minio.PutObjectPartOptions{})
+	fileObj, err := file.Open()
+	if err != nil {
+		h.logger.Error("上传失败", zap.Error(err))
+		response.SetFail(c, "上传失败", nil)
+		return
+	}
+
+	err = h.svc.UploadMultipart(c, key, uploadId, partNumber, fileObj, file.Size)
 	if err != nil {
 		h.logger.Error("上传失败", zap.Error(err))
 		response.SetFail(c, "上传失败", nil)
@@ -406,36 +285,12 @@ func (h *Handler) completeUploadMultipart(c *gin.Context) {
 		return
 	}
 
-	headerUrl, err := h.sp.CompleteMultipartUpload(context.Background(), req.Key, req.UploadId)
+	resp, err := h.svc.CompleteMultipartUpload(c, req)
 	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
-		return
-	}
-	info, err := h.sp.GetObjectInfo(context.Background(), req.Key, minio.GetObjectOptions{})
-	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
 		return
 	}
 
-	_, err = h.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
-		UserID:   "userID",
-		FileName: req.FileName,
-		Path:     req.Key,
-		Url:      headerUrl.String(),
-		Type:     storagev1.FileType(req.Type),
-		Size:     uint64(info.Size),
-	})
-	if err != nil {
-		h.logger.Error("上传失败", zap.Error(err))
-		response.SetFail(c, "上传失败", nil)
-		return
-	}
-
-	headerUrl.Host = gatewayAddress + ":" + gatewayPort
-	headerUrl.Path = downloadURL + headerUrl.Path
-	response.SetSuccess(c, "上传成功", gin.H{"file_url": headerUrl.String()})
+	response.SetSuccess(c, "上传成功", gin.H{"file_url": resp})
 }
 
 // @Summary 清除文件分片(用于中断上传)
@@ -453,7 +308,7 @@ func (h *Handler) abortUploadMultipart(c *gin.Context) {
 		return
 	}
 
-	err := h.sp.AbortMultipartUpload(context.Background(), req.Key, req.UploadId)
+	err := h.svc.AbortMultipartUpload(context.Background(), req.Key, req.UploadId)
 	if err != nil {
 		h.logger.Error("清理失败", zap.Error(err))
 		response.SetFail(c, "清理失败", nil)

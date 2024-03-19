@@ -75,3 +75,23 @@ type AbortUploadRequest struct {
 	UploadId string `json:"upload_id" binding:"required"`
 	Key      string `json:"key" binding:"required"`
 }
+
+type UploadFileResponse struct {
+	FileId string `json:"file_id"`
+	Url    string `json:"url"`
+}
+
+type GetFileInfoRequest struct {
+	FileId string `json:"file_id" binding:"required"`
+}
+
+type GetMultipartUploadKeyResponse struct {
+	UploadId string   `json:"upload_id" binding:"required"`
+	Type     FileType `json:"type" binding:"required"`
+	Key      string   `json:"key" binding:"required"`
+}
+
+type GetMultipartUploadKeyRequest struct {
+	FileName string   `json:"file_name" binding:"required"`
+	Type     FileType `json:"type" binding:"required"`
+}

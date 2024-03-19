@@ -3,8 +3,8 @@ package minio
 import (
 	"context"
 	"fmt"
+	storev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/storage"
-	storev1 "github.com/cossim/coss-server/service/storage/api/v1"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"io"

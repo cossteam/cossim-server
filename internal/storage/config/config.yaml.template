@@ -1,0 +1,83 @@
+log:
+  stdout: true
+  level: -1
+  file: "logs/app.log"
+  format: "console" # console、json
+
+mysql:
+  address: "mysql"
+  port: 33066
+  username: "root"
+  password: "888888"
+  database: "coss"
+  opts:
+    allowNativePasswords: "true"
+    timeout: "800ms"
+    readTimeout: "200ms"
+    writeTimeout: "800ms"
+    parseTime: "true"
+    loc: "Local"
+    charset: "utf8mb4"
+
+grpc:
+  name: "storage_service"
+  address: "storage_service"
+  port: 10003
+
+system:
+  environment: "prod"
+  ssl: true # 是否启用ssl true的话不会使用port
+  gateway_address: "coss.gezi.vip"
+  gateway_port: 8080
+  gateway_address_dev: "127.0.0.1"
+  gateway_port_dev: 8080
+
+http:
+  name: "storage_bff"
+  addr: "storage_service"
+  port: 8085
+
+email:
+  enable: false
+  smtp_server: "smtp.gmail.com"
+  port: 587
+  username: "max.mustermann@example.com"
+  password: "Hitosea@123.."
+
+oss:
+  name: "minio"
+  address: "minio"
+  port: 9000
+  accessKey: "root"
+  secretKey: "Hitosea@123.."
+  ssl: false
+  presignedExpires: ""
+  dial: "3000ms"
+  timeout: "5000ms"
+
+redis:
+  proto: "tcp"
+  address: "redis"
+  port: 6379
+  password: "Hitosea@123.."
+#  protocol: 3
+
+# 注册本服务
+register:
+  name: "storage_service"
+  address: "consul"   # 注册中心地址
+  port: 8500            # 注册中心端口
+  tags: ["storage", "service"]
+
+discovers:
+#  storage:
+#    name: "storage_service"
+#    address: "storage_service"
+#    port: 10003
+
+encryption:
+  enable: false
+  name: coss-im
+  email: max.mustermann@example.com
+  passphrase: LongSecret
+  rsaBits: 2048

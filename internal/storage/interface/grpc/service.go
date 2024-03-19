@@ -1,19 +1,19 @@
-package service
+package grpc
 
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/internal/storage/api/grpc/v1"
+	api "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/storage/domain/entity"
+	"github.com/cossim/coss-server/internal/storage/domain/repository"
+	"github.com/cossim/coss-server/internal/storage/infrastructure/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/version"
-	"github.com/cossim/coss-server/service/storage/api/v1"
-	api "github.com/cossim/coss-server/service/storage/api/v1"
-	"github.com/cossim/coss-server/service/storage/domain/entity"
-	"github.com/cossim/coss-server/service/storage/domain/repository"
-	"github.com/cossim/coss-server/service/storage/infrastructure/persistence"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -23,14 +23,14 @@ import (
 	"strconv"
 )
 
-type Service struct {
+type Handler struct {
 	logger *zap.Logger
 	ac     *pkgconfig.AppConfig
 	fr     repository.FileRepository
 	v1.UnimplementedStorageServiceServer
 }
 
-func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
+func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
 	if err != nil {
 		return err
@@ -51,26 +51,26 @@ func (s *Service) Init(cfg *pkgconfig.AppConfig) error {
 	return nil
 }
 
-func (s *Service) Name() string {
+func (s *Handler) Name() string {
 	//TODO implement me
 	return "storage_service"
 }
 
-func (s *Service) Version() string { return version.FullVersion() }
+func (s *Handler) Version() string { return version.FullVersion() }
 
-func (s *Service) Register(srv *grpc.Server) {
+func (s *Handler) Register(srv *grpc.Server) {
 	api.RegisterStorageServiceServer(srv, s)
 }
 
-func (s *Service) RegisterHealth(srv *grpc.Server) {
+func (s *Handler) RegisterHealth(srv *grpc.Server) {
 	grpc_health_v1.RegisterHealthServer(srv, health.NewServer())
 }
 
-func (s *Service) Stop(ctx context.Context) error { return nil }
+func (s *Handler) Stop(ctx context.Context) error { return nil }
 
-func (s *Service) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
+func (s *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
 
-func (s *Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.UploadResponse, error) {
+func (s *Handler) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.UploadResponse, error) {
 	resp := &v1.UploadResponse{}
 
 	_, fileName, err := minio.ParseKey(request.Path)
@@ -97,7 +97,7 @@ func (s *Service) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Up
 	return resp, nil
 }
 
-func (s *Service) GetFileInfo(ctx context.Context, request *v1.GetFileInfoRequest) (*v1.GetFileInfoResponse, error) {
+func (s *Handler) GetFileInfo(ctx context.Context, request *v1.GetFileInfoRequest) (*v1.GetFileInfoResponse, error) {
 	file, err := s.fr.GetByID(request.FileID)
 	if err != nil {
 		s.logger.Error("查询文件信息失败", zap.Error(err))
@@ -116,7 +116,7 @@ func (s *Service) GetFileInfo(ctx context.Context, request *v1.GetFileInfoReques
 	}, nil
 }
 
-func (s *Service) Delete(ctx context.Context, request *v1.DeleteRequest) (*v1.DeleteResponse, error) {
+func (s *Handler) Delete(ctx context.Context, request *v1.DeleteRequest) (*v1.DeleteResponse, error) {
 	fmt.Println("request.FileID => ", request.FileID)
 	// 根据文件 ID 删除文件
 	err := s.fr.Delete(request.FileID)

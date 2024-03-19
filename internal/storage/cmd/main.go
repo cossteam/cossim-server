@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	_ "github.com/cossim/coss-server/docs"
+	"github.com/cossim/coss-server/internal/storage/interface/grpc"
+	"github.com/cossim/coss-server/internal/storage/interface/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/healthz"
 	"github.com/cossim/coss-server/pkg/manager/signals"
-	"github.com/cossim/coss-server/service/storage/service"
 )
 
 var (
@@ -35,9 +36,14 @@ func init() {
 }
 
 func main() {
+	svc := &grpc.Handler{}
 	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
+		Http: ctrl.HTTPServer{
+			HTTPService:        &http.Handler{StorageClient: svc},
+			HealthCheckAddress: httpProbeAddr,
+		},
 		Grpc: ctrl.GRPCServer{
-			GRPCService:         &service.Service{},
+			GRPCService:         svc,
 			HealthzCheckAddress: grpcProbeAddr,
 		},
 		Config: ctrl.Config{
@@ -46,7 +52,7 @@ func main() {
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
 			Key:                  "service/storage",
-			Keys:                 []string{discovery.CommonMySQLConfigKey},
+			Keys:                 []string{discovery.CommonMySQLConfigKey, discovery.CommonOssConfigKey},
 			Registry: ctrl.Registry{
 				Discover: discover,
 				Register: register,
