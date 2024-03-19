@@ -5,7 +5,7 @@ BUILDPLATFORM := linux/amd64,linux/arm64,linux/arm/v8
 MAIN_FILE=cmd/main.go
 NAME= ""
 DIR := $(shell pwd)
-IMG ?= hub.hitosea.com/cossim/${NAME}-${ACTION}:latest
+IMG ?= hub.hitosea.com/cossim/${NAME}-internal:latest
 
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 #BUILD_BRANCH := "main"
@@ -14,9 +14,8 @@ BUILD_COMMIT := ${shell git rev-parse HEAD}
 BUILD_TIME := ${shell date '+%Y-%m-%d %H:%M:%S'}
 BUILD_GO_VERSION := $(shell go version | grep -o  'go[0-9].[0-9].*')
 VERSION_PATH := "github.com/cossim/coss-server/pkg/version"
-BUILD_PATH := ""
-DOCKER_BUILD_PATH := ""
-ACTION := ""
+BUILD_PATH := "${DIR}/internal/cmd/${NAME}/main.go"
+DOCKER_BUILD_PATH := "cmd/${NAME}/main.go"
 
 CONFIG_PATH := "deploy/docker/config"
 DOCKER_COMPOSE_PATH := "deploy/docker"
@@ -26,21 +25,6 @@ INTERFACE_LIST ?= group msg relation storage user live
 CONSUL_HOST := "127.0.0.1:8500"
 CONSUL_SSL := false
 CONSUL_TOKEN := ""
-
-# 根据传入的 ACTION 参数设置 BUILD_PATH
-ifeq ($(ACTION), interface)
-	BUILD_PATH := ${DIR}/interface/${NAME}
-	DOCKER_BUILD_PATH :="interface/${NAME}"
-else ifeq ($(ACTION), service)
-	BUILD_PATH := ${DIR}/service/${NAME}
-	DOCKER_BUILD_PATH := "service/${NAME}"
-else ifeq ($(ACTION), admin)
-	BUILD_PATH := ${DIR}/admin
-	DOCKER_BUILD_PATH := "${NAME}"
-else ifeq ($(ACTION), internal)
-	BUILD_PATH := ${DIR}/internal/${NAME}
-	DOCKER_BUILD_PATH := "internal/${NAME}"
-endif
 
 # 如果没有设置 BUILD_PATH，输出错误信息
 ifeq ($(BUILD_PATH),)
@@ -157,8 +141,8 @@ config_clear: ## Clear YAML and JSON files in config_path
 # 构建指定grpc服务  make build-service ACTION=service NAME="user"
 build-service: dep ## Build the binary file
 ifdef NAME
-	@echo "Building with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}/$(MAIN_FILE)"
-	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}/$(MAIN_FILE)
+	@echo "Building with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}"
+	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}
 else
 	@echo "Please provide service NAME"
 endif
@@ -166,8 +150,8 @@ endif
 # 构建指定接口服务  make build-interface ACTION=interface NAME="user"
 build-interface: dep
 ifdef NAME
-	@echo "Building ${INTERFACE_NAME} interface with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}/$(MAIN_FILE)"
-	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}/$(MAIN_FILE)
+	@echo "Building ${INTERFACE_NAME} interface with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}"
+	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}
 else
 	@echo "Please provide interface NAME"
 endif
@@ -184,7 +168,6 @@ docker-build: dep test## Build docker image with the manager.
              --build-arg BUILD_GO_VERSION="${BUILD_GO_VERSION}" \
              --build-arg BUILD_PATH="${DOCKER_BUILD_PATH}" \
              --build-arg VERSION_PATH="${VERSION_PATH}" \
-              --build-arg MAIN_FILE="${MAIN_FILE}" \
              -t "${IMG}" .
 
 docker-push: ## Push docker image with the manager.
@@ -208,9 +191,8 @@ docker-buildx: test ## Build and push docker image for the manager for cross-pla
              --build-arg BUILD_COMMIT="${BUILD_COMMIT}" \
              --build-arg BUILD_TIME="${BUILD_TIME}" \
              --build-arg BUILD_GO_VERSION="${BUILD_GO_VERSION}" \
-             --build-arg BUILD_PATH="${DOCKER_BUILD_PATH}" \
              --build-arg VERSION_PATH="${VERSION_PATH}" \
-              --build-arg MAIN_FILE="${MAIN_FILE}" \
+             --build-arg BUILD_PATH="${DOCKER_BUILD_PATH}" \
              -t "${IMG}" -f Dockerfile .
 	- docker buildx rm project-v3-builder
 	#rm Dockerfile.cross
