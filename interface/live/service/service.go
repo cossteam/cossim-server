@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	msggrpcv1 "github.com/cossim/coss-server/service/msg/api/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/service/relation/api/v1"
 	lksdk "github.com/livekit/server-sdk-go"
 	"github.com/rs/xid"
@@ -25,13 +26,15 @@ const (
 )
 
 type Service struct {
-	userClient     user.UserServiceClient
-	relUserClient  relationgrpcv1.UserRelationServiceClient
-	relGroupClient relationgrpcv1.GroupRelationServiceClient
-	groupClient    groupgrpcv1.GroupServiceClient
-	roomService    *lksdk.RoomServiceClient
-	mqClient       *msg_queue.RabbitMQ
-	redisClient    *cache.RedisClient
+	userClient           user.UserServiceClient
+	relUserClient        relationgrpcv1.UserRelationServiceClient
+	relGroupClient       relationgrpcv1.GroupRelationServiceClient
+	groupClient          groupgrpcv1.GroupServiceClient
+	msgClient            msggrpcv1.MsgServiceClient
+	relationDialogClient relationgrpcv1.DialogServiceClient
+	roomService          *lksdk.RoomServiceClient
+	mqClient             *msg_queue.RabbitMQ
+	redisClient          *cache.RedisClient
 
 	ac *pkgconfig.AppConfig
 
@@ -44,11 +47,13 @@ type Service struct {
 	sid       string
 	discovery discovery.Registry
 
+	cache bool
+
 	lock sync.Mutex
 }
 
 func New(ac *pkgconfig.AppConfig) *Service {
-	return &Service{
+	s := &Service{
 		liveTimeout:   ac.Livekit.Timeout,
 		liveApiKey:    ac.Livekit.ApiKey,
 		liveApiSecret: ac.Livekit.ApiSecret,
@@ -60,6 +65,8 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		sid:           xid.New().String(),
 		logger:        plog.NewDefaultLogger("live_user_bff", int8(ac.Log.Level)),
 	}
+	s.cache = s.setCacheConfig()
+	return s
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
@@ -74,6 +81,9 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	case "group_service":
 		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
+	case "msg_service":
+		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
+		s.logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
 	}
 
 	return nil
@@ -86,6 +96,14 @@ func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
 	}
 	return rmq
 }
+
 func setupRedisClient(cfg *pkgconfig.AppConfig) *cache.RedisClient {
 	return cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
+}
+
+func (s *Service) setCacheConfig() bool {
+	if s.redisClient == nil && s.ac.Cache.Enable {
+		return false
+	}
+	return s.ac.Cache.Enable
 }

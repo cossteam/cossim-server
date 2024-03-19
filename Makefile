@@ -174,7 +174,7 @@ endif
 docker-build: dep test## Build docker image with the manager.
 	#docker build -t ${IMG} .
 	# 根据传入的 ACTION 参数设置 BUILD_PATH
-	docker build --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \
+	docker build --platform $(PLATFORMS)  --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \
              --build-arg BUILD_COMMIT="${BUILD_COMMIT}" \
              --build-arg BUILD_TIME="${BUILD_TIME}" \
              --build-arg BUILD_GO_VERSION="${BUILD_GO_VERSION}" \
@@ -192,7 +192,8 @@ docker-push: ## Push docker image with the manager.
 # - have enable BuildKit, More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 # - be able to push the image for your registry (i.e. if you do not inform a valid value via IMG=<myregistry/image:<tag>> then the export will fail)
 # To properly provided solutions that supports more than one platform you should use this option.
-PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
+#PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
+PLATFORMS ?= linux/amd64
 .PHONY: docker-buildx
 docker-buildx: test ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile

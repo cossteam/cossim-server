@@ -356,7 +356,7 @@ func (s *Handler) GetUserInfoByCossId(ctx context.Context, in *api.GetUserInfoBy
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
 		}
-		return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	} else {
 		resp = &api.UserInfoResponse{
 			UserId: userInfo.ID,

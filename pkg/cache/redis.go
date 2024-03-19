@@ -288,8 +288,11 @@ func (r *RedisClient) UpdateKeyExpiration(key string, expiration time.Duration) 
 		return err
 	}
 	// 如果键不存在或已过期，返回错误
-	if remaining < 0 && remaining != -1 {
+	if remaining < 0 {
 		return fmt.Errorf("key does not exist or has expired")
+	}
+	if expiration == -1 {
+		expiration = remaining
 	}
 	// 使用 EXPIRE 命令更新键的过期时间
 	return r.Client.Expire(context.Background(), key, expiration).Err()
