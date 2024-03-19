@@ -212,7 +212,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		}
 	}
 	if fRequest != nil {
-		if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
+		if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING && fRequest.ID != 0 {
 			return nil, code.RelationErrFriendRequestAlreadyPending
 		} else if fRequest.Status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_ACCEPT {
 			return nil, code.RelationErrRequestAlreadyProcessed
