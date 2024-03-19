@@ -31,7 +31,7 @@ RUN echo "VERSION_PATH=${VERSION_PATH}" \
 #    && echo "BUILD_PATH=${BUILD_PATH}" \
 #    && echo "MAIN_FILE=${MAIN_FILE}"
 RUN go mod tidy
-RUN go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o /tmp/main ${BUILD_PATH}/${MAIN_FILE}
+RUN go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o /tmp/main ${BUILD_PATH}
 
 FROM alpine
 COPY --from=builder /tmp/main .
