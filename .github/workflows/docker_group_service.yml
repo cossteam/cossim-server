@@ -8,6 +8,8 @@ on:
        - 'master'
     paths:
       - 'pkg/**/*.go'
+      - 'docs/group*.*'
+      - 'cmd/group/**.go'
       - 'internal/group/**.go'
 jobs:
   build_group_service:

@@ -8,6 +8,7 @@ on:
       - 'master'
     paths:
       - 'pkg/**/*.go'
+      - 'cmd/gateway/**.go'
       - 'internal/gateway/**.go'
 jobs:
   build_gateway:

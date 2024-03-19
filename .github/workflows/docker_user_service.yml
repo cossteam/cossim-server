@@ -9,6 +9,7 @@ on:
     paths:
       - 'pkg/**/*.go'
       - 'docs/user*.*'
+      - 'cmd/user/**.go'
       - 'internal/user/**.go'
 jobs:
   build_user_service:
