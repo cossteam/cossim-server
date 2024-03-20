@@ -48,7 +48,7 @@ func main() {
 			RemoteConfigAddr:     remoteConfigAddr,
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
-			Key:                  "interface/gateway",
+			Key:                  "service/gateway",
 			Keys:                 discovery.DefaultKeys,
 			Registry: ctrl.Registry{
 				Discover: discover,
