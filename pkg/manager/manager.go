@@ -20,12 +20,8 @@ import (
 
 // Manager initializes shared dependencies such as Caches and Clients, and provides them to Runnables.
 type Manager interface {
-	// Cluster holds a variety of methods to interact with a cluster.
-	//cluster.Cluster
-
 	// Add will set requested dependencies on the component, and cause the component to be
 	// started when Start is called.  Add will inject any dependencies for which the argument
-	// implements the inject interface - e.g. inject.Client.
 	Add(Runnable) error
 
 	// AddMetricsExtraHandler adds an extra handler served on path to the http httpServer that serves metrics.
