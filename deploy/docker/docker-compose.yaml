@@ -112,7 +112,7 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  admin:
+  admin_service:
     container_name: cossim_admin
     image: hub.hitosea.com/cossim/admin
     command:
@@ -134,7 +134,7 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  live:
+  live_service:
     container_name: cossim_live
     image: hub.hitosea.com/cossim/live
     command:
