@@ -61,7 +61,7 @@ docker-build: dep test## Build docker image with the manager.
              --build-arg GOPROXY="${GOPROXY}" \
              -t "${IMG}" .
 
-docker-push: ## Push docker image with the manager.
+docker-push:
 	docker push ${IMG}
 
 # PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple
