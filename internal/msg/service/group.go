@@ -349,7 +349,7 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		return nil, err
 	}
 
-	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+	if model.IsPromptMessageType(model.UserMessageType(msginfo.Type)) {
 		return nil, code.MsgErrDeleteGroupMessageFailed
 	}
 
@@ -428,7 +428,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 		return nil, err
 	}
 
-	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+	if model.IsPromptMessageType(model.UserMessageType(msginfo.Type)) {
 		return nil, code.SetMsgErrSetGroupMsgLabelFailed
 	}
 

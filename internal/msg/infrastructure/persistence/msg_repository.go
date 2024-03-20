@@ -264,7 +264,12 @@ func (g *MsgRepo) SetUserMsgReadStatus(msgId uint32, isRead entity.ReadType) err
 
 func (g *MsgRepo) GetUnreadUserMsgs(uid string, dialogId uint32) ([]*entity.UserMessage, error) {
 	var userMessages []*entity.UserMessage
-	if err := g.db.Model(&entity.UserMessage{}).Where("dialog_id = ? AND is_read = ? AND receive_id = ? AND deleted_at = 0", dialogId, entity.NotRead, uid).Find(&userMessages).Error; err != nil {
+	if err := g.db.Model(&entity.UserMessage{}).Where("dialog_id = ? AND is_read = ? AND receive_id = ? AND deleted_at = 0",
+		dialogId,
+		entity.NotRead,
+		uid).
+		Where("type NOT IN (?)", []entity.UserMessageType{entity.MessageTypeLabel, entity.MessageTypeDelete}).
+		Find(&userMessages).Error; err != nil {
 		return nil, err
 	}
 	return userMessages, nil
@@ -373,6 +378,7 @@ func (g *MsgRepo) GetGroupMsgIdsByDialogID(dialogID uint32) ([]uint32, error) {
 	err := g.db.Model(&entity.GroupMessage{}).
 		Where("dialog_id = ? AND deleted_at = 0", dialogID).
 		Select("id").
+		Where("type NOT IN (?)", []entity.UserMessageType{entity.MessageTypeLabel, entity.MessageTypeDelete}).
 		Find(&msgIds).Error
 	return msgIds, err
 }

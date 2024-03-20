@@ -107,6 +107,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g.POST("/announcement/read", h.readGroupAnnouncement)
 	//获取群公告已读列表
 	g.GET("/announcement/read/list", h.getReadGroupAnnouncementList)
+
 	g.POST("/remark/set", h.setGroupUserRemark)
 
 	gg := api.Group("/group/admin")

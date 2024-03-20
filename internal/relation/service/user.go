@@ -715,6 +715,19 @@ func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *m
 	if err != nil {
 		return nil, err
 	}
+
+	if s.cache {
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return nil, nil
 }
 

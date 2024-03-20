@@ -416,7 +416,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 			return code.UserErrCossIdAlreadyRegistered
 		}
 	}
-	// 调用服务端设置用户公钥的方法
+
 	_, err := s.userClient.ModifyUserInfo(ctx, &usergrpcv1.User{
 		UserId:    userID,
 		NickName:  req.NickName,
@@ -429,6 +429,36 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 	if err != nil {
 		s.logger.Error("修改用户信息失败", zap.Error(err))
 		return err
+	}
+
+	if s.cache {
+		//查询所有好友
+		friends, err := s.relClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
+			UserId: userID,
+		})
+
+		for _, friend := range friends.FriendList {
+			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", friend.UserId))
+			if err != nil {
+				return err
+			}
+
+			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", friend.UserId))
+			if err != nil {
+				return err
+			}
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			return err
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
