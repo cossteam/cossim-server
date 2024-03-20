@@ -66,7 +66,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	var groupID uint32
 	var DialogID uint32
 	// 创建 DTM 分布式事务工作流
-	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "create_group_workflow_" + gid
 	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
