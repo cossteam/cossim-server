@@ -112,8 +112,8 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  admin_bff:
-    container_name: cossim_admin_bff
+  admin:
+    container_name: cossim_admin
     image: hub.hitosea.com/cossim/admin
     command:
       - "--discover"
@@ -134,8 +134,8 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  live_bff:
-    container_name: cossim_live_bff
+  live:
+    container_name: cossim_live
     image: hub.hitosea.com/cossim/live
     command:
       - "--discover"
