@@ -352,19 +352,30 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 			return nil, code.RelationErrConfirmFriendFailed
 		}
 
-		err = s.updateRedisFriendList(userId, usersorter.CustomUserData{
-			UserID:    info2.UserId,
-			NickName:  info2.NickName,
-			Email:     info2.Email,
-			Tel:       info2.Tel,
-			Avatar:    info2.Avatar,
-			Signature: info2.Signature,
-			Status:    uint(info2.Status),
-			DialogId:  relation2.DialogId,
-		})
+		//err = s.updateRedisFriendList(userId, usersorter.CustomUserData{
+		//	UserID:    info2.UserId,
+		//	NickName:  info2.NickName,
+		//	Email:     info2.Email,
+		//	Tel:       info2.Tel,
+		//	Avatar:    info2.Avatar,
+		//	Signature: info2.Signature,
+		//	Status:    uint(info2.Status),
+		//	DialogId:  relation2.DialogId,
+		//})
+		//if err != nil {
+		//	return nil, err
+		//}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.SenderId))
 		if err != nil {
 			return nil, err
 		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.ReceiverId))
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	// 向用户推送通知
