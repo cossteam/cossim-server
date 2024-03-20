@@ -146,16 +146,34 @@ func (s *Service) ListenQueue() {
 					return
 				}
 
-				UserId := "10001"
+				UserId := constants.SystemNotification
 
 				msgList := make([]*msggrpcv1.SendUserMsgRequest, 0)
+
+				wg := sync.WaitGroup{}
 				for _, v := range data.UserIds {
-					msgList = append(msgList, &msggrpcv1.SendUserMsgRequest{
+					//查询对话id
+					relation, err := s.relationUserClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+						UserId:   v,
+						FriendId: UserId,
+					})
+					if err != nil {
+						return
+					}
+					msg2 := &msggrpcv1.SendUserMsgRequest{
 						SenderId:   UserId,
 						ReceiverId: v,
 						Content:    data.Content,
+						DialogId:   relation.DialogId,
 						Type:       int32(data.Type), //TODO 消息类型枚举
-					})
+					}
+					msgList = append(msgList, msg2)
+					wg.Add(1)
+					v2 := v
+					go func() {
+						defer wg.Done()
+						s.SendMsg(v2, wsm.DriverId, constants.SendUserMessageEvent, msg2, true)
+					}()
 				}
 
 				_, err = s.msgClient.SendMultiUserMessage(context.Background(), &msggrpcv1.SendMultiUserMsgRequest{MsgList: msgList})
@@ -164,10 +182,12 @@ func (s *Service) ListenQueue() {
 					return
 				}
 
-				sendIds := data.UserIds
-				data.UserIds = nil
-				//delete(data, "user_ids")
-				s.SendMsgToUsers(sendIds, "", constants.SystemNotificationEvent, data, true)
+				fmt.Println("等待线程结束")
+				wg.Wait()
+				//sendIds := data.UserIds
+				//data.UserIds = nil
+				////delete(data, "user_ids")
+				//s.SendMsgToUsers(sendIds, "", constants.SendUserMessageEvent, data, true)
 
 			//强制断开ws
 			case msg_queue.UserWebsocketClose:

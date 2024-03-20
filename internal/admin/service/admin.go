@@ -154,9 +154,8 @@ func (s *Service) InitAdmin() error {
 }
 
 func (s *Service) SendAllNotification(ctx context.Context, content string) (interface{}, error) {
-	UserId := "10001"
-	fmt.Println("relationClient", s.relationClient)
-	fmt.Println("msgClient", s.msgClient)
+	UserId := constants.SystemNotification
+
 	//TODO 系统账号统一管理
 	//查询系统通知账号的所有好友
 	list, err := s.relationClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: UserId})
