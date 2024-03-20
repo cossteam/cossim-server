@@ -1,37 +1,27 @@
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
-
-BUILDPLATFORM := linux/amd64,linux/arm64,linux/arm/v8
-
-MAIN_FILE=cmd/main.go
-NAME= ""
 DIR := $(shell pwd)
-IMG ?= hub.hitosea.com/cossim/${NAME}-internal:latest
 
+# 将命令行参数存储到一个变量中
+CMD_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+ifeq ($(strip $(CMD_ARGS)),)
+    CMD_ARGS := ""
+endif
+SERVICE := $(lastword $(CMD_ARGS))
+DOCKER_BUILD_PATH := "cmd/${SERVICE}/main.go"
+INTERFACE_LIST ?= group msg relation storage user live
+
+GOPROXY=https://goproxy.cn
+TAG ?= latest
+IMG ?= hub.hitosea.com/cossim/${SERVICE}:${TAG}
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-#BUILD_BRANCH := "main"
 BUILD_COMMIT := ${shell git rev-parse HEAD}
-#BUILD_COMMIT := "22193944514397212fe6a25189906ab9de49164a"
 BUILD_TIME := ${shell date '+%Y-%m-%d %H:%M:%S'}
 BUILD_GO_VERSION := $(shell go version | grep -o  'go[0-9].[0-9].*')
 VERSION_PATH := "github.com/cossim/coss-server/pkg/version"
-BUILD_PATH := "${DIR}/internal/cmd/${NAME}/main.go"
-DOCKER_BUILD_PATH := "cmd/${NAME}/main.go"
 
-CONFIG_PATH := "deploy/docker/config"
-DOCKER_COMPOSE_PATH := "deploy/docker"
-
-INTERFACE_LIST ?= group msg relation storage user live
-
-CONSUL_HOST := "127.0.0.1:8500"
-CONSUL_SSL := false
-CONSUL_TOKEN := ""
-
-# 如果没有设置 BUILD_PATH，输出错误信息
-ifeq ($(BUILD_PATH),)
-    $(error Invalid ACTION. Use 'make build ACTION=interface' or 'make build ACTION=service')
-endif
-
-.PHONY: build-service build-interface docker-build docker-push
+# 防止命令行参数被误认为是目标
+%:
+	@:
 
 .PHONY: dep
 dep: ## Get the dependencies
@@ -53,121 +43,22 @@ fmt: ## Run go fmt against code.
 test: fmt vet## Run unittests
 	@go test -short ./...
 
-SERVICE_DIR := ./service
-INTERFACE_DIR := ./interface
-
-.PHONY: run run_service run_interface
-
-.PHONY: run stop
-
-run: config_init
-	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml up -d
-
-restart:
-	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml restart
-stop:
-	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml down
-
-
-
-
-#run_service:
-#	@for dir in $(shell ls -d $(SERVICE_DIR)/*); do \
-#		if [ -f "$$dir/Makefile" ]; then \
-#			(cd $$dir && make run &); \
-#		else \
-#			echo "No Makefile found in $$dir"; \
-#		fi \
-#	done
-#
-#run_interface:
-#	@for dir in $(shell ls -d $(INTERFACE_DIR)/*); do \
-#		if [ -f "$$dir/Makefile" ]; then \
-#			(cd $$dir && make run &); \
-#		else \
-#			echo "No Makefile found in $$dir"; \
-#		fi \
-#	done
-
 swag: ## Run unittests
 	$(foreach dir,$(INTERFACE_LIST), \
 		swag i -g http.go -dir internal/$(dir)/interface/http,internal/$(dir)/api/http/model,internal/live/api/dto,pkg/utils/usersorter --instanceName $(dir); \
 	)
-#	swag i -g http.go -dir internal/admin/interface/http,internal/admin/api/model,pkg/utils/usersorter --instanceName admin
-#	swag i -g http.go -dir internal/group/interface/http,internal/group/api/http/model,pkg/utils/usersorter --instanceName group
-#	swag i -g http.go -dir internal/storage/interface/http,internal/storage/api/http/model,pkg/utils/usersorter --instanceName storage
-#	swag i -g http.go -dir internal/user/interface/http,internal/user/api/http/model,pkg/utils/usersorter --instanceName user
-#	swag i -g http.go -dir internal/relation/interface/http,internal/relation/api/http/model,pkg/utils/usersorter --instanceName relation
-#	swag i -g http.go -dir internal/msg/interface/http,internal/msg/api/http/model,pkg/utils/usersorter --instanceName msg
-
-
-
-
-
-
-.PHONY: config_init config_clear
-config_init: ## Initialize config files
-	@config_path=$(CONFIG_PATH) && \
-	for template_file in $$(find $${config_path} -type f -name '*.template'); do \
-		if [ -e "$$template_file" ]; then \
-			new_file="$${template_file%.template}"; \
-			if [ ! -e "$$new_file" ]; then \
-				cp "$$template_file" "$$new_file"; \
-				echo "Copied $$template_file to $$new_file"; \
-			else \
-				echo "File $$new_file already exists, skipping copy"; \
-			fi \
-		fi \
-	done
-
-config_clear: ## Clear YAML and JSON files in config_path
-	@config_path=$(CONFIG_PATH) && \
-	find $${config_path} \( -name '*.yaml' -o -name '*.yml' -o -name '*.json' \) -type f -exec rm -f {} \; && \
-	echo "Cleared YAML and JSON files in $${config_path}"
-
-#.PHONY: common dev prod
-#common: config_init
-#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 up -d
-#
-#dev: common
-#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.dev.yaml up -d
-#
-#prod: common
-#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.prod.yaml up -d
-#
-#stop:
-#	@docker-compose -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.yaml.bak2 -f $(DOCKER_COMPOSE_PATH)/docker-compose.prod.yaml down
-
-# 构建指定grpc服务  make build-service ACTION=service NAME="user"
-build-service: dep ## Build the binary file
-ifdef NAME
-	@echo "Building with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}"
-	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}
-else
-	@echo "Please provide service NAME"
-endif
-
-# 构建指定接口服务  make build-interface ACTION=interface NAME="user"
-build-interface: dep
-ifdef NAME
-	@echo "Building ${INTERFACE_NAME} interface with flags: go build -ldflags \"-s -w\" -ldflags \"-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'\" -o ${BUILD_PATH}"
-	@go build -ldflags "-s -w" -ldflags "-X '${VERSION_PATH}.GitBranch=${BUILD_BRANCH}' -X '${VERSION_PATH}.GitCommit=${BUILD_COMMIT}' -X '${VERSION_PATH}.BuildTime=${BUILD_TIME}' -X '${VERSION_PATH}.GoVersion=${BUILD_GO_VERSION}'" -o ${BUILD_PATH}/bin/main ${BUILD_PATH}
-else
-	@echo "Please provide interface NAME"
-endif
 
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 docker-build: dep test## Build docker image with the manager.
-	#docker build -t ${IMG} .
-	# 根据传入的 ACTION 参数设置 BUILD_PATH
 	docker build --platform $(PLATFORMS)  --build-arg BUILD_BRANCH="${BUILD_BRANCH}" \
              --build-arg BUILD_COMMIT="${BUILD_COMMIT}" \
              --build-arg BUILD_TIME="${BUILD_TIME}" \
              --build-arg BUILD_GO_VERSION="${BUILD_GO_VERSION}" \
-             --build-arg BUILD_PATH="${DOCKER_BUILD_PATH}" \
-             --build-arg VERSION_PATH="${VERSION_PATH}" \
+             --build-arg BUILD_PATH=${DOCKER_BUILD_PATH} \
+             --build-arg VERSION_PATH=${VERSION_PATH} \
+             --build-arg GOPROXY="${GOPROXY}" \
              -t "${IMG}" .
 
 docker-push: ## Push docker image with the manager.
@@ -191,8 +82,8 @@ docker-buildx: test ## Build and push docker image for the manager for cross-pla
              --build-arg BUILD_COMMIT="${BUILD_COMMIT}" \
              --build-arg BUILD_TIME="${BUILD_TIME}" \
              --build-arg BUILD_GO_VERSION="${BUILD_GO_VERSION}" \
-             --build-arg VERSION_PATH="${VERSION_PATH}" \
-             --build-arg BUILD_PATH="${DOCKER_BUILD_PATH}" \
+             --build-arg VERSION_PATH=${VERSION_PATH} \
+             --build-arg BUILD_PATH=${DOCKER_BUILD_PATH} \
              -t "${IMG}" -f Dockerfile .
 	- docker buildx rm project-v3-builder
 	#rm Dockerfile.cross
