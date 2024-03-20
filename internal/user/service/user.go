@@ -359,6 +359,7 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 		Nickname:  r.NickName,
 		Email:     r.Email,
 		Avatar:    r.Avatar,
+		Tel:       r.Tel,
 		Signature: r.Signature,
 		CossId:    r.CossId,
 		Status:    model.UserStatus(r.Status),

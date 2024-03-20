@@ -198,7 +198,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			DialogAvatar:      info2.Avatar,
 			DialogUnreadCount: len(msgs.UserMessages),
 			LastMessage: model.Message{
-				MsgType:  req.Type,
+				MsgType:  uint(req.Type),
 				Content:  req.Content,
 				SenderId: userID,
 				SendTime: pkgtime.Now(),
@@ -246,7 +246,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
 		SenderId:                userID,
 		Content:                 req.Content,
-		MsgType:                 req.Type,
+		MsgType:                 uint(req.Type),
 		ReplayId:                req.ReplayId,
 		MsgId:                   message.MsgId,
 		ReceiverId:              req.ReceiverId,
@@ -264,7 +264,9 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	return message, nil
 }
 
-//func (s *Service)InsertMsgSend
+//func (s *Service) InsertMsgAndSendWsMsg(ctx context.Context, req *msggrpcv1.SendUserMsgRequest, driverId string) (*msggrpcv1.SendUserMsgResponse, error) {
+//
+//}
 
 // 推送私聊消息
 func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *model.WsUserMsg) {
@@ -708,6 +710,10 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 		return nil, err
 	}
 
+	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+		return nil, code.MsgErrDeleteUserMessageFailed
+	}
+
 	if msginfo.SenderId != userID {
 		return nil, code.Unauthorized
 	}
@@ -717,7 +723,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	_, err = s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -734,44 +740,55 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 		return nil, err
 	}
 
-	//查询发送者信息
-	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-		UserId: userID,
-	})
+	////查询发送者信息
+	//info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//	UserId: userID,
+	//})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//if s.cache {
+	//	//更新缓存
+	//	err = s.updateCacheUserDialog(msginfo.DialogId)
+	//	if err != nil {
+	//		s.logger.Error("更新用户对话失败", zap.Error(err))
+	//		return nil, code.MsgErrDeleteUserMessageFailed
+	//	}
+	//}
+
+	//wsm := model.WsUserOperatorMsg{
+	//	Id:                     msginfo.Id,
+	//	SenderId:               msginfo.SenderId,
+	//	ReceiverId:             msginfo.ReceiverId,
+	//	Content:                msginfo.Content,
+	//	Type:                   msginfo.Type,
+	//	ReplayId:               msginfo.ReplayId,
+	//	IsRead:                 msginfo.IsRead,
+	//	ReadAt:                 msginfo.ReadAt,
+	//	CreatedAt:              msginfo.CreatedAt,
+	//	DialogId:               msginfo.DialogId,
+	//	IsLabel:                model.LabelMsgType(msginfo.IsLabel),
+	//	IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
+	//	OperatorInfo: model.SenderInfo{
+	//		Avatar: info.Avatar,
+	//		Name:   info.NickName,
+	//		UserId: info.UserId,
+	//	},
+	//}
+	//
+	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, wsm, true)
+	req := &model.SendUserMsgRequest{
+		ReceiverId: msginfo.ReceiverId,
+		Content:    "",
+		Type:       model.MessageTypeDelete,
+		DialogId:   msginfo.DialogId,
+	}
+
+	_, err = s.SendUserMsg(ctx, userID, driverId, req)
 	if err != nil {
 		return nil, err
 	}
-
-	if s.cache {
-		//更新缓存
-		err = s.updateCacheUserDialog(msginfo.DialogId)
-		if err != nil {
-			s.logger.Error("更新用户对话失败", zap.Error(err))
-			return nil, code.MsgErrDeleteUserMessageFailed
-		}
-	}
-
-	wsm := model.WsUserOperatorMsg{
-		Id:                     msginfo.Id,
-		SenderId:               msginfo.SenderId,
-		ReceiverId:             msginfo.ReceiverId,
-		Content:                msginfo.Content,
-		Type:                   msginfo.Type,
-		ReplayId:               msginfo.ReplayId,
-		IsRead:                 msginfo.IsRead,
-		ReadAt:                 msginfo.ReadAt,
-		CreatedAt:              msginfo.CreatedAt,
-		DialogId:               msginfo.DialogId,
-		IsLabel:                model.LabelMsgType(msginfo.IsLabel),
-		IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
-		OperatorInfo: model.SenderInfo{
-			Avatar: info.Avatar,
-			Name:   info.NickName,
-			UserId: info.UserId,
-		},
-	}
-
-	s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, wsm, true)
 
 	return msg.Id, nil
 }
@@ -947,6 +964,11 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 		s.logger.Error("获取用户消息失败", zap.Error(err))
 		return nil, err
 	}
+
+	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+		return nil, code.SetMsgErrSetUserMsgLabelFailed
+	}
+
 	//判断是否在对话内
 	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
@@ -980,34 +1002,45 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 	msginfo.IsLabel = msggrpcv1.MsgLabel(label)
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-		UserId: userID,
-	})
+	//info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//	UserId: userID,
+	//})
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//wsm := model.WsUserOperatorMsg{
+	//	Id:                     msginfo.Id,
+	//	SenderId:               msginfo.SenderId,
+	//	ReceiverId:             msginfo.ReceiverId,
+	//	Content:                msginfo.Content,
+	//	Type:                   msginfo.Type,
+	//	ReplayId:               msginfo.ReplayId,
+	//	IsRead:                 msginfo.IsRead,
+	//	ReadAt:                 msginfo.ReadAt,
+	//	CreatedAt:              msginfo.CreatedAt,
+	//	DialogId:               msginfo.DialogId,
+	//	IsLabel:                model.LabelMsgType(msginfo.IsLabel),
+	//	IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
+	//	OperatorInfo: model.SenderInfo{
+	//		Avatar: info.Avatar,
+	//		Name:   info.NickName,
+	//		UserId: info.UserId,
+	//	},
+	//}
+
+	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, wsm, true)
+	req := &model.SendUserMsgRequest{
+		ReceiverId: msginfo.ReceiverId,
+		Content:    msginfo.Content,
+		Type:       model.MessageTypeLabel,
+		DialogId:   msginfo.DialogId,
+	}
+	fmt.Println("发送推送事件")
+	_, err = s.SendUserMsg(ctx, userID, driverId, req)
 	if err != nil {
 		return nil, err
 	}
-
-	wsm := model.WsUserOperatorMsg{
-		Id:                     msginfo.Id,
-		SenderId:               msginfo.SenderId,
-		ReceiverId:             msginfo.ReceiverId,
-		Content:                msginfo.Content,
-		Type:                   msginfo.Type,
-		ReplayId:               msginfo.ReplayId,
-		IsRead:                 msginfo.IsRead,
-		ReadAt:                 msginfo.ReadAt,
-		CreatedAt:              msginfo.CreatedAt,
-		DialogId:               msginfo.DialogId,
-		IsLabel:                model.LabelMsgType(msginfo.IsLabel),
-		IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
-		OperatorInfo: model.SenderInfo{
-			Avatar: info.Avatar,
-			Name:   info.NickName,
-			UserId: info.UserId,
-		},
-	}
-
-	s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, wsm, true)
 
 	return nil, nil
 }

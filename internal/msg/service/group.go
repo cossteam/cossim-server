@@ -196,7 +196,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			GroupId:                req.GroupId,
 			UserId:                 userID,
 			Content:                req.Content,
-			Type:                   req.Type,
+			Type:                   uint32(req.Type),
 			ReplayId:               req.ReplayId,
 			AtUsers:                req.AtUsers,
 			AtAllUser:              msggrpcv1.AtAllUserType(req.AtAllUser),
@@ -349,6 +349,10 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		return nil, err
 	}
 
+	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+		return nil, code.MsgErrDeleteGroupMessageFailed
+	}
+
 	if msginfo.UserId != userID {
 		return nil, code.Unauthorized
 	}
@@ -385,20 +389,30 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		return nil, err
 	}
 
-	s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
-
-	if s.cache {
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
-			if err != nil {
-				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-				return
-			}
-		}()
-		wg.Wait()
+	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
+	//
+	//if s.cache {
+	//	wg := sync.WaitGroup{}
+	//	wg.Add(1)
+	//	go func() {
+	//		defer wg.Done()
+	//		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+	//		if err != nil {
+	//			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+	//			return
+	//		}
+	//	}()
+	//	wg.Wait()
+	//}
+	msg2 := &model.SendGroupMsgRequest{
+		DialogId: msginfo.DialogId,
+		GroupId:  msginfo.GroupId,
+		Content:  "",
+		Type:     model.MessageTypeDelete,
+	}
+	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
+	if err != nil {
+		return nil, err
 	}
 
 	return msg.Id, nil
@@ -412,6 +426,10 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 	if err != nil {
 		s.logger.Error("获取群聊消息失败", zap.Error(err))
 		return nil, err
+	}
+
+	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+		return nil, code.SetMsgErrSetGroupMsgLabelFailed
 	}
 
 	//判断是否在对话内
@@ -444,7 +462,18 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 		return nil, err
 	}
 	msginfo.IsLabel = msggrpcv1.MsgLabel(label)
-	s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, msginfo, true)
+	msg2 := &model.SendGroupMsgRequest{
+		DialogId: msginfo.DialogId,
+		GroupId:  msginfo.GroupId,
+		Content:  msginfo.Content,
+		Type:     model.MessageTypeLabel,
+	}
+
+	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
+	if err != nil {
+		return nil, err
+	}
+	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, msginfo, true)
 	return nil, nil
 }
 

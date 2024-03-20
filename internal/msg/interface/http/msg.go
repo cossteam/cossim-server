@@ -104,6 +104,12 @@ func (h *Handler) sendUserMsg(c *gin.Context) {
 		return
 	}
 
+	if !model.IsValidMessageType(req.Type) {
+		h.logger.Error("消息类型错误", zap.Error(err))
+		response.SetFail(c, "消息类型错误", nil)
+		return
+	}
+
 	resp, err := h.svc.SendUserMsg(c, thisId, driverId, req)
 	if err != nil {
 		c.Error(err)
