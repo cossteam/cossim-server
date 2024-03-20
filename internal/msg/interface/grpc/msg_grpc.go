@@ -528,6 +528,7 @@ func (s *Handler) GetGroupMessagesByIds(ctx context.Context, in *v1.GetGroupMess
 func (s *Handler) GetGroupUnreadMessages(ctx context.Context, in *v1.GetGroupUnreadMessagesRequest) (*v1.GetGroupUnreadMessagesResponse, error) {
 	resp := &v1.GetGroupUnreadMessagesResponse{}
 	//获取群聊消息id
+	//去除不需要的消息类型
 	ids, err := s.mr.GetGroupMsgIdsByDialogID(in.DialogId)
 	if err != nil {
 		return nil, err
@@ -552,7 +553,7 @@ func (s *Handler) GetGroupUnreadMessages(ctx context.Context, in *v1.GetGroupUnr
 				Id:                     uint32(msg.ID),
 				UserId:                 msg.UserID,
 				Content:                msg.Content,
-				Type:                   uint32(int32(msg.Type)),
+				Type:                   uint32(msg.Type),
 				ReplyId:                uint32(msg.ReplyId),
 				GroupId:                uint32(msg.GroupID),
 				ReadCount:              int32(msg.ReadCount),
@@ -584,7 +585,7 @@ func (s *Handler) GetUserMessagesByIds(ctx context.Context, in *v1.GetUserMessag
 				ReadAt:                 msg.ReadAt,
 				IsRead:                 int32(msg.IsRead),
 				Content:                msg.Content,
-				Type:                   uint32(int32(msg.Type)),
+				Type:                   uint32(msg.Type),
 				ReplayId:               uint64(msg.ReplyId),
 				DialogId:               uint32(msg.DialogId),
 				IsLabel:                v1.MsgLabel(msg.IsLabel),

@@ -36,6 +36,7 @@ const (
 	MessageTypeVoiceCall                             // 语音通话
 	MessageTypeVideoCall                             // 视频通话
 	MessageTypeDelete                                // 撤回消息
+	MessageTypeCancelLabel
 )
 
 type MessageLabelType uint
@@ -48,17 +49,18 @@ const (
 // IsValidMessageType 判断是否是有效的消息类型
 func IsValidMessageType(msgType UserMessageType) bool {
 	validTypes := map[UserMessageType]struct{}{
-		MessageTypeText:       {},
-		MessageTypeVoice:      {},
-		MessageTypeImage:      {},
-		MessageTypeFile:       {},
-		MessageTypeVideo:      {},
-		MessageTypeVoiceCall:  {},
-		MessageTypeVideoCall:  {},
-		MessageTypeLabel:      {},
-		MessageTypeNotice:     {},
-		MessageTypeEmojiReply: {},
-		MessageTypeDelete:     {},
+		MessageTypeText:        {},
+		MessageTypeVoice:       {},
+		MessageTypeImage:       {},
+		MessageTypeFile:        {},
+		MessageTypeVideo:       {},
+		MessageTypeVoiceCall:   {},
+		MessageTypeVideoCall:   {},
+		MessageTypeLabel:       {},
+		MessageTypeNotice:      {},
+		MessageTypeEmojiReply:  {},
+		MessageTypeDelete:      {},
+		MessageTypeCancelLabel: {},
 	}
 
 	_, isValid := validTypes[msgType]

@@ -381,3 +381,52 @@ type SetGroupOpenBurnAfterReadingTimeOutRequest struct {
 	GroupId                     uint32 `json:"group_id" binding:"required"`
 	OpenBurnAfterReadingTimeOut int64  `json:"open_burn_after_reading_time_out" binding:"required"`
 }
+
+type UserMessageType uint
+
+const (
+	MessageTypeText        UserMessageType = iota + 1 // 文本消息
+	MessageTypeVoice                                  // 语音消息
+	MessageTypeImage                                  // 图片消息
+	MessageTypeLabel                                  //标注
+	MessageTypeNotice                                 //群公告
+	MessageTypeFile                                   // 文件消息
+	MessageTypeVideo                                  // 视频消息
+	MessageTypeEmojiReply                             //emoji回复
+	MessageTypeVoiceCall                              // 语音通话
+	MessageTypeVideoCall                              // 视频通话
+	MessageTypeDelete                                 // 撤回消息
+	MessageTypeCancelLabel                            //取消标注
+)
+
+// IsValidMessageType 判断是否是有效的消息类型
+func IsValidMessageType(msgType UserMessageType) bool {
+	validTypes := map[UserMessageType]struct{}{
+		MessageTypeText:        {},
+		MessageTypeVoice:       {},
+		MessageTypeImage:       {},
+		MessageTypeFile:        {},
+		MessageTypeVideo:       {},
+		MessageTypeVoiceCall:   {},
+		MessageTypeVideoCall:   {},
+		MessageTypeLabel:       {},
+		MessageTypeNotice:      {},
+		MessageTypeEmojiReply:  {},
+		MessageTypeDelete:      {},
+		MessageTypeCancelLabel: {},
+	}
+
+	_, isValid := validTypes[msgType]
+	return isValid
+}
+
+type SendGroupMsgRequest struct {
+	DialogId               uint32               `json:"dialog_id" binding:"required"`
+	GroupId                uint32               `json:"group_id" binding:"required"`
+	Content                string               `json:"content" binding:"required"`
+	Type                   UserMessageType      `json:"type" binding:"required"`
+	ReplayId               uint32               `json:"replay_id"`
+	AtUsers                []string             `json:"at_users"`
+	AtAllUser              AtAllUserType        `json:"at_all_user"`
+	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
+}

@@ -594,6 +594,18 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 				re.DialogUnreadCount = len(msgs.UserMessages)
 				re.UserId = info.UserId
 				re.DialogCreateAt = v.CreateAt
+
+				relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+					UserId:   userID,
+					FriendId: id,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				if relation.Remark != "" {
+					re.DialogName = relation.Remark
+				}
 				break
 			}
 
@@ -710,7 +722,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 		return nil, err
 	}
 
-	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+	if model.IsPromptMessageType(model.UserMessageType(msginfo.Type)) {
 		return nil, code.MsgErrDeleteUserMessageFailed
 	}
 
@@ -965,7 +977,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 		return nil, err
 	}
 
-	if msginfo.Type == uint32(model.MessageTypeDelete) || msginfo.Type == uint32(model.MessageTypeLabel) {
+	if model.IsPromptMessageType(model.UserMessageType(msginfo.Type)) {
 		return nil, code.SetMsgErrSetUserMsgLabelFailed
 	}
 
