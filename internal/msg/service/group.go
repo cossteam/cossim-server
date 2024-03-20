@@ -169,7 +169,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 
 	var message *msggrpcv1.SendGroupMsgResponse
 
-	workflow.InitGrpc(s.dtmGrpcServer, s.dialogGrpcServer, grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "send_group_msg_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {

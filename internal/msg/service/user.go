@@ -87,7 +87,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	}
 
 	var message *msggrpcv1.SendUserMsgResponse
-	workflow.InitGrpc(s.dtmGrpcServer, s.dialogGrpcServer, grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "send_user_msg_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
@@ -263,6 +263,8 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 
 	return message, nil
 }
+
+//func (s *Service)InsertMsgSend
 
 // 推送私聊消息
 func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *model.WsUserMsg) {

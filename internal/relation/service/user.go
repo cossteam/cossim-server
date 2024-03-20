@@ -413,7 +413,7 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 	r2 := &relationgrpcv1.DeleteFriendRequest{UserId: userID, FriendId: friendID}
 	r3 := &msggrpcv1.DeleteUserMsgByDialogIdRequest{DialogId: relation.DialogId}
 	gid := shortuuid.New()
-	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
 	wfName := "delete_relation_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		_, err := s.svc.DeleteDialogUserByDialogIDAndUserID(wf.Context, r1)
@@ -572,7 +572,7 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus) (uint32, error) {
 	var dialogId uint32
 	// 创建 DTM 分布式事务工作流
-	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "manage_friend_workflow_2_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {

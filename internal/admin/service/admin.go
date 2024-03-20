@@ -73,7 +73,7 @@ func (s *Service) InitAdmin() error {
 		}
 	}
 
-	workflow.InitGrpc(s.dtmGrpcServer, s.userGrpcServer, grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "init_admin_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
