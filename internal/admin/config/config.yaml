@@ -6,8 +6,6 @@ admin:
 
 system:
   environment: "dev" # dev、prod
-  avatar_file_path: "/.cache/"
-  avatar_file_path_dev: "/.cache/"
   gateway_address: "43.229.28.107"
   gateway_port: 8080
   gateway_address_dev: "127.0.0.1"
@@ -38,7 +36,7 @@ log:
 
 mysql:
   address: "mysql"
-  port: 33066
+  port: 33306
   username: "root"
   password: "888888"
   database: "coss"

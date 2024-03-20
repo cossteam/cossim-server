@@ -113,12 +113,20 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		}
 		info := httputil.OnlineIpInfo(clientIp)
 		result := fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s %s", clientIp, info.Country, info.RegionName, info.City)
-		msg := constants.WsMsg{Uid: "10001", Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: constants.SystemNotificationEventData{
+		msg := constants.WsMsg{Uid: constants.SystemNotification, Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: constants.SystemNotificationEventData{
 			UserIds: []string{resp.UserId},
 			Content: result,
 			Type:    1,
 		}}
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.UserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.Notice, msg)
+	}
+
+	if s.cache {
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", resp.UserId))
+		if err != nil {
+			return nil, "", err
+		}
+
 	}
 
 	return &model.UserInfoResponse{
@@ -169,6 +177,17 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 		return err
 	}
 
+	if s.cache {
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			return err
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("user:%s", userID))
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
