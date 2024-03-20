@@ -45,7 +45,7 @@ func main() {
 			RemoteConfigAddr:     remoteConfigAddr,
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
-			Key:                  "interface/live",
+			Key:                  "service/live",
 			Keys:                 discovery.DefaultKeys,
 			Registry: ctrl.Registry{
 				Discover: discover,
