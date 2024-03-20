@@ -101,7 +101,7 @@ services:
     restart: on-failure
   gateway:
     container_name: cossim_gateway
-    image: hub.hitosea.com/cossim/gateway-internal
+    image: hub.hitosea.com/cossim/gateway
     command:
       - "--discover"
       - "--remote-config"
@@ -114,7 +114,7 @@ services:
     restart: on-failure
   admin_bff:
     container_name: cossim_admin_bff
-    image: hub.hitosea.com/cossim/admin-internal
+    image: hub.hitosea.com/cossim/admin
     command:
       - "--discover"
       - "--register"
@@ -136,7 +136,7 @@ services:
     restart: on-failure
   live_bff:
     container_name: cossim_live_bff
-    image: hub.hitosea.com/cossim/live-internal
+    image: hub.hitosea.com/cossim/live
     command:
       - "--discover"
       - "--register"
@@ -155,7 +155,7 @@ services:
     restart: on-failure
   msg_service:
     container_name: cossim_msg_service
-    image: hub.hitosea.com/cossim/msg-internal
+    image: hub.hitosea.com/cossim/msg
     command:
       - "--discover"
       - "--register"
@@ -172,7 +172,7 @@ services:
     restart: on-failure
   relation_service:
     container_name: cossim_relation_service
-    image: hub.hitosea.com/cossim/relation-internal
+    image: hub.hitosea.com/cossim/relation
     command:
       - "--discover"
       - "--register"
@@ -189,7 +189,7 @@ services:
     restart: on-failure
   user_service:
     container_name: cossim_user_service
-    image: hub.hitosea.com/cossim/user-internal
+    image: hub.hitosea.com/cossim/user
     command:
       - "--discover"
       - "--register"
@@ -206,7 +206,7 @@ services:
     restart: on-failure
   group_service:
     container_name: cossim_group_service
-    image: hub.hitosea.com/cossim/group-internal
+    image: hub.hitosea.com/cossim/group
     command:
       - "--discover"
       - "--register"
@@ -223,7 +223,7 @@ services:
       - ./config/pgp:/.cache
   storage_service:
     container_name: cossim_storage_service
-    image: hub.hitosea.com/cossim/storage-internal
+    image: hub.hitosea.com/cossim/storage
     command:
       - "--discover"
       - "--register"

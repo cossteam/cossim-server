@@ -45,4 +45,4 @@ jobs:
           export GOOS=linux
           export ARCH=all
           export REGISTRY=${{ secrets.REGISTRY }}/cossim
-          make docker-build docker-push ACTION=internal NAME=user TAG=latest REGISTRY=${{ secrets.REGISTRY }}/cossim
+          make docker-build docker-push TAG=latest REGISTRY=${{ secrets.REGISTRY }}/cossim
