@@ -234,7 +234,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	}
 
 	var UserId string
-	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, s.userGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "register_user_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {

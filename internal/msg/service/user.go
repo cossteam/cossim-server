@@ -87,7 +87,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	}
 
 	var message *msggrpcv1.SendUserMsgResponse
-	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, s.dialogGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "send_user_msg_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
