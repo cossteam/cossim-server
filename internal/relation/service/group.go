@@ -474,7 +474,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 		s.logger.Error("get group relation failed", zap.Error(err))
 	}
 
-	if relation != nil {
+	if relation != nil && relation.GroupId != 0 {
 		return code.RelationGroupErrAlreadyInGroup
 	}
 
