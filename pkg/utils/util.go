@@ -78,6 +78,7 @@ func SliceDifference(slice1, slice2 []uint32) []uint32 {
 }
 
 func GenCossID() (string, error) {
+
 	flake := sonyflake.NewSonyflake(sonyflake.Settings{})
 	id, err := flake.NextID()
 	if err != nil {
