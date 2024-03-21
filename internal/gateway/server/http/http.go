@@ -83,26 +83,26 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 func (h *Handler) handlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
 	addr := conn.Target()
 	switch serviceName {
-	case "user_service":
+	case "user_bff":
 		*userServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for user service initialized", "service", "user", "addr", addr)
-	case "relation_service":
+	case "relation_bff":
 		*relationServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for relation service initialized", "service", "relation", "addr", addr)
-	case "group_service":
+	case "group_bff":
 		*groupServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for group service initialized", "service", "group", "addr", addr)
-	case "msg_service":
+	case "msg_bff":
 		*messageServiceURL = "http://" + addr
 		*messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
 		h.logger.Info("gRPC client for group service initialized", "service", "msg", "addr", addr)
-	case "storage_service":
+	case "storage_bff":
 		*storageServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for group service initialized", "service", "storage", "addr", addr)
-	case "live_service":
+	case "live_bff":
 		*liveUserServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for group service initialized", "service", "live", "addr", addr)
-	case "admin_service":
+	case "admin_bff":
 		*adminServiceURL = "http://" + addr
 		h.logger.Info("gRPC client for group service initialized", "service", "admin", "addr", addr)
 	}
