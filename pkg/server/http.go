@@ -170,6 +170,10 @@ func (s *HttpService) Discover() error {
 				mu.Lock()
 				clients[c.Name] = conn
 				mu.Unlock()
+				// 在每次成功发现服务后调用 DiscoverServices
+				if err := s.svc.DiscoverServices(clients); err != nil {
+					s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
+				}
 				return nil
 			}
 			if err := backoff.Retry(retryFunc, backoffSettings); err != nil {
@@ -179,14 +183,14 @@ func (s *HttpService) Discover() error {
 		}(serviceName, c)
 	}
 	wg.Wait()
-	return s.svc.DiscoverServices(clients)
+	return nil // 异步调用 DiscoverServices，无需等待所有服务都发现
 }
 
 func (s *HttpService) cancel() {
 	if err := s.registry.Cancel(s.sid); err != nil {
-		s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+		s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 	}
-	s.logger.Info("Service unregister success", "service", s.ac.HTTP.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	s.logger.Info("Service unregister success", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 }
 
 func (s *HttpService) Health() string {
