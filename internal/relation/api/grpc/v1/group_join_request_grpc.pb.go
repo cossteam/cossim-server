@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/group_join_request.proto
+// source: api/grpc/v1/group_join_request.proto
 
 package v1
 
@@ -304,5 +304,5 @@ var GroupJoinRequestService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/group_join_request.proto",
+	Metadata: "api/grpc/v1/group_join_request.proto",
 }

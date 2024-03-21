@@ -27,6 +27,8 @@ message FriendRequestList {
   string Remark = 5; //备注
   // @inject_tag: json:"create_at"
   uint64 CreateAt = 6;
+  // @inject_tag: json:"delete_by"
+  string DeleteBy = 7; // 删除记录的用户
 }
 
 enum FriendRequestStatus {
@@ -78,6 +80,13 @@ message DeleteFriendRequestByUserIdAndFriendIdRequest{
   string FriendId = 2;
 }
 
+message DeleteFriendRecordRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
 
 service UserFriendRequestService {
   // 获取好友请求列表
@@ -92,4 +101,6 @@ service UserFriendRequestService {
   rpc GetFriendRequestByUserIdAndFriendId(GetFriendRequestByUserIdAndFriendIdRequest) returns (FriendRequestList);
   //删除已经处理的请求
   rpc DeleteFriendRequestByUserIdAndFriendId(DeleteFriendRequestByUserIdAndFriendIdRequest) returns (google.protobuf.Empty);
+  // 删除好友申请记录
+  rpc DeleteFriendRecord(DeleteFriendRecordRequest) returns (google.protobuf.Empty);
 }

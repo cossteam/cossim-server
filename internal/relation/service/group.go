@@ -1272,3 +1272,7 @@ func (s *Service) removeRedisGroupList(userID string, groupID uint32) error {
 	}
 	return nil
 }
+
+//func (s *Service) DeleteGroupFriendRecord(ctx context.Context, uid string, id uint32) error {
+//	return nil
+//}

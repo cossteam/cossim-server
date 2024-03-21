@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/dialog.proto
+// source: api/grpc/v1/dialog.proto
 
 package v1
 
@@ -1081,5 +1081,5 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/dialog.proto",
+	Metadata: "api/grpc/v1/dialog.proto",
 }

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/user_friend_requests.proto
+// source: api/grpc/v1/user_friend_requests.proto
 
 package v1
 
@@ -26,6 +26,7 @@ const (
 	UserFriendRequestService_GetFriendRequestById_FullMethodName                   = "/v1.UserFriendRequestService/GetFriendRequestById"
 	UserFriendRequestService_GetFriendRequestByUserIdAndFriendId_FullMethodName    = "/v1.UserFriendRequestService/GetFriendRequestByUserIdAndFriendId"
 	UserFriendRequestService_DeleteFriendRequestByUserIdAndFriendId_FullMethodName = "/v1.UserFriendRequestService/DeleteFriendRequestByUserIdAndFriendId"
+	UserFriendRequestService_DeleteFriendRecord_FullMethodName                     = "/v1.UserFriendRequestService/DeleteFriendRecord"
 )
 
 // UserFriendRequestServiceClient is the client API for UserFriendRequestService service.
@@ -44,6 +45,8 @@ type UserFriendRequestServiceClient interface {
 	GetFriendRequestByUserIdAndFriendId(ctx context.Context, in *GetFriendRequestByUserIdAndFriendIdRequest, opts ...grpc.CallOption) (*FriendRequestList, error)
 	// 删除已经处理的请求
 	DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, in *DeleteFriendRequestByUserIdAndFriendIdRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 删除好友申请记录
+	DeleteFriendRecord(ctx context.Context, in *DeleteFriendRecordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userFriendRequestServiceClient struct {
@@ -108,6 +111,15 @@ func (c *userFriendRequestServiceClient) DeleteFriendRequestByUserIdAndFriendId(
 	return out, nil
 }
 
+func (c *userFriendRequestServiceClient) DeleteFriendRecord(ctx context.Context, in *DeleteFriendRecordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserFriendRequestService_DeleteFriendRecord_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserFriendRequestServiceServer is the server API for UserFriendRequestService service.
 // All implementations must embed UnimplementedUserFriendRequestServiceServer
 // for forward compatibility
@@ -124,6 +136,8 @@ type UserFriendRequestServiceServer interface {
 	GetFriendRequestByUserIdAndFriendId(context.Context, *GetFriendRequestByUserIdAndFriendIdRequest) (*FriendRequestList, error)
 	// 删除已经处理的请求
 	DeleteFriendRequestByUserIdAndFriendId(context.Context, *DeleteFriendRequestByUserIdAndFriendIdRequest) (*emptypb.Empty, error)
+	// 删除好友申请记录
+	DeleteFriendRecord(context.Context, *DeleteFriendRecordRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUserFriendRequestServiceServer()
 }
 
@@ -148,6 +162,9 @@ func (UnimplementedUserFriendRequestServiceServer) GetFriendRequestByUserIdAndFr
 }
 func (UnimplementedUserFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(context.Context, *DeleteFriendRequestByUserIdAndFriendIdRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFriendRequestByUserIdAndFriendId not implemented")
+}
+func (UnimplementedUserFriendRequestServiceServer) DeleteFriendRecord(context.Context, *DeleteFriendRecordRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFriendRecord not implemented")
 }
 func (UnimplementedUserFriendRequestServiceServer) mustEmbedUnimplementedUserFriendRequestServiceServer() {
 }
@@ -271,6 +288,24 @@ func _UserFriendRequestService_DeleteFriendRequestByUserIdAndFriendId_Handler(sr
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserFriendRequestService_DeleteFriendRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteFriendRecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserFriendRequestServiceServer).DeleteFriendRecord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserFriendRequestService_DeleteFriendRecord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserFriendRequestServiceServer).DeleteFriendRecord(ctx, req.(*DeleteFriendRecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserFriendRequestService_ServiceDesc is the grpc.ServiceDesc for UserFriendRequestService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -302,7 +337,11 @@ var UserFriendRequestService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "DeleteFriendRequestByUserIdAndFriendId",
 			Handler:    _UserFriendRequestService_DeleteFriendRequestByUserIdAndFriendId_Handler,
 		},
+		{
+			MethodName: "DeleteFriendRecord",
+			Handler:    _UserFriendRequestService_DeleteFriendRecord_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/user_friend_requests.proto",
+	Metadata: "api/grpc/v1/user_friend_requests.proto",
 }
