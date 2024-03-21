@@ -1,0 +1,23 @@
+apisix:
+  node_listen: 9080              # APISIX listening port
+  enable_ipv6: false
+
+  enable_control: true
+  control:
+    ip: "0.0.0.0"
+    port: 9092
+
+deployment:
+  admin:
+    allow_admin: # https://nginx.org/en/docs/http/ngx_http_access_module.html#allow
+      - 0.0.0.0/0
+  etcd:
+    host:                           # it's possible to define multiple etcd hosts addresses of the same etcd cluster.
+      - http://etcd:2379          # multiple etcd address
+    prefix: "/apisix"               # apisix configurations prefix
+    timeout: 30                     # 30 seconds
+
+discovery:
+  consul:
+    servers:
+      - http://consul:8500

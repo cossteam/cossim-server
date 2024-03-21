@@ -122,7 +122,7 @@ func (s *GrpcService) Discover() error {
 					s.logger.Error(err, "Service discover failed", "service", c.Name)
 					return err
 				}
-				s.logger.Info("Service registry success", "service", c.Name, "addr", addr)
+				s.logger.Info("Service discover success", "service", c.Name, "addr", addr)
 				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 				if err != nil {
 					return err

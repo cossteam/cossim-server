@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cossim/coss-server/pkg/utils/os"
+
 	//"github.com/cossim/coss-server/pkg/cluster"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
@@ -178,6 +180,28 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	//if err != nil {
 	//	return nil, err
 	//}
+
+	//地址
+	//grpc地址
+	//获取本地地址
+	if cfg.HTTP.Address == "" {
+		ip, err := os.GetOutBoundIP()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get outbound ip: %w", err)
+		}
+		cfg.HTTP.Address = ip
+	}
+	if cfg.GRPC.Address == "" {
+		ip, err := os.GetOutBoundIP()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get outbound ip: %w", err)
+		}
+		cfg.GRPC.Address = ip
+	}
+
+	fmt.Println("grpc add", cfg.GRPC.Address)
+
+	fmt.Println("http add", cfg.HTTP.Address)
 
 	// Create health probes listener. This will throw an error if the bind
 	// address is invalid or already in use.
