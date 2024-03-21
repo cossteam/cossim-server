@@ -44,7 +44,7 @@ test: fmt vet## Run unittests
 	@go test -short ./...
 
 swag: ## Run unittests
-	$(foreach dir,$(INTERFACE_LIST), \
+	- $(foreach dir,$(INTERFACE_LIST), \
 		swag i -g http.go -dir internal/$(dir)/interface/http,internal/$(dir)/api/http/model,internal/live/api/dto,pkg/utils/usersorter --instanceName $(dir); \
 	)
 

@@ -202,8 +202,11 @@ func (s *Handler) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRe
 	}
 
 	deletedBy := strings.Split(fr.DeletedBy, ",")
-	for _, email := range deletedBy {
-		if email == req.UserId {
+	for _, v := range deletedBy {
+		if v != req.UserId {
+			if err := s.ufqr.DeletedById(req.ID); err != nil {
+				return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
+			}
 			return resp, nil
 		}
 	}

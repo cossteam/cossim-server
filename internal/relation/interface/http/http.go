@@ -84,7 +84,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g := api.Group("/group")
 	g.GET("/member", h.getGroupMember)
 	g.GET("/request_list", h.groupRequestList)
-	//g.POST("/delete_friend_record", h.deleteGroupFriendRequest)
+	g.POST("/delete_friend_record", h.deleteGroupFriendRequest)
 	// 邀请好友加入群聊
 	g.POST("/invite", h.inviteGroup)
 	// 申请加入群聊

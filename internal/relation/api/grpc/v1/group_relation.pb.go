@@ -171,9 +171,9 @@ type UserGroupRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *UserGroupRequest) Reset() {
@@ -266,7 +266,7 @@ type GroupIDRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 }
 
 func (x *GroupIDRequest) Reset() {
@@ -314,7 +314,7 @@ type UserIdsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_ids"
-	UserIds []string `protobuf:"bytes,1,rep,name=UserIds,proto3" json:"UserIds,omitempty"`
+	UserIds []string `protobuf:"bytes,1,rep,name=UserIds,proto3" json:"user_ids"`
 }
 
 func (x *UserIdsResponse) Reset() {
@@ -362,9 +362,9 @@ type RemoveFromGroupRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊id
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"` // 移除的用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 移除的用户id
 }
 
 func (x *RemoveFromGroupRequest) Reset() {
@@ -457,9 +457,9 @@ type LeaveGroupRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊id
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"` // 拒绝的用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 拒绝的用户id
 }
 
 func (x *LeaveGroupRequest) Reset() {
@@ -552,9 +552,9 @@ type GetGroupRelationRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊id
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 用户id
 }
 
 func (x *GetGroupRelationRequest) Reset() {
@@ -609,30 +609,30 @@ type GetGroupRelationResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊ID
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊ID
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户ID
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 用户ID
 	//	// @inject_tag: json:"status"
 	//	GroupRelationStatus Status = 3; //状态
 	//
 	// @inject_tag: json:"identity"
-	Identity GroupIdentity `protobuf:"varint,4,opt,name=Identity,proto3,enum=v1.GroupIdentity" json:"Identity,omitempty"` // 群聊身份
+	Identity GroupIdentity `protobuf:"varint,4,opt,name=Identity,proto3,enum=v1.GroupIdentity" json:"identity"` // 群聊身份
 	// @inject_tag: json:"join_method"
-	JoinMethod uint32 `protobuf:"varint,5,opt,name=JoinMethod,proto3" json:"JoinMethod,omitempty"` // 加入方式
+	JoinMethod uint32 `protobuf:"varint,5,opt,name=JoinMethod,proto3" json:"join_method"` // 加入方式
 	// @inject_tag: json:"join_time"
-	JoinTime int64 `protobuf:"varint,6,opt,name=JoinTime,proto3" json:"JoinTime,omitempty"` //加入时间
+	JoinTime int64 `protobuf:"varint,6,opt,name=JoinTime,proto3" json:"join_time"` //加入时间
 	// @inject_tag: json:"mute_end_time"
-	MuteEndTime int64 `protobuf:"varint,7,opt,name=MuteEndTime,proto3" json:"MuteEndTime,omitempty"` //禁言结束时间
+	MuteEndTime int64 `protobuf:"varint,7,opt,name=MuteEndTime,proto3" json:"mute_end_time"` //禁言结束时间
 	// @inject_tag: json:"is_silent"
-	IsSilent GroupSilentNotificationType `protobuf:"varint,8,opt,name=IsSilent,proto3,enum=v1.GroupSilentNotificationType" json:"IsSilent,omitempty"` //是否静默通知
+	IsSilent GroupSilentNotificationType `protobuf:"varint,8,opt,name=IsSilent,proto3,enum=v1.GroupSilentNotificationType" json:"is_silent"` //是否静默通知
 	// @inject_tag: json:"inviter"
-	Inviter string `protobuf:"bytes,9,opt,name=Inviter,proto3" json:"Inviter,omitempty"` //邀请人
+	Inviter string `protobuf:"bytes,9,opt,name=Inviter,proto3" json:"inviter"` //邀请人
 	// @inject_tag: json:"remark"
-	Remark string `protobuf:"bytes,11,opt,name=Remark,proto3" json:"Remark,omitempty"` //群聊备注
+	Remark string `protobuf:"bytes,11,opt,name=Remark,proto3" json:"remark"` //群聊备注
 	// @inject_tag: json:"open_burn_after_reading"
-	OpenBurnAfterReading OpenBurnAfterReadingType `protobuf:"varint,12,opt,name=OpenBurnAfterReading,proto3,enum=v1.OpenBurnAfterReadingType" json:"OpenBurnAfterReading,omitempty"`
+	OpenBurnAfterReading OpenBurnAfterReadingType `protobuf:"varint,12,opt,name=OpenBurnAfterReading,proto3,enum=v1.OpenBurnAfterReadingType" json:"open_burn_after_reading"`
 	// @inject_tag: json:"open_burn_after_reading_time_out"
-	OpenBurnAfterReadingTimeOut int64 `protobuf:"varint,13,opt,name=OpenBurnAfterReadingTimeOut,proto3" json:"OpenBurnAfterReadingTimeOut,omitempty"`
+	OpenBurnAfterReadingTimeOut int64 `protobuf:"varint,13,opt,name=OpenBurnAfterReadingTimeOut,proto3" json:"open_burn_after_reading_time_out"`
 }
 
 func (x *GetGroupRelationResponse) Reset() {
@@ -750,7 +750,7 @@ type GetUserManageGroupIDRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *GetUserManageGroupIDRequest) Reset() {
@@ -845,7 +845,7 @@ type GetUserGroupIDsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户ID
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"` // 用户ID
 }
 
 func (x *GetUserGroupIDsRequest) Reset() {
@@ -893,7 +893,7 @@ type GetUserGroupIDsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊ID
+	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=GroupId,proto3" json:"group_id"` // 群聊ID
 }
 
 func (x *GetUserGroupIDsResponse) Reset() {
@@ -941,7 +941,7 @@ type GetUserGroupListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *GetUserGroupListRequest) Reset() {
@@ -1036,18 +1036,18 @@ type UserGroupRequestList struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊id
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"UserId,omitempty"` // 用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 用户id
 	// @inject_tag: json:"msg"
-	Msg string `protobuf:"bytes,3,opt,name=Msg,proto3" json:"Msg,omitempty"` // 申请信息
+	Msg string `protobuf:"bytes,3,opt,name=Msg,proto3" json:"msg"` // 申请信息
 	//	// @inject_tag: json:"status"
 	//	GroupRelationStatus Status = 4;
 	//
 	// @inject_tag: json:"created_at"
-	CreatedAt int64 `protobuf:"varint,5,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
+	CreatedAt int64 `protobuf:"varint,5,opt,name=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"inviter_id"
-	InviterId string `protobuf:"bytes,6,opt,name=InviterId,proto3" json:"InviterId,omitempty"` // 邀请人id
+	InviterId string `protobuf:"bytes,6,opt,name=InviterId,proto3" json:"inviter_id"` // 邀请人id
 }
 
 func (x *UserGroupRequestList) Reset() {
@@ -1123,9 +1123,9 @@ type DeleteGroupRelationByGroupIdAndUserIDRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupID uint32 `protobuf:"varint,1,opt,name=GroupID,proto3" json:"GroupID,omitempty"` // 群聊ID
+	GroupID uint32 `protobuf:"varint,1,opt,name=GroupID,proto3" json:"group_id"` // 群聊ID
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"UserID,omitempty"` // 用户ID
+	UserID string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"` // 用户ID
 }
 
 func (x *DeleteGroupRelationByGroupIdAndUserIDRequest) Reset() {
@@ -1180,9 +1180,9 @@ type DeleteGroupRelationByGroupIdAndUserIDRevertRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupID uint32 `protobuf:"varint,1,opt,name=GroupID,proto3" json:"GroupID,omitempty"` // 群聊ID
+	GroupID uint32 `protobuf:"varint,1,opt,name=GroupID,proto3" json:"group_id"` // 群聊ID
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"UserID,omitempty"` // 用户ID
+	UserID string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"` // 用户ID
 }
 
 func (x *DeleteGroupRelationByGroupIdAndUserIDRevertRequest) Reset() {
@@ -1237,11 +1237,11 @@ type CreateGroupAndInviteUsersRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊id
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊id
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"UserID,omitempty"` // 用户ID
+	UserID string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"` // 用户ID
 	// @inject_tag: json:"member"
-	Member []string `protobuf:"bytes,3,rep,name=Member,proto3" json:"Member,omitempty"` // 邀请的好友
+	Member []string `protobuf:"bytes,3,rep,name=Member,proto3" json:"member"` // 邀请的好友
 }
 
 func (x *CreateGroupAndInviteUsersRequest) Reset() {
@@ -1303,9 +1303,9 @@ type GetBatchGroupRelationRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"` // 群聊id
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊id
 	// @inject_tag: json:"user_id"
-	UserIds []string `protobuf:"bytes,2,rep,name=UserIds,proto3" json:"UserIds,omitempty"` // 用户id列表
+	UserIds []string `protobuf:"bytes,2,rep,name=UserIds,proto3" json:"user_id"` // 用户id列表
 }
 
 func (x *GetBatchGroupRelationRequest) Reset() {
@@ -1445,11 +1445,11 @@ type SetGroupSilentNotificationRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"is_silent"
-	IsSilent GroupSilentNotificationType `protobuf:"varint,3,opt,name=IsSilent,proto3,enum=v1.GroupSilentNotificationType" json:"IsSilent,omitempty"`
+	IsSilent GroupSilentNotificationType `protobuf:"varint,3,opt,name=IsSilent,proto3,enum=v1.GroupSilentNotificationType" json:"is_silent"`
 }
 
 func (x *SetGroupSilentNotificationRequest) Reset() {
@@ -1511,7 +1511,7 @@ type CreateGroupAndInviteUsersResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"DialogId,omitempty"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 }
 
 func (x *CreateGroupAndInviteUsersResponse) Reset() {
@@ -1559,9 +1559,9 @@ type RemoveGroupRelationByGroupIdAndUserIDsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"user_id"
-	UserIDs []string `protobuf:"bytes,2,rep,name=UserIDs,proto3" json:"UserIDs,omitempty"`
+	UserIDs []string `protobuf:"bytes,2,rep,name=UserIDs,proto3" json:"user_id"`
 }
 
 func (x *RemoveGroupRelationByGroupIdAndUserIDsRequest) Reset() {
@@ -1616,11 +1616,11 @@ type SetGroupOpenBurnAfterReadingRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"open_burn_after_reading"
-	OpenBurnAfterReading OpenBurnAfterReadingType `protobuf:"varint,3,opt,name=OpenBurnAfterReading,proto3,enum=v1.OpenBurnAfterReadingType" json:"OpenBurnAfterReading,omitempty"`
+	OpenBurnAfterReading OpenBurnAfterReadingType `protobuf:"varint,3,opt,name=OpenBurnAfterReading,proto3,enum=v1.OpenBurnAfterReadingType" json:"open_burn_after_reading"`
 }
 
 func (x *SetGroupOpenBurnAfterReadingRequest) Reset() {
@@ -1682,11 +1682,11 @@ type SetGroupOpenBurnAfterReadingTimeOutRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"open_burn_after_reading_time_out"
-	OpenBurnAfterReadingTimeOut int64 `protobuf:"varint,3,opt,name=OpenBurnAfterReadingTimeOut,proto3" json:"OpenBurnAfterReadingTimeOut,omitempty"`
+	OpenBurnAfterReadingTimeOut int64 `protobuf:"varint,3,opt,name=OpenBurnAfterReadingTimeOut,proto3" json:"open_burn_after_reading_time_out"`
 }
 
 func (x *SetGroupOpenBurnAfterReadingTimeOutRequest) Reset() {
@@ -1748,11 +1748,11 @@ type SetGroupUserRemarkRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"remark"
-	Remark string `protobuf:"bytes,3,opt,name=Remark,proto3" json:"Remark,omitempty"`
+	Remark string `protobuf:"bytes,3,opt,name=Remark,proto3" json:"remark"`
 }
 
 func (x *SetGroupUserRemarkRequest) Reset() {

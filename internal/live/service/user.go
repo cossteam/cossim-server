@@ -87,10 +87,12 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID string, req *dto.
 	if err != nil {
 		return nil, err
 	}
-	if err = s.redisClient.SetKey(liveRoomPrefix+roomName, roomInfo, s.liveTimeout+10); err != nil {
+	if err = s.redisClient.SetKey(liveRoomPrefix+roomName, roomInfo, s.liveTimeout); err != nil {
 		s.logger.Error("保存房间信息失败", zap.Error(err), zap.String("room", roomName))
 		return nil, err
 	}
+
+	fmt.Println("s.liveTimeout+10 => ", s.liveTimeout)
 
 	msg := constants.WsMsg{
 		Uid:   recipientID,
@@ -123,6 +125,10 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 	}
 
 	room.NumParticipants++
+	if room.NumParticipants > room.MaxParticipants {
+		return nil, code.LiveErrMaxParticipantsExceeded
+	}
+
 	room.Participants[uid] = &model.ActiveParticipant{
 		Connected: true,
 	}
@@ -132,9 +138,12 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 		return nil, code.LiveErrJoinCallFailed
 	}
 
+	fmt.Println("UserJoinRoom roomStr => ", roomStr)
+
 	if room.NumParticipants == 2 {
 		for k := range room.Participants {
-			if err = s.redisClient.UpdateKeyExpiration(liveUserPrefix+k, 0); err != nil {
+			fmt.Println(" room.Participants k => ", room.Participants)
+			if err = s.redisClient.PersistKey(liveUserPrefix + k); err != nil {
 				s.logger.Error("更新用户房间记录失败", zap.Error(err))
 				return nil, err
 			}
@@ -279,10 +288,12 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, 
 func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (interface{}, error) {
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
+		if strings.Contains(err.Error(), "redis: nil") {
+			fmt.Println("UserLeaveRoom 1 err => ", err)
 			return nil, code.LiveErrCallNotFound
 		}
-		return nil, fmt.Errorf("failed to get user room: %w", err)
+		fmt.Println("UserLeaveRoom 2 err => ", err)
+		return nil, err
 	}
 
 	if _, ok := room.Participants[uid]; !ok {
@@ -613,7 +624,8 @@ func (s *Service) getRedisUserRoom(ctx context.Context, uid string) (*model.Room
 
 	roomInfo, err := s.redisClient.GetKey(liveRoomPrefix + d1.Room)
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
+		fmt.Println("d1.Room => ", d1.Room)
+		if strings.Contains(err.Error(), "redis: nil") {
 			if err := s.redisClient.DelKey(liveUserPrefix + uid); err != nil {
 				s.logger.Error("获取用户通话信息失败后删除房间失败", zap.Error(err))
 			}
