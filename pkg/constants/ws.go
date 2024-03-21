@@ -84,6 +84,9 @@ const (
 
 	//修改群公告
 	UpdateGroupAnnouncementEvent
+
+	// 用户离开群聊通话
+	UserLeaveGroupCallEvent
 )
 
 type WsMsg struct {
