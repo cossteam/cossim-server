@@ -1,5 +1,44 @@
 version: '3.9'
 services:
+  dashboard:
+    container_name: cossim_apisix_dashboard
+    image: apache/apisix-dashboard:latest
+    restart: always
+    volumes:
+      - ./config/common/apisix-dashboard.yaml:/usr/local/apisix-dashboard/conf/conf.yaml:ro
+    depends_on:
+      - etcd
+    ports:
+      - "10000:9000/tcp"
+  apisix:
+    image: apache/apisix
+    container_name: cossim_apisix
+    restart: always
+    volumes:
+      - ./config/common/apisix.yaml:/usr/local/apisix/conf/config.yaml:ro
+    depends_on:
+      - etcd
+    ports:
+      - "9180:9180/tcp"
+      - "8080:9080/tcp"
+      - "9091:9091/tcp"
+      - "7443:9443/tcp"
+      - "9092:9092/tcp"
+  etcd:
+    container_name: cossim_etcd
+    image: bitnami/etcd:3.4.9
+    user: root
+    restart: always
+    volumes:
+      - ./data/var/lib/etcd_data:/etcd_data
+    environment:
+      ETCD_DATA_DIR: /etcd_data
+      ETCD_ENABLE_V2: "true"
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+    ports:
+      - "2379:2379/tcp"
   mysql:
     container_name: cossim_mysql
     image: mysql:5.7
@@ -99,20 +138,7 @@ services:
       - "7070:7070"
       - "7071:7071"
     restart: on-failure
-  gateway:
-    container_name: cossim_gateway
-    image: hub.hitosea.com/cossim/gateway
-    command:
-      - "--discover"
-      - "--remote-config"
-      - "--config-center-addr"
-      - "consul:8500"
-    ports:
-      - "8080:8080"
-    environment:
-      CONSUL_HTTP_TOKEN:
-    restart: on-failure
-  admin_service:
+  admin:
     container_name: cossim_admin
     image: hub.hitosea.com/cossim/admin
     command:
@@ -127,14 +153,14 @@ services:
       - dtm
       - redis
       - rabbitmq
-      - group_service
-      - relation_service
-      - user_service
-      - msg_service
+      - group
+      - relation
+      - user
+      - msg
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  live_service:
+  live:
     container_name: cossim_live
     image: hub.hitosea.com/cossim/live
     command:
@@ -148,13 +174,13 @@ services:
     depends_on:
       - consul
       - redis
-      - user_service
-      - relation_service
+      - user
+      - relation
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  msg_service:
-    container_name: cossim_msg_service
+  msg:
+    container_name: cossim_msg
     image: hub.hitosea.com/cossim/msg
     command:
       - "--discover"
@@ -170,8 +196,8 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  relation_service:
-    container_name: cossim_relation_service
+  relation:
+    container_name: cossim_relation
     image: hub.hitosea.com/cossim/relation
     command:
       - "--discover"
@@ -187,8 +213,8 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  user_service:
-    container_name: cossim_user_service
+  user:
+    container_name: cossim_user
     image: hub.hitosea.com/cossim/user
     command:
       - "--discover"
@@ -204,8 +230,8 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
-  group_service:
-    container_name: cossim_group_service
+  group:
+    container_name: cossim_group
     image: hub.hitosea.com/cossim/group
     command:
       - "--discover"
@@ -221,8 +247,8 @@ services:
     restart: on-failure
     volumes:
       - ./config/pgp:/.cache
-  storage_service:
-    container_name: cossim_storage_service
+  storage:
+    container_name: cossim_storage
     image: hub.hitosea.com/cossim/storage
     command:
       - "--discover"

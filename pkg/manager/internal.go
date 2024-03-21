@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/server"
+	"github.com/cossim/coss-server/pkg/utils/os"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
@@ -329,9 +330,30 @@ func (cm *controllerManager) reloadConfiguration() error {
 	cm.runnables.HTTPServers.StopAndWait(cm.internalCtx)
 	cm.runnables.GRPCServers.StopAndWait(cm.internalCtx)
 
+	//地址
+	//grpc地址
+	//获取本地地址
+	if cm.config.HTTP.Address == "" {
+		ip, err := os.GetOutBoundIP()
+		if err != nil {
+			return fmt.Errorf("failed to get outbound ip: %w", err)
+		}
+		cm.config.HTTP.Address = ip
+	}
+	if cm.config.GRPC.Address == "" {
+		ip, err := os.GetOutBoundIP()
+		if err != nil {
+			return fmt.Errorf("failed to get outbound ip: %w", err)
+		}
+		cm.config.GRPC.Address = ip
+	}
+
+	fmt.Println("grpc add", cm.config.GRPC.Address)
+
+	fmt.Println("http add", cm.config.HTTP.Address)
+
 	errChan := make(chan error, 1)
 	cm.runnables = newRunnables(context.Background, errChan)
-
 	if cm.httpServer != nil {
 		cm.httpServer = server.NewHttpService(cm.config, cm.optsHttpServer, cm.healthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
 		if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
@@ -346,15 +368,15 @@ func (cm *controllerManager) reloadConfiguration() error {
 		}
 	}
 
-	if err := cm.runnables.HTTPServers.Start(cm.internalCtx); err != nil {
-		if err != nil {
-			return fmt.Errorf("failed to start HTTP servers: %w", err)
-		}
-	}
-
 	if err := cm.runnables.GRPCServers.Start(cm.internalCtx); err != nil {
 		if err != nil {
 			return fmt.Errorf("failed to start grpcServers: %w", err)
+		}
+	}
+
+	if err := cm.runnables.HTTPServers.Start(cm.internalCtx); err != nil {
+		if err != nil {
+			return fmt.Errorf("failed to start HTTP servers: %w", err)
 		}
 	}
 

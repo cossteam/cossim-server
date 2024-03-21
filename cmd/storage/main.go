@@ -52,7 +52,7 @@ func main() {
 			RemoteConfigToken:    remoteConfigToken,
 			Hot:                  true,
 			Key:                  "service/storage",
-			Keys:                 []string{discovery.CommonMySQLConfigKey, discovery.CommonOssConfigKey},
+			Keys:                 []string{discovery.CommonMySQLConfigKey, discovery.CommonOssConfigKey, discovery.CommonRedisConfigKey},
 			Registry: ctrl.Registry{
 				Discover: discover,
 				Register: register,
