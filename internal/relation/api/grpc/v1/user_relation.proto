@@ -2,7 +2,7 @@ syntax = "proto3";
 package v1;
 option go_package = "github.com/cossim/coss-server/internal/relation/api/grpc/v1";
 import "google/protobuf/empty.proto";
-import "api/v1/group_relation.proto";
+import "api/grpc/v1/group_relation.proto";
 
 message AddFriendRequest {
   // @inject_tag: json:"user_id"

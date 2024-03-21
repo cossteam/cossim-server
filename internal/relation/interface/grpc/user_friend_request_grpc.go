@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
+	"strings"
 )
 
 func (s *Handler) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
@@ -161,6 +162,7 @@ func (s *Handler) GetFriendRequestById(ctx context.Context, in *v1.GetFriendRequ
 		resp.Remark = re.Remark
 		resp.Status = v1.FriendRequestStatus(re.Status)
 		resp.CreateAt = uint64(re.CreatedAt)
+		resp.DeleteBy = re.DeletedBy
 	}
 	return resp, nil
 }
@@ -189,5 +191,27 @@ func (s *Handler) DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, in
 	if err := s.ufqr.DeleteFriendRequestByUserIdAndFriendIdRequest(in.UserId, in.FriendId); err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
 	}
+	return resp, nil
+}
+
+func (s *Handler) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRecordRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	fr, err := s.ufqr.GetFriendRequestByID(uint(req.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	deletedBy := strings.Split(fr.DeletedBy, ",")
+	for _, email := range deletedBy {
+		if email == req.UserId {
+			return resp, nil
+		}
+	}
+
+	deletedBy = append(deletedBy, req.UserId)
+	if err := s.ufqr.UpdateUserColumnById(req.ID, map[string]interface{}{"deleted_by": strings.Join(deletedBy, ",")}); err != nil {
+		return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
+	}
+
 	return resp, nil
 }

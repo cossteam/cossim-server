@@ -11,4 +11,5 @@ var (
 	StatusNotAvailable  = add(1001, "状态不可用")
 	StatusException     = add(1002, "状态异常")
 	InvalidParameter    = add(422, "参数无效")
+	DuplicateOperation  = add(409, "重复操作")
 )
