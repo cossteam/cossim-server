@@ -21,4 +21,6 @@ type GroupJoinRequestRepository interface {
 	GetJoinRequestBatchListByGroupIDs(gids []uint) ([]*entity.GroupJoinRequest, error)
 	//根据多个请求ID获取入群申请
 	GetJoinRequestListByRequestIDs(ids []uint) ([]*entity.GroupJoinRequest, error)
+
+	DeleteJoinRequestByID(id uint) error
 }

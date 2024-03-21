@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, member []string) (*dto.GroupCallResponse, error) {
+func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, member []string, option dto.CallOption) (*dto.GroupCallResponse, error) {
 	groupID := strconv.FormatUint(uint64(gid), 10)
 
 	// 检查群组和用户是否已经在通话中
@@ -150,6 +150,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 			"room":         roomName,
 			"sender_id":    uid,
 			"recipient_id": participants[i].UserID,
+			"option":       option,
 		}}
 		if err = s.publishServiceMessage(ctx, msg); err != nil {
 			s.logger.Error("发送消息失败", zap.Error(err), zap.String("room", roomName), zap.String("uid", participants[i].UserID))

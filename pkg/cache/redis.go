@@ -271,6 +271,8 @@ func (r *RedisClient) UpdateKey(key string, newData interface{}, expiration time
 		return err
 	}
 
+	fmt.Println("remaining => ", remaining)
+
 	// 如果键不存在或已过期，返回错误
 	if remaining < 0 {
 		return fmt.Errorf("key does not exist or has expired")
@@ -300,6 +302,15 @@ func (r *RedisClient) DelKey(key string) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	err := r.Client.Del(context.Background(), key).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisClient) PersistKey(key string) error {
+	// 使用 PERSIST 命令将键设置为永久不过期
+	_, err := r.Client.Persist(context.Background(), key).Result()
 	if err != nil {
 		return err
 	}

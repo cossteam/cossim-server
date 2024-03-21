@@ -27,7 +27,7 @@ func (u *UserFriendRequestRepo) AddFriendRequest(ent *entity.UserFriendRequest) 
 
 func (u *UserFriendRequestRepo) GetFriendRequestList(userId string) ([]*entity.UserFriendRequest, error) {
 	var result []*entity.UserFriendRequest
-	err := u.db.Where("receiver_id = ? OR sender_id = ? AND deleted_at = 0 AND delete_by like ?", userId, userId, "%"+userId+"%").Find(&result).Error
+	err := u.db.Where("receiver_id = ? OR sender_id = ? AND deleted_at = 0 AND deleted_by like ?", userId, userId, "%"+userId+"%").Find(&result).Error
 	return result, err
 }
 

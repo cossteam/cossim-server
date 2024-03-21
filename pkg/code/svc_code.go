@@ -103,6 +103,7 @@ var (
 	RelationGroupErrSetUserGroupOpenBurnAfterReadingTimeOutFailed = New(13133, "获取群聊阅后即焚时间失败")
 	RelationGroupErrGroupOwnerCantLeaveGroupFailed                = New(13134, "群主不能退出群聊")
 	RelationGroupErrSetUserGroupRemarkFailed                      = New(13135, "设置群聊备注失败")
+	RelationErrDeleteGroupJoinRecord                              = New(13136, "删除群聊申请记录失败")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

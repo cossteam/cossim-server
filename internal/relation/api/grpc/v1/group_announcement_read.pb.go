@@ -26,11 +26,11 @@ type MarkAnnouncementAsReadRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"announcement_id"
-	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"AnnouncementId,omitempty"`
+	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 	// @inject_tag: json:"user_ids"
-	UserIds []string `protobuf:"bytes,3,rep,name=UserIds,proto3" json:"UserIds,omitempty"`
+	UserIds []string `protobuf:"bytes,3,rep,name=UserIds,proto3" json:"user_ids"`
 }
 
 func (x *MarkAnnouncementAsReadRequest) Reset() {
@@ -92,7 +92,7 @@ type MarkAnnouncementAsReadResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"id"`
 }
 
 func (x *MarkAnnouncementAsReadResponse) Reset() {
@@ -140,9 +140,9 @@ type GetReadUsersRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"announcement_id"
-	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"AnnouncementId,omitempty"`
+	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 }
 
 func (x *GetReadUsersRequest) Reset() {
@@ -197,7 +197,7 @@ type GetReadUsersResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"announcement_read_users"
-	AnnouncementReadUsers []*AnnouncementRead `protobuf:"bytes,1,rep,name=AnnouncementReadUsers,proto3" json:"AnnouncementReadUsers,omitempty"`
+	AnnouncementReadUsers []*AnnouncementRead `protobuf:"bytes,1,rep,name=AnnouncementReadUsers,proto3" json:"announcement_read_users"`
 }
 
 func (x *GetReadUsersResponse) Reset() {
@@ -245,15 +245,15 @@ type AnnouncementRead struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"announcement_id"
-	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"AnnouncementId,omitempty"`
+	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"read_at"
-	ReadAt uint64 `protobuf:"varint,4,opt,name=ReadAt,proto3" json:"ReadAt,omitempty"`
+	ReadAt uint64 `protobuf:"varint,4,opt,name=ReadAt,proto3" json:"read_at"`
 	// @inject_tag: json:"id"
-	ID uint32 `protobuf:"varint,5,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID uint32 `protobuf:"varint,5,opt,name=ID,proto3" json:"id"`
 }
 
 func (x *AnnouncementRead) Reset() {
@@ -329,11 +329,11 @@ type GetAnnouncementReadByUserIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"announcement_id"
-	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"AnnouncementId,omitempty"`
+	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *GetAnnouncementReadByUserIdRequest) Reset() {
@@ -395,15 +395,15 @@ type GetAnnouncementReadByUserIdResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"GroupId,omitempty"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"announcement_id"
-	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"AnnouncementId,omitempty"`
+	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"read_at"
-	ReadAt uint64 `protobuf:"varint,4,opt,name=ReadAt,proto3" json:"ReadAt,omitempty"`
+	ReadAt uint64 `protobuf:"varint,4,opt,name=ReadAt,proto3" json:"read_at"`
 	// @inject_tag: json:"id"
-	ID uint32 `protobuf:"varint,5,opt,name=ID,proto3" json:"ID,omitempty"`
+	ID uint32 `protobuf:"varint,5,opt,name=ID,proto3" json:"id"`
 }
 
 func (x *GetAnnouncementReadByUserIdResponse) Reset() {
