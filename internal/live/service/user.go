@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/internal/live/api/dto"
 	"github.com/cossim/coss-server/internal/live/api/model"
@@ -16,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"strings"
 	"time"
@@ -90,6 +92,8 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID string, req *dto.
 		return nil, err
 	}
 
+	fmt.Println("s.liveTimeout+10 => ", s.liveTimeout)
+
 	msg := constants.WsMsg{
 		Uid:   recipientID,
 		Event: constants.UserCallReqEvent,
@@ -113,7 +117,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
 		s.logger.Error("获取房间信息失败", zap.Error(err))
-		return nil, code.LiveErrJoinCallFailed
+		return nil, err
 	}
 
 	if err = s.checkUserRoom(ctx, room, uid); err != nil {
@@ -121,6 +125,10 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 	}
 
 	room.NumParticipants++
+	if room.NumParticipants > room.MaxParticipants {
+		return nil, code.LiveErrMaxParticipantsExceeded
+	}
+
 	room.Participants[uid] = &model.ActiveParticipant{
 		Connected: true,
 	}
@@ -130,14 +138,22 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 		return nil, code.LiveErrJoinCallFailed
 	}
 
+	fmt.Println("UserJoinRoom roomStr => ", roomStr)
+
 	if room.NumParticipants == 2 {
 		for k := range room.Participants {
-			if err = s.redisClient.UpdateKeyExpiration(liveUserPrefix+k, 0); err != nil {
+			fmt.Println(" room.Participants k => ", room.Participants)
+			if err = s.redisClient.PersistKey(liveUserPrefix + k); err != nil {
 				s.logger.Error("更新用户房间记录失败", zap.Error(err))
 				return nil, err
 			}
 		}
 		if err = s.redisClient.SetKey(liveRoomPrefix+room.Room, roomStr, 0); err != nil {
+			s.logger.Error("更新房间信息失败", zap.Error(err), zap.String("room", room.Room))
+			return nil, err
+		}
+	} else {
+		if err = s.redisClient.UpdateKey(liveRoomPrefix+room.Room, roomStr, -1); err != nil {
 			s.logger.Error("更新房间信息失败", zap.Error(err), zap.String("room", room.Room))
 			return nil, err
 		}
@@ -272,7 +288,12 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, 
 func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (interface{}, error) {
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user room: %w", err)
+		if strings.Contains(err.Error(), "redis: nil") {
+			fmt.Println("UserLeaveRoom 1 err => ", err)
+			return nil, code.LiveErrCallNotFound
+		}
+		fmt.Println("UserLeaveRoom 2 err => ", err)
+		return nil, err
 	}
 
 	if _, ok := room.Participants[uid]; !ok {
@@ -578,16 +599,15 @@ func (s *Service) isEitherUserInCall(ctx context.Context, userID1, userID2 strin
 }
 
 func (s *Service) isUserInCall(ctx context.Context, id string) (bool, error) {
-	//pattern := liveUserPrefix + "*:" + id + ":*"
-	//keys, err := s.redisClient.Keys(ctx, pattern).Result()
-	//if err != nil {
-	//	return false, err
-	//}
-	//return len(keys) > 0, nil
 	pattern := liveUserPrefix + id
 	count, err := s.redisClient.Client.Exists(ctx, pattern).Result()
 	if err != nil {
-		return false, err
+		s.logger.Error("isUserInCall err", zap.Error(err))
+		// 检查错误并且错误消息中不包含 "does not exist" 或 "expired"
+		if !strings.Contains(err.Error(), "does not exist") && !strings.Contains(err.Error(), "expired") && errors.Is(err, redis.Nil) {
+			return false, err
+		}
+		return true, nil
 	}
 	return count > 0, nil
 }
@@ -604,6 +624,13 @@ func (s *Service) getRedisUserRoom(ctx context.Context, uid string) (*model.Room
 
 	roomInfo, err := s.redisClient.GetKey(liveRoomPrefix + d1.Room)
 	if err != nil {
+		fmt.Println("d1.Room => ", d1.Room)
+		if strings.Contains(err.Error(), "redis: nil") {
+			if err := s.redisClient.DelKey(liveUserPrefix + uid); err != nil {
+				s.logger.Error("获取用户通话信息失败后删除房间失败", zap.Error(err))
+			}
+			return nil, code.LiveErrCallNotFound
+		}
 		return nil, err
 	}
 	d2 := &model.RoomInfo{}

@@ -465,6 +465,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/group/delete_friend_record": {
+            "post": {
+                "description": "删除群聊申请记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
+                ],
+                "summary": "删除群聊申请记录",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteRecordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/invite": {
             "post": {
                 "description": "邀请加入群聊",
@@ -1006,6 +1040,40 @@ const docTemplaterelation = `{
                 }
             }
         },
+        "/relation/user/delete_friend_record": {
+            "post": {
+                "description": "删除好友申请记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UserRelation"
+                ],
+                "summary": "删除好友申请记录",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteRecordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/user/friend_list": {
             "get": {
                 "description": "好友列表",
@@ -1311,6 +1379,18 @@ const docTemplaterelation = `{
                 },
                 "id": {
                     "description": "公告ID",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.DeleteRecordRequest": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "description": "申请记录id",
                     "type": "integer"
                 }
             }

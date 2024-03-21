@@ -19,6 +19,7 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"strings"
 	ostime "time"
 )
 
@@ -192,10 +193,11 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 	return data, nil
 }
 func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *model.SendFriendRequest) (interface{}, error) {
-	if req.UserId == userID {
+	friendID := req.UserId
+	if friendID == userID {
 		return nil, code.RelationErrSendFriendRequestFailed
 	}
-	_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: req.UserId})
+	_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: friendID})
 	if err != nil {
 		s.logger.Error("获取用户信息失败", zap.Error(err))
 		return nil, code.UserErrNotExist
@@ -203,7 +205,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 
 	fRequest, err := s.svc.GetFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.GetFriendRequestByUserIdAndFriendIdRequest{
 		UserId:   userID,
-		FriendId: req.UserId,
+		FriendId: friendID,
 	})
 	if err != nil {
 		if code.Code(code.RelationUserErrNoFriendRequestRecords.Code()) != code.Cause(err) {
@@ -219,7 +221,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		}
 	}
 
-	relation, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserId})
+	relation, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
@@ -235,15 +237,16 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	//删除之前的
 	_, err = s.svc.DeleteFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.DeleteFriendRequestByUserIdAndFriendIdRequest{
 		UserId:   userID,
-		FriendId: req.UserId,
+		FriendId: friendID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	// 创建好友申请
 	resp, err := s.svc.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
 		SenderId:   userID,
-		ReceiverId: req.UserId,
+		ReceiverId: friendID,
 		Remark:     req.Remark,
 	})
 	if err != nil {
@@ -256,7 +259,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		Msg:          req.Remark,
 		E2EPublicKey: req.E2EPublicKey,
 	}
-	msg := constants.WsMsg{Uid: req.UserId, Event: constants.AddFriendEvent, Data: wsMsgData}
+	msg := constants.WsMsg{Uid: friendID, Event: constants.AddFriendEvent, Data: wsMsgData}
 
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("Failed to publish service message", zap.Error(err))
@@ -1049,6 +1052,32 @@ func (s *Service) removeRedisFriendList(userID string, friendID string) error {
 				}
 			}
 		}
+	}
+	return nil
+}
+
+func (s *Service) DeleteUserFriendRecord(ctx context.Context, uid string, id uint32) error {
+	fr, err := s.svc.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: id})
+	if err != nil {
+		s.logger.Error("获取好友申请记录失败", zap.String("uid", uid), zap.Uint32("id", id), zap.Error(err))
+		return err
+	}
+
+	if fr.SenderId != uid {
+		return code.Forbidden
+	}
+
+	deletedBy := strings.Split(fr.DeleteBy, ",")
+	for _, v := range deletedBy {
+		if v == uid {
+			return code.DuplicateOperation
+		}
+	}
+
+	_, err = s.svc.DeleteFriendRecord(ctx, &relationgrpcv1.DeleteFriendRecordRequest{ID: id})
+	if err != nil {
+		s.logger.Error("删除好友申请记录失败", zap.Error(err))
+		return err
 	}
 	return nil
 }

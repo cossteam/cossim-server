@@ -62,6 +62,10 @@ type DeleteFriendRequest struct {
 	UserID string `json:"user_id" binding:"required"`
 }
 
+type DeleteRecordRequest struct {
+	ID uint32 `json:"id" binding:"required"` // 申请记录id
+}
+
 type DeleteBlacklistRequest struct {
 	UserID string `json:"user_id" binding:"required"`
 }

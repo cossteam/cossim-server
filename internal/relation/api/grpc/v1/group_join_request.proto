@@ -113,6 +113,13 @@ message GetGroupJoinRequestByIDResponse {
   string Remark = 7;
 }
 
+message DeleteGroupRecordRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 3;
+}
+
 service GroupJoinRequestService {
   // 获取用户加入群聊列表
   rpc GetGroupJoinRequestListByUserId(GetGroupJoinRequestListRequest) returns (GroupJoinRequestListResponse) {}
@@ -126,4 +133,6 @@ service GroupJoinRequestService {
   rpc ManageGroupJoinRequestByID(ManageGroupJoinRequestByIDRequest) returns (google.protobuf.Empty) {}
   //根据请求id获取申请
   rpc GetGroupJoinRequestByID(GetGroupJoinRequestByIDRequest) returns (GetGroupJoinRequestByIDResponse) {}
+  // 删除用户自己的群聊申请记录
+  rpc DeleteGroupRecord(DeleteGroupRecordRequest) returns (google.protobuf.Empty) {}
 }

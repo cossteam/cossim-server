@@ -1272,3 +1272,22 @@ func (s *Service) removeRedisGroupList(userID string, groupID uint32) error {
 	}
 	return nil
 }
+
+func (s *Service) DeleteGroupFriendRecord(ctx context.Context, uid string, id uint32) error {
+	gr, err := s.svc.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: id})
+	if err != nil {
+		s.logger.Error("获取群聊好友申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
+		return err
+	}
+
+	if gr.UserId != uid {
+		return code.Forbidden
+	}
+
+	_, err = s.svc.DeleteGroupRecord(ctx, &relationgrpcv1.DeleteGroupRecordRequest{ID: id})
+	if err != nil {
+		s.logger.Error("删除群聊好友申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
+		return err
+	}
+	return nil
+}

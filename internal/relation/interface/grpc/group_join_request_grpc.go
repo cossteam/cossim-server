@@ -207,3 +207,11 @@ func (s *Handler) GetGroupJoinRequestByID(ctx context.Context, request *v1.GetGr
 	resp.Remark = req.Remark
 	return resp, nil
 }
+
+func (s *Handler) DeleteGroupRecord(ctx context.Context, req *v1.DeleteGroupRecordRequest) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
+	if err := s.gjqr.DeleteJoinRequestByID(uint(req.ID)); err != nil {
+		return nil, status.Error(codes.Code(code.RelationErrDeleteGroupJoinRecord.Code()), err.Error())
+	}
+	return resp, nil
+}

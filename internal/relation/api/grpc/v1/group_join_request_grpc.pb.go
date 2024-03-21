@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/group_join_request.proto
+// source: api/grpc/v1/group_join_request.proto
 
 package v1
 
@@ -26,6 +26,7 @@ const (
 	GroupJoinRequestService_InviteJoinGroup_FullMethodName                       = "/v1.GroupJoinRequestService/InviteJoinGroup"
 	GroupJoinRequestService_ManageGroupJoinRequestByID_FullMethodName            = "/v1.GroupJoinRequestService/ManageGroupJoinRequestByID"
 	GroupJoinRequestService_GetGroupJoinRequestByID_FullMethodName               = "/v1.GroupJoinRequestService/GetGroupJoinRequestByID"
+	GroupJoinRequestService_DeleteGroupRecord_FullMethodName                     = "/v1.GroupJoinRequestService/DeleteGroupRecord"
 )
 
 // GroupJoinRequestServiceClient is the client API for GroupJoinRequestService service.
@@ -44,6 +45,8 @@ type GroupJoinRequestServiceClient interface {
 	ManageGroupJoinRequestByID(ctx context.Context, in *ManageGroupJoinRequestByIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 根据请求id获取申请
 	GetGroupJoinRequestByID(ctx context.Context, in *GetGroupJoinRequestByIDRequest, opts ...grpc.CallOption) (*GetGroupJoinRequestByIDResponse, error)
+	// 删除用户自己的群聊申请记录
+	DeleteGroupRecord(ctx context.Context, in *DeleteGroupRecordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type groupJoinRequestServiceClient struct {
@@ -108,6 +111,15 @@ func (c *groupJoinRequestServiceClient) GetGroupJoinRequestByID(ctx context.Cont
 	return out, nil
 }
 
+func (c *groupJoinRequestServiceClient) DeleteGroupRecord(ctx context.Context, in *DeleteGroupRecordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, GroupJoinRequestService_DeleteGroupRecord_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupJoinRequestServiceServer is the server API for GroupJoinRequestService service.
 // All implementations must embed UnimplementedGroupJoinRequestServiceServer
 // for forward compatibility
@@ -124,6 +136,8 @@ type GroupJoinRequestServiceServer interface {
 	ManageGroupJoinRequestByID(context.Context, *ManageGroupJoinRequestByIDRequest) (*emptypb.Empty, error)
 	// 根据请求id获取申请
 	GetGroupJoinRequestByID(context.Context, *GetGroupJoinRequestByIDRequest) (*GetGroupJoinRequestByIDResponse, error)
+	// 删除用户自己的群聊申请记录
+	DeleteGroupRecord(context.Context, *DeleteGroupRecordRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGroupJoinRequestServiceServer()
 }
 
@@ -148,6 +162,9 @@ func (UnimplementedGroupJoinRequestServiceServer) ManageGroupJoinRequestByID(con
 }
 func (UnimplementedGroupJoinRequestServiceServer) GetGroupJoinRequestByID(context.Context, *GetGroupJoinRequestByIDRequest) (*GetGroupJoinRequestByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupJoinRequestByID not implemented")
+}
+func (UnimplementedGroupJoinRequestServiceServer) DeleteGroupRecord(context.Context, *DeleteGroupRecordRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRecord not implemented")
 }
 func (UnimplementedGroupJoinRequestServiceServer) mustEmbedUnimplementedGroupJoinRequestServiceServer() {
 }
@@ -271,6 +288,24 @@ func _GroupJoinRequestService_GetGroupJoinRequestByID_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupJoinRequestService_DeleteGroupRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteGroupRecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupJoinRequestServiceServer).DeleteGroupRecord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupJoinRequestService_DeleteGroupRecord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupJoinRequestServiceServer).DeleteGroupRecord(ctx, req.(*DeleteGroupRecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupJoinRequestService_ServiceDesc is the grpc.ServiceDesc for GroupJoinRequestService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -302,7 +337,11 @@ var GroupJoinRequestService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetGroupJoinRequestByID",
 			Handler:    _GroupJoinRequestService_GetGroupJoinRequestByID_Handler,
 		},
+		{
+			MethodName: "DeleteGroupRecord",
+			Handler:    _GroupJoinRequestService_DeleteGroupRecord_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/group_join_request.proto",
+	Metadata: "api/grpc/v1/group_join_request.proto",
 }

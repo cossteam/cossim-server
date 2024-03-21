@@ -75,6 +75,14 @@ definitions:
     - group_id
     - id
     type: object
+  model.DeleteRecordRequest:
+    properties:
+      id:
+        description: 申请记录id
+        type: integer
+    required:
+    - id
+    type: object
   model.GroupRequestListResponse:
     properties:
       creator_id:
@@ -695,6 +703,28 @@ paths:
       summary: 设置群聊阅后即焚消息销毁时间
       tags:
       - GroupRelation
+  /relation/group/delete_friend_record:
+    post:
+      consumes:
+      - application/json
+      description: 删除群聊申请记录
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteRecordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 删除群聊申请记录
+      tags:
+      - UserRelation
   /relation/group/invite:
     post:
       consumes:
@@ -1037,6 +1067,28 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 删除好友
+      tags:
+      - UserRelation
+  /relation/user/delete_friend_record:
+    post:
+      consumes:
+      - application/json
+      description: 删除好友申请记录
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteRecordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 删除好友申请记录
       tags:
       - UserRelation
   /relation/user/friend_list:

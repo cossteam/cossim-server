@@ -132,8 +132,8 @@ func (s *HttpService) Discover() error {
 	backoffSettings.InitialInterval = 1 * time.Second
 	backoffSettings.MaxElapsedTime = 0 // 无限期重试
 
-	clients := make(map[string]*grpc.ClientConn)
-	var mu sync.Mutex // 用于对 clients 的并发访问进行保护
+	//clients := make(map[string]*grpc.ClientConn)
+	//var mu sync.Mutex // 用于对 clients 的并发访问进行保护
 	var wg sync.WaitGroup
 
 	// 控制并发数的信号量
@@ -145,9 +145,15 @@ func (s *HttpService) Discover() error {
 			if err != nil {
 				return err
 			}
-			mu.Lock()
-			clients[c.Name] = conn
-			mu.Unlock()
+			//mu.Lock()
+			//clients[c.Name] = conn
+			//mu.Unlock()
+			// 在每次成功发现服务后调用 DiscoverServices
+			client := make(map[string]*grpc.ClientConn)
+			client[c.Name] = conn
+			if err := s.svc.DiscoverServices(client); err != nil {
+				s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
+			}
 			continue
 		}
 		sem <- struct{}{} // 获取信号量，限制并发数
@@ -167,9 +173,15 @@ func (s *HttpService) Discover() error {
 				if err != nil {
 					return err
 				}
-				mu.Lock()
-				clients[c.Name] = conn
-				mu.Unlock()
+				//mu.Lock()
+				//clients[c.Name] = conn
+				//mu.Unlock()
+				client := make(map[string]*grpc.ClientConn)
+				client[c.Name] = conn
+				// 在每次成功发现服务后调用 DiscoverServices
+				if err := s.svc.DiscoverServices(client); err != nil {
+					s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
+				}
 				return nil
 			}
 			if err := backoff.Retry(retryFunc, backoffSettings); err != nil {
@@ -179,14 +191,14 @@ func (s *HttpService) Discover() error {
 		}(serviceName, c)
 	}
 	wg.Wait()
-	return s.svc.DiscoverServices(clients)
+	return nil // 异步调用 DiscoverServices，无需等待所有服务都发现
 }
 
 func (s *HttpService) cancel() {
 	if err := s.registry.Cancel(s.sid); err != nil {
-		s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+		s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 	}
-	s.logger.Info("Service unregister success", "service", s.ac.HTTP.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	s.logger.Info("Service unregister success", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 }
 
 func (s *HttpService) Health() string {

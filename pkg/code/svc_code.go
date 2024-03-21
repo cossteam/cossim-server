@@ -66,6 +66,7 @@ var (
 	RelationErrSetUserOpenBurnAfterReadingFailed        = New(13021, "设置用户阅后即焚开关失败")
 	RelationErrSetFriendRemarkFailed                    = New(13022, "设置好友备注失败")
 	RelationErrSetUserOpenBurnAfterReadingTimeOutFailed = New(13023, "设置用户阅后即焚时间失败")
+	RelationErrDeleteUserFriendRecord                   = New(13024, "删除好友申请记录失败")
 
 	RelationErrCreateGroupFailed                                  = New(13101, "创建群聊失败")
 	RelationErrGetGroupIDsFailed                                  = New(13102, "获取群聊成员")
@@ -102,6 +103,7 @@ var (
 	RelationGroupErrSetUserGroupOpenBurnAfterReadingTimeOutFailed = New(13133, "获取群聊阅后即焚时间失败")
 	RelationGroupErrGroupOwnerCantLeaveGroupFailed                = New(13134, "群主不能退出群聊")
 	RelationGroupErrSetUserGroupRemarkFailed                      = New(13135, "设置群聊备注失败")
+	RelationErrDeleteGroupJoinRecord                              = New(13136, "删除群聊申请记录失败")
 
 	// 消息服务错误码定义
 	MsgErrInsertUserMessageFailed                   = New(14000, "发送消息失败")

@@ -34,7 +34,7 @@ func (h *Handler) GroupCreate(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.CreateGroupCall(c, userID, req.GroupID, req.Member)
+	resp, err := h.svc.CreateGroupCall(c, userID, req.GroupID, req.Member, req.Option)
 	if err != nil {
 		c.Error(err)
 		return
