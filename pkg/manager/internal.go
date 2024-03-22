@@ -29,7 +29,6 @@ const (
 
 	defaultReadinessEndpoint      = "/ready"
 	defaultLivenessEndpoint       = "/health"
-	defaultMetricsEndpoint        = "/metrics"
 	defaultHealthProbeBindAddress = ":8081"
 )
 
@@ -61,12 +60,6 @@ type controllerManager struct {
 
 	// httpHealthProbeListener is used to serve liveness probe
 	httpHealthProbeListener net.Listener
-
-	// metricsListener is used to serve prometheus metrics
-	metricsListener net.Listener
-
-	// metricsExtraHandlers contains extra handlers to register on http server that serves metrics.
-	metricsExtraHandlers map[string]http.Handler
 
 	// Readiness probe endpoint name
 	readinessEndpointName string
@@ -128,24 +121,8 @@ func (cm *controllerManager) Add(runnable Runnable) error {
 }
 
 func (cm *controllerManager) AddMetricsExtraHandler(path string, handler http.Handler) error {
-	cm.Lock()
-	defer cm.Unlock()
-
-	if cm.started {
-		return fmt.Errorf("unable to add new metrics handler because metrics endpoint has already been created")
-	}
-
-	if path == defaultMetricsEndpoint {
-		return fmt.Errorf("overriding builtin %s endpoint is not allowed", defaultMetricsEndpoint)
-	}
-
-	if _, found := cm.metricsExtraHandlers[path]; found {
-		return fmt.Errorf("can't register extra handler by duplicate path %q on metrics http server", path)
-	}
-
-	cm.metricsExtraHandlers[path] = handler
-	cm.logger.V(2).Info("Registering metrics http server extra handler", "path", path)
-	return nil
+	//TODO implement me
+	panic("implement me")
 }
 
 func (cm *controllerManager) AddHealthzCheck(name string, check healthz.Checker) error {
@@ -281,10 +258,7 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	// Metrics should be served whether the controller is leader or not.
 	// (If we don't serve metrics for non-leaders, prometheus will still scrape
 	// the pod but will get a connection refused).
-	if cm.metricsListener != nil {
-		//cm.serveMetrics()
-	}
-
+	//if cm.metricsServer != nil {
 	// Note: We are adding the metrics httpServer directly to HTTPServers here as matching on the
 	// metricsserver.Server interface in cm.runnables.Add would be very brittle.
 	//if cm.runnables.HTTPServers != nil {
@@ -302,9 +276,9 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 
 	// Add pprof httpServer
 	if cm.pprofListener != nil {
-		//if err := cm.addPprofServer(); err != nil {
-		//	return fmt.Errorf("failed to add pprof httpServer: %w", err)
-		//}
+		if err := cm.addPprofServer(); err != nil {
+			return fmt.Errorf("failed to add pprof httpServer: %w", err)
+		}
 	}
 
 	if cm.runnables.HTTPServers != nil && cm.httpServer != nil {
@@ -421,57 +395,6 @@ func (cm *controllerManager) reloadConfiguration() error {
 
 	return nil
 }
-
-//func (cm *controllerManager) serveMetrics() {
-//	handler := promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
-//		ErrorHandling: promhttp.HTTPErrorOnError,
-//	})
-//	// TODO(JoelSpeed): Use existing Kubernetes machinery for serving metrics
-//	mux := http.NewServeMux()
-//	mux.Handle(defaultMetricsEndpoint, handler)
-//	for path, extraHandler := range cm.metricsExtraHandlers {
-//		mux.Handle(path, extraHandler)
-//	}
-//
-//	server := server2.New(mux)
-//	go cm.httpServe("metrics", cm.logger.WithValues("path", defaultMetricsEndpoint), server, cm.metricsListener)
-//}
-//
-//func (cm *controllerManager) httpServe(kind string, log logr.Logger, server *http.Server, ln net.Listener) {
-//	log = log.WithValues("kind", kind, "addr", ln.Addr())
-//
-//	go func() {
-//		log.Info("Starting server")
-//		if err := server.Serve(ln); err != nil {
-//			if errors.Is(err, http.ErrServerClosed) {
-//				return
-//			}
-//			if atomic.LoadInt64(cm.stopProcedureEngaged) > 0 {
-//				// There might be cases where connections are still open and we try to shutdown
-//				// but not having enough time to close the connection causes an error in Serve
-//				//
-//				// In that case we want to avoid returning an error to the main error channel.
-//				log.Error(err, "error on Serve after stop has been engaged")
-//				return
-//			}
-//			cm.errChan <- err
-//		}
-//	}()
-//
-//	// Shutdown the server when stop is closed.
-//	<-cm.internalProceduresStop
-//	if err := server.Shutdown(cm.shutdownCtx); err != nil {
-//		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-//			// Avoid logging context related errors.
-//			return
-//		}
-//		if atomic.LoadInt64(cm.stopProcedureEngaged) > 0 {
-//			cm.logger.Error(err, "error on Shutdown after stop has been engaged")
-//			return
-//		}
-//		cm.errChan <- err
-//	}
-//}
 
 // engageStopProcedure signals all runnables to stop, reads potential errors
 // from the errChan and waits for them to end. It must not be called more than once.

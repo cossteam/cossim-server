@@ -31,9 +31,9 @@ type Handler struct {
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("live_bff", int8(cfg.Log.Level))
-	//h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg)
-	return nil
+	return h.enc.ReadKeyPair()
 }
 
 func (h *Handler) Name() string {
