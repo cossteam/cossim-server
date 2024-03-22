@@ -455,7 +455,7 @@ func (h *Handler) deleteUserFriendRecord(c *gin.Context) {
 	}
 
 	if err = h.svc.DeleteUserFriendRecord(c, userID, req.ID); err != nil {
-		response.SetFail(c, "删除好友申请记录失败", nil)
+		c.Error(err)
 		return
 	}
 
