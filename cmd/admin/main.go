@@ -28,6 +28,7 @@ var (
 		discovery.CommonRedisConfigKey,
 		discovery.CommonOssConfigKey,
 		discovery.CommonMQConfigKey,
+		discovery.CommonDtmConfigKey,
 	}, ",")
 )
 
