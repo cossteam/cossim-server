@@ -5,7 +5,7 @@ type WsUserMsg struct {
 	SenderId                string               `json:"sender_id"`
 	ReceiverId              string               `json:"receiver_id"`
 	Content                 string               `json:"content"`
-	MsgType                 uint                 `json:"msgType"`
+	MsgType                 uint                 `json:"msg_type"`
 	ReplayId                uint                 `json:"reply_id"`
 	SendAt                  int64                `json:"send_at"`
 	DialogId                uint32               `json:"dialog_id"`
@@ -19,7 +19,7 @@ type WsGroupMsg struct {
 	GroupId            int64                `json:"group_id"`
 	SenderId           string               `json:"sender_id"`
 	Content            string               `json:"content"`
-	MsgType            uint                 `json:"msgType"`
+	MsgType            uint                 `json:"msg_type"`
 	ReplayId           uint                 `json:"reply_id"`
 	SendAt             int64                `json:"send_at"`
 	DialogId           uint32               `json:"dialog_id"`
