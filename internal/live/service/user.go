@@ -164,7 +164,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 		return nil, err
 	}
 
-	token, err := s.GetAdminJoinToken(ctx, room.Room, user.NickName)
+	token, err := s.GetAdminJoinToken(ctx, room.Room, user.NickName, uid)
 	if err != nil {
 		return nil, code.LiveErrJoinCallFailed
 	}
@@ -700,13 +700,13 @@ func (s *Service) deleteRedisLiveUser(ctx context.Context, userID string) error 
 	return nil
 }
 
-func (s *Service) GetUserJoinToken(ctx context.Context, room, userName string) (string, error) {
+func (s *Service) GetUserJoinToken(ctx context.Context, room, userName, userID string) (string, error) {
 	at := auth.NewAccessToken(s.liveApiKey, s.liveApiSecret)
 	grant := &auth.VideoGrant{
 		RoomJoin: true,
 		Room:     room,
 	}
-	at.AddGrant(grant).SetIdentity(userName).SetValidFor(s.liveTimeout).SetName(userName)
+	at.AddGrant(grant).SetName(userName).SetIdentity(userID).SetValidFor(s.liveTimeout)
 	jwt, err := at.ToJWT()
 	if err != nil {
 		s.logger.Error("Failed to generate JWT", zap.Error(err))
@@ -716,7 +716,7 @@ func (s *Service) GetUserJoinToken(ctx context.Context, room, userName string) (
 	return jwt, nil
 }
 
-func (s *Service) GetAdminJoinToken(ctx context.Context, room, userName string) (string, error) {
+func (s *Service) GetAdminJoinToken(ctx context.Context, room, userName, userID string) (string, error) {
 	at := auth.NewAccessToken(s.liveApiKey, s.liveApiSecret)
 	grant := &auth.VideoGrant{
 		RoomCreate: true,
@@ -725,7 +725,7 @@ func (s *Service) GetAdminJoinToken(ctx context.Context, room, userName string) 
 		RoomJoin:   true,
 		Room:       room,
 	}
-	at.AddGrant(grant).SetIdentity(userName).SetValidFor(s.liveTimeout).SetName(userName)
+	at.AddGrant(grant).SetName(userName).SetIdentity(userID).SetValidFor(s.liveTimeout)
 	jwt, err := at.ToJWT()
 	if err != nil {
 		s.logger.Error("Failed to generate JWT", zap.Error(err))
