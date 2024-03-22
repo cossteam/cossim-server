@@ -2,7 +2,7 @@ package alias
 
 import "github.com/cossim/coss-server/pkg/manager"
 
-// Manager initializes shared dependencies such as Caches and Clients, and provides them to Runnables.
+// Manager initializes shared dependencies, and provides them to Runnables.
 // A Manager is required to create Controllers.
 type Manager = manager.Manager
 

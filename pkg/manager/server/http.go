@@ -23,6 +23,16 @@ var (
 	_ Registry = &HttpService{}
 )
 
+// New returns a new server with sane defaults.
+func New(handler http.Handler) *http.Server {
+	return &http.Server{
+		Handler:           handler,
+		MaxHeaderBytes:    1 << 20,
+		IdleTimeout:       90 * time.Second, // matches http.DefaultTransport keep-alive timeout
+		ReadHeaderTimeout: 32 * time.Second,
+	}
+}
+
 type HttpService struct {
 	server     *http.Server
 	handler    gin.IRouter
@@ -48,13 +58,7 @@ func NewHttpService(c *config.AppConfig, svc HTTPService, healthAddr string, log
 	handler := gin.New()
 	handler.Use(middleware.GinLogger(log.NewLogger(c.Log.Format, int8(c.Log.Level), true)))
 	s.handler = handler
-	s.server = &http.Server{
-		Handler:           handler,
-		Addr:              s.ac.HTTP.Addr(),
-		MaxHeaderBytes:    1 << 20,
-		IdleTimeout:       90 * time.Second, // matches http.DefaultTransport keep-alive timeout
-		ReadHeaderTimeout: 32 * time.Second,
-	}
+	s.server = New(handler)
 	return s
 }
 
@@ -195,10 +199,12 @@ func (s *HttpService) Discover() error {
 }
 
 func (s *HttpService) cancel() {
-	if err := s.registry.Cancel(s.sid); err != nil {
-		s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
+	if s.registry != nil {
+		if err := s.registry.Cancel(s.sid); err != nil {
+			s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
+		}
+		s.logger.Info("Service unregister success", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 	}
-	s.logger.Info("Service unregister success", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 }
 
 func (s *HttpService) Health() string {

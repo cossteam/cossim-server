@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	server2 "github.com/cossim/coss-server/pkg/manager/server"
+	"github.com/cossim/coss-server/pkg/metrics"
 	"github.com/cossim/coss-server/pkg/utils/os"
 
 	//"github.com/cossim/coss-server/pkg/cluster"
@@ -133,6 +134,7 @@ type Options struct {
 
 	//newMetricsServer       func(options metricsserver.Options, config *rest.Config, httpClient *http.Client) (metricsserver.Server, error)
 	newHealthProbeListener func(addr string) (net.Listener, error)
+	newMetricsListener     func(addr string) (net.Listener, error)
 	newPprofListener       func(addr string) (net.Listener, error)
 }
 
@@ -140,9 +142,6 @@ type Options struct {
 type HealthProbeListener func(addr string) (net.Listener, error)
 
 // New returns a new Manager for creating Controllers.
-// Note that if ContentType in the given config is not set, "application/vnd.kubernetes.protobuf"
-// will be used for all built-in resources of Kubernetes, and "application/json" is for other types
-// including all CRD resources.
 func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	if cfg == nil && !opts.Config.LoadFromConfigCenter {
 		return nil, errors.New("must specify Config")
@@ -199,9 +198,15 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 		cfg.GRPC.Address = ip
 	}
 
-	fmt.Println("grpc add", cfg.GRPC.Address)
+	// Create the metrics listener. This will throw an error if the metrics bind
+	// address is invalid or already in use.
+	metricsListener, err := opts.newMetricsListener(opts.MetricsBindAddress)
+	if err != nil {
+		return nil, err
+	}
 
-	fmt.Println("http add", cfg.HTTP.Address)
+	// By default we have no extra endpoints to expose on metrics http server.
+	metricsExtraHandlers := make(map[string]http.Handler)
 
 	// Create health probes listener. This will throw an error if the bind
 	// address is invalid or already in use.
@@ -239,6 +244,8 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 		grpcServer:              gs,
 		optsHttpServer:          &opts.Http,
 		optsGrpcServer:          &opts.Grpc,
+		metricsListener:         metricsListener,
+		metricsExtraHandlers:    metricsExtraHandlers,
 		healthCheckAddress:      opts.Http.HealthCheckAddress,
 		httpHealthProbeListener: httpHealthProbeListener,
 		readinessEndpointName:   opts.ReadinessEndpointName,
@@ -259,6 +266,10 @@ func setOptionsDefaults(opts Options) Options {
 
 	if opts.LivenessEndpointName == "" {
 		opts.LivenessEndpointName = defaultLivenessEndpoint
+	}
+
+	if opts.newMetricsListener == nil {
+		opts.newMetricsListener = metrics.NewListener
 	}
 
 	if opts.Http.HealthCheckAddress == "" {
