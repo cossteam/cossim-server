@@ -217,8 +217,8 @@ type SendUserMsgRequest struct {
 	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"type"
 	Type int32 `protobuf:"varint,4,opt,name=Type,proto3" json:"type"`
-	// @inject_tag: json:"replay_id"
-	ReplayId uint64 `protobuf:"varint,5,opt,name=ReplayId,proto3" json:"replay_id"`
+	// @inject_tag: json:"reply_id"
+	ReplyId uint64 `protobuf:"varint,5,opt,name=ReplyId,proto3" json:"reply_id"`
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"is_burn_after_reading"
@@ -285,9 +285,9 @@ func (x *SendUserMsgRequest) GetType() int32 {
 	return 0
 }
 
-func (x *SendUserMsgRequest) GetReplayId() uint64 {
+func (x *SendUserMsgRequest) GetReplyId() uint64 {
 	if x != nil {
-		return x.ReplayId
+		return x.ReplyId
 	}
 	return 0
 }
@@ -319,8 +319,8 @@ type SendGroupMsgRequest struct {
 	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"content" form:"content" uri:"content"`
 	// @inject_tag: json:"type" form:"type" uri:"type"
 	Type uint32 `protobuf:"varint,4,opt,name=Type,proto3" json:"type" form:"type" uri:"type"`
-	// @inject_tag: json:"replay_id" form:"replay_id" uri:"replay_id"
-	ReplayId uint32 `protobuf:"varint,5,opt,name=ReplayId,proto3" json:"replay_id" form:"replay_id" uri:"replay_id"`
+	// @inject_tag: json:"reply_id" form:"reply_id" uri:"reply_id"
+	ReplyId uint32 `protobuf:"varint,5,opt,name=ReplyId,proto3" json:"reply_id" form:"reply_id" uri:"reply_id"`
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"is_burn_after_reading"
@@ -391,9 +391,9 @@ func (x *SendGroupMsgRequest) GetType() uint32 {
 	return 0
 }
 
-func (x *SendGroupMsgRequest) GetReplayId() uint32 {
+func (x *SendGroupMsgRequest) GetReplyId() uint32 {
 	if x != nil {
-		return x.ReplayId
+		return x.ReplyId
 	}
 	return 0
 }
@@ -534,8 +534,8 @@ type UserMessage struct {
 	Content string `protobuf:"bytes,4,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"type"
 	Type uint32 `protobuf:"varint,5,opt,name=Type,proto3" json:"type"`
-	// @inject_tag: json:"replay_id"
-	ReplayId uint64 `protobuf:"varint,6,opt,name=ReplayId,proto3" json:"replay_id"`
+	// @inject_tag: json:"reply_id"
+	ReplyId uint64 `protobuf:"varint,6,opt,name=ReplyId,proto3" json:"reply_id"`
 	// @inject_tag: json:"is_read"
 	IsRead int32 `protobuf:"varint,7,opt,name=IsRead,proto3" json:"is_read"`
 	// @inject_tag: json:"read_at"
@@ -617,9 +617,9 @@ func (x *UserMessage) GetType() uint32 {
 	return 0
 }
 
-func (x *UserMessage) GetReplayId() uint64 {
+func (x *UserMessage) GetReplyId() uint64 {
 	if x != nil {
-		return x.ReplayId
+		return x.ReplyId
 	}
 	return 0
 }

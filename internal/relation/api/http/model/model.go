@@ -343,7 +343,7 @@ type Message struct {
 	AtUsers            []string             `json:"at_users,omitempty"`      // @用户id
 	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`   // 是否阅后即焚
 	IsLabel            LabelMsgType         `json:"is_label"`                // 是否标记
-	ReplayId           uint32               `json:"replay_id"`               // 回复消息id
+	ReplyId            uint32               `json:"reply_id"`                // 回复消息id
 }
 
 type BurnAfterReadingType uint
@@ -429,7 +429,7 @@ type SendGroupMsgRequest struct {
 	GroupId                uint32               `json:"group_id" binding:"required"`
 	Content                string               `json:"content" binding:"required"`
 	Type                   UserMessageType      `json:"type" binding:"required"`
-	ReplayId               uint32               `json:"replay_id"`
+	ReplyId                uint32               `json:"reply_id"`
 	AtUsers                []string             `json:"at_users"`
 	AtAllUser              AtAllUserType        `json:"at_all_user"`
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`

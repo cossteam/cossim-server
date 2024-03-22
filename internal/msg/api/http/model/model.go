@@ -13,7 +13,7 @@ type SendUserMsgRequest struct {
 	ReceiverId             string               `json:"receiver_id" binding:"required"`
 	Content                string               `json:"content" binding:"required"`
 	Type                   UserMessageType      `json:"type" binding:"required"`
-	ReplayId               uint                 `json:"replay_id"`
+	ReplyId                uint                 `json:"reply_id"`
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 
@@ -22,7 +22,7 @@ type SendGroupMsgRequest struct {
 	GroupId                uint32               `json:"group_id" binding:"required"`
 	Content                string               `json:"content" binding:"required"`
 	Type                   UserMessageType      `json:"type" binding:"required"`
-	ReplayId               uint32               `json:"replay_id"`
+	ReplyId                uint32               `json:"reply_id"`
 	AtUsers                []string             `json:"at_users"`
 	AtAllUser              AtAllUserType        `json:"at_all_user"`
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
@@ -94,7 +94,7 @@ type Message struct {
 	AtUsers            []string             `json:"at_users,omitempty"`      // @用户id
 	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`   // 是否阅后即焚
 	IsLabel            LabelMsgType         `json:"is_label"`                // 是否标记
-	ReplayId           uint32               `json:"replay_id"`               // 回复消息id
+	ReplyId            uint32               `json:"reply_id"`                // 回复消息id
 }
 
 type UserMessage struct {
@@ -103,7 +103,7 @@ type UserMessage struct {
 	ReceiverId              string               `json:"receiver_id"`
 	Content                 string               `json:"content"`
 	Type                    uint32               `json:"type"`
-	ReplayId                uint64               `json:"replay_id"`
+	ReplyId                 uint64               `json:"reply_id"`
 	IsRead                  int32                `json:"is_read"`
 	ReadAt                  int64                `json:"read_at"`
 	CreatedAt               int64                `json:"created_at"`

@@ -91,7 +91,7 @@ func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request 
 	//			MsgId:              uint64(lm.Id),
 	//			IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
 	//			IsLabel:            model.LabelMsgType(lm.IsLabel),
-	//			ReplayId:           lm.ReplyId,
+	//			ReplyId:           lm.ReplyId,
 	//		}
 	//		if lm.SenderId == info.UserId {
 	//			lastmsg.SenderInfo = model.SenderInfo{
