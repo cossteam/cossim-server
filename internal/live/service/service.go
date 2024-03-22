@@ -59,11 +59,11 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		liveApiSecret: ac.Livekit.ApiSecret,
 		livekitServer: ac.Livekit.Url,
 		roomService:   lksdk.NewRoomServiceClient(ac.Livekit.Addr(), ac.Livekit.ApiKey, ac.Livekit.ApiSecret),
-		//redisClient:   setupRedisClient(ac),
-		//mqClient:      setRabbitMQProvider(ac),
-		ac:     ac,
-		sid:    xid.New().String(),
-		logger: plog.NewDefaultLogger("live_user_bff", int8(ac.Log.Level)),
+		redisClient:   setupRedisClient(ac),
+		mqClient:      setRabbitMQProvider(ac),
+		ac:            ac,
+		sid:           xid.New().String(),
+		logger:        plog.NewDefaultLogger("live_user_bff", int8(ac.Log.Level)),
 	}
 	s.cache = s.setCacheConfig()
 	return s
