@@ -12,8 +12,6 @@ import (
 	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -56,7 +54,6 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/msg")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("msg")))
 	u.Use(middleware.AuthMiddleware(h.redisClient))
 
 	u.GET("/ws", h.ws)

@@ -12,8 +12,6 @@ import (
 	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -58,8 +56,6 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/storage")
-	// 为Swagger路径添加不需要身份验证的中间件
-	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("storage")))
 	api.Use(middleware.AuthMiddleware(h.redisClient))
 
 	api.GET("/files/download/:type/:id", h.download)

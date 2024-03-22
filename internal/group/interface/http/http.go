@@ -13,8 +13,6 @@ import (
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net/http"
@@ -59,7 +57,6 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	g := r.Group("/api/v1/group")
-	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("group")))
 	g.Use(middleware.AuthMiddleware(h.redisClient))
 	// 获取群聊信息
 	g.GET("/info", h.getGroupInfoByGid)

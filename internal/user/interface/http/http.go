@@ -12,8 +12,6 @@ import (
 	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -70,7 +68,6 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/public_key/reset", h.resetUserPublicKey)
 	u.POST("/email/code/send", h.sendEmailCode)
 	u.GET("/system/key/get", h.GetSystemPublicKey)
-	u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("user")))
 
 	u.Use(middleware.AuthMiddleware(h.redisClient))
 	u.GET("/search", h.search)
