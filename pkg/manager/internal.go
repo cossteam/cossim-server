@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
-	"github.com/cossim/coss-server/pkg/server"
+	server2 "github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/utils/os"
 	"google.golang.org/grpc"
 	"net"
@@ -45,9 +45,9 @@ type controllerManager struct {
 	// cluster holds a variety of methods to interact with a cluster. Required.
 	//cluster cluster.Cluster
 
-	httpServer *server.HttpService
+	httpServer *server2.HttpService
 
-	grpcServer *server.GrpcService
+	grpcServer *server2.GrpcService
 
 	optsHttpServer *HttpServer
 
@@ -293,15 +293,15 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 		}
 	}
 
-	// First start any internal HTTP servers, which includes health probes, metrics and profiling if enabled.
-	if err := cm.runnables.HTTPServers.Start(cm.internalCtx); err != nil {
+	// First start any internal GRPC servers, which includes health probes, metrics and profiling if enabled.
+	if err := cm.runnables.GRPCServers.Start(cm.internalCtx); err != nil {
 		if err != nil {
 			return fmt.Errorf("failed to start HTTP servers: %w", err)
 		}
 	}
 
-	// First start any internal GRPC servers, which includes health probes, metrics and profiling if enabled.
-	if err := cm.runnables.GRPCServers.Start(cm.internalCtx); err != nil {
+	// First start any internal HTTP servers, which includes health probes, metrics and profiling if enabled.
+	if err := cm.runnables.HTTPServers.Start(cm.internalCtx); err != nil {
 		if err != nil {
 			return fmt.Errorf("failed to start HTTP servers: %w", err)
 		}
@@ -355,14 +355,14 @@ func (cm *controllerManager) reloadConfiguration() error {
 	errChan := make(chan error, 1)
 	cm.runnables = newRunnables(context.Background, errChan)
 	if cm.httpServer != nil {
-		cm.httpServer = server.NewHttpService(cm.config, cm.optsHttpServer, cm.healthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
+		cm.httpServer = server2.NewHttpService(cm.config, cm.optsHttpServer, cm.healthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
 		if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
 			return fmt.Errorf("failed to add metrics httpServers: %w", err)
 		}
 	}
 
 	if cm.grpcServer != nil {
-		cm.grpcServer = server.NewGRPCService(cm.config, cm.optsGrpcServer, cm.GetLogger())
+		cm.grpcServer = server2.NewGRPCService(cm.config, cm.optsGrpcServer, cm.GetLogger())
 		if err := cm.runnables.GRPCServers.Add(cm.grpcServer, nil); err != nil {
 			return fmt.Errorf("failed to add metrics grpcServers: %w", err)
 		}

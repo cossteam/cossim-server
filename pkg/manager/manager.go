@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	server2 "github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/utils/os"
 
 	//"github.com/cossim/coss-server/pkg/cluster"
@@ -11,7 +12,6 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/healthz"
 	plog "github.com/cossim/coss-server/pkg/log"
-	"github.com/cossim/coss-server/pkg/server"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap/zapcore"
@@ -49,13 +49,13 @@ type Manager interface {
 type GrpcServer struct {
 	MetricsBindAddress  string
 	HealthzCheckAddress string
-	server.GRPCService
+	server2.GRPCService
 }
 
 type HttpServer struct {
 	MetricsBindAddress string
 	HealthCheckAddress string
-	server.HTTPService
+	server2.HTTPService
 }
 
 type Registry struct {
@@ -220,15 +220,15 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	errChan := make(chan error, 1)
 	runnables := newRunnables(context.Background, errChan)
 
-	var hs *server.HttpService
-	var gs *server.GrpcService
+	var hs *server2.HttpService
+	var gs *server2.GrpcService
 
 	if opts.Http.HTTPService != nil {
-		hs = server.NewHttpService(cfg, opts.Http.HTTPService, opts.Http.HealthCheckAddress+opts.LivenessEndpointName, opts.Logger)
+		hs = server2.NewHttpService(cfg, opts.Http.HTTPService, opts.Http.HealthCheckAddress+opts.LivenessEndpointName, opts.Logger)
 	}
 
 	if opts.Grpc.GRPCService != nil {
-		gs = server.NewGRPCService(cfg, opts.Grpc.GRPCService, opts.Logger)
+		gs = server2.NewGRPCService(cfg, opts.Grpc.GRPCService, opts.Logger)
 	}
 
 	return &controllerManager{

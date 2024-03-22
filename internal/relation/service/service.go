@@ -73,7 +73,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		s.logger.Info("gRPC client for msg service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
 	case "relation_service":
 		s.relationGrpcServer = conn.Target()
-		s.logger.Info("gRPC client for msg service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
+		s.logger.Info("gRPC client for msg service initialized", zap.String("service", "relation"), zap.String("addr", conn.Target()))
 	}
 
 	return nil
