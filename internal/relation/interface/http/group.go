@@ -709,7 +709,7 @@ func (h *Handler) deleteGroupFriendRequest(c *gin.Context) {
 	}
 
 	if err = h.svc.DeleteGroupFriendRecord(c, userID, req.ID); err != nil {
-		response.SetFail(c, "删除群聊申请记录失败", nil)
+		c.Error(err)
 		return
 	}
 

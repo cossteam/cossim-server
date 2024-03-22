@@ -1057,27 +1057,35 @@ func (s *Service) removeRedisFriendList(userID string, friendID string) error {
 }
 
 func (s *Service) DeleteUserFriendRecord(ctx context.Context, uid string, id uint32) error {
+	// 打印请求进来的日志
+	s.logger.Debug("开始处理删除用户好友申请记录请求", zap.String("uid", uid), zap.Uint32("recordID", id))
+
 	fr, err := s.svc.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: id})
 	if err != nil {
-		s.logger.Error("获取好友申请记录失败", zap.String("uid", uid), zap.Uint32("id", id), zap.Error(err))
+		s.logger.Debug("获取好友申请记录失败", zap.String("uid", uid), zap.Uint32("recordID", id), zap.Error(err))
 		return err
 	}
 
-	if fr.SenderId != uid {
+	if fr.SenderId != uid && fr.ReceiverId != uid {
+		s.logger.Warn("用户没有权限删除该好友申请记录", zap.String("uid", uid), zap.Uint32("recordID", id))
 		return code.Forbidden
 	}
 
 	deletedBy := strings.Split(fr.DeleteBy, ",")
 	for _, v := range deletedBy {
-		if v == uid {
+		if v == uid && v != "" {
+			s.logger.Warn("用户尝试重复删除好友申请记录", zap.String("uid", uid), zap.Uint32("recordID", id))
 			return code.DuplicateOperation
 		}
 	}
 
-	_, err = s.svc.DeleteFriendRecord(ctx, &relationgrpcv1.DeleteFriendRecordRequest{ID: id})
+	_, err = s.svc.DeleteFriendRecord(ctx, &relationgrpcv1.DeleteFriendRecordRequest{ID: id, UserId: uid})
 	if err != nil {
 		s.logger.Error("删除好友申请记录失败", zap.Error(err))
 		return err
 	}
+
+	s.logger.Debug("成功删除好友申请记录", zap.String("uid", uid), zap.Stringer("FriendRecord", fr))
+
 	return nil
 }

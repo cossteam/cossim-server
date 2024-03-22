@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -195,25 +196,42 @@ func (s *Handler) DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, in
 }
 
 func (s *Handler) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRecordRequest) (*emptypb.Empty, error) {
+	//if req.ID == 0 || req.UserId == "" {
+	//	return nil, status.Error(codes.Code(code.InvalidParameter.Code()), code.InvalidParameter.Message())
+	//}
+
 	resp := &emptypb.Empty{}
+
 	fr, err := s.ufqr.GetFriendRequestByID(uint(req.ID))
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), code.RelationUserErrNoFriendRequestRecords.Message())
+		}
 		return nil, err
+	}
+
+	if fr.DeletedBy == "" {
+		if err := s.ufqr.UpdateUserColumnById(req.ID, map[string]interface{}{"deleted_by": strings.Join([]string{req.UserId}, ",")}); err != nil {
+			return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
+		}
+		return resp, nil
 	}
 
 	deletedBy := strings.Split(fr.DeletedBy, ",")
 	for _, v := range deletedBy {
-		if v != req.UserId {
-			if err := s.ufqr.DeletedById(req.ID); err != nil {
+		if v != "" && v != req.UserId {
+			deletedBy = append(deletedBy, v)
+			if err := s.ufqr.UpdateUserColumnById(req.ID, map[string]interface{}{
+				"deleted_by": strings.Join(deletedBy, ","),
+				"deleted_at": time.Now(),
+			}); err != nil {
 				return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
 			}
+			//if err := s.ufqr.DeletedById(req.ID); err != nil {
+			//	return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
+			//}
 			return resp, nil
 		}
-	}
-
-	deletedBy = append(deletedBy, req.UserId)
-	if err := s.ufqr.UpdateUserColumnById(req.ID, map[string]interface{}{"deleted_by": strings.Join(deletedBy, ",")}); err != nil {
-		return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
 	}
 
 	return resp, nil
