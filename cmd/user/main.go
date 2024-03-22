@@ -10,6 +10,7 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/healthz"
 	"github.com/cossim/coss-server/pkg/manager/signals"
+	"strings"
 )
 
 var (
@@ -21,12 +22,24 @@ var (
 	metricsAddr       string
 	httpProbeAddr     string
 	grpcProbeAddr     string
+	hotReload         bool
+	configKey         string
+	configKeys        string = strings.Join([]string{
+		discovery.CommonMySQLConfigKey,
+		discovery.CommonRedisConfigKey,
+		discovery.CommonOssConfigKey,
+		discovery.CommonMQConfigKey,
+		discovery.CommonDtmConfigKey,
+	}, ",")
 )
 
 func init() {
 	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
 	flag.BoolVar(&register, "register", false, "Enable service register")
 	flag.BoolVar(&remoteConfig, "remote-config", false, "Load config from remote source")
+	flag.BoolVar(&hotReload, "hot-reload", true, "Enable hot reloading")
+	flag.StringVar(&configKey, "config-key", "service/user", "Service configuration path in the configuration center")
+	//flag.StringVar(&configKeys, "config-keys", "", "The public configuration path on which the service depends. use, separated common/x1,comm/x2")
 	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the config center")
 	flag.StringVar(&remoteConfigToken, "config-center-token", "", "Token for accessing the config center")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
@@ -50,15 +63,9 @@ func main() {
 			LoadFromConfigCenter: remoteConfig,
 			RemoteConfigAddr:     remoteConfigAddr,
 			RemoteConfigToken:    remoteConfigToken,
-			Hot:                  true,
-			Key:                  "service/user",
-			Keys: []string{
-				discovery.CommonMySQLConfigKey,
-				discovery.CommonRedisConfigKey,
-				discovery.CommonOssConfigKey,
-				discovery.CommonMQConfigKey,
-				discovery.CommonDtmConfigKey,
-			},
+			Hot:                  hotReload,
+			Key:                  configKey,
+			Keys:                 strings.Split(configKeys, ","),
 			Registry: ctrl.Registry{
 				Discover: discover,
 				Register: register,
