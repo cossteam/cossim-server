@@ -220,9 +220,9 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*d
 
 	var token string
 	if uid == room.SenderID {
-		token, err = s.GetAdminJoinToken(ctx, room.Room, user.NickName)
+		token, err = s.GetAdminJoinToken(ctx, room.Room, user.NickName, uid)
 	} else {
-		token, err = s.GetUserJoinToken(ctx, room.Room, user.NickName)
+		token, err = s.GetUserJoinToken(ctx, room.Room, user.NickName, uid)
 	}
 	if err != nil {
 		s.logger.Error("获取用户加入房间token失败", zap.Error(err))
