@@ -51,7 +51,7 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
-// @title msg服务
+// @title CossApi
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/msg")

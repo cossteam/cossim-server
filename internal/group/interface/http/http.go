@@ -54,8 +54,7 @@ func (h *Handler) Version() string {
 	return version.FullVersion()
 }
 
-// @title coss-user服务
-
+// @title CossApi
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())

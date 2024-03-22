@@ -44,7 +44,7 @@ func (h *Handler) Version() string {
 	return version.FullVersion()
 }
 
-// @title msg服务
+// @title CossApi
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/admin")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())

@@ -13,6 +13,7 @@ import (
 
 // @Summary 获取群聊信息
 // @Description 获取群聊信息
+// @Tags Group
 // @Accept  json
 // @Produce  json
 // @Param group_id query int32 true "群聊ID"
@@ -48,6 +49,7 @@ func (h *Handler) getGroupInfoByGid(c *gin.Context) {
 
 // @Summary 批量获取群聊信息
 // @Description 批量获取群聊信息
+// @Tags Group
 // @Accept  json
 // @Produce  json
 // @Param group_ids query []string true "群聊ID列表"
@@ -77,6 +79,7 @@ func (h *Handler) getBatchGroupInfoByIDs(c *gin.Context) {
 
 // @Summary 更新群聊信息
 // @Description 更新群聊信息
+// @Tags Group
 // @Accept  json
 // @Produce  json
 // @Param request body model.UpdateGroupRequest true "0(公开群);1(私密群)""
@@ -110,6 +113,7 @@ func (h *Handler) updateGroup(c *gin.Context) {
 
 // @Summary 创建群聊
 // @Description 创建群聊
+// @Tags Group
 // @Accept  json
 // @Produce  json
 // @Param request body model.CreateGroupRequest true "请求体"
@@ -161,6 +165,7 @@ func (h *Handler) createGroup(c *gin.Context) {
 
 // @Summary 删除群聊
 // @Description 删除群聊
+// @Tags Group
 // @Accept  json
 // @Produce  json
 // @Param request body model.DeleteGroupRequest true "群聊id"
@@ -191,6 +196,7 @@ func (h *Handler) deleteGroup(c *gin.Context) {
 
 // @Summary 修改群聊头像
 // @Description 修改群聊头像
+// @Tags Group
 // @Accept  json
 // @Produce  json
 // @param file formData file true "头像文件"

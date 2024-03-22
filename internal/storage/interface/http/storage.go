@@ -17,6 +17,7 @@ import (
 // upload
 // @Summary 上传文件
 // @Description 上传文件
+// @Tags Storage
 // @param file formData file true "文件"
 // @param type formData integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
 // @Produce  json
@@ -69,6 +70,7 @@ func (h *Handler) upload(c *gin.Context) {
 // download
 // @Summary 下载文件
 // @Description 下载文件
+// @Tags Storage
 // @param id path string true "文件id"
 // @Produce  json
 // @Success		200 {object} model.Response{}
@@ -120,6 +122,7 @@ func (h *Handler) download(c *gin.Context) {
 // getFileInfo
 // @Summary 获取文件信息
 // @Description 获取文件信息
+// @Tags Storage
 // @param id path string true "文件id"
 // @Produce  json
 // @Success		200 {object} model.Response{}
@@ -146,6 +149,7 @@ func (h *Handler) getFileInfo(c *gin.Context) {
 // @Description 删除文件
 // @param id path string true "文件id"
 // @Produce  json
+// @Tags Storage
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/:id [delete]
 func (h *Handler) deleteFile(c *gin.Context) {
@@ -170,6 +174,7 @@ func (h *Handler) deleteFile(c *gin.Context) {
 
 // @Summary 生成分片上传id
 // @Description 生成分片上传id
+// @Tags Storage
 // @Produce  json
 // @param file_name query string true "文件名"
 // @param type query integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
@@ -204,6 +209,7 @@ func (h *Handler) getMultipartKey(c *gin.Context) {
 
 // @Summary 上传分片
 // @Description 上传分片
+// @Tags Storage
 // @param file formData file true "本次分片"
 // @param upload_id formData string true "上传id"
 // @param part_number formData integer true "本次分片序号"
@@ -272,6 +278,7 @@ func (h *Handler) uploadMultipart(c *gin.Context) {
 
 // @Summary 完成分片上传
 // @Description 完成分片上传
+// @Tags Storage
 // @Produce  json
 // @Accept  json
 // @param request body model.CompleteUploadRequest true "request"
@@ -295,6 +302,7 @@ func (h *Handler) completeUploadMultipart(c *gin.Context) {
 
 // @Summary 清除文件分片(用于中断上传)
 // @Description 清除文件分片
+// @Tags Storage
 // @Produce  json
 // @Accept  json
 // @param request body model.AbortUploadRequest true "request"

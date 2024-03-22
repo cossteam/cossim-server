@@ -13,6 +13,7 @@ import (
 
 // @Summary 用户登录
 // @Description 用户登录
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @param request body model.LoginRequest true "request"
@@ -47,6 +48,7 @@ func (h *Handler) login(c *gin.Context) {
 
 // @Summary 退出登录
 // @Description 退出登录
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @param request body model.LogoutRequest true "request"
@@ -81,6 +83,7 @@ func (h *Handler) logout(c *gin.Context) {
 
 // @Summary 用户注册
 // @Description 用户注册
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @param request body model.RegisterRequest true "request"
@@ -127,6 +130,7 @@ func (h *Handler) register(c *gin.Context) {
 
 // @Summary 搜索用户
 // @Description 搜索用户
+// @Tags User
 // @Produce  json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
@@ -165,6 +169,7 @@ func (h *Handler) search(c *gin.Context) {
 
 // @Summary 查询用户信息
 // @Description 查询用户信息
+// @Tags User
 // @Produce  json
 // @Security Bearer
 // @Param Authorization header string true "Bearer JWT"
@@ -196,6 +201,7 @@ func (h *Handler) getUserInfo(c *gin.Context) {
 
 // @Summary 设置用户公钥
 // @Description 设置用户公钥
+// @Tags User
 // @Accept json
 // @Produce json
 // @param request body model.SetPublicKeyRequest true "request"
@@ -228,6 +234,7 @@ func (h *Handler) setUserPublicKey(c *gin.Context) {
 
 // @Summary 获取系统pgp公钥
 // @Description 获取系统pgp公钥
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @Param type query model.GetType true "指定根据id还是邮箱类型查找"
@@ -240,6 +247,7 @@ func (h *Handler) GetSystemPublicKey(c *gin.Context) {
 
 // @Summary 修改用户信息
 // @Description 修改用户信息
+// @Tags User
 // @Accept json
 // @Produce json
 // @param request body model.UserInfoRequest true "request"
@@ -271,6 +279,7 @@ func (h *Handler) modifyUserInfo(c *gin.Context) {
 
 // @Summary 修改用户密码
 // @Description 修改用户密码
+// @Tags User
 // @Accept json
 // @Produce json
 // @param request body model.PasswordRequest true "request"
@@ -327,6 +336,7 @@ func (h *Handler) modifyUserPassword(c *gin.Context) {
 
 // @Summary 修改用户密钥包
 // @Description 修改用户密码
+// @Tags User
 // @Accept json
 // @Produce json
 // @param request body model.ModifyUserSecretBundleRequest true "request"
@@ -359,6 +369,7 @@ func (h *Handler) modifyUserSecretBundle(c *gin.Context) {
 
 // @Summary 获取用户密钥包
 // @Description 获取用户密钥包
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @Param user_id query string true "用户id"
@@ -387,6 +398,7 @@ func (h *Handler) getUserSecretBundle(c *gin.Context) {
 
 // @Summary 获取该用户当前登录的所有客户端
 // @Description 获取该用户当前登录的所有客户端
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} model.Response{}
@@ -404,6 +416,7 @@ func (h *Handler) getUserLoginClients(c *gin.Context) {
 
 // @Summary 激活账号
 // @Description 激活账号
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} model.Response{}
@@ -429,6 +442,7 @@ func (h *Handler) userActivate(c *gin.Context) {
 
 // @Summary 重置用户pgp公钥
 // @Description 重置用户pgp公钥
+// @Tags User
 // @Accept json
 // @Produce json
 // @param request body model.ResetPublicKeyRequest true "request"
@@ -453,6 +467,7 @@ func (h *Handler) resetUserPublicKey(c *gin.Context) {
 
 // @Summary 发送重置验证码(邮箱)
 // @Description 发送重置验证码(邮箱)
+// @Tags User
 // @Accept json
 // @Produce json
 // @param request body model.SendEmailCodeRequest true "request"
@@ -477,6 +492,7 @@ func (h *Handler) sendEmailCode(c *gin.Context) {
 
 // @Summary 修改用户头像
 // @Description 修改用户头像
+// @Tags User
 // @Accept  json
 // @Produce  json
 // @param file formData file true "头像文件"

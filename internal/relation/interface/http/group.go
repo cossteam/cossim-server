@@ -687,7 +687,7 @@ func (h *Handler) quitGroup(c *gin.Context) {
 
 // @Summary 删除群聊申请记录
 // @Description 删除群聊申请记录
-// @Tags UserRelation
+// @Tags GroupRelation
 // @Accept  json
 // @Produce  json
 // @param request body model.DeleteRecordRequest true "request"
