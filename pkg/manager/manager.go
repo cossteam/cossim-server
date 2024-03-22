@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	server2 "github.com/cossim/coss-server/pkg/manager/server"
-	"github.com/cossim/coss-server/pkg/metrics"
 	"github.com/cossim/coss-server/pkg/utils/os"
 
 	//"github.com/cossim/coss-server/pkg/cluster"
@@ -200,13 +199,13 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 
 	// Create the metrics listener. This will throw an error if the metrics bind
 	// address is invalid or already in use.
-	metricsListener, err := opts.newMetricsListener(opts.MetricsBindAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	// By default we have no extra endpoints to expose on metrics http server.
-	metricsExtraHandlers := make(map[string]http.Handler)
+	//metricsListener, err := opts.newMetricsListener(opts.MetricsBindAddress)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//// By default we have no extra endpoints to expose on metrics http server.
+	//metricsExtraHandlers := make(map[string]http.Handler)
 
 	// Create health probes listener. This will throw an error if the bind
 	// address is invalid or already in use.
@@ -237,15 +236,15 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	}
 
 	return &controllerManager{
-		stopProcedureEngaged:    new(int64),
-		errChan:                 errChan,
-		runnables:               runnables,
-		httpServer:              hs,
-		grpcServer:              gs,
-		optsHttpServer:          &opts.Http,
-		optsGrpcServer:          &opts.Grpc,
-		metricsListener:         metricsListener,
-		metricsExtraHandlers:    metricsExtraHandlers,
+		stopProcedureEngaged: new(int64),
+		errChan:              errChan,
+		runnables:            runnables,
+		httpServer:           hs,
+		grpcServer:           gs,
+		optsHttpServer:       &opts.Http,
+		optsGrpcServer:       &opts.Grpc,
+		//metricsListener:         metricsListener,
+		//metricsExtraHandlers:    metricsExtraHandlers,
 		healthCheckAddress:      opts.Http.HealthCheckAddress,
 		httpHealthProbeListener: httpHealthProbeListener,
 		readinessEndpointName:   opts.ReadinessEndpointName,
@@ -269,11 +268,11 @@ func setOptionsDefaults(opts Options) Options {
 	}
 
 	if opts.newMetricsListener == nil {
-		opts.newMetricsListener = metrics.NewListener
+		//opts.newMetricsListener = metrics.NewListener
 	}
 
 	if opts.Http.HealthCheckAddress == "" {
-		//opts.Http.HealthCheckAddress = defaultHealthProbeBindAddress
+		opts.Http.HealthCheckAddress = defaultHealthProbeBindAddress
 	}
 
 	if opts.newHealthProbeListener == nil {
