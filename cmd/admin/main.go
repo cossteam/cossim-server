@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/healthz"
 	"github.com/cossim/coss-server/pkg/manager/signals"
+	"strings"
 )
 
 var (
@@ -20,6 +21,14 @@ var (
 	metricsAddr       string
 	httpProbeAddr     string
 	grpcProbeAddr     string
+	hotReload         bool
+	configKey         string
+	configKeys        string = strings.Join([]string{
+		discovery.CommonMySQLConfigKey,
+		discovery.CommonRedisConfigKey,
+		discovery.CommonOssConfigKey,
+		discovery.CommonMQConfigKey,
+	}, ",")
 )
 
 func init() {
@@ -28,12 +37,12 @@ func init() {
 	flag.BoolVar(&remoteConfig, "remote-config", false, "Load config from remote source")
 	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the config center")
 	flag.StringVar(&remoteConfigToken, "config-center-token", "", "Token for accessing the config center")
+	flag.BoolVar(&hotReload, "hot-reload", true, "Enable hot reloading")
+	flag.StringVar(&configKey, "config-key", "service/admin", "Service configuration path in the configuration center")
+	//flag.StringVar(&configKeys, "config-keys", "", "The public configuration path on which the service depends. use, separated common/x1,comm/x2")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
 	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":9091", "The address to bind the http health probe endpoint")
 	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":9092", "The address to bind the grpc health probe endpoint")
-	//flag.StringVar(&metricsAddr, "metrics-bind-address", ":11003", "The address the metric endpoint binds to")
-	//flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":11004", "The address to bind the http health probe endpoint")
-	//flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":11005", "The address to bind the grpc health probe endpoint")
 	flag.Parse()
 }
 
@@ -47,15 +56,9 @@ func main() {
 			LoadFromConfigCenter: remoteConfig,
 			RemoteConfigAddr:     remoteConfigAddr,
 			RemoteConfigToken:    remoteConfigToken,
-			Hot:                  true,
-			Key:                  "service/admin",
-			//Keys:                 discovery.DefaultKeys,
-			Keys: []string{
-				discovery.CommonMySQLConfigKey,
-				discovery.CommonRedisConfigKey,
-				discovery.CommonOssConfigKey,
-				discovery.CommonMQConfigKey,
-			},
+			Hot:                  hotReload,
+			Key:                  configKey,
+			Keys:                 strings.Split(configKeys, ","),
 			Registry: ctrl.Registry{
 				Discover: discover,
 				Register: register,
