@@ -404,10 +404,14 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	//	}()
 	//	wg.Wait()
 	//}
+	msgcontent, err := json.Marshal(msginfo)
+	if err != nil {
+		return nil, err
+	}
 	msg2 := &model.SendGroupMsgRequest{
 		DialogId: msginfo.DialogId,
 		GroupId:  msginfo.GroupId,
-		Content:  "",
+		Content:  string(msgcontent),
 		Type:     model.MessageTypeDelete,
 	}
 	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
@@ -461,11 +465,17 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 		s.logger.Error("设置群聊消息标注失败", zap.Error(err))
 		return nil, err
 	}
+
+	msgcontent, err := json.Marshal(msginfo)
+	if err != nil {
+		return nil, err
+	}
+
 	msginfo.IsLabel = msggrpcv1.MsgLabel(label)
 	msg2 := &model.SendGroupMsgRequest{
 		DialogId: msginfo.DialogId,
 		GroupId:  msginfo.GroupId,
-		Content:  msginfo.Content,
+		Content:  string(msgcontent),
 		Type:     model.MessageTypeLabel,
 	}
 
