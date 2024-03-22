@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	_ "github.com/cossim/coss-server/docs"
 	"github.com/cossim/coss-server/internal/user/interface/grpc"
 	"github.com/cossim/coss-server/internal/user/interface/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
