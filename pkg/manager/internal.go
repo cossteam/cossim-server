@@ -31,6 +31,7 @@ const (
 
 	defaultReadinessEndpoint      = "/ready"
 	defaultLivenessEndpoint       = "/health"
+	defaultMetricsEndpoint        = "/metrics"
 	defaultHealthProbeBindAddress = ":8081"
 )
 
@@ -57,6 +58,12 @@ type controllerManager struct {
 
 	// metricsServer is used to serve prometheus metrics
 	metricsServer metrics.Server
+
+	// metricsListener is used to serve prometheus metrics
+	metricsListener net.Listener
+
+	// metricsExtraHandlers contains extra handlers to register on http server that serves metrics.
+	metricsExtraHandlers map[string]http.Handler
 
 	healthCheckAddress string
 
