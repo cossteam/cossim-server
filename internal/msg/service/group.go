@@ -197,7 +197,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			UserId:                 userID,
 			Content:                req.Content,
 			Type:                   uint32(req.Type),
-			ReplayId:               req.ReplayId,
+			ReplyId:                req.ReplyId,
 			AtUsers:                req.AtUsers,
 			AtAllUser:              msggrpcv1.AtAllUserType(req.AtAllUser),
 			IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(req.IsBurnAfterReadingType),
@@ -245,7 +245,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		SenderId:           userID,
 		Content:            req.Content,
 		MsgType:            uint(req.Type),
-		ReplayId:           uint(req.ReplayId),
+		ReplyId:            uint(req.ReplyId),
 		SendAt:             pkgtime.Now(),
 		DialogId:           req.DialogId,
 		AtUsers:            req.AtUsers,
@@ -409,7 +409,7 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 		DialogId: msginfo.DialogId,
 		GroupId:  msginfo.GroupId,
 		Content:  msginfo.Content,
-		ReplayId: msginfo.Id,
+		ReplyId:  msginfo.Id,
 		Type:     model.MessageTypeDelete,
 	}
 	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
@@ -469,7 +469,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 		DialogId: msginfo.DialogId,
 		GroupId:  msginfo.GroupId,
 		Content:  msginfo.Content,
-		ReplayId: msginfo.Id,
+		ReplyId:  msginfo.Id,
 		Type:     model.MessageTypeLabel,
 	}
 
@@ -830,7 +830,7 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 				},
 				IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
 				IsLabel:            model.LabelMsgType(lm.IsLabel),
-				ReplayId:           lm.ReplyId,
+				ReplyId:            lm.ReplyId,
 				AtUsers:            lm.AtUsers,
 				AtAllUser:          model.AtAllUserType(lm.AtAllUser),
 			},

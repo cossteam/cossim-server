@@ -158,7 +158,7 @@ type WsUserMsg struct {
 	ReceiverId              string               `json:"receiver_id"`
 	Content                 string               `json:"content"`
 	MsgType                 uint                 `json:"msgType"`
-	ReplayId                uint                 `json:"reply_id"`
+	ReplyId                 uint                 `json:"reply_id"`
 	SendAt                  int64                `json:"send_at"`
 	DialogId                uint32               `json:"dialog_id"`
 	IsBurnAfterReading      BurnAfterReadingType `json:"is_burn_after_reading"`
@@ -172,7 +172,7 @@ type WsGroupMsg struct {
 	SenderId           string               `json:"sender_id"`
 	Content            string               `json:"content"`
 	MsgType            uint                 `json:"msgType"`
-	ReplayId           uint                 `json:"reply_id"`
+	ReplyId            uint                 `json:"reply_id"`
 	SendAt             int64                `json:"send_at"`
 	DialogId           uint32               `json:"dialog_id"`
 	AtUsers            []string             `json:"at_users"`

@@ -6,7 +6,7 @@ type WsUserMsg struct {
 	ReceiverId              string               `json:"receiver_id"`
 	Content                 string               `json:"content"`
 	MsgType                 uint                 `json:"msg_type"`
-	ReplayId                uint                 `json:"reply_id"`
+	ReplyId                 uint                 `json:"reply_id"`
 	SendAt                  int64                `json:"send_at"`
 	DialogId                uint32               `json:"dialog_id"`
 	IsBurnAfterReading      BurnAfterReadingType `json:"is_burn_after_reading"`
@@ -20,7 +20,7 @@ type WsGroupMsg struct {
 	SenderId           string               `json:"sender_id"`
 	Content            string               `json:"content"`
 	MsgType            uint                 `json:"msg_type"`
-	ReplayId           uint                 `json:"reply_id"`
+	ReplyId            uint                 `json:"reply_id"`
 	SendAt             int64                `json:"send_at"`
 	DialogId           uint32               `json:"dialog_id"`
 	AtUsers            []string             `json:"at_users"`
@@ -46,7 +46,7 @@ type WsUserOperatorMsg struct {
 	ReceiverId             string               `json:"receiver_id"`
 	Content                string               `json:"content"`
 	Type                   uint32               `json:"type"`
-	ReplayId               uint64               `json:"replay_id"`
+	ReplyId                uint64               `json:"reply_id"`
 	IsRead                 int32                `json:"is_read"`
 	ReadAt                 int64                `json:"read_at"`
 	CreatedAt              int64                `json:"created_at"`

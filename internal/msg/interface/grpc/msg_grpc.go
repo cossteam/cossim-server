@@ -18,7 +18,7 @@ import (
 func (s *Handler) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRequest) (*v1.SendUserMsgResponse, error) {
 	resp := &v1.SendUserMsgResponse{}
 
-	msg, err := s.mr.InsertUserMessage(request.GetSenderId(), request.GetReceiverId(), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()), entity.BurnAfterReadingType(request.IsBurnAfterReadingType))
+	msg, err := s.mr.InsertUserMessage(request.GetSenderId(), request.GetReceiverId(), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplyId()), uint(request.GetDialogId()), entity.BurnAfterReadingType(request.IsBurnAfterReadingType))
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrInsertUserMessageFailed.Code()), err.Error())
 	}
@@ -29,7 +29,7 @@ func (s *Handler) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRe
 func (s *Handler) SendGroupMessage(ctx context.Context, request *v1.SendGroupMsgRequest) (*v1.SendGroupMsgResponse, error) {
 	resp := &v1.SendGroupMsgResponse{}
 
-	ums, err := s.mr.InsertGroupMessage(request.GetUserId(), uint(request.GetGroupId()), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplayId()), uint(request.GetDialogId()), entity.BurnAfterReadingType(request.IsBurnAfterReadingType), request.AtUsers, entity.AtAllUserType(request.AtAllUser))
+	ums, err := s.mr.InsertGroupMessage(request.GetUserId(), uint(request.GetGroupId()), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplyId()), uint(request.GetDialogId()), entity.BurnAfterReadingType(request.IsBurnAfterReadingType), request.AtUsers, entity.AtAllUserType(request.AtAllUser))
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrInsertGroupMessageFailed.Code()), err.Error())
 	}
@@ -51,7 +51,7 @@ func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 			ReceiverId: m.ReceiveID,
 			Content:    m.Content,
 			Type:       uint32(int32(m.Type)),
-			ReplayId:   uint64(m.ReplyId),
+			ReplyId:    uint64(m.ReplyId),
 			IsRead:     int32(m.IsRead),
 			ReadAt:     m.ReadAt,
 			CreatedAt:  m.CreatedAt,
@@ -76,7 +76,7 @@ func (s *Handler) GetLastMsgsForUserWithFriends(ctx context.Context, request *v1
 			Id:        uint32(m.ID),
 			Content:   m.Content,
 			Type:      uint32(m.Type),
-			ReplayId:  uint64(m.ReplyId),
+			ReplyId:   uint64(m.ReplyId),
 			ReadAt:    m.ReadAt,
 			CreatedAt: m.CreatedAt,
 		})
@@ -155,7 +155,7 @@ func (s *Handler) EditUserMessage(ctx context.Context, request *v1.EditUserMsgRe
 			ID: uint(request.UserMessage.Id),
 		},
 		Content:   request.UserMessage.Content,
-		ReplyId:   uint(request.UserMessage.ReplayId),
+		ReplyId:   uint(request.UserMessage.ReplyId),
 		SendID:    request.UserMessage.SenderId,
 		ReceiveID: request.UserMessage.ReceiverId,
 		Type:      entity.UserMessageType(request.UserMessage.Type),
@@ -229,7 +229,7 @@ func (s *Handler) GetUserMessageById(ctx context.Context, in *v1.GetUserMsgByIDR
 		Id:         uint32(msg.ID),
 		Content:    msg.Content,
 		Type:       uint32(int32(msg.Type)),
-		ReplayId:   uint64(msg.ReplyId),
+		ReplyId:    uint64(msg.ReplyId),
 		SenderId:   msg.SendID,
 		ReceiverId: msg.ReceiveID,
 		CreatedAt:  msg.CreatedAt,
@@ -291,7 +291,7 @@ func (s *Handler) GetUserMsgLabelByDialogId(ctx context.Context, in *v1.GetUserM
 			Id:         uint32(msg.ID),
 			Content:    msg.Content,
 			Type:       uint32(msg.Type),
-			ReplayId:   uint64(msg.ReplyId),
+			ReplyId:    uint64(msg.ReplyId),
 			SenderId:   msg.SendID,
 			ReceiverId: msg.ReceiveID,
 			CreatedAt:  msg.CreatedAt,
@@ -390,7 +390,7 @@ func (s *Handler) GetUnreadUserMsgs(ctx context.Context, in *v1.GetUnreadUserMsg
 			Id:         uint32(msg.ID),
 			Content:    msg.Content,
 			Type:       uint32(msg.Type),
-			ReplayId:   uint64(msg.ReplyId),
+			ReplyId:    uint64(msg.ReplyId),
 			SenderId:   msg.SendID,
 			ReceiverId: msg.ReceiveID,
 			CreatedAt:  msg.CreatedAt,
@@ -415,7 +415,7 @@ func (s *Handler) GetUserMsgIdAfterMsgList(ctx context.Context, in *v1.GetUserMs
 						Id:         uint32(msg.ID),
 						Content:    msg.Content,
 						Type:       uint32(msg.Type),
-						ReplayId:   uint64(msg.ReplyId),
+						ReplyId:    uint64(msg.ReplyId),
 						SenderId:   msg.SendID,
 						ReceiverId: msg.ReceiveID,
 						CreatedAt:  msg.CreatedAt,
@@ -586,7 +586,7 @@ func (s *Handler) GetUserMessagesByIds(ctx context.Context, in *v1.GetUserMessag
 				IsRead:                 int32(msg.IsRead),
 				Content:                msg.Content,
 				Type:                   uint32(msg.Type),
-				ReplayId:               uint64(msg.ReplyId),
+				ReplyId:                uint64(msg.ReplyId),
 				DialogId:               uint32(msg.DialogId),
 				IsLabel:                v1.MsgLabel(msg.IsLabel),
 				IsBurnAfterReadingType: v1.BurnAfterReadingType(msg.IsBurnAfterReading),
@@ -607,7 +607,7 @@ func (s *Handler) SendMultiUserMessage(ctx context.Context, in *v1.SendMultiUser
 				ReceiveID: msg.ReceiverId,
 				Content:   msg.Content,
 				Type:      entity.UserMessageType(msg.Type),
-				//ReplyId:            uint(msg.ReplayId),
+				//ReplyId:            uint(msg.ReplyId),
 				DialogId: uint(msg.DialogId),
 				//IsBurnAfterReading: entity.BurnAfterReadingType(msg.IsBurnAfterReadingType),
 			})

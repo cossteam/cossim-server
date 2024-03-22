@@ -3933,7 +3933,7 @@ const docTemplate = `{
                 "is_burn_after_reading": {
                     "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType"
                 },
-                "replay_id": {
+                "reply_id": {
                     "type": "integer"
                 },
                 "type": {
@@ -4834,7 +4834,7 @@ const docTemplate = `{
                 "receiver_id": {
                     "type": "string"
                 },
-                "replay_id": {
+                "reply_id": {
                     "type": "integer"
                 },
                 "type": {
