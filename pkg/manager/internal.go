@@ -303,9 +303,9 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 
 	// Add pprof httpServer
 	if cm.pprofListener != nil {
-		if err := cm.addPprofServer(); err != nil {
-			return fmt.Errorf("failed to add pprof httpServer: %w", err)
-		}
+		//if err := cm.addPprofServer(); err != nil {
+		//	return fmt.Errorf("failed to add pprof httpServer: %w", err)
+		//}
 	}
 
 	if cm.runnables.HTTPServers != nil && cm.httpServer != nil {
