@@ -26,6 +26,7 @@ require (
 	github.com/o1egl/govatar v0.4.1
 	github.com/pkg/errors v0.9.1
 	github.com/pretty66/websocketproxy v0.0.0-20220507015215-930b3a686308
+	github.com/prometheus/client_golang v1.18.0
 	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/redis/go-redis/v9 v9.4.0
 	github.com/rs/xid v1.5.0
@@ -138,7 +139,6 @@ require (
 	github.com/pion/turn/v2 v2.1.3 // indirect
 	github.com/pion/webrtc/v3 v3.2.24 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.18.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect

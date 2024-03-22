@@ -283,7 +283,7 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	// (If we don't serve metrics for non-leaders, prometheus will still scrape
 	// the pod but will get a connection refused).
 	if cm.metricsListener != nil {
-		cm.serveMetrics()
+		//cm.serveMetrics()
 	}
 
 	// Note: We are adding the metrics httpServer directly to HTTPServers here as matching on the
