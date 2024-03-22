@@ -9,7 +9,7 @@ import (
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
-	"github.com/cossim/coss-server/pkg/server"
+	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
