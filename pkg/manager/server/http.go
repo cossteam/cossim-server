@@ -58,13 +58,9 @@ func NewHttpService(c *config.AppConfig, svc HTTPService, healthAddr string, log
 	handler := gin.New()
 	handler.Use(middleware.GinLogger(log.NewLogger(c.Log.Format, int8(c.Log.Level), true)))
 	s.handler = handler
-	s.server = &http.Server{
-		Handler:           handler,
-		Addr:              s.ac.HTTP.Addr(),
-		MaxHeaderBytes:    1 << 20,
-		IdleTimeout:       90 * time.Second, // matches http.DefaultTransport keep-alive timeout
-		ReadHeaderTimeout: 32 * time.Second,
-	}
+	server := New(handler)
+	server.Addr = s.ac.HTTP.Addr()
+	s.server = server
 	return s
 }
 

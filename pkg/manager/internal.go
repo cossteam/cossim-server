@@ -8,6 +8,8 @@ import (
 	"github.com/cossim/coss-server/pkg/discovery"
 	server2 "github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/utils/os"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
@@ -258,7 +260,10 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	// Metrics should be served whether the controller is leader or not.
 	// (If we don't serve metrics for non-leaders, prometheus will still scrape
 	// the pod but will get a connection refused).
-	//if cm.metricsServer != nil {
+	if cm.metricsListener != nil {
+		cm.serveMetrics()
+	}
+
 	// Note: We are adding the metrics httpServer directly to HTTPServers here as matching on the
 	// metricsserver.Server interface in cm.runnables.Add would be very brittle.
 	//if cm.runnables.HTTPServers != nil {
@@ -394,6 +399,61 @@ func (cm *controllerManager) reloadConfiguration() error {
 	}
 
 	return nil
+}
+
+func (cm *controllerManager) serveMetrics() {
+	metrics.Registry.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
+	handler := promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{
+		ErrorHandling: promhttp.HTTPErrorOnError,
+	})
+	// TODO(JoelSpeed): Use existing Kubernetes machinery for serving metrics
+	mux := http.NewServeMux()
+	mux.Handle(defaultMetricsEndpoint, handler)
+	for path, extraHandler := range cm.metricsExtraHandlers {
+		mux.Handle(path, extraHandler)
+	}
+
+	server := server2.New(mux)
+	go cm.httpServe("metrics", cm.logger.WithValues("path", defaultMetricsEndpoint), server, cm.metricsListener)
+}
+
+func (cm *controllerManager) httpServe(kind string, log logr.Logger, server *http.Server, ln net.Listener) {
+	log = log.WithValues("kind", kind, "addr", ln.Addr())
+
+	go func() {
+		log.Info("Starting server")
+		if err := server.Serve(ln); err != nil {
+			if errors.Is(err, http.ErrServerClosed) {
+				return
+			}
+			if atomic.LoadInt64(cm.stopProcedureEngaged) > 0 {
+				// There might be cases where connections are still open and we try to shutdown
+				// but not having enough time to close the connection causes an error in Serve
+				//
+				// In that case we want to avoid returning an error to the main error channel.
+				log.Error(err, "error on Serve after stop has been engaged")
+				return
+			}
+			cm.errChan <- err
+		}
+	}()
+
+	// Shutdown the server when stop is closed.
+	<-cm.internalProceduresStop
+	if err := server.Shutdown(cm.shutdownCtx); err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			// Avoid logging context related errors.
+			return
+		}
+		if atomic.LoadInt64(cm.stopProcedureEngaged) > 0 {
+			cm.logger.Error(err, "error on Shutdown after stop has been engaged")
+			return
+		}
+		cm.errChan <- err
+	}
 }
 
 // engageStopProcedure signals all runnables to stop, reads potential errors
