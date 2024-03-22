@@ -201,7 +201,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 				MsgType:  uint(req.Type),
 				Content:  req.Content,
 				SenderId: userID,
-				SendTime: pkgtime.Now(),
+				SendAt:   pkgtime.Now(),
 				MsgId:    uint64(message.MsgId),
 				SenderInfo: model.SenderInfo{
 					UserId: info.UserId,
@@ -483,7 +483,7 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 			ReplyId:                 v.ReplyId,
 			IsRead:                  v.IsRead,
 			ReadAt:                  v.ReadAt,
-			CreatedAt:               v.CreatedAt,
+			SendAt:                  v.CreatedAt,
 			DialogId:                v.DialogId,
 			IsLabel:                 model.LabelMsgType(v.IsLabel),
 			IsBurnAfterReadingType:  model.BurnAfterReadingType(v.IsBurnAfterReadingType),
@@ -643,7 +643,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					MsgId:    uint64(msg.Id),
 					Content:  msg.Content,
 					SenderId: msg.SenderId,
-					SendTime: msg.CreatedAt,
+					SendAt:   msg.CreatedAt,
 					MsgType:  uint(msg.Type),
 				}
 				if msg.SenderId != "" {
@@ -683,7 +683,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	}
 	//根据发送时间排序
 	sort.Slice(responseList, func(i, j int) bool {
-		return responseList[i].LastMessage.SendTime > responseList[j].LastMessage.SendTime
+		return responseList[i].LastMessage.SendAt > responseList[j].LastMessage.SendAt
 	})
 
 	if s.cache && len(responseList) > 0 {
@@ -1306,7 +1306,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			msg.MsgType = uint(i3.Type)
 			msg.Content = i3.Content
 			msg.SenderId = i3.UserId
-			msg.SendTime = i3.CreatedAt
+			msg.SendAt = i3.CreatedAt
 			msg.SenderInfo = model.SenderInfo{
 				Avatar: info.Avatar,
 				Name:   info.NickName,
@@ -1352,7 +1352,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			msg.MsgType = uint(i3.Type)
 			msg.Content = i3.Content
 			msg.SenderId = i3.SenderId
-			msg.SendTime = i3.CreatedAt
+			msg.SendAt = i3.CreatedAt
 			msg.SenderInfo = model.SenderInfo{
 				Avatar: info.Avatar,
 				Name:   info.NickName,
@@ -1475,7 +1475,7 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 			MsgType:  uint(lm.Type),
 			Content:  lm.Content,
 			SenderId: lm.SenderId,
-			SendTime: lm.CreatedAt,
+			SendAt:   lm.CreatedAt,
 			MsgId:    uint64(lm.Id),
 			SenderInfo: model.SenderInfo{
 				UserId: info.UserId,

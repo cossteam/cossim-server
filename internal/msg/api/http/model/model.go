@@ -86,7 +86,7 @@ type Message struct {
 	MsgType            uint                 `json:"msg_type"`                // 消息类型
 	Content            string               `json:"content"`                 // 消息内容
 	SenderId           string               `json:"sender_id"`               // 消息发送者
-	SendTime           int64                `json:"send_time"`               // 消息发送时间
+	SendAt             int64                `json:"send_at"`                 // 消息发送时间
 	MsgId              uint64               `json:"msg_id"`                  // 消息id
 	SenderInfo         SenderInfo           `json:"sender_info"`             // 消息发送者信息
 	ReceiverInfo       SenderInfo           `json:"receiver_info,omitempty"` // 消息接受者信息
@@ -106,7 +106,7 @@ type UserMessage struct {
 	ReplyId                 uint64               `json:"reply_id"`
 	IsRead                  int32                `json:"is_read"`
 	ReadAt                  int64                `json:"read_at"`
-	CreatedAt               int64                `json:"created_at"`
+	SendAt                  int64                `json:"send_at"`
 	DialogId                uint32               `json:"dialog_id"`
 	IsLabel                 LabelMsgType         `json:"is_label"`
 	IsBurnAfterReadingType  BurnAfterReadingType `json:"is_burn_after_reading"`
@@ -129,7 +129,7 @@ type GroupMessage struct {
 	ReadCount              int32                `protobuf:"varint,5,opt,name=Read_count,json=ReadCount,proto3" json:"read_count"`
 	UserId                 string               `protobuf:"bytes,6,opt,name=UserId,proto3" json:"user_id"`
 	Content                string               `protobuf:"bytes,7,opt,name=Content,proto3" json:"content"`
-	CreatedAt              int64                `protobuf:"varint,8,opt,name=Created_at,json=CreatedAt,proto3" json:"created_at"`
+	SendAt                 int64                `json:"send_at"`
 	DialogId               uint32               `protobuf:"varint,9,opt,name=Dialog_id,json=DialogId,proto3" json:"dialog_id"`
 	IsLabel                LabelMsgType         `protobuf:"varint,10,opt,name=IsLabel,proto3,enum=v1.MsgLabel" json:"is_label"`
 	IsBurnAfterReadingType BurnAfterReadingType `protobuf:"varint,11,opt,name=IsBurnAfterReadingType,proto3,enum=v1.BurnAfterReadingType" json:"is_burn_after_reading"`

@@ -335,7 +335,7 @@ type Message struct {
 	MsgType            uint                 `json:"msg_type"`                // 消息类型
 	Content            string               `json:"content"`                 // 消息内容
 	SenderId           string               `json:"sender_id"`               // 消息发送者
-	SendTime           int64                `json:"send_time"`               // 消息发送时间
+	SendAt             int64                `json:"send_at"`                 // 消息发送时间
 	MsgId              uint64               `json:"msg_id"`                  // 消息id
 	SenderInfo         SenderInfo           `json:"sender_info"`             // 消息发送者信息
 	ReceiverInfo       SenderInfo           `json:"receiver_info,omitempty"` // 消息接受者信息
