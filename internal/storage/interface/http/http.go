@@ -53,7 +53,7 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
-// @title storage服务
+// @title CossApi
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())

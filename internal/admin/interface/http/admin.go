@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/cossim/coss-server/internal/admin/api/model"
+	"github.com/cossim/coss-server/internal/admin/api/http/model"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -9,6 +9,7 @@ import (
 
 // @Summary 发送全体通知
 // @Description 发送全体通知
+// @Tags Admin
 // @Accept  json
 // @Produce  json
 // @param request body model.SendAllNotificationRequest{} true "request"

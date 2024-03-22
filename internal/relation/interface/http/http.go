@@ -50,7 +50,7 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
-// @title relation服务
+// @title CossApi
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	gin.SetMode(gin.ReleaseMode)

@@ -8,7 +8,7 @@ ifeq ($(strip $(CMD_ARGS)),)
 endif
 SERVICE := $(lastword $(CMD_ARGS))
 DOCKER_BUILD_PATH := "cmd/${SERVICE}/main.go"
-INTERFACE_LIST ?= group msg relation storage user live
+INTERFACE_LIST ?=group msg relation storage user live
 
 GOPROXY=https://goproxy.cn
 TAG ?= latest
@@ -43,10 +43,12 @@ fmt: ## Run go fmt against code.
 test: fmt vet## Run unittests
 	@go test -short ./...
 
-swag: ## Run unittests
-	- $(foreach dir,$(INTERFACE_LIST), \
-		swag i -g http.go -dir internal/$(dir)/interface/http,internal/$(dir)/api/http/model,internal/live/api/dto,pkg/utils/usersorter --instanceName $(dir); \
-	)
+
+SWAG_CMD := swag i -g http.go -dir internal/admin/interface/http,internal/admin/api/http/model,internal/group/interface/http,internal/group/api/http/model,internal/user/interface/http,internal/user/api/http/model,internal/relation/interface/http,internal/relation/api/http/model,internal/msg/interface/http,internal/msg/api/http/model,internal/storage/interface/http,internal/storage/api/http/model,internal/live/api/dto,internal/live/interface/http,pkg/utils/usersorter --packageName coss
+
+.PHONY: swag
+swag: ## Generate Swagger documentation
+	$(SWAG_CMD)
 
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.

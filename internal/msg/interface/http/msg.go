@@ -37,6 +37,7 @@ type client struct {
 }
 
 // @Summary websocket请求
+// @Tags Msg
 // @Description websocket请求
 // @Router /msg/ws [get]
 func (h *Handler) ws(c *gin.Context) {
@@ -80,6 +81,7 @@ func (h *Handler) ws(c *gin.Context) {
 
 // @Summary 发送私聊消息
 // @Description 发送私聊消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.SendUserMsgRequest true "request"
@@ -121,6 +123,7 @@ func (h *Handler) sendUserMsg(c *gin.Context) {
 
 // @Summary 发送群聊消息
 // @Description 发送群聊消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.SendGroupMsgRequest true "request"
@@ -160,6 +163,7 @@ func (h *Handler) sendGroupMsg(c *gin.Context) {
 
 // @Summary 获取私聊消息
 // @Description 获取私聊消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @Param user_id query string true "用户id"
@@ -212,6 +216,7 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 
 // @Summary 获取群聊消息
 // @Description 获取群聊消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @Param group_id query string true "群聊id"
@@ -270,6 +275,7 @@ func (h *Handler) getGroupMsgList(c *gin.Context) {
 // 获取用户对话列表
 // @Summary 获取用户对话列表
 // @Description 获取用户对话列表
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @Success		200 {object} model.Response{}
@@ -292,6 +298,7 @@ func (h *Handler) getUserDialogList(c *gin.Context) {
 
 // @Summary 编辑用户消息
 // @Description 编辑用户消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.EditUserMsgRequest true "request"
@@ -328,6 +335,7 @@ func (h *Handler) editUserMsg(c *gin.Context) {
 
 // @Summary 编辑群消息
 // @Description 编辑群消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.EditGroupMsgRequest true "request"
@@ -364,6 +372,7 @@ func (h *Handler) editGroupMsg(c *gin.Context) {
 
 // @Summary 撤回用户消息
 // @Description 撤回用户消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.RecallUserMsgRequest true "request"
@@ -400,6 +409,7 @@ func (h *Handler) recallUserMsg(c *gin.Context) {
 
 // @Summary 撤回群消息
 // @Description 撤回群消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.RecallGroupMsgRequest true "request"
@@ -436,6 +446,7 @@ func (h *Handler) recallGroupMsg(c *gin.Context) {
 
 // @Summary 标注用户消息状态
 // @Description 标注用户消息状态
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.LabelUserMessageRequest true "request"
@@ -477,6 +488,7 @@ func (h *Handler) labelUserMessage(c *gin.Context) {
 
 // @Summary 标注群聊消息状态
 // @Description 标注群聊消息状态
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.LabelGroupMessageRequest true "request"
@@ -519,6 +531,7 @@ func (h *Handler) labelGroupMessage(c *gin.Context) {
 // 获取私聊标注信息
 // @Summary 获取私聊标注信息
 // @Description 获取私聊标注信息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @Param dialog_id query string true "对话id"
@@ -555,6 +568,7 @@ func (h *Handler) getUserLabelMsgList(c *gin.Context) {
 // 获取群聊标注信息
 // @Summary 获取群聊标注信息
 // @Description 获取群聊标注信息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @Param dialog_id query string true "对话id"
@@ -590,6 +604,7 @@ func (h *Handler) getGroupLabelMsgList(c *gin.Context) {
 
 // @Summary 批量设置私聊消息状态为已读
 // @Description 批量设置私聊消息状态为已读
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body model.ReadUserMsgsRequest true "request"
@@ -626,6 +641,7 @@ func (h *Handler) readUserMsgs(c *gin.Context) {
 
 // @Summary 获取指定对话落后消息
 // @Description 获取指定对话落后消息
+// @Tags Msg
 // @Accept  json
 // @Produce  json
 // @param request body []model.AfterMsg true "request"
@@ -653,6 +669,7 @@ func (h *Handler) getDialogAfterMsg(c *gin.Context) {
 
 // @Summary 批量设置群聊消息为已读
 // @Description 批量设置群聊消息为已读
+// @Tags Msg
 // @Accept json
 // @Produce json
 // @Param request body model.GroupMessageReadRequest true "请求参数"
@@ -689,6 +706,7 @@ func (h *Handler) setGroupMessagesRead(c *gin.Context) {
 
 // @Summary 获取消息已读人员
 // @Description 获取消息已读人员
+// @Tags Msg
 // @Accept json
 // @Produce json
 // @Param msg_id query uint32 true "消息ID"
