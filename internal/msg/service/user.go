@@ -790,14 +790,11 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	//}
 	//
 	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, wsm, true)
-	msgcontent, err := json.Marshal(msginfo)
-	if err != nil {
-		return nil, err
-	}
 
 	req := &model.SendUserMsgRequest{
 		ReceiverId: msginfo.ReceiverId,
-		Content:    string(msgcontent),
+		Content:    msginfo.Content,
+		ReplayId:   uint(msginfo.Id),
 		Type:       model.MessageTypeDelete,
 		DialogId:   msginfo.DialogId,
 	}
@@ -1047,14 +1044,11 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 	//}
 
 	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, wsm, true)
-	msgcontent, err := json.Marshal(msginfo)
-	if err != nil {
-		return nil, err
-	}
 
 	req := &model.SendUserMsgRequest{
 		ReceiverId: msginfo.ReceiverId,
-		Content:    string(msgcontent),
+		Content:    msginfo.Content,
+		ReplayId:   uint(msginfo.Id),
 		Type:       model.MessageTypeLabel,
 		DialogId:   msginfo.DialogId,
 	}
