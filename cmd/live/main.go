@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	_ "github.com/cossim/coss-server/docs"
-	"github.com/cossim/coss-server/internal/live/server/http"
+	"github.com/cossim/coss-server/internal/live/interface/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
