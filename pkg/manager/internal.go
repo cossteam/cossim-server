@@ -31,7 +31,6 @@ const (
 
 	defaultReadinessEndpoint      = "/ready"
 	defaultLivenessEndpoint       = "/health"
-	defaultMetricsEndpoint        = "/metrics"
 	defaultHealthProbeBindAddress = ":8081"
 )
 
@@ -63,12 +62,6 @@ type controllerManager struct {
 
 	// httpHealthProbeListener is used to serve liveness probe
 	httpHealthProbeListener net.Listener
-
-	// metricsListener is used to serve prometheus metrics
-	metricsListener net.Listener
-
-	// metricsExtraHandlers contains extra handlers to register on http server that serves metrics.
-	metricsExtraHandlers map[string]http.Handler
 
 	// Readiness probe endpoint name
 	readinessEndpointName string
@@ -130,24 +123,8 @@ func (cm *controllerManager) Add(runnable Runnable) error {
 }
 
 func (cm *controllerManager) AddMetricsExtraHandler(path string, handler http.Handler) error {
-	cm.Lock()
-	defer cm.Unlock()
-
-	if cm.started {
-		return fmt.Errorf("unable to add new metrics handler because metrics endpoint has already been created")
-	}
-
-	if path == defaultMetricsEndpoint {
-		return fmt.Errorf("overriding builtin %s endpoint is not allowed", defaultMetricsEndpoint)
-	}
-
-	if _, found := cm.metricsExtraHandlers[path]; found {
-		return fmt.Errorf("can't register extra handler by duplicate path %q on metrics http server", path)
-	}
-
-	cm.metricsExtraHandlers[path] = handler
-	cm.logger.V(2).Info("Registering metrics http server extra handler", "path", path)
-	return nil
+	//TODO implement me
+	panic("implement me")
 }
 
 func (cm *controllerManager) AddHealthzCheck(name string, check healthz.Checker) error {
@@ -286,6 +263,7 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	if cm.metricsListener != nil {
 		cm.serveMetrics()
 	}
+
 	// Note: We are adding the metrics httpServer directly to HTTPServers here as matching on the
 	// metricsserver.Server interface in cm.runnables.Add would be very brittle.
 	//if cm.runnables.HTTPServers != nil {
