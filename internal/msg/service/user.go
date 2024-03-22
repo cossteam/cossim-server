@@ -1053,6 +1053,10 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 		DialogId:   msginfo.DialogId,
 	}
 
+	if label == model.NotLabel {
+		req.Type = model.MessageTypeCancelLabel
+	}
+
 	_, err = s.SendUserMsg(ctx, userID, driverId, req)
 	if err != nil {
 		return nil, err

@@ -473,6 +473,10 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 		Type:     model.MessageTypeLabel,
 	}
 
+	if label == model.NotLabel {
+		msg2.Type = model.MessageTypeCancelLabel
+	}
+
 	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
 	if err != nil {
 		return nil, err
