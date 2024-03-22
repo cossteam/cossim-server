@@ -585,7 +585,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 			Content:                v.Content,
 			GroupId:                v.GroupId,
 			Type:                   v.Type,
-			CreatedAt:              v.CreatedAt,
+			SendAt:                 v.CreatedAt,
 			DialogId:               v.DialogId,
 			IsLabel:                model.LabelMsgType(v.IsLabel),
 			ReadCount:              v.ReadCount,
@@ -825,7 +825,7 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 				MsgType:  uint(lm.Type),
 				Content:  lm.Content,
 				SenderId: lm.SenderId,
-				SendTime: lm.CreatedAt,
+				SendAt:   lm.CreatedAt,
 				MsgId:    uint64(lm.Id),
 				SenderInfo: model.SenderInfo{
 					UserId: info.UserId,
