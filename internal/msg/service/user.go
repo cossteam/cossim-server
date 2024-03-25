@@ -242,25 +242,6 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		}
 	}
 
-	//推送
-	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
-		SenderId:                userID,
-		Content:                 req.Content,
-		MsgType:                 uint(req.Type),
-		ReplyId:                 req.ReplyId,
-		MsgId:                   message.MsgId,
-		ReceiverId:              req.ReceiverId,
-		SendAt:                  pkgtime.Now(),
-		DialogId:                req.DialogId,
-		IsBurnAfterReading:      req.IsBurnAfterReadingType,
-		BurnAfterReadingTimeOut: userRelationStatus1.OpenBurnAfterReadingTimeOut,
-		SenderInfo: model.SenderInfo{
-			Avatar: info.Avatar,
-			Name:   info.NickName,
-			UserId: userID,
-		},
-	})
-
 	resp := &model.SendUserMsgResponse{
 		MsgId: message.MsgId,
 	}
@@ -296,6 +277,27 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			ReplyId:            uint32(msg.ReplyId),
 		}
 	}
+
+	//推送
+	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
+		SenderId:                userID,
+		Content:                 req.Content,
+		MsgType:                 uint(req.Type),
+		ReplyId:                 req.ReplyId,
+		MsgId:                   message.MsgId,
+		ReceiverId:              req.ReceiverId,
+		SendAt:                  pkgtime.Now(),
+		DialogId:                req.DialogId,
+		IsBurnAfterReading:      req.IsBurnAfterReadingType,
+		BurnAfterReadingTimeOut: userRelationStatus1.OpenBurnAfterReadingTimeOut,
+		SenderInfo: model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: userID,
+		},
+		ReplyMsg: resp.ReplyMsg,
+	})
+
 	return resp, nil
 }
 
@@ -1032,6 +1034,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 		return nil, err
 	}
 
+	fmt.Println("对话id", userIds.GetUserIds())
 	found := false
 	for _, v := range userIds.UserIds {
 		if v == userID {
@@ -1039,6 +1042,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 			break
 		}
 	}
+
 	if !found {
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
@@ -1091,6 +1095,10 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 		ReplyId:    uint(msginfo.Id),
 		Type:       model.MessageTypeLabel,
 		DialogId:   msginfo.DialogId,
+	}
+
+	if msginfo.SenderId != userID {
+		req.ReceiverId = msginfo.SenderId
 	}
 
 	if label == model.NotLabel {
