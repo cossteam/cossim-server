@@ -248,7 +248,7 @@ func (s *Service) GetUserRoom(ctx context.Context, uid string) (*dto.UserShowRes
 	return resp, nil
 }
 
-func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, error) {
+func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId string) (interface{}, error) {
 	room, err := s.getRedisUserRoom(ctx, uid)
 	if err != nil {
 		return nil, err
@@ -267,21 +267,98 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string) (interface{}, 
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
+	var senderID = room.SenderID
+	var receiverId string
+	for k, _ := range room.Participants {
+		if k != senderID {
+			receiverId = k
+			break
+		}
+	}
+
+	var msgType dto.UserMessageType
+	if room.Option.AudioEnabled {
+		msgType = dto.MessageTypeVoiceCall
+	}
+	if room.Option.VideoEnabled {
+		msgType = dto.MessageTypeVideoCall
+	}
+
+	isBurnAfterReading := rel.OpenBurnAfterReading
+	OpenBurnAfterReadingTimeOut := rel.OpenBurnAfterReadingTimeOut
+	message, err := s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
+		DialogId:               rel.DialogId,
+		SenderId:               senderID,
+		ReceiverId:             receiverId,
+		Content:                "已拒绝",
+		Type:                   msgType.Int32(),
+		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(isBurnAfterReading),
+	})
+	if err != nil {
+		s.logger.Error("发送消息失败", zap.Error(err))
+		return nil, code.LiveErrLeaveCallFailed
+	}
+
+	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		UserId: senderID,
+	})
+	if err != nil {
+		s.logger.Error("获取用户信息失败", zap.Error(err))
+		return nil, code.LiveErrLeaveCallFailed
+	}
+
+	for k, _ := range room.Participants {
+		msgContent := constants.WsMsg{
+			Uid:      k,
+			Event:    constants.SendUserMessageEvent,
+			DriverId: driverId,
+			Data: &constants.WsUserMsg{
+				SenderId:                senderID,
+				Content:                 "已拒绝",
+				MsgType:                 msgType.Uint(),
+				MsgId:                   message.MsgId,
+				ReceiverId:              receiverId,
+				SendAt:                  pkgtime.Now(),
+				DialogId:                rel.DialogId,
+				IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
+				BurnAfterReadingTimeOut: OpenBurnAfterReadingTimeOut,
+				SenderInfo: constants.SenderInfo{
+					Avatar: info.Avatar,
+					Name:   info.NickName,
+					UserId: senderID,
+				},
+			},
+		}
+		if err := s.publishServiceMessage(ctx, msgContent); err != nil {
+			s.logger.Error("发送消息失败", zap.Error(err))
+		}
+	}
+
+	// 清除缓存
+	if s.cache {
+		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", senderID)); err != nil {
+			return nil, err
+		}
+		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", receiverId)); err != nil {
+			return nil, err
+		}
+	}
+
 	_, err = s.deleteUserRoom(ctx, room)
 	if err != nil {
 		return nil, err
 	}
 
-	msg := constants.WsMsg{Uid: room.SenderID, Event: constants.UserCallRejectEvent, Data: map[string]interface{}{
+	msg := constants.WsMsg{Uid: senderID, Event: constants.UserCallRejectEvent, Data: map[string]interface{}{
 		"url":          s.livekitServer,
-		"sender_id":    room.SenderID,
+		"sender_id":    senderID,
 		"recipient_id": uid,
 	}}
 	if err = s.publishServiceMessage(ctx, msg); err != nil {
 		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 
-	s.logger.Info("UserRejectRoom", zap.String("room", room.Room), zap.String("SenderID", room.SenderID), zap.String("RecipientID", uid))
+	s.logger.Info("UserRejectRoom", zap.String("room", room.Room), zap.String("SenderID", senderID), zap.String("RecipientID", uid))
 
 	return nil, nil
 }
