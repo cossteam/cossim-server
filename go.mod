@@ -32,8 +32,6 @@ require (
 	github.com/rs/xid v1.5.0
 	github.com/sony/sonyflake v1.2.0
 	github.com/spf13/viper v1.18.2
-	github.com/swaggo/files v1.0.1
-	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.2
 	github.com/wneessen/go-mail v0.4.0
 	go.uber.org/zap v1.27.0

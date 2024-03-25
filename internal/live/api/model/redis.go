@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cossim/coss-server/internal/live/api/dto"
 )
 
 type RoomType string
@@ -31,6 +32,7 @@ type RoomInfo struct {
 	NumParticipants uint32                        `json:"num_participants"`
 	MaxParticipants uint32                        `json:"max_participants"`
 	Participants    map[string]*ActiveParticipant `json:"participants"`
+	Option          dto.CallOption                `json:"option"`
 }
 
 func (r *RoomInfo) ToJSONString() (string, error) {
