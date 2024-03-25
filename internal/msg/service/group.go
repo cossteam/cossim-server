@@ -272,6 +272,43 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		wg.Wait()
 	}
 
+	resp := &model.SendGroupMsgResponse{
+		MsgId: message.MsgId,
+	}
+
+	if req.ReplyId != 0 {
+		msg, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
+			MsgId: uint32(req.ReplyId),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		userInfo, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			UserId: msg.UserId,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		resp.ReplyMsg = &model.Message{
+			MsgType:  uint(msg.Type),
+			Content:  msg.Content,
+			SenderId: msg.UserId,
+			SendAt:   msg.GetCreatedAt(),
+			MsgId:    uint64(msg.Id),
+			SenderInfo: model.SenderInfo{
+				UserId: userInfo.UserId,
+				Name:   userInfo.NickName,
+				Avatar: userInfo.Avatar,
+			},
+			IsBurnAfterReading: model.BurnAfterReadingType(msg.IsBurnAfterReadingType),
+			IsLabel:            model.LabelMsgType(msg.IsLabel),
+			ReplyId:            msg.ReplyId,
+		}
+	}
+	return resp, nil
+
 	return message.MsgId, nil
 }
 

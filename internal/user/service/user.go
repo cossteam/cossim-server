@@ -112,7 +112,11 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			clientIp = httputil.GetMyPublicIP()
 		}
 		info := httputil.OnlineIpInfo(clientIp)
+
 		result := fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s %s", clientIp, info.Country, info.RegionName, info.City)
+		if info.RegionName == info.City {
+			result = fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s", clientIp, info.Country, info.City)
+		}
 		msg := constants.WsMsg{Uid: constants.SystemNotification, Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: constants.SystemNotificationEventData{
 			UserIds: []string{resp.UserId},
 			Content: result,
