@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/group_msg_read.proto
+// source: api/grpc/v1/group_msg_read.proto
 
 package v1
 
@@ -71,7 +71,7 @@ func (c *groupMessageServiceClient) GetGroupMessageReadByMsgIdAndUserId(ctx cont
 	return out, nil
 }
 
-// GroupMessageServiceServer is the interface API for GroupMessageService service.
+// GroupMessageServiceServer is the server API for GroupMessageService service.
 // All implementations must embed UnimplementedGroupMessageServiceServer
 // for forward compatibility
 type GroupMessageServiceServer interface {
@@ -185,5 +185,5 @@ var GroupMessageService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/group_msg_read.proto",
+	Metadata: "api/grpc/v1/group_msg_read.proto",
 }

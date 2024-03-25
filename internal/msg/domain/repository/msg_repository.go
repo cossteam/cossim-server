@@ -25,6 +25,9 @@ type MsgRepository interface {
 	GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogId uint32) ([]*entity.UserMessage, error)
 	GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error)
 	UpdateUserMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error
+	// 获取最新的指定范围的消息
+	GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error)
+	GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, error)
 
 	//群聊
 	GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error)

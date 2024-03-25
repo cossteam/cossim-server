@@ -51,12 +51,12 @@ install: ## Install depence go package
 	@go install github.com/favadi/protoc-go-inject-tag@latest
 
 gen: ## generate protobuf file
-	@protoc -I=. --go_out=. --go_opt=module=${PKG} --go-grpc_out=. --go-grpc_opt=module=${PKG} api/v1/*.proto
+	@protoc -I=. --go_out=. --go_opt=module=${PKG} --go-grpc_out=. --go-grpc_opt=module=${PKG} api/grpc/v1/*.proto
 	@go fmt ./...
-	@protoc-go-inject-tag -input=api/v1/*.pb.go
+	@protoc-go-inject-tag -input=api/grpc/v1/*.pb.go
 
 run: # Run Develop server
-	@go run $(MAIN_FILE) --config ./config/config.yaml
+	@go run ../../cmd/$(PROJECT_NAME)/main.go --config ./config/config.yaml
 
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

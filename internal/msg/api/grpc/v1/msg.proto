@@ -1,6 +1,6 @@
 syntax = "proto3";
 package v1;
-option go_package = "github.com/cossim/coss-interface/service/msg/api/v1";
+option go_package = "github.com/cossim/coss-server/internal/msg/api/grpc/v1";
 
 message SendUserMsgRequest{
   // @inject_tag: json:"sender_id"
@@ -473,6 +473,15 @@ message  DeleteGroupMsgByDialogIdResponse {
 
 }
 
+message GetLastMsgListRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+  // @inject_tag: json:"page_size"
+  uint32 PageSize = 2;
+  // @inject_tag: json:"page_number"
+  uint32 PageNum = 3;
+}
+
 service MsgService{
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
@@ -482,6 +491,11 @@ service MsgService{
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
   //获取用户消息列表
   rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
+  //获取私聊对话最新消息
+  rpc GetUserLastMessageList(GetLastMsgListRequest)returns(UserMessages);
+  //获取群聊对话最新消息
+  rpc GetGroupLastMessageList(GetLastMsgListRequest) returns(GroupMessages);
+
 
   //根据好友id获取最后一条消息
   rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
