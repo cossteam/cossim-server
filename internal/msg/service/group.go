@@ -260,7 +260,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 
 	if req.ReplyId != 0 {
 		msg, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
-			MsgId: uint32(req.ReplyId),
+			MsgId: req.ReplyId,
 		})
 		if err != nil {
 			return nil, err
@@ -418,30 +418,6 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	if !found {
 		return nil, code.DialogErrGetDialogByIdFailed
 	}
-	// 调用相应的 gRPC 客户端方法来撤回群消息
-	msg, err := s.msgClient.DeleteGroupMessage(ctx, &msggrpcv1.DeleteGroupMsgRequest{
-		MsgId: msgID,
-	})
-	if err != nil {
-		s.logger.Error("撤回群消息失败", zap.Error(err))
-		return nil, err
-	}
-
-	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
-	//
-	//if s.cache {
-	//	wg := sync.WaitGroup{}
-	//	wg.Add(1)
-	//	go func() {
-	//		defer wg.Done()
-	//		err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
-	//		if err != nil {
-	//			s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-	//			return
-	//		}
-	//	}()
-	//	wg.Wait()
-	//}
 
 	msg2 := &model.SendGroupMsgRequest{
 		DialogId: msginfo.DialogId,
@@ -453,6 +429,31 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
 	if err != nil {
 		return nil, err
+	}
+
+	// 调用相应的 gRPC 客户端方法来撤回群消息
+	msg, err := s.msgClient.DeleteGroupMessage(ctx, &msggrpcv1.DeleteGroupMsgRequest{
+		MsgId: msgID,
+	})
+	if err != nil {
+		s.logger.Error("撤回群消息失败", zap.Error(err))
+		return nil, err
+	}
+
+	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
+	//
+	if s.cache {
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+			if err != nil {
+				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+				return
+			}
+		}()
+		wg.Wait()
 	}
 
 	return msg.Id, nil
