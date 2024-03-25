@@ -158,7 +158,7 @@ func (h *Handler) sendGroupMsg(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "发送成功", gin.H{"msg_id": resp})
+	response.SetSuccess(c, "发送成功", resp)
 }
 
 // @Summary 获取私聊消息
@@ -441,7 +441,7 @@ func (h *Handler) recallGroupMsg(c *gin.Context) {
 		return
 	}
 
-	response.SetSuccess(c, "撤回成功", gin.H{"msg_id": resp})
+	response.SetSuccess(c, "撤回成功", resp)
 }
 
 // @Summary 标注用户消息状态
