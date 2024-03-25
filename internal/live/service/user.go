@@ -74,6 +74,7 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID string, req *dto.
 		Room:            roomName,
 		SenderID:        senderID,
 		Type:            model.UserRoomType,
+		Option:          req.Option,
 		MaxParticipants: 2,
 		Participants: map[string]*model.ActiveParticipant{
 			senderID: {
@@ -359,12 +360,22 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
+	var msgType dto.UserMessageType
+
+	if room.Option.AudioEnabled {
+		msgType = dto.MessageTypeVoiceCall
+	}
+
+	if room.Option.VideoEnabled {
+		msgType = dto.MessageTypeVideoCall
+	}
+
 	message, err := s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
 		DialogId:               did,
 		SenderId:               senderID,
 		ReceiverId:             receiverId,
 		Content:                content,
-		Type:                   1,
+		Type:                   msgType.Int32(),
 		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(isBurnAfterReading),
 	})
 	if err != nil {
@@ -388,7 +399,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 			Data: &constants.WsUserMsg{
 				SenderId:                senderID,
 				Content:                 content,
-				MsgType:                 1,
+				MsgType:                 msgType.Uint(),
 				MsgId:                   message.MsgId,
 				ReceiverId:              receiverId,
 				SendAt:                  pkgtime.Now(),
