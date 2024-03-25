@@ -239,24 +239,6 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 	if err != nil {
 		return nil, err
 	}
-	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &model.WsGroupMsg{
-		MsgId:              message.MsgId,
-		GroupId:            int64(req.GroupId),
-		SenderId:           userID,
-		Content:            req.Content,
-		MsgType:            uint(req.Type),
-		ReplyId:            uint(req.ReplyId),
-		SendAt:             pkgtime.Now(),
-		DialogId:           req.DialogId,
-		AtUsers:            req.AtUsers,
-		AtAllUser:          req.AtAllUser,
-		IsBurnAfterReading: req.IsBurnAfterReadingType,
-		SenderInfo: model.SenderInfo{
-			Avatar: info.Avatar,
-			Name:   info.NickName,
-			UserId: userID,
-		},
-	})
 
 	if s.cache {
 		wg := sync.WaitGroup{}
@@ -307,9 +289,28 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			ReplyId:            msg.ReplyId,
 		}
 	}
-	return resp, nil
 
-	return message.MsgId, nil
+	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &model.WsGroupMsg{
+		MsgId:              message.MsgId,
+		GroupId:            int64(req.GroupId),
+		SenderId:           userID,
+		Content:            req.Content,
+		MsgType:            uint(req.Type),
+		ReplyId:            uint(req.ReplyId),
+		SendAt:             pkgtime.Now(),
+		DialogId:           req.DialogId,
+		AtUsers:            req.AtUsers,
+		AtAllUser:          req.AtAllUser,
+		IsBurnAfterReading: req.IsBurnAfterReadingType,
+		SenderInfo: model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: userID,
+		},
+		ReplyMsg: resp.ReplyMsg,
+	})
+
+	return resp, nil
 }
 
 func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId string, msgID uint32, content string) (interface{}, error) {

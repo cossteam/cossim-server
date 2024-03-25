@@ -12,6 +12,7 @@ type WsUserMsg struct {
 	IsBurnAfterReading      BurnAfterReadingType `json:"is_burn_after_reading"`
 	BurnAfterReadingTimeOut int64                `json:"burn_after_reading_time_out"`
 	SenderInfo              SenderInfo           `json:"sender_info"`
+	ReplyMsg                *Message             `json:"reply_msg,omitempty"`
 }
 
 type WsGroupMsg struct {
@@ -27,6 +28,7 @@ type WsGroupMsg struct {
 	AtAllUser          AtAllUserType        `json:"at_all_users"`
 	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`
 	SenderInfo         SenderInfo           `json:"sender_info"`
+	ReplyMsg           *Message             `json:"reply_msg,omitempty"`
 }
 
 type SenderInfo struct {
