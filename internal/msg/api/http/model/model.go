@@ -17,6 +17,11 @@ type SendUserMsgRequest struct {
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 
+type SendUserMsgResponse struct {
+	MsgId    uint32   `json:"msg_id"`
+	ReplyMsg *Message `json:"reply_msg,omitempty"`
+}
+
 type SendGroupMsgRequest struct {
 	DialogId               uint32               `json:"dialog_id" binding:"required"`
 	GroupId                uint32               `json:"group_id" binding:"required"`
@@ -28,6 +33,10 @@ type SendGroupMsgRequest struct {
 	IsBurnAfterReadingType BurnAfterReadingType `json:"is_burn_after_reading"`
 }
 
+type SendGroupMsgResponse struct {
+	MsgId    uint32   `json:"msg_id"`
+	ReplyMsg *Message `json:"reply_msg,omitempty"`
+}
 type AtAllUserType uint
 
 const (
