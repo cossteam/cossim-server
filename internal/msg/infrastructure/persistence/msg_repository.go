@@ -419,3 +419,31 @@ func (g *MsgRepo) PhysicalDeleteUserMessagesByDialogID(dialogId uint32) error {
 func (g *MsgRepo) PhysicalDeleteGroupMessagesByDialogID(dialogId uint32) error {
 	return g.db.Where("dialog_id = ?", dialogId).Delete(&entity.GroupMessage{}).Error
 }
+
+func (g *MsgRepo) GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error) {
+	var userMessages []entity.UserMessage
+	err := g.db.Model(&entity.UserMessage{}).
+		Where("dialog_id = ? AND deleted_at = 0", dialogId).
+		Order("updated_at DESC").
+		Limit(pageSize).
+		Offset(pageSize * (pageNumber - 1)).
+		Find(&userMessages).Error
+	if err != nil {
+		return nil, err
+	}
+	return userMessages, err
+}
+
+func (g *MsgRepo) GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, error) {
+	var groupMessages []entity.GroupMessage
+	err := g.db.Model(&entity.GroupMessage{}).
+		Where("dialog_id = ? AND deleted_at = 0", dialogId).
+		Order("updated_at DESC").
+		Limit(pageSize).
+		Offset(pageSize * (pageNumber - 1)).
+		Find(&groupMessages).Error
+	if err != nil {
+		return nil, err
+	}
+	return groupMessages, err
+}

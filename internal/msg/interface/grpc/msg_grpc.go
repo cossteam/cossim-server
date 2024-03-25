@@ -674,3 +674,58 @@ func (s *Handler) DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *
 	}
 	return resp, err
 }
+
+func (s *Handler) GetUserLastMessageList(ctx context.Context, request *v1.GetLastMsgListRequest) (*v1.UserMessages, error) {
+	resp := &v1.UserMessages{}
+	msgs, err := s.mr.GetUserDialogLastMsgs(request.DialogId, int(request.PageNum), int(request.PageSize))
+	if err != nil {
+		return nil, status.Error(codes.Code(code.GetMsgErrGetUserMsgByIDFailed.Code()), err.Error())
+	}
+	if len(msgs) > 0 {
+		for _, msg := range msgs {
+			resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
+				Id:                     uint32(msg.ID),
+				SenderId:               msg.SendID,
+				ReceiverId:             msg.ReceiveID,
+				ReadAt:                 msg.ReadAt,
+				IsRead:                 int32(msg.IsRead),
+				Content:                msg.Content,
+				Type:                   uint32(msg.Type),
+				ReplyId:                uint64(msg.ReplyId),
+				DialogId:               uint32(msg.DialogId),
+				IsLabel:                v1.MsgLabel(msg.IsLabel),
+				IsBurnAfterReadingType: v1.BurnAfterReadingType(msg.IsBurnAfterReading),
+				CreatedAt:              msg.CreatedAt,
+			})
+		}
+	}
+	return resp, nil
+}
+
+func (s *Handler) GetGroupLastMessageList(ctx context.Context, request *v1.GetLastMsgListRequest) (*v1.GroupMessages, error) {
+	resp := &v1.GroupMessages{}
+	msgs, err := s.mr.GetGroupDialogLastMsgs(request.DialogId, int(request.PageNum), int(request.PageSize))
+	if err != nil {
+		return nil, status.Error(codes.Code(code.GetMsgErrGetUserMsgByIDFailed.Code()), err.Error())
+	}
+	if len(msgs) > 0 {
+		for _, msg := range msgs {
+			resp.GroupMessages = append(resp.GroupMessages, &v1.GroupMessage{
+				Id:                     uint32(msg.ID),
+				UserId:                 msg.UserID,
+				Content:                msg.Content,
+				Type:                   uint32(msg.Type),
+				ReplyId:                uint32(msg.ReplyId),
+				GroupId:                uint32(msg.GroupID),
+				ReadCount:              int32(msg.ReadCount),
+				DialogId:               uint32(msg.DialogId),
+				IsLabel:                v1.MsgLabel(msg.IsLabel),
+				IsBurnAfterReadingType: v1.BurnAfterReadingType(msg.IsBurnAfterReading),
+				AtUsers:                msg.AtUsers,
+				AtAllUser:              v1.AtAllUserType(msg.AtAllUser),
+				CreatedAt:              msg.CreatedAt,
+			})
+		}
+	}
+	return resp, nil
+}

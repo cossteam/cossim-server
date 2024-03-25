@@ -466,12 +466,13 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 			UserId: info2.UserId,
 			Avatar: info2.Avatar,
 		}
-
 		name := relation.Remark
-		if v.SenderId == userID {
-			receinfo.Name = name
-		} else {
-			sendinfo.Name = name
+		if name != "" {
+			if v.SenderId == userID {
+				receinfo.Name = name
+			} else {
+				sendinfo.Name = name
+			}
 		}
 
 		msgList = append(msgList, &model.UserMessage{
@@ -661,18 +662,22 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					}
 					if v.Type == 1 {
 						//查询群聊备注
-						relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: v.GroupId, UserId: userID})
+						relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: v.GroupId, UserId: info.UserId})
 						if err != nil {
 							return nil, err
 						}
-						re.LastMessage.SenderInfo.Name = relation.Remark
+						if relation.Remark != "" {
+							re.LastMessage.SenderInfo.Name = relation.Remark
+						}
 					} else if v.Type == 0 && msg.SenderId != userID {
 						//查询用户备注
 						relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: msg.SenderId})
 						if err != nil {
 							return nil, err
 						}
-						re.LastMessage.SenderInfo.Name = relation.Remark
+						if relation.Remark != "" {
+							re.LastMessage.SenderInfo.Name = relation.Remark
+						}
 					}
 				}
 				break
@@ -1259,27 +1264,120 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	}
 	var infos2 = make([]*msggrpcv1.GetGroupMsgIdAfterMsgRequest, 0)
 	var infos3 = make([]*msggrpcv1.GetUserMsgIdAfterMsgRequest, 0)
-	for _, i2 := range infos.Dialogs {
-		if i2.Type == uint32(model.GroupConversation) {
-			for _, i3 := range request {
-				if i2.Id == i3.DialogId {
-					infos2 = append(infos2, &msggrpcv1.GetGroupMsgIdAfterMsgRequest{
-						DialogId: i2.Id,
-						MsgId:    i3.MsgId,
-					})
-					break
-				}
-			}
 
+	addToInfos := func(dialogID uint32, msgID uint32, dialogType uint32) {
+		if dialogType == uint32(model.GroupConversation) {
+			infos2 = append(infos2, &msggrpcv1.GetGroupMsgIdAfterMsgRequest{
+				DialogId: dialogID,
+				MsgId:    msgID,
+			})
 		} else {
-			for _, i3 := range request {
-				if i2.Id == i3.DialogId {
-					infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
-						DialogId: i2.Id,
-						MsgId:    i3.MsgId,
-					})
+			infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
+				DialogId: dialogID,
+				MsgId:    msgID,
+			})
+		}
+	}
+	//todo 优化逻辑，封装方法
+	for _, i2 := range infos.Dialogs {
+		for _, i3 := range request {
+			if i2.Id == i3.DialogId {
+				if i3.MsgId == 0 {
+					if i2.Type == uint32(model.GroupConversation) {
+						list, err := s.msgClient.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
+							DialogId: i3.DialogId,
+							PageNum:  1,
+							PageSize: 20,
+						})
+						if err != nil {
+							return nil, err
+						}
+						msgs := make([]*model.Message, 0)
+						for _, gm := range list.GroupMessages {
+							info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+								UserId: gm.UserId,
+							})
+							if err != nil {
+								return nil, err
+							}
+							msg := model.Message{}
+							msg.GroupId = gm.GroupId
+							msg.MsgId = uint64(gm.Id)
+							msg.MsgType = uint(gm.Type)
+							msg.Content = gm.Content
+							msg.SenderId = gm.UserId
+							msg.SendAt = gm.CreatedAt
+							msg.SenderInfo = model.SenderInfo{
+								Avatar: info.Avatar,
+								Name:   info.NickName,
+								UserId: info.UserId,
+							}
+							msg.AtUsers = gm.AtUsers
+							msg.AtAllUser = model.AtAllUserType(gm.AtAllUser)
+							msg.IsBurnAfterReading = model.BurnAfterReadingType(gm.IsBurnAfterReadingType)
+							msg.ReplyId = gm.ReplyId
+							msg.IsLabel = model.LabelMsgType(gm.IsLabel)
+							msgs = append(msgs, &msg)
+						}
+						responses = append(responses, &model.GetDialogAfterMsgResponse{
+							DialogId: i3.DialogId,
+							Messages: msgs,
+						})
+					} else {
+						list, err := s.msgClient.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
+							DialogId: i3.DialogId,
+							PageNum:  1,
+							PageSize: 20,
+						})
+						if err != nil {
+							return nil, err
+						}
+						msgs := make([]*model.Message, 0)
+						for _, um := range list.UserMessages {
+							//查询发送者信息
+							info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+								UserId: um.SenderId,
+							})
+							if err != nil {
+								return nil, err
+							}
+							info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+								UserId: um.ReceiverId,
+							})
+							if err != nil {
+								return nil, err
+							}
+							msg := model.Message{}
+							msg.MsgId = uint64(um.Id)
+							msg.MsgType = uint(um.Type)
+							msg.Content = um.Content
+							msg.SenderId = um.SenderId
+							msg.SendAt = um.CreatedAt
+							msg.SenderInfo = model.SenderInfo{
+								Avatar: info.Avatar,
+								Name:   info.NickName,
+								UserId: info.UserId,
+							}
+							msg.ReceiverInfo = model.SenderInfo{
+								Avatar: info2.Avatar,
+								Name:   info2.NickName,
+								UserId: info2.UserId,
+							}
+							msg.IsBurnAfterReading = model.BurnAfterReadingType(um.IsBurnAfterReadingType)
+							msg.ReplyId = uint32(um.ReplyId)
+							msg.IsLabel = model.LabelMsgType(um.IsLabel)
+							msgs = append(msgs, &msg)
+						}
+						responses = append(responses, &model.GetDialogAfterMsgResponse{
+							DialogId: i3.DialogId,
+							Messages: msgs,
+						})
+					}
+
 					break
 				}
+				addToInfos(i2.Id, i3.MsgId, i2.Type)
+				break
 			}
 		}
 	}
