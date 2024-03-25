@@ -239,6 +239,57 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 	if err != nil {
 		return nil, err
 	}
+
+	if s.cache {
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
+			if err != nil {
+				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+				return
+			}
+		}()
+		wg.Wait()
+	}
+
+	resp := &model.SendGroupMsgResponse{
+		MsgId: message.MsgId,
+	}
+
+	if req.ReplyId != 0 {
+		msg, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
+			MsgId: uint32(req.ReplyId),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		userInfo, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			UserId: msg.UserId,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		resp.ReplyMsg = &model.Message{
+			MsgType:  uint(msg.Type),
+			Content:  msg.Content,
+			SenderId: msg.UserId,
+			SendAt:   msg.GetCreatedAt(),
+			MsgId:    uint64(msg.Id),
+			SenderInfo: model.SenderInfo{
+				UserId: userInfo.UserId,
+				Name:   userInfo.NickName,
+				Avatar: userInfo.Avatar,
+			},
+			IsBurnAfterReading: model.BurnAfterReadingType(msg.IsBurnAfterReadingType),
+			IsLabel:            model.LabelMsgType(msg.IsLabel),
+			ReplyId:            msg.ReplyId,
+		}
+	}
+
 	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &model.WsGroupMsg{
 		MsgId:              message.MsgId,
 		GroupId:            int64(req.GroupId),
@@ -256,23 +307,10 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			Name:   info.NickName,
 			UserId: userID,
 		},
+		ReplyMsg: resp.ReplyMsg,
 	})
 
-	if s.cache {
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
-			if err != nil {
-				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-				return
-			}
-		}()
-		wg.Wait()
-	}
-
-	return message.MsgId, nil
+	return resp, nil
 }
 
 func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId string, msgID uint32, content string) (interface{}, error) {

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/msg.proto
+// source: api/grpc/v1/msg.proto
 
 package v1
 
@@ -23,6 +23,8 @@ const (
 	MsgService_SendMultiUserMessage_FullMethodName                 = "/v1.MsgService/SendMultiUserMessage"
 	MsgService_SendGroupMessage_FullMethodName                     = "/v1.MsgService/SendGroupMessage"
 	MsgService_GetUserMessageList_FullMethodName                   = "/v1.MsgService/GetUserMessageList"
+	MsgService_GetUserLastMessageList_FullMethodName               = "/v1.MsgService/GetUserLastMessageList"
+	MsgService_GetGroupLastMessageList_FullMethodName              = "/v1.MsgService/GetGroupLastMessageList"
 	MsgService_GetLastMsgsForUserWithFriends_FullMethodName        = "/v1.MsgService/GetLastMsgsForUserWithFriends"
 	MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName          = "/v1.MsgService/GetLastMsgsForGroupsWithIDs"
 	MsgService_GetLastMsgsByDialogIds_FullMethodName               = "/v1.MsgService/GetLastMsgsByDialogIds"
@@ -65,6 +67,10 @@ type MsgServiceClient interface {
 	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
 	// 获取用户消息列表
 	GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error)
+	// 获取私聊对话最新消息
+	GetUserLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*UserMessages, error)
+	// 获取群聊对话最新消息
+	GetGroupLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*GroupMessages, error)
 	// 根据好友id获取最后一条消息
 	GetLastMsgsForUserWithFriends(ctx context.Context, in *UserMsgsRequest, opts ...grpc.CallOption) (*UserMessages, error)
 	// 根据群组id获取最后一条消息
@@ -161,6 +167,24 @@ func (c *msgServiceClient) SendGroupMessage(ctx context.Context, in *SendGroupMs
 func (c *msgServiceClient) GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error) {
 	out := new(GetUserMsgListResponse)
 	err := c.cc.Invoke(ctx, MsgService_GetUserMessageList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) GetUserLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*UserMessages, error) {
+	out := new(UserMessages)
+	err := c.cc.Invoke(ctx, MsgService_GetUserLastMessageList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) GetGroupLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*GroupMessages, error) {
+	out := new(GroupMessages)
+	err := c.cc.Invoke(ctx, MsgService_GetGroupLastMessageList_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -431,6 +455,10 @@ type MsgServiceServer interface {
 	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
 	// 获取用户消息列表
 	GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error)
+	// 获取私聊对话最新消息
+	GetUserLastMessageList(context.Context, *GetLastMsgListRequest) (*UserMessages, error)
+	// 获取群聊对话最新消息
+	GetGroupLastMessageList(context.Context, *GetLastMsgListRequest) (*GroupMessages, error)
 	// 根据好友id获取最后一条消息
 	GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error)
 	// 根据群组id获取最后一条消息
@@ -505,6 +533,12 @@ func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendGrou
 }
 func (UnimplementedMsgServiceServer) GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessageList not implemented")
+}
+func (UnimplementedMsgServiceServer) GetUserLastMessageList(context.Context, *GetLastMsgListRequest) (*UserMessages, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserLastMessageList not implemented")
+}
+func (UnimplementedMsgServiceServer) GetGroupLastMessageList(context.Context, *GetLastMsgListRequest) (*GroupMessages, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupLastMessageList not implemented")
 }
 func (UnimplementedMsgServiceServer) GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsForUserWithFriends not implemented")
@@ -671,6 +705,42 @@ func _MsgService_GetUserMessageList_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServiceServer).GetUserMessageList(ctx, req.(*GetUserMsgListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_GetUserLastMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLastMsgListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetUserLastMessageList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetUserLastMessageList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetUserLastMessageList(ctx, req.(*GetLastMsgListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_GetGroupLastMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLastMsgListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).GetGroupLastMessageList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_GetGroupLastMessageList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).GetGroupLastMessageList(ctx, req.(*GetLastMsgListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1203,6 +1273,14 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MsgService_GetUserMessageList_Handler,
 		},
 		{
+			MethodName: "GetUserLastMessageList",
+			Handler:    _MsgService_GetUserLastMessageList_Handler,
+		},
+		{
+			MethodName: "GetGroupLastMessageList",
+			Handler:    _MsgService_GetGroupLastMessageList_Handler,
+		},
+		{
 			MethodName: "GetLastMsgsForUserWithFriends",
 			Handler:    _MsgService_GetLastMsgsForUserWithFriends_Handler,
 		},
@@ -1316,5 +1394,5 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/msg.proto",
+	Metadata: "api/grpc/v1/msg.proto",
 }
