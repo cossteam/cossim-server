@@ -777,11 +777,24 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	}
 
 	//判断是否在对话内
-	_, err = s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
 		s.logger.Error("获取用户对话信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	req := &model.SendUserMsgRequest{
+		ReceiverId: msginfo.ReceiverId,
+		Content:    msginfo.Content,
+		ReplyId:    uint(msginfo.Id),
+		Type:       model.MessageTypeDelete,
+		DialogId:   msginfo.DialogId,
+	}
+
+	_, err = s.SendUserMsg(ctx, userID, driverId, req)
+	if err != nil {
 		return nil, err
 	}
 
@@ -802,14 +815,15 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	//	return nil, err
 	//}
 	//
-	//if s.cache {
-	//	//更新缓存
-	//	err = s.updateCacheUserDialog(msginfo.DialogId)
-	//	if err != nil {
-	//		s.logger.Error("更新用户对话失败", zap.Error(err))
-	//		return nil, code.MsgErrDeleteUserMessageFailed
-	//	}
-	//}
+	if s.cache {
+		//更新缓存
+		for _, id := range userIds.GetUserIds() {
+			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	//wsm := model.WsUserOperatorMsg{
 	//	Id:                     msginfo.Id,
@@ -832,19 +846,6 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	//}
 	//
 	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, wsm, true)
-
-	req := &model.SendUserMsgRequest{
-		ReceiverId: msginfo.ReceiverId,
-		Content:    msginfo.Content,
-		ReplyId:    uint(msginfo.Id),
-		Type:       model.MessageTypeDelete,
-		DialogId:   msginfo.DialogId,
-	}
-
-	_, err = s.SendUserMsg(ctx, userID, driverId, req)
-	if err != nil {
-		return nil, err
-	}
 
 	return msg.Id, nil
 }
