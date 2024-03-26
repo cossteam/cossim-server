@@ -147,7 +147,12 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest, driverType string) error {
 	value, err := s.redisClient.GetKey(userID + ":" + driverType + ":" + strconv.Itoa(int(request.LoginNumber)))
 	if err != nil {
+		s.logger.Error("redis get err", zap.Error(err))
 		return err
+	}
+
+	if value == nil {
+		return nil
 	}
 
 	data := value.(string)
