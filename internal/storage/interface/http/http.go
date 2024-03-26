@@ -56,9 +56,9 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/storage")
+	api.GET("/files/download/:type/:id", h.download)
 	api.Use(middleware.AuthMiddleware(h.redisClient))
 
-	api.GET("/files/download/:type/:id", h.download)
 	api.GET("/files/:id", h.getFileInfo)
 	api.POST("/files", h.upload)
 	api.DELETE("/files/:id", h.deleteFile)
