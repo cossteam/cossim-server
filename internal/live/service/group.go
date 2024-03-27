@@ -34,7 +34,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 		return nil, code.LiveErrAlreadyInCall
 	}
 
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{Gid: gid})
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{Gid: gid})
 	if err != nil {
 		s.logger.Error("create group call failed", zap.Error(err))
 		return nil, err
@@ -44,7 +44,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 		return nil, code.GroupErrGroupStatusNotAvailable
 	}
 
-	//rel, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
+	//rel, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -58,7 +58,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 		UserName string
 	}
 
-	rels, err := s.relGroupClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: gid, UserIds: member})
+	rels, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: gid, UserIds: member})
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 
 	// 获取成员的名称和其他信息
 	for i := range participants {
-		memberUser, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: participants[i].UserID})
+		memberUser, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: participants[i].UserID})
 		if err != nil {
 			s.logger.Error("获取用户信息失败", zap.Error(err), zap.String("uid", participants[i].UserID))
 			continue
@@ -165,7 +165,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 }
 
 func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*dto.GroupJoinResponse, error) {
-	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
+	_, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return nil, err
@@ -213,7 +213,7 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*d
 		s.logger.Error("保存用户通话记录失败", zap.Error(err), zap.String("uid", uid))
 	}
 
-	user, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: uid})
+	user, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: uid})
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*d
 }
 
 func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string) (*dto.GroupShowResponse, error) {
-	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
+	_, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return nil, err
@@ -303,7 +303,7 @@ func (s *Service) GroupShowRoom(ctx context.Context, gid uint32, uid string) (*d
 // Then it sends a rejection message to all participants in the call.
 func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (interface{}, error) {
 	// Check the user's group relation
-	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
+	_, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("Failed to retrieve user's group relation", zap.Error(err))
 		return nil, err
@@ -355,7 +355,7 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (
 
 func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, force bool) (interface{}, error) {
 	s.logger.Info("用户请求离开群聊通话", zap.Int("gid", int(gid)), zap.String("uid", uid))
-	_, err := s.relGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
+	_, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return nil, err
