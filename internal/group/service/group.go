@@ -33,7 +33,7 @@ import (
 
 func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*model.CreateGroupResponse, error) {
 	var err error
-	friends, err := s.relationUserClient.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: req.CreatorId, FriendIds: req.Member})
+	friends, err := s.relationUserService.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: req.CreatorId, FriendIds: req.Member})
 	if err != nil {
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return nil, code.RelationErrCreateGroupFailed
@@ -71,12 +71,12 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	wfName := "create_group_workflow_" + gid
 	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		// 创建群聊
-		resp1, err = s.groupClient.CreateGroup(wf.Context, r1)
+		resp1, err = s.groupService.CreateGroup(wf.Context, r1)
 		if err != nil {
 			return err
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.groupClient.CreateGroupRevert(wf.Context, &groupgrpcv1.CreateGroupRequest{Group: &groupgrpcv1.Group{
+			_, err = s.groupService.CreateGroupRevert(wf.Context, &groupgrpcv1.CreateGroupRequest{Group: &groupgrpcv1.Group{
 				Id: resp1.Id,
 			}})
 			return err
@@ -85,13 +85,13 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		r22.GroupId = groupID
 		r22.Member = req.Member
 		r22.UserID = req.CreatorId
-		resp2, err := s.relationGroupClient.CreateGroupAndInviteUsers(wf.Context, r22)
+		resp2, err := s.relationGroupService.CreateGroupAndInviteUsers(wf.Context, r22)
 		if err != nil {
 			return err
 		}
 		DialogID = resp2.DialogId
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.relationGroupClient.CreateGroupAndInviteUsersRevert(wf.Context, r22)
+			_, err = s.relationGroupService.CreateGroupAndInviteUsersRevert(wf.Context, r22)
 			return err
 		})
 
@@ -118,7 +118,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 			return nil, code.RelationErrCreateGroupFailed
 		}
 
-		dialog, err := s.relationDialogClient.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{DialogId: DialogID})
+		dialog, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{DialogId: DialogID})
 		if err != nil {
 			s.logger.Error("CreateGroup", zap.Error(err))
 			return nil, code.RelationErrCreateGroupFailed
@@ -161,13 +161,13 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 }
 
 func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string) (uint32, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
 		Gid: groupID,
 	})
 	if err != nil {
 		return 0, code.GroupErrGroupNotFound
 	}
-	sf, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	sf, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: groupID,
 	})
@@ -177,13 +177,13 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	if sf.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
 		return 0, code.Forbidden
 	}
-	dialog, err := s.relationDialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+	dialog, err := s.relationDialogService.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 	if err != nil {
 		return 0, err
 	}
 
 	//查询所有群员
-	relation, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
+	relation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
 		GroupId: groupID,
 	})
 	if err != nil {
@@ -245,7 +245,7 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 }
 
 func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest, userID string) (interface{}, error) {
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
 		Gid: req.GroupId,
 	})
 	if err != nil {
@@ -253,7 +253,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 		return nil, err
 	}
 
-	sf, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	sf, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: req.GroupId,
 	})
@@ -277,7 +277,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 		group.MaxMembersLimit = model.DefaultGroup
 	}
 
-	resp, err := s.groupClient.UpdateGroup(ctx, &groupgrpcv1.UpdateGroupRequest{
+	resp, err := s.groupService.UpdateGroup(ctx, &groupgrpcv1.UpdateGroupRequest{
 		Group: group,
 	})
 	if err != nil {
@@ -287,7 +287,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 
 	if s.cache {
 		//查询所有群员
-		relation, err := s.relationGroupClient.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{
+		relation, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{
 			GroupId: group.Id,
 		})
 		if err != nil {
@@ -313,7 +313,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 }
 
 func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, ids []uint32) (interface{}, error) {
-	groups, err := s.groupClient.GetBatchGroupInfoByIDs(ctx, &groupgrpcv1.GetBatchGroupInfoRequest{
+	groups, err := s.groupService.GetBatchGroupInfoByIDs(ctx, &groupgrpcv1.GetBatchGroupInfoRequest{
 		GroupIds: ids,
 	})
 	if err != nil {
@@ -325,19 +325,19 @@ func (s *Service) GetBatchGroupInfoByIDs(ctx context.Context, ids []uint32) (int
 }
 
 func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32, userID string) (interface{}, error) {
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
 		Gid: gid,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := s.relationDialogClient.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: gid})
+	id, err := s.relationDialogService.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: gid})
 	if err != nil {
 		return nil, err
 	}
 
-	relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: gid,
 		UserId:  userID,
 	})
@@ -547,14 +547,14 @@ func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) erro
 }
 
 func (s *Service) ModifyGroupAvatar(ctx context.Context, userID string, groupID uint32, avatar multipart.File) (string, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
 		Gid: groupID,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: groupID,
 	})
@@ -566,7 +566,7 @@ func (s *Service) ModifyGroupAvatar(ctx context.Context, userID string, groupID 
 		return "", code.Forbidden
 	}
 
-	_, err = s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	_, err = s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -595,14 +595,14 @@ func (s *Service) ModifyGroupAvatar(ctx context.Context, userID string, groupID 
 	}
 
 	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, key)
-	if s.conf.SystemConfig.Ssl {
+	if s.ac.SystemConfig.Ssl {
 		aUrl, err = httputil.ConvertToHttps(aUrl)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	_, err = s.groupClient.UpdateGroup(ctx, &groupgrpcv1.UpdateGroupRequest{
+	_, err = s.groupService.UpdateGroup(ctx, &groupgrpcv1.UpdateGroupRequest{
 		Group: &groupgrpcv1.Group{
 			Id:     groupID,
 			Avatar: aUrl,
@@ -614,7 +614,7 @@ func (s *Service) ModifyGroupAvatar(ctx context.Context, userID string, groupID 
 
 	if s.cache {
 		//获取所有群成员
-		members, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
+		members, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
 			GroupId: groupID,
 		})
 
