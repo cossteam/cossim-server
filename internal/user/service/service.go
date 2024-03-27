@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
+	userv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	grpchandler "github.com/cossim/coss-server/internal/user/interface/grpc"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
@@ -21,24 +22,26 @@ import (
 
 // Service struct
 type Service struct {
-	ac         *pkgconfig.AppConfig
-	logger     *zap.Logger
-	userClient *grpchandler.Handler
-	//userLoginClient usergrpc.UserLoginServiceClient
-	relClient      relationgrpcv1.UserRelationServiceClient
-	dialogClient   relationgrpcv1.DialogServiceClient
-	sp             storage.StorageProvider
+	ac     *pkgconfig.AppConfig
+	logger *zap.Logger
+
+	userService      userv1.UserServiceServer
+	userLoginService userv1.UserLoginServiceServer
+	relationService  relationgrpcv1.UserRelationServiceClient
+	dialogService    relationgrpcv1.DialogServiceClient
+
+	storageService storage.StorageProvider
 	redisClient    *cache.RedisClient
 	smtpClient     email.EmailProvider
 	rabbitMQClient *msg_queue.RabbitMQ
-	dtmGrpcServer  string
-	userGrpcServer string
 
+	dtmGrpcServer   string
+	userGrpcServer  string
 	sid             string
-	tokenExpiration time.Duration
 	downloadURL     string
 	gatewayAddress  string
 	gatewayPort     string
+	tokenExpiration time.Duration
 	cache           bool
 }
 
@@ -50,23 +53,24 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) (s *Service)
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
 		rabbitMQClient:  setRabbitMQProvider(ac),
 		//appPath:         path,
-		sp:            setMinIOProvider(ac),
-		dtmGrpcServer: ac.Dtm.Addr(),
-		downloadURL:   "/api/v1/storage/files/download",
-		smtpClient:    setupSmtpProvider(ac),
+		storageService: setMinIOProvider(ac),
+		dtmGrpcServer:  ac.Dtm.Addr(),
+		downloadURL:    "/api/v1/storage/files/download",
+		smtpClient:     setupSmtpProvider(ac),
 	}
 	s.setLoadSystem()
 	s.setupRedisClient()
 	s.cache = s.setCacheConfig()
-	s.userClient = grpcService
+	s.userService = grpcService
+	s.userLoginService = grpcService
 	return s
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
 	switch serviceName {
 	case "relation_service":
-		s.relClient = relationgrpcv1.NewUserRelationServiceClient(conn)
-		s.dialogClient = relationgrpcv1.NewDialogServiceClient(conn)
+		s.relationService = relationgrpcv1.NewUserRelationServiceClient(conn)
+		s.dialogService = relationgrpcv1.NewDialogServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("addr", conn.Target()))
 	}
 
