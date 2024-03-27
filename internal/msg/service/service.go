@@ -50,6 +50,7 @@ type Service struct {
 	userLoginService      usergrpcv1.UserLoginServiceClient
 	groupService          groupgrpcv1.GroupServiceClient
 	msgService            msggrpcv1.MsgServiceServer
+	msgGroupService       msggrpcv1.GroupMessageServiceServer
 	//msgClient            *grpcHandler.Handler
 
 }

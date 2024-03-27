@@ -191,7 +191,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			return err
 		})
 
-		message, err = s.msgClient.SendGroupMessage(ctx, &msggrpcv1.SendGroupMsgRequest{
+		message, err = s.msgService.SendGroupMessage(ctx, &msggrpcv1.SendGroupMsgRequest{
 			DialogId:               req.DialogId,
 			GroupId:                req.GroupId,
 			UserId:                 userID,
@@ -218,7 +218,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 
 		var list []*msggrpcv1.SetGroupMessageReadRequest
 		list = append(list, data2)
-		_, err = s.msgClient.SetGroupMessageRead(context.Background(), &msggrpcv1.SetGroupMessagesReadRequest{
+		_, err = s.msgGroupService.SetGroupMessageRead(context.Background(), &msggrpcv1.SetGroupMessagesReadRequest{
 			List: list,
 		})
 		if err != nil {
@@ -259,7 +259,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	if req.ReplyId != 0 {
-		msg, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
+		msg, err := s.msgService.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
 			MsgId: req.ReplyId,
 		})
 		if err != nil {
@@ -315,7 +315,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 
 func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId string, msgID uint32, content string) (interface{}, error) {
 	//获取消息
-	msginfo, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
+	msginfo, err := s.msgService.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -346,7 +346,7 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	// 调用相应的 gRPC 客户端方法来编辑群消息
-	_, err = s.msgClient.EditGroupMessage(ctx, &msggrpcv1.EditGroupMsgRequest{
+	_, err = s.msgService.EditGroupMessage(ctx, &msggrpcv1.EditGroupMsgRequest{
 		GroupMessage: &msggrpcv1.GroupMessage{
 			Id:      msgID,
 			Content: content,
@@ -379,7 +379,7 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 
 func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId string, msgID uint32) (interface{}, error) {
 	//获取消息
-	msginfo, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
+	msginfo, err := s.msgService.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -432,7 +432,7 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	}
 
 	// 调用相应的 gRPC 客户端方法来撤回群消息
-	msg, err := s.msgClient.DeleteGroupMessage(ctx, &msggrpcv1.DeleteGroupMsgRequest{
+	msg, err := s.msgService.DeleteGroupMessage(ctx, &msggrpcv1.DeleteGroupMsgRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -461,7 +461,7 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 
 func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId string, msgID uint32, label model.LabelMsgType) (interface{}, error) {
 	// 获取群聊消息
-	msginfo, err := s.msgClient.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
+	msginfo, err := s.msgService.GetGroupMessageById(ctx, &msggrpcv1.GetGroupMsgByIDRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -494,7 +494,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 	}
 
 	// 调用 gRPC 客户端方法将群聊消息设置为标注状态
-	_, err = s.msgClient.SetGroupMsgLabel(ctx, &msggrpcv1.SetGroupMsgLabelRequest{
+	_, err = s.msgService.SetGroupMsgLabel(ctx, &msggrpcv1.SetGroupMsgLabelRequest{
 		MsgId:   msgID,
 		IsLabel: msggrpcv1.MsgLabel(label),
 	})
@@ -534,7 +534,7 @@ func (s *Service) GetGroupLabelMsgList(ctx context.Context, userID string, dialo
 		return nil, err
 	}
 
-	msgs, err := s.msgClient.GetGroupMsgLabelByDialogId(ctx, &msggrpcv1.GetGroupMsgLabelByDialogIdRequest{
+	msgs, err := s.msgService.GetGroupMsgLabelByDialogId(ctx, &msggrpcv1.GetGroupMsgLabelByDialogIdRequest{
 		DialogId: dialogId,
 	})
 	if err != nil {
@@ -563,7 +563,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		return nil, err
 	}
 
-	msg, err := s.msgClient.GetGroupMessageList(c, &msggrpcv1.GetGroupMsgListRequest{
+	msg, err := s.msgService.GetGroupMessageList(c, &msggrpcv1.GetGroupMsgListRequest{
 		GroupId:  int32(request.GroupId),
 		UserId:   request.UserId,
 		Content:  request.Content,
@@ -585,7 +585,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		ReadAt := 0
 		isRead := 0
 		//查询是否已读
-		msgRead, err := s.msgClient.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
+		msgRead, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
 			MsgId:  v.Id,
 			UserId: request.UserId,
 		})
@@ -675,7 +675,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 
 	msgList := make([]*msggrpcv1.SetGroupMessageReadRequest, 0)
 	for _, v := range request.MsgIds {
-		userId, _ := s.msgClient.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
+		userId, _ := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
 			MsgId:  v,
 			UserId: id,
 		})
@@ -694,14 +694,14 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 		return nil, nil
 	}
 
-	_, err = s.msgClient.SetGroupMessageRead(c, &msggrpcv1.SetGroupMessagesReadRequest{
+	_, err = s.msgGroupService.SetGroupMessageRead(c, &msggrpcv1.SetGroupMessagesReadRequest{
 		List: msgList,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	msgs, err := s.msgClient.GetGroupMessagesByIds(c, &msggrpcv1.GetGroupMessagesByIdsRequest{
+	msgs, err := s.msgService.GetGroupMessagesByIds(c, &msggrpcv1.GetGroupMessagesByIdsRequest{
 		MsgIds:  request.MsgIds,
 		GroupId: request.GroupId,
 	})
@@ -717,7 +717,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 	}
 
 	if s.cache {
-		userMsgs, err := s.msgClient.GetGroupUnreadMessages(c, &msggrpcv1.GetGroupUnreadMessagesRequest{
+		userMsgs, err := s.msgService.GetGroupUnreadMessages(c, &msggrpcv1.GetGroupUnreadMessagesRequest{
 			UserId:   id,
 			DialogId: request.DialogId,
 		})
@@ -759,7 +759,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 		return nil, err
 	}
 
-	us, err := s.msgClient.GetGroupMessageReaders(c, &msggrpcv1.GetGroupMessageReadersRequest{
+	us, err := s.msgGroupService.GetGroupMessageReaders(c, &msggrpcv1.GetGroupMessageReadersRequest{
 		MsgId:    msgId,
 		GroupId:  groupId,
 		DialogId: dialogId,
@@ -795,7 +795,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 
 func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) error {
 	//获取最后一条消息，更新缓存
-	lastMsg, err := s.msgClient.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+	lastMsg, err := s.msgService.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
 		DialogIds: []uint32{dialogId},
 	})
 	if err != nil {
@@ -843,7 +843,7 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 			return err
 		}
 
-		msgs, err := s.msgClient.GetGroupUnreadMessages(context.Background(), &msggrpcv1.GetGroupUnreadMessagesRequest{
+		msgs, err := s.msgService.GetGroupUnreadMessages(context.Background(), &msggrpcv1.GetGroupUnreadMessagesRequest{
 			UserId:   userId,
 			DialogId: dialogId,
 		})
