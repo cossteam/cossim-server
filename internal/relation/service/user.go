@@ -378,17 +378,17 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 		//if err != nil {
 		//	return nil, err
 		//}
+		if s.cache {
+			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.SenderId))
+			if err != nil {
+				return nil, err
+			}
 
-		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.SenderId))
-		if err != nil {
-			return nil, err
+			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.ReceiverId))
+			if err != nil {
+				return nil, err
+			}
 		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.ReceiverId))
-		if err != nil {
-			return nil, err
-		}
-
 	}
 
 	// 向用户推送通知
@@ -499,6 +499,22 @@ func (s *Service) AddBlacklist(ctx context.Context, userID, friendID string) (in
 		s.logger.Error("添加黑名单失败", zap.Error(err))
 		return nil, err
 	}
+
+	if s.cache {
+
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+		if err != nil {
+			s.logger.Error("添加黑名单失败", zap.Error(err))
+			return nil, err
+		}
+
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			s.logger.Error("添加黑名单失败", zap.Error(err))
+			return nil, err
+		}
+
+	}
 	return nil, nil
 }
 
@@ -518,6 +534,20 @@ func (s *Service) DeleteBlacklist(ctx context.Context, userID, friendID string) 
 	if err != nil {
 		s.logger.Error("删除黑名单失败", zap.Error(err))
 		return nil, err
+	}
+
+	if s.cache {
+
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return nil, err
+		}
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return nil, err
+		}
 	}
 	return nil, nil
 }
@@ -556,6 +586,20 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 		s.logger.Error("设置好友静默通知失败", zap.Error(err))
 		return nil, err
 	}
+
+	if s.cache {
+
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return nil, err
+		}
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return nil, err
+		}
+	}
 	return nil, nil
 }
 
@@ -577,6 +621,19 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 	if err != nil {
 		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))
 		return nil, err
+	}
+
+	if s.cache {
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userId))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return nil, err
+		}
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userId))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return nil, err
+		}
 	}
 	return nil, nil
 }
@@ -976,6 +1033,19 @@ func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, userID
 	if err != nil {
 		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))
 		return err
+	}
+
+	if s.cache {
+		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return err
+		}
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
+		if err != nil {
+			s.logger.Error("删除用户好友失败", zap.Error(err))
+			return err
+		}
 	}
 	return nil
 }
