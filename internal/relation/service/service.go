@@ -5,11 +5,11 @@ import (
 	"fmt"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
+	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	grpchandler "github.com/cossim/coss-server/internal/relation/interface/grpc"
-	user "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	userv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/rs/xid"
@@ -19,30 +19,28 @@ import (
 
 // Service struct
 type Service struct {
-	//dialogClient                relationgrpcv1.DialogServiceClient
-	msgClient msggrpcv1.MsgServiceClient
-	//groupRelationClient         relationgrpcv1.GroupRelationServiceClient
-	//userRelationClient
-	//userFriendRequestClient     relationgrpcv1.UserFriendRequestServiceClient
-	//groupAnnouncementClient     relationgrpcv1.GroupAnnouncementServiceClient
-	//groupAnnouncementReadClient relationgrpcv1.GroupAnnouncementReadServiceClient
-	//groupJoinRequestClient      relationgrpcv1.GroupJoinRequestServiceClient
-	svc            *grpchandler.Handler
-	userClient     user.UserServiceClient
-	groupClient    groupgrpcv1.GroupServiceClient
-	rabbitMQClient *msg_queue.RabbitMQ
-	redisClient    *cache.RedisClient
-
-	logger    *zap.Logger
-	sid       string
-	discovery discovery.Registry
-	ac        *pkgconfig.AppConfig
-
+	ac                 *pkgconfig.AppConfig
+	logger             *zap.Logger
+	sid                string
 	dtmGrpcServer      string
 	relationGrpcServer string
 	msgGrpcServer      string
 	dialogGrpcServer   string
 	cache              bool
+
+	relationGroupService             relationgrpcv1.GroupRelationServiceServer
+	relationUserService              relationgrpcv1.UserRelationServiceServer
+	relationUserFriendRequestService relationgrpcv1.UserFriendRequestServiceServer
+	relationGroupJoinRequestService  relationgrpcv1.GroupJoinRequestServiceServer
+	relationGroupAnnouncementService relationgrpcv1.GroupAnnouncementServiceServer
+
+	relationDialogService relationgrpcv1.DialogServiceServer
+	userService           userv1.UserServiceClient
+	groupService          groupgrpcv1.GroupServiceClient
+
+	msgClient      msggrpcv1.MsgServiceClient
+	rabbitMQClient *msg_queue.RabbitMQ
+	redisClient    *cache.RedisClient
 }
 
 func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) *Service {
@@ -55,17 +53,20 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) *Service {
 		dtmGrpcServer:  ac.Dtm.Addr(),
 	}
 	s.cache = s.setCacheConfig()
-	s.svc = grpcService
+	s.relationGroupService = grpcService
+	s.relationUserService = grpcService
+	s.relationUserFriendRequestService = grpcService
+	s.relationDialogService = grpcService
 	return s
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
 	switch serviceName {
 	case "user_service":
-		s.userClient = user.NewUserServiceClient(conn)
+		s.userService = userv1.NewUserServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "group_service":
-		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
+		s.groupService = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	case "msg_service":
 		s.msgGrpcServer = conn.Target()

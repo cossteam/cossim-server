@@ -48,7 +48,7 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 	}
 
 	// 获取好友列表
-	friendListResp, err := s.svc.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: userID})
+	friendListResp, err := s.relationUserService.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: userID})
 	if err != nil {
 		s.logger.Error("user service GetFriendList", zap.Error(err))
 		return nil, err
@@ -61,7 +61,7 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 		users = append(users, user.UserId)
 	}
 
-	userInfos, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
+	userInfos, err := s.userService.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
 	if err != nil {
 		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
 		return nil, err
@@ -132,7 +132,7 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 
 func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, error) {
 	// 获取黑名单列表
-	blacklistResp, err := s.svc.GetBlacklist(ctx, &relationgrpcv1.GetBlacklistRequest{UserId: userID})
+	blacklistResp, err := s.relationUserService.GetBlacklist(ctx, &relationgrpcv1.GetBlacklistRequest{UserId: userID})
 	if err != nil {
 		s.logger.Error("user service GetBlacklist", zap.Error(err))
 		return nil, err
@@ -143,7 +143,7 @@ func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, er
 		users = append(users, user.UserId)
 	}
 
-	blacklist, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
+	blacklist, err := s.userService.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: users})
 	if err != nil {
 		s.logger.Error("user service GetBatchUserInfo", zap.Error(err))
 		return nil, err
@@ -154,7 +154,7 @@ func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, er
 
 func (s *Service) UserRequestList(ctx context.Context, userID string) (interface{}, error) {
 
-	reqList, err := s.svc.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
+	reqList, err := s.relationUserFriendRequestService.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
 	if err != nil {
 		s.logger.Error("user service GetFriendRequestList", zap.Error(err))
 		return nil, err
@@ -163,7 +163,7 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 	var data []*model.UserRequestListResponse
 	for _, v := range reqList.FriendRequestList {
 		if v.SenderId == userID {
-			info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.ReceiverId})
+			info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.ReceiverId})
 			if err != nil {
 				return nil, err
 			}
@@ -181,7 +181,7 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 				},
 			})
 		} else {
-			info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.SenderId})
+			info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.SenderId})
 			if err != nil {
 				return nil, err
 			}
@@ -207,13 +207,13 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	if friendID == userID {
 		return nil, code.RelationErrSendFriendRequestFailed
 	}
-	_, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: friendID})
+	_, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: friendID})
 	if err != nil {
 		s.logger.Error("获取用户信息失败", zap.Error(err))
 		return nil, code.UserErrNotExist
 	}
 
-	fRequest, err := s.svc.GetFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.GetFriendRequestByUserIdAndFriendIdRequest{
+	fRequest, err := s.relationUserFriendRequestService.GetFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.GetFriendRequestByUserIdAndFriendIdRequest{
 		UserId:   userID,
 		FriendId: friendID,
 	})
@@ -231,7 +231,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		}
 	}
 
-	relation, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
@@ -245,7 +245,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	}
 
 	//删除之前的
-	_, err = s.svc.DeleteFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.DeleteFriendRequestByUserIdAndFriendIdRequest{
+	_, err = s.relationUserFriendRequestService.DeleteFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.DeleteFriendRequestByUserIdAndFriendIdRequest{
 		UserId:   userID,
 		FriendId: friendID,
 	})
@@ -254,7 +254,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	}
 
 	// 创建好友申请
-	resp, err := s.svc.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
+	resp, err := s.relationUserFriendRequestService.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
 		SenderId:   userID,
 		ReceiverId: friendID,
 		Remark:     req.Remark,
@@ -279,7 +279,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 }
 
 func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint32, action int32, key string) (interface{}, error) {
-	qs, err := s.svc.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: questId})
+	qs, err := s.relationUserFriendRequestService.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: questId})
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	if qs.Status != relationgrpcv1.FriendRequestStatus_FriendRequestStatus_PENDING {
 		return nil, code.RelationErrRequestAlreadyProcessed
 	}
-	relation, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
+	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
 	if err != nil {
 		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
@@ -307,7 +307,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 		}
 	}
 
-	_, err = s.svc.ManageFriendRequest(ctx, &relationgrpcv1.ManageFriendRequestStruct{
+	_, err = s.relationUserFriendRequestService.ManageFriendRequest(ctx, &relationgrpcv1.ManageFriendRequestStruct{
 		ID:     questId,
 		Status: s.convertStatusToRelationStatus(uint32(action)),
 	})
@@ -316,26 +316,26 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	}
 
 	if action == 1 && s.cache {
-		relation2, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
+		relation2, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
 		if err != nil {
 			if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
 				s.logger.Error("获取好友关系失败", zap.Error(err))
 				return nil, code.RelationErrConfirmFriendFailed
 			}
 		}
-		dialogInfo, err := s.svc.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{DialogId: relation2.DialogId})
+		dialogInfo, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{DialogId: relation2.DialogId})
 		if err != nil {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return nil, code.RelationErrConfirmFriendFailed
 		}
 
-		info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.UserId})
+		info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.UserId})
 		if err != nil {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return nil, code.RelationErrConfirmFriendFailed
 		}
 
-		info2, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.FriendId})
+		info2, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.FriendId})
 		if err != nil {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return nil, code.RelationErrConfirmFriendFailed
@@ -416,7 +416,7 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		}
 	}
 
-	relation, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return code.RelationErrRelationNotFound
@@ -429,26 +429,26 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 	workflow.InitGrpc(s.dtmGrpcServer, s.relationGrpcServer, grpc.NewServer())
 	wfName := "delete_relation_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		_, err := s.svc.DeleteDialogUserByDialogIDAndUserID(wf.Context, r1)
+		_, err := s.relationDialogService.DeleteDialogUserByDialogIDAndUserID(wf.Context, r1)
 		if err != nil {
 			return err
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err := s.svc.DeleteDialogUserByDialogIDAndUserIDRevert(wf.Context, r1)
+			_, err := s.relationDialogService.DeleteDialogUserByDialogIDAndUserIDRevert(wf.Context, r1)
 			if err != nil {
 				return err
 			}
 			return nil
 		})
 
-		_, err = s.svc.DeleteFriend(wf.Context, r2)
+		_, err = s.relationUserService.DeleteFriend(wf.Context, r2)
 		if err != nil {
 			return err
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err := s.svc.DeleteFriendRevert(wf.Context, r2)
+			_, err := s.relationUserService.DeleteFriendRevert(wf.Context, r2)
 			if err != nil {
 				return err
 			}
@@ -487,14 +487,14 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 }
 
 func (s *Service) AddBlacklist(ctx context.Context, userID, friendID string) (interface{}, error) {
-	_, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	_, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return nil, err
 	}
 
 	// 进行添加黑名单操作
-	_, err = s.svc.AddBlacklist(ctx, &relationgrpcv1.AddBlacklistRequest{UserId: userID, FriendId: friendID})
+	_, err = s.relationUserService.AddBlacklist(ctx, &relationgrpcv1.AddBlacklistRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		s.logger.Error("添加黑名单失败", zap.Error(err))
 		return nil, err
@@ -519,7 +519,7 @@ func (s *Service) AddBlacklist(ctx context.Context, userID, friendID string) (in
 }
 
 func (s *Service) DeleteBlacklist(ctx context.Context, userID, friendID string) (interface{}, error) {
-	relation, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
+	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		s.logger.Error("获取好友关系失败", zap.Error(err))
 		return nil, err
@@ -530,7 +530,7 @@ func (s *Service) DeleteBlacklist(ctx context.Context, userID, friendID string) 
 	}
 
 	// 进行删除黑名单操作
-	_, err = s.svc.DeleteBlacklist(context.Background(), &relationgrpcv1.DeleteBlacklistRequest{UserId: userID, FriendId: friendID})
+	_, err = s.relationUserService.DeleteBlacklist(context.Background(), &relationgrpcv1.DeleteBlacklistRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		s.logger.Error("删除黑名单失败", zap.Error(err))
 		return nil, err
@@ -568,7 +568,7 @@ func (s *Service) SwitchUserE2EPublicKey(ctx context.Context, userID string, fri
 }
 
 func (s *Service) UserSilentNotification(ctx context.Context, userID string, friendID string, silent model.SilentNotificationType) (interface{}, error) {
-	_, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	_, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: friendID,
 	})
@@ -577,7 +577,7 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 		return nil, err
 	}
 
-	_, err = s.svc.SetFriendSilentNotification(ctx, &relationgrpcv1.SetFriendSilentNotificationRequest{
+	_, err = s.relationUserService.SetFriendSilentNotification(ctx, &relationgrpcv1.SetFriendSilentNotificationRequest{
 		UserId:   userID,
 		FriendId: friendID,
 		IsSilent: relationgrpcv1.UserSilentNotificationType(silent),
@@ -604,7 +604,7 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 }
 
 func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, req *model.OpenUserBurnAfterReadingRequest) (interface{}, error) {
-	_, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	_, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userId,
 		FriendId: req.UserId,
 	})
@@ -613,7 +613,7 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 		return nil, err
 	}
 
-	_, err = s.svc.SetUserOpenBurnAfterReading(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingRequest{
+	_, err = s.relationUserService.SetUserOpenBurnAfterReading(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingRequest{
 		UserId:               userId,
 		FriendId:             req.UserId,
 		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
@@ -650,13 +650,13 @@ func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, st
 			OwnerId: userId,
 			UserId:  friendId,
 		}
-		resp1, err := s.svc.ConfirmFriendAndJoinDialog(ctx, r1)
+		resp1, err := s.relationDialogService.ConfirmFriendAndJoinDialog(ctx, r1)
 		if err != nil {
 			return err
 		}
 		dialogId = resp1.Id
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.svc.ConfirmFriendAndJoinDialogRevert(ctx, &relationgrpcv1.ConfirmFriendAndJoinDialogRevertRequest{DialogId: resp1.Id, OwnerId: userId, UserId: friendId})
+			_, err = s.relationDialogService.ConfirmFriendAndJoinDialogRevert(ctx, &relationgrpcv1.ConfirmFriendAndJoinDialogRevertRequest{DialogId: resp1.Id, OwnerId: userId, UserId: friendId})
 			return err
 		})
 
@@ -666,12 +666,12 @@ func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, st
 			Status:   status,
 			DialogId: resp1.Id,
 		}
-		_, err = s.svc.ManageFriend(ctx, r2)
+		_, err = s.relationUserService.ManageFriend(ctx, r2)
 		if err != nil {
 			return err
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.svc.ManageFriendRevert(ctx, r2)
+			_, err = s.relationUserService.ManageFriendRevert(ctx, r2)
 			if err != nil {
 				return err
 			}
@@ -705,13 +705,13 @@ func (s *Service) manageFriend3(ctx context.Context, userId, friendId string, di
 			Status:   status,
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.svc.ManageFriendRevert(ctx, mfr)
+			_, err = s.relationUserService.ManageFriendRevert(ctx, mfr)
 			if err != nil {
 				return err
 			}
 			return nil
 		})
-		if _, err = s.svc.ManageFriend(ctx, mfr); err != nil {
+		if _, err = s.relationUserService.ManageFriend(ctx, mfr); err != nil {
 			return err
 		}
 
@@ -760,7 +760,7 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 
 func (s *Service) getUserInfo(ctx context.Context, userID string) (*userApi.UserInfoResponse, error) {
 	req := &userApi.UserInfoRequest{UserId: userID}
-	resp, err := s.userClient.UserInfo(ctx, req)
+	resp, err := s.userService.UserInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -768,7 +768,7 @@ func (s *Service) getUserInfo(ctx context.Context, userID string) (*userApi.User
 }
 
 func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *model.SetUserFriendRemarkRequest) (interface{}, error) {
-	_, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	_, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: req.UserId,
 	})
@@ -777,7 +777,7 @@ func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *m
 		return nil, err
 	}
 
-	_, err = s.svc.SetFriendRemark(ctx, &relationgrpcv1.SetFriendRemarkRequest{
+	_, err = s.relationUserService.SetFriendRemark(ctx, &relationgrpcv1.SetFriendRemarkRequest{
 		UserId:   userID,
 		Remark:   req.Remark,
 		FriendId: req.UserId,
@@ -1016,7 +1016,7 @@ func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) erro
 }
 
 func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, userID string, req *model.SetUserOpenBurnAfterReadingTimeOutRequest) error {
-	_, err := s.svc.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	_, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: req.FriendId,
 	})
@@ -1025,7 +1025,7 @@ func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, userID
 		return err
 	}
 
-	_, err = s.svc.SetUserOpenBurnAfterReadingTimeOut(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingTimeOutRequest{
+	_, err = s.relationUserService.SetUserOpenBurnAfterReadingTimeOut(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingTimeOutRequest{
 		UserId:                      userID,
 		FriendId:                    req.FriendId,
 		OpenBurnAfterReadingTimeOut: req.OpenBurnAfterReadingTimeOut,
@@ -1140,7 +1140,7 @@ func (s *Service) DeleteUserFriendRecord(ctx context.Context, uid string, id uin
 	// 打印请求进来的日志
 	s.logger.Debug("开始处理删除用户好友申请记录请求", zap.String("uid", uid), zap.Uint32("recordID", id))
 
-	fr, err := s.svc.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: id})
+	fr, err := s.relationUserFriendRequestService.GetFriendRequestById(ctx, &relationgrpcv1.GetFriendRequestByIdRequest{ID: id})
 	if err != nil {
 		s.logger.Debug("获取好友申请记录失败", zap.String("uid", uid), zap.Uint32("recordID", id), zap.Error(err))
 		return err
@@ -1159,7 +1159,7 @@ func (s *Service) DeleteUserFriendRecord(ctx context.Context, uid string, id uin
 		}
 	}
 
-	_, err = s.svc.DeleteFriendRecord(ctx, &relationgrpcv1.DeleteFriendRecordRequest{ID: id, UserId: uid})
+	_, err = s.relationUserFriendRequestService.DeleteFriendRecord(ctx, &relationgrpcv1.DeleteFriendRecordRequest{ID: id, UserId: uid})
 	if err != nil {
 		s.logger.Error("删除好友申请记录失败", zap.Error(err))
 		return err

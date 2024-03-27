@@ -12,14 +12,14 @@ import (
 )
 
 func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request *model.CloseOrOpenDialogRequest) (interface{}, error) {
-	_, err := s.svc.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
+	_, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
 		DialogId: request.DialogId,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.svc.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: request.DialogId,
 		UserId:   userId,
 	})
@@ -27,7 +27,7 @@ func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request 
 		return nil, err
 	}
 
-	_, err = s.svc.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+	_, err = s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
 		DialogId: request.DialogId,
 		UserId:   userId,
 		Action:   relationgrpcv1.CloseOrOpenDialogType(request.Action),
@@ -49,14 +49,14 @@ func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request 
 	//		return nil, err
 	//	}
 	//	if len(id.UserIds) == 1 {
-	//		info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 	//			UserId: id.UserIds[0],
 	//		})
 	//		if err != nil {
 	//			return nil, err
 	//		}
 	//
-	//		info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//		info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 	//			UserId: userId,
 	//		})
 	//		if err != nil {
@@ -146,14 +146,14 @@ func (s *Service) OpenOrCloseDialog(ctx context.Context, userId string, request 
 }
 
 func (s *Service) TopOrCancelTopDialog(ctx context.Context, userId string, request *model.TopOrCancelTopDialogRequest) (interface{}, error) {
-	_, err := s.svc.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
+	_, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
 		DialogId: request.DialogId,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.svc.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: request.DialogId,
 		UserId:   userId,
 	})
@@ -161,7 +161,7 @@ func (s *Service) TopOrCancelTopDialog(ctx context.Context, userId string, reque
 		return nil, err
 	}
 
-	_, err = s.svc.TopOrCancelTopDialog(ctx, &relationgrpcv1.TopOrCancelTopDialogRequest{
+	_, err = s.relationDialogService.TopOrCancelTopDialog(ctx, &relationgrpcv1.TopOrCancelTopDialogRequest{
 		DialogId: request.DialogId,
 		UserId:   userId,
 		Action:   relationgrpcv1.TopOrCancelTopDialogType(request.Action),
