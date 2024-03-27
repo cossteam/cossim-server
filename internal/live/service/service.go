@@ -8,7 +8,6 @@ import (
 	user "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	lksdk "github.com/livekit/server-sdk-go"
@@ -26,30 +25,25 @@ const (
 )
 
 type Service struct {
-	userClient           user.UserServiceClient
-	relUserClient        relationgrpcv1.UserRelationServiceClient
-	relGroupClient       relationgrpcv1.GroupRelationServiceClient
-	groupClient          groupgrpcv1.GroupServiceClient
-	msgClient            msggrpcv1.MsgServiceClient
-	relationDialogClient relationgrpcv1.DialogServiceClient
-	roomService          *lksdk.RoomServiceClient
-	mqClient             *msg_queue.RabbitMQ
-	redisClient          *cache.RedisClient
-
-	ac *pkgconfig.AppConfig
-
+	ac            *pkgconfig.AppConfig
+	logger        *zap.Logger
 	livekitServer string
 	liveApiKey    string
 	liveApiSecret string
+	sid           string
 	liveTimeout   time.Duration
+	lock          sync.Mutex
+	cache         bool
 
-	logger    *zap.Logger
-	sid       string
-	discovery discovery.Registry
-
-	cache bool
-
-	lock sync.Mutex
+	userService           user.UserServiceClient
+	relationUserService   relationgrpcv1.UserRelationServiceClient
+	relationGroupService  relationgrpcv1.GroupRelationServiceClient
+	groupService          groupgrpcv1.GroupServiceClient
+	msgService            msggrpcv1.MsgServiceClient
+	relationDialogService relationgrpcv1.DialogServiceClient
+	roomService           *lksdk.RoomServiceClient
+	mqClient              *msg_queue.RabbitMQ
+	redisClient           *cache.RedisClient
 }
 
 func New(ac *pkgconfig.AppConfig) *Service {
@@ -72,17 +66,17 @@ func New(ac *pkgconfig.AppConfig) *Service {
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
 	switch serviceName {
 	case "user_service":
-		s.userClient = user.NewUserServiceClient(conn)
+		s.userService = user.NewUserServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "relation_service":
-		s.relUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
-		s.relGroupClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
+		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
+		s.relationGroupService = relationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
 	case "group_service":
-		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
+		s.groupService = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	case "msg_service":
-		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
+		s.msgService = msggrpcv1.NewMsgServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
 	}
 

@@ -160,7 +160,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid string) (*dto.UserJoinRe
 		}
 	}
 
-	user, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: uid})
+	user, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: uid})
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 		return nil, code.Forbidden
 	}
 
-	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: uid, FriendId: room.SenderID})
+	rel, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: uid, FriendId: room.SenderID})
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +286,7 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 
 	isBurnAfterReading := rel.OpenBurnAfterReading
 	OpenBurnAfterReadingTimeOut := rel.OpenBurnAfterReadingTimeOut
-	message, err := s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
+	message, err := s.msgService.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
 		DialogId:               rel.DialogId,
 		SenderId:               senderID,
 		ReceiverId:             receiverId,
@@ -299,7 +299,7 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 		return nil, code.LiveErrLeaveCallFailed
 	}
 
-	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: senderID,
 	})
 	if err != nil {
@@ -416,7 +416,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 		return nil, err
 	}
 
-	rel1, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: senderID, FriendId: receiverId})
+	rel1, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: senderID, FriendId: receiverId})
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +429,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 	isBurnAfterReading = rel1.OpenBurnAfterReading
 	OpenBurnAfterReadingTimeOut = rel1.OpenBurnAfterReadingTimeOut
 
-	rel2, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: receiverId, FriendId: senderID})
+	rel2, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: receiverId, FriendId: senderID})
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +447,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 		msgType = dto.MessageTypeVideoCall
 	}
 
-	message, err := s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
+	message, err := s.msgService.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
 		DialogId:               did,
 		SenderId:               senderID,
 		ReceiverId:             receiverId,
@@ -460,7 +460,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 		return nil, code.LiveErrLeaveCallFailed
 	}
 
-	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: senderID,
 	})
 	if err != nil {
@@ -524,7 +524,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 
 // checkUserRelation checks the relationship status between two users
 func (s *Service) checkUserRelation(ctx context.Context, userID, friendID string) error {
-	rel, err := s.relUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	rel, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: friendID,
 	})
