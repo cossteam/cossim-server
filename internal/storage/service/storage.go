@@ -52,7 +52,7 @@ func (s *Service) Upload(ctx context.Context, userID string, file *multipart.Fil
 	}
 
 	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, key)
-	if s.conf.SystemConfig.Ssl {
+	if s.ac.SystemConfig.Ssl {
 		aUrl, err = httputil.ConvertToHttps(aUrl)
 		if err != nil {
 			return nil, err
@@ -75,7 +75,7 @@ func (s *Service) Upload(ctx context.Context, userID string, file *multipart.Fil
 	//	}
 	//}
 
-	_, err = s.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
+	_, err = s.storageService.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   userID,
 		FileName: file.Filename,
 		Path:     key,
@@ -94,7 +94,7 @@ func (s *Service) Upload(ctx context.Context, userID string, file *multipart.Fil
 }
 
 func (s *Service) GetFileInfo(ctx context.Context, request *model.GetFileInfoRequest) (interface{}, error) {
-	file, err := s.storageClient.GetFileInfo(ctx, &storagev1.GetFileInfoRequest{
+	file, err := s.storageService.GetFileInfo(ctx, &storagev1.GetFileInfoRequest{
 		FileID: request.FileId,
 	})
 	if err != nil {
@@ -111,7 +111,7 @@ func (s *Service) GetFileInfo(ctx context.Context, request *model.GetFileInfoReq
 }
 
 func (s *Service) DeleteFile(ctx context.Context, fileId string) error {
-	resp, err := s.storageClient.GetFileInfo(ctx, &storagev1.GetFileInfoRequest{FileID: fileId})
+	resp, err := s.storageService.GetFileInfo(ctx, &storagev1.GetFileInfoRequest{FileID: fileId})
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (s *Service) DeleteFile(ctx context.Context, fileId string) error {
 		return err
 	}
 
-	_, err = s.storageClient.Delete(ctx, &storagev1.DeleteRequest{FileID: fileId})
+	_, err = s.storageService.Delete(ctx, &storagev1.DeleteRequest{FileID: fileId})
 	if err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (s *Service) CompleteMultipartUpload(ctx context.Context, req *model.Comple
 		return "", err
 	}
 
-	_, err = s.storageClient.Upload(context.Background(), &storagev1.UploadRequest{
+	_, err = s.storageService.Upload(context.Background(), &storagev1.UploadRequest{
 		UserID:   "userID",
 		FileName: req.FileName,
 		Path:     req.Key,
@@ -193,7 +193,7 @@ func (s *Service) CompleteMultipartUpload(ctx context.Context, req *model.Comple
 	}
 
 	aUrl := fmt.Sprintf("http://%s%s/%s", s.gatewayAddress, s.downloadURL, req.Key)
-	if s.conf.SystemConfig.Ssl {
+	if s.ac.SystemConfig.Ssl {
 		aUrl, err = httputil.ConvertToHttps(aUrl)
 		if err != nil {
 			return "", err
