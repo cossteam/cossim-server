@@ -71,6 +71,15 @@ message Friend {
   uint32 DialogId = 2;
   // @inject_tag: json:"remark" form:"remark"
   string Remark = 3;
+  // @inject_tag: json:"status" form:"status"
+  RelationStatus Status = 4;
+  // @inject_tag: json:"open_burn_after_reading"
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 6;
+  // @inject_tag: json:"is_silent"
+  UserSilentNotificationType IsSilent = 5;
+  //  @inject_tag: json:"open_burn_after_reading_time_out"
+  int64 OpenBurnAfterReadingTimeOut = 8;
+
 }
 
 message GetFriendListRequest {

@@ -230,7 +230,16 @@ func (s *Handler) GetFriendList(ctx context.Context, request *v1.GetFriendListRe
 	}
 
 	for _, friend := range friends {
-		resp.FriendList = append(resp.FriendList, &v1.Friend{UserId: friend.FriendID, DialogId: uint32(friend.DialogId), Remark: friend.Remark})
+		resp.FriendList = append(resp.FriendList,
+			&v1.Friend{
+				UserId:                      friend.FriendID,
+				DialogId:                    uint32(friend.DialogId),
+				Remark:                      friend.Remark,
+				Status:                      v1.RelationStatus(friend.Status),
+				IsSilent:                    v1.UserSilentNotificationType(friend.SilentNotification),
+				OpenBurnAfterReading:        v1.OpenBurnAfterReadingType(friend.OpenBurnAfterReading),
+				OpenBurnAfterReadingTimeOut: friend.BurnAfterReadingTimeOut,
+			})
 	}
 
 	return resp, nil
