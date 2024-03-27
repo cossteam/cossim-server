@@ -75,7 +75,7 @@ func (h *Handler) Health(r gin.IRouter) string {
 }
 
 func (h *Handler) Stop(ctx context.Context) error {
-	return h.svc.Stop()
+	return nil
 }
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
