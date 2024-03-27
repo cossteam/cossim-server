@@ -358,7 +358,6 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	msginfo.Content = content
-	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
 
 	if s.cache {
 		wg := sync.WaitGroup{}
@@ -372,6 +371,68 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 			}
 		}()
 		wg.Wait()
+	}
+
+	sendinfo, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+		UserId: msginfo.UserId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	relation, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
+		UserId:  msginfo.UserId,
+		GroupId: msginfo.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	name := sendinfo.NickName
+	if relation.Remark != "" {
+		name = relation.Remark
+	}
+
+	for _, uid := range userIds.UserIds {
+
+		//查询是否已读
+		read, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(ctx, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
+			MsgId:  msgID,
+			UserId: uid,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		newMsg := model.GroupMessage{
+			MsgId:                  msginfo.Id,
+			GroupId:                msginfo.GroupId,
+			Content:                msginfo.Content,
+			UserId:                 msginfo.UserId,
+			Type:                   msginfo.Type,
+			ReplyId:                msginfo.ReplyId,
+			ReadAt:                 read.ReadAt,
+			SendAt:                 msginfo.CreatedAt,
+			DialogId:               msginfo.DialogId,
+			IsLabel:                model.LabelMsgType(msginfo.IsLabel),
+			AtUsers:                msginfo.AtUsers,
+			ReadCount:              msginfo.ReadCount,
+			AtAllUser:              model.AtAllUserType(msginfo.AtAllUser),
+			IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
+			SenderInfo: model.SenderInfo{
+				Avatar: sendinfo.Avatar,
+				Name:   name,
+				UserId: sendinfo.UserId,
+			},
+		}
+
+		if read.ReadAt != 0 {
+			newMsg.IsRead = 1
+		}
+
+		s.SendMsg(uid, driverId, constants.EditMsgEvent, newMsg, true)
 	}
 
 	return msgID, nil
