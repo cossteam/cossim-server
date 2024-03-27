@@ -30,7 +30,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 	for _, uid := range uIds {
 		m := constants.WsMsg{Uid: uid, DriverId: driverId, Event: constants.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
 		//查询是否静默通知
-		groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		groupRelation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 			GroupId: uint32(msg.GroupId),
 			UserId:  uid,
 		})
@@ -45,7 +45,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 		}
 
 		var is bool
-		r, err := s.userLoginClient.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
+		r, err := s.userLoginService.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
 			DriverId: driverId,
 			UserId:   uid,
 		})
@@ -129,7 +129,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, code.MsgErrInsertUserMessageFailed
 	}
 
-	groupRelation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	groupRelation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: req.GroupId,
 		UserId:  userID,
 	})
@@ -142,7 +142,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, code.GroupErrUserIsMuted
 	}
 
-	dialogs, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+	dialogs, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: []uint32{req.DialogId},
 	})
 	if err != nil {
@@ -153,7 +153,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, code.DialogErrGetDialogUserByDialogIDAndUserIDFailed
 	}
 
-	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: req.DialogId,
 		UserId:   userID,
 	})
@@ -163,7 +163,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	//查询群聊所有用户id
-	uids, err := s.relationGroupClient.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
+	uids, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupId,
 	})
 
@@ -174,7 +174,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 	wfName := "send_group_msg_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 
-		_, err := s.relationDialogClient.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
+		_, err := s.relationDialogService.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
 			DialogId: req.DialogId,
 			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
 			UserIds:  uids.UserIds,
@@ -183,7 +183,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			return err
 		}
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err := s.relationDialogClient.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
+			_, err := s.relationDialogService.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
 				DialogId: req.DialogId,
 				Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
 				UserIds:  uids.UserIds,
@@ -233,7 +233,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -266,7 +266,7 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			return nil, err
 		}
 
-		userInfo, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		userInfo, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 			UserId: msg.UserId,
 		})
 		if err != nil {
@@ -327,7 +327,7 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -401,7 +401,7 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -474,7 +474,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -525,7 +525,7 @@ func (s *Service) LabelGroupMessage(ctx context.Context, userID string, driverId
 }
 
 func (s *Service) GetGroupLabelMsgList(ctx context.Context, userID string, dialogId uint32) (interface{}, error) {
-	_, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		UserId:   userID,
 		DialogId: dialogId,
 	})
@@ -546,7 +546,7 @@ func (s *Service) GetGroupLabelMsgList(ctx context.Context, userID string, dialo
 }
 
 func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.GroupMsgListRequest) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+	_, err := s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
 		Gid: request.GroupId,
 	})
 	if err != nil {
@@ -554,7 +554,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		return nil, err
 	}
 
-	_, err = s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: request.GroupId,
 		UserId:  id,
 	})
@@ -598,14 +598,14 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		}
 
 		//查询信息
-		info, err := s.userClient.UserInfo(c, &usergrpcv1.UserInfoRequest{
+		info, err := s.userService.UserInfo(c, &usergrpcv1.UserInfoRequest{
 			UserId: v.UserId,
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		sendRelation, err := s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+		sendRelation, err := s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
 			GroupId: request.GroupId,
 			UserId:  v.UserId,
 		})
@@ -648,7 +648,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 }
 
 func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId string, request *model.GroupMessageReadRequest) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+	_, err := s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
 		Gid: request.GroupId,
 	})
 	if err != nil {
@@ -656,7 +656,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 		return nil, err
 	}
 
-	_, err = s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: request.GroupId,
 		UserId:  id,
 	})
@@ -665,7 +665,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 		return nil, err
 	}
 
-	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		UserId:   id,
 		DialogId: request.DialogId,
 	})
@@ -734,7 +734,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 }
 
 func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId string, msgId uint32, dialogId uint32, groupId uint32) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+	_, err := s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
 		Gid: groupId,
 	})
 	if err != nil {
@@ -742,7 +742,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 		return nil, err
 	}
 
-	_, err = s.relationGroupClient.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
+	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: groupId,
 		UserId:  userId,
 	})
@@ -751,7 +751,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 		return nil, err
 	}
 
-	_, err = s.relationDialogClient.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		UserId:   userId,
 		DialogId: dialogId,
 	})
@@ -768,7 +768,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 		return nil, err
 	}
 
-	info, err := s.userClient.GetBatchUserInfo(c, &usergrpcv1.GetBatchUserInfoRequest{
+	info, err := s.userService.GetBatchUserInfo(c, &usergrpcv1.GetBatchUserInfoRequest{
 		UserIds: us.UserIds,
 	})
 	if err != nil {
@@ -808,7 +808,7 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 	lm := lastMsg.LastMsgs[0]
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
 		UserId: lm.SenderId,
 	})
 	if err != nil {
@@ -816,7 +816,7 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 	}
 
 	//获取对话信息
-	dialogInfo, err := s.relationDialogClient.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
+	dialogInfo, err := s.relationDialogService.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
 		DialogId: dialogId,
 	})
 	if err != nil {
@@ -827,7 +827,7 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 		return nil
 	}
 
-	ginfo, err := s.groupClient.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{
+	ginfo, err := s.groupService.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{
 		Gid: dialogInfo.GroupId,
 	})
 	if err != nil {
@@ -835,7 +835,7 @@ func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) erro
 	}
 
 	for _, userId := range userIds {
-		dialogUser, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+		dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 			DialogId: dialogId,
 			UserId:   userId,
 		})
