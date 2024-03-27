@@ -36,7 +36,7 @@ import (
 )
 
 func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string, clientIp string) (*model.UserInfoResponse, string, error) {
-	resp, err := s.userClient.UserLogin(ctx, &usergrpcv1.UserLoginRequest{
+	resp, err := s.userService.UserLogin(ctx, &usergrpcv1.UserLoginRequest{
 		Email:    req.Email,
 		Password: utils.HashString(req.Password),
 	})
@@ -82,14 +82,14 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 
 	// 推送登录提醒
 	// 查询是否在该设备第一次登录
-	userLogin, err := s.userClient.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
+	userLogin, err := s.userLoginService.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
 		UserId:   resp.UserId,
 		DriverId: req.DriverId,
 	})
 	if err != nil {
 		s.logger.Error("failed to get user login by driver id and user id", zap.Error(err))
 	}
-	_, err = s.userClient.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
+	_, err = s.userLoginService.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
 		UserId:      resp.UserId,
 		DriverId:    req.DriverId,
 		Token:       token,
@@ -227,7 +227,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	reader := bytes.NewReader(buf.Bytes())
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	err = s.sp.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
+	err = s.storageService.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
 		ContentType: "image/jpeg",
 	})
 	if err != nil {
@@ -247,7 +247,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	gid := shortuuid.New()
 	wfName := "register_user_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		resp, err := s.userClient.UserRegister(wf.Context, &usergrpcv1.UserRegisterRequest{
+		resp, err := s.userService.UserRegister(wf.Context, &usergrpcv1.UserRegisterRequest{
 			Email:           req.Email,
 			NickName:        req.Nickname,
 			Password:        utils.HashString(req.Password),
@@ -265,19 +265,19 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		UserId = resp.UserId
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.userClient.CreateUserRollback(wf.Context, &usergrpcv1.CreateUserRollbackRequest{UserId: resp.UserId})
+			_, err = s.userService.CreateUserRollback(wf.Context, &usergrpcv1.CreateUserRollbackRequest{UserId: resp.UserId})
 			return err
 		})
 
 		//TODO 系统账号统一管理
-		_, err = s.userClient.UserInfo(wf.Context, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
+		_, err = s.userService.UserInfo(wf.Context, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
 		if err != nil {
 			s.logger.Error("failed to register user", zap.Error(err))
 			return code.UserErrRegistrationFailed
 		}
 
 		//添加系统好友
-		_, err = s.relClient.AddFriend(wf.Context, &relationgrpcv1.AddFriendRequest{
+		_, err = s.relationService.AddFriend(wf.Context, &relationgrpcv1.AddFriendRequest{
 			UserId:   resp.UserId,
 			FriendId: constants.SystemNotification,
 		})
@@ -317,7 +317,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 }
 
 func (s *Service) Search(ctx context.Context, userID string, email string) (interface{}, error) {
-	r, err := s.userClient.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
+	r, err := s.userService.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
 		Email: email,
 	})
 	if err != nil {
@@ -334,7 +334,7 @@ func (s *Service) Search(ctx context.Context, userID string, email string) (inte
 		Status:    model.UserStatus(r.Status),
 	}
 
-	relation, err := s.relClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: r.UserId,
 	})
@@ -355,7 +355,7 @@ func (s *Service) Search(ctx context.Context, userID string, email string) (inte
 
 func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string) (*model.UserInfoResponse, error) {
 	resp := &model.UserInfoResponse{}
-	r, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	r, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -375,7 +375,7 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 	}
 
 	if thisID != userID {
-		relation, err := s.relClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 			UserId:   thisID,
 			FriendId: userID,
 		})
@@ -411,7 +411,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 		if !regexp.MustCompile(pattern).MatchString(req.CossId) {
 			return code.UserErrCossIdFormat
 		}
-		info, err := s.userClient.GetUserInfoByCossId(ctx, &usergrpcv1.GetUserInfoByCossIdlRequest{
+		info, err := s.userService.GetUserInfoByCossId(ctx, &usergrpcv1.GetUserInfoByCossIdlRequest{
 			CossId: req.CossId,
 		})
 		if err != nil {
@@ -426,7 +426,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 		}
 	}
 
-	_, err := s.userClient.ModifyUserInfo(ctx, &usergrpcv1.User{
+	_, err := s.userService.ModifyUserInfo(ctx, &usergrpcv1.User{
 		UserId:    userID,
 		NickName:  req.NickName,
 		Tel:       req.Tel,
@@ -442,7 +442,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 
 	if s.cache {
 		//查询所有好友
-		friends, err := s.relClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
+		friends, err := s.relationService.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
 			UserId: userID,
 		})
 
@@ -474,7 +474,7 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 
 func (s *Service) ModifyUserPassword(ctx context.Context, userID string, req *model.PasswordRequest) error {
 	//查询用户旧密码
-	info, err := s.userClient.GetUserPasswordByUserId(ctx, &usergrpcv1.UserRequest{
+	info, err := s.userService.GetUserPasswordByUserId(ctx, &usergrpcv1.UserRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -492,7 +492,7 @@ func (s *Service) ModifyUserPassword(ctx context.Context, userID string, req *mo
 	if req.Password == req.OldPasswprd || req.ConfirmPass == req.OldPasswprd {
 		return code.UserErrNewPasswordAndOldPasswordEqual
 	}
-	_, err = s.userClient.ModifyUserPassword(ctx, &usergrpcv1.ModifyUserPasswordRequest{
+	_, err = s.userService.ModifyUserPassword(ctx, &usergrpcv1.ModifyUserPasswordRequest{
 		UserId:   userID,
 		Password: utils.HashString(req.Password),
 	})
@@ -505,7 +505,7 @@ func (s *Service) ModifyUserPassword(ctx context.Context, userID string, req *mo
 
 func (s *Service) SetUserPublicKey(ctx context.Context, userID string, publicKey string) (interface{}, error) {
 	// 调用服务端设置用户公钥的方法
-	_, err := s.userClient.SetUserPublicKey(ctx, &usergrpcv1.SetPublicKeyRequest{
+	_, err := s.userService.SetUserPublicKey(ctx, &usergrpcv1.SetPublicKeyRequest{
 		UserId:    userID,
 		PublicKey: publicKey,
 	})
@@ -517,7 +517,7 @@ func (s *Service) SetUserPublicKey(ctx context.Context, userID string, publicKey
 }
 
 func (s *Service) ModifyUserSecretBundle(ctx context.Context, userID string, req *model.ModifyUserSecretBundleRequest) (interface{}, error) {
-	_, err := s.userClient.SetUserSecretBundle(context.Background(), &usergrpcv1.SetUserSecretBundleRequest{
+	_, err := s.userService.SetUserSecretBundle(context.Background(), &usergrpcv1.SetUserSecretBundleRequest{
 		UserId:       userID,
 		SecretBundle: req.SecretBundle,
 	})
@@ -529,8 +529,7 @@ func (s *Service) ModifyUserSecretBundle(ctx context.Context, userID string, req
 }
 
 func (s *Service) GetUserSecretBundle(ctx context.Context, userID string) (*model.UserSecretBundleResponse, error) {
-
-	_, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	_, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -538,7 +537,7 @@ func (s *Service) GetUserSecretBundle(ctx context.Context, userID string) (*mode
 		return nil, code.UserErrGetUserInfoFailed
 	}
 
-	bundle, err := s.userClient.GetUserSecretBundle(context.Background(), &usergrpcv1.GetUserSecretBundleRequest{
+	bundle, err := s.userService.GetUserSecretBundle(context.Background(), &usergrpcv1.GetUserSecretBundleRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -588,7 +587,7 @@ func (s *Service) UserActivate(ctx context.Context, userID string, key string) (
 		return nil, code.UserErrActivateUserFailed
 	}
 
-	resp, err := s.userClient.ActivateUser(ctx, &usergrpcv1.UserRequest{
+	resp, err := s.userService.ActivateUser(ctx, &usergrpcv1.UserRequest{
 		UserId: userID,
 	})
 
@@ -615,7 +614,7 @@ func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublic
 		return nil, code.UserErrResetPublicKeyFailed
 	}
 
-	info, err := s.userClient.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
+	info, err := s.userService.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
 		Email: req.Email,
 	})
 	if err != nil {
@@ -627,7 +626,7 @@ func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublic
 		return nil, code.UserErrResetPublicKeyFailed
 	}
 
-	_, err = s.userClient.SetUserPublicKey(ctx, &usergrpcv1.SetPublicKeyRequest{
+	_, err = s.userService.SetUserPublicKey(ctx, &usergrpcv1.SetPublicKeyRequest{
 		UserId:    info.UserId,
 		PublicKey: req.PublicKey,
 	})
@@ -646,7 +645,7 @@ func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublic
 
 func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{}, error) {
 	//查询用户是否存在
-	info, err := s.userClient.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
+	info, err := s.userService.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
 		Email: email,
 	})
 	if err != nil {
@@ -675,7 +674,7 @@ func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{},
 
 // 修改用户头像
 func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar multipart.File) (string, error) {
-	_, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	_, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -696,7 +695,7 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 	reader := bytes.NewReader(data)
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	err = s.sp.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
+	err = s.storageService.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
 		ContentType: "image/jpeg",
 	})
 	if err != nil {
@@ -711,7 +710,7 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 		}
 	}
 
-	_, err = s.userClient.ModifyUserInfo(ctx, &usergrpcv1.User{
+	_, err = s.userService.ModifyUserInfo(ctx, &usergrpcv1.User{
 		UserId: userID,
 		Avatar: aUrl,
 	})
@@ -721,7 +720,7 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 
 	if s.cache {
 		//查询所有好友
-		friends, err := s.relClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
+		friends, err := s.relationService.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
 			UserId: userID,
 		})
 
