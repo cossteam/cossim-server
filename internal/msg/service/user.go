@@ -864,6 +864,24 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 		return nil, code.Unauthorized
 	}
 
+	relation, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+		UserId:   msginfo.SenderId,
+		FriendId: msginfo.ReceiverId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户关系失败", zap.Error(err))
+		return nil, err
+	}
+
+	relation2, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+		UserId:   msginfo.ReceiverId,
+		FriendId: msginfo.SenderId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户关系失败", zap.Error(err))
+		return nil, err
+	}
+
 	//判断是否在对话内
 	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(c, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
@@ -895,7 +913,54 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 		}
 	}
 
-	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, msginfo, true)
+	sendinfo, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+		UserId: msginfo.SenderId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	receinfo, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+		UserId: msginfo.ReceiverId,
+	})
+	if err != nil {
+		s.logger.Error("获取用户信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	name := sendinfo.NickName
+	if relation2.Remark != "" {
+		name = relation2.Remark
+	}
+
+	newMsg := model.UserMessage{
+		MsgId:                   msginfo.Id,
+		SenderId:                msginfo.SenderId,
+		ReceiverId:              msginfo.ReceiverId,
+		Content:                 msginfo.Content,
+		Type:                    msginfo.Type,
+		ReplyId:                 msginfo.ReplyId,
+		IsRead:                  msginfo.IsRead,
+		ReadAt:                  msginfo.ReadAt,
+		SendAt:                  msginfo.CreatedAt,
+		DialogId:                msginfo.DialogId,
+		IsLabel:                 model.LabelMsgType(msginfo.IsLabel),
+		IsBurnAfterReadingType:  model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
+		BurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
+		SenderInfo: model.SenderInfo{
+			Avatar: sendinfo.Avatar,
+			Name:   name,
+			UserId: sendinfo.UserId,
+		},
+		ReceiverInfo: model.SenderInfo{
+			Avatar: receinfo.Avatar,
+			Name:   receinfo.NickName,
+			UserId: receinfo.UserId,
+		},
+	}
+
+	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, newMsg, true)
 
 	return msgID, nil
 }
