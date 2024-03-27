@@ -36,15 +36,24 @@ func (udlr CustomGroupData) MarshalBinary() ([]byte, error) {
 
 // CustomUserData Custom struct implementing the User interface
 type CustomUserData struct {
-	UserID    string `json:"user_id"`
-	NickName  string `json:"nickname"`
-	Remark    string `json:"remark"`
-	Email     string `json:"email"`
-	Tel       string `json:"tel"`
-	Avatar    string `json:"avatar"`
-	Signature string ` json:"signature"`
-	Status    uint   `json:"status"`
-	DialogId  uint32 `json:"dialog_id"`
+	UserID         string       `json:"user_id"`
+	NickName       string       `json:"nickname"`
+	Email          string       `json:"email"`
+	Tel            string       `json:"tel"`
+	Avatar         string       `json:"avatar"`
+	Signature      string       ` json:"signature"`
+	Status         uint         `json:"status"`
+	DialogId       uint32       `json:"dialog_id"`
+	CossId         string       `json:"coss_id"`
+	RelationStatus uint32       `json:"relation_status"`
+	Preferences    *Preferences `json:"preferences"`
+}
+
+type Preferences struct {
+	SilentNotification          uint32 `json:"silent_notification"`
+	Remark                      string ` json:"remark"`
+	OpenBurnAfterReading        uint32 `json:"open_burn_after_reading"`
+	OpenBurnAfterReadingTimeOut int64  `json:"open_burn_after_reading_time_out"`
 }
 
 type CustomGroupData struct {
@@ -77,10 +86,21 @@ func SortAndGroupUsers(data interface{}, fieldName string) map[string][]interfac
 	if list, ok := data.([]User); ok {
 		for _, v := range list {
 			var name string
+			remark := ""
+			fmt.Println("v=>", v)
+			//_ = reflect.ValueOf(v).FieldByName("Preferences")
+			preferencesField := reflect.ValueOf(v).FieldByName("Preferences")
+			if preferencesField.IsValid() {
+				preferencesValue := preferencesField.Interface().(*Preferences)
+				remark = preferencesValue.Remark
+				//// 这里可以访问 Preferences 结构体中的属性
+				//fmt.Printf("SilentNotification: %d\n", preferencesValue.SilentNotification)
+				//fmt.Printf("Remark: %s\n", preferencesValue.Remark)
+				//fmt.Printf("OpenBurnAfterReading: %d\n", preferencesValue.OpenBurnAfterReading)
+				//fmt.Printf("OpenBurnAfterReadingTimeOut: %d\n", preferencesValue.OpenBurnAfterReadingTimeOut)
 
-			_ = reflect.ValueOf(v).FieldByName("Remark")
-			fieldValue2 := fieldOf(v, "Remark")
-			remark := fmt.Sprintf("%v", fieldValue2.Interface())
+			}
+
 			if remark != "" {
 				name = remark
 			} else {
@@ -134,6 +154,10 @@ func SortAndGroupUsers(data interface{}, fieldName string) map[string][]interfac
 func fieldOf(i interface{}, name string) reflect.Value {
 	val := reflect.ValueOf(i)
 	field := reflect.Indirect(val).FieldByName(name)
+	if !field.IsValid() {
+		// 如果字段不存在，返回零值
+		return reflect.Value{}
+	}
 	return field
 }
 

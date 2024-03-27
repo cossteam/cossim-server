@@ -71,16 +71,26 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 	for _, v := range userInfos.Users {
 		for _, friend := range friendListResp.FriendList {
 			if friend.UserId == v.UserId {
+				pre := &usersorter.Preferences{
+					OpenBurnAfterReading:        uint32(friend.OpenBurnAfterReading),
+					OpenBurnAfterReadingTimeOut: friend.OpenBurnAfterReadingTimeOut,
+					SilentNotification:          uint32(friend.IsSilent),
+					Remark:                      friend.Remark,
+				}
 				data = append(data, usersorter.CustomUserData{
-					UserID:   v.UserId,
-					NickName: v.NickName,
-					Email:    v.Email,
-					Tel:      v.Tel,
-					Avatar:   v.Avatar,
-					Status:   uint(v.Status),
-					DialogId: friend.DialogId,
-					Remark:   friend.Remark,
+					UserID:         v.UserId,
+					NickName:       v.NickName,
+					CossId:         v.CossId,
+					Email:          v.Email,
+					Tel:            v.Tel,
+					Avatar:         v.Avatar,
+					Status:         uint(v.Status),
+					DialogId:       friend.DialogId,
+					RelationStatus: uint32(friend.Status),
+					Signature:      v.Signature,
+					Preferences:    pre,
 				})
+				fmt.Println("pre", pre)
 				break
 			}
 		}
