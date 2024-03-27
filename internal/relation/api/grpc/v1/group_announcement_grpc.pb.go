@@ -19,11 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupAnnouncementService_CreateGroupAnnouncement_FullMethodName  = "/v1.GroupAnnouncementService/CreateGroupAnnouncement"
-	GroupAnnouncementService_GetGroupAnnouncementList_FullMethodName = "/v1.GroupAnnouncementService/GetGroupAnnouncementList"
-	GroupAnnouncementService_GetGroupAnnouncement_FullMethodName     = "/v1.GroupAnnouncementService/GetGroupAnnouncement"
-	GroupAnnouncementService_UpdateGroupAnnouncement_FullMethodName  = "/v1.GroupAnnouncementService/UpdateGroupAnnouncement"
-	GroupAnnouncementService_DeleteGroupAnnouncement_FullMethodName  = "/v1.GroupAnnouncementService/DeleteGroupAnnouncement"
+	GroupAnnouncementService_CreateGroupAnnouncement_FullMethodName     = "/v1.GroupAnnouncementService/CreateGroupAnnouncement"
+	GroupAnnouncementService_GetGroupAnnouncementList_FullMethodName    = "/v1.GroupAnnouncementService/GetGroupAnnouncementList"
+	GroupAnnouncementService_GetGroupAnnouncement_FullMethodName        = "/v1.GroupAnnouncementService/GetGroupAnnouncement"
+	GroupAnnouncementService_UpdateGroupAnnouncement_FullMethodName     = "/v1.GroupAnnouncementService/UpdateGroupAnnouncement"
+	GroupAnnouncementService_DeleteGroupAnnouncement_FullMethodName     = "/v1.GroupAnnouncementService/DeleteGroupAnnouncement"
+	GroupAnnouncementService_MarkAnnouncementAsRead_FullMethodName      = "/v1.GroupAnnouncementService/MarkAnnouncementAsRead"
+	GroupAnnouncementService_GetReadUsers_FullMethodName                = "/v1.GroupAnnouncementService/GetReadUsers"
+	GroupAnnouncementService_GetAnnouncementReadByUserId_FullMethodName = "/v1.GroupAnnouncementService/GetAnnouncementReadByUserId"
 )
 
 // GroupAnnouncementServiceClient is the client API for GroupAnnouncementService service.
@@ -35,6 +38,9 @@ type GroupAnnouncementServiceClient interface {
 	GetGroupAnnouncement(ctx context.Context, in *GetGroupAnnouncementRequest, opts ...grpc.CallOption) (*GetGroupAnnouncementResponse, error)
 	UpdateGroupAnnouncement(ctx context.Context, in *UpdateGroupAnnouncementRequest, opts ...grpc.CallOption) (*UpdateGroupAnnouncementResponse, error)
 	DeleteGroupAnnouncement(ctx context.Context, in *DeleteGroupAnnouncementRequest, opts ...grpc.CallOption) (*DeleteGroupAnnouncementResponse, error)
+	MarkAnnouncementAsRead(ctx context.Context, in *MarkAnnouncementAsReadRequest, opts ...grpc.CallOption) (*MarkAnnouncementAsReadResponse, error)
+	GetReadUsers(ctx context.Context, in *GetReadUsersRequest, opts ...grpc.CallOption) (*GetReadUsersResponse, error)
+	GetAnnouncementReadByUserId(ctx context.Context, in *GetAnnouncementReadByUserIdRequest, opts ...grpc.CallOption) (*GetAnnouncementReadByUserIdResponse, error)
 }
 
 type groupAnnouncementServiceClient struct {
@@ -90,6 +96,33 @@ func (c *groupAnnouncementServiceClient) DeleteGroupAnnouncement(ctx context.Con
 	return out, nil
 }
 
+func (c *groupAnnouncementServiceClient) MarkAnnouncementAsRead(ctx context.Context, in *MarkAnnouncementAsReadRequest, opts ...grpc.CallOption) (*MarkAnnouncementAsReadResponse, error) {
+	out := new(MarkAnnouncementAsReadResponse)
+	err := c.cc.Invoke(ctx, GroupAnnouncementService_MarkAnnouncementAsRead_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupAnnouncementServiceClient) GetReadUsers(ctx context.Context, in *GetReadUsersRequest, opts ...grpc.CallOption) (*GetReadUsersResponse, error) {
+	out := new(GetReadUsersResponse)
+	err := c.cc.Invoke(ctx, GroupAnnouncementService_GetReadUsers_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupAnnouncementServiceClient) GetAnnouncementReadByUserId(ctx context.Context, in *GetAnnouncementReadByUserIdRequest, opts ...grpc.CallOption) (*GetAnnouncementReadByUserIdResponse, error) {
+	out := new(GetAnnouncementReadByUserIdResponse)
+	err := c.cc.Invoke(ctx, GroupAnnouncementService_GetAnnouncementReadByUserId_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupAnnouncementServiceServer is the server API for GroupAnnouncementService service.
 // All implementations must embed UnimplementedGroupAnnouncementServiceServer
 // for forward compatibility
@@ -99,6 +132,9 @@ type GroupAnnouncementServiceServer interface {
 	GetGroupAnnouncement(context.Context, *GetGroupAnnouncementRequest) (*GetGroupAnnouncementResponse, error)
 	UpdateGroupAnnouncement(context.Context, *UpdateGroupAnnouncementRequest) (*UpdateGroupAnnouncementResponse, error)
 	DeleteGroupAnnouncement(context.Context, *DeleteGroupAnnouncementRequest) (*DeleteGroupAnnouncementResponse, error)
+	MarkAnnouncementAsRead(context.Context, *MarkAnnouncementAsReadRequest) (*MarkAnnouncementAsReadResponse, error)
+	GetReadUsers(context.Context, *GetReadUsersRequest) (*GetReadUsersResponse, error)
+	GetAnnouncementReadByUserId(context.Context, *GetAnnouncementReadByUserIdRequest) (*GetAnnouncementReadByUserIdResponse, error)
 	mustEmbedUnimplementedGroupAnnouncementServiceServer()
 }
 
@@ -120,6 +156,15 @@ func (UnimplementedGroupAnnouncementServiceServer) UpdateGroupAnnouncement(conte
 }
 func (UnimplementedGroupAnnouncementServiceServer) DeleteGroupAnnouncement(context.Context, *DeleteGroupAnnouncementRequest) (*DeleteGroupAnnouncementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupAnnouncement not implemented")
+}
+func (UnimplementedGroupAnnouncementServiceServer) MarkAnnouncementAsRead(context.Context, *MarkAnnouncementAsReadRequest) (*MarkAnnouncementAsReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkAnnouncementAsRead not implemented")
+}
+func (UnimplementedGroupAnnouncementServiceServer) GetReadUsers(context.Context, *GetReadUsersRequest) (*GetReadUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReadUsers not implemented")
+}
+func (UnimplementedGroupAnnouncementServiceServer) GetAnnouncementReadByUserId(context.Context, *GetAnnouncementReadByUserIdRequest) (*GetAnnouncementReadByUserIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAnnouncementReadByUserId not implemented")
 }
 func (UnimplementedGroupAnnouncementServiceServer) mustEmbedUnimplementedGroupAnnouncementServiceServer() {
 }
@@ -225,6 +270,60 @@ func _GroupAnnouncementService_DeleteGroupAnnouncement_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupAnnouncementService_MarkAnnouncementAsRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkAnnouncementAsReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupAnnouncementServiceServer).MarkAnnouncementAsRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupAnnouncementService_MarkAnnouncementAsRead_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupAnnouncementServiceServer).MarkAnnouncementAsRead(ctx, req.(*MarkAnnouncementAsReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupAnnouncementService_GetReadUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReadUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupAnnouncementServiceServer).GetReadUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupAnnouncementService_GetReadUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupAnnouncementServiceServer).GetReadUsers(ctx, req.(*GetReadUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupAnnouncementService_GetAnnouncementReadByUserId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAnnouncementReadByUserIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupAnnouncementServiceServer).GetAnnouncementReadByUserId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupAnnouncementService_GetAnnouncementReadByUserId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupAnnouncementServiceServer).GetAnnouncementReadByUserId(ctx, req.(*GetAnnouncementReadByUserIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupAnnouncementService_ServiceDesc is the grpc.ServiceDesc for GroupAnnouncementService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -251,6 +350,18 @@ var GroupAnnouncementService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroupAnnouncement",
 			Handler:    _GroupAnnouncementService_DeleteGroupAnnouncement_Handler,
+		},
+		{
+			MethodName: "MarkAnnouncementAsRead",
+			Handler:    _GroupAnnouncementService_MarkAnnouncementAsRead_Handler,
+		},
+		{
+			MethodName: "GetReadUsers",
+			Handler:    _GroupAnnouncementService_GetReadUsers_Handler,
+		},
+		{
+			MethodName: "GetAnnouncementReadByUserId",
+			Handler:    _GroupAnnouncementService_GetAnnouncementReadByUserId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

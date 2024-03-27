@@ -43,3 +43,44 @@ func (g *GroupAnnouncementRepository) UpdateGroupAnnouncement(announcement *enti
 func (g *GroupAnnouncementRepository) DeleteGroupAnnouncement(announcementID uint32) error {
 	return g.db.Model(&entity.GroupAnnouncement{}).Where("id = ?", announcementID).Update("deleted_at", time.Now()).Error
 }
+
+func (g *GroupAnnouncementRepository) MarkAnnouncementAsRead(groupId, announcementId uint, userIds []string) error {
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		for _, userId := range userIds {
+			announcementRead := entity.GroupAnnouncementRead{
+				GroupID:        groupId,
+				AnnouncementId: announcementId,
+				UserId:         userId,
+				ReadAt:         time.Now(),
+			}
+			if err := tx.Where(entity.GroupAnnouncementRead{AnnouncementId: announcementId, UserId: userId}).Assign(announcementRead).FirstOrCreate(&announcementRead).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (g *GroupAnnouncementRepository) GetReadUsers(groupId, announcementId uint) ([]*entity.GroupAnnouncementRead, error) {
+	var users []*entity.GroupAnnouncementRead
+	if err := g.db.Model(&entity.GroupAnnouncementRead{}).
+		Where("group_id = ? AND announcement_id = ?", groupId, announcementId).Find(&users).
+		Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (g *GroupAnnouncementRepository) GetAnnouncementReadByUserId(groupId, announcementId uint, userId string) (*entity.GroupAnnouncementRead, error) {
+	resp := &entity.GroupAnnouncementRead{}
+	if err := g.db.Model(&entity.GroupAnnouncementRead{}).
+		Where("group_id = ? AND announcement_id = ? AND user_id = ?", groupId, announcementId, userId).First(resp).Error; err != nil {
+		return nil, err
+	}
+	return resp, nil
+}

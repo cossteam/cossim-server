@@ -21,7 +21,7 @@ import (
 )
 
 func (s *Service) GetGroupMember(ctx context.Context, gid uint32, userID string) (interface{}, error) {
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: gid})
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: gid})
 	if err != nil {
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
 		return nil, err
@@ -31,23 +31,23 @@ func (s *Service) GetGroupMember(ctx context.Context, gid uint32, userID string)
 		return nil, code.GroupErrGroupStatusNotAvailable
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: userID})
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: userID})
 	if err != nil {
 		return nil, err
 	}
 
-	groupRelation, err := s.svc.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: gid})
+	groupRelation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: gid})
 	if err != nil {
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
 		return nil, err
 	}
 
-	relation, err := s.svc.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: gid, UserIds: groupRelation.UserIds})
+	relation, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: gid, UserIds: groupRelation.UserIds})
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: groupRelation.UserIds})
+	resp, err := s.userService.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: groupRelation.UserIds})
 	if err != nil {
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
 		return nil, err
@@ -72,14 +72,14 @@ func (s *Service) GetGroupMember(ctx context.Context, gid uint32, userID string)
 }
 
 func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGroupRequest) (interface{}, error) {
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
 		return nil, err
 	}
 
 	//查询是不是已经有邀请
-	id, err := s.svc.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
+	id, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
 		GroupId: req.GroupID,
 		UserId:  uid,
 	})
@@ -94,7 +94,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, code.GroupErrGroupStatusNotAvailable
 	}
 	//判断是否在群聊中
-	relation, err := s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: req.GroupID,
 		UserId:  uid,
 	})
@@ -102,7 +102,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, code.RelationGroupErrAlreadyInGroup
 	}
 
-	groupRelation, err := s.svc.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
+	groupRelation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
 	if err != nil {
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
 		return nil, err
@@ -112,13 +112,13 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, code.RelationGroupErrGroupFull
 	}
 	//添加普通用户申请
-	_, err = s.svc.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID})
+	_, err = s.relationGroupJoinRequestService.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID})
 	if err != nil {
 		s.logger.Error("添加群聊申请失败", zap.Error(err))
 		return nil, err
 	}
 	//查询所有管理员
-	adminIds, err := s.svc.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
+	adminIds, err := s.relationGroupService.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupID,
 	})
 	for _, id := range adminIds.UserIds {
@@ -162,7 +162,7 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 	}
 
 	// 获取用户群聊列表
-	ids, err := s.svc.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
+	ids, err := s.relationGroupService.GetUserGroupIDs(context.Background(), &relationgrpcv1.GetUserGroupIDsRequest{UserId: userID})
 	if err != nil {
 		s.logger.Error("获取用户群聊列表失败", zap.Error(err))
 		return nil, err
@@ -171,13 +171,13 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 		return []string{}, nil
 	}
 
-	ds, err := s.groupClient.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
+	ds, err := s.groupService.GetBatchGroupInfoByIDs(context.Background(), &groupApi.GetBatchGroupInfoRequest{GroupIds: ids.GroupId})
 	if err != nil {
 		s.logger.Error("获取群聊列表失败", zap.Error(err))
 		return nil, err
 	}
 	//获取群聊对话信息
-	dialogs, err := s.svc.GetDialogByGroupIds(context.Background(), &relationgrpcv1.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
+	dialogs, err := s.relationDialogService.GetDialogByGroupIds(context.Background(), &relationgrpcv1.GetDialogByGroupIdsRequest{GroupId: ids.GroupId})
 	if err != nil {
 		s.logger.Error("获取群聊对话列表失败", zap.Error(err))
 		return nil, err
@@ -226,7 +226,7 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 }
 
 func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, uid string, silent model.SilentNotificationType) (interface{}, error) {
-	_, err := s.svc.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
+	_, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: gid,
 		UserId:  uid,
 	})
@@ -235,7 +235,7 @@ func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, ui
 		return nil, err
 	}
 
-	_, err = s.svc.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
+	_, err = s.relationGroupService.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
 		GroupId:  gid,
 		UserId:   uid,
 		IsSilent: relationgrpcv1.GroupSilentNotificationType(silent),
@@ -249,13 +249,13 @@ func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, ui
 }
 
 func (s *Service) SetGroupBurnAfterReading(ctx context.Context, userId string, req *model.OpenGroupBurnAfterReadingRequest) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
 		return nil, err
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		UserId:  userId,
 		GroupId: req.GroupId,
 	})
@@ -264,7 +264,7 @@ func (s *Service) SetGroupBurnAfterReading(ctx context.Context, userId string, r
 		return nil, err
 	}
 
-	_, err = s.svc.SetGroupOpenBurnAfterReading(ctx, &relationgrpcv1.SetGroupOpenBurnAfterReadingRequest{
+	_, err = s.relationGroupService.SetGroupOpenBurnAfterReading(ctx, &relationgrpcv1.SetGroupOpenBurnAfterReadingRequest{
 		UserId:               userId,
 		GroupId:              req.GroupId,
 		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
@@ -277,7 +277,7 @@ func (s *Service) SetGroupBurnAfterReading(ctx context.Context, userId string, r
 }
 
 func (s *Service) GroupRequestList(ctx context.Context, userID string) (interface{}, error) {
-	reqList, err := s.svc.GetGroupJoinRequestListByUserId(ctx, &relationgrpcv1.GetGroupJoinRequestListRequest{UserId: userID})
+	reqList, err := s.relationGroupJoinRequestService.GetGroupJoinRequestListByUserId(ctx, &relationgrpcv1.GetGroupJoinRequestListRequest{UserId: userID})
 	if err != nil {
 		s.logger.Error("获取群聊申请列表失败", zap.Error(err))
 		return nil, err
@@ -291,13 +291,13 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 		gids[i] = v.GroupId
 		uids[i] = v.UserId
 		//查询发送者接受者信息
-		reinfo, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.UserId})
+		reinfo, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.UserId})
 		if err != nil {
 			return nil, err
 		}
 		sendinfo := &userApi.UserInfoResponse{}
 		if v.InviterId != "" {
-			sendinfo, err = s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.InviterId})
+			sendinfo, err = s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.InviterId})
 			if err != nil {
 				return nil, err
 			}
@@ -335,7 +335,7 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 
 	groupInfoMap := make(map[uint32]*groupApi.Group)
 	for _, groupID := range groupIDs {
-		groupInfo, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+		groupInfo, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 		if err != nil {
 			s.logger.Error("获取群聊信息失败", zap.Error(err))
 			return nil, err
@@ -344,7 +344,7 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 		groupInfoMap[groupID] = groupInfo
 	}
 
-	_, err = s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
+	_, err = s.userService.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
 	if err != nil {
 		s.logger.Error("获取群聊成员信息失败", zap.Error(err))
 		return nil, err
@@ -362,7 +362,7 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 }
 
 func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID uint32, userID string, status relationgrpcv1.GroupRequestStatus) error {
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 	if err != nil {
 		s.logger.Error("get group info failed", zap.Error(err))
 		return code.RelationGroupErrGetGroupInfoFailed
@@ -372,7 +372,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		return code.GroupErrGroupStatusNotAvailable
 	}
 
-	relation1, err := s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
+	relation1, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
 	if err != nil {
 		s.logger.Error("get group relation failed", zap.Error(err))
 		return code.RelationGroupErrGetGroupInfoFailed
@@ -382,14 +382,14 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		return code.Unauthorized
 	}
 
-	info, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+	info, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 	if err != nil {
 		s.logger.Error("get group info failed", zap.Error(err))
 		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
 	if status == relationgrpcv1.GroupRequestStatus_Accepted {
-		ds, err := s.svc.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: groupID})
+		ds, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: groupID})
 		if err != nil {
 			return err
 		}
@@ -398,12 +398,12 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		}
 	}
 
-	req, err := s.svc.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
+	req, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
 	if err != nil {
 		return err
 	}
 
-	_, err = s.svc.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
+	_, err = s.relationGroupJoinRequestService.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
 		ID:     requestID,
 		Status: status,
 	})
@@ -412,7 +412,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 	}
 
 	if status == relationgrpcv1.GroupRequestStatus_Accepted && s.cache {
-		dialogInfo, err := s.svc.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+		dialogInfo, err := s.relationDialogService.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 		if err != nil {
 			s.logger.Error("获取群聊对话信息失败", zap.Error(err))
 			return code.RelationGroupErrManageJoinFailed
@@ -457,19 +457,19 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 }
 
 func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID uint32, userID string, status relationgrpcv1.GroupRequestStatus) error {
-	_, err := s.svc.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{GroupId: groupID, UserId: userID})
+	_, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{GroupId: groupID, UserId: userID})
 	if err != nil {
 		s.logger.Error("找不到入群请求", zap.Error(err))
 		return code.RelationErrManageFriendRequestFailed
 	}
 
-	info, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
+	info, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupID})
 	if err != nil {
 		s.logger.Error("get group info failed", zap.Error(err))
 		return code.RelationGroupErrGetGroupInfoFailed
 	}
 
-	relation, err := s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
+	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupID, UserId: userID})
 	if err != nil {
 		s.logger.Error("get group relation failed", zap.Error(err))
 	}
@@ -479,7 +479,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 	}
 
 	if status == relationgrpcv1.GroupRequestStatus_Accepted {
-		ds, err := s.svc.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: groupID})
+		ds, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: groupID})
 		if err != nil {
 			return err
 		}
@@ -488,12 +488,12 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 		}
 	}
 
-	req, err := s.svc.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
+	req, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
 	if err != nil {
 		return err
 	}
 
-	_, err = s.svc.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
+	_, err = s.relationGroupJoinRequestService.ManageGroupJoinRequestByID(ctx, &relationgrpcv1.ManageGroupJoinRequestByIDRequest{
 		ID:     requestID,
 		Status: status,
 	})
@@ -502,7 +502,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 	}
 
 	if status == relationgrpcv1.GroupRequestStatus_Accepted && s.cache {
-		dialogInfo, err := s.svc.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+		dialogInfo, err := s.relationDialogService.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 		if err != nil {
 			s.logger.Error("获取群聊对话信息失败", zap.Error(err))
 			return code.RelationGroupErrManageJoinFailed
@@ -547,12 +547,12 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 }
 
 func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, req *model.CreateGroupAnnouncementRequest) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
 	if err != nil {
 		return nil, err
 	}
 
-	relation, err := s.svc.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userId, GroupId: req.GroupId})
+	relation, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userId, GroupId: req.GroupId})
 	if err != nil {
 		return nil, err
 	}
@@ -561,7 +561,7 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 		return nil, code.Forbidden
 	}
 
-	resp, err := s.svc.CreateGroupAnnouncement(ctx, &relationgrpcv1.CreateGroupAnnouncementRequest{
+	resp, err := s.relationGroupAnnouncementService.CreateGroupAnnouncement(ctx, &relationgrpcv1.CreateGroupAnnouncementRequest{
 		GroupId: req.GroupId,
 		UserId:  userId,
 		Content: req.Content,
@@ -573,7 +573,7 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 	}
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{
 		UserId: userId,
 	})
 	if err != nil {
@@ -581,7 +581,7 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 	}
 
 	//查询群成员
-	ds, err := s.svc.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupId})
+	ds, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupId})
 	if err != nil {
 		return nil, err
 	}
@@ -620,7 +620,7 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 }
 
 func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, adminID string, userIDs []string) error {
-	gr1, err := s.svc.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: adminID, GroupId: groupID})
+	gr1, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: adminID, GroupId: groupID})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return code.RelationGroupErrGroupRelationFailed
@@ -630,7 +630,7 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 		return code.Forbidden
 	}
 
-	relation, err := s.svc.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: groupID, UserIds: userIDs})
+	relation, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: groupID, UserIds: userIDs})
 	if err != nil {
 		return err
 	}
@@ -650,7 +650,7 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 	}
 
 	//删除用户群聊关系
-	_, err = s.svc.RemoveGroupRelationByGroupIdAndUserIDs(ctx, &relationgrpcv1.RemoveGroupRelationByGroupIdAndUserIDsRequest{GroupId: groupID, UserIDs: userIDs})
+	_, err = s.relationGroupService.RemoveGroupRelationByGroupIdAndUserIDs(ctx, &relationgrpcv1.RemoveGroupRelationByGroupIdAndUserIDsRequest{GroupId: groupID, UserIDs: userIDs})
 	if err != nil {
 		return err
 	}
@@ -660,7 +660,7 @@ func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID uint32, admin
 
 func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) error {
 	//查询用户是否在群聊中
-	relation, err := s.svc.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
+	relation, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
 	if err != nil {
 		return code.RelationGroupErrGroupRelationFailed
 	}
@@ -669,7 +669,7 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 		return code.RelationGroupErrGroupOwnerCantLeaveGroupFailed
 	}
 
-	dialog, err := s.svc.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
+	dialog, err := s.relationDialogService.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 	if err != nil {
 		return code.DialogErrGetDialogByIdFailed
 	}
@@ -705,7 +705,7 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 }
 
 func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.InviteGroupRequest) error {
-	group, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
 	if err != nil {
 		return code.GroupErrGetGroupInfoByGidFailed
 	}
@@ -716,7 +716,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 
 	for _, s2 := range req.Member {
 		//查询是不是已经有邀请
-		id, err := s.svc.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
+		id, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
 			GroupId: req.GroupID,
 			UserId:  s2,
 		})
@@ -728,7 +728,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		}
 	}
 
-	relation1, err := s.svc.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: inviterId})
+	relation1, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: inviterId})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		return code.RelationGroupErrGroupRelationFailed
@@ -738,7 +738,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.Unauthorized
 	}
 
-	grs, err := s.svc.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: req.GroupID, UserIds: req.Member})
+	grs, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: req.GroupID, UserIds: req.Member})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
 		//if !errors.Is(code.Cause(err), code.RelationGroupErrRelationNotFound) {
@@ -751,7 +751,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrInviteFailed
 	}
 	//TODO 添加群聊配置，（是否邀请入群需要管理员权限）
-	_, err = s.svc.InviteJoinGroup(ctx, &relationgrpcv1.InviteJoinGroupRequest{
+	_, err = s.relationGroupJoinRequestService.InviteJoinGroup(ctx, &relationgrpcv1.InviteJoinGroupRequest{
 		GroupId:   req.GroupID,
 		InviterId: inviterId,
 		Member:    req.Member,
@@ -762,7 +762,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	}
 
 	//查询所有管理员
-	adminIds, err := s.svc.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
+	adminIds, err := s.relationGroupService.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupID,
 	})
 	for _, id := range adminIds.UserIds {
@@ -784,17 +784,17 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 }
 
 func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, groupId uint32) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := s.svc.GetGroupAnnouncementList(ctx, &relationgrpcv1.GetGroupAnnouncementListRequest{GroupId: groupId})
+	res, err := s.relationGroupAnnouncementService.GetGroupAnnouncementList(ctx, &relationgrpcv1.GetGroupAnnouncementListRequest{GroupId: groupId})
 	if err != nil {
 		return nil, err
 	}
@@ -802,14 +802,14 @@ func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, g
 	var respList []model.GetGroupAnnouncementListResponse
 
 	for _, item := range res.AnnouncementList {
-		info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+		info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{
 			UserId: item.UserId,
 		})
 		if err != nil {
 			return nil, err
 		}
 		//查询每条已读人数
-		users, err := s.svc.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{
+		users, err := s.relationGroupAnnouncementService.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{
 			GroupId:        item.GroupId,
 			AnnouncementId: item.ID,
 		})
@@ -818,7 +818,7 @@ func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, g
 		}
 		var readerInfos []*model.GetGroupAnnouncementReadUsersRequest
 		for _, ru := range users.AnnouncementReadUsers {
-			info2, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+			info2, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{
 				UserId: ru.UserId,
 			})
 			if err != nil {
@@ -857,22 +857,22 @@ func (s *Service) GetGroupAnnouncementList(ctx context.Context, userId string, g
 }
 
 func (s *Service) GetGroupAnnouncementDetail(ctx context.Context, userId string, id, groupId uint32) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
 	if err != nil {
 		return nil, err
 	}
 
-	announcement, err := s.svc.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: id})
+	announcement, err := s.relationGroupAnnouncementService.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: id})
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{
 		UserId: announcement.AnnouncementInfo.UserId,
 	})
 	if err != nil {
@@ -880,7 +880,7 @@ func (s *Service) GetGroupAnnouncementDetail(ctx context.Context, userId string,
 	}
 
 	//查询每条已读人数
-	users, err := s.svc.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{
+	users, err := s.relationGroupAnnouncementService.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{
 		GroupId:        groupId,
 		AnnouncementId: id,
 	})
@@ -889,7 +889,7 @@ func (s *Service) GetGroupAnnouncementDetail(ctx context.Context, userId string,
 	}
 	var readerInfos []*model.GetGroupAnnouncementReadUsersRequest
 	for _, ru := range users.AnnouncementReadUsers {
-		info2, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+		info2, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{
 			UserId: ru.UserId,
 		})
 		if err != nil {
@@ -926,12 +926,12 @@ func (s *Service) GetGroupAnnouncementDetail(ctx context.Context, userId string,
 }
 
 func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, req *model.UpdateGroupAnnouncementRequest) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
 	if err != nil {
 		return nil, err
 	}
 
-	relation, err := s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
+	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
 	if err != nil {
 		return nil, err
 	}
@@ -940,7 +940,7 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 		return nil, code.Forbidden
 	}
 
-	an, err := s.svc.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
+	an, err := s.relationGroupAnnouncementService.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -949,13 +949,13 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
 	}
 
-	res, err := s.svc.UpdateGroupAnnouncement(ctx, &relationgrpcv1.UpdateGroupAnnouncementRequest{ID: req.Id, Title: req.Title, Content: req.Content})
+	res, err := s.relationGroupAnnouncementService.UpdateGroupAnnouncement(ctx, &relationgrpcv1.UpdateGroupAnnouncementRequest{ID: req.Id, Title: req.Title, Content: req.Content})
 	if err != nil {
 		return nil, err
 	}
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(ctx, &userApi.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{
 		UserId: userId,
 	})
 	if err != nil {
@@ -963,7 +963,7 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 	}
 
 	//查询群成员
-	ds, err := s.svc.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupId})
+	ds, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupId})
 	if err != nil {
 		return nil, err
 	}
@@ -989,12 +989,12 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 }
 
 func (s *Service) DeleteGroupAnnouncement(ctx context.Context, userId string, req *model.DeleteGroupAnnouncementRequest) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
 	if err != nil {
 		return nil, err
 	}
 
-	relation, err := s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
+	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
 	if err != nil {
 		return nil, err
 	}
@@ -1003,7 +1003,7 @@ func (s *Service) DeleteGroupAnnouncement(ctx context.Context, userId string, re
 		return nil, code.Forbidden
 	}
 
-	an, err := s.svc.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
+	an, err := s.relationGroupAnnouncementService.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -1012,7 +1012,7 @@ func (s *Service) DeleteGroupAnnouncement(ctx context.Context, userId string, re
 		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
 	}
 
-	res, err := s.svc.DeleteGroupAnnouncement(ctx, &relationgrpcv1.DeleteGroupAnnouncementRequest{ID: req.Id})
+	res, err := s.relationGroupAnnouncementService.DeleteGroupAnnouncement(ctx, &relationgrpcv1.DeleteGroupAnnouncementRequest{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -1021,17 +1021,17 @@ func (s *Service) DeleteGroupAnnouncement(ctx context.Context, userId string, re
 
 // 设置群聊公告为已读
 func (s *Service) ReadGroupAnnouncement(ctx context.Context, userId string, req *model.ReadGroupAnnouncementRequest) (interface{}, error) {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupId, UserId: userId})
 	if err != nil {
 		return nil, err
 	}
 
-	an, err := s.svc.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
+	an, err := s.relationGroupAnnouncementService.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -1040,7 +1040,7 @@ func (s *Service) ReadGroupAnnouncement(ctx context.Context, userId string, req 
 		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
 	}
 
-	read, err := s.svc.MarkAnnouncementAsRead(ctx, &relationgrpcv1.MarkAnnouncementAsReadRequest{GroupId: req.GroupId, AnnouncementId: req.Id, UserIds: []string{userId}})
+	read, err := s.relationGroupAnnouncementService.MarkAnnouncementAsRead(ctx, &relationgrpcv1.MarkAnnouncementAsReadRequest{GroupId: req.GroupId, AnnouncementId: req.Id, UserIds: []string{userId}})
 	if err != nil {
 		return nil, err
 	}
@@ -1051,17 +1051,17 @@ func (s *Service) ReadGroupAnnouncement(ctx context.Context, userId string, req 
 // 获取读取群聊公告列表
 func (s *Service) GetReadGroupAnnouncementUserList(ctx context.Context, userId string, aid, groupId uint32) (interface{}, error) {
 	var response []*model.GetGroupAnnouncementReadUsersRequest
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: groupId})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: groupId, UserId: userId})
 	if err != nil {
 		return nil, err
 	}
 
-	an, err := s.svc.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: aid})
+	an, err := s.relationGroupAnnouncementService.GetGroupAnnouncement(ctx, &relationgrpcv1.GetGroupAnnouncementRequest{ID: aid})
 	if err != nil {
 		return nil, err
 	}
@@ -1070,7 +1070,7 @@ func (s *Service) GetReadGroupAnnouncementUserList(ctx context.Context, userId s
 		return nil, code.RelationGroupErrGroupAnnouncementNotFoundFailed
 	}
 
-	users, err := s.svc.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{GroupId: groupId, AnnouncementId: aid})
+	users, err := s.relationGroupAnnouncementService.GetReadUsers(ctx, &relationgrpcv1.GetReadUsersRequest{GroupId: groupId, AnnouncementId: aid})
 	if err != nil {
 		return nil, err
 	}
@@ -1082,7 +1082,7 @@ func (s *Service) GetReadGroupAnnouncementUserList(ctx context.Context, userId s
 		}
 	}
 
-	info, err := s.userClient.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
+	info, err := s.userService.GetBatchUserInfo(ctx, &userApi.GetBatchUserInfoRequest{UserIds: uids})
 	if err != nil {
 		return nil, err
 	}
@@ -1122,13 +1122,13 @@ func SwitchGroupRequestStatus(thisId, senderId, receiverId string, status relati
 }
 
 func (s *Service) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, userID string, req *model.SetGroupOpenBurnAfterReadingTimeOutRequest) error {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
 		return err
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: req.GroupId,
 	})
@@ -1137,7 +1137,7 @@ func (s *Service) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, userI
 		return err
 	}
 
-	_, err = s.svc.SetGroupOpenBurnAfterReadingTimeOut(ctx, &relationgrpcv1.SetGroupOpenBurnAfterReadingTimeOutRequest{
+	_, err = s.relationGroupService.SetGroupOpenBurnAfterReadingTimeOut(ctx, &relationgrpcv1.SetGroupOpenBurnAfterReadingTimeOutRequest{
 		UserId:                      userID,
 		GroupId:                     req.GroupId,
 		OpenBurnAfterReadingTimeOut: req.OpenBurnAfterReadingTimeOut,
@@ -1150,13 +1150,13 @@ func (s *Service) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, userI
 }
 
 func (s *Service) SetGroupUserRemark(ctx context.Context, userID string, req *model.SetGroupUserRemarkRequest) error {
-	_, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
+	_, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupId})
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
 		return err
 	}
 
-	_, err = s.svc.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+	_, err = s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: req.GroupId,
 	})
@@ -1165,7 +1165,7 @@ func (s *Service) SetGroupUserRemark(ctx context.Context, userID string, req *mo
 		return err
 	}
 
-	_, err = s.svc.SetGroupUserRemark(ctx, &relationgrpcv1.SetGroupUserRemarkRequest{
+	_, err = s.relationGroupService.SetGroupUserRemark(ctx, &relationgrpcv1.SetGroupUserRemarkRequest{
 		UserId:  userID,
 		GroupId: req.GroupId,
 		Remark:  req.Remark,
@@ -1274,7 +1274,7 @@ func (s *Service) removeRedisGroupList(userID string, groupID uint32) error {
 }
 
 func (s *Service) DeleteGroupFriendRecord(ctx context.Context, uid string, id uint32) error {
-	gr, err := s.svc.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: id})
+	gr, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: id})
 	if err != nil {
 		s.logger.Error("获取群聊好友申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
 		return err
@@ -1284,7 +1284,7 @@ func (s *Service) DeleteGroupFriendRecord(ctx context.Context, uid string, id ui
 		return code.Forbidden
 	}
 
-	_, err = s.svc.DeleteGroupRecord(ctx, &relationgrpcv1.DeleteGroupRecordRequest{ID: id})
+	_, err = s.relationGroupJoinRequestService.DeleteGroupRecord(ctx, &relationgrpcv1.DeleteGroupRecordRequest{ID: id})
 	if err != nil {
 		s.logger.Error("删除群聊好友申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
 		return err

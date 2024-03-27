@@ -13,7 +13,6 @@ type Repositories struct {
 	Gjqr repository.GroupJoinRequestRepository
 	GAr  repository.GroupAnnouncementRepository
 	Dr   repository.DialogRepository
-	Garr repository.GroupAnnouncementReadRepository
 	db   *gorm.DB
 }
 
@@ -25,7 +24,6 @@ func NewRepositories(db *gorm.DB) *Repositories {
 		Gjqr: NewGroupJoinRequestRepo(db),
 		GAr:  NewGroupAnnouncementRepository(db),
 		Ufqr: NewUserFriendRequestRepo(db),
-		Garr: NewGroupAnnouncementReadRepo(db),
 		db:   db,
 	}
 }
