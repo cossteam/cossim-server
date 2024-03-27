@@ -11,7 +11,6 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
@@ -35,22 +34,24 @@ var (
 
 // Service struct
 type Service struct {
-	relationUserClient   relationgrpcv1.UserRelationServiceClient
-	relationGroupClient  relationgrpcv1.GroupRelationServiceClient
-	relationDialogClient relationgrpcv1.DialogServiceClient
-	userClient           usergrpcv1.UserServiceClient
-	userLoginClient      usergrpcv1.UserLoginServiceClient
-	groupClient          groupgrpcv1.GroupServiceClient
-	msgClient            *grpcHandler.Handler
-	dtmGrpcServer        string
-	dialogGrpcServer     string
-	redisClient          *cache.RedisClient
-	pushClient           pushv1.PushServiceClient
-	logger               *zap.Logger
-	sid                  string
-	discovery            discovery.Registry
-	ac                   *pkgconfig.AppConfig
-	cache                bool
+	ac               *pkgconfig.AppConfig
+	dtmGrpcServer    string
+	dialogGrpcServer string
+	redisClient      *cache.RedisClient
+	pushClient       pushv1.PushServiceClient
+	logger           *zap.Logger
+	sid              string
+	cache            bool
+
+	relationUserService   relationgrpcv1.UserRelationServiceClient
+	relationGroupService  relationgrpcv1.GroupRelationServiceClient
+	relationDialogService relationgrpcv1.DialogServiceClient
+	userService           usergrpcv1.UserServiceClient
+	userLoginService      usergrpcv1.UserLoginServiceClient
+	groupService          groupgrpcv1.GroupServiceClient
+	msgService            msggrpcv1.MsgServiceServer
+	//msgClient            *grpcHandler.Handler
+
 }
 
 func New(ac *pkgconfig.AppConfig, handler *grpcHandler.Handler) *Service {
@@ -80,7 +81,7 @@ func New(ac *pkgconfig.AppConfig, handler *grpcHandler.Handler) *Service {
 		//mqClient: mqClient,
 		//pool:     make(map[string]map[string][]*client),
 	}
-	s.msgClient = handler
+	s.msgService = handler
 	// 监听服务消息队列
 	go s.ListenQueue()
 
@@ -153,7 +154,7 @@ func (s *Service) ListenQueue() {
 				wg := sync.WaitGroup{}
 				for _, v := range data.UserIds {
 					//查询对话id
-					relation, err := s.relationUserClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+					relation, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
 						UserId:   v,
 						FriendId: UserId,
 					})
@@ -176,7 +177,7 @@ func (s *Service) ListenQueue() {
 					}()
 				}
 
-				_, err = s.msgClient.SendMultiUserMessage(context.Background(), &msggrpcv1.SendMultiUserMsgRequest{MsgList: msgList})
+				_, err = s.msgService.SendMultiUserMessage(context.Background(), &msggrpcv1.SendMultiUserMsgRequest{MsgList: msgList})
 				if err != nil {
 					s.logger.Error("发送系统通知失败", zap.Error(err))
 					return
@@ -226,21 +227,21 @@ func (s *Service) Stop(ctx context.Context) error {
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
 	switch serviceName {
 	case "user_service":
-		s.userClient = usergrpcv1.NewUserServiceClient(conn)
-		s.userLoginClient = usergrpcv1.NewUserLoginServiceClient(conn)
+		s.userService = usergrpcv1.NewUserServiceClient(conn)
+		s.userLoginService = usergrpcv1.NewUserLoginServiceClient(conn)
 		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "relation_service":
-		s.relationUserClient = relationgrpcv1.NewUserRelationServiceClient(conn)
+		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
 
-		s.relationGroupClient = relationgrpcv1.NewGroupRelationServiceClient(conn)
+		s.relationGroupService = relationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
 
-		s.relationDialogClient = relationgrpcv1.NewDialogServiceClient(conn)
+		s.relationDialogService = relationgrpcv1.NewDialogServiceClient(conn)
 		s.dialogGrpcServer = conn.Target()
 		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
 	case "group_service":
-		s.groupClient = groupgrpcv1.NewGroupServiceClient(conn)
+		s.groupService = groupgrpcv1.NewGroupServiceClient(conn)
 		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	}
 

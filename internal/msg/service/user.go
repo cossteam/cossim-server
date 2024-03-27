@@ -31,7 +31,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	if !model.IsAllowedConversationType(req.IsBurnAfterReadingType) {
 		return nil, code.MsgErrInsertUserMessageFailed
 	}
-	userRelationStatus1, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	userRelationStatus1, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: req.ReceiverId,
 	})
@@ -43,7 +43,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
-	userRelationStatus2, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	userRelationStatus2, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   req.ReceiverId,
 		FriendId: userID,
 	})
@@ -56,7 +56,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
 
-	dialogs, err := s.relationDialogClient.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
+	dialogs, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
 		DialogId: req.DialogId,
 	})
 	if err != nil {
@@ -68,7 +68,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		return nil, code.DialogErrGetDialogByIdFailed
 	}
 
-	dialogUser, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: req.DialogId,
 		UserId:   userID,
 	})
@@ -77,7 +77,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		return nil, err
 	}
 
-	dialogUser2, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	dialogUser2, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: req.DialogId,
 		UserId:   req.ReceiverId,
 	})
@@ -92,7 +92,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	wfName := "send_user_msg_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		if dialogUser.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
-			_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+			_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
 				DialogId: req.DialogId,
 				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
 				UserId:   userID,
@@ -102,7 +102,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			}
 
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-				_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+				_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
 					DialogId: req.DialogId,
 					Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
 					UserId:   userID,
@@ -112,7 +112,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		}
 
 		if dialogUser2.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
-			_, err = s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+			_, err = s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
 				DialogId: req.DialogId,
 				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
 				UserId:   dialogUser2.UserId,
@@ -121,7 +121,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 				return err
 			}
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-				_, err := s.relationDialogClient.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+				_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
 					DialogId: req.DialogId,
 					Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
 					UserId:   dialogUser2.UserId,
@@ -130,7 +130,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			})
 		}
 
-		message, err = s.msgClient.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
+		message, err = s.msgService.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
 			DialogId:               req.DialogId,
 			SenderId:               userID,
 			ReceiverId:             req.ReceiverId,
@@ -153,7 +153,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	}
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 
 	if s.cache {
 		//查询接受者信息
-		info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 			UserId: req.ReceiverId,
 		})
 		if err != nil {
@@ -174,7 +174,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			dialogName = info2.NickName
 		}
 
-		msgs, err := s.msgClient.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
+		msgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
 			UserId:   userID,
 			DialogId: req.DialogId,
 		})
@@ -182,7 +182,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			return nil, err
 		}
 
-		msgs2, err := s.msgClient.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
+		msgs2, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
 			UserId:   req.ReceiverId,
 			DialogId: req.DialogId,
 		})
@@ -247,14 +247,14 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	}
 
 	if req.ReplyId != 0 {
-		msg, err := s.msgClient.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
+		msg, err := s.msgService.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
 			MsgId: uint32(req.ReplyId),
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		userInfo, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		userInfo, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 			UserId: msg.SenderId,
 		})
 		if err != nil {
@@ -315,7 +315,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 	}
 
 	var is bool
-	r, err := s.userLoginClient.GetUserLoginByUserId(context.Background(), &usergrpcv1.GetUserLoginByUserIdRequest{
+	r, err := s.userLoginService.GetUserLoginByUserId(context.Background(), &usergrpcv1.GetUserLoginByUserIdRequest{
 		UserId: receiverId,
 	})
 	if err == nil {
@@ -454,7 +454,7 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 }
 
 func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *model.MsgListRequest) (interface{}, error) {
-	msg, err := s.msgClient.GetUserMessageList(ctx, &msggrpcv1.GetUserMsgListRequest{
+	msg, err := s.msgService.GetUserMessageList(ctx, &msggrpcv1.GetUserMsgListRequest{
 		UserId:   userID,     //当前用户
 		FriendId: req.UserId, //好友id
 		Content:  req.Content,
@@ -467,7 +467,7 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 		return nil, err
 	}
 	//查询关系
-	relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserId})
+	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserId})
 	if err != nil {
 		s.logger.Error("获取用户关系失败", zap.Error(err))
 		return nil, err
@@ -479,13 +479,13 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 
 	msgList := make([]*model.UserMessage, 0)
 	for _, v := range msg.UserMessages {
-		info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 			UserId: v.SenderId,
 		})
 		if err != nil {
 			return nil, err
 		}
-		info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 			UserId: v.ReceiverId,
 		})
 		if err != nil {
@@ -560,7 +560,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	}
 
 	//获取对话id
-	ids, err := s.relationDialogClient.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
+	ids, err := s.relationDialogService.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
 		UserId: userID,
 	})
 	if err != nil {
@@ -568,7 +568,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		return nil, err
 	}
 	//获取对话信息
-	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+	infos, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
 	if err != nil {
@@ -576,7 +576,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		return nil, err
 	}
 	//获取最后一条消息
-	dialogIds, err := s.msgClient.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+	dialogIds, err := s.msgService.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
 		DialogIds: ids.DialogIds,
 	})
 	if err != nil {
@@ -588,7 +588,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 	var responseList = make([]model.UserDialogListResponse, 0)
 	for _, v := range infos.Dialogs {
 		var re model.UserDialogListResponse
-		du, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+		du, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 			DialogId: v.Id,
 			UserId:   userID,
 		})
@@ -599,7 +599,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		re.TopAt = int64(du.TopAt)
 		//用户
 		if v.Type == 0 {
-			users, _ := s.relationDialogClient.GetAllUsersInConversation(ctx, &relationgrpcv1.GetAllUsersInConversationRequest{
+			users, _ := s.relationDialogService.GetAllUsersInConversation(ctx, &relationgrpcv1.GetAllUsersInConversationRequest{
 				DialogId: v.Id,
 			})
 			if len(users.UserIds) == 0 {
@@ -609,7 +609,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 				if id == userID {
 					continue
 				}
-				info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+				info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 					UserId: id,
 				})
 				if err != nil {
@@ -618,7 +618,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 				}
 
 				//获取未读消息
-				msgs, err := s.msgClient.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
+				msgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
 					UserId:   userID,
 					DialogId: v.Id,
 				})
@@ -633,7 +633,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 				re.UserId = info.UserId
 				re.DialogCreateAt = v.CreateAt
 
-				relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+				relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 					UserId:   userID,
 					FriendId: id,
 				})
@@ -649,7 +649,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 
 		} else if v.Type == 1 {
 			//群聊
-			info, err := s.groupClient.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{
+			info, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{
 				Gid: v.GroupId,
 			})
 			if err != nil {
@@ -658,7 +658,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 			}
 
 			//获取未读消息
-			msgs, err := s.msgClient.GetGroupUnreadMessages(ctx, &msggrpcv1.GetGroupUnreadMessagesRequest{
+			msgs, err := s.msgService.GetGroupUnreadMessages(ctx, &msggrpcv1.GetGroupUnreadMessagesRequest{
 				UserId:   userID,
 				DialogId: v.Id,
 			})
@@ -685,7 +685,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					MsgType:  uint(msg.Type),
 				}
 				if msg.SenderId != "" {
-					info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+					info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 						UserId: msg.SenderId,
 					})
 					if err != nil {
@@ -699,7 +699,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					}
 					if v.Type == 1 {
 						//查询群聊备注
-						relation, err := s.relationGroupClient.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: v.GroupId, UserId: info.UserId})
+						relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: v.GroupId, UserId: info.UserId})
 						if err != nil {
 							return nil, err
 						}
@@ -708,7 +708,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 						}
 					} else if v.Type == 0 && msg.SenderId != userID {
 						//查询用户备注
-						relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: msg.SenderId})
+						relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: msg.SenderId})
 						if err != nil {
 							return nil, err
 						}
@@ -756,7 +756,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 
 func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId string, msgID uint32) (interface{}, error) {
 	//获取消息
-	msginfo, err := s.msgClient.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
+	msginfo, err := s.msgService.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -777,7 +777,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -799,7 +799,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	}
 
 	// 调用相应的 gRPC 客户端方法来撤回用户消息
-	msg, err := s.msgClient.DeleteUserMessage(ctx, &msggrpcv1.DeleteUserMsgRequest{
+	msg, err := s.msgService.DeleteUserMessage(ctx, &msggrpcv1.DeleteUserMsgRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -808,7 +808,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	}
 
 	////查询发送者信息
-	//info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 	//	UserId: userID,
 	//})
 	//if err != nil {
@@ -852,7 +852,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 
 func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, msgID uint32, content string) (interface{}, error) {
 	//获取消息
-	msginfo, err := s.msgClient.GetUserMessageById(context.Background(), &msggrpcv1.GetUserMsgByIDRequest{
+	msginfo, err := s.msgService.GetUserMessageById(context.Background(), &msggrpcv1.GetUserMsgByIDRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -865,7 +865,7 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(c, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(c, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -874,7 +874,7 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 	}
 
 	// 调用相应的 gRPC 客户端方法来编辑用户消息
-	_, err = s.msgClient.EditUserMessage(context.Background(), &msggrpcv1.EditUserMsgRequest{
+	_, err = s.msgService.EditUserMessage(context.Background(), &msggrpcv1.EditUserMsgRequest{
 		UserMessage: &msggrpcv1.UserMessage{
 			Id:      msgID,
 			Content: content,
@@ -901,7 +901,7 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 }
 
 func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId string, dialogId uint32, msgids []uint32) (interface{}, error) {
-	ids, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	ids, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: dialogId,
 	})
 	if err != nil {
@@ -933,7 +933,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		targetId = ids.UserIds[0]
 	}
 
-	relation, err := s.relationUserClient.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userid,
 		FriendId: targetId,
 	})
@@ -941,7 +941,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		return nil, err
 	}
 
-	_, err = s.msgClient.SetUserMsgsReadStatus(ctx, &msggrpcv1.SetUserMsgsReadStatusRequest{
+	_, err = s.msgService.SetUserMsgsReadStatus(ctx, &msggrpcv1.SetUserMsgsReadStatusRequest{
 		MsgIds:                      msgids,
 		DialogId:                    dialogId,
 		OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
@@ -951,7 +951,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		return nil, err
 	}
 
-	msgs, err := s.msgClient.GetUserMessagesByIds(ctx, &msggrpcv1.GetUserMessagesByIdsRequest{
+	msgs, err := s.msgService.GetUserMessagesByIds(ctx, &msggrpcv1.GetUserMessagesByIdsRequest{
 		MsgIds: msgids,
 		UserId: userid,
 	})
@@ -960,7 +960,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 	}
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 		UserId: userid,
 	})
 	if err != nil {
@@ -987,7 +987,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 	}
 
 	if s.cache {
-		userMsgs, err := s.msgClient.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
+		userMsgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
 			UserId:   userid,
 			DialogId: dialogId,
 		})
@@ -1014,7 +1014,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 // 标注私聊消息
 func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId string, msgID uint32, label model.LabelMsgType) (interface{}, error) {
 	// 获取用户消息
-	msginfo, err := s.msgClient.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
+	msginfo, err := s.msgService.GetUserMessageById(ctx, &msggrpcv1.GetUserMsgByIDRequest{
 		MsgId: msgID,
 	})
 	if err != nil {
@@ -1027,7 +1027,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogClient.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -1049,7 +1049,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 	}
 
 	// 调用 gRPC 客户端方法将用户消息设置为标注状态
-	_, err = s.msgClient.SetUserMsgLabel(context.Background(), &msggrpcv1.SetUserMsgLabelRequest{
+	_, err = s.msgService.SetUserMsgLabel(context.Background(), &msggrpcv1.SetUserMsgLabelRequest{
 		MsgId:   msgID,
 		IsLabel: msggrpcv1.MsgLabel(label),
 	})
@@ -1061,7 +1061,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 	msginfo.IsLabel = msggrpcv1.MsgLabel(label)
 
 	//查询发送者信息
-	//info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+	//info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 	//	UserId: userID,
 	//})
 	//if err != nil {
@@ -1115,7 +1115,7 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 }
 
 func (s *Service) GetUserLabelMsgList(ctx context.Context, userID string, dialogID uint32) (interface{}, error) {
-	_, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	_, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		UserId:   userID,
 		DialogId: dialogID,
 	})
@@ -1124,7 +1124,7 @@ func (s *Service) GetUserLabelMsgList(ctx context.Context, userID string, dialog
 		return nil, err
 	}
 
-	msgs, err := s.msgClient.GetUserMsgLabelByDialogId(ctx, &msggrpcv1.GetUserMsgLabelByDialogIdRequest{
+	msgs, err := s.msgService.GetUserMsgLabelByDialogId(ctx, &msggrpcv1.GetUserMsgLabelByDialogIdRequest{
 		DialogId: dialogID,
 	})
 	if err != nil {
@@ -1152,7 +1152,7 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 		queue:          messages,
 		DriverId:       driverId,
 		Rdb:            s.redisClient,
-		relationClient: s.relationUserClient,
+		relationClient: s.relationUserService,
 	}
 	if _, ok := pool[uid]; !ok {
 		pool[uid] = make(map[string][]*client)
@@ -1299,7 +1299,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	}
 
 	//TODO 验证是否在对话内
-	infos, err := s.relationDialogClient.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
+	infos, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: dialogIds,
 	})
 	if err != nil {
@@ -1328,7 +1328,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			if i2.Id == i3.DialogId {
 				if i3.MsgId == 0 {
 					if i2.Type == uint32(model.GroupConversation) {
-						list, err := s.msgClient.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
+						list, err := s.msgService.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
 							DialogId: i3.DialogId,
 							PageNum:  1,
 							PageSize: 20,
@@ -1338,7 +1338,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 						}
 						msgs := make([]*model.Message, 0)
 						for _, gm := range list.GroupMessages {
-							info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+							info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 								UserId: gm.UserId,
 							})
 							if err != nil {
@@ -1368,7 +1368,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 							Messages: msgs,
 						})
 					} else {
-						list, err := s.msgClient.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
+						list, err := s.msgService.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
 							DialogId: i3.DialogId,
 							PageNum:  1,
 							PageSize: 20,
@@ -1379,13 +1379,13 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 						msgs := make([]*model.Message, 0)
 						for _, um := range list.UserMessages {
 							//查询发送者信息
-							info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+							info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 								UserId: um.SenderId,
 							})
 							if err != nil {
 								return nil, err
 							}
-							info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+							info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 								UserId: um.ReceiverId,
 							})
 							if err != nil {
@@ -1427,7 +1427,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	}
 
 	//获取群聊消息
-	grouplist, err := s.msgClient.GetGroupMsgIdAfterMsgList(ctx, &msggrpcv1.GetGroupMsgIdAfterMsgListRequest{
+	grouplist, err := s.msgService.GetGroupMsgIdAfterMsgList(ctx, &msggrpcv1.GetGroupMsgIdAfterMsgListRequest{
 		List: infos2,
 	})
 	if err != nil {
@@ -1436,7 +1436,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 	for _, i2 := range grouplist.Messages {
 		msgs := make([]*model.Message, 0)
 		for _, i3 := range i2.GroupMessages {
-			info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 				UserId: i3.UserId,
 			})
 			if err != nil {
@@ -1467,7 +1467,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 		})
 	}
 	//获取私聊消息
-	userlist, err := s.msgClient.GetUserMsgIdAfterMsgList(ctx, &msggrpcv1.GetUserMsgIdAfterMsgListRequest{
+	userlist, err := s.msgService.GetUserMsgIdAfterMsgList(ctx, &msggrpcv1.GetUserMsgIdAfterMsgListRequest{
 		List: infos3,
 	})
 	if err != nil {
@@ -1477,13 +1477,13 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 		msgs := make([]*model.Message, 0)
 		for _, i3 := range i2.UserMessages {
 			//查询发送者信息
-			info, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 				UserId: i3.SenderId,
 			})
 			if err != nil {
 				return nil, err
 			}
-			info2, err := s.userClient.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 				UserId: i3.ReceiverId,
 			})
 			if err != nil {
@@ -1520,7 +1520,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 
 func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 	//获取最后一条消息，更新缓存
-	lastMsg, err := s.msgClient.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+	lastMsg, err := s.msgService.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
 		DialogIds: []uint32{dialogId},
 	})
 	if err != nil {
@@ -1533,7 +1533,7 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 	lm := lastMsg.LastMsgs[0]
 
 	//查询发送者信息
-	info, err := s.userClient.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
 		UserId: lm.SenderId,
 	})
 	if err != nil {
@@ -1541,7 +1541,7 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 	}
 
 	//查询接受者信息
-	info2, err := s.userClient.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+	info2, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
 		UserId: lm.ReceiverId,
 	})
 	if err != nil {
@@ -1549,21 +1549,21 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 	}
 
 	//获取对话信息
-	dialogInfo, err := s.relationDialogClient.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
+	dialogInfo, err := s.relationDialogService.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
 		DialogId: dialogId,
 	})
 	if err != nil {
 		return err
 	}
 
-	userRelationStatus1, err := s.relationUserClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+	userRelationStatus1, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
 		UserId:   lm.SenderId,
 		FriendId: lm.ReceiverId,
 	})
 	if err != nil {
 		return err
 	}
-	userRelationStatus2, err := s.relationUserClient.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+	userRelationStatus2, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
 		UserId:   lm.ReceiverId,
 		FriendId: lm.SenderId,
 	})
@@ -1571,14 +1571,14 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 		return err
 	}
 
-	dialogUser, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: dialogId,
 		UserId:   lm.SenderId,
 	})
 	if err != nil {
 		return err
 	}
-	dialogUser2, err := s.relationDialogClient.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+	dialogUser2, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 		DialogId: dialogId,
 		UserId:   lm.ReceiverId,
 	})
@@ -1586,7 +1586,7 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 		return err
 	}
 
-	msgs, err := s.msgClient.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
+	msgs, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
 		UserId:   lm.SenderId,
 		DialogId: dialogId,
 	})
@@ -1594,7 +1594,7 @@ func (s *Service) updateCacheUserDialog(dialogId uint32) error {
 		return err
 	}
 
-	msgs2, err := s.msgClient.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
+	msgs2, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
 		UserId:   lm.ReceiverId,
 		DialogId: dialogId,
 	})
