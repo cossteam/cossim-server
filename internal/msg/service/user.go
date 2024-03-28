@@ -343,12 +343,13 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 						js, _ := json.Marshal(m)
 						message, err := Enc.GetSecretMessage(string(js), receiverId)
 						if err != nil {
+							s.logger.Error("get secret message err", zap.Error(err))
 							return
 						}
 						err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 						if err != nil {
 							s.logger.Error("send msggrpcv1 err", zap.Error(err))
-							return
+							continue
 						}
 						if is {
 							appid, ok := s.ac.Push.PlatformAppID[r.Platform]
@@ -393,12 +394,13 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 					js, _ := json.Marshal(m)
 					message, err := Enc.GetSecretMessage(string(js), senderId)
 					if err != nil {
+						s.logger.Error("get secret message err", zap.Error(err))
 						return
 					}
 					err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 					if err != nil {
 						s.logger.Error("send msggrpcv1 err", zap.Error(err))
-						return
+						continue
 					}
 				}
 			}
