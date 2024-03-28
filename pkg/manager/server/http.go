@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cenkalti/backoff"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -125,14 +124,10 @@ func (s *HttpService) Register() error {
 }
 
 func (s *HttpService) Discover() {
-	// 定时器，每隔15秒执行一次服务发现
-	ticker := time.NewTicker(15 * time.Second)
+	// 定时器，每隔5秒执行一次服务发现
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	backoffSettings := backoff.NewExponentialBackOff()
-	backoffSettings.InitialInterval = 1 * time.Second
-	backoffSettings.MaxElapsedTime = 3 * backoffSettings.InitialInterval // 最高重试3次
-	fmt.Println("开始服务发现 => ", s.ac.Discovers)
 	for {
 		select {
 		case <-ticker.C:
@@ -152,26 +147,21 @@ func (s *HttpService) Discover() {
 					continue
 				}
 
-				retryFunc := func() error {
-					addr, err := s.registry.Discover(c.Name)
-					if err != nil {
-						return err
-					}
-					//s.logger.Info("Service discover success", "service", c.Name, "addr", addr)
-					conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-					if err != nil {
-						return err
-					}
-					client := make(map[string]*grpc.ClientConn)
-					client[c.Name] = conn
-					// 在每次成功发现服务后调用 DiscoverServices
-					if err := s.svc.DiscoverServices(client); err != nil {
-						s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
-					}
-					return nil
+				addr, err := s.registry.Discover(c.Name)
+				if err != nil {
+					s.logger.Error(err, "Failed to discover service", "service", c.Name)
+					continue
 				}
-				if err := backoff.Retry(retryFunc, backoffSettings); err != nil {
-					s.logger.Error(err, "Failed to initialize gRPC client for service after retries", "service", c.Name)
+				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				if err != nil {
+					s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
+					continue
+				}
+				client := make(map[string]*grpc.ClientConn)
+				client[c.Name] = conn
+				// 在每次成功发现服务后调用 DiscoverServices
+				if err := s.svc.DiscoverServices(client); err != nil {
+					s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
 				}
 			}
 		}
