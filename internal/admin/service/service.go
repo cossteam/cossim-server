@@ -21,22 +21,22 @@ import (
 
 type Service struct {
 	ac             *pkgconfig.AppConfig
-	repo           *persistence.Repositories
 	logger         *zap.Logger
+	repo           *persistence.Repositories
 	userClient     user.UserServiceClient
 	relationClient relationgrpcv1.UserRelationServiceClient
 	msgClient      msggrpcv1.MsgServiceClient
 	rabbitMQClient *msg_queue.RabbitMQ
 	sp             storage.StorageProvider
 
-	dtmGrpcServer  string
-	userGrpcServer string
-
-	gatewayAddress string
-	gatewayPort    string
-
-	sid         string
-	downloadURL string
+	dtmGrpcServer       string
+	relationServiceAddr string
+	userServiceAddr     string
+	msgServiceAddr      string
+	gatewayAddress      string
+	gatewayPort         string
+	sid                 string
+	downloadURL         string
 }
 
 func New(ac *pkgconfig.AppConfig) (s *Service) {
@@ -55,22 +55,32 @@ func New(ac *pkgconfig.AppConfig) (s *Service) {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	addr := conn.Target()
 	switch serviceName {
 	case "user_service":
+		if addr == s.userServiceAddr {
+			return nil
+		}
+		s.userServiceAddr = addr
 		s.userClient = user.NewUserServiceClient(conn)
-		s.userGrpcServer = conn.Target()
 		err := s.InitAdmin()
 		if err != nil {
 			return err
 		}
-		s.logger.Info("gRPC client for user service initialized", zap.String("addr", conn.Target()))
 	case "relation_service":
+		if addr == s.relationServiceAddr {
+			return nil
+		}
+		s.relationServiceAddr = addr
 		s.relationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("addr", conn.Target()))
 	case "msg_service":
+		if addr == s.msgServiceAddr {
+			return nil
+		}
+		s.msgServiceAddr = addr
 		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
-		s.logger.Info("gRPC client for msg service initialized", zap.String("addr", conn.Target()))
 	}
+	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil
 }
 

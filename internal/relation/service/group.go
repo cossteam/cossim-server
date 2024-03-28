@@ -679,10 +679,10 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 	gid := shortuuid.New()
 	err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
 		r := &emptypb.Empty{}
-		if err = tcc.CallBranch(r1, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r1, s.relationServiceAddr+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, "", s.relationServiceAddr+relationgrpcv1.DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, r); err != nil {
 			return err
 		}
-		err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.GroupRelationService_LeaveGroup_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_LeaveGroupRevert_FullMethodName, r)
+		err = tcc.CallBranch(r2, s.relationServiceAddr+relationgrpcv1.GroupRelationService_LeaveGroup_FullMethodName, "", s.relationServiceAddr+relationgrpcv1.GroupRelationService_LeaveGroupRevert_FullMethodName, r)
 		return err
 	})
 	if err != nil {

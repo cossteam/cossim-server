@@ -84,28 +84,43 @@ func (h *Handler) handlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
 	addr := conn.Target()
 	switch serviceName {
 	case "user_bff":
+		if *userServiceURL == "http://"+addr {
+			return
+		}
 		*userServiceURL = "http://" + addr
-		h.logger.Info("gRPC client for user service initialized", "service", "user", "addr", addr)
 	case "relation_bff":
+		if *relationServiceURL == "http://"+addr {
+			return
+		}
 		*relationServiceURL = "http://" + addr
-		h.logger.Info("gRPC client for relation service initialized", "service", "relation", "addr", addr)
 	case "group_bff":
+		if *groupServiceURL == "http://"+addr {
+			return
+		}
 		*groupServiceURL = "http://" + addr
-		h.logger.Info("gRPC client for group service initialized", "service", "group", "addr", addr)
 	case "msg_bff":
+		if *messageServiceURL == "http://"+addr {
+			return
+		}
 		*messageServiceURL = "http://" + addr
 		*messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
-		h.logger.Info("gRPC client for group service initialized", "service", "msg", "addr", addr)
 	case "storage_bff":
+		if *storageServiceURL == "http://"+addr {
+			return
+		}
 		*storageServiceURL = "http://" + addr
-		h.logger.Info("gRPC client for group service initialized", "service", "storage", "addr", addr)
 	case "live_bff":
+		if *liveUserServiceURL == "http://"+addr {
+			return
+		}
 		*liveUserServiceURL = "http://" + addr
-		h.logger.Info("gRPC client for group service initialized", "service", "live", "addr", addr)
 	case "admin_bff":
+		if *adminServiceURL == "http://"+addr {
+			return
+		}
 		*adminServiceURL = "http://" + addr
-		h.logger.Info("gRPC client for group service initialized", "service", "admin", "addr", addr)
 	}
+	h.logger.Info("gRPC client service initialized", "service", serviceName, "addr", addr)
 }
 
 func (h *Handler) proxyToService(targetURL *string) gin.HandlerFunc {

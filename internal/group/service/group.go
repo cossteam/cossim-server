@@ -66,7 +66,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	var groupID uint32
 	var DialogID uint32
 	// 创建 DTM 分布式事务工作流
-	workflow.InitGrpc(s.dtmGrpcServer, s.groupGrpcServer, grpc.NewServer())
+	workflow.InitGrpc(s.dtmGrpcServer, s.groupServiceAddr, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "create_group_workflow_" + gid
 	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
@@ -206,19 +206,19 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	if err = dtmgrpc.TccGlobalTransaction(s.dtmGrpcServer, gid, func(tcc *dtmgrpc.TccGrpc) error {
 		r := &emptypb.Empty{}
 		// 删除对话用户
-		if err = tcc.CallBranch(r1, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUsersByDialogID_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r1, s.relationServiceAddr+relationgrpcv1.DialogService_DeleteDialogUsersByDialogID_FullMethodName, "", s.relationServiceAddr+relationgrpcv1.DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		// 删除对话
-		if err = tcc.CallBranch(r2, s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogById_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.DialogService_DeleteDialogByIdRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r2, s.relationServiceAddr+relationgrpcv1.DialogService_DeleteDialogById_FullMethodName, "", s.relationServiceAddr+relationgrpcv1.DialogService_DeleteDialogByIdRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		// 删除群聊成员
-		if err = tcc.CallBranch(r3, s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, "", s.relationGrpcServer+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r3, s.relationServiceAddr+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName, "", s.relationServiceAddr+relationgrpcv1.GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		// 删除群聊
-		if err = tcc.CallBranch(r4, s.groupGrpcServer+groupgrpcv1.GroupService_DeleteGroup_FullMethodName, "", s.groupGrpcServer+groupgrpcv1.GroupService_DeleteGroupRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r4, s.groupServiceAddr+groupgrpcv1.GroupService_DeleteGroup_FullMethodName, "", s.groupServiceAddr+groupgrpcv1.GroupService_DeleteGroupRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		return err

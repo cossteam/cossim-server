@@ -34,14 +34,17 @@ var (
 
 // Service struct
 type Service struct {
-	ac               *pkgconfig.AppConfig
-	dtmGrpcServer    string
-	dialogGrpcServer string
-	redisClient      *cache.RedisClient
-	pushClient       pushv1.PushServiceClient
-	logger           *zap.Logger
-	sid              string
-	cache            bool
+	ac                  *pkgconfig.AppConfig
+	dtmGrpcServer       string
+	relationServiceAddr string
+	userServiceAddr     string
+	groupServiceAddr    string
+	msgServiceAddr      string
+	redisClient         *cache.RedisClient
+	pushClient          pushv1.PushServiceClient
+	logger              *zap.Logger
+	sid                 string
+	cache               bool
 
 	relationUserService   relationgrpcv1.UserRelationServiceClient
 	relationGroupService  relationgrpcv1.GroupRelationServiceClient
@@ -227,26 +230,31 @@ func (s *Service) Stop(ctx context.Context) error {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	addr := conn.Target()
 	switch serviceName {
 	case "user_service":
+		if s.userServiceAddr == addr {
+			return nil
+		}
+		s.userServiceAddr = addr
 		s.userService = usergrpcv1.NewUserServiceClient(conn)
 		s.userLoginService = usergrpcv1.NewUserLoginServiceClient(conn)
-		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "relation_service":
+		if s.relationServiceAddr == addr {
+			return nil
+		}
+		s.relationServiceAddr = addr
 		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
-
 		s.relationGroupService = relationgrpcv1.NewGroupRelationServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
-
 		s.relationDialogService = relationgrpcv1.NewDialogServiceClient(conn)
-		s.dialogGrpcServer = conn.Target()
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
 	case "group_service":
+		if s.groupServiceAddr == addr {
+			return nil
+		}
+		s.groupServiceAddr = addr
 		s.groupService = groupgrpcv1.NewGroupServiceClient(conn)
-		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	}
-
+	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil
 }
 

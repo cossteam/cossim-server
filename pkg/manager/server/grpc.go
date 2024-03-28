@@ -63,10 +63,6 @@ func NewGRPCService(c *config.AppConfig, svc GRPCService, logger logr.Logger, op
 
 type GrpcDiscoverFunc func(serviceName, addr string) error
 
-var (
-	_ Registry = &GrpcService{}
-)
-
 type GrpcService struct {
 	server   *grpc.Server
 	logger   logr.Logger
