@@ -253,6 +253,8 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		}
 		s.groupServiceAddr = addr
 		s.groupService = groupgrpcv1.NewGroupServiceClient(conn)
+	default:
+		return nil
 	}
 	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil

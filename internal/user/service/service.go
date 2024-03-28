@@ -77,6 +77,8 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		s.relationServiceAddr = addr
 		s.relationService = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.dialogService = relationgrpcv1.NewDialogServiceClient(conn)
+	default:
+		return nil
 	}
 	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil

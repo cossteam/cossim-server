@@ -119,6 +119,8 @@ func (h *Handler) handlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
 			return
 		}
 		*adminServiceURL = "http://" + addr
+	default:
+		return
 	}
 	h.logger.Info("gRPC client service initialized", "service", serviceName, "addr", addr)
 }

@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/ProtonMail/gopenpgp/v2 v2.7.4
-	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cossim/hipush v0.0.0-20240228032622-f93868966b7e
 	github.com/dlclark/regexp2 v1.10.0
 	github.com/dtm-labs/client v1.18.7
