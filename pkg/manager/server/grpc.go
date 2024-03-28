@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cenkalti/backoff"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/go-logr/logr"
@@ -12,7 +11,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"net"
-	"sync"
 	"time"
 )
 
@@ -83,59 +81,49 @@ func (s *GrpcService) RegisterHTTP(serviceName, addr string, serviceID string) e
 	panic("implement me")
 }
 
-func (s *GrpcService) Discover() error {
-	backoffSettings := backoff.NewExponentialBackOff()
-	backoffSettings.InitialInterval = 1 * time.Second
-	backoffSettings.MaxElapsedTime = 0 // 无限期重试
+func (s *GrpcService) discover() {
+	// 定时器，每隔5秒执行一次服务发现
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
 
-	clients := make(map[string]*grpc.ClientConn)
-	var mu sync.Mutex // 用于对 clients 的并发访问进行保护
-	var wg sync.WaitGroup
+	for {
+		select {
+		case <-ticker.C:
+			for _, c := range s.ac.Discovers {
+				if c.Direct {
+					conn, err := grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+					if err != nil {
+						s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
+						continue
+					}
+					// 在每次成功发现服务后调用 DiscoverServices
+					client := make(map[string]*grpc.ClientConn)
+					client[c.Name] = conn
+					if err := s.svc.DiscoverServices(client); err != nil {
+						s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
+					}
+					continue
+				}
 
-	// 控制并发数的信号量
-	sem := make(chan struct{}, 10) // 限制并发数为 10
-
-	for serviceName, c := range s.ac.Discovers {
-		if c.Direct {
-			conn, err := grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-			if err != nil {
-				return err
-			}
-			mu.Lock()
-			clients[c.Name] = conn
-			mu.Unlock()
-			continue
-		}
-		sem <- struct{}{} // 获取信号量，限制并发数
-		wg.Add(1)
-		go func(serviceName string, c config.ServiceConfig) {
-			defer wg.Done()
-			defer func() { <-sem }() // 释放信号量
-
-			retryFunc := func() error {
 				addr, err := s.registry.Discover(c.Name)
 				if err != nil {
-					s.logger.Error(err, "Service discover failed", "service", c.Name)
-					return err
+					s.logger.Error(err, "Failed to discover service", "service", c.Name)
+					continue
 				}
-				s.logger.Info("Service discover success", "service", c.Name, "addr", addr)
 				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 				if err != nil {
-					return err
+					s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
+					continue
 				}
-				mu.Lock()
-				clients[c.Name] = conn
-				mu.Unlock()
-				return nil
+				client := make(map[string]*grpc.ClientConn)
+				client[c.Name] = conn
+				// 在每次成功发现服务后调用 DiscoverServices
+				if err := s.svc.DiscoverServices(client); err != nil {
+					s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
+				}
 			}
-			if err := backoff.Retry(retryFunc, backoffSettings); err != nil {
-				s.logger.Error(err, "Failed to initialize gRPC client for service after retries")
-				return
-			}
-		}(serviceName, c)
+		}
 	}
-	wg.Wait()
-	return s.svc.DiscoverServices(clients)
 }
 
 func (s *GrpcService) Start(ctx context.Context) error {
@@ -160,14 +148,11 @@ func (s *GrpcService) Start(ctx context.Context) error {
 			return err
 		}
 		s.logger.Info("Service register success", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+		go s.watchRegistry(ctx)
 	}
 
 	if s.ac.Register.Discover {
-		go func() {
-			if err := s.discover(); err != nil {
-				s.logger.Error(err, "Service discover failed", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
-			}
-		}()
+		go s.discover()
 	}
 
 	lisAddr := fmt.Sprintf("%s", s.ac.GRPC.Addr())
@@ -196,8 +181,15 @@ func (s *GrpcService) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *GrpcService) discover() error {
-	return s.Discover()
+// watchRegistration 监听注册状态
+func (s *GrpcService) watchRegistry(ctx context.Context) {
+	s.registry.KeepAlive(s.ac.GRPC.Name, s.sid, &discovery.RegisterOption{
+		HealthCheckCallbackFn: func(b bool) {
+			if !b {
+				s.register()
+			}
+		},
+	})
 }
 
 func (s *GrpcService) register() error {
@@ -207,8 +199,10 @@ func (s *GrpcService) register() error {
 }
 
 func (s *GrpcService) cancel() {
-	if err := s.registry.Cancel(s.sid); err != nil {
-		s.logger.Error(err, "Service unregister failed", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+	if s.registry != nil {
+		if err := s.registry.Cancel(s.sid); err != nil {
+			s.logger.Error(err, "Service unregister failed", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
+		}
+		s.logger.Info("Service unregister success", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 	}
-	s.logger.Info("Service unregister success", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 }
