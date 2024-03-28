@@ -74,7 +74,7 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	if s.ac.Register.Register {
-		if err := s.Register(); err != nil {
+		if err := s.register(); err != nil {
 			return err
 		}
 		go s.watchRegistry(ctx)
@@ -111,7 +111,7 @@ func (s *HttpService) Stop(_ context.Context) error {
 	return nil
 }
 
-func (s *HttpService) Register() error {
+func (s *HttpService) register() error {
 	serviceName := s.ac.HTTP.Name
 	addr := s.ac.HTTP.Addr()
 	serviceID := s.sid
@@ -173,7 +173,7 @@ func (s *HttpService) watchRegistry(ctx context.Context) {
 	s.registry.KeepAlive(s.ac.HTTP.Name, s.sid, &discovery.RegisterOption{
 		HealthCheckCallbackFn: func(b bool) {
 			if !b {
-				s.Register()
+				s.register()
 			}
 		},
 	})
