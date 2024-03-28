@@ -33,10 +33,9 @@ type Service struct {
 	relationUserFriendRequestService relationgrpcv1.UserFriendRequestServiceServer
 	relationGroupJoinRequestService  relationgrpcv1.GroupJoinRequestServiceServer
 	relationGroupAnnouncementService relationgrpcv1.GroupAnnouncementServiceServer
-
-	relationDialogService relationgrpcv1.DialogServiceServer
-	userService           userv1.UserServiceClient
-	groupService          groupgrpcv1.GroupServiceClient
+	relationDialogService            relationgrpcv1.DialogServiceServer
+	userService                      userv1.UserServiceClient
+	groupService                     groupgrpcv1.GroupServiceClient
 
 	msgClient      msggrpcv1.MsgServiceClient
 	rabbitMQClient *msg_queue.RabbitMQ
@@ -56,6 +55,8 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) *Service {
 	s.relationGroupService = grpcService
 	s.relationUserService = grpcService
 	s.relationUserFriendRequestService = grpcService
+	s.relationGroupJoinRequestService = grpcService
+	s.relationGroupAnnouncementService = grpcService
 	s.relationDialogService = grpcService
 	return s
 }
