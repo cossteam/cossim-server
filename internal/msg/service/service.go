@@ -83,6 +83,7 @@ func New(ac *pkgconfig.AppConfig, handler *grpcHandler.Handler) *Service {
 		//pool:     make(map[string]map[string][]*client),
 	}
 	s.msgService = handler
+	s.msgGroupService = handler
 	// 监听服务消息队列
 	go s.ListenQueue()
 
