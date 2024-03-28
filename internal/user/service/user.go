@@ -374,16 +374,17 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 		Status:    model.UserStatus(r.Status),
 	}
 
-	if thisID != userID {
-		relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-			UserId:   thisID,
-			FriendId: userID,
-		})
-		if err != nil {
-			s.logger.Error("获取用户关系失败", zap.Error(err))
-			return resp, nil
-		}
+	relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   thisID,
+		FriendId: userID,
+	})
+	if err != nil {
+		s.logger.Error("获取用户关系失败", zap.Error(err))
+	}
 
+	fmt.Println("查询用户信息1", userID)
+	fmt.Println("查询用户信息2", thisID)
+	if thisID != userID && relation.UserId != "" {
 		if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
 			resp.RelationStatus = model.UserRelationStatusFriend
 		} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
