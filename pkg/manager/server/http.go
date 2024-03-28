@@ -15,12 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
-	"sync"
 	"time"
-)
-
-var (
-	_ Registry = &HttpService{}
 )
 
 // New returns a new server with sane defaults.
@@ -80,17 +75,14 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	if s.ac.Register.Register {
-		if err := s.RegisterHTTP(s.ac.HTTP.Name, s.ac.HTTP.Addr(), s.sid); err != nil {
+		if err := s.Register(); err != nil {
 			return err
 		}
+		go s.watchRegistry(ctx)
 	}
 
 	if s.ac.Register.Discover {
-		go func() {
-			if err := s.Discover(); err != nil {
-				s.logger.Error(err, "发现服务失败")
-			}
-		}()
+		go s.Discover()
 	}
 
 	serverShutdown := make(chan struct{})
@@ -120,84 +112,81 @@ func (s *HttpService) Stop(_ context.Context) error {
 	return nil
 }
 
-func (s *HttpService) RegisterGRPC(serviceName, addr string, serviceID string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *HttpService) RegisterHTTP(serviceName, addr string, serviceID string) error {
-	if err := s.registry.RegisterHTTP(serviceName, addr, s.sid, s.Health()); err != nil {
+func (s *HttpService) Register() error {
+	serviceName := s.ac.HTTP.Name
+	addr := s.ac.HTTP.Addr()
+	serviceID := s.sid
+	if err := s.registry.RegisterHTTP(serviceName, addr, serviceID, s.Health()); err != nil {
+		s.logger.Error(err, "Service register failed", "service", serviceName, "addr", addr, "sid", serviceID)
 		return err
 	}
 	s.logger.Info("Service register success", "service", serviceName, "addr", addr, "sid", serviceID)
 	return nil
 }
 
-func (s *HttpService) Discover() error {
+func (s *HttpService) Discover() {
+	// 定时器，每隔15秒执行一次服务发现
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+
 	backoffSettings := backoff.NewExponentialBackOff()
 	backoffSettings.InitialInterval = 1 * time.Second
-	backoffSettings.MaxElapsedTime = 0 // 无限期重试
+	backoffSettings.MaxElapsedTime = 3 * backoffSettings.InitialInterval // 最高重试3次
+	fmt.Println("开始服务发现 => ", s.ac.Discovers)
+	for {
+		select {
+		case <-ticker.C:
+			for _, c := range s.ac.Discovers {
+				if c.Direct {
+					conn, err := grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+					if err != nil {
+						s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
+						continue
+					}
+					// 在每次成功发现服务后调用 DiscoverServices
+					client := make(map[string]*grpc.ClientConn)
+					client[c.Name] = conn
+					if err := s.svc.DiscoverServices(client); err != nil {
+						s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
+					}
+					continue
+				}
 
-	//clients := make(map[string]*grpc.ClientConn)
-	//var mu sync.Mutex // 用于对 clients 的并发访问进行保护
-	var wg sync.WaitGroup
-
-	// 控制并发数的信号量
-	sem := make(chan struct{}, 10) // 限制并发数为 10
-
-	for serviceName, c := range s.ac.Discovers {
-		if c.Direct {
-			conn, err := grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-			if err != nil {
-				return err
+				retryFunc := func() error {
+					addr, err := s.registry.Discover(c.Name)
+					if err != nil {
+						return err
+					}
+					//s.logger.Info("Service discover success", "service", c.Name, "addr", addr)
+					conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+					if err != nil {
+						return err
+					}
+					client := make(map[string]*grpc.ClientConn)
+					client[c.Name] = conn
+					// 在每次成功发现服务后调用 DiscoverServices
+					if err := s.svc.DiscoverServices(client); err != nil {
+						s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
+					}
+					return nil
+				}
+				if err := backoff.Retry(retryFunc, backoffSettings); err != nil {
+					s.logger.Error(err, "Failed to initialize gRPC client for service after retries", "service", c.Name)
+				}
 			}
-			//mu.Lock()
-			//clients[c.Name] = conn
-			//mu.Unlock()
-			// 在每次成功发现服务后调用 DiscoverServices
-			client := make(map[string]*grpc.ClientConn)
-			client[c.Name] = conn
-			if err := s.svc.DiscoverServices(client); err != nil {
-				s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
-			}
-			continue
 		}
-		sem <- struct{}{} // 获取信号量，限制并发数
-		wg.Add(1)
-		go func(serviceName string, c config.ServiceConfig) {
-			defer wg.Done()
-			defer func() { <-sem }() // 释放信号量
-
-			retryFunc := func() error {
-				addr, err := s.registry.Discover(c.Name)
-				if err != nil {
-					s.logger.Error(err, "Service discover failed", "service", c.Name)
-					return err
-				}
-				s.logger.Info("Service discover success", "service", c.Name, "addr", addr)
-				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-				if err != nil {
-					return err
-				}
-				//mu.Lock()
-				//clients[c.Name] = conn
-				//mu.Unlock()
-				client := make(map[string]*grpc.ClientConn)
-				client[c.Name] = conn
-				// 在每次成功发现服务后调用 DiscoverServices
-				if err := s.svc.DiscoverServices(client); err != nil {
-					s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
-				}
-				return nil
-			}
-			if err := backoff.Retry(retryFunc, backoffSettings); err != nil {
-				s.logger.Error(err, "Failed to initialize gRPC client for service after retries")
-				return
-			}
-		}(serviceName, c)
 	}
-	wg.Wait()
-	return nil // 异步调用 DiscoverServices，无需等待所有服务都发现
+}
+
+// watchRegistration 监听注册状态
+func (s *HttpService) watchRegistry(ctx context.Context) {
+	s.registry.KeepAlive(s.ac.HTTP.Name, s.sid, &discovery.RegisterOption{
+		HealthCheckCallbackFn: func(b bool) {
+			if !b {
+				s.Register()
+			}
+		},
+	})
 }
 
 func (s *HttpService) cancel() {

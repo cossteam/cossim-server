@@ -80,7 +80,7 @@ func (h *Handler) Stop(ctx context.Context) error {
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 	for k, v := range services {
-		if err := h.svc.HandlerGrpcClient(k, v.Target()); err != nil {
+		if err := h.svc.HandlerGrpcClient(k, v); err != nil {
 			h.logger.Error("handler grpc client error", zap.String("name", k), zap.String("addr", v.Target()), zap.Error(err))
 		}
 	}

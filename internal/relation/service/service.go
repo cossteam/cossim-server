@@ -19,14 +19,15 @@ import (
 
 // Service struct
 type Service struct {
-	ac                 *pkgconfig.AppConfig
-	logger             *zap.Logger
-	sid                string
-	dtmGrpcServer      string
-	relationGrpcServer string
-	msgGrpcServer      string
-	dialogGrpcServer   string
-	cache              bool
+	ac                  *pkgconfig.AppConfig
+	logger              *zap.Logger
+	sid                 string
+	dtmGrpcServer       string
+	relationServiceAddr string
+	msgServiceAddr      string
+	userServiceAddr     string
+	groupServiceAddr    string
+	cache               bool
 
 	relationGroupService             relationgrpcv1.GroupRelationServiceServer
 	relationUserService              relationgrpcv1.UserRelationServiceServer
@@ -62,22 +63,33 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) *Service {
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	addr := conn.Target()
 	switch serviceName {
 	case "user_service":
+		if s.userServiceAddr == addr {
+			return nil
+		}
+		s.userServiceAddr = addr
 		s.userService = userv1.NewUserServiceClient(conn)
-		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "group_service":
+		if s.groupServiceAddr == addr {
+			return nil
+		}
+		s.groupServiceAddr = addr
 		s.groupService = groupgrpcv1.NewGroupServiceClient(conn)
-		s.logger.Info("gRPC client for group service initialized", zap.String("service", "group"), zap.String("addr", conn.Target()))
 	case "msg_service":
-		s.msgGrpcServer = conn.Target()
+		if s.msgServiceAddr == addr {
+			return nil
+		}
+		s.msgServiceAddr = addr
 		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
-		s.logger.Info("gRPC client for msg service initialized", zap.String("service", "msg"), zap.String("addr", conn.Target()))
 	case "relation_service":
-		s.relationGrpcServer = conn.Target()
-		s.logger.Info("gRPC client for msg service initialized", zap.String("service", "relation"), zap.String("addr", conn.Target()))
+		if s.relationServiceAddr == addr {
+			return nil
+		}
+		s.relationServiceAddr = addr
 	}
-
+	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil
 }
 

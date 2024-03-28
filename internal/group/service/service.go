@@ -15,22 +15,22 @@ import (
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Service struct
 type Service struct {
-	ac                 *pkgconfig.AppConfig
-	logger             *zap.Logger
-	sid                string
-	dtmGrpcServer      string
-	relationGrpcServer string
-	dialogGrpcServer   string
-	groupGrpcServer    string
-	downloadURL        string
-	gatewayAddress     string
-	gatewayPort        string
-	cache              bool
+	ac                  *pkgconfig.AppConfig
+	logger              *zap.Logger
+	sid                 string
+	dtmGrpcServer       string
+	relationServiceAddr string
+	dialogServiceAddr   string
+	groupServiceAddr    string
+	userServiceAddr     string
+	downloadURL         string
+	gatewayAddress      string
+	gatewayPort         string
+	cache               bool
 
 	groupService groupgrpcv1.GroupServiceServer
 	//groupClient           *mgrpc.Handler
@@ -77,29 +77,26 @@ func setMinIOProvider(ac *pkgconfig.AppConfig) storage.StorageProvider {
 	return sp
 }
 
-func (s *Service) HandlerGrpcClient(serviceName string, addr string) error {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
-
+func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	addr := conn.Target()
 	switch serviceName {
 	case "user_service":
+		if s.userServiceAddr == addr {
+			return nil
+		}
+		s.userServiceAddr = addr
 		s.userService = usergrpcv1.NewUserServiceClient(conn)
-		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
 	case "relation_service":
-		s.relationGrpcServer = addr
-		s.dialogGrpcServer = addr
+		if s.relationServiceAddr == addr {
+			return nil
+		}
+		s.relationServiceAddr = addr
+		s.dialogServiceAddr = addr
 		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "userRelation"), zap.String("addr", conn.Target()))
-
 		s.relationGroupService = relationgrpcv1.NewGroupRelationServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "groupRelation"), zap.String("addr", conn.Target()))
-
 		s.relationDialogService = relationgrpcv1.NewDialogServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("service", "dialogRelation"), zap.String("addr", conn.Target()))
 	}
-
+	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil
 }
 

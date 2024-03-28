@@ -35,14 +35,15 @@ type Service struct {
 	smtpClient     email.EmailProvider
 	rabbitMQClient *msg_queue.RabbitMQ
 
-	dtmGrpcServer   string
-	userGrpcServer  string
-	sid             string
-	downloadURL     string
-	gatewayAddress  string
-	gatewayPort     string
-	tokenExpiration time.Duration
-	cache           bool
+	dtmGrpcServer       string
+	relationServiceAddr string
+	userGrpcServer      string
+	sid                 string
+	downloadURL         string
+	gatewayAddress      string
+	gatewayPort         string
+	tokenExpiration     time.Duration
+	cache               bool
 }
 
 func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) (s *Service) {
@@ -67,13 +68,17 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) (s *Service)
 }
 
 func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) error {
+	addr := conn.Target()
 	switch serviceName {
 	case "relation_service":
+		if s.relationServiceAddr == addr {
+			return nil
+		}
+		s.relationServiceAddr = addr
 		s.relationService = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.dialogService = relationgrpcv1.NewDialogServiceClient(conn)
-		s.logger.Info("gRPC client for relation service initialized", zap.String("addr", conn.Target()))
 	}
-
+	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil
 }
 

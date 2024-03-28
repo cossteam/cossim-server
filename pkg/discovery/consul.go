@@ -27,6 +27,55 @@ type ConsulRegistry struct {
 	keepAliveSync time.Duration // 心跳同步间隔
 }
 
+func (c *ConsulRegistry) KeepAlive(serviceName, serviceID string, opts *RegisterOption) {
+	// 定时器，每隔15秒进行一次健康检查
+	var interval = 15 * time.Second
+	if opts.Interval != 0 {
+		interval = opts.Interval
+	}
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				// 检查Consul的健康状态
+				_, _, err := c.client.Health().Service("consul", "", false, nil)
+				if err != nil {
+					log.Printf("[ERROR] consul registry keep alive error: %v", err)
+					opts.HealthCheckCallbackFn(false)
+					continue
+				}
+				// 检查服务实例是否已经注册
+				isRegistered, err := c.checkServiceRegistered(serviceName, serviceID)
+				if err != nil {
+					log.Printf("[ERROR] consul registry keep alive error: %v", err)
+				}
+				if opts.HealthCheckCallbackFn != nil {
+					opts.HealthCheckCallbackFn(isRegistered)
+				}
+			}
+		}
+	}()
+}
+
+// checkServiceRegistered 检查服务实例是否已经注册
+func (c *ConsulRegistry) checkServiceRegistered(serviceName, serviceID string) (bool, error) {
+	services, _, err := c.client.Health().Service(serviceName, "", true, &api.QueryOptions{Token: c.token})
+	if err != nil {
+		return false, err
+	}
+
+	for _, service := range services {
+		if service.Service.ID == serviceID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func (c *ConsulRegistry) RegisterHTTP(serviceName, addr, serviceID, healthAddr string) error {
 	address, portStr, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -61,7 +110,7 @@ func (c *ConsulRegistry) RegisterHTTP(serviceName, addr, serviceID, healthAddr s
 	}
 
 	// 定期检查Consul的可用性，并在Consul重新启动后重新注册服务
-	go c.keepAlive(service)
+	//go c.keepAlive(service)
 
 	return nil
 }
@@ -137,7 +186,7 @@ func (c *ConsulRegistry) RegisterGRPC(serviceName, addr string, serviceID string
 	}
 
 	// 定期检查Consul的可用性，并在Consul重新启动后重新注册服务
-	go c.keepAlive(service)
+	//go c.keepAlive(service)
 
 	return nil
 }

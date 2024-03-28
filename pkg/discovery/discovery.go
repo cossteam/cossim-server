@@ -1,5 +1,7 @@
 package discovery
 
+import "time"
+
 // Registry 定义服务注册发现接口
 type Registry interface {
 	RegisterGRPC(serviceName, addr string, serviceID string) error
@@ -7,6 +9,12 @@ type Registry interface {
 	Cancel(serviceID string) error
 	Discover(serviceName string) (string, error)
 	Health(serviceName string) bool
+	KeepAlive(serviceName, serviceID string, opts *RegisterOption)
+}
+
+type RegisterOption struct {
+	Interval              time.Duration
+	HealthCheckCallbackFn func(bool)
 }
 
 // ConfigCenter 定义配置中心接口
