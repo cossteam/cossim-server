@@ -69,7 +69,13 @@ func (h *Handler) GroupJoin(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GroupJoinRoom(c, req.GroupID, userID)
+	driverId, err := pkghttp.ParseTokenReDriverId(c)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	resp, err := h.svc.GroupJoinRoom(c, req.GroupID, userID, driverId)
 	if err != nil {
 		c.Error(err)
 		return

@@ -164,7 +164,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 	}, nil
 }
 
-func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*dto.GroupJoinResponse, error) {
+func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid, driverId string) (*dto.GroupJoinResponse, error) {
 	_, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: gid, UserId: uid})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
@@ -225,11 +225,25 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid string) (*d
 		token, err = s.GetUserJoinToken(ctx, room.Room, user.NickName, uid)
 	}
 	if err != nil {
-		s.logger.Error("获取用户加入房间token失败", zap.Error(err))
 		return nil, code.LiveErrJoinCallFailed
 	}
 
-	s.logger.Info("加入群聊通话", zap.Int("gid", int(gid)), zap.String("uid", uid), zap.String("room", room.Room), zap.String("livekit", s.livekitServer))
+	for k := range room.Participants {
+		if k == uid {
+			continue
+		}
+		msg := constants.WsMsg{Uid: k, Event: constants.GroupCallAcceptEvent, Data: map[string]interface{}{
+			"room":         room.Room,
+			"sender_id":    room.SenderID,
+			"recipient_id": uid,
+			"driver_id":    driverId,
+		}}
+		if err = s.publishServiceMessage(ctx, msg); err != nil {
+			s.logger.Error("推送用户通话接受事件失败", zap.Error(err))
+		}
+	}
+
+	s.logger.Info("加入群聊通话", zap.Int("gid", int(gid)), zap.String("uid", uid), zap.String("room", roomStr), zap.String("livekit", s.livekitServer))
 
 	return &dto.GroupJoinResponse{
 		Url:   s.livekitServer,
