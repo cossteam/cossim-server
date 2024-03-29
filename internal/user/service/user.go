@@ -384,7 +384,7 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 
 	fmt.Println("查询用户信息1", userID)
 	fmt.Println("查询用户信息2", thisID)
-	if thisID != userID && relation.UserId != "" {
+	if thisID != userID && relation.UserId != "" && relation != nil {
 		if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
 			resp.RelationStatus = model.UserRelationStatusFriend
 		} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
