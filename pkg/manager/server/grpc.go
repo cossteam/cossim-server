@@ -46,7 +46,7 @@ func NewGRPCService(c *config.AppConfig, svc GRPCService, logger logr.Logger, op
 	}
 	s := &GrpcService{
 		server:   grpc.NewServer(),
-		logger:   logger,
+		logger:   logger.WithValues("kind", "grpc server", "name", c.GRPC.Name),
 		ac:       c,
 		sid:      xid.New().String(),
 		registry: d,
@@ -89,6 +89,7 @@ func (s *GrpcService) discover() {
 	for {
 		select {
 		case <-ticker.C:
+			clients := make(map[string]*grpc.ClientConn)
 			for _, c := range s.ac.Discovers {
 				if c.Direct {
 					conn, err := grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -97,9 +98,8 @@ func (s *GrpcService) discover() {
 						continue
 					}
 					// 在每次成功发现服务后调用 DiscoverServices
-					client := make(map[string]*grpc.ClientConn)
-					client[c.Name] = conn
-					if err := s.svc.DiscoverServices(client); err != nil {
+					clients[c.Name] = conn
+					if err := s.svc.DiscoverServices(clients); err != nil {
 						s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
 					}
 					continue
@@ -115,10 +115,9 @@ func (s *GrpcService) discover() {
 					s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
 					continue
 				}
-				client := make(map[string]*grpc.ClientConn)
-				client[c.Name] = conn
+				clients[c.Name] = conn
 				// 在每次成功发现服务后调用 DiscoverServices
-				if err := s.svc.DiscoverServices(client); err != nil {
+				if err := s.svc.DiscoverServices(clients); err != nil {
 					s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
 				}
 			}

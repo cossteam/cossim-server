@@ -82,6 +82,7 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 
 func (h *Handler) handlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
 	addr := conn.Target()
+	defer conn.Close()
 	switch serviceName {
 	case "user_bff":
 		if *userServiceURL == "http://"+addr {
