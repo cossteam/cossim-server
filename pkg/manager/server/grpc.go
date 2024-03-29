@@ -120,10 +120,11 @@ func (s *GrpcService) discover() {
 				if ip, ok := serviceMap[c.Name]; ok {
 					if ip != conn.Target() {
 						newClients[c.Name] = conn
+						serviceMap[c.Name] = conn.Target()
 					}
 				} else {
-					serviceMap[c.Name] = conn.Target()
 					newClients[c.Name] = conn
+					serviceMap[c.Name] = conn.Target()
 				}
 				serviceLock.Unlock()
 			}
