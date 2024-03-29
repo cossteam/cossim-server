@@ -1885,7 +1885,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/relation/group/delete_friend_record": {
+        "/relation/group/delete_request_record": {
             "post": {
                 "description": "删除群聊申请记录",
                 "consumes": [
@@ -2460,7 +2460,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/relation/user/delete_friend_record": {
+        "/relation/user/delete_request_record": {
             "post": {
                 "description": "删除好友申请记录",
                 "consumes": [
@@ -4542,6 +4542,9 @@ const docTemplate = `{
         },
         "model.LogoutRequest": {
             "type": "object",
+            "required": [
+                "login_number"
+            ],
             "properties": {
                 "login_number": {
                     "type": "integer"

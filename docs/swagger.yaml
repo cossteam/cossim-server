@@ -693,6 +693,8 @@ definitions:
     properties:
       login_number:
         type: integer
+    required:
+    - login_number
     type: object
   model.ManageFriendRequest:
     properties:
@@ -2324,7 +2326,7 @@ paths:
       summary: 设置群聊阅后即焚消息销毁时间
       tags:
       - GroupRelation
-  /relation/group/delete_friend_record:
+  /relation/group/delete_request_record:
     post:
       consumes:
       - application/json
@@ -2690,7 +2692,7 @@ paths:
       summary: 删除好友
       tags:
       - UserRelation
-  /relation/user/delete_friend_record:
+  /relation/user/delete_request_record:
     post:
       consumes:
       - application/json

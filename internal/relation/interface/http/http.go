@@ -63,7 +63,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/add_friend", h.addFriend)
 	u.POST("/manage_friend", h.manageFriend)
 	u.POST("/delete_friend", h.deleteFriend)
-	u.POST("/delete_friend_record", h.deleteUserFriendRecord)
+	u.POST("/delete_request_record", h.deleteUserRequestRecord)
 	u.POST("/add_blacklist", h.addBlacklist)
 	u.POST("/delete_blacklist", h.deleteBlacklist)
 	u.POST("/switch/e2e/key", h.switchUserE2EPublicKey)
@@ -77,7 +77,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g := api.Group("/group")
 	g.GET("/member", h.getGroupMember)
 	g.GET("/request_list", h.groupRequestList)
-	g.POST("/delete_friend_record", h.deleteGroupFriendRequest)
+	g.POST("/delete_request_record", h.deleteGroupRequestRecord)
 	// 邀请好友加入群聊
 	g.POST("/invite", h.inviteGroup)
 	// 申请加入群聊
