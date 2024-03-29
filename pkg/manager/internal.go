@@ -110,6 +110,26 @@ type controllerManager struct {
 	config *config.AppConfig
 }
 
+func (cm *controllerManager) SetupHTTPServerWithManager(hs HttpServer) error {
+	if hs.HTTPService == nil {
+		return errors.New("http service is nil")
+	}
+	cm.httpServer = server2.NewHttpService(cm.config, hs.HTTPService, hs.HealthCheckAddress+defaultLivenessEndpoint, cm.GetLogger())
+	return nil
+}
+
+func (cm *controllerManager) SetupGRPCServerWithManager(gs GrpcServer) error {
+	if gs.GRPCService == nil {
+		return errors.New("http service is nil")
+	}
+	cm.grpcServer = server2.NewGRPCService(cm.config, gs.GRPCService, cm.GetLogger())
+	return nil
+}
+
+func (cm *controllerManager) GetConfig() config.AppConfig {
+	return *cm.config
+}
+
 func (cm *controllerManager) Stop(ctx context.Context) error {
 	return nil
 }
