@@ -4376,6 +4376,10 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "read_all": {
+                    "description": "全部已读",
+                    "type": "boolean"
                 }
             }
         },
@@ -4677,8 +4681,7 @@ const docTemplate = `{
         "model.ReadUserMsgsRequest": {
             "type": "object",
             "required": [
-                "dialog_id",
-                "msg_ids"
+                "dialog_id"
             ],
             "properties": {
                 "dialog_id": {
@@ -4691,6 +4694,10 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "read_all": {
+                    "description": "全部已读",
+                    "type": "boolean"
                 }
             }
         },

@@ -44,6 +44,8 @@ const (
 	MsgService_GetGroupMsgLabelByDialogId_FullMethodName           = "/v1.MsgService/GetGroupMsgLabelByDialogId"
 	MsgService_GetGroupMsgIdAfterMsgList_FullMethodName            = "/v1.MsgService/GetGroupMsgIdAfterMsgList"
 	MsgService_GetGroupUnreadMessages_FullMethodName               = "/v1.MsgService/GetGroupUnreadMessages"
+	MsgService_ReadAllUserMsg_FullMethodName                       = "/v1.MsgService/ReadAllUserMsg"
+	MsgService_ReadAllGroupMsg_FullMethodName                      = "/v1.MsgService/ReadAllGroupMsg"
 	MsgService_SetUserMsgsReadStatus_FullMethodName                = "/v1.MsgService/SetUserMsgsReadStatus"
 	MsgService_SetUserMsgReadStatus_FullMethodName                 = "/v1.MsgService/SetUserMsgReadStatus"
 	MsgService_GetUnreadUserMsgs_FullMethodName                    = "/v1.MsgService/GetUnreadUserMsgs"
@@ -109,6 +111,10 @@ type MsgServiceClient interface {
 	GetGroupMsgIdAfterMsgList(ctx context.Context, in *GetGroupMsgIdAfterMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgIdAfterMsgListResponse, error)
 	// 获取群聊未读消息
 	GetGroupUnreadMessages(ctx context.Context, in *GetGroupUnreadMessagesRequest, opts ...grpc.CallOption) (*GetGroupUnreadMessagesResponse, error)
+	// 一键已读用户消息
+	ReadAllUserMsg(ctx context.Context, in *ReadAllUserMsgRequest, opts ...grpc.CallOption) (*ReadAllUserMsgResponse, error)
+	// 一键已读群聊消息
+	ReadAllGroupMsg(ctx context.Context, in *ReadAllGroupMsgRequest, opts ...grpc.CallOption) (*ReadAllGroupMsgResponse, error)
 	// 批量设置私聊消息id为已读
 	SetUserMsgsReadStatus(ctx context.Context, in *SetUserMsgsReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgsReadStatusResponse, error)
 	// 修改指定私聊消息的已读状态
@@ -362,6 +368,24 @@ func (c *msgServiceClient) GetGroupUnreadMessages(ctx context.Context, in *GetGr
 	return out, nil
 }
 
+func (c *msgServiceClient) ReadAllUserMsg(ctx context.Context, in *ReadAllUserMsgRequest, opts ...grpc.CallOption) (*ReadAllUserMsgResponse, error) {
+	out := new(ReadAllUserMsgResponse)
+	err := c.cc.Invoke(ctx, MsgService_ReadAllUserMsg_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) ReadAllGroupMsg(ctx context.Context, in *ReadAllGroupMsgRequest, opts ...grpc.CallOption) (*ReadAllGroupMsgResponse, error) {
+	out := new(ReadAllGroupMsgResponse)
+	err := c.cc.Invoke(ctx, MsgService_ReadAllGroupMsg_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgServiceClient) SetUserMsgsReadStatus(ctx context.Context, in *SetUserMsgsReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgsReadStatusResponse, error) {
 	out := new(SetUserMsgsReadStatusResponse)
 	err := c.cc.Invoke(ctx, MsgService_SetUserMsgsReadStatus_FullMethodName, in, out, opts...)
@@ -497,6 +521,10 @@ type MsgServiceServer interface {
 	GetGroupMsgIdAfterMsgList(context.Context, *GetGroupMsgIdAfterMsgListRequest) (*GetGroupMsgIdAfterMsgListResponse, error)
 	// 获取群聊未读消息
 	GetGroupUnreadMessages(context.Context, *GetGroupUnreadMessagesRequest) (*GetGroupUnreadMessagesResponse, error)
+	// 一键已读用户消息
+	ReadAllUserMsg(context.Context, *ReadAllUserMsgRequest) (*ReadAllUserMsgResponse, error)
+	// 一键已读群聊消息
+	ReadAllGroupMsg(context.Context, *ReadAllGroupMsgRequest) (*ReadAllGroupMsgResponse, error)
 	// 批量设置私聊消息id为已读
 	SetUserMsgsReadStatus(context.Context, *SetUserMsgsReadStatusRequest) (*SetUserMsgsReadStatusResponse, error)
 	// 修改指定私聊消息的已读状态
@@ -596,6 +624,12 @@ func (UnimplementedMsgServiceServer) GetGroupMsgIdAfterMsgList(context.Context, 
 }
 func (UnimplementedMsgServiceServer) GetGroupUnreadMessages(context.Context, *GetGroupUnreadMessagesRequest) (*GetGroupUnreadMessagesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupUnreadMessages not implemented")
+}
+func (UnimplementedMsgServiceServer) ReadAllUserMsg(context.Context, *ReadAllUserMsgRequest) (*ReadAllUserMsgResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadAllUserMsg not implemented")
+}
+func (UnimplementedMsgServiceServer) ReadAllGroupMsg(context.Context, *ReadAllGroupMsgRequest) (*ReadAllGroupMsgResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadAllGroupMsg not implemented")
 }
 func (UnimplementedMsgServiceServer) SetUserMsgsReadStatus(context.Context, *SetUserMsgsReadStatusRequest) (*SetUserMsgsReadStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetUserMsgsReadStatus not implemented")
@@ -1087,6 +1121,42 @@ func _MsgService_GetGroupUnreadMessages_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_ReadAllUserMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadAllUserMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).ReadAllUserMsg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_ReadAllUserMsg_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).ReadAllUserMsg(ctx, req.(*ReadAllUserMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_ReadAllGroupMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadAllGroupMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).ReadAllGroupMsg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_ReadAllGroupMsg_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).ReadAllGroupMsg(ctx, req.(*ReadAllGroupMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MsgService_SetUserMsgsReadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetUserMsgsReadStatusRequest)
 	if err := dec(in); err != nil {
@@ -1355,6 +1425,14 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGroupUnreadMessages",
 			Handler:    _MsgService_GetGroupUnreadMessages_Handler,
+		},
+		{
+			MethodName: "ReadAllUserMsg",
+			Handler:    _MsgService_ReadAllUserMsg_Handler,
+		},
+		{
+			MethodName: "ReadAllGroupMsg",
+			Handler:    _MsgService_ReadAllGroupMsg_Handler,
 		},
 		{
 			MethodName: "SetUserMsgsReadStatus",

@@ -630,7 +630,7 @@ func (h *Handler) readUserMsgs(c *gin.Context) {
 		return
 	}
 
-	_, err = h.svc.ReadUserMsgs(c, thisId, driverId, req.DialogId, req.MsgIds)
+	_, err = h.svc.ReadUserMsgs(c, thisId, driverId, req)
 	if err != nil {
 		c.Error(err)
 		return

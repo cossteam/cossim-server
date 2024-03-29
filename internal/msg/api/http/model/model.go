@@ -194,7 +194,8 @@ type LabelGroupMessageRequest struct {
 }
 
 type ReadUserMsgsRequest struct {
-	MsgIds   []uint32 `json:"msg_ids" binding:"required"`   //消息id
+	ReadAll  bool     `json:"read_all"`                     // 全部已读
+	MsgIds   []uint32 `json:"msg_ids"`                      // 消息id
 	DialogId uint32   `json:"dialog_id" binding:"required"` // 会话ID
 }
 
@@ -244,6 +245,7 @@ func IsAllowedConversationType(isBurnAfterReading BurnAfterReadingType) bool {
 }
 
 type GroupMessageReadRequest struct {
+	ReadAll  bool     `json:"read_all"`                     // 全部已读
 	GroupId  uint32   `json:"group_id" binding:"required"`  // 群组ID
 	DialogId uint32   `json:"dialog_id" binding:"required"` // 会话ID
 	MsgIds   []uint32 `json:"msg_ids" binding:"required"`   // 消息ID

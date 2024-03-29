@@ -482,7 +482,36 @@ message GetLastMsgListRequest {
   uint32 PageNum = 3;
 }
 
-service MsgService{
+message ReadAllUserMsgRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+message ReadAllGroupMsgRequest {
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+message ReadAllUserMsgResponse {}
+
+message ReadAllGroupMsgResponse {
+  // @inject_tag: json:"msgs"
+  repeated UnreadGroupMessage UnreadGroupMessage = 1;
+
+}
+
+message UnreadGroupMessage {
+  // @inject_tag: json:"msg_id"
+  uint32 MsgId = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
+}
+
+service MsgService {
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
   //群发私聊消息
@@ -537,6 +566,11 @@ service MsgService{
   //获取群聊未读消息
   rpc GetGroupUnreadMessages(GetGroupUnreadMessagesRequest) returns (GetGroupUnreadMessagesResponse);
 
+  // 一键已读用户消息
+  rpc ReadAllUserMsg(ReadAllUserMsgRequest) returns (ReadAllUserMsgResponse);
+
+  // 一键已读群聊消息
+  rpc ReadAllGroupMsg(ReadAllGroupMsgRequest) returns (ReadAllGroupMsgResponse);
 
   //批量设置私聊消息id为已读
   rpc SetUserMsgsReadStatus(SetUserMsgsReadStatusRequest) returns (SetUserMsgsReadStatusResponse);
