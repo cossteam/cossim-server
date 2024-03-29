@@ -71,9 +71,6 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	addr := conn.Target()
 	switch serviceName {
 	case "relation_service":
-		if s.relationServiceAddr == addr {
-			return nil
-		}
 		s.relationServiceAddr = addr
 		s.relationService = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.dialogService = relationgrpcv1.NewDialogServiceClient(conn)

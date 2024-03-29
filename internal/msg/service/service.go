@@ -233,24 +233,15 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	addr := conn.Target()
 	switch serviceName {
 	case "user_service":
-		if s.userServiceAddr == addr {
-			return nil
-		}
 		s.userServiceAddr = addr
 		s.userService = usergrpcv1.NewUserServiceClient(conn)
 		s.userLoginService = usergrpcv1.NewUserLoginServiceClient(conn)
 	case "relation_service":
-		if s.relationServiceAddr == addr {
-			return nil
-		}
 		s.relationServiceAddr = addr
 		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.relationGroupService = relationgrpcv1.NewGroupRelationServiceClient(conn)
 		s.relationDialogService = relationgrpcv1.NewDialogServiceClient(conn)
 	case "group_service":
-		if s.groupServiceAddr == addr {
-			return nil
-		}
 		s.groupServiceAddr = addr
 		s.groupService = groupgrpcv1.NewGroupServiceClient(conn)
 	default:

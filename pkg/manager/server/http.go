@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -125,13 +126,18 @@ func (s *HttpService) register() error {
 
 func (s *HttpService) discover() {
 	// 定时器，每隔5秒执行一次服务发现
-	ticker := time.NewTicker(15 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
-	clients := make(map[string]*grpc.ClientConn)
+
+	//clients := make(map[string]*grpc.ClientConn)
+	serviceMap := make(map[string]string)
+	serviceLock := sync.Mutex{}
+	newClients := make(map[string]*grpc.ClientConn)
 
 	for {
 		select {
 		case <-ticker.C:
+			newClients = make(map[string]*grpc.ClientConn)
 			for _, c := range s.ac.Discovers {
 				var conn *grpc.ClientConn
 				var err error
@@ -147,12 +153,24 @@ func (s *HttpService) discover() {
 					s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
 					continue
 				}
-				clients[c.Name] = conn
+
+				serviceLock.Lock()
+				if ip, ok := serviceMap[c.Name]; ok {
+					if ip != conn.Target() {
+						newClients[c.Name] = conn
+					}
+				} else {
+					serviceMap[c.Name] = conn.Target()
+					newClients[c.Name] = conn
+				}
+				serviceLock.Unlock()
 			}
-			if err := s.svc.DiscoverServices(clients); err != nil {
-				s.logger.Error(err, "Failed to set up gRPC clients")
+
+			if len(newClients) > 0 {
+				if err := s.svc.DiscoverServices(newClients); err != nil {
+					s.logger.Error(err, "Failed to set up gRPC clients")
+				}
 			}
-			clients = make(map[string]*grpc.ClientConn)
 		}
 	}
 }
