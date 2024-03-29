@@ -82,43 +82,21 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 
 func (h *Handler) handlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
 	addr := conn.Target()
-	defer conn.Close()
 	switch serviceName {
 	case "user_bff":
-		if *userServiceURL == "http://"+addr {
-			return
-		}
 		*userServiceURL = "http://" + addr
 	case "relation_bff":
-		if *relationServiceURL == "http://"+addr {
-			return
-		}
 		*relationServiceURL = "http://" + addr
 	case "group_bff":
-		if *groupServiceURL == "http://"+addr {
-			return
-		}
 		*groupServiceURL = "http://" + addr
 	case "msg_bff":
-		if *messageServiceURL == "http://"+addr {
-			return
-		}
 		*messageServiceURL = "http://" + addr
 		*messageWsServiceURL = "ws://" + addr + "/api/v1/msg/ws"
 	case "storage_bff":
-		if *storageServiceURL == "http://"+addr {
-			return
-		}
 		*storageServiceURL = "http://" + addr
 	case "live_bff":
-		if *liveUserServiceURL == "http://"+addr {
-			return
-		}
 		*liveUserServiceURL = "http://" + addr
 	case "admin_bff":
-		if *adminServiceURL == "http://"+addr {
-			return
-		}
 		*adminServiceURL = "http://" + addr
 	default:
 		return

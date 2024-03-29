@@ -10,8 +10,6 @@ import (
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Service struct {
@@ -53,21 +51,6 @@ func setMinIOProvider(ac *pkgconfig.AppConfig) storage.StorageProvider {
 	}
 
 	return sp
-}
-
-func (s *Service) HandlerGrpcClient(serviceName string, addr string) error {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
-
-	switch serviceName {
-	case "user_service":
-		s.userService = usergrpcv1.NewUserServiceClient(conn)
-		s.logger.Info("gRPC client for user service initialized", zap.String("service", "user"), zap.String("addr", conn.Target()))
-	}
-
-	return nil
 }
 
 func setupLogger(c *pkgconfig.AppConfig) *zap.Logger {
