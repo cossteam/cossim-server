@@ -125,7 +125,7 @@ func (s *HttpService) register() error {
 
 func (s *HttpService) discover() {
 	// 定时器，每隔5秒执行一次服务发现
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 	clients := make(map[string]*grpc.ClientConn)
 
