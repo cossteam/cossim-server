@@ -575,6 +575,9 @@ definitions:
         items:
           type: integer
         type: array
+      read_all:
+        description: 全部已读
+        type: boolean
     required:
     - dialog_id
     - group_id
@@ -788,9 +791,11 @@ definitions:
         items:
           type: integer
         type: array
+      read_all:
+        description: 全部已读
+        type: boolean
     required:
     - dialog_id
-    - msg_ids
     type: object
   model.RecallGroupMsgRequest:
     properties:

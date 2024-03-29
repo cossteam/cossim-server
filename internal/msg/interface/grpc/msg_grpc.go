@@ -729,3 +729,11 @@ func (s *Handler) GetGroupLastMessageList(ctx context.Context, request *v1.GetLa
 	}
 	return resp, nil
 }
+
+func (s *Handler) ReadAllUserMsg(ctx context.Context, request *v1.ReadAllUserMsgRequest) (*v1.ReadAllUserMsgResponse, error) {
+	resp := &v1.ReadAllUserMsgResponse{}
+	if err := s.mr.ReadAllUserMsg(request.UserId, request.DialogId); err != nil {
+		return nil, status.Error(codes.Code(code.SetMsgErrSetUserMsgsReadStatusFailed.Code()), err.Error())
+	}
+	return resp, nil
+}

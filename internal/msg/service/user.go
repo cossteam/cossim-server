@@ -967,9 +967,9 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 	return msgID, nil
 }
 
-func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId string, dialogId uint32, msgids []uint32) (interface{}, error) {
+func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId string, req *model.ReadUserMsgsRequest) (interface{}, error) {
 	ids, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-		DialogId: dialogId,
+		DialogId: req.DialogId,
 	})
 	if err != nil {
 		s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))
@@ -1008,18 +1008,42 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		return nil, err
 	}
 
-	_, err = s.msgService.SetUserMsgsReadStatus(ctx, &msggrpcv1.SetUserMsgsReadStatusRequest{
-		MsgIds:                      msgids,
-		DialogId:                    dialogId,
-		OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
-	})
-	if err != nil {
-		s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))
-		return nil, err
+	if relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
+
+	if req.ReadAll {
+		_, err := s.msgService.ReadAllUserMsg(ctx, &msggrpcv1.ReadAllUserMsgRequest{
+			DialogId: req.DialogId,
+			UserId:   userid,
+		})
+		if err != nil {
+			s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))
+			return nil, err
+		}
+		if s.cache {
+			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userid))
+			if err != nil {
+				s.logger.Error("删除redis失败", zap.Error(err))
+				return nil, nil
+			}
+		}
+		return nil, nil
+
+	} else {
+		_, err = s.msgService.SetUserMsgsReadStatus(ctx, &msggrpcv1.SetUserMsgsReadStatusRequest{
+			MsgIds:                      req.MsgIds,
+			DialogId:                    req.DialogId,
+			OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
+		})
+		if err != nil {
+			s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))
+			return nil, err
+		}
 	}
 
 	msgs, err := s.msgService.GetUserMessagesByIds(ctx, &msggrpcv1.GetUserMessagesByIdsRequest{
-		MsgIds: msgids,
+		MsgIds: req.MsgIds,
 		UserId: userid,
 	})
 	if err != nil {
@@ -1056,13 +1080,13 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 	if s.cache {
 		userMsgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
 			UserId:   userid,
-			DialogId: dialogId,
+			DialogId: req.DialogId,
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", userid), dialogId, "DialogUnreadCount", len(userMsgs.UserMessages))
+		err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", userid), req.DialogId, "DialogUnreadCount", len(userMsgs.UserMessages))
 		if err != nil {
 			s.logger.Error("更新用户对话未读消息数量失败", zap.Error(err))
 			return nil, err

@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/internal/msg/domain/entity"
 	"github.com/cossim/coss-server/internal/msg/infrastructure/persistence"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -72,4 +73,42 @@ func (s *Handler) GetGroupMessageReadByMsgIdAndUserId(ctx context.Context, in *v
 	}
 	resp.ReadAt = msg.ReadAt
 	return resp, err
+}
+
+func (s *Handler) ReadAllGroupMsg(ctx context.Context, request *v1.ReadAllGroupMsgRequest) (*v1.ReadAllGroupMsgResponse, error) {
+	resp := &v1.ReadAllGroupMsgResponse{}
+
+	msgids, err := s.gmrr.GetGroupMsgUserReadIdsByDialogID(request.DialogId, request.UserId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrGetGroupMsgReadByMsgIdAndUserIdFailed.Code()), err.Error())
+	}
+
+	list, err := s.mr.GetGroupUnreadMsgList(request.DialogId, msgids)
+	if err != nil {
+		return resp, err
+	}
+	var reads []*entity.GroupMessageRead
+
+	if len(list) > 0 {
+		reads = make([]*entity.GroupMessageRead, len(list))
+		for k, v := range list {
+			reads[k] = &entity.GroupMessageRead{
+				DialogId: v.DialogId,
+				MsgId:    v.ID,
+				UserId:   v.UserID,
+				GroupID:  v.GroupID,
+				ReadAt:   time.Now(),
+			}
+			resp.UnreadGroupMessage = append(resp.UnreadGroupMessage, &v1.UnreadGroupMessage{
+				MsgId:  uint32(v.ID),
+				UserId: v.UserID,
+			})
+		}
+	}
+
+	if err := s.gmrr.SetGroupMsgReadByMsgs(reads); err != nil {
+		return resp, status.Error(codes.Code(code.GroupErrGetGroupMsgReadByMsgIdAndUserIdFailed.Code()), err.Error())
+	}
+
+	return resp, nil
 }

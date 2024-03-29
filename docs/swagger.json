@@ -4366,6 +4366,10 @@
                     "items": {
                         "type": "integer"
                     }
+                },
+                "read_all": {
+                    "description": "全部已读",
+                    "type": "boolean"
                 }
             }
         },
@@ -4667,8 +4671,7 @@
         "model.ReadUserMsgsRequest": {
             "type": "object",
             "required": [
-                "dialog_id",
-                "msg_ids"
+                "dialog_id"
             ],
             "properties": {
                 "dialog_id": {
@@ -4681,6 +4684,10 @@
                     "items": {
                         "type": "integer"
                     }
+                },
+                "read_all": {
+                    "description": "全部已读",
+                    "type": "boolean"
                 }
             }
         },

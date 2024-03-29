@@ -3,12 +3,35 @@ package persistence
 import (
 	"github.com/cossim/coss-server/internal/msg/api/grpc/dataTransformers"
 	"github.com/cossim/coss-server/internal/msg/domain/entity"
+	"github.com/cossim/coss-server/internal/msg/domain/repository"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
 
+var _ repository.MsgRepository = &MsgRepo{}
+
 type MsgRepo struct {
 	db *gorm.DB
+}
+
+func (g *MsgRepo) GetGroupUnreadMsgList(dialogId uint32, msgIds []uint32) ([]*entity.GroupMessage, error) {
+	var msgList []*entity.GroupMessage
+	err := g.db.Model(&entity.UserMessage{}).
+		Where("id NOT IN (?) AND dialog_id = ? AND deleted_at = 0", msgIds, dialogId).
+		Find(msgList).Error
+	if err != nil {
+		return nil, err
+	}
+	return msgList, nil
+}
+
+func (g *MsgRepo) ReadAllUserMsg(uid string, dialogId uint32) error {
+	return g.db.Model(&entity.UserMessage{}).
+		Where("receive_id = ? AND dialog_id = ? AND deleted_at = 0", uid, dialogId).
+		Updates(map[string]interface{}{
+			"is_read": entity.IsRead,
+			"read_at": time.Now(),
+		}).Error
 }
 
 func NewMsgRepo(db *gorm.DB) *MsgRepo {

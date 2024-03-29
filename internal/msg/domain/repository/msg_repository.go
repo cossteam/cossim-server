@@ -29,6 +29,8 @@ type MsgRepository interface {
 	GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error)
 	GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, error)
 
+	ReadAllUserMsg(uid string, dialogId uint32) error
+
 	//群聊
 	GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error)
 	GetGroupMsgsByIDs(msgIds []uint32) ([]*entity.GroupMessage, error)
@@ -41,6 +43,8 @@ type MsgRepository interface {
 	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error)
 	GetGroupMsgIdsByDialogID(dialogId uint32) ([]uint32, error)
 	UpdateGroupMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error
+
+	GetGroupUnreadMsgList(dialogId uint32, msgIds []uint32) ([]*entity.GroupMessage, error)
 
 	//删除
 	PhysicalDeleteGroupMessage(msgId uint32) error

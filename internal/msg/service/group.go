@@ -708,7 +708,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 	return resp, nil
 }
 
-func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId string, request *model.GroupMessageReadRequest) (interface{}, error) {
+func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId string, request *model.GroupMessageReadRequest) (interface{}, error) {
 	_, err := s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
 		Gid: request.GroupId,
 	})
@@ -719,7 +719,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 
 	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: request.GroupId,
-		UserId:  id,
+		UserId:  uid,
 	})
 	if err != nil {
 		s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -727,18 +727,45 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 	}
 
 	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-		UserId:   id,
+		UserId:   uid,
 		DialogId: request.DialogId,
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	if request.ReadAll {
+		resp1, err := s.msgService.ReadAllGroupMsg(c, &msggrpcv1.ReadAllGroupMsgRequest{
+			DialogId: request.DialogId,
+			UserId:   uid,
+		})
+		if err != nil {
+			s.logger.Error("设置群聊消息已读失败", zap.Error(err))
+			return nil, err
+		}
+		if s.cache {
+			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", uid))
+			if err != nil {
+				s.logger.Error("删除redis失败", zap.Error(err))
+				return nil, nil
+			}
+		}
+
+		//给消息发送者推送谁读了消息
+		for _, v := range resp1.UnreadGroupMessage {
+			if v.UserId != uid {
+				s.SendMsg(v.UserId, driverId, constants.GroupMsgReadEvent, map[string]interface{}{"msg_id": v.MsgId, "read_user_id": uid}, false)
+			}
+		}
+
+		return nil, nil
+	}
+
 	msgList := make([]*msggrpcv1.SetGroupMessageReadRequest, 0)
 	for _, v := range request.MsgIds {
 		userId, _ := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
 			MsgId:  v,
-			UserId: id,
+			UserId: uid,
 		})
 		if userId != nil {
 			continue
@@ -747,7 +774,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 			MsgId:    v,
 			GroupId:  request.GroupId,
 			DialogId: request.DialogId,
-			UserId:   id,
+			UserId:   uid,
 			ReadAt:   pkgtime.Now(),
 		})
 	}
@@ -772,21 +799,21 @@ func (s *Service) SetGroupMessagesRead(c context.Context, id string, driverId st
 
 	//给消息发送者推送谁读了消息
 	for _, message := range msgs.GroupMessages {
-		if message.UserId != id {
-			s.SendMsg(message.UserId, driverId, constants.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": id}, false)
+		if message.UserId != uid {
+			s.SendMsg(message.UserId, driverId, constants.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": uid}, false)
 		}
 	}
 
 	if s.cache {
 		userMsgs, err := s.msgService.GetGroupUnreadMessages(c, &msggrpcv1.GetGroupUnreadMessagesRequest{
-			UserId:   id,
+			UserId:   uid,
 			DialogId: request.DialogId,
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", id), request.DialogId, "DialogUnreadCount", len(userMsgs.GroupMessages))
+		err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", uid), request.DialogId, "DialogUnreadCount", len(userMsgs.GroupMessages))
 		if err != nil {
 			return nil, err
 		}
