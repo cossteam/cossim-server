@@ -692,8 +692,8 @@ func (h *Handler) quitGroup(c *gin.Context) {
 // @Produce  json
 // @param request body model.DeleteRecordRequest true "request"
 // @Success		200 {object} model.Response{}
-// @Router /relation/group/delete_friend_record [post]
-func (h *Handler) deleteGroupFriendRequest(c *gin.Context) {
+// @Router /relation/group/delete_request_record [post]
+func (h *Handler) deleteGroupRequestRecord(c *gin.Context) {
 	req := new(model.DeleteRecordRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
