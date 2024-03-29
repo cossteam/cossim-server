@@ -59,28 +59,28 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	switch serviceName {
 	case "user_service":
 		if addr == s.userServiceAddr {
-			return nil
+			return conn.Close()
 		}
 		s.userServiceAddr = addr
 		s.userClient = user.NewUserServiceClient(conn)
 		err := s.InitAdmin()
 		if err != nil {
-			return err
+			return conn.Close()
 		}
 	case "relation_service":
 		if addr == s.relationServiceAddr {
-			return nil
+			return conn.Close()
 		}
 		s.relationServiceAddr = addr
 		s.relationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
 	case "msg_service":
 		if addr == s.msgServiceAddr {
-			return nil
+			return conn.Close()
 		}
 		s.msgServiceAddr = addr
 		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
 	default:
-		return nil
+		return conn.Close()
 	}
 	s.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
 	return nil

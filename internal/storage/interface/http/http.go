@@ -78,6 +78,9 @@ func (h *Handler) Stop(ctx context.Context) error {
 }
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
+	for _, v := range services {
+		v.Close()
+	}
 	return nil
 }
 
