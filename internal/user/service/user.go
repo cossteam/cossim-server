@@ -384,20 +384,22 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 
 	fmt.Println("查询用户信息1", userID)
 	fmt.Println("查询用户信息2", thisID)
-	if thisID != userID && relation.UserId != "" && relation != nil {
-		if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
-			resp.RelationStatus = model.UserRelationStatusFriend
-		} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
-			resp.RelationStatus = model.UserRelationStatusBlacked
-		} else {
-			resp.RelationStatus = model.UserRelationStatusUnknown
-		}
+	if relation != nil {
+		if thisID != userID && relation.UserId != "" {
+			if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
+				resp.RelationStatus = model.UserRelationStatusFriend
+			} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
+				resp.RelationStatus = model.UserRelationStatusBlacked
+			} else {
+				resp.RelationStatus = model.UserRelationStatusUnknown
+			}
 
-		resp.Preferences = &model.Preferences{
-			OpenBurnAfterReading:        model.OpenBurnAfterReadingType(relation.OpenBurnAfterReading),
-			SilentNotification:          model.SilentNotification(relation.IsSilent),
-			Remark:                      relation.Remark,
-			OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
+			resp.Preferences = &model.Preferences{
+				OpenBurnAfterReading:        model.OpenBurnAfterReadingType(relation.OpenBurnAfterReading),
+				SilentNotification:          model.SilentNotification(relation.IsSilent),
+				Remark:                      relation.Remark,
+				OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
+			}
 		}
 	}
 
