@@ -388,6 +388,16 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 			if err != nil {
 				return nil, err
 			}
+
+			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", qs.SenderId))
+			if err != nil {
+				return nil, err
+			}
+
+			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", qs.ReceiverId))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
