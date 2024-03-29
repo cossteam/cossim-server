@@ -85,42 +85,32 @@ func (s *GrpcService) discover() {
 	// 定时器，每隔5秒执行一次服务发现
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
+	clients := make(map[string]*grpc.ClientConn)
 
 	for {
 		select {
 		case <-ticker.C:
-			clients := make(map[string]*grpc.ClientConn)
 			for _, c := range s.ac.Discovers {
+				var conn *grpc.ClientConn
+				var err error
 				if c.Direct {
-					conn, err := grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-					if err != nil {
-						s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
-						continue
+					conn, err = grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+				} else {
+					addr, err := s.registry.Discover(c.Name)
+					if err == nil {
+						conn, err = grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 					}
-					// 在每次成功发现服务后调用 DiscoverServices
-					clients[c.Name] = conn
-					if err := s.svc.DiscoverServices(clients); err != nil {
-						s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
-					}
-					continue
 				}
-
-				addr, err := s.registry.Discover(c.Name)
-				if err != nil {
-					s.logger.Error(err, "Failed to discover service", "service", c.Name)
-					continue
-				}
-				conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 				if err != nil {
 					s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
 					continue
 				}
 				clients[c.Name] = conn
-				// 在每次成功发现服务后调用 DiscoverServices
-				if err := s.svc.DiscoverServices(clients); err != nil {
-					s.logger.Error(err, "Failed to set up gRPC client for service", "service", c.Name)
-				}
 			}
+			if err := s.svc.DiscoverServices(clients); err != nil {
+				s.logger.Error(err, "Failed to set up gRPC clients")
+			}
+			clients = make(map[string]*grpc.ClientConn)
 		}
 	}
 }
