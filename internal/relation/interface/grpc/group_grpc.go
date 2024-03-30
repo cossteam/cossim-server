@@ -265,12 +265,23 @@ func (s *Handler) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 		}
 		//发送邀请给其他成员
 		requests := make([]*entity.GroupJoinRequest, 0)
+
+		gjr1 := &entity.GroupJoinRequest{
+			UserID:      request.UserID,
+			GroupID:     uint(request.GroupId),
+			OwnerID:     request.UserID,
+			InviterTime: time.Now(),
+			Status:      entity.Invitation,
+		}
+		requests = append(requests, gjr1)
+
 		for _, v := range request.Member {
 			req := &entity.GroupJoinRequest{
 				UserID:      v,
 				GroupID:     uint(request.GroupId),
 				Status:      entity.Invitation,
 				Inviter:     request.UserID,
+				OwnerID:     v,
 				InviterTime: time.Now(),
 			}
 			requests = append(requests, req)

@@ -78,7 +78,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, err
 	}
 
-	//查询是不是已经有邀请
+	// 查询是不是已经有邀请
 	id, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
 		GroupId: req.GroupID,
 		UserId:  uid,
@@ -107,20 +107,29 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
 		return nil, err
 	}
-
 	if len(groupRelation.UserIds) >= int(group.MaxMembersLimit) {
 		return nil, code.RelationGroupErrGroupFull
 	}
-	//添加普通用户申请
-	_, err = s.relationGroupJoinRequestService.JoinGroup(context.Background(), &relationgrpcv1.JoinGroupRequest{UserId: uid, GroupId: req.GroupID})
+
+	// 添加群聊申请记录
+	_, err = s.relationGroupJoinRequestService.JoinGroup(ctx, &relationgrpcv1.JoinGroupRequest{
+		UserId:  uid,
+		GroupId: req.GroupID,
+	})
 	if err != nil {
 		s.logger.Error("添加群聊申请失败", zap.Error(err))
 		return nil, err
 	}
+
 	//查询所有管理员
-	adminIds, err := s.relationGroupService.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
+	adminIds, err := s.relationGroupService.GetGroupAdminIds(ctx, &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupID,
 	})
+	if err != nil {
+		s.logger.Error("获取群聊管理员失败", zap.Error(err))
+		return nil, err
+	}
+
 	for _, id := range adminIds.UserIds {
 		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: constants.JoinGroupEventData{
 			GroupId: req.GroupID,
@@ -398,7 +407,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		}
 	}
 
-	req, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
+	r, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: requestID})
 	if err != nil {
 		return err
 	}
@@ -428,12 +437,12 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		}
 
 		//更新缓存
-		err = s.insertRedisUserDialogList(req.UserId, re)
+		err = s.insertRedisUserDialogList(r.UserId, re)
 		if err != nil {
 			s.logger.Error("获取好友关系失败", zap.Error(err))
 			return code.RelationGroupErrManageJoinFailed
 		}
-		err = s.updateRedisGroupList(req.UserId, usersorter.CustomGroupData{
+		err = s.updateRedisGroupList(r.UserId, usersorter.CustomGroupData{
 			GroupID:  groupID,
 			Name:     info.Name,
 			Avatar:   info.Avatar,
@@ -443,7 +452,7 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 	}
 
 	msg := constants.WsMsg{
-		Uid:    req.UserId,
+		Uid:    r.UserId,
 		Event:  constants.JoinGroupEvent,
 		Data:   constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)},
 		SendAt: time.Now(),
@@ -751,6 +760,15 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrInviteFailed
 	}
 	//TODO 添加群聊配置，（是否邀请入群需要管理员权限）
+	//查询所有管理员
+	adminIds, err := s.relationGroupService.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
+		GroupId: req.GroupID,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊管理员失败", zap.Error(err))
+		return code.RelationGroupErrInviteFailed
+	}
+
 	_, err = s.relationGroupJoinRequestService.InviteJoinGroup(ctx, &relationgrpcv1.InviteJoinGroupRequest{
 		GroupId:   req.GroupID,
 		InviterId: inviterId,
@@ -761,10 +779,6 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrInviteFailed
 	}
 
-	//查询所有管理员
-	adminIds, err := s.relationGroupService.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
-		GroupId: req.GroupID,
-	})
 	for _, id := range adminIds.UserIds {
 		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": inviterId}, SendAt: time.Now()}
 		//通知消息服务有消息需要发送
@@ -1276,17 +1290,17 @@ func (s *Service) removeRedisGroupList(userID string, groupID uint32) error {
 func (s *Service) DeleteGroupFriendRecord(ctx context.Context, uid string, id uint32) error {
 	gr, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByID(ctx, &relationgrpcv1.GetGroupJoinRequestByIDRequest{ID: id})
 	if err != nil {
-		s.logger.Error("获取群聊好友申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
+		s.logger.Error("获取群聊申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
 		return err
 	}
 
-	if gr.UserId != uid {
+	if gr.OwnerID != uid {
 		return code.Forbidden
 	}
 
 	_, err = s.relationGroupJoinRequestService.DeleteGroupRecord(ctx, &relationgrpcv1.DeleteGroupRecordRequest{ID: id})
 	if err != nil {
-		s.logger.Error("删除群聊好友申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
+		s.logger.Error("删除群聊申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
 		return err
 	}
 	return nil

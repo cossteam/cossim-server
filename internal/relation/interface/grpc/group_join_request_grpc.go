@@ -15,21 +15,46 @@ import (
 
 func (s *Handler) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGroupRequest) (*v1.JoinGroupResponse, error) {
 	resp := &v1.JoinGroupResponse{}
-	inviterID := request.InviterId
+
+	// 获取群组管理员 ID
+	adminIDs, err := s.grr.GetGroupAdminIds(request.GroupId)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
+	}
+
+	// 构建关系切片
 	relations := make([]*entity.GroupJoinRequest, 0)
+	var notifiy []string
+	notifiy = append(notifiy, request.InviterId)
+	notifiy = append(notifiy, adminIDs...)
 
 	for _, userID := range request.Member {
 		userGroup := &entity.GroupJoinRequest{
 			UserID:      userID,
 			GroupID:     uint(request.GroupId),
-			Inviter:     inviterID,
+			Inviter:     request.InviterId,
+			OwnerID:     userID,
 			InviterTime: time.Now(),
 			Status:      entity.Invitation,
 		}
 		relations = append(relations, userGroup)
 	}
 
-	_, err := s.gjqr.AddJoinRequestBatch(relations)
+	// 将管理员添加到关系切片中
+	for _, id := range notifiy {
+		adminGroup := &entity.GroupJoinRequest{
+			UserID:      id,
+			GroupID:     uint(request.GroupId),
+			Inviter:     request.InviterId,
+			OwnerID:     id,
+			InviterTime: time.Now(),
+			Status:      entity.Invitation,
+		}
+		relations = append(relations, adminGroup)
+	}
+
+	// 添加关系切片到数据库
+	_, err = s.gjqr.AddJoinRequestBatch(relations)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
 	}
@@ -38,16 +63,39 @@ func (s *Handler) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGro
 
 func (s *Handler) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
 	resp := &v1.JoinGroupResponse{}
+	relations := make([]*entity.GroupJoinRequest, 0)
 
-	_, err := s.gjqr.AddJoinRequest(&entity.GroupJoinRequest{
+	// 添加管理员群聊申请记录
+	ids, err := s.grr.GetGroupAdminIds(request.GroupId)
+	if err != nil {
+		return resp, err
+	}
+	for _, id := range ids {
+		userGroup := &entity.GroupJoinRequest{
+			UserID:      id,
+			GroupID:     uint(request.GroupId),
+			Remark:      request.Msg,
+			OwnerID:     id,
+			InviterTime: time.Now(),
+			Status:      entity.Pending,
+		}
+		relations = append(relations, userGroup)
+	}
+
+	// 添加用户群聊申请记录
+	ur := &entity.GroupJoinRequest{
 		GroupID:     uint(request.GroupId),
 		UserID:      request.UserId,
 		Remark:      request.Msg,
+		OwnerID:     request.UserId,
 		InviterTime: time.Now(),
 		Status:      entity.Pending,
-	})
+	}
+	relations = append(relations, ur)
+
+	_, err = s.gjqr.AddJoinRequestBatch(relations)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrRequestFailed.Code()), err.Error())
+		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
 	}
 	return resp, nil
 }
@@ -66,7 +114,7 @@ func (s *Handler) GetGroupJoinRequestListByUserId(ctx context.Context, request *
 		for _, v := range ds {
 			ids = append(ids, uint(v))
 		}
-		list, err := s.gjqr.GetJoinRequestBatchListByGroupIDs(ids)
+		list, err := s.gjqr.GetJoinRequestBatchListByGroupIDs(ids, request.UserId)
 		if err != nil {
 			return resp, err
 		}
@@ -117,10 +165,10 @@ func (s *Handler) GetGroupJoinRequestByGroupIdAndUserId(ctx context.Context, req
 		resp.UserId = req.UserID
 		resp.Status = v1.GroupRequestStatus(req.Status)
 		resp.CreatedAt = uint64(req.CreatedAt)
+		resp.InviterId = req.Inviter
 		if req.Remark != "" {
 			resp.Remark = req.Remark
 		}
-		resp.InviterId = req.Inviter
 		return resp, nil
 	}
 	return resp, nil
@@ -133,14 +181,16 @@ func (s *Handler) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageG
 	if err != nil {
 		return nil, err
 	}
+
 	//拒绝请求
 	if in.Status == v1.GroupRequestStatus_Rejected {
-		if err := s.gjqr.ManageGroupJoinRequestByID(uint(in.ID), entity.RequestStatus(in.Status)); err != nil {
+		if err := s.gjqr.ManageGroupJoinRequestByID(info.GroupID, info.UserID, entity.RequestStatus(in.Status)); err != nil {
 			return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
 		return resp, nil
 	}
 
+	// 判断用户是否已经加入该群聊
 	relation, err := s.grr.GetUserGroupByID(uint32(info.GroupID), info.UserID)
 	if relation != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), err.Error())
@@ -162,7 +212,7 @@ func (s *Handler) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageG
 		}
 
 		//修改请求状态
-		if err := npo.Gjqr.ManageGroupJoinRequestByID(uint(in.ID), entity.RequestStatus(in.Status)); err != nil {
+		if err := npo.Gjqr.ManageGroupJoinRequestByID(info.GroupID, info.UserID, entity.RequestStatus(in.Status)); err != nil {
 			return status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
 
@@ -195,16 +245,17 @@ func (s *Handler) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageG
 func (s *Handler) GetGroupJoinRequestByID(ctx context.Context, request *v1.GetGroupJoinRequestByIDRequest) (*v1.GetGroupJoinRequestByIDResponse, error) {
 	resp := &v1.GetGroupJoinRequestByIDResponse{}
 
-	req, err := s.gjqr.GetGroupJoinRequestByRequestID(uint(request.ID))
+	r, err := s.gjqr.GetGroupJoinRequestByRequestID(uint(request.ID))
 	if err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrGetGroupJoinRequestFailed.Code()), err.Error())
 	}
-	resp.GroupId = uint32(req.GroupID)
-	resp.UserId = req.UserID
-	resp.Status = v1.GroupRequestStatus(req.Status)
-	resp.CreatedAt = uint64(req.CreatedAt)
-	resp.InviterId = req.Inviter
-	resp.Remark = req.Remark
+	resp.GroupId = uint32(r.GroupID)
+	resp.UserId = r.UserID
+	resp.Status = v1.GroupRequestStatus(r.Status)
+	resp.CreatedAt = uint64(r.CreatedAt)
+	resp.InviterId = r.Inviter
+	resp.Remark = r.Remark
+	resp.OwnerID = r.OwnerID
 	return resp, nil
 }
 

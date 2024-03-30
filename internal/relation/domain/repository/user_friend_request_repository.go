@@ -7,7 +7,7 @@ type UserFriendRequestRepository interface {
 	GetFriendRequestList(userId string) ([]*entity.UserFriendRequest, error)
 	GetFriendRequestBySenderIDAndReceiverID(senderId string, receiverId string) (*entity.UserFriendRequest, error)
 	GetFriendRequestByID(id uint) (*entity.UserFriendRequest, error)
-	UpdateFriendRequestStatus(id uint, status entity.RequestStatus) error
+	UpdateFriendRequestStatus(senderId string, receiverId string, status entity.RequestStatus) error
 	DeleteFriendRequestByUserIdAndFriendIdRequest(userId string, friendId string) error
 	// DeletedById 根据id删除好友申请记录
 	DeletedById(id uint32) error

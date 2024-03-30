@@ -7,12 +7,10 @@ import (
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
-	"strings"
 )
 
 func (s *Handler) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
@@ -36,16 +34,32 @@ func (s *Handler) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 
 func (s *Handler) SendFriendRequest(ctx context.Context, request *v1.SendFriendRequestStruct) (*v1.SendFriendRequestStructResponse, error) {
 	var resp = &v1.SendFriendRequestStructResponse{}
-	re, err := s.ufqr.AddFriendRequest(&entity.UserFriendRequest{
+
+	// 添加自己的
+	re1, err := s.ufqr.AddFriendRequest(&entity.UserFriendRequest{
 		SenderID:   request.SenderId,
 		ReceiverID: request.ReceiverId,
 		Remark:     request.Remark,
+		OwnerID:    request.SenderId,
 		Status:     entity.Pending,
 	})
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
 	}
-	resp.ID = uint32(re.ID)
+	resp.ID = uint32(re1.ID)
+
+	// 添加对方的
+	_, err = s.ufqr.AddFriendRequest(&entity.UserFriendRequest{
+		SenderID:   request.SenderId,
+		ReceiverID: request.ReceiverId,
+		Remark:     request.Remark,
+		OwnerID:    request.ReceiverId,
+		Status:     entity.Pending,
+	})
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
+	}
+
 	return resp, nil
 }
 
@@ -62,21 +76,23 @@ func (s *Handler) ManageFriendRequest(ctx context.Context, request *v1.ManageFri
 			}
 			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), formatErrorMessage(err))
 		}
+
+		senderId := re.SenderID
+		receiverId := re.ReceiverID
+
 		//拒绝
 		if request.Status == v1.FriendRequestStatus_FriendRequestStatus_REJECT {
-			if err := npo.Ufqr.UpdateFriendRequestStatus(uint(request.ID), entity.Rejected); err != nil {
+			if err := npo.Ufqr.UpdateFriendRequestStatus(senderId, receiverId, entity.Rejected); err != nil {
 				return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 			}
 			return nil
 		} else {
 			//修改状态
-			if err := npo.Ufqr.UpdateFriendRequestStatus(uint(request.ID), entity.Accepted); err != nil {
+			if err := npo.Ufqr.UpdateFriendRequestStatus(senderId, receiverId, entity.Accepted); err != nil {
 				return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 			}
 		}
 
-		senderId := re.SenderID
-		receiverId := re.ReceiverID
 		_, err = npo.Urr.GetRelationByID(senderId, receiverId)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "")
@@ -163,7 +179,7 @@ func (s *Handler) GetFriendRequestById(ctx context.Context, in *v1.GetFriendRequ
 		resp.Remark = re.Remark
 		resp.Status = v1.FriendRequestStatus(re.Status)
 		resp.CreateAt = uint64(re.CreatedAt)
-		resp.DeleteBy = re.DeletedBy
+		resp.OwnerID = re.OwnerID
 	}
 	return resp, nil
 }
@@ -196,42 +212,21 @@ func (s *Handler) DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, in
 }
 
 func (s *Handler) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRecordRequest) (*emptypb.Empty, error) {
-	//if req.ID == 0 || req.UserId == "" {
-	//	return nil, status.Error(codes.Code(code.InvalidParameter.Code()), code.InvalidParameter.Message())
+	resp := &emptypb.Empty{}
+	//fr, err := s.ufqr.GetFriendRequestByID(uint(req.ID))
+	//if err != nil {
+	//	if errors.Is(err, gorm.ErrRecordNotFound) {
+	//		return nil, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), code.RelationUserErrNoFriendRequestRecords.Message())
+	//	}
+	//	return nil, err
+	//}
+	//
+	//if fr.OwnerID != req.UserId {
+	//	return nil, status.Error(codes.Code(code.Forbidden.Code()), code.Forbidden.Message())
 	//}
 
-	resp := &emptypb.Empty{}
-
-	fr, err := s.ufqr.GetFriendRequestByID(uint(req.ID))
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), code.RelationUserErrNoFriendRequestRecords.Message())
-		}
-		return nil, err
-	}
-
-	if fr.DeletedBy == "" {
-		if err := s.ufqr.UpdateUserColumnById(req.ID, map[string]interface{}{"deleted_by": strings.Join([]string{req.UserId}, ",")}); err != nil {
-			return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
-		}
-		return resp, nil
-	}
-
-	deletedBy := strings.Split(fr.DeletedBy, ",")
-	for _, v := range deletedBy {
-		if v != "" && v != req.UserId {
-			deletedBy = append(deletedBy, v)
-			if err := s.ufqr.UpdateUserColumnById(req.ID, map[string]interface{}{
-				"deleted_by": strings.Join(deletedBy, ","),
-				"deleted_at": time.Now(),
-			}); err != nil {
-				return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
-			}
-			//if err := s.ufqr.DeletedById(req.ID); err != nil {
-			//	return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
-			//}
-			return resp, nil
-		}
+	if err := s.ufqr.DeletedById(req.ID); err != nil {
+		return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
 	}
 
 	return resp, nil

@@ -17,18 +17,22 @@ message GetFriendRequestListResponse {
 message FriendRequestList {
   // @inject_tag: json:"id"
   uint32 ID = 1;
+  // SenderId 发送方id
   // @inject_tag: json:"sender_id"
-  string SenderId = 2;    // 发送方id
+  string SenderId = 2;
+  // ReceiverId 接收方id
   // @inject_tag: json:"receiver_id"
-  string ReceiverId = 3;       // 接收方id
+  string ReceiverId = 3;
   // @inject_tag: json:"status"
-  FriendRequestStatus Status = 4; //状态
+  FriendRequestStatus Status = 4;
+  // Remark 请求备注
   // @inject_tag: json:"remark"
-  string Remark = 5; //备注
+  string Remark = 5;
   // @inject_tag: json:"create_at"
   uint64 CreateAt = 6;
-  // @inject_tag: json:"delete_by"
-  string DeleteBy = 7; // 删除记录的用户
+  // OwnerID 所有者id
+  // @inject_tag: json:"owner_id"
+  string OwnerID = 7 ;
 }
 
 enum FriendRequestStatus {
@@ -40,13 +44,16 @@ enum FriendRequestStatus {
   FriendRequestStatus_REJECT = 2;
 }
 
-message SendFriendRequestStruct{
+message SendFriendRequestStruct {
+  // SenderId 发送请求方id
   // @inject_tag: json:"sender_id"
-  string SenderId = 1;    // 发送请求方id
+  string SenderId = 1;
+  // ReceiverId 接收请求方id
   // @inject_tag: json:"receiver_id"
-  string ReceiverId = 2;  // 接收请求方id
+  string ReceiverId = 2;
+  // Remark 申请信息
   // @inject_tag: json:"remark"
-  string Remark = 3;       // 申请信息
+  string Remark = 3;
 }
 
 message ManageFriendRequestStruct {

@@ -111,6 +111,9 @@ message GetGroupJoinRequestByIDResponse {
   GroupRequestStatus Status = 6;
   // @inject_tag: json:"remark"
   string Remark = 7;
+  // OwnerID 所有者id
+  // @inject_tag: json:"owner_id"
+  string OwnerID = 8;
 }
 
 message DeleteGroupRecordRequest {
