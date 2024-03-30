@@ -59,8 +59,8 @@ func (g *GroupJoinRequestRepo) GetGroupJoinRequestByGroupIdAndUserId(groupID uin
 	return result, nil
 }
 
-func (g *GroupJoinRequestRepo) ManageGroupJoinRequestByID(id uint, status entity.RequestStatus) error {
-	return g.db.Model(&entity.GroupJoinRequest{}).Where("id = ? AND deleted_at = 0", id).Update("status", status).Error
+func (g *GroupJoinRequestRepo) ManageGroupJoinRequestByID(gid uint, uid string, status entity.RequestStatus) error {
+	return g.db.Model(&entity.GroupJoinRequest{}).Where("group_id = ? AND user_id = ?  AND deleted_at = 0", gid, uid).Update("status", status).Error
 }
 
 func (g *GroupJoinRequestRepo) GetGroupJoinRequestByRequestID(id uint) (*entity.GroupJoinRequest, error) {
@@ -71,9 +71,9 @@ func (g *GroupJoinRequestRepo) GetGroupJoinRequestByRequestID(id uint) (*entity.
 	return result, nil
 }
 
-func (g *GroupJoinRequestRepo) GetJoinRequestBatchListByGroupIDs(gids []uint) ([]*entity.GroupJoinRequest, error) {
+func (g *GroupJoinRequestRepo) GetJoinRequestBatchListByGroupIDs(gids []uint, uid string) ([]*entity.GroupJoinRequest, error) {
 	var result []*entity.GroupJoinRequest
-	if err := g.db.Where("group_id IN (?) AND deleted_at = 0", gids).Find(&result).Error; err != nil {
+	if err := g.db.Where("group_id IN (?) AND owner_id = ? AND deleted_at = 0", gids, uid).Find(&result).Error; err != nil {
 		return nil, err
 	}
 	return result, nil

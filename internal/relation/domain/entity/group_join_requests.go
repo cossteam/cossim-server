@@ -2,14 +2,13 @@ package entity
 
 type GroupJoinRequest struct {
 	BaseModel
-	UserID  string        `json:"user_id" gorm:"column:user_id"`
-	GroupID uint          `json:"group_id" gorm:"column:group_id"`
-	Status  RequestStatus `json:"status" gorm:"column:status"`
-	//邀请人
-	Inviter string `json:"inviter" gorm:"column:inviter"`
-	//邀请时间
-	InviterTime int64  `json:"inviter_time" gorm:"column:inviter_time"`
-	Remark      string `json:"remark" gorm:"column:remark"`
+	GroupID     uint
+	InviterTime int64  `gorm:"comment:邀请时间"`
+	UserID      string `gorm:"comment:被邀请人id"`
+	Inviter     string `gorm:"comment:邀请人ID"`
+	Remark      string `gorm:"comment:邀请备注"`
+	OwnerID     string `gorm:"comment:所有者id"`
+	Status      RequestStatus
 }
 
 type RequestStatus uint

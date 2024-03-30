@@ -19,7 +19,6 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"strings"
 	ostime "time"
 )
 
@@ -1156,17 +1155,9 @@ func (s *Service) DeleteUserFriendRecord(ctx context.Context, uid string, id uin
 		return err
 	}
 
-	if fr.SenderId != uid && fr.ReceiverId != uid {
+	if fr.OwnerID != uid {
 		s.logger.Warn("用户没有权限删除该好友申请记录", zap.String("uid", uid), zap.Uint32("recordID", id))
 		return code.Forbidden
-	}
-
-	deletedBy := strings.Split(fr.DeleteBy, ",")
-	for _, v := range deletedBy {
-		if v == uid && v != "" {
-			s.logger.Warn("用户尝试重复删除好友申请记录", zap.String("uid", uid), zap.Uint32("recordID", id))
-			return code.DuplicateOperation
-		}
 	}
 
 	_, err = s.relationUserFriendRequestService.DeleteFriendRecord(ctx, &relationgrpcv1.DeleteFriendRecordRequest{ID: id, UserId: uid})
