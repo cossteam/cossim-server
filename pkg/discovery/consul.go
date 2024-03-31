@@ -109,9 +109,6 @@ func (c *ConsulRegistry) RegisterHTTP(serviceName, addr, serviceID, healthAddr s
 		return err
 	}
 
-	// 定期检查Consul的可用性，并在Consul重新启动后重新注册服务
-	//go c.keepAlive(service)
-
 	return nil
 }
 
