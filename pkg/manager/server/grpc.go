@@ -154,51 +154,72 @@ func (s *GrpcService) Discover() error {
 	return nil // 异步调用 DiscoverServices，无需等待所有服务都发现
 }
 
-func (s *GrpcService) discover() {
-	// 定时器，每隔5秒执行一次服务发现
+func (s *GrpcService) discover(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
-	//clients := make(map[string]*grpc.ClientConn)
-	serviceMap := make(map[string]string)
-	serviceLock := sync.Mutex{}
-	newClients := make(map[string]*grpc.ClientConn)
+	serviceMap := make(map[string]*svcT)
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case <-ticker.C:
-			newClients = make(map[string]*grpc.ClientConn)
 			for _, c := range s.ac.Discovers {
-				var conn *grpc.ClientConn
+				var addr string
 				var err error
 				if c.Direct {
-					conn, err = grpc.Dial(c.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+					addr = c.Addr()
 				} else {
-					addr, err := s.registry.Discover(c.Name)
-					if err == nil {
-						conn, err = grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+					addr, err = s.registry.Discover(c.Name)
+					if err != nil {
+						s.logger.Error(err, "Failed to discover gRPC server", "service", c.Name)
+						continue
 					}
-				}
-				if err != nil {
-					s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
-					continue
 				}
 
-				serviceLock.Lock()
-				if ip, ok := serviceMap[c.Name]; ok {
-					if ip != conn.Target() {
-						newClients[c.Name] = conn
-						serviceMap[c.Name] = conn.Target()
+				if svc, ok := serviceMap[c.Name]; ok {
+					if svc.addr == addr {
+						fmt.Printf("原地址 => %s 发现后地址 => %s 服务发现无变化\n", svc.addr, addr)
+						continue
 					}
+					svc.addr = addr
+					svc.f = true
 				} else {
-					newClients[c.Name] = conn
-					serviceMap[c.Name] = conn.Target()
+					serviceMap[c.Name] = &svcT{
+						addr: addr,
+						f:    true,
+					}
 				}
-				serviceLock.Unlock()
 			}
 
-			if len(newClients) > 0 {
-				if err := s.svc.DiscoverServices(newClients); err != nil {
+			allFalse := true
+			for _, v := range serviceMap {
+				if v.f {
+					allFalse = false
+					break
+				}
+			}
+
+			if allFalse {
+				continue
+			}
+
+			ss := make(map[string]*grpc.ClientConn)
+			for k, v := range serviceMap {
+				if !v.f {
+					continue
+				}
+				v.f = false
+				conn, err := grpc.Dial(v.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				if err != nil {
+					s.logger.Error(err, "Failed to connect to gRPC server", "service", k)
+					continue
+				}
+				ss[k] = conn
+			}
+			if len(ss) > 0 {
+				if err := s.svc.DiscoverServices(ss); err != nil {
 					s.logger.Error(err, "Failed to set up gRPC clients")
 				}
 			}
@@ -232,8 +253,8 @@ func (s *GrpcService) Start(ctx context.Context) error {
 	}
 
 	if s.ac.Register.Discover {
-		//go s.discover()
-		go s.Discover()
+		go s.discover(ctx)
+		//go s.Discover()
 	}
 
 	lisAddr := fmt.Sprintf("%s", s.ac.GRPC.Addr())
@@ -267,6 +288,7 @@ func (s *GrpcService) watchRegistry(ctx context.Context) {
 	s.registry.KeepAlive(s.ac.GRPC.Name, s.sid, &discovery.RegisterOption{
 		HealthCheckCallbackFn: func(b bool) {
 			if !b {
+				s.logger.Info("Service health check failed, re-registering", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 				s.register()
 			}
 		},
