@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
@@ -314,7 +315,6 @@ func (c *ConsulConfigCenter) Watch(key string) (<-chan string, error) {
 			WaitIndex: 0,
 		}
 		for {
-			time.Sleep(15 * time.Second)
 			p, _, err := c.client.KV().Get(key, params)
 			if err != nil {
 				fmt.Println("Failed to get Consul KV: ", err)
@@ -325,6 +325,7 @@ func (c *ConsulConfigCenter) Watch(key string) (<-chan string, error) {
 				configCh <- string(p.Value)
 			}
 			params.WaitIndex = p.ModifyIndex
+			time.Sleep(15 * time.Second)
 		}
 	}()
 	return configCh, nil
@@ -440,15 +441,6 @@ func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig
 		return nil, err
 	}
 
-	//v := viper.New()
-	//v.SetConfigType("yaml")
-	//if err = v.ReadConfig(strings.NewReader(newValue)); err != nil {
-	//	return nil, err
-	//}
-	//if err = v.Unmarshal(ac); err != nil {
-	//	return nil, err
-	//}
-
 	fmt.Println("newValue => ", newValue)
 
 	err = yaml.Unmarshal([]byte(newValue), ac)
@@ -493,6 +485,7 @@ func (m *RemoteConfigManager) Watch(ac *config.AppConfig, updateCh chan<- Config
 		for {
 			select {
 			case newValue := <-configCh:
+				fmt.Println("更新的配置 => ", newValue)
 				if err = m.handlerAppConfig(ac, newValue); err != nil {
 					log.Printf("Failed to update config for key %s: %v", k, err)
 					continue
@@ -533,32 +526,62 @@ func (m *RemoteConfigManager) Watch(ac *config.AppConfig, updateCh chan<- Config
 
 func (m *RemoteConfigManager) handlerAppConfig(ac *config.AppConfig, newValue string) error {
 	// 解析新的配置值
-	var newConfig *config.AppConfig
+	var newConfig config.AppConfig
 
 	if err := yaml.Unmarshal([]byte(newValue), &newConfig); err != nil {
 		return err
 	}
 
+	// 遍历newConfig的每个字段，将其值复制给ac对应的字段（仅当ac的字段值为空或未赋值时）
+	// 如果newConfig的字段在ac中不存在，则忽略该字段
+	v := reflect.ValueOf(&newConfig).Elem()
+	acValue := reflect.ValueOf(ac).Elem()
+
+	for i := 0; i < v.NumField(); i++ {
+		newFieldValue := v.Field(i)
+		acFieldValue := acValue.Field(i)
+
+		if acFieldValue.CanSet() && (acFieldValue.IsZero() || !newFieldValue.IsZero()) {
+			acFieldValue.Set(newFieldValue)
+		}
+	}
+
 	// 检查新的配置是否与旧的配置相同
-	if reflect.DeepEqual(ac, newConfig) {
+	if reflect.DeepEqual(ac, &newConfig) {
 		return nil // 配置相同，不触发更新
 	}
 
-	ac.HTTP.Address = newConfig.HTTP.Address
-	ac.HTTP.Port = newConfig.HTTP.Port
-
-	ac.Register.Address = newConfig.Register.Address
-	ac.Register.Name = newConfig.Register.Name
-	ac.Register.Port = newConfig.Register.Port
-
-	ac.GRPC.Address = newConfig.GRPC.Address
-	ac.GRPC.Port = newConfig.GRPC.Port
-
-	ac.Register.Tags = newConfig.Register.Tags
-	ac.Discovers = newConfig.Discovers
-
 	return nil
 }
+
+//func (m *RemoteConfigManager) handlerAppConfig(ac *config.AppConfig, newValue string) error {
+//	// 解析新的配置值
+//	var newConfig *config.AppConfig
+//
+//	if err := yaml.Unmarshal([]byte(newValue), &newConfig); err != nil {
+//		return err
+//	}
+//
+//	// 检查新的配置是否与旧的配置相同
+//	if reflect.DeepEqual(ac, newConfig) {
+//		return nil // 配置相同，不触发更新
+//	}
+//
+//	ac.HTTP.Address = newConfig.HTTP.Address
+//	ac.HTTP.Port = newConfig.HTTP.Port
+//
+//	ac.Register.Address = newConfig.Register.Address
+//	ac.Register.Name = newConfig.Register.Name
+//	ac.Register.Port = newConfig.Register.Port
+//
+//	ac.GRPC.Address = newConfig.GRPC.Address
+//	ac.GRPC.Port = newConfig.GRPC.Port
+//
+//	ac.Register.Tags = newConfig.Register.Tags
+//	ac.Discovers = newConfig.Discovers
+//
+//	return nil
+//}
 
 func (m *RemoteConfigManager) handlerConfig(key string, ac *config.AppConfig, newValue string) error {
 	var trimmedKey string
@@ -589,6 +612,13 @@ func (m *RemoteConfigManager) handlerConfig(key string, ac *config.AppConfig, ne
 		return fmt.Errorf("unknown config key: %s", key)
 	}
 
+	marshal1, err := json.Marshal(ac.Dtm)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("更新前配置 => ", string(marshal1))
+
 	// 解析新的配置值
 	var newConfig map[string]interface{}
 	if err := yaml.Unmarshal([]byte(newValue), &newConfig); err != nil {
@@ -599,6 +629,13 @@ func (m *RemoteConfigManager) handlerConfig(key string, ac *config.AppConfig, ne
 	if err := updateConfigField(fieldName, ac, newConfig); err != nil {
 		return err
 	}
+
+	marshal2, err := json.Marshal(ac.Dtm)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("更新后配置 => ", string(marshal2))
 
 	// 持久化到文件
 	if m.persistence && m.configFile != "" {
