@@ -157,7 +157,7 @@ func (s *HttpService) discover(ctx context.Context) {
 
 				if svc, ok := serviceMap[c.Name]; ok {
 					if svc.addr == addr {
-						fmt.Printf("原地址 => %s 发现后地址 => %s 服务发现无变化\n", svc.addr, addr)
+						//fmt.Printf("原地址 => %s 发现后地址 => %s 服务发现无变化\n", svc.addr, addr)
 						continue
 					}
 					svc.addr = addr
