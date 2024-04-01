@@ -655,12 +655,12 @@ func (h *Handler) getDialogAfterMsg(c *gin.Context) {
 		return
 	}
 
-	_, err := pkghttp.ParseTokenReUid(c)
+	thisID, err := pkghttp.ParseTokenReUid(c)
 	if err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
-	resp, err := h.svc.GetDialogAfterMsg(c, *req)
+	resp, err := h.svc.GetDialogAfterMsg(c, thisID, *req)
 	if err != nil {
 		c.Error(err)
 	}
