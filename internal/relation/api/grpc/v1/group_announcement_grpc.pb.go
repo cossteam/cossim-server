@@ -124,7 +124,7 @@ func (c *groupAnnouncementServiceClient) GetAnnouncementReadByUserId(ctx context
 }
 
 // GroupAnnouncementServiceServer is the server API for GroupAnnouncementService service.
-// All implementations must embed UnimplementedGroupAnnouncementServiceServer
+// All implementations should embed UnimplementedGroupAnnouncementServiceServer
 // for forward compatibility
 type GroupAnnouncementServiceServer interface {
 	CreateGroupAnnouncement(context.Context, *CreateGroupAnnouncementRequest) (*CreateGroupAnnouncementResponse, error)
@@ -135,10 +135,9 @@ type GroupAnnouncementServiceServer interface {
 	MarkAnnouncementAsRead(context.Context, *MarkAnnouncementAsReadRequest) (*MarkAnnouncementAsReadResponse, error)
 	GetReadUsers(context.Context, *GetReadUsersRequest) (*GetReadUsersResponse, error)
 	GetAnnouncementReadByUserId(context.Context, *GetAnnouncementReadByUserIdRequest) (*GetAnnouncementReadByUserIdResponse, error)
-	mustEmbedUnimplementedGroupAnnouncementServiceServer()
 }
 
-// UnimplementedGroupAnnouncementServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedGroupAnnouncementServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedGroupAnnouncementServiceServer struct {
 }
 
@@ -165,8 +164,6 @@ func (UnimplementedGroupAnnouncementServiceServer) GetReadUsers(context.Context,
 }
 func (UnimplementedGroupAnnouncementServiceServer) GetAnnouncementReadByUserId(context.Context, *GetAnnouncementReadByUserIdRequest) (*GetAnnouncementReadByUserIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAnnouncementReadByUserId not implemented")
-}
-func (UnimplementedGroupAnnouncementServiceServer) mustEmbedUnimplementedGroupAnnouncementServiceServer() {
 }
 
 // UnsafeGroupAnnouncementServiceServer may be embedded to opt out of forward compatibility for this service.

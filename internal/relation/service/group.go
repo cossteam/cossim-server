@@ -23,6 +23,46 @@ import (
 	ostime "time"
 )
 
+func (s *Service) AddGroupAdmin(ctx context.Context, uid string, req *model.AddGroupAdminRequest) error {
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return err
+	}
+
+	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
+		return code.GroupErrGroupStatusNotAvailable
+	}
+
+	r3, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: req.GroupID, UserIds: req.UserIDs})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return err
+	}
+
+	marshal, err := json.Marshal(r3.GroupRelationResponses)
+	if err != nil {
+		return err
+	}
+
+	if len(req.UserIDs) != len(r3.GroupRelationResponses) {
+		s.logger.Error("添加的用户数量与查询后的关系数量不一致", zap.Strings("req", req.UserIDs), zap.String("resp", string(marshal)))
+		return code.RelationGroupErrRelationNotFound
+	}
+
+	_, err = s.relationGroupService.AddGroupAdmin(ctx, &relationgrpcv1.AddGroupAdminRequest{
+		GroupID: req.GroupID,
+		UserID:  uid,
+		UserIDs: req.UserIDs,
+	})
+	if err != nil {
+		s.logger.Error("添加群聊管理员失败", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
 func (s *Service) GetGroupMember(ctx context.Context, gid uint32, userID string) (interface{}, error) {
 	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: gid})
 	if err != nil {

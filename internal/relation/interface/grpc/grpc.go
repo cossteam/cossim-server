@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	api "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
@@ -25,12 +24,6 @@ type Handler struct {
 	gar  repository.GroupAnnouncementRepository
 	gjqr repository.GroupJoinRequestRepository
 	dr   repository.DialogRepository
-	v1.UnimplementedUserRelationServiceServer
-	v1.UnimplementedGroupRelationServiceServer
-	v1.UnimplementedDialogServiceServer
-	v1.UnimplementedUserFriendRequestServiceServer
-	v1.UnimplementedGroupJoinRequestServiceServer
-	v1.UnimplementedGroupAnnouncementServiceServer
 }
 
 func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {

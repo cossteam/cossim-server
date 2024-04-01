@@ -121,7 +121,7 @@ func (c *groupJoinRequestServiceClient) DeleteGroupRecord(ctx context.Context, i
 }
 
 // GroupJoinRequestServiceServer is the server API for GroupJoinRequestService service.
-// All implementations must embed UnimplementedGroupJoinRequestServiceServer
+// All implementations should embed UnimplementedGroupJoinRequestServiceServer
 // for forward compatibility
 type GroupJoinRequestServiceServer interface {
 	// 获取用户加入群聊列表
@@ -138,10 +138,9 @@ type GroupJoinRequestServiceServer interface {
 	GetGroupJoinRequestByID(context.Context, *GetGroupJoinRequestByIDRequest) (*GetGroupJoinRequestByIDResponse, error)
 	// 删除用户自己的群聊申请记录
 	DeleteGroupRecord(context.Context, *DeleteGroupRecordRequest) (*emptypb.Empty, error)
-	mustEmbedUnimplementedGroupJoinRequestServiceServer()
 }
 
-// UnimplementedGroupJoinRequestServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedGroupJoinRequestServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedGroupJoinRequestServiceServer struct {
 }
 
@@ -165,8 +164,6 @@ func (UnimplementedGroupJoinRequestServiceServer) GetGroupJoinRequestByID(contex
 }
 func (UnimplementedGroupJoinRequestServiceServer) DeleteGroupRecord(context.Context, *DeleteGroupRecordRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRecord not implemented")
-}
-func (UnimplementedGroupJoinRequestServiceServer) mustEmbedUnimplementedGroupJoinRequestServiceServer() {
 }
 
 // UnsafeGroupJoinRequestServiceServer may be embedded to opt out of forward compatibility for this service.

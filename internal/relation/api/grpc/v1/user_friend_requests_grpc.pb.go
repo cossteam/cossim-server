@@ -121,7 +121,7 @@ func (c *userFriendRequestServiceClient) DeleteFriendRecord(ctx context.Context,
 }
 
 // UserFriendRequestServiceServer is the server API for UserFriendRequestService service.
-// All implementations must embed UnimplementedUserFriendRequestServiceServer
+// All implementations should embed UnimplementedUserFriendRequestServiceServer
 // for forward compatibility
 type UserFriendRequestServiceServer interface {
 	// 获取好友请求列表
@@ -138,10 +138,9 @@ type UserFriendRequestServiceServer interface {
 	DeleteFriendRequestByUserIdAndFriendId(context.Context, *DeleteFriendRequestByUserIdAndFriendIdRequest) (*emptypb.Empty, error)
 	// 删除好友申请记录
 	DeleteFriendRecord(context.Context, *DeleteFriendRecordRequest) (*emptypb.Empty, error)
-	mustEmbedUnimplementedUserFriendRequestServiceServer()
 }
 
-// UnimplementedUserFriendRequestServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedUserFriendRequestServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedUserFriendRequestServiceServer struct {
 }
 
@@ -165,8 +164,6 @@ func (UnimplementedUserFriendRequestServiceServer) DeleteFriendRequestByUserIdAn
 }
 func (UnimplementedUserFriendRequestServiceServer) DeleteFriendRecord(context.Context, *DeleteFriendRecordRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFriendRecord not implemented")
-}
-func (UnimplementedUserFriendRequestServiceServer) mustEmbedUnimplementedUserFriendRequestServiceServer() {
 }
 
 // UnsafeUserFriendRequestServiceServer may be embedded to opt out of forward compatibility for this service.
