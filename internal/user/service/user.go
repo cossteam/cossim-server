@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
@@ -12,7 +13,6 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/msg_queue"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/avatar"
@@ -20,6 +20,7 @@ import (
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/minio/minio-go/v7"
@@ -117,12 +118,29 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		if info.RegionName == info.City {
 			result = fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s", clientIp, info.Country, info.City)
 		}
-		msg := constants.WsMsg{Uid: constants.SystemNotification, Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: constants.SystemNotificationEventData{
-			UserIds: []string{resp.UserId},
+
+		data2 := constants.SystemNotificationEventData{
+			UserId:  resp.UserId,
 			Content: result,
 			Type:    1,
-		}}
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.UserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.Notice, msg)
+		}
+
+		toBytes, err := utils.StructToBytes(data2)
+		if err != nil {
+			return nil, "", err
+		}
+
+		msg := &pushgrpcv1.WsMsg{Uid: constants.SystemNotification, Event: pushgrpcv1.WSEventType_SystemNotificationEvent, PushOffline: false, SendAt: time.Now(), Data: &any.Any{Value: toBytes}}
+
+		toBytes2, err := utils.StructToBytes(msg)
+		if err != nil {
+			return nil, "", err
+		}
+
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: toBytes2})
+		if err != nil {
+			return nil, "", err
+		}
 	}
 
 	if s.cache {
@@ -164,20 +182,34 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 	//通知消息服务关闭ws
 	rid := info.Rid
 	t := info.DriverType
+
+	data2 := &constants.OfflineEventData{
+		Rid:        rid,
+		DriverType: constants.DriverType(t),
+	}
+
+	toBytes, err := utils.StructToBytes(data2)
+	if err != nil {
+		return err
+	}
+
 	if rid != 0 {
-		msg := constants.WsMsg{
-			Uid:   userID,
-			Event: constants.OfflineEvent,
-			Data: constants.OfflineEventData{
-				Rid:        rid,
-				DriverType: constants.DriverType(t),
-			},
+		msg := &pushgrpcv1.WsMsg{
+			Uid:    userID,
+			Event:  pushgrpcv1.WSEventType_OfflineEvent,
+			Data:   &any.Any{Value: toBytes},
 			SendAt: time.Now(),
 		}
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.UserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.UserWebsocketClose, msg)
+		toBytes2, err := utils.StructToBytes(msg)
 		if err != nil {
-			s.logger.Error("通知消息服务失败", zap.Error(err))
+			return err
 		}
+
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: toBytes2})
+		if err != nil {
+			return err
+		}
+
 	}
 
 	//删除客户端信息

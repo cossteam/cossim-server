@@ -6,16 +6,19 @@ import (
 	"errors"
 	"fmt"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/api/http/model"
 	userApi "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
+	any2 "github.com/golang/protobuf/ptypes/any"
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -268,11 +271,25 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		Msg:          req.Remark,
 		E2EPublicKey: req.E2EPublicKey,
 	}
-	msg := constants.WsMsg{Uid: friendID, Event: constants.AddFriendEvent, Data: wsMsgData}
-
-	if err = s.publishServiceMessage(ctx, msg); err != nil {
-		s.logger.Error("Failed to publish service message", zap.Error(err))
+	bytes, err := utils.StructToBytes(wsMsgData)
+	if err != nil {
+		return nil, err
 	}
+
+	msg := &pushgrpcv1.WsMsg{Uid: friendID, Event: pushgrpcv1.WSEventType_AddFriendEvent, Data: &any2.Any{Value: bytes}}
+
+	toBytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes})
+	if err != nil {
+		return nil, err
+	}
+	//if err = s.publishServiceMessage(ctx, msg); err != nil {
+	//	s.logger.Error("Failed to publish service message", zap.Error(err))
+	//}
 
 	return resp, nil
 }
@@ -562,16 +579,30 @@ func (s *Service) DeleteBlacklist(ctx context.Context, userID, friendID string) 
 }
 
 func (s *Service) SwitchUserE2EPublicKey(ctx context.Context, userID string, friendID string, publicKey string) (interface{}, error) {
-	reqm := model.SwitchUserE2EPublicKeyRequest{
+	reqm := &model.SwitchUserE2EPublicKeyRequest{
 		UserId:    userID,
 		PublicKey: publicKey,
 	}
-	msg := constants.WsMsg{Uid: friendID, Event: constants.PushE2EPublicKeyEvent, Data: reqm, SendAt: time.Now()}
-
-	//通知消息服务有消息需要发送
-	if err := s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {
-		s.logger.Error("交换用户端到端公钥通知推送失败", zap.Error(err))
-		return nil, code.UserErrSwapPublicKeyFailed
+	bytes, err := utils.StructToBytes(reqm)
+	if err != nil {
+		return nil, err
+	}
+	msg := &pushgrpcv1.WsMsg{Uid: friendID, Event: pushgrpcv1.WSEventType_PushE2EPublicKeyEvent, Data: &any2.Any{Value: bytes}, SendAt: time.Now()}
+	toBytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return nil, err
+	}
+	////通知消息服务有消息需要发送
+	//if err := s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {
+	//	s.logger.Error("交换用户端到端公钥通知推送失败", zap.Error(err))
+	//	return nil, code.UserErrSwapPublicKeyFailed
+	//}
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+		Type: pushgrpcv1.Type_Ws,
+		Data: toBytes,
+	})
+	if err != nil {
+		return nil, err
 	}
 	return nil, nil
 }
@@ -751,7 +782,7 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 	}
 
 	wsMsgData := constants.ManageFriendEventData{UserId: userID, Status: uint32(status)}
-	msg := constants.WsMsg{Uid: targetID, Event: constants.ManageFriendEvent, Data: wsMsgData}
+
 	var responseData interface{}
 
 	if status == 1 {
@@ -759,10 +790,24 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 		wsMsgData.TargetInfo = myInfo
 		responseData = targetInfo
 	}
-
-	if err = s.publishServiceMessage(ctx, msg); err != nil {
-		s.logger.Error("Failed to publish service message", zap.Error(err))
+	bytes, err := utils.StructToBytes(wsMsgData)
+	if err != nil {
+		return nil, err
 	}
+	msg := &pushgrpcv1.WsMsg{Uid: targetID, Event: pushgrpcv1.WSEventType_ManageFriendEvent, Data: &any2.Any{Value: bytes}}
+	toBytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes, Type: pushgrpcv1.Type_Ws})
+	if err != nil {
+		return nil, err
+	}
+
+	//if err = s.publishServiceMessage(ctx, msg); err != nil {
+	//	s.logger.Error("Failed to publish service message", zap.Error(err))
+	//}
 
 	return responseData, nil
 }
@@ -810,7 +855,7 @@ func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *m
 	return nil, nil
 }
 
-func (s *Service) publishServiceMessage(ctx context.Context, msg constants.WsMsg) error {
+func (s *Service) publishServiceMessage(ctx context.Context, msg *pushgrpcv1.WsMsg) error {
 	return s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 }
 

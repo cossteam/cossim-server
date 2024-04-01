@@ -20,6 +20,17 @@ var (
 	_ server.HTTPService = &Handler{}
 )
 
+//var (
+//	wsRid    int64 = 0            //全局客户端id
+//	wsMutex        = sync.Mutex{} //锁
+//	upgrader       = websocket.Upgrader{
+//		CheckOrigin: func(r *http.Request) bool {
+//			return true
+//		},
+//	}
+//	Pool = make(map[string]map[string][]*client)
+//)
+
 type Handler struct {
 	svc         *service.Service
 	redisClient *cache.RedisClient
@@ -56,7 +67,6 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	u.Use(middleware.AuthMiddleware(h.redisClient))
 
-	u.GET("/ws", h.ws)
 	u.POST("/send/user", h.sendUserMsg)
 	u.POST("/send/group", h.sendGroupMsg)
 	u.GET("/list/user", h.getUserMsgList)

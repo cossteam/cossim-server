@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/internal/admin/infrastructure/persistence"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	user "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
@@ -20,14 +21,15 @@ import (
 )
 
 type Service struct {
-	ac             *pkgconfig.AppConfig
-	logger         *zap.Logger
-	repo           *persistence.Repositories
-	userClient     user.UserServiceClient
-	relationClient relationgrpcv1.UserRelationServiceClient
-	msgClient      msggrpcv1.MsgServiceClient
-	rabbitMQClient *msg_queue.RabbitMQ
-	sp             storage.StorageProvider
+	ac                  *pkgconfig.AppConfig
+	logger              *zap.Logger
+	repo                *persistence.Repositories
+	userService         user.UserServiceClient
+	relationUserService relationgrpcv1.UserRelationServiceClient
+	pushService         pushgrpcv1.PushServiceClient
+	msgService          msggrpcv1.MsgServiceClient
+	rabbitMQClient      *msg_queue.RabbitMQ
+	sp                  storage.StorageProvider
 
 	dtmGrpcServer       string
 	relationServiceAddr string
@@ -59,17 +61,19 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	switch serviceName {
 	case "user_service":
 		s.userServiceAddr = addr
-		s.userClient = user.NewUserServiceClient(conn)
+		s.userService = user.NewUserServiceClient(conn)
 		err := s.InitAdmin()
 		if err != nil {
 			return nil
 		}
 	case "relation_service":
 		s.relationServiceAddr = addr
-		s.relationClient = relationgrpcv1.NewUserRelationServiceClient(conn)
+		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
 	case "msg_service":
 		s.msgServiceAddr = addr
-		s.msgClient = msggrpcv1.NewMsgServiceClient(conn)
+		s.msgService = msggrpcv1.NewMsgServiceClient(conn)
+	case "push_service":
+		s.pushService = pushgrpcv1.NewPushServiceClient(conn)
 	default:
 		return nil
 	}

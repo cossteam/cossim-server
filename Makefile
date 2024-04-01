@@ -44,7 +44,7 @@ test: fmt vet## Run unittests
 	@go test -short ./...
 
 
-SWAG_CMD := swag i -g http.go -dir internal/admin/interface/http,internal/admin/api/http/model,internal/group/interface/http,internal/group/api/http/model,internal/user/interface/http,internal/user/api/http/model,internal/relation/interface/http,internal/relation/api/http/model,internal/msg/interface/http,internal/msg/api/http/model,internal/storage/interface/http,internal/storage/api/http/model,internal/live/api/dto,internal/live/interface/http,pkg/utils/usersorter --packageName coss
+SWAG_CMD := swag i -g http.go -dir internal/push/interface/http,internal/push/api/http/model,internal/admin/interface/http,internal/admin/api/http/model,internal/group/interface/http,internal/group/api/http/model,internal/user/interface/http,internal/user/api/http/model,internal/relation/interface/http,internal/relation/api/http/model,internal/msg/interface/http,internal/msg/api/http/model,internal/storage/interface/http,internal/storage/api/http/model,internal/live/api/dto,internal/live/interface/http,pkg/utils/usersorter --packageName coss
 
 .PHONY: swag
 swag: ## Generate Swagger documentation

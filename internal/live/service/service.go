@@ -4,6 +4,7 @@ import (
 	"fmt"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	user "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
@@ -45,6 +46,7 @@ type Service struct {
 	groupService          groupgrpcv1.GroupServiceClient
 	msgService            msggrpcv1.MsgServiceClient
 	relationDialogService relationgrpcv1.DialogServiceClient
+	pushService           pushgrpcv1.PushServiceClient
 	roomService           *lksdk.RoomServiceClient
 	mqClient              *msg_queue.RabbitMQ
 	redisClient           *cache.RedisClient
@@ -83,6 +85,8 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	case "msg_service":
 		s.msgServiceAddr = addr
 		s.msgService = msggrpcv1.NewMsgServiceClient(conn)
+	case "push_service":
+		s.pushService = pushgrpcv1.NewPushServiceClient(conn)
 	default:
 		return nil
 	}

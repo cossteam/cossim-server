@@ -202,6 +202,8 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 		cfg.GRPC.Address = ip
 	}
 
+	fmt.Println("opts.MetricsBindAddress => ", opts.MetricsBindAddress)
+
 	// Create the metrics listener. This will throw an error if the metrics bind
 	// address is invalid or already in use.
 	metricsListener, err := opts.newMetricsListener(opts.MetricsBindAddress)
@@ -276,7 +278,7 @@ func setOptionsDefaults(opts Options) Options {
 	}
 
 	if opts.Http.HealthCheckAddress == "" {
-		opts.Http.HealthCheckAddress = defaultHealthProbeBindAddress
+		//opts.Http.HealthCheckAddress = defaultHealthProbeBindAddress
 	}
 
 	if opts.newHealthProbeListener == nil {

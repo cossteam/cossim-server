@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	userv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	grpchandler "github.com/cossim/coss-server/internal/user/interface/grpc"
@@ -29,6 +30,7 @@ type Service struct {
 	userLoginService userv1.UserLoginServiceServer
 	relationService  relationgrpcv1.UserRelationServiceClient
 	dialogService    relationgrpcv1.DialogServiceClient
+	pushService      pushv1.PushServiceClient
 
 	storageService storage.StorageProvider
 	redisClient    *cache.RedisClient
@@ -74,6 +76,10 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 		s.relationServiceAddr = addr
 		s.relationService = relationgrpcv1.NewUserRelationServiceClient(conn)
 		s.dialogService = relationgrpcv1.NewDialogServiceClient(conn)
+	case "push_service":
+		s.pushService = pushv1.NewPushServiceClient(conn)
+		//初始化推送服务
+		fmt.Println("push service init:user_service")
 	default:
 		return nil
 	}

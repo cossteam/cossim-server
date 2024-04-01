@@ -5,15 +5,14 @@ go 1.20
 require (
 	github.com/ProtonMail/gopenpgp/v2 v2.7.5
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/cossim/hipush v0.0.0-20240228032622-f93868966b7e
 	github.com/dlclark/regexp2 v1.10.0
 	github.com/dtm-labs/client v1.18.7
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ego/gse v0.80.2
 	github.com/go-logr/logr v1.4.1
 	github.com/go-logr/zapr v1.3.0
-	github.com/goccy/go-json v0.10.2
 	github.com/golang-jwt/jwt/v5 v5.2.0
+	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/hashicorp/consul/api v1.25.1
@@ -37,7 +36,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.21.0
 	google.golang.org/grpc v1.62.0
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gorm v1.25.5
@@ -82,7 +81,7 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect

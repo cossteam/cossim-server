@@ -1,0 +1,93 @@
+log:
+  stdout: true
+  level: 4
+  file: "logs/app.log"
+  format: "console" # console、json
+
+mysql:
+  address: "mysql"
+  port: 33306
+  username: "root"
+  password: "888888"
+  database: "coss"
+  opts:
+    allowNativePasswords: "true"
+    timeout: "1000ms"
+    readTimeout: "500ms"
+    writeTimeout: "1000ms"
+    parseTime: "true"
+    loc: "Local"
+    charset: "utf8mb4"
+
+redis:
+  proto: "tcp"
+  address: "redis"
+  port: 6379
+  password: "Hitosea@123.."
+#  protocol: 3
+
+message_queue:
+  name: "rabbitmq"
+  username: "root"
+  password: "Hitosea@123.."
+  address: "rabbitmq"
+  port: 5672
+
+
+dtm:
+  name: "dtm"
+  address: "dtm"
+  port: 36790
+
+
+http:
+  name: "relation_bff"
+  address: "0.0.0.0"
+  port: 8082
+
+grpc:
+  name: "relation_service"
+  address: "0.0.0.0"
+  port: 10001
+
+# 注册本服务
+register:
+  address: "registry"   # 注册中心地址
+  port: 8500            # 注册中心端口
+  tags: ["relation", "bff", "关系服务"]
+
+discovers:
+  msg:
+    name: "msg_service"
+    address: "msg_service"
+    port: 10000
+    direct: true
+  relation:
+    name: "relation_service"
+    address: "group_service"
+    port: 10001
+    direct: true
+  user:
+    name: "user_service"
+    address: "user_service"
+    port: 10002
+    direct: true
+  group:
+    name: "group_service"
+    address: "group_service"
+    port: 10005
+    direct: true
+  push:
+    name: "push_service"
+    address: "push_service"
+    port: 10007
+    direct: true
+cache:
+  enable: true
+
+encryption:
+  enable: false
+  name: coss-im
+  email: max.mustermann@example.com
+  passphrase: LongSecret
+  rsaBits: 2048

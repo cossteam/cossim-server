@@ -7,19 +7,20 @@ import (
 	"fmt"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/api/http/model"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/msg_queue"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
+	"github.com/cossim/coss-server/pkg/utils"
 	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/dtmgrpc"
 	"github.com/dtm-labs/client/workflow"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/minio/minio-go/v7"
@@ -141,11 +142,24 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		}
 	}
 
+	data := map[string]interface{}{"group_id": groupID, "inviter_id": req.CreatorId}
+
+	toBytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return nil, err
+	}
 	// 给被邀请的用户推送
 	for _, id := range req.Member {
-		msg := constants.WsMsg{Uid: id, Event: constants.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": groupID, "inviter_id": req.CreatorId}, SendAt: time.Now()}
-		//通知消息服务有消息需要发送
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		msg := &pushgrpcv1.WsMsg{Uid: id, Event: pushgrpcv1.WSEventType_InviteJoinGroupEvent, Data: &any.Any{Value: toBytes}, SendAt: time.Now(), PushOffline: true}
+		toBytes2, err := utils.StructToBytes(msg)
+
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes2,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &model.CreateGroupResponse{
