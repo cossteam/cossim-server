@@ -114,7 +114,7 @@ func (repo *GroupRelationRepo) GetJoinRequestBatchListByID(gids []uint32) ([]*en
 
 func (repo *GroupRelationRepo) GetGroupAdminIds(gid uint32) ([]string, error) {
 	var adminIds []string
-	repo.db.Model(&entity.GroupRelation{}).Where(" group_id = ? AND identity = ? AND deleted_at = 0", gid, entity.IdentityAdmin).Pluck("user_id", &adminIds)
+	repo.db.Model(&entity.GroupRelation{}).Where("(identity = ? or identity = ?)AND group_id = ? AND deleted_at = 0", entity.IdentityAdmin, entity.IdentityOwner, gid).Pluck("user_id", &adminIds)
 	return adminIds, nil
 }
 

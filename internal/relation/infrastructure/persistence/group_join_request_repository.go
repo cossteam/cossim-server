@@ -27,7 +27,7 @@ func (g *GroupJoinRequestRepo) AddJoinRequest(en *entity.GroupJoinRequest) (*ent
 
 func (g *GroupJoinRequestRepo) GetJoinRequestListByID(userId string) ([]*entity.GroupJoinRequest, error) {
 	var result []*entity.GroupJoinRequest
-	if err := g.db.Where("user_id = ? AND deleted_at = 0", userId).Find(&result).Error; err != nil {
+	if err := g.db.Where("id = ? AND deleted_at = 0", userId).Find(&result).Error; err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -45,7 +45,7 @@ func (g *GroupJoinRequestRepo) AddJoinRequestBatch(en []*entity.GroupJoinRequest
 
 func (g *GroupJoinRequestRepo) GetGroupJoinRequestListByUserId(userID string) ([]*entity.GroupJoinRequest, error) {
 	var result []*entity.GroupJoinRequest
-	if err := g.db.Where("user_id = ? AND deleted_at = 0", userID).Find(&result).Error; err != nil {
+	if err := g.db.Where("owner_id = ? AND deleted_at = 0", userID).Find(&result).Error; err != nil {
 		return nil, err
 	}
 	return result, nil
