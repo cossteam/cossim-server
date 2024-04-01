@@ -233,10 +233,12 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	var gs *GrpcServer
 
 	if opts.Http.HTTPService != nil {
+		hs = &HttpServer{}
 		hs.svc = server2.NewHttpService(cfg, opts.Http.HTTPService, opts.Http.HealthCheckAddress+opts.LivenessEndpointName, opts.Logger)
 	}
 
 	if opts.Grpc.GRPCService != nil {
+		gs = &GrpcServer{}
 		gs.svc = server2.NewGRPCService(cfg, opts.Grpc.GRPCService, opts.Logger)
 	}
 
