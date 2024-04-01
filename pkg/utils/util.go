@@ -78,6 +78,25 @@ func SliceDifference(slice1, slice2 []uint32) []uint32 {
 	return diff
 }
 
+func RemoveDuplicate(strSlice []string) []string {
+	// 创建一个 map 用于记录每个字符串是否已经出现过
+	seen := make(map[string]struct{})
+
+	// 创建一个新的切片，用于存储去重后的字符串
+	result := []string{}
+
+	// 遍历原始切片
+	for _, str := range strSlice {
+		// 如果字符串没有出现过，则将其添加到结果切片中，并在 map 中标记为已经出现
+		if _, ok := seen[str]; !ok {
+			result = append(result, str)
+			seen[str] = struct{}{}
+		}
+	}
+
+	return result
+}
+
 func GenCossID() (string, error) {
 
 	flake := sonyflake.NewSonyflake(sonyflake.Settings{})

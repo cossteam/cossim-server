@@ -181,6 +181,7 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	if err != nil {
 		return 0, code.GroupErrGroupNotFound
 	}
+
 	sf, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		UserId:  userID,
 		GroupId: groupID,
@@ -188,9 +189,11 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	if err != nil {
 		return 0, err
 	}
+
 	if sf.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
 		return 0, code.Forbidden
 	}
+
 	dialog, err := s.relationDialogService.GetDialogByGroupId(ctx, &relationgrpcv1.GetDialogByGroupIdRequest{GroupId: groupID})
 	if err != nil {
 		return 0, err
@@ -232,7 +235,7 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 			return err
 		}
 		// 删除群聊
-		if err = tcc.CallBranch(r4, s.groupServiceAddr+groupgrpcv1.GroupService_DeleteGroup_FullMethodName, "", s.groupServiceAddr+groupgrpcv1.GroupService_DeleteGroupRevert_FullMethodName, r); err != nil {
+		if err = tcc.CallBranch(r4, s.ac.GRPC.Addr()+groupgrpcv1.GroupService_DeleteGroup_FullMethodName, "", s.ac.GRPC.Addr()+groupgrpcv1.GroupService_DeleteGroupRevert_FullMethodName, r); err != nil {
 			return err
 		}
 		return err

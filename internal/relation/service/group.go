@@ -354,6 +354,11 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 			if err != nil {
 				return nil, err
 			}
+		} else {
+			sendinfo, err = s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.UserId})
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		data[i] = &model.GroupRequestListResponse{

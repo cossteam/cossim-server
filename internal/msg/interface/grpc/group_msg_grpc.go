@@ -95,7 +95,7 @@ func (s *Handler) ReadAllGroupMsg(ctx context.Context, request *v1.ReadAllGroupM
 			reads[k] = &entity.GroupMessageRead{
 				DialogId: v.DialogId,
 				MsgId:    v.ID,
-				UserId:   v.UserID,
+				UserId:   request.UserId,
 				GroupID:  v.GroupID,
 				ReadAt:   time.Now(),
 			}

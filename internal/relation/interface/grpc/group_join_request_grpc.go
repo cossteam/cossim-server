@@ -2,10 +2,12 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,7 +30,14 @@ func (s *Handler) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGro
 	notifiy = append(notifiy, request.InviterId)
 	notifiy = append(notifiy, adminIDs...)
 
+	//去除重复
+	notifiy = utils.RemoveDuplicate(notifiy)
+
+	fmt.Println("管理员ids", notifiy)
+	fmt.Println("原来的ids", request.Member)
 	for _, userID := range request.Member {
+		fmt.Println("添加被邀请人记录")
+
 		userGroup := &entity.GroupJoinRequest{
 			UserID:      userID,
 			GroupID:     uint(request.GroupId),
@@ -42,15 +51,18 @@ func (s *Handler) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGro
 
 	// 将管理员添加到关系切片中
 	for _, id := range notifiy {
-		adminGroup := &entity.GroupJoinRequest{
-			UserID:      id,
-			GroupID:     uint(request.GroupId),
-			Inviter:     request.InviterId,
-			OwnerID:     id,
-			InviterTime: time.Now(),
-			Status:      entity.Invitation,
+		for _, userID := range request.Member {
+			fmt.Println("添加管理员记录")
+			userGroup := &entity.GroupJoinRequest{
+				UserID:      userID,
+				GroupID:     uint(request.GroupId),
+				Inviter:     request.InviterId,
+				OwnerID:     id,
+				InviterTime: time.Now(),
+				Status:      entity.Invitation,
+			}
+			relations = append(relations, userGroup)
 		}
-		relations = append(relations, adminGroup)
 	}
 
 	// 添加关系切片到数据库
@@ -103,35 +115,35 @@ func (s *Handler) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 func (s *Handler) GetGroupJoinRequestListByUserId(ctx context.Context, request *v1.GetGroupJoinRequestListRequest) (*v1.GroupJoinRequestListResponse, error) {
 	var resp = &v1.GroupJoinRequestListResponse{}
 
-	//获取该用户管理的群聊
-	ds, err := s.grr.GetUserManageGroupIDs(request.UserId)
-	if err != nil {
-		return nil, err
-	}
-	if len(ds) > 0 {
-		//获取该用户管理的群聊的申请列表
-		ids := make([]uint, 0)
-		for _, v := range ds {
-			ids = append(ids, uint(v))
-		}
-		list, err := s.gjqr.GetJoinRequestBatchListByGroupIDs(ids, request.UserId)
-		if err != nil {
-			return resp, err
-		}
-		if len(list) > 0 {
-			for _, v := range list {
-				resp.GroupJoinRequestResponses = append(resp.GroupJoinRequestResponses, &v1.GroupJoinRequestResponse{
-					ID:        uint32(v.ID),
-					UserId:    v.UserID,
-					GroupId:   uint32(v.GroupID),
-					Status:    v1.GroupRequestStatus(v.Status),
-					InviterId: v.Inviter,
-					CreatedAt: uint64(v.CreatedAt),
-					Remark:    v.Remark,
-				})
-			}
-		}
-	}
+	////获取该用户管理的群聊
+	//ds, err := s.grr.GetUserManageGroupIDs(request.UserId)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if len(ds) > 0 {
+	//	//获取该用户管理的群聊的申请列表
+	//	ids := make([]uint, 0)
+	//	for _, v := range ds {
+	//		ids = append(ids, uint(v))
+	//	}
+	//	list, err := s.gjqr.GetJoinRequestBatchListByGroupIDs(ids, request.UserId)
+	//	if err != nil {
+	//		return resp, err
+	//	}
+	//	if len(list) > 0 {
+	//		for _, v := range list {
+	//			resp.GroupJoinRequestResponses = append(resp.GroupJoinRequestResponses, &v1.GroupJoinRequestResponse{
+	//				ID:        uint32(v.ID),
+	//				UserId:    v.UserID,
+	//				GroupId:   uint32(v.GroupID),
+	//				Status:    v1.GroupRequestStatus(v.Status),
+	//				InviterId: v.Inviter,
+	//				CreatedAt: uint64(v.CreatedAt),
+	//				Remark:    v.Remark,
+	//			})
+	//		}
+	//	}
+	//}
 	//获取他自己的申请列表
 	list, err := s.gjqr.GetGroupJoinRequestListByUserId(request.UserId)
 	if err != nil {
