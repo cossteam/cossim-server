@@ -19,12 +19,12 @@ email:
   password: "zjnudhwoiuknecgh"
 
 http:
+  name: "admin_bff"
   address: "0.0.0.0"
   port: 8087
 
 register:
-  name: "admin_bff"
-  address: "registry"   # 注册中心地址
+  address: "consul"   # 注册中心地址
   port: 8500            # 注册中心端口
   tags: ["admin", "bff", "管理服务"]
 
@@ -94,4 +94,9 @@ discovers:
     name: "msg_service"
     address: "msg_service"
     port: 10001
+    direct: true
+  push:
+    name: "push_service"
+    address: "push_service"
+    port: 10007
     direct: true

@@ -7,10 +7,12 @@ import (
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/live/api/dto"
 	"github.com/cossim/coss-server/internal/live/api/model"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/constants"
+	"github.com/cossim/coss-server/pkg/utils"
+	any2 "github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/livekit"
 	"github.com/redis/go-redis/v9"
@@ -144,16 +146,34 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 		if participants[i].UserID == uid {
 			continue
 		}
-		msg := constants.WsMsg{Uid: participants[i].UserID, Event: constants.GroupCallReqEvent, Data: map[string]interface{}{
+		data := map[string]interface{}{
 			"url":          s.livekitServer,
 			"group_id":     gid,
 			"room":         roomName,
 			"sender_id":    uid,
 			"recipient_id": participants[i].UserID,
 			"option":       option,
-		}}
-		if err = s.publishServiceMessage(ctx, msg); err != nil {
-			s.logger.Error("发送消息失败", zap.Error(err), zap.String("room", roomName), zap.String("uid", participants[i].UserID))
+		}
+
+		bytes, err := utils.StructToBytes(data)
+		if err != nil {
+			return nil, err
+		}
+
+		msg := &pushgrpcv1.WsMsg{Uid: participants[i].UserID, Event: pushgrpcv1.WSEventType_GroupCallReqEvent, Data: &any2.Any{Value: bytes}}
+		//if err = s.publishServiceMessage(ctx, msg); err != nil {
+		//	s.logger.Error("发送消息失败", zap.Error(err), zap.String("room", roomName), zap.String("uid", participants[i].UserID))
+		//}
+		toBytes, err := utils.StructToBytes(msg)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes,
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -232,14 +252,28 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid, driverId s
 		if k == uid {
 			continue
 		}
-		msg := constants.WsMsg{Uid: k, Event: constants.GroupCallAcceptEvent, Data: map[string]interface{}{
+		bytes, err := utils.StructToBytes(map[string]interface{}{
 			"room":         room.Room,
 			"sender_id":    room.SenderID,
 			"recipient_id": uid,
 			"driver_id":    driverId,
-		}}
-		if err = s.publishServiceMessage(ctx, msg); err != nil {
-			s.logger.Error("推送用户通话接受事件失败", zap.Error(err))
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		msg := &pushgrpcv1.WsMsg{Uid: k, Event: pushgrpcv1.WSEventType_GroupCallAcceptEvent, Data: &any2.Any{Value: bytes}}
+		toBytes, err := utils.StructToBytes(msg)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes,
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -350,18 +384,38 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (
 	}
 
 	// Send rejection message to all participants in the call
+
 	for id := range roomInfo.Participants {
-		msg := constants.WsMsg{
+		data := map[string]interface{}{
+			"sender_id":    roomInfo.SenderID,
+			"recipient_id": id,
+		}
+		bytes, err := utils.StructToBytes(data)
+		if err != nil {
+			return nil, err
+		}
+		msg := &pushgrpcv1.WsMsg{
 			Uid:   id,
-			Event: constants.GroupCallRejectEvent,
-			Data: map[string]interface{}{
-				"sender_id":    roomInfo.SenderID,
-				"recipient_id": id,
-			},
+			Event: pushgrpcv1.WSEventType_GroupCallRejectEvent,
+			Data:  &any2.Any{Value: bytes},
 		}
-		if err = s.publishServiceMessage(ctx, msg); err != nil {
-			s.logger.Error("Failed to send rejection message", zap.Error(err))
+
+		toBytes, err := utils.StructToBytes(msg)
+		if err != nil {
+			return nil, err
 		}
+
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		//if err = s.publishServiceMessage(ctx, msg); err != nil {
+		//	s.logger.Error("Failed to send rejection message", zap.Error(err))
+		//}
 	}
 
 	return nil, nil
@@ -435,13 +489,29 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 		if k == uid {
 			continue
 		}
-		msg := constants.WsMsg{Uid: k, Event: constants.UserLeaveGroupCallEvent, Data: map[string]interface{}{
+		data := map[string]interface{}{
 			"room": roomInfo.Room,
 			"uid":  uid,
 			"gid":  gid,
-		}}
-		if err = s.publishServiceMessage(ctx, msg); err != nil {
-			s.logger.Error("发送消息失败", zap.Error(err))
+		}
+		bytes, err := utils.StructToBytes(data)
+		if err != nil {
+			return nil, err
+		}
+		msg := pushgrpcv1.WsMsg{Uid: k, Event: pushgrpcv1.WSEventType_UserLeaveGroupCallEvent, Data: &any2.Any{Value: bytes}}
+		//if err = s.publishServiceMessage(ctx, msg); err != nil {
+		//	s.logger.Error("发送消息失败", zap.Error(err))
+		//	return nil, err
+		//}
+		toBytes, err := utils.StructToBytes(&msg)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes,
+		})
+		if err != nil {
 			return nil, err
 		}
 	}

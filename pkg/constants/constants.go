@@ -17,3 +17,11 @@ func DetermineClientType(clientType DriverType) DriverType {
 	}
 	return UnDefinedClient
 }
+
+func GetDriverTypeList() []DriverType {
+	return []DriverType{
+		MobileClient,
+		DesktopClient,
+		UnDefinedClient,
+	}
+}

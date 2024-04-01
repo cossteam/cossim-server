@@ -37,11 +37,6 @@ type SenderInfo struct {
 	Name   string `json:"name"`
 }
 
-type FriendOnlineStatusMsg struct {
-	UserId string `json:"user_id"`
-	Status int32  `json:"status"`
-}
-
 type WsUserOperatorMsg struct {
 	Id                     uint32               `json:"id"`
 	SenderId               string               `json:"sender_id"`

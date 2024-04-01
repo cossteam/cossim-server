@@ -1,6 +1,6 @@
 syntax = "proto3";
 package v1;
-option go_package = "github.com/cossim/coss-interface/service/group/api/v1";
+option go_package = "github.com/cossim/coss-server/internal/group/api/v1";
 
 message Group {
   // @inject_tag: json:"id"

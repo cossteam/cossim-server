@@ -1,6 +1,6 @@
-PROJECT_NAME=gateway
+PROJECT_NAME=push
 MAIN_FILE=cmd/main.go
-PKG := "github.com/cossim/coss-server/internale/$(PROJECT_NAME)"
+PKG := "github.com/cossim/coss-server/internal/$(PROJECT_NAME)"
 MOD_DIR := $(shell go env GOMODCACHE)
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
@@ -51,9 +51,9 @@ install: ## Install depence go package
 	@go install github.com/favadi/protoc-go-inject-tag@latest
 
 gen: ## generate protobuf file
-	@protoc -I=. --go_out=. --go_opt=module=${PKG} --go-grpc_out=. --go-grpc_opt=module=${PKG} api/v1/*.proto
+	@protoc -I=. --go_out=. --go_opt=module=${PKG} --go-grpc_out=. --go-grpc_opt=module=${PKG} api/grpc/v1/*.proto
 	@go fmt ./...
-	@protoc-go-inject-tag -input=api/v1/*.pb.go
+	@protoc-go-inject-tag -input=api/grpc/v1/*.pb.go
 
 run: # Run Develop server
 	@go run ../../cmd/$(PROJECT_NAME)/main.go --config ./config/config.yaml
@@ -68,12 +68,12 @@ help: ## Display this help screen
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	# make docker-build ACTION=interface NAME=gateway
+	# make docker-build ACTION=service NAME=group
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-	# make docker-push ACTION=interface NAME=gateway
+	# make docker-push ACTION=service NAME=group
 	docker push ${IMG}
 
 # PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple

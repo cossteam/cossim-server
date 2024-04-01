@@ -137,8 +137,8 @@ func NewMySQL(host, port, username, password, database string, level int64, opts
 }
 
 func NewDefaultMysqlConn() *MySQL {
-	return NewMySQLFromDSN("root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4")
-	//return NewMySQLFromDSN("root:888888@tcp(mysql:33066)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4")
+	//return NewMySQLFromDSN("root:Hitosea@123..@tcp(mysql:3306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4")
+	return NewMySQLFromDSN("root:888888@tcp(mysql:33306)/coss?allowNativePasswords=true&timeout=800ms&readTimeout=200ms&writeTimeout=800ms&parseTime=true&loc=Local&charset=utf8mb4")
 
 }
 

@@ -5,21 +5,23 @@ import (
 	"context"
 	"fmt"
 	"github.com/cossim/coss-server/internal/admin/domain/entity"
+	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/msg_queue"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
 	httputil "github.com/cossim/coss-server/pkg/utils/http"
-	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/minio/minio-go/v7"
 	"github.com/o1egl/govatar"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"image/png"
 )
@@ -78,7 +80,7 @@ func (s *Service) InitAdmin() error {
 	wfName := "init_admin_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		// 创建初始化数据
-		resp1, err := s.userClient.CreateUser(context.Background(), &usergrpcv1.CreateUserRequest{
+		resp1, err := s.userService.CreateUser(context.Background(), &usergrpcv1.CreateUserRequest{
 			UserId:   UserId,
 			Password: utils.HashString(Password),
 			Email:    Email,
@@ -92,7 +94,7 @@ func (s *Service) InitAdmin() error {
 			return err
 		}
 		// 创建初始化数据
-		resp2, err := s.userClient.CreateUser(context.Background(), &usergrpcv1.CreateUserRequest{
+		resp2, err := s.userService.CreateUser(context.Background(), &usergrpcv1.CreateUserRequest{
 			UserId:   "10001",
 			Password: utils.HashString(Password),
 			Email:    Email2,
@@ -108,12 +110,12 @@ func (s *Service) InitAdmin() error {
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.userClient.CreateUserRollback(context.Background(), &usergrpcv1.CreateUserRollbackRequest{UserId: resp1.UserId})
+			_, err = s.userService.CreateUserRollback(context.Background(), &usergrpcv1.CreateUserRollbackRequest{UserId: resp1.UserId})
 			if err != nil {
 				return err
 			}
 
-			_, err = s.userClient.CreateUserRollback(context.Background(), &usergrpcv1.CreateUserRollbackRequest{UserId: resp2.UserId})
+			_, err = s.userService.CreateUserRollback(context.Background(), &usergrpcv1.CreateUserRollbackRequest{UserId: resp2.UserId})
 			if err != nil {
 				return err
 			}
@@ -158,7 +160,7 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 
 	//TODO 系统账号统一管理
 	//查询系统通知账号的所有好友
-	list, err := s.relationClient.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: UserId})
+	list, err := s.relationUserService.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: UserId})
 	if err != nil {
 		return nil, err
 	}
@@ -168,18 +170,48 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 		ids = append(ids, v.UserId)
 	}
 
-	err = s.publishServiceNoticeMessage(ctx, constants.WsMsg{Uid: UserId, Event: constants.SystemNotificationEvent, SendAt: time.Now(), Data: constants.SystemNotificationEventData{
-		UserIds: ids,
+	msgList := make([]*msggrpcv1.SendUserMsgRequest, 0)
+
+	for _, v := range ids {
+		relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: v, FriendId: UserId})
+		if err != nil {
+			return nil, err
+		}
+		msg2 := &msggrpcv1.SendUserMsgRequest{
+			SenderId:   UserId,
+			ReceiverId: v,
+			Content:    content,
+			DialogId:   relation.DialogId,
+			Type:       1, //todo 消息类型枚举
+		}
+		msgList = append(msgList, msg2)
+	}
+
+	_, err = s.msgService.SendMultiUserMessage(context.Background(), &msggrpcv1.SendMultiUserMsgRequest{MsgList: msgList})
+	if err != nil {
+		s.logger.Error("发送系统通知失败", zap.Error(err))
+		return nil, err
+	}
+
+	toBytes, err := utils.StructToBytes(&constants.SystemNotificationEventData{
+		UserId:  UserId,
 		Content: content,
 		Type:    1,
-	}})
+	})
+	msg := pushgrpcv1.PushWsBatchByUserIdsRequest{UserIds: ids, Event: pushgrpcv1.WSEventType_SystemNotificationEvent, PushOffline: true, Data: &any.Any{Value: toBytes}}
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := utils.StructToBytes(&msg)
+
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+		Type: pushgrpcv1.Type_Ws_Batch_User,
+		Data: data,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return nil, nil
-}
-
-func (s *Service) publishServiceNoticeMessage(ctx context.Context, msg constants.WsMsg) error {
-	return s.rabbitMQClient.PublishServiceMessage(msg_queue.AdminService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.Notice, msg)
 }

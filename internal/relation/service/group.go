@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/api/http/model"
 	userApi "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
 	"github.com/dtm-labs/client/dtmgrpc"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -125,16 +128,17 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 	adminIds, err := s.relationGroupService.GetGroupAdminIds(ctx, &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupID,
 	})
+	data := &constants.JoinGroupEventData{
+		GroupId: req.GroupID,
+		UserId:  uid,
+	}
+	bytes, err := utils.StructToBytes(data)
 	if err != nil {
-		s.logger.Error("获取群聊管理员失败", zap.Error(err))
 		return nil, err
 	}
 
 	for _, id := range adminIds.UserIds {
-		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: constants.JoinGroupEventData{
-			GroupId: req.GroupID,
-			UserId:  uid,
-		}, SendAt: time.Now()}
+		msg := &pushgrpcv1.WsMsg{Uid: id, Event: pushgrpcv1.WSEventType_JoinGroupEvent, PushOffline: true, Data: &any.Any{Value: bytes}, SendAt: time.Now()}
 		//通知消息服务有消息需要发送
 		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 		if err != nil {
@@ -451,16 +455,32 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 		})
 	}
 
-	msg := constants.WsMsg{
+	data := &constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)}
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return err
+	}
+
+	msg := &pushgrpcv1.WsMsg{
 		Uid:    r.UserId,
-		Event:  constants.JoinGroupEvent,
-		Data:   constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)},
+		Event:  pushgrpcv1.WSEventType_JoinGroupEvent,
+		Data:   &any.Any{Value: bytes},
 		SendAt: time.Now(),
 	}
-	err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+
+	toBytes, err := utils.StructToBytes(msg)
 	if err != nil {
-		s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
+		return err
 	}
+
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes, Type: pushgrpcv1.Type_Ws})
+	if err != nil {
+		return err
+	}
+	//err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	//if err != nil {
+	//	s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
+	//}
 
 	return nil
 }
@@ -541,15 +561,27 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 			DialogId: dialogInfo.DialogId,
 		})
 	}
-
-	msg := constants.WsMsg{
-		Uid:    userID,
-		Event:  constants.JoinGroupEvent,
-		Data:   constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)},
-		SendAt: time.Now(),
+	data := constants.JoinGroupEventData{GroupId: groupID, Status: uint32(status)}
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return err
 	}
-	if err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg); err != nil {
-		s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
+	msg := &pushgrpcv1.WsMsg{
+		Uid:         userID,
+		Event:       pushgrpcv1.WSEventType_JoinGroupEvent,
+		Data:        &any.Any{Value: bytes},
+		SendAt:      time.Now(),
+		PushOffline: true,
+	}
+
+	msgBytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: msgBytes, Type: pushgrpcv1.Type_Ws})
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -594,24 +626,41 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 	if err != nil {
 		return nil, err
 	}
+
+	data := &model.WsGroupRelationOperatorMsg{
+		Id:      resp.ID,
+		GroupId: req.GroupId,
+		Title:   req.Title,
+		Content: req.Content,
+		OperatorInfo: model.SenderInfo{
+			UserId: info.UserId,
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+		},
+	}
+
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, id := range ds.UserIds {
 		if id == userId {
 			continue
 		}
-		msg := constants.WsMsg{Uid: id, Event: constants.CreateGroupAnnouncementEvent, Data: model.WsGroupRelationOperatorMsg{
-			Id:      resp.ID,
-			GroupId: req.GroupId,
-			Title:   req.Title,
-			Content: req.Content,
-			OperatorInfo: model.SenderInfo{
-				UserId: info.UserId,
-				Avatar: info.Avatar,
-				Name:   info.NickName,
-			},
-		}}
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+
+		msg := &pushgrpcv1.WsMsg{Uid: id, Event: pushgrpcv1.WSEventType_CreateGroupAnnouncementEvent, PushOffline: true, Data: &any.Any{Value: bytes}}
+		//err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		//if err != nil {
+		//	s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
+		//}
+		toBytes, err := utils.StructToBytes(msg)
 		if err != nil {
-			s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
+			return nil, err
+		}
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes, Type: pushgrpcv1.Type_Ws})
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -779,19 +828,44 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrInviteFailed
 	}
 
+	data := map[string]interface{}{"group_id": req.GroupID, "user_id": inviterId}
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return err
+	}
+	var msgs []*pushgrpcv1.WsMsg
 	for _, id := range adminIds.UserIds {
-		msg := constants.WsMsg{Uid: id, Event: constants.JoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "user_id": inviterId}, SendAt: time.Now()}
+		msg := &pushgrpcv1.WsMsg{Uid: id, Event: pushgrpcv1.WSEventType_JoinGroupEvent, Data: &any.Any{Value: bytes}, SendAt: time.Now(), PushOffline: true}
 		//通知消息服务有消息需要发送
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-		if err != nil {
-			s.logger.Error("加入群聊请求申请通知推送失败", zap.Error(err))
-		}
+		msgs = append(msgs, msg)
 	}
 
+	toBytes, err := utils.StructToBytes(msgs)
+	if err != nil {
+		return err
+	}
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws_Batch_User, Data: toBytes})
+	if err != nil {
+		return err
+	}
+
+	data2 := map[string]interface{}{"group_id": req.GroupID, "inviter_id": inviterId}
 	// 给被邀请的用户推送
+	bytes2, err := utils.StructToBytes(data2)
+	if err != nil {
+		return err
+	}
 	for _, id := range req.Member {
-		msg := constants.WsMsg{Uid: id, Event: constants.InviteJoinGroupEvent, Data: map[string]interface{}{"group_id": req.GroupID, "inviter_id": inviterId}, SendAt: time.Now()}
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		msg := &pushgrpcv1.WsMsg{Uid: id, Event: pushgrpcv1.WSEventType_InviteJoinGroupEvent, Data: &any.Any{Value: bytes2}, SendAt: time.Now()}
+		structToBytes, err := utils.StructToBytes(msg)
+		if err != nil {
+			return err
+		}
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: structToBytes})
+		if err != nil {
+			return err
+		}
+		//err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	}
 
 	return nil
@@ -981,22 +1055,41 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 	if err != nil {
 		return nil, err
 	}
+	data := &model.WsGroupRelationOperatorMsg{
+		Id:      req.Id,
+		GroupId: req.GroupId,
+		Title:   req.Title,
+		Content: req.Content,
+		OperatorInfo: model.SenderInfo{
+			UserId: info.UserId,
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+		},
+	}
+
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var msgs []*pushgrpcv1.WsMsg
 	for _, id := range ds.UserIds {
 		if id == userId {
 			continue
 		}
-		msg := constants.WsMsg{Uid: id, Event: constants.UpdateGroupAnnouncementEvent, Data: model.WsGroupRelationOperatorMsg{
-			Id:      req.Id,
-			GroupId: req.GroupId,
-			Title:   req.Title,
-			Content: req.Content,
-			OperatorInfo: model.SenderInfo{
-				UserId: info.UserId,
-				Avatar: info.Avatar,
-				Name:   info.NickName,
-			},
-		}}
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+
+		msg := &pushgrpcv1.WsMsg{Uid: id, Event: pushgrpcv1.WSEventType_UpdateGroupAnnouncementEvent, Data: &any.Any{Value: bytes}}
+		msgs = append(msgs, msg)
+		//err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+	}
+	toBytes, err := utils.StructToBytes(msgs)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws_Batch_User, Data: toBytes})
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil

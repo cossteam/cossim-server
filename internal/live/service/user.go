@@ -8,12 +8,14 @@ import (
 	"github.com/cossim/coss-server/internal/live/api/dto"
 	"github.com/cossim/coss-server/internal/live/api/model"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
+	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/msg_queue"
+	"github.com/cossim/coss-server/pkg/utils"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
+	any2 "github.com/golang/protobuf/ptypes/any"
 	"github.com/google/uuid"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
@@ -94,21 +96,38 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID string, req *dto.
 	}
 
 	fmt.Println("s.liveTimeout+10 => ", s.liveTimeout)
+	data := map[string]interface{}{
+		"url":          s.livekitServer,
+		"sender_id":    senderID,
+		"recipient_id": recipientID,
+		"option":       req.Option,
+	}
 
-	msg := constants.WsMsg{
-		Uid:   recipientID,
-		Event: constants.UserCallReqEvent,
-		Data: map[string]interface{}{
-			"url":          s.livekitServer,
-			"sender_id":    senderID,
-			"recipient_id": recipientID,
-			"option":       req.Option,
-		}}
-	if err = s.publishServiceMessage(ctx, msg); err != nil {
-		s.logger.Error("发送消息失败", zap.Error(err))
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
 		return nil, err
 	}
 
+	msg := &pushgrpcv1.WsMsg{
+		Uid:   recipientID,
+		Event: pushgrpcv1.WSEventType_UserCallReqEvent,
+		Data:  &any2.Any{Value: bytes}}
+
+	toBytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return nil, err
+	}
+	//if err = s.publishServiceMessage(ctx, msg); err != nil {
+	//	s.logger.Error("发送消息失败", zap.Error(err))
+	//	return nil, err
+	//}
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+		Type: pushgrpcv1.Type_Ws,
+		Data: toBytes,
+	})
+	if err != nil {
+		return nil, err
+	}
 	return &dto.UserCallResponse{
 		Url: s.livekitServer,
 	}, nil
@@ -168,18 +187,35 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid, driverId string) (*dto.
 		return nil, code.LiveErrJoinCallFailed
 	}
 
+	data := map[string]interface{}{
+		"room":         room.Room,
+		"sender_id":    room.SenderID,
+		"recipient_id": uid,
+	}
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return nil, err
+	}
 	for k := range room.Participants {
 		if k == uid {
 			continue
 		}
-		msg := constants.WsMsg{Uid: k, Event: constants.UserCallAcceptEvent, Data: map[string]interface{}{
-			"room":         room.Room,
-			"sender_id":    room.SenderID,
-			"recipient_id": uid,
-			"driver_id":    driverId,
-		}}
-		if err = s.publishServiceMessage(ctx, msg); err != nil {
-			s.logger.Error("推送用户通话接受事件失败", zap.Error(err))
+
+		msg := &pushgrpcv1.WsMsg{Uid: k, Event: pushgrpcv1.WSEventType_UserCallAcceptEvent, Data: &any2.Any{Value: bytes}}
+
+		toBytes, err := utils.StructToBytes(msg)
+		if err != nil {
+			return nil, err
+		}
+		//if err = s.publishServiceMessage(ctx, msg); err != nil {
+		//	s.logger.Error("推送用户通话接受事件失败", zap.Error(err))
+		//}
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes,
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -302,32 +338,50 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 		s.logger.Error("获取用户信息失败", zap.Error(err))
 		return nil, code.LiveErrLeaveCallFailed
 	}
-
+	data := &constants.WsUserMsg{
+		SenderId:                senderID,
+		Content:                 "已拒绝",
+		MsgType:                 msgType.Uint(),
+		MsgId:                   message.MsgId,
+		ReceiverId:              receiverId,
+		SendAt:                  pkgtime.Now(),
+		DialogId:                rel.DialogId,
+		IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
+		BurnAfterReadingTimeOut: OpenBurnAfterReadingTimeOut,
+		SenderInfo: constants.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: senderID,
+		},
+	}
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return nil, err
+	}
+	var msgs []*pushgrpcv1.WsMsg
 	for k, _ := range room.Participants {
-		msgContent := constants.WsMsg{
+		msgContent := &pushgrpcv1.WsMsg{
 			Uid:      k,
-			Event:    constants.SendUserMessageEvent,
+			Event:    pushgrpcv1.WSEventType_SendUserMessageEvent,
 			DriverId: driverId,
-			Data: &constants.WsUserMsg{
-				SenderId:                senderID,
-				Content:                 "已拒绝",
-				MsgType:                 msgType.Uint(),
-				MsgId:                   message.MsgId,
-				ReceiverId:              receiverId,
-				SendAt:                  pkgtime.Now(),
-				DialogId:                rel.DialogId,
-				IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
-				BurnAfterReadingTimeOut: OpenBurnAfterReadingTimeOut,
-				SenderInfo: constants.SenderInfo{
-					Avatar: info.Avatar,
-					Name:   info.NickName,
-					UserId: senderID,
-				},
-			},
+			Data:     &any2.Any{Value: bytes},
 		}
-		if err := s.publishServiceMessage(ctx, msgContent); err != nil {
-			s.logger.Error("发送消息失败", zap.Error(err))
-		}
+		msgs = append(msgs, msgContent)
+
+		//if err := s.publishServiceMessage(ctx, msgContent); err != nil {
+		//	s.logger.Error("发送消息失败", zap.Error(err))
+		//}
+	}
+	toBytes, err := utils.StructToBytes(msgs)
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+		Type: pushgrpcv1.Type_Ws_Batch_User,
+		Data: toBytes,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	// 清除缓存
@@ -343,15 +397,30 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 	if err := s.deleteUserRoom(ctx, room); err != nil {
 		return nil, err
 	}
-
-	msg := constants.WsMsg{Uid: senderID, Event: constants.UserCallRejectEvent, Data: map[string]interface{}{
+	data2 := map[string]interface{}{
 		"url":          s.livekitServer,
 		"sender_id":    senderID,
 		"recipient_id": uid,
-	}}
-	if err := s.publishServiceMessage(ctx, msg); err != nil {
-		s.logger.Error("发送消息失败", zap.Error(err))
 	}
+	structToBytes, err := utils.StructToBytes(data2)
+	if err != nil {
+		return nil, err
+	}
+	msg := &pushgrpcv1.WsMsg{Uid: senderID, Event: pushgrpcv1.WSEventType_UserCallRejectEvent, Data: &any2.Any{Value: structToBytes}}
+	toBytes3, err := utils.StructToBytes(msg)
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+		Type: pushgrpcv1.Type_Ws,
+		Data: toBytes3,
+	})
+	if err != nil {
+		return nil, err
+	}
+	//if err = s.publishServiceMessage(ctx, msg); err != nil {
+	//	s.logger.Error("发送消息失败", zap.Error(err))
+	//}
 
 	s.logger.Info("UserRejectRoom", zap.String("room", room.Room), zap.String("SenderID", senderID), zap.String("RecipientID", uid))
 
@@ -466,46 +535,81 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 		s.logger.Error("获取用户信息失败", zap.Error(err))
 		return nil, code.LiveErrLeaveCallFailed
 	}
+	data := &constants.WsUserMsg{
+		SenderId:                senderID,
+		Content:                 content,
+		MsgType:                 msgType.Uint(),
+		MsgId:                   message.MsgId,
+		ReceiverId:              receiverId,
+		SendAt:                  pkgtime.Now(),
+		DialogId:                did,
+		IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
+		BurnAfterReadingTimeOut: OpenBurnAfterReadingTimeOut,
+		SenderInfo: constants.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: senderID,
+		},
+	}
+
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return nil, err
+	}
 
 	for k := range room.Participants {
-		msgContent := constants.WsMsg{
+		msgContent := &pushgrpcv1.WsMsg{
 			Uid:      k,
-			Event:    constants.SendUserMessageEvent,
+			Event:    pushgrpcv1.WSEventType_SendUserMessageEvent,
 			DriverId: driverId,
-			Data: &constants.WsUserMsg{
-				SenderId:                senderID,
-				Content:                 content,
-				MsgType:                 msgType.Uint(),
-				MsgId:                   message.MsgId,
-				ReceiverId:              receiverId,
-				SendAt:                  pkgtime.Now(),
-				DialogId:                did,
-				IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
-				BurnAfterReadingTimeOut: OpenBurnAfterReadingTimeOut,
-				SenderInfo: constants.SenderInfo{
-					Avatar: info.Avatar,
-					Name:   info.NickName,
-					UserId: senderID,
-				},
-			},
+			Data:     &any2.Any{Value: bytes},
 		}
-		if err := s.publishServiceMessage(ctx, msgContent); err != nil {
-			s.logger.Error("发送消息失败", zap.Error(err))
+		toBytes, err := utils.StructToBytes(msgContent)
+		if err != nil {
+			return nil, err
 		}
 
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes,
+		})
+		if err != nil {
+			return nil, err
+		}
+		//if err := s.publishServiceMessage(ctx, msgContent); err != nil {
+		//	s.logger.Error("发送消息失败", zap.Error(err))
+		//}
+
 		// 发送用户结束通话事件消息
-		endCallMsg := constants.WsMsg{
+		data2 := map[string]interface{}{
+			"room":         room.Room,
+			"sender_id":    senderID,
+			"recipient_id": receiverId,
+		}
+		structToBytes, err := utils.StructToBytes(data2)
+		if err != nil {
+			return nil, err
+		}
+		endCallMsg := &pushgrpcv1.WsMsg{
 			Uid:   k,
-			Event: constants.UserCallEndEvent,
-			Data: map[string]interface{}{
-				"room":         room.Room,
-				"sender_id":    senderID,
-				"recipient_id": receiverId,
-			},
+			Event: pushgrpcv1.WSEventType_UserCallEndEvent,
+			Data:  &any2.Any{Value: structToBytes},
 		}
-		if err := s.publishServiceMessage(ctx, endCallMsg); err != nil {
-			s.logger.Error("发送消息失败", zap.Error(err))
+		toBytes2, err := utils.StructToBytes(endCallMsg)
+		if err != nil {
+			return nil, err
 		}
+
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes2,
+		})
+		if err != nil {
+			return nil, err
+		}
+		//if err := s.publishServiceMessage(ctx, endCallMsg); err != nil {
+		//	s.logger.Error("发送消息失败", zap.Error(err))
+		//}
 	}
 
 	// 清除缓存
@@ -837,6 +941,6 @@ func (s *Service) GetAdminJoinToken(ctx context.Context, room, userName, userID 
 	return jwt, nil
 }
 
-func (s *Service) publishServiceMessage(ctx context.Context, msg constants.WsMsg) error {
-	return s.mqClient.PublishServiceMessage(msg_queue.LiveUserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-}
+//func (s *Service) publishServiceMessage(ctx context.Context, msg pushgrpcv1.WsMsg) error {
+//	return s.mqClient.PublishServiceMessage(msg_queue.LiveUserService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+//}

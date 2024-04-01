@@ -7,16 +7,16 @@ import (
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/api/http/model"
+	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/constants"
+	"github.com/cossim/coss-server/pkg/utils"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
-	pushv1 "github.com/cossim/hipush/api/grpc/v1"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -26,9 +26,15 @@ import (
 
 // 推送群聊消息
 func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId string, msg *model.WsGroupMsg) {
+	bytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return
+	}
+
 	//发送群聊消息
 	for _, uid := range uIds {
-		m := constants.WsMsg{Uid: uid, DriverId: driverId, Event: constants.SendGroupMessageEvent, SendAt: pkgtime.Now(), Data: msg}
+		m := &pushv1.WsMsg{Uid: uid, DriverId: driverId, Event: pushv1.WSEventType_SendGroupMessageEvent, PushOffline: true, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}
+
 		//查询是否静默通知
 		groupRelation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 			GroupId: uint32(msg.GroupId),
@@ -41,85 +47,22 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 
 		//判断是否静默通知
 		if groupRelation.IsSilent == relationgrpcv1.GroupSilentNotificationType_GroupSilent {
-			m.Event = constants.SendSilentGroupMessageEvent
+			m.Event = pushv1.WSEventType_SendSilentGroupMessageEvent
 		}
 
-		var is bool
-		r, err := s.userLoginService.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
-			DriverId: driverId,
-			UserId:   uid,
+		bytes2, err := utils.StructToBytes(m)
+		if err != nil {
+			return
+		}
+
+		_, err = s.pushService.Push(ctx, &pushv1.PushRequest{
+			Type: pushv1.Type_Ws,
+			Data: bytes2,
 		})
 		if err != nil {
-			s.logger.Error("获取用户登录信息失败", zap.Error(err))
-		}
-
-		//在线则推送ws
-		if _, ok := pool[uid]; ok {
-			for _, c := range pool[uid] {
-				for _, c2 := range c {
-					m.Rid = c2.Rid
-					js, _ := json.Marshal(m)
-					message, err := Enc.GetSecretMessage(string(js), uid)
-					if err != nil {
-						s.logger.Error("加密失败", zap.Error(err))
-						return
-					}
-					err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-					if err != nil {
-						s.logger.Error("发布ws消息失败", zap.Error(err))
-						continue
-					}
-					appid, ok := s.ac.Push.PlatformAppID[r.Platform]
-					if !ok {
-						s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
-						continue
-					}
-					if constants.DriverType(r.Platform) != constants.MobileClient {
-						s.logger.Info("platform not mobile", zap.String("platform", r.Platform))
-						continue
-					}
-					if is {
-						if _, err := s.pushClient.Push(ctx, &pushv1.PushRequest{
-							Platform:    r.Platform,
-							Tokens:      []string{r.DriverToken},
-							Title:       msg.SenderInfo.Name,
-							Message:     message,
-							AppID:       appid,
-							Development: true,
-						}); err != nil {
-							s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
-						}
-					}
-				}
-			}
-			continue
-		}
-		//否则推送到消息队列
-		//是否传输加密
-
-		if Enc.IsEnable() {
-
-			marshal, err := json.Marshal(m)
-			if err != nil {
-				s.logger.Error("json解析失败", zap.Error(err))
-				return
-			}
-			message, err := Enc.GetSecretMessage(string(marshal), uid)
-			if err != nil {
-				return
-			}
-			err = rabbitMQClient.PublishEncryptedMessage(uid, message)
-			if err != nil {
-				s.logger.Error("发布消息失败", zap.Error(err))
-				return
-			}
 			return
 		}
-		err = rabbitMQClient.PublishMessage(uid, m)
-		if err != nil {
-			s.logger.Error("发布消息失败", zap.Error(err))
-			return
-		}
+
 	}
 }
 
@@ -358,6 +301,7 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	msginfo.Content = content
+	s.SendMsgToUsers(userIds.UserIds, driverId, pushv1.WSEventType_EditMsgEvent, msginfo, true)
 
 	if s.cache {
 		wg := sync.WaitGroup{}
@@ -371,68 +315,6 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 			}
 		}()
 		wg.Wait()
-	}
-
-	sendinfo, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-		UserId: msginfo.UserId,
-	})
-	if err != nil {
-		s.logger.Error("获取用户信息失败", zap.Error(err))
-		return nil, err
-	}
-
-	relation, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
-		UserId:  msginfo.UserId,
-		GroupId: msginfo.GroupId,
-	})
-	if err != nil {
-		s.logger.Error("获取用户信息失败", zap.Error(err))
-		return nil, err
-	}
-
-	name := sendinfo.NickName
-	if relation.Remark != "" {
-		name = relation.Remark
-	}
-
-	for _, uid := range userIds.UserIds {
-
-		//查询是否已读
-		read, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(ctx, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
-			MsgId:  msgID,
-			UserId: uid,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		newMsg := model.GroupMessage{
-			MsgId:                  msginfo.Id,
-			GroupId:                msginfo.GroupId,
-			Content:                msginfo.Content,
-			UserId:                 msginfo.UserId,
-			Type:                   msginfo.Type,
-			ReplyId:                msginfo.ReplyId,
-			ReadAt:                 read.ReadAt,
-			SendAt:                 msginfo.CreatedAt,
-			DialogId:               msginfo.DialogId,
-			IsLabel:                model.LabelMsgType(msginfo.IsLabel),
-			AtUsers:                msginfo.AtUsers,
-			ReadCount:              msginfo.ReadCount,
-			AtAllUser:              model.AtAllUserType(msginfo.AtAllUser),
-			IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
-			SenderInfo: model.SenderInfo{
-				Avatar: sendinfo.Avatar,
-				Name:   name,
-				UserId: sendinfo.UserId,
-			},
-		}
-
-		if read.ReadAt != 0 {
-			newMsg.IsRead = 1
-		}
-
-		s.SendMsg(uid, driverId, constants.EditMsgEvent, newMsg, true)
 	}
 
 	return msgID, nil
@@ -766,7 +648,26 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 		//给消息发送者推送谁读了消息
 		for _, v := range resp1.UnreadGroupMessage {
 			if v.UserId != uid {
-				s.SendMsg(v.UserId, driverId, constants.GroupMsgReadEvent, map[string]interface{}{"msg_id": v.MsgId, "read_user_id": uid}, false)
+				data := map[string]interface{}{"msg_id": v.MsgId, "read_user_id": uid}
+				bytes, err := utils.StructToBytes(data)
+				if err != nil {
+					s.logger.Error("push err:", zap.Error(err))
+					continue
+				}
+				msg := &pushv1.WsMsg{Uid: v.UserId, Event: pushv1.WSEventType_GroupMsgReadEvent, Data: &any.Any{Value: bytes}}
+				bytes2, err := utils.StructToBytes(msg)
+				if err != nil {
+					s.logger.Error("push err:", zap.Error(err))
+					continue
+				}
+				_, err = s.pushService.Push(c, &pushv1.PushRequest{
+					Type: pushv1.Type_Ws,
+					Data: bytes2,
+				})
+				if err != nil {
+					s.logger.Error("push err:", zap.Error(err))
+					continue
+				}
 			}
 		}
 
@@ -812,7 +713,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 	//给消息发送者推送谁读了消息
 	for _, message := range msgs.GroupMessages {
 		if message.UserId != uid {
-			s.SendMsg(message.UserId, driverId, constants.GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": uid}, false)
+			s.SendMsg(message.UserId, driverId, pushv1.WSEventType_GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": uid}, false)
 		}
 	}
 

@@ -1,0 +1,98 @@
+syntax = "proto3";
+package v1;
+option go_package = "github.com/cossim/coss-server/internal/push/api/grpc/v1";
+import "google/protobuf/any.proto";
+
+enum Type {
+  Ws = 0; //ws推送
+  Mobile = 1; //移动端推送
+  Email = 2; //邮件推送
+  Message = 3; //短信推送
+  Ws_Batch = 4; //批量ws推送
+  Ws_Batch_User = 5; //批量ws推送
+}
+
+message PushRequest {
+  // @inject_tag: json:"type"
+  Type type = 1;
+  // @inject_tag: json:"data"
+  bytes data = 2;
+}
+
+message PushResponse {
+}
+
+enum WSEventType {
+  UnknownEvent = 0;
+  OnlineEvent = 1;
+  OfflineEvent = 2;
+  SendUserMessageEvent = 3;
+  SendGroupMessageEvent = 4;
+  SystemNotificationEvent = 5;
+  AddFriendEvent = 6;
+  ManageFriendEvent = 7;
+  PushE2EPublicKeyEvent = 8;
+  JoinGroupEvent = 9;
+  ApproveJoinGroupEvent = 10;
+  InviteJoinGroupEvent = 11;
+  SendSilentUserMessageEvent = 12;
+  SendSilentGroupMessageEvent = 13;
+  UserCallReqEvent = 14;
+  GroupCallReqEvent = 15;
+  UserCallRejectEvent = 16;
+  GroupCallRejectEvent = 17;
+  UserCallEndEvent = 18;
+  GroupCallEndEvent = 19;
+  GroupMsgReadEvent = 20;
+  FriendUpdateOnlineStatusEvent = 21;
+  PushAllFriendOnlineStatusEvent = 22;
+  LabelMsgEvent = 23;
+  EditMsgEvent = 24;
+  RecallMsgEvent = 25;
+  UserMsgReadEvent = 26;
+  UserCallAcceptEvent = 27;
+  GroupCallAcceptEvent = 28;
+  CreateGroupAnnouncementEvent = 29;
+  UpdateGroupAnnouncementEvent = 30;
+  UserLeaveGroupCallEvent = 31;
+}
+
+message WsMsg {
+  // @inject_tag: json:"uid"
+  string uid = 1;
+  // @inject_tag: json:"event"
+  WSEventType event = 2;
+  // @inject_tag: json:"rid"
+  int64 rid = 3;
+  // @inject_tag: json:"driver_id"
+  string driverId = 4;
+  // @inject_tag: json:"send_at"
+  int64 send_at = 5;
+  // @inject_tag: json:"push_offline"
+  bool PushOffline = 7;
+  // @inject_tag: json:"data"
+  google.protobuf.Any data = 6;
+}
+
+//    driverId string, event constants.WSEventType, data interface{}, pushOffline bool
+message PushWsBatchByUserIdsRequest {
+  // @inject_tag: json:"user_ids"
+  repeated string UserIds = 1;
+  // @inject_tag: json:"event"
+  WSEventType Event = 2;
+  // @inject_tag: json:"data"
+  google.protobuf.Any Data = 3;
+  // @inject_tag: json:"push_offline"
+  bool PushOffline = 4;
+  // @inject_tag: json:"driver_id"
+  string DriverId = 5;
+}
+
+message PushWsBatchRequest {
+  // @inject_tag: json:"msgs"
+  repeated WsMsg Msgs = 1;
+}
+
+service PushService {
+  rpc Push(PushRequest) returns (PushResponse);
+}

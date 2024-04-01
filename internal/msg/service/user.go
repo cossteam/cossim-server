@@ -7,22 +7,20 @@ import (
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/api/http/model"
+	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
-	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/utils"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
-	pushv1 "github.com/cossim/hipush/api/grpc/v1"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"log"
 	"sort"
 	"time"
 )
@@ -307,152 +305,132 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 
 // 推送私聊消息
 func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *model.WsUserMsg) {
-	sendFlag := false
-	receFlag := false
 
-	m := constants.WsMsg{Uid: receiverId, DriverId: driverId, Event: constants.SendUserMessageEvent, SendAt: pkgtime.Now(),
-		Data: msg,
+	bytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return
+	}
+	m := &pushv1.WsMsg{Uid: receiverId, DriverId: driverId, Event: pushv1.WSEventType_SendUserMessageEvent, PushOffline: true, SendAt: pkgtime.Now(),
+		Data: &any.Any{Value: bytes},
 	}
 
-	var is bool
-	r, err := s.userLoginService.GetUserLoginByUserId(context.Background(), &usergrpcv1.GetUserLoginByUserIdRequest{
-		UserId: receiverId,
-	})
-	if err == nil {
-		if r.Platform != "" && r.DriverToken != "" && err == nil {
-			is = true
-		}
-	} else {
-		s.logger.Error("获取用户登录信息失败", zap.Error(err))
-	}
+	//var is bool
+	//r, err := s.userLoginClient.GetUserLoginByUserId(context.Background(), &usergrpcv1.GetUserLoginByUserIdRequest{
+	//	UserId: receiverId,
+	//})
+	//if err == nil {
+	//	if r.Platform != "" && r.DriverToken != "" && err == nil {
+	//		is = true
+	//	}
+	//} else {
+	//	s.logger.Error("获取用户登录信息失败", zap.Error(err))
+	//}
 
 	//是否静默通知
 	if silent == relationgrpcv1.UserSilentNotificationType_UserSilent {
-		m.Event = constants.SendSilentUserMessageEvent
+		m.Event = pushv1.WSEventType_SendSilentUserMessageEvent
+	}
+	bytes2, err := utils.StructToBytes(m)
+	if err != nil {
+		return
 	}
 
 	//接受者不为系统则推送
 	if !constants.IsSystemUser(constants.SystemUser(receiverId)) {
 		//遍历该用户所有客户端
-		if _, ok := pool[receiverId]; ok {
-			if len(pool[receiverId]) > 0 {
-				receFlag = true
-				for _, c := range pool[receiverId] {
-					for _, c2 := range c {
-						m.Rid = c2.Rid
-						js, _ := json.Marshal(m)
-						message, err := Enc.GetSecretMessage(string(js), receiverId)
-						if err != nil {
-							s.logger.Error("get secret message err", zap.Error(err))
-							return
-						}
-						err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-						if err != nil {
-							s.logger.Error("send msggrpcv1 err", zap.Error(err))
-							continue
-						}
-						if is {
-							appid, ok := s.ac.Push.PlatformAppID[r.Platform]
-							if !ok {
-								s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
-								continue
-							}
-							if constants.DriverType(r.ClientType) != constants.MobileClient {
-								s.logger.Info("client type not mobile", zap.String("client type", r.ClientType))
-								continue
-							}
-							text, err := utils.ExtractText(msg.Content)
-							if err != nil {
-								s.logger.Error("extract html text err", zap.Error(err))
-								continue
-							}
-							s.logger.Info("push message", zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
-							if _, err := s.pushClient.Push(context.Background(), &pushv1.PushRequest{
-								Platform:    r.Platform,
-								Tokens:      []string{r.DriverToken},
-								Title:       msg.SenderInfo.Name,
-								Message:     text,
-								AppID:       appid,
-								Topic:       appid,
-								Development: true,
-							}); err != nil {
-								s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+		_, err := s.pushService.Push(context.Background(), &pushv1.PushRequest{
+			Type: pushv1.Type_Ws,
+			Data: bytes2,
+		})
 
-	if _, ok := pool[senderId]; ok {
-		if len(pool[senderId]) > 0 {
-			sendFlag = true
-			for _, c := range pool[senderId] {
-				for _, c2 := range c {
-					m.Rid = c2.Rid
-					js, _ := json.Marshal(m)
-					message, err := Enc.GetSecretMessage(string(js), senderId)
-					if err != nil {
-						s.logger.Error("get secret message err", zap.Error(err))
-						return
-					}
-					err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-					if err != nil {
-						s.logger.Error("send msggrpcv1 err", zap.Error(err))
-						continue
-					}
-				}
-			}
-		}
-	}
-	if Enc.IsEnable() {
-		marshal, err := json.Marshal(m)
 		if err != nil {
-			s.logger.Error("json解析失败", zap.Error(err))
+			s.logger.Error("推送失败", zap.Error(err))
 			return
 		}
-		if !receFlag && !constants.IsSystemUser(constants.SystemUser(receiverId)) {
-			message, err := Enc.GetSecretMessage(string(marshal), receiverId)
-			if err != nil {
-				s.logger.Error("加密消息失败", zap.Error(err))
-				return
-			}
-			err = rabbitMQClient.PublishEncryptedMessage(receiverId, message)
-			if err != nil {
-				s.logger.Error("发布消息失败", zap.Error(err))
-				return
-			}
-		}
-
-		if !sendFlag {
-			message, err := Enc.GetSecretMessage(string(marshal), senderId)
-			if err != nil {
-				s.logger.Error("加密消息失败", zap.Error(err))
-				return
-			}
-			err = rabbitMQClient.PublishEncryptedMessage(senderId, message)
-			if err != nil {
-				s.logger.Error("发布消息失败", zap.Error(err))
-				return
-			}
-		}
+		//if _, ok := pool[receiverId]; ok {
+		//	if len(pool[receiverId]) > 0 {
+		//		receFlag = true
+		//		for _, c := range pool[receiverId] {
+		//			for _, c2 := range c {
+		//				m.Rid = c2.Rid
+		//				js, _ := json.Marshal(m)
+		//				message, err := Enc.GetSecretMessage(string(js), receiverId)
+		//				if err != nil {
+		//					return
+		//				}
+		//				err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+		//				if err != nil {
+		//					s.logger.Error("send msggrpcv1 err", zap.Error(err))
+		//					return
+		//				}
+		//				if is {
+		//					appid, ok := s.ac.Push.PlatformAppID[r.Platform]
+		//					if !ok {
+		//						s.logger.Error("platform appid not found", zap.String("platform", r.Platform))
+		//						continue
+		//					}
+		//					if constants.DriverType(r.ClientType) != constants.MobileClient {
+		//						s.logger.Info("client type not mobile", zap.String("client type", r.ClientType))
+		//						continue
+		//					}
+		//					text, err := utils.ExtractText(msg.Content)
+		//					if err != nil {
+		//						s.logger.Error("extract html text err", zap.Error(err))
+		//						continue
+		//					}
+		//					s.logger.Info("push message", zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
+		//					if _, err := s.pushClient.Push(context.Background(), &pushv1.PushRequest{
+		//						Platform:    r.Platform,
+		//						Tokens:      []string{r.DriverToken},
+		//						Title:       msg.SenderInfo.Name,
+		//						Message:     text,
+		//						AppID:       appid,
+		//						Topic:       appid,
+		//						Development: true,
+		//					}); err != nil {
+		//						s.logger.Error("push err", zap.Error(err), zap.String("title", msg.SenderInfo.Name), zap.String("message", message), zap.String("platform", r.Platform), zap.String("driverToken", r.DriverToken), zap.String("appid", appid))
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}
+		//}
+	}
+	m.Uid = senderId
+	m.Event = pushv1.WSEventType_SendUserMessageEvent
+	bytes2, err = utils.StructToBytes(m)
+	if err != nil {
 		return
 	}
-	if !receFlag && !constants.IsSystemUser(constants.SystemUser(receiverId)) {
-		err := rabbitMQClient.PublishMessage(receiverId, m)
-		if err != nil {
-			s.logger.Error("发布消息失败", zap.Error(err))
-			return
-		}
+	_, err = s.pushService.Push(context.Background(), &pushv1.PushRequest{
+		Type: pushv1.Type_Ws,
+		Data: bytes2,
+	})
+	if err != nil {
+		s.logger.Error("推送失败", zap.Error(err))
+		return
 	}
-	if !sendFlag {
-		err := rabbitMQClient.PublishMessage(senderId, m)
-		if err != nil {
-			s.logger.Error("发布消息失败", zap.Error(err))
-			return
-		}
-	}
+	//if _, ok := pool[senderId]; ok {
+	//	if len(pool[senderId]) > 0 {
+	//		sendFlag = true
+	//		for _, c := range pool[senderId] {
+	//			for _, c2 := range c {
+	//				m.Rid = c2.Rid
+	//				js, _ := json.Marshal(m)
+	//				message, err := Enc.GetSecretMessage(string(js), senderId)
+	//				if err != nil {
+	//					return
+	//				}
+	//				err = c2.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+	//				if err != nil {
+	//					s.logger.Error("send msggrpcv1 err", zap.Error(err))
+	//					return
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
 }
 
 func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *model.MsgListRequest) (interface{}, error) {
@@ -874,6 +852,9 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 		s.logger.Error("获取用户关系失败", zap.Error(err))
 		return nil, err
 	}
+	if relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
 
 	relation2, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
 		UserId:   msginfo.ReceiverId,
@@ -884,6 +865,9 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 		return nil, err
 	}
 
+	if relation2.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		return nil, code.RelationUserErrFriendRelationNotFound
+	}
 	//判断是否在对话内
 	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(c, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
@@ -915,54 +899,7 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 		}
 	}
 
-	sendinfo, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-		UserId: msginfo.SenderId,
-	})
-	if err != nil {
-		s.logger.Error("获取用户信息失败", zap.Error(err))
-		return nil, err
-	}
-
-	receinfo, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-		UserId: msginfo.ReceiverId,
-	})
-	if err != nil {
-		s.logger.Error("获取用户信息失败", zap.Error(err))
-		return nil, err
-	}
-
-	name := sendinfo.NickName
-	if relation2.Remark != "" {
-		name = relation2.Remark
-	}
-
-	newMsg := model.UserMessage{
-		MsgId:                   msginfo.Id,
-		SenderId:                msginfo.SenderId,
-		ReceiverId:              msginfo.ReceiverId,
-		Content:                 msginfo.Content,
-		Type:                    msginfo.Type,
-		ReplyId:                 msginfo.ReplyId,
-		IsRead:                  msginfo.IsRead,
-		ReadAt:                  msginfo.ReadAt,
-		SendAt:                  msginfo.CreatedAt,
-		DialogId:                msginfo.DialogId,
-		IsLabel:                 model.LabelMsgType(msginfo.IsLabel),
-		IsBurnAfterReadingType:  model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
-		BurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
-		SenderInfo: model.SenderInfo{
-			Avatar: sendinfo.Avatar,
-			Name:   name,
-			UserId: sendinfo.UserId,
-		},
-		ReceiverInfo: model.SenderInfo{
-			Avatar: receinfo.Avatar,
-			Name:   receinfo.NickName,
-			UserId: receinfo.UserId,
-		},
-	}
-
-	s.SendMsgToUsers(userIds.UserIds, driverId, constants.EditMsgEvent, newMsg, true)
+	s.SendMsgToUsers(userIds.UserIds, driverId, pushv1.WSEventType_EditMsgEvent, msginfo, true)
 
 	return msgID, nil
 }
@@ -1093,7 +1030,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		}
 	}
 
-	s.SendMsgToUsers(ids.UserIds, driverId, constants.UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{
+	s.SendMsgToUsers(ids.UserIds, driverId, pushv1.WSEventType_UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{
 		Avatar: info.Avatar,
 		Name:   info.NickName,
 		UserId: info.UserId,
@@ -1227,154 +1164,29 @@ func (s *Service) GetUserLabelMsgList(ctx context.Context, userID string, dialog
 	return msgs, nil
 }
 
-func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceType, token string) {
-	defer conn.Close()
-	//用户上线
-	wsRid++
-	messages := rabbitMQClient.GetChannel()
-	if messages.IsClosed() {
-		log.Fatal("Channel is Closed")
-	}
-	cli := &client{
-		ClientType:     deviceType,
-		Conn:           conn,
-		Uid:            uid,
-		Rid:            wsRid,
-		queue:          messages,
-		DriverId:       driverId,
-		Rdb:            s.redisClient,
-		relationClient: s.relationUserService,
-	}
-	if _, ok := pool[uid]; !ok {
-		pool[uid] = make(map[string][]*client)
-	}
-
-	if s.ac.MultipleDeviceLimit.Enable {
-		if _, ok := pool[uid][deviceType]; ok {
-			if len(pool[uid][deviceType]) == s.ac.MultipleDeviceLimit.Max {
-				return
-			}
-		}
-	}
-	//保存到线程池
-	cli.wsOnlineClients()
-
-	//todo 加锁
-	//更新登录信息
-	keys, err := s.redisClient.ScanKeys(cli.Uid + ":" + deviceType + ":*")
-	if err != nil {
-		s.logger.Error("获取用户信息失败1", zap.Error(err))
-		return
-	}
-
-	for _, key := range keys {
-		v, err := s.redisClient.GetKey(key)
-		if err != nil {
-			s.logger.Error("获取用户信息失败", zap.Error(err))
-			return
-		}
-		strKey := v.(string)
-		info, err := cache.GetUserInfo(strKey)
-		if err != nil {
-			s.logger.Error("获取用户信息失败", zap.Error(err))
-			return
-		}
-		if info.Token == token {
-			info.Rid = cli.Rid
-			resp := cache.GetUserInfoToInterfaces(info)
-			err := s.redisClient.SetKey(key, resp, 60*60*24*7*time.Second)
-			if err != nil {
-				s.logger.Error("保存用户信息失败", zap.Error(err))
-				return
-			}
-			break
-		}
-	}
-	//读取客户端消息
-	for {
-		_, _, err := conn.ReadMessage()
-		if err != nil {
-			s.logger.Error("读取消息失败", zap.Error(err))
-			//删除redis里的rid
-			keys, err := s.redisClient.ScanKeys(cli.Uid + ":" + deviceType + ":*")
-			if err != nil {
-				s.logger.Error("获取用户信息失败1", zap.Error(err))
-				return
-			}
-
-			for _, key := range keys {
-				v, err := s.redisClient.GetKey(key)
-				if err != nil {
-					s.logger.Error("获取用户信息失败", zap.Error(err))
-					return
-				}
-				strKey := v.(string)
-				info, err := cache.GetUserInfo(strKey)
-				if err != nil {
-					s.logger.Error("获取用户信息失败", zap.Error(err))
-					return
-				}
-				if info.Token == token {
-					info.Rid = 0
-					resp := cache.GetUserInfoToInterfaces(info)
-					err := s.redisClient.SetKey(key, resp, 60*60*24*7*time.Second)
-					if err != nil {
-						s.logger.Error("保存用户信息失败", zap.Error(err))
-						return
-					}
-					break
-				}
-			}
-			//用户下线
-			cli.wsOfflineClients()
-			return
-		}
-	}
-}
-
 // SendMsg 推送消息
-func (s *Service) SendMsg(uid string, driverId string, event constants.WSEventType, data interface{}, pushOffline bool) {
-	m := constants.WsMsg{Uid: uid, DriverId: driverId, Event: event, Rid: 0, Data: data, SendAt: pkgtime.Now()}
-	_, ok := pool[uid]
-	if !pushOffline && !ok {
+func (s *Service) SendMsg(uid string, driverId string, event pushv1.WSEventType, data interface{}, pushOffline bool) {
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
 		return
 	}
-	if pushOffline && !ok {
-		//不在线则推送到消息队列
-		err := rabbitMQClient.PublishMessage(uid, m)
-		if err != nil {
-			fmt.Println("发布消息失败：", err)
-			return
-		}
+
+	m := &pushv1.WsMsg{Uid: uid, DriverId: driverId, Event: event, Rid: 0, Data: &any.Any{Value: bytes}, PushOffline: pushOffline, SendAt: pkgtime.Now()}
+	bytes2, err := utils.StructToBytes(m)
+	if err != nil {
 		return
 	}
-	for _, v := range pool[uid] {
-		for _, c := range v {
-			m.Rid = c.Rid
-			js, _ := json.Marshal(m)
-			err := c.Conn.WriteMessage(websocket.TextMessage, js)
-			if err != nil {
-				s.logger.Error("send msg err", zap.Error(err))
-				return
-			}
-		}
+	_, err = s.pushService.Push(context.Background(), &pushv1.PushRequest{
+		Type: pushv1.Type_Ws,
+		Data: bytes2,
+	})
+	if err != nil {
+		return
 	}
 }
 
 // SendMsgToUsers 推送多个用户消息
-func (s *Service) SendMsgToUsers(uids []string, driverId string, event constants.WSEventType, data interface{}, pushOffline bool) {
-	//var wg sync.WaitGroup
-	//var lock = sync.Mutex{}
-	//for _, uid := range uids {
-	//	wg.Add(1)
-	//	go func(uid string) {
-	//		defer lock.Unlock()
-	//		defer wg.Done()
-	//		lock.Lock()
-	//		s.SendMsg(uid, driverId, event, data, pushOffline)
-	//	}(uid)
-	//}
-	//wg.Wait()
+func (s *Service) SendMsgToUsers(uids []string, driverId string, event pushv1.WSEventType, data interface{}, pushOffline bool) {
 
 	for _, uid := range uids {
 		s.SendMsg(uid, driverId, event, data, pushOffline)
