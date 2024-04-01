@@ -45,17 +45,25 @@ type Manager interface {
 
 	// GetLogger returns this manager's logger.
 	GetLogger() logr.Logger
+
+	GetConfig() *config.AppConfig
+
+	SetupHTTPServerWithManager(hs *HttpServer) error
+
+	SetupGrpcServerWithManager(gs *GrpcServer) error
 }
 
 type GrpcServer struct {
 	MetricsBindAddress  string
 	HealthzCheckAddress string
+	svc                 *server2.GrpcService
 	server2.GRPCService
 }
 
 type HttpServer struct {
 	MetricsBindAddress string
 	HealthCheckAddress string
+	svc                *server2.HttpService
 	server2.HTTPService
 }
 
@@ -147,10 +155,6 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 		return nil, errors.New("must specify Config")
 	}
 
-	if opts.Http.HTTPService == nil && opts.Grpc.GRPCService == nil {
-		return nil, errors.New("must specify at least one of Http or Grpc")
-	}
-
 	// Set default values for options fields
 	opts = setOptionsDefaults(opts)
 
@@ -225,15 +229,15 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 	errChan := make(chan error, 1)
 	runnables := newRunnables(context.Background, errChan)
 
-	var hs *server2.HttpService
-	var gs *server2.GrpcService
+	var hs *HttpServer
+	var gs *GrpcServer
 
 	if opts.Http.HTTPService != nil {
-		hs = server2.NewHttpService(cfg, opts.Http.HTTPService, opts.Http.HealthCheckAddress+opts.LivenessEndpointName, opts.Logger)
+		hs.svc = server2.NewHttpService(cfg, opts.Http.HTTPService, opts.Http.HealthCheckAddress+opts.LivenessEndpointName, opts.Logger)
 	}
 
 	if opts.Grpc.GRPCService != nil {
-		gs = server2.NewGRPCService(cfg, opts.Grpc.GRPCService, opts.Logger)
+		gs.svc = server2.NewGRPCService(cfg, opts.Grpc.GRPCService, opts.Logger)
 	}
 
 	return &controllerManager{
@@ -242,11 +246,8 @@ func New(cfg *config.AppConfig, opts Options) (Manager, error) {
 		runnables:               runnables,
 		httpServer:              hs,
 		grpcServer:              gs,
-		optsHttpServer:          &opts.Http,
-		optsGrpcServer:          &opts.Grpc,
 		metricsListener:         metricsListener,
 		metricsExtraHandlers:    metricsExtraHandlers,
-		healthCheckAddress:      opts.Http.HealthCheckAddress,
 		httpHealthProbeListener: httpHealthProbeListener,
 		readinessEndpointName:   opts.ReadinessEndpointName,
 		livenessEndpointName:    opts.LivenessEndpointName,

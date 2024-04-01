@@ -48,13 +48,13 @@ type controllerManager struct {
 	// cluster holds a variety of methods to interact with a cluster. Required.
 	//cluster cluster.Cluster
 
-	httpServer *server2.HttpService
+	//httpServer *server2.HttpService
+	//
+	//grpcServer *server2.GrpcService
 
-	grpcServer *server2.GrpcService
+	httpServer *HttpServer
 
-	optsHttpServer *HttpServer
-
-	optsGrpcServer *GrpcServer
+	grpcServer *GrpcServer
 
 	// metricsServer is used to serve prometheus metrics
 	metricsServer metrics.Server
@@ -64,8 +64,6 @@ type controllerManager struct {
 
 	// metricsExtraHandlers contains extra handlers to register on http server that serves metrics.
 	metricsExtraHandlers map[string]http.Handler
-
-	healthCheckAddress string
 
 	// httpHealthProbeListener is used to serve liveness probe
 	httpHealthProbeListener net.Listener
@@ -108,6 +106,39 @@ type controllerManager struct {
 	configUpdateCh chan discovery.ConfigUpdate
 
 	config *config.AppConfig
+}
+
+func (cm *controllerManager) GetConfig() *config.AppConfig {
+	var ac *config.AppConfig
+	if cm.config != nil {
+		ac = &config.AppConfig{}
+		*ac = *cm.config
+	}
+	return ac
+}
+
+func (cm *controllerManager) SetupHTTPServerWithManager(hs *HttpServer) error {
+	if hs == nil {
+		return errors.New("http server is nil")
+	}
+	if hs.HTTPService == nil {
+		return errors.New("HTTPService == nil")
+	}
+	cm.httpServer = hs
+	cm.httpServer.svc = server2.NewHttpService(cm.config, cm.httpServer, hs.HealthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
+	return nil
+}
+
+func (cm *controllerManager) SetupGrpcServerWithManager(gs *GrpcServer) error {
+	if gs == nil {
+		return errors.New("http server is nil")
+	}
+	if gs.GRPCService == nil {
+		return errors.New("HTTPService == nil")
+	}
+	cm.grpcServer = gs
+	cm.grpcServer.svc = server2.NewGRPCService(cm.config, cm.grpcServer, cm.GetLogger())
+	return nil
 }
 
 func (cm *controllerManager) Stop(ctx context.Context) error {
@@ -259,6 +290,10 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 		}
 	}()
 
+	//if cm.httpServer == nil && cm.grpcServer == nil {
+	//	return errors.New("must specify at least one of Http or Grpc")
+	//}
+
 	// Add the cluster runnable.
 	//if err := cm.add(cm.cluster); err != nil {
 	//	return fmt.Errorf("failed to add cluster to runnables: %w", err)
@@ -294,13 +329,13 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	}
 
 	if cm.runnables.HTTPServers != nil && cm.httpServer != nil {
-		if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
+		if err := cm.runnables.HTTPServers.Add(cm.httpServer.svc, nil); err != nil {
 			return fmt.Errorf("failed to add metrics httpServer: %w", err)
 		}
 	}
 
 	if cm.runnables.GRPCServers != nil && cm.grpcServer != nil {
-		if err := cm.runnables.GRPCServers.Add(cm.grpcServer, nil); err != nil {
+		if err := cm.runnables.GRPCServers.Add(cm.grpcServer.svc, nil); err != nil {
 			return fmt.Errorf("failed to add metrics httpServer: %w", err)
 		}
 	}
@@ -367,15 +402,15 @@ func (cm *controllerManager) reloadConfiguration() error {
 	errChan := make(chan error, 1)
 	cm.runnables = newRunnables(context.Background, errChan)
 	if cm.httpServer != nil {
-		cm.httpServer = server2.NewHttpService(cm.config, cm.optsHttpServer, cm.healthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
-		if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
+		cm.httpServer.svc = server2.NewHttpService(cm.config, cm.httpServer, cm.httpServer.HealthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
+		if err := cm.runnables.HTTPServers.Add(cm.httpServer.svc, nil); err != nil {
 			return fmt.Errorf("failed to add metrics httpServers: %w", err)
 		}
 	}
 
 	if cm.grpcServer != nil {
-		cm.grpcServer = server2.NewGRPCService(cm.config, cm.optsGrpcServer, cm.GetLogger())
-		if err := cm.runnables.GRPCServers.Add(cm.grpcServer, nil); err != nil {
+		cm.grpcServer.svc = server2.NewGRPCService(cm.config, cm.grpcServer, cm.GetLogger())
+		if err := cm.runnables.GRPCServers.Add(cm.grpcServer.svc, nil); err != nil {
 			return fmt.Errorf("failed to add metrics grpcServers: %w", err)
 		}
 	}
@@ -394,7 +429,7 @@ func (cm *controllerManager) reloadConfiguration() error {
 
 	httpHealthProbeListener, err := (&Options{
 		newHealthProbeListener: defaultHealthProbeListener,
-	}).newHealthProbeListener(cm.healthCheckAddress)
+	}).newHealthProbeListener(cm.httpServer.HealthCheckAddress)
 	if err != nil {
 		return err
 	}
