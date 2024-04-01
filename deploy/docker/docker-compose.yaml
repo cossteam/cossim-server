@@ -277,3 +277,17 @@ services:
     environment:
       CONSUL_HTTP_TOKEN:
     restart: on-failure
+  push:
+    container_name: cossim_push
+    image: hub.hitosea.com/cossim/push
+    command:
+      - "--discover"
+      - "--register"
+      - "--remote-config"
+      - "--config-center-addr"
+      - "consul:8500"
+    volumes:
+      - ./config/pgp:/.cache
+    environment:
+      CONSUL_HTTP_TOKEN:
+    restart: on-failure
