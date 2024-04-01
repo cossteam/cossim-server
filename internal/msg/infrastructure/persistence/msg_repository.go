@@ -16,9 +16,9 @@ type MsgRepo struct {
 
 func (g *MsgRepo) GetGroupUnreadMsgList(dialogId uint32, msgIds []uint32) ([]*entity.GroupMessage, error) {
 	var msgList []*entity.GroupMessage
-	err := g.db.Model(&entity.UserMessage{}).
+	err := g.db.Model(&entity.GroupMessage{}).
 		Where("id NOT IN (?) AND dialog_id = ? AND deleted_at = 0", msgIds, dialogId).
-		Find(msgList).Error
+		Find(&msgList).Error
 	if err != nil {
 		return nil, err
 	}
