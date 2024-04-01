@@ -217,7 +217,7 @@ func (c *userRelationServiceClient) SetFriendRemark(ctx context.Context, in *Set
 }
 
 // UserRelationServiceServer is the server API for UserRelationService service.
-// All implementations must embed UnimplementedUserRelationServiceServer
+// All implementations should embed UnimplementedUserRelationServiceServer
 // for forward compatibility
 type UserRelationServiceServer interface {
 	// 添加好友
@@ -250,10 +250,9 @@ type UserRelationServiceServer interface {
 	SetUserOpenBurnAfterReadingTimeOut(context.Context, *SetUserOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error)
 	// 设置好友备注
 	SetFriendRemark(context.Context, *SetFriendRemarkRequest) (*emptypb.Empty, error)
-	mustEmbedUnimplementedUserRelationServiceServer()
 }
 
-// UnimplementedUserRelationServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedUserRelationServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedUserRelationServiceServer struct {
 }
 
@@ -302,7 +301,6 @@ func (UnimplementedUserRelationServiceServer) SetUserOpenBurnAfterReadingTimeOut
 func (UnimplementedUserRelationServiceServer) SetFriendRemark(context.Context, *SetFriendRemarkRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetFriendRemark not implemented")
 }
-func (UnimplementedUserRelationServiceServer) mustEmbedUnimplementedUserRelationServiceServer() {}
 
 // UnsafeUserRelationServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to UserRelationServiceServer will

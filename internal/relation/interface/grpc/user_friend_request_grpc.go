@@ -13,6 +13,11 @@ import (
 	"gorm.io/gorm"
 )
 
+func (s *Handler) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (s *Handler) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
 	var resp = &v1.GetFriendRequestListResponse{}
 	list, err := s.ufqr.GetFriendRequestList(request.UserId)

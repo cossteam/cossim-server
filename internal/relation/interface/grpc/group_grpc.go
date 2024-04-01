@@ -15,6 +15,27 @@ import (
 	"gorm.io/gorm"
 )
 
+func (s *Handler) AddGroupAdmin(ctx context.Context, request *v1.AddGroupAdminRequest) (*v1.AddGroupAdminResponse, error) {
+	resp := &v1.AddGroupAdminResponse{}
+
+	r1, err := s.grr.GetUserGroupByID(request.GroupID, request.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if r1.Identity != entity.IdentityAdmin {
+		return nil, code.Forbidden
+	}
+
+	for _, v := range request.UserIDs {
+		if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, v, "identity", entity.IdentityAdmin); err != nil {
+			return nil, code.RelationErrGroupAddAdmin
+		}
+	}
+
+	return resp, nil
+}
+
 func (s *Handler) GetGroupUserIDs(ctx context.Context, id *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
 	resp := &v1.UserIdsResponse{}
 

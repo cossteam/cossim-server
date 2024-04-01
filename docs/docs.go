@@ -1501,6 +1501,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/relation/group/admin/add": {
+            "post": {
+                "description": "添加群聊管理员",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GroupRelation"
+                ],
+                "summary": "添加群聊管理员",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AddGroupAdminRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/relation/group/admin/announcement": {
             "post": {
                 "description": "创建群公告(管理员)",
@@ -4105,6 +4139,24 @@ const docTemplate = `{
             "properties": {
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "model.AddGroupAdminRequest": {
+            "type": "object",
+            "required": [
+                "group_id",
+                "user_ids"
+            ],
+            "properties": {
+                "group_id": {
+                    "type": "integer"
+                },
+                "user_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

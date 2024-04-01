@@ -241,6 +241,18 @@ message SetGroupUserRemarkRequest{
   string Remark = 3;
 }
 
+message AddGroupAdminRequest {
+  // @inject_tag: json:"group_id"
+  uint32 GroupID = 1;
+  string UserID = 2;
+  // @inject_tag: json:"user_ids"
+  repeated string UserIDs = 3;
+}
+
+message AddGroupAdminResponse {
+
+}
+
 service GroupRelationService {
   // 获取群聊成员ID列表
   rpc GetGroupUserIDs(GroupIDRequest) returns (UserIdsResponse);
@@ -304,4 +316,7 @@ service GroupRelationService {
 
   //设置群聊用户备注
   rpc SetGroupUserRemark(SetGroupUserRemarkRequest) returns (google.protobuf.Empty);
+
+  // 添加群聊管理员
+  rpc AddGroupAdmin(AddGroupAdminRequest) returns (AddGroupAdminResponse);
 }

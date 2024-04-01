@@ -41,6 +41,7 @@ const (
 	GroupRelationService_SetGroupOpenBurnAfterReading_FullMethodName                = "/v1.GroupRelationService/SetGroupOpenBurnAfterReading"
 	GroupRelationService_SetGroupOpenBurnAfterReadingTimeOut_FullMethodName         = "/v1.GroupRelationService/SetGroupOpenBurnAfterReadingTimeOut"
 	GroupRelationService_SetGroupUserRemark_FullMethodName                          = "/v1.GroupRelationService/SetGroupUserRemark"
+	GroupRelationService_AddGroupAdmin_FullMethodName                               = "/v1.GroupRelationService/AddGroupAdmin"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -89,6 +90,8 @@ type GroupRelationServiceClient interface {
 	SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, in *SetGroupOpenBurnAfterReadingTimeOutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 设置群聊用户备注
 	SetGroupUserRemark(ctx context.Context, in *SetGroupUserRemarkRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 添加群聊管理员
+	AddGroupAdmin(ctx context.Context, in *AddGroupAdminRequest, opts ...grpc.CallOption) (*AddGroupAdminResponse, error)
 }
 
 type groupRelationServiceClient struct {
@@ -288,8 +291,17 @@ func (c *groupRelationServiceClient) SetGroupUserRemark(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *groupRelationServiceClient) AddGroupAdmin(ctx context.Context, in *AddGroupAdminRequest, opts ...grpc.CallOption) (*AddGroupAdminResponse, error) {
+	out := new(AddGroupAdminResponse)
+	err := c.cc.Invoke(ctx, GroupRelationService_AddGroupAdmin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupRelationServiceServer is the server API for GroupRelationService service.
-// All implementations must embed UnimplementedGroupRelationServiceServer
+// All implementations should embed UnimplementedGroupRelationServiceServer
 // for forward compatibility
 type GroupRelationServiceServer interface {
 	// 获取群聊成员ID列表
@@ -334,10 +346,11 @@ type GroupRelationServiceServer interface {
 	SetGroupOpenBurnAfterReadingTimeOut(context.Context, *SetGroupOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error)
 	// 设置群聊用户备注
 	SetGroupUserRemark(context.Context, *SetGroupUserRemarkRequest) (*emptypb.Empty, error)
-	mustEmbedUnimplementedGroupRelationServiceServer()
+	// 添加群聊管理员
+	AddGroupAdmin(context.Context, *AddGroupAdminRequest) (*AddGroupAdminResponse, error)
 }
 
-// UnimplementedGroupRelationServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedGroupRelationServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedGroupRelationServiceServer struct {
 }
 
@@ -404,7 +417,9 @@ func (UnimplementedGroupRelationServiceServer) SetGroupOpenBurnAfterReadingTimeO
 func (UnimplementedGroupRelationServiceServer) SetGroupUserRemark(context.Context, *SetGroupUserRemarkRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGroupUserRemark not implemented")
 }
-func (UnimplementedGroupRelationServiceServer) mustEmbedUnimplementedGroupRelationServiceServer() {}
+func (UnimplementedGroupRelationServiceServer) AddGroupAdmin(context.Context, *AddGroupAdminRequest) (*AddGroupAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddGroupAdmin not implemented")
+}
 
 // UnsafeGroupRelationServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to GroupRelationServiceServer will
@@ -795,6 +810,24 @@ func _GroupRelationService_SetGroupUserRemark_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupRelationService_AddGroupAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddGroupAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupRelationServiceServer).AddGroupAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupRelationService_AddGroupAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupRelationServiceServer).AddGroupAdmin(ctx, req.(*AddGroupAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupRelationService_ServiceDesc is the grpc.ServiceDesc for GroupRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -885,6 +918,10 @@ var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetGroupUserRemark",
 			Handler:    _GroupRelationService_SetGroupUserRemark_Handler,
+		},
+		{
+			MethodName: "AddGroupAdmin",
+			Handler:    _GroupRelationService_AddGroupAdmin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

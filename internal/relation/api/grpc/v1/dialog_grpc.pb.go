@@ -348,7 +348,7 @@ func (c *dialogServiceClient) GetDialogTargetUserId(ctx context.Context, in *Get
 }
 
 // DialogServiceServer is the server API for DialogService service.
-// All implementations must embed UnimplementedDialogServiceServer
+// All implementations should embed UnimplementedDialogServiceServer
 // for forward compatibility
 type DialogServiceServer interface {
 	// CreateDialog 创建对话
@@ -402,10 +402,9 @@ type DialogServiceServer interface {
 	GetAllUsersInConversation(context.Context, *GetAllUsersInConversationRequest) (*GetAllUsersInConversationResponse, error)
 	// 查询对话对方userId
 	GetDialogTargetUserId(context.Context, *GetDialogTargetUserIdRequest) (*GetDialogTargetUserIdResponse, error)
-	mustEmbedUnimplementedDialogServiceServer()
 }
 
-// UnimplementedDialogServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedDialogServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedDialogServiceServer struct {
 }
 
@@ -487,7 +486,6 @@ func (UnimplementedDialogServiceServer) GetAllUsersInConversation(context.Contex
 func (UnimplementedDialogServiceServer) GetDialogTargetUserId(context.Context, *GetDialogTargetUserIdRequest) (*GetDialogTargetUserIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDialogTargetUserId not implemented")
 }
-func (UnimplementedDialogServiceServer) mustEmbedUnimplementedDialogServiceServer() {}
 
 // UnsafeDialogServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to DialogServiceServer will

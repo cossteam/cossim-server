@@ -106,6 +106,8 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	g.POST("/remark/set", h.setGroupUserRemark)
 
 	gg := api.Group("/group/admin")
+	// 设置群聊管理员
+	gg.POST("/add", h.addGroupAdmin)
 	// 管理员管理群聊申请
 	gg.POST("/manage/join", h.adminManageJoinGroup)
 	// 管理员移除群聊成员

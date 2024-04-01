@@ -12,6 +12,38 @@ import (
 	"strconv"
 )
 
+// 添加群聊管理员
+// @Summary 添加群聊管理员
+// @Description 添加群聊管理员
+// @Tags GroupRelation
+// @Accept  json
+// @Produce  json
+// @param request body model.AddGroupAdminRequest true "request"
+// @Success 200 {object} model.Response{}
+// @Router /relation/group/admin/add [post]
+func (h *Handler) addGroupAdmin(c *gin.Context) {
+	req := new(model.AddGroupAdminRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	thisID, err := pkghttp.ParseTokenReUid(c)
+	if err != nil {
+		response.SetFail(c, err.Error(), nil)
+		return
+	}
+
+	err = h.svc.AddGroupAdmin(c, thisID, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "添加群聊管理员成功", nil)
+}
+
 // 设置自己在群聊内的名称
 // @Summary 设置自己在群聊内的名称
 // @Description 设置自己在群聊内的名称
