@@ -138,7 +138,7 @@ services:
       - '8600:8600'
       - '8600:8600/udp'
   hipush:
-    container_name: cossim_push
+    container_name: cossim_hipush
     image: hub.hitosea.com/cossim/hipush
     volumes:
       - ./config/common/hipush.yaml:/config/config.yaml
