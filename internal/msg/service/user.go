@@ -1382,7 +1382,7 @@ func (s *Service) SendMsgToUsers(uids []string, driverId string, event constants
 }
 
 // 获取对话落后信息
-func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMsg) ([]*model.GetDialogAfterMsgResponse, error) {
+func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request []model.AfterMsg) ([]*model.GetDialogAfterMsgResponse, error) {
 	var responses = make([]*model.GetDialogAfterMsgResponse, 0)
 	dialogIds := make([]uint32, 0)
 	for _, v := range request {
@@ -1498,6 +1498,8 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 								Name:   info2.NickName,
 								UserId: info2.UserId,
 							}
+							msg.ReadAt = um.ReadAt
+							msg.IsRead = um.IsRead
 							msg.IsBurnAfterReading = model.BurnAfterReadingType(um.IsBurnAfterReadingType)
 							msg.ReplyId = uint32(um.ReplyId)
 							msg.IsLabel = model.LabelMsgType(um.IsLabel)
@@ -1531,7 +1533,16 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 				UserId: i3.UserId,
 			})
 			if err != nil {
-				return nil, err
+				s.logger.Error("获取用户信息", zap.Error(err))
+				continue
+			}
+			readmsg, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(ctx, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
+				MsgId:  i3.Id,
+				UserId: userID,
+			})
+			if err != nil {
+				s.logger.Error("获取消息是否已读失败", zap.Error(err))
+				continue
 			}
 			msg := model.Message{}
 			msg.GroupId = i3.GroupId
@@ -1550,6 +1561,10 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			msg.IsBurnAfterReading = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
 			msg.ReplyId = i3.ReplyId
 			msg.IsLabel = model.LabelMsgType(i3.IsLabel)
+			msg.ReadAt = readmsg.ReadAt
+			if msg.ReplyId != 0 {
+				msg.IsRead = int32(msggrpcv1.ReadType_IsRead)
+			}
 			msgs = append(msgs, &msg)
 		}
 		responses = append(responses, &model.GetDialogAfterMsgResponse{
@@ -1598,6 +1613,8 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, request []model.AfterMs
 			}
 			msg.IsBurnAfterReading = model.BurnAfterReadingType(i3.IsBurnAfterReadingType)
 			msg.ReplyId = uint32(i3.ReplyId)
+			msg.ReadAt = i3.ReadAt
+			msg.IsRead = i3.IsRead
 			msg.IsLabel = model.LabelMsgType(i3.IsLabel)
 			msgs = append(msgs, &msg)
 		}

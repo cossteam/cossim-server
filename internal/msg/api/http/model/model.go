@@ -104,6 +104,8 @@ type Message struct {
 	IsBurnAfterReading BurnAfterReadingType `json:"is_burn_after_reading"`   // 是否阅后即焚
 	IsLabel            LabelMsgType         `json:"is_label"`                // 是否标记
 	ReplyId            uint32               `json:"reply_id"`                // 回复消息id
+	IsRead             int32                `json:"is_read"`
+	ReadAt             int64                `json:"read_at"`
 }
 
 type UserMessage struct {
