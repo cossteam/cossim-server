@@ -674,7 +674,7 @@ func (h *Handler) getDialogAfterMsg(c *gin.Context) {
 // @Produce json
 // @Param request body model.GroupMessageReadRequest true "请求参数"
 // @Success 200 {object} model.Response{}
-// @Router /msg/group/read/set [post]
+// @Router /msg/read/group [post]
 func (h *Handler) setGroupMessagesRead(c *gin.Context) {
 	req := new(model.GroupMessageReadRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -713,7 +713,7 @@ func (h *Handler) setGroupMessagesRead(c *gin.Context) {
 // @Param dialog_id query uint32 true "对话ID"
 // @Param group_id query uint32 true "群聊ID"
 // @Success 200 {object} model.Response{data=[]model.GetGroupMessageReadersResponse{}}
-// @Router /msg/group/read/get [get]
+// @Router /msg/read/group [get]
 func (h *Handler) getGroupMessageReaders(c *gin.Context) {
 	msgID, err := strconv.ParseUint(c.Query("msg_id"), 10, 32)
 	if err != nil {

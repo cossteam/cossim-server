@@ -709,8 +709,20 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 }
 
 func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId string, request *model.GroupMessageReadRequest) (interface{}, error) {
-	_, err := s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
-		Gid: request.GroupId,
+	dialog, err := s.relationDialogService.GetDialogById(c, &relationgrpcv1.GetDialogByIdRequest{
+		DialogId: request.DialogId,
+	})
+	if err != nil {
+		s.logger.Error("获取对话失败", zap.Error(err))
+		return nil, err
+	}
+
+	if dialog.Type != uint32(model.GroupConversation) && dialog.GroupId == 0 {
+		return nil, code.DialogErrTypeNotSupport
+	}
+
+	_, err = s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+		Gid: dialog.GroupId,
 	})
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
@@ -718,7 +730,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 	}
 
 	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
-		GroupId: request.GroupId,
+		GroupId: dialog.GroupId,
 		UserId:  uid,
 	})
 	if err != nil {
@@ -772,7 +784,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 		}
 		msgList = append(msgList, &msggrpcv1.SetGroupMessageReadRequest{
 			MsgId:    v,
-			GroupId:  request.GroupId,
+			GroupId:  dialog.GroupId,
 			DialogId: request.DialogId,
 			UserId:   uid,
 			ReadAt:   pkgtime.Now(),
@@ -791,7 +803,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 
 	msgs, err := s.msgService.GetGroupMessagesByIds(c, &msggrpcv1.GetGroupMessagesByIdsRequest{
 		MsgIds:  request.MsgIds,
-		GroupId: request.GroupId,
+		GroupId: dialog.GroupId,
 	})
 	if err != nil {
 		return nil, err

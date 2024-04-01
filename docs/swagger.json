@@ -900,101 +900,6 @@
                 }
             }
         },
-        "/msg/group/read/get": {
-            "get": {
-                "description": "获取消息已读人员",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "获取消息已读人员",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "消息ID",
-                        "name": "msg_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "对话ID",
-                        "name": "dialog_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "群聊ID",
-                        "name": "group_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.GetGroupMessageReadersResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/group/read/set": {
-            "post": {
-                "description": "批量设置群聊消息为已读",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "批量设置群聊消息为已读",
-                "parameters": [
-                    {
-                        "description": "请求参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.GroupMessageReadRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/msg/label/group": {
             "get": {
                 "description": "获取群聊标注信息",
@@ -1233,6 +1138,99 @@
                         "name": "page_size",
                         "in": "query",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/read/group": {
+            "get": {
+                "description": "获取消息已读人员",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "获取消息已读人员",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "msg_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "对话ID",
+                        "name": "dialog_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "群聊ID",
+                        "name": "group_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.GetGroupMessageReadersResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "批量设置群聊消息为已读",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "批量设置群聊消息为已读",
+                "parameters": [
+                    {
+                        "description": "请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.GroupMessageReadRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -4347,17 +4345,11 @@
         "model.GroupMessageReadRequest": {
             "type": "object",
             "required": [
-                "dialog_id",
-                "group_id",
-                "msg_ids"
+                "dialog_id"
             ],
             "properties": {
                 "dialog_id": {
                     "description": "会话ID",
-                    "type": "integer"
-                },
-                "group_id": {
-                    "description": "群组ID",
                     "type": "integer"
                 },
                 "msg_ids": {

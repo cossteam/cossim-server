@@ -76,9 +76,9 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.GET("/label/user", h.getUserLabelMsgList)
 	u.POST("/after/get", h.getDialogAfterMsg)
 	//群聊设置消息已读
-	u.POST("/group/read/set", h.setGroupMessagesRead)
+	u.POST("/read/group", h.setGroupMessagesRead)
 	//获取群聊消息阅读者
-	u.GET("/group/read/get", h.getGroupMessageReaders)
+	u.GET("/read/group", h.getGroupMessageReaders)
 }
 
 func (h *Handler) Health(r gin.IRouter) string {

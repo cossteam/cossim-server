@@ -567,9 +567,6 @@ definitions:
       dialog_id:
         description: 会话ID
         type: integer
-      group_id:
-        description: 群组ID
-        type: integer
       msg_ids:
         description: 消息ID
         items:
@@ -580,8 +577,6 @@ definitions:
         type: boolean
     required:
     - dialog_id
-    - group_id
-    - msg_ids
     type: object
   model.GroupRequestListResponse:
     properties:
@@ -1695,66 +1690,6 @@ paths:
       summary: 编辑用户消息
       tags:
       - Msg
-  /msg/group/read/get:
-    get:
-      consumes:
-      - application/json
-      description: 获取消息已读人员
-      parameters:
-      - description: 消息ID
-        in: query
-        name: msg_id
-        required: true
-        type: integer
-      - description: 对话ID
-        in: query
-        name: dialog_id
-        required: true
-        type: integer
-      - description: 群聊ID
-        in: query
-        name: group_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/model.GetGroupMessageReadersResponse'
-                  type: array
-              type: object
-      summary: 获取消息已读人员
-      tags:
-      - Msg
-  /msg/group/read/set:
-    post:
-      consumes:
-      - application/json
-      description: 批量设置群聊消息为已读
-      parameters:
-      - description: 请求参数
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupMessageReadRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 批量设置群聊消息为已读
-      tags:
-      - Msg
   /msg/label/group:
     get:
       consumes:
@@ -1919,6 +1854,65 @@ paths:
           schema:
             $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
       summary: 获取私聊消息
+      tags:
+      - Msg
+  /msg/read/group:
+    get:
+      consumes:
+      - application/json
+      description: 获取消息已读人员
+      parameters:
+      - description: 消息ID
+        in: query
+        name: msg_id
+        required: true
+        type: integer
+      - description: 对话ID
+        in: query
+        name: dialog_id
+        required: true
+        type: integer
+      - description: 群聊ID
+        in: query
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.GetGroupMessageReadersResponse'
+                  type: array
+              type: object
+      summary: 获取消息已读人员
+      tags:
+      - Msg
+    post:
+      consumes:
+      - application/json
+      description: 批量设置群聊消息为已读
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.GroupMessageReadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+      summary: 批量设置群聊消息为已读
       tags:
       - Msg
   /msg/read/user:

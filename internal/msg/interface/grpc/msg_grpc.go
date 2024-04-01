@@ -394,6 +394,9 @@ func (s *Handler) GetUnreadUserMsgs(ctx context.Context, in *v1.GetUnreadUserMsg
 			SenderId:   msg.SendID,
 			ReceiverId: msg.ReceiveID,
 			CreatedAt:  msg.CreatedAt,
+			ReadAt:     msg.ReadAt,
+			IsRead:     int32(msg.IsRead),
+			DialogId:   uint32(msg.DialogId),
 		})
 	}
 	resp.UserMessages = list
