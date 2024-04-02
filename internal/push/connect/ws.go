@@ -14,10 +14,7 @@ type WebsocketClient struct {
 // NewWebsocketClient creates a new WebsocketClient instance
 func NewWebsocketClient(rid int64, conn *websocket.Conn) *WebsocketClient {
 	return &WebsocketClient{
-		Rid: rid,
-		Conn: &ws.JSWebSocket{
-			ConnType: 0,
-			Conn:     conn,
-		},
+		Rid:  rid,
+		Conn: ws.New(0, conn),
 	}
 }
