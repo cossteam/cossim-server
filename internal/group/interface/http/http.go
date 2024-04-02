@@ -37,7 +37,8 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("group_bff", int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.GrpcService)
-	return h.enc.ReadKeyPair()
+	//return h.enc.ReadKeyPair()
+	return nil
 }
 
 func (h *Handler) Name() string {

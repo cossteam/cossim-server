@@ -5,16 +5,26 @@ import (
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/utils/time"
+	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 )
 
-func (s *Handler) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) (*v1.CreateDialogResponse, error) {
+var _ v1.DialogServiceServer = &dialogServiceServer{}
+
+type dialogServiceServer struct {
+	db    *gorm.DB
+	cache cache.RelationUserCache
+	dr    repository.DialogRepository
+}
+
+func (s *dialogServiceServer) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) (*v1.CreateDialogResponse, error) {
 	resp := &v1.CreateDialogResponse{}
 
 	dialog, err := s.dr.CreateDialog(in.OwnerId, entity.DialogType(in.Type), uint(in.GroupId))
@@ -29,7 +39,7 @@ func (s *Handler) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) 
 	}, nil
 }
 
-func (s *Handler) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.CreateAndJoinDialogWithGroupRequest) (*v1.CreateAndJoinDialogWithGroupResponse, error) {
+func (s *dialogServiceServer) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.CreateAndJoinDialogWithGroupRequest) (*v1.CreateAndJoinDialogWithGroupResponse, error) {
 	resp := &v1.CreateAndJoinDialogWithGroupResponse{}
 
 	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
@@ -61,7 +71,7 @@ func (s *Handler) CreateAndJoinDialogWithGroup(ctx context.Context, request *v1.
 	return resp, nil
 }
 
-func (s *Handler) CreateAndJoinDialogWithGroupRevert(ctx context.Context, request *v1.CreateAndJoinDialogWithGroupRequest) (*v1.CreateAndJoinDialogWithGroupResponse, error) {
+func (s *dialogServiceServer) CreateAndJoinDialogWithGroupRevert(ctx context.Context, request *v1.CreateAndJoinDialogWithGroupRequest) (*v1.CreateAndJoinDialogWithGroupResponse, error) {
 	resp := &v1.CreateAndJoinDialogWithGroupResponse{}
 
 	fmt.Println("CreateAndJoinDialogWithGroupRevert req => ", request)
@@ -88,7 +98,7 @@ func (s *Handler) CreateAndJoinDialogWithGroupRevert(ctx context.Context, reques
 	return resp, nil
 }
 
-func (s *Handler) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRequest) (*v1.ConfirmFriendAndJoinDialogResponse, error) {
+func (s *dialogServiceServer) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRequest) (*v1.ConfirmFriendAndJoinDialogResponse, error) {
 	resp := &v1.ConfirmFriendAndJoinDialogResponse{}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -120,7 +130,7 @@ func (s *Handler) ConfirmFriendAndJoinDialog(ctx context.Context, request *v1.Co
 	return resp, nil
 }
 
-func (s *Handler) ConfirmFriendAndJoinDialogRevert(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRevertRequest) (*v1.ConfirmFriendAndJoinDialogRevertResponse, error) {
+func (s *dialogServiceServer) ConfirmFriendAndJoinDialogRevert(ctx context.Context, request *v1.ConfirmFriendAndJoinDialogRevertRequest) (*v1.ConfirmFriendAndJoinDialogRevertResponse, error) {
 	resp := &v1.ConfirmFriendAndJoinDialogRevertResponse{}
 
 	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.UserId}); err != nil {
@@ -138,7 +148,7 @@ func (s *Handler) ConfirmFriendAndJoinDialogRevert(ctx context.Context, request 
 	return resp, nil
 }
 
-func (s *Handler) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
+func (s *dialogServiceServer) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
 	resp := &v1.JoinDialogResponse{}
 	_, err := s.dr.JoinDialog(uint(in.DialogId), in.UserId)
 	if err != nil {
@@ -147,7 +157,7 @@ func (s *Handler) JoinDialog(ctx context.Context, in *v1.JoinDialogRequest) (*v1
 	return resp, nil
 }
 
-func (s *Handler) JoinDialogRevert(ctx context.Context, request *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
+func (s *dialogServiceServer) JoinDialogRevert(ctx context.Context, request *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
 	fmt.Println("JoinDialogRevert req => ", request)
 	resp := &v1.JoinDialogResponse{}
 	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.UserId}); err != nil {
@@ -156,7 +166,7 @@ func (s *Handler) JoinDialogRevert(ctx context.Context, request *v1.JoinDialogRe
 	return resp, nil
 }
 
-func (s *Handler) GetUserDialogList(ctx context.Context, in *v1.GetUserDialogListRequest) (*v1.GetUserDialogListResponse, error) {
+func (s *dialogServiceServer) GetUserDialogList(ctx context.Context, in *v1.GetUserDialogListRequest) (*v1.GetUserDialogListResponse, error) {
 	resp := &v1.GetUserDialogListResponse{}
 	ids, err := s.dr.GetUserDialogs(in.UserId)
 	if err != nil {
@@ -172,7 +182,7 @@ func (s *Handler) GetUserDialogList(ctx context.Context, in *v1.GetUserDialogLis
 	return resp, nil
 }
 
-func (s *Handler) GetDialogByIds(ctx context.Context, in *v1.GetDialogByIdsRequest) (*v1.GetDialogByIdsResponse, error) {
+func (s *dialogServiceServer) GetDialogByIds(ctx context.Context, in *v1.GetDialogByIdsRequest) (*v1.GetDialogByIdsResponse, error) {
 	resp := &v1.GetDialogByIdsResponse{}
 	nids := make([]uint, 0)
 	if len(in.DialogIds) > 0 {
@@ -200,7 +210,7 @@ func (s *Handler) GetDialogByIds(ctx context.Context, in *v1.GetDialogByIdsReque
 	return resp, nil
 }
 
-func (s *Handler) GetDialogUsersByDialogID(ctx context.Context, in *v1.GetDialogUsersByDialogIDRequest) (*v1.GetDialogUsersByDialogIDResponse, error) {
+func (s *dialogServiceServer) GetDialogUsersByDialogID(ctx context.Context, in *v1.GetDialogUsersByDialogIDRequest) (*v1.GetDialogUsersByDialogIDResponse, error) {
 	resp := &v1.GetDialogUsersByDialogIDResponse{}
 	users, err := s.dr.GetDialogUsersByDialogID(uint(in.DialogId))
 	if err != nil {
@@ -214,7 +224,7 @@ func (s *Handler) GetDialogUsersByDialogID(ctx context.Context, in *v1.GetDialog
 	return resp, nil
 }
 
-func (s *Handler) DeleteDialogByIds(ctx context.Context, in *v1.DeleteDialogByIdsRequest) (*v1.DeleteDialogByIdsResponse, error) {
+func (s *dialogServiceServer) DeleteDialogByIds(ctx context.Context, in *v1.DeleteDialogByIdsRequest) (*v1.DeleteDialogByIdsResponse, error) {
 	var resp = &v1.DeleteDialogByIdsResponse{}
 	uintIds := make([]uint, 0)
 	if len(in.DialogIds) > 0 {
@@ -228,7 +238,7 @@ func (s *Handler) DeleteDialogByIds(ctx context.Context, in *v1.DeleteDialogById
 	return resp, nil
 }
 
-func (s *Handler) DeleteDialogById(ctx context.Context, in *v1.DeleteDialogByIdRequest) (*v1.DeleteDialogByIdResponse, error) {
+func (s *dialogServiceServer) DeleteDialogById(ctx context.Context, in *v1.DeleteDialogByIdRequest) (*v1.DeleteDialogByIdResponse, error) {
 	resp := &v1.DeleteDialogByIdResponse{}
 
 	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
@@ -239,7 +249,7 @@ func (s *Handler) DeleteDialogById(ctx context.Context, in *v1.DeleteDialogByIdR
 	return resp, nil
 }
 
-func (s *Handler) DeleteDialogByIdRevert(ctx context.Context, request *v1.DeleteDialogByIdRequest) (*v1.DeleteDialogByIdResponse, error) {
+func (s *dialogServiceServer) DeleteDialogByIdRevert(ctx context.Context, request *v1.DeleteDialogByIdRequest) (*v1.DeleteDialogByIdResponse, error) {
 	var resp = &v1.DeleteDialogByIdResponse{}
 	fmt.Println("DeleteDialogByIdRevert req => ", request)
 	if err := s.dr.UpdateDialogByDialogID(uint(request.DialogId), map[string]interface{}{
@@ -250,7 +260,7 @@ func (s *Handler) DeleteDialogByIdRevert(ctx context.Context, request *v1.Delete
 	return resp, nil
 }
 
-func (s *Handler) DeleteDialogUsersByDialogID(ctx context.Context, in *v1.DeleteDialogUsersByDialogIDRequest) (*v1.DeleteDialogUsersByDialogIDResponse, error) {
+func (s *dialogServiceServer) DeleteDialogUsersByDialogID(ctx context.Context, in *v1.DeleteDialogUsersByDialogIDRequest) (*v1.DeleteDialogUsersByDialogIDResponse, error) {
 	var resp = &v1.DeleteDialogUsersByDialogIDResponse{}
 	if err := s.dr.DeleteDialogUserByDialogID(uint(in.DialogId)); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), err.Error())
@@ -258,7 +268,7 @@ func (s *Handler) DeleteDialogUsersByDialogID(ctx context.Context, in *v1.Delete
 	return resp, nil
 }
 
-func (s *Handler) DeleteDialogUsersByDialogIDRevert(ctx context.Context, request *v1.DeleteDialogUsersByDialogIDRequest) (*v1.DeleteDialogUsersByDialogIDResponse, error) {
+func (s *dialogServiceServer) DeleteDialogUsersByDialogIDRevert(ctx context.Context, request *v1.DeleteDialogUsersByDialogIDRequest) (*v1.DeleteDialogUsersByDialogIDResponse, error) {
 	var resp = &v1.DeleteDialogUsersByDialogIDResponse{}
 	if err := s.dr.UpdateDialogUserByDialogID(uint(request.DialogId), map[string]interface{}{
 		"deleted_at": 0,
@@ -268,7 +278,7 @@ func (s *Handler) DeleteDialogUsersByDialogIDRevert(ctx context.Context, request
 	return resp, nil
 }
 
-func (s *Handler) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.GetDialogUserByDialogIDAndUserIdRequest) (*v1.GetDialogUserByDialogIDAndUserIdResponse, error) {
+func (s *dialogServiceServer) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.GetDialogUserByDialogIDAndUserIdRequest) (*v1.GetDialogUserByDialogIDAndUserIdResponse, error) {
 	var resp = &v1.GetDialogUserByDialogIDAndUserIdResponse{}
 	user, err := s.dr.GetDialogUserByDialogIDAndUserID(uint(in.DialogId), in.UserId)
 	if err != nil {
@@ -282,7 +292,7 @@ func (s *Handler) GetDialogUserByDialogIDAndUserID(ctx context.Context, in *v1.G
 	return resp, nil
 }
 
-func (s *Handler) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+func (s *dialogServiceServer) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
 	var resp = &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
 
 	err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.UserId})
@@ -292,7 +302,7 @@ func (s *Handler) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, reque
 	return resp, nil
 }
 
-func (s *Handler) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
+func (s *dialogServiceServer) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, request *v1.DeleteDialogUserByDialogIDAndUserIDRequest) (*v1.DeleteDialogUserByDialogIDAndUserIDResponse, error) {
 	resp := &v1.DeleteDialogUserByDialogIDAndUserIDResponse{}
 
 	if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(request.DialogId), request.UserId, "deleted_at", 0); err != nil {
@@ -302,7 +312,7 @@ func (s *Handler) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context,
 	return resp, nil
 }
 
-func (s *Handler) GetDialogByGroupId(ctx context.Context, in *v1.GetDialogByGroupIdRequest) (*v1.GetDialogByGroupIdResponse, error) {
+func (s *dialogServiceServer) GetDialogByGroupId(ctx context.Context, in *v1.GetDialogByGroupIdRequest) (*v1.GetDialogByGroupIdResponse, error) {
 	var resp = &v1.GetDialogByGroupIdResponse{}
 	dialog, err := s.dr.GetDialogByGroupId(uint(in.GroupId))
 	if err != nil {
@@ -315,7 +325,7 @@ func (s *Handler) GetDialogByGroupId(ctx context.Context, in *v1.GetDialogByGrou
 	return resp, nil
 }
 
-func (s *Handler) GetDialogByGroupIds(ctx context.Context, in *v1.GetDialogByGroupIdsRequest) (*v1.GetDialogByGroupIdsResponse, error) {
+func (s *dialogServiceServer) GetDialogByGroupIds(ctx context.Context, in *v1.GetDialogByGroupIdsRequest) (*v1.GetDialogByGroupIdsResponse, error) {
 	var resp = &v1.GetDialogByGroupIdsResponse{}
 	var idlist []uint
 	if len(in.GroupId) > 0 {
@@ -340,7 +350,7 @@ func (s *Handler) GetDialogByGroupIds(ctx context.Context, in *v1.GetDialogByGro
 	return resp, nil
 }
 
-func (s *Handler) CloseOrOpenDialog(ctx context.Context, in *v1.CloseOrOpenDialogRequest) (*emptypb.Empty, error) {
+func (s *dialogServiceServer) CloseOrOpenDialog(ctx context.Context, in *v1.CloseOrOpenDialogRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 	if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(in.DialogId), in.UserId, "is_show", in.Action); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrCloseOrOpenDialogFailed.Code()), err.Error())
@@ -348,7 +358,7 @@ func (s *Handler) CloseOrOpenDialog(ctx context.Context, in *v1.CloseOrOpenDialo
 	return resp, nil
 }
 
-func (s *Handler) TopOrCancelTopDialog(ctx context.Context, in *v1.TopOrCancelTopDialogRequest) (*emptypb.Empty, error) {
+func (s *dialogServiceServer) TopOrCancelTopDialog(ctx context.Context, in *v1.TopOrCancelTopDialogRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 	switch in.Action {
 	case v1.TopOrCancelTopDialogType_CANCEL_TOP:
@@ -356,7 +366,7 @@ func (s *Handler) TopOrCancelTopDialog(ctx context.Context, in *v1.TopOrCancelTo
 			return resp, status.Error(codes.Code(code.DialogErrCloseOrOpenDialogFailed.Code()), err.Error())
 		}
 	case v1.TopOrCancelTopDialogType_TOP:
-		if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(in.DialogId), in.UserId, "top_at", time.Now()); err != nil {
+		if err := s.dr.UpdateDialogUserColumnByDialogIDAndUserId(uint(in.DialogId), in.UserId, "top_at", ptime.Now()); err != nil {
 			return resp, status.Error(codes.Code(code.DialogErrCloseOrOpenDialogFailed.Code()), err.Error())
 		}
 	}
@@ -364,7 +374,7 @@ func (s *Handler) TopOrCancelTopDialog(ctx context.Context, in *v1.TopOrCancelTo
 	return resp, nil
 }
 
-func (s *Handler) GetDialogById(ctx context.Context, in *v1.GetDialogByIdRequest) (*v1.Dialog, error) {
+func (s *dialogServiceServer) GetDialogById(ctx context.Context, in *v1.GetDialogByIdRequest) (*v1.Dialog, error) {
 	var resp = &v1.Dialog{}
 	dialog, err := s.dr.GetDialogById(uint(in.DialogId))
 	if err != nil {
@@ -379,7 +389,7 @@ func (s *Handler) GetDialogById(ctx context.Context, in *v1.GetDialogByIdRequest
 	return resp, nil
 }
 
-func (s *Handler) GetAllUsersInConversation(ctx context.Context, in *v1.GetAllUsersInConversationRequest) (*v1.GetAllUsersInConversationResponse, error) {
+func (s *dialogServiceServer) GetAllUsersInConversation(ctx context.Context, in *v1.GetAllUsersInConversationRequest) (*v1.GetAllUsersInConversationResponse, error) {
 	resp := &v1.GetAllUsersInConversationResponse{}
 	users, err := s.dr.GetDialogAllUsers(uint(in.DialogId))
 	if err != nil {
@@ -393,7 +403,7 @@ func (s *Handler) GetAllUsersInConversation(ctx context.Context, in *v1.GetAllUs
 	return resp, nil
 }
 
-func (s *Handler) BatchCloseOrOpenDialog(ctx context.Context, request *v1.BatchCloseOrOpenDialogRequest) (*emptypb.Empty, error) {
+func (s *dialogServiceServer) BatchCloseOrOpenDialog(ctx context.Context, request *v1.BatchCloseOrOpenDialogRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	err := s.dr.UpdateDialogUserByDialogIDAndUserIds(uint(request.DialogId), request.UserIds, "is_show", request.Action)
 	if err != nil {
@@ -402,7 +412,7 @@ func (s *Handler) BatchCloseOrOpenDialog(ctx context.Context, request *v1.BatchC
 	return resp, nil
 }
 
-func (s *Handler) GetDialogTargetUserId(ctx context.Context, request *v1.GetDialogTargetUserIdRequest) (*v1.GetDialogTargetUserIdResponse, error) {
+func (s *dialogServiceServer) GetDialogTargetUserId(ctx context.Context, request *v1.GetDialogTargetUserIdRequest) (*v1.GetDialogTargetUserIdResponse, error) {
 	resp := &v1.GetDialogTargetUserIdResponse{}
 	userIDs, err := s.dr.GetDialogTargetUserId(uint(request.DialogId), request.UserId)
 	if err != nil {

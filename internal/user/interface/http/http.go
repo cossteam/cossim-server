@@ -35,10 +35,10 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.UserClient)
 
-	if err := h.enc.ReadKeyPair(); err != nil {
-		return err
-	}
-	h.key = h.enc.GetPublicKey()
+	//if err := h.enc.ReadKeyPair(); err != nil {
+	//	return err
+	//}
+	//h.key = h.enc.GetPublicKey()
 	return nil
 }
 

@@ -132,11 +132,11 @@ type svcT struct {
 }
 
 func (s *HttpService) discover(ctx context.Context) {
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
+	var allDirect = true
 	serviceMap := make(map[string]*svcT)
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -153,6 +153,7 @@ func (s *HttpService) discover(ctx context.Context) {
 						s.logger.Error(err, "Failed to discover gRPC server", "service", c.Name)
 						continue
 					}
+					allDirect = false
 				}
 
 				if svc, ok := serviceMap[c.Name]; ok {
@@ -199,6 +200,9 @@ func (s *HttpService) discover(ctx context.Context) {
 				if err := s.svc.DiscoverServices(ss); err != nil {
 					s.logger.Error(err, "Failed to set up gRPC clients")
 				}
+			}
+			if allDirect {
+				return
 			}
 		}
 	}

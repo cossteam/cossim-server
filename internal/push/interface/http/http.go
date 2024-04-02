@@ -36,7 +36,8 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("push_bff", int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	//h.PushService.Init(cfg)
-	return h.enc.ReadKeyPair()
+	//return h.enc.ReadKeyPair()
+	return nil
 }
 
 func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {

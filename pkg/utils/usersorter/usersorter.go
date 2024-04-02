@@ -87,7 +87,6 @@ func SortAndGroupUsers(data interface{}, fieldName string) map[string][]interfac
 		for _, v := range list {
 			var name string
 			remark := ""
-			fmt.Println("v=>", v)
 			//_ = reflect.ValueOf(v).FieldByName("Preferences")
 			preferencesField := reflect.ValueOf(v).FieldByName("Preferences")
 			if preferencesField.IsValid() {

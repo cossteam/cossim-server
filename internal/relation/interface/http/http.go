@@ -21,19 +21,20 @@ var (
 )
 
 type Handler struct {
-	redisClient    *cache.RedisClient
-	logger         *zap.Logger
-	svc            *service.Service
-	enc            encryption.Encryptor
-	RelationClient *grpchandler.Handler
+	redisClient     *cache.RedisClient
+	logger          *zap.Logger
+	svc             *service.Service
+	enc             encryption.Encryptor
+	RelationService *grpchandler.RelationServiceServer
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("relation_bff", int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	h.svc = service.New(cfg, h.RelationClient)
-	return h.enc.ReadKeyPair()
+	h.svc = service.New(cfg, h.RelationService)
+	//return h.enc.ReadKeyPair()
+	return nil
 }
 
 func (h *Handler) Name() string {
