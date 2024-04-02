@@ -21,15 +21,16 @@ import (
 )
 
 type Service struct {
-	ac                  *pkgconfig.AppConfig
-	logger              *zap.Logger
-	repo                *persistence.Repositories
-	userService         user.UserServiceClient
-	relationUserService relationgrpcv1.UserRelationServiceClient
-	pushService         pushgrpcv1.PushServiceClient
-	msgService          msggrpcv1.MsgServiceClient
-	rabbitMQClient      *msg_queue.RabbitMQ
-	sp                  storage.StorageProvider
+	ac                    *pkgconfig.AppConfig
+	logger                *zap.Logger
+	repo                  *persistence.Repositories
+	userService           user.UserServiceClient
+	relationUserService   relationgrpcv1.UserRelationServiceClient
+	relationDialogService relationgrpcv1.DialogServiceClient
+	pushService           pushgrpcv1.PushServiceClient
+	msgService            msggrpcv1.MsgServiceClient
+	rabbitMQClient        *msg_queue.RabbitMQ
+	sp                    storage.StorageProvider
 
 	dtmGrpcServer       string
 	relationServiceAddr string
@@ -69,6 +70,7 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	case "relation_service":
 		s.relationServiceAddr = addr
 		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
+		s.relationDialogService = relationgrpcv1.NewDialogServiceClient(conn)
 	case "msg_service":
 		s.msgServiceAddr = addr
 		s.msgService = msggrpcv1.NewMsgServiceClient(conn)

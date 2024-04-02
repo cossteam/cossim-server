@@ -65,6 +65,12 @@ type GroupMsgListRequest struct {
 	PageSize int    `json:"page_size" binding:"required"`
 }
 
+type SenderInfo struct {
+	UserId string `json:"user_id"`
+	Avatar string `json:"avatar"`
+	Name   string `json:"name"`
+}
+
 type ConversationType uint
 
 const (
