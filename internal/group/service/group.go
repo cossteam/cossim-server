@@ -362,15 +362,18 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32, userID stri
 		return nil, err
 	}
 
-	per := &model.Preferences{
-		OpenBurnAfterReading: model.OpenBurnAfterReadingType(relation.OpenBurnAfterReading),
-		SilentNotification:   model.SilentNotification(relation.IsSilent),
-		Remark:               relation.Remark,
-		EntryMethod:          model.EntryMethod(relation.JoinMethod),
-		Inviter:              relation.Inviter,
-		JoinedAt:             relation.JoinTime,
-		MuteEndTime:          relation.MuteEndTime,
-		Identity:             model.GroupIdentity(relation.Identity),
+	per := &model.Preferences{}
+	if relation != nil && relation.GroupId != 0 {
+		per = &model.Preferences{
+			OpenBurnAfterReading: model.OpenBurnAfterReadingType(relation.OpenBurnAfterReading),
+			SilentNotification:   model.SilentNotification(relation.IsSilent),
+			Remark:               relation.Remark,
+			EntryMethod:          model.EntryMethod(relation.JoinMethod),
+			Inviter:              relation.Inviter,
+			JoinedAt:             relation.JoinTime,
+			MuteEndTime:          relation.MuteEndTime,
+			Identity:             model.GroupIdentity(relation.Identity),
+		}
 	}
 
 	return &model.GroupInfo{
