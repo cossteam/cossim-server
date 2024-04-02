@@ -155,7 +155,7 @@ func (s *GrpcService) Discover() error {
 }
 
 func (s *GrpcService) discover(ctx context.Context) {
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	serviceMap := make(map[string]*svcT)
