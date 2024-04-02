@@ -1,5 +1,5 @@
 syntax = "proto3";
-package v1;
+package relation_v1;
 option go_package = "github.com/cossim/coss-server/internal/relation/api/grpc/v1";
 
 service GroupAnnouncementService {

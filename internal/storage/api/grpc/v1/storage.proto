@@ -1,5 +1,5 @@
 syntax = "proto3";
-package storage.v1;
+package storage_v1;
 option go_package = "github.com/cossim/coss-server/internal/storage/api/v1";
 
 message UploadRequest {

@@ -12,7 +12,6 @@ type MsgRepository interface {
 	InsertUserMessages(message []entity.UserMessage) error
 	GetUserMsgList(uid, friendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) ([]entity.UserMessage, int32, int32)
 	GetLastMsgsForUserWithFriends(userID string, friendIDs []string) ([]*entity.UserMessage, error)
-	GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.LastMessage, error)
 	UpdateUserMessage(msg entity.UserMessage) error
 	GetUserMsgByID(msgId uint32) (*entity.UserMessage, error)
 	GetUserMsgByIDs(msgIds []uint32) ([]*entity.UserMessage, error)
@@ -28,10 +27,12 @@ type MsgRepository interface {
 	// 获取最新的指定范围的消息
 	GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error)
 	GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, error)
+	GetLastUserMsgsByDialogIDs(dialogIds []uint) ([]*entity.UserMessage, error)
 
 	ReadAllUserMsg(uid string, dialogId uint32) error
 
 	//群聊
+	GetLastGroupMsgsByDialogIDs(dialogIds []uint) ([]*entity.GroupMessage, error)
 	GetGroupMsgByID(msgId uint32) (*entity.GroupMessage, error)
 	GetGroupMsgsByIDs(msgIds []uint32) ([]*entity.GroupMessage, error)
 	UpdateGroupMessage(msg entity.GroupMessage) error

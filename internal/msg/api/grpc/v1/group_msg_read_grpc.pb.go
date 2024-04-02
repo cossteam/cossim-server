@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupMessageService_SetGroupMessageRead_FullMethodName                 = "/v1.GroupMessageService/SetGroupMessageRead"
-	GroupMessageService_GetGroupMessageReaders_FullMethodName              = "/v1.GroupMessageService/GetGroupMessageReaders"
-	GroupMessageService_GetGroupMessageReadByMsgIdAndUserId_FullMethodName = "/v1.GroupMessageService/GetGroupMessageReadByMsgIdAndUserId"
+	GroupMessageService_SetGroupMessageRead_FullMethodName                 = "/msg_v1.GroupMessageService/SetGroupMessageRead"
+	GroupMessageService_GetGroupMessageReaders_FullMethodName              = "/msg_v1.GroupMessageService/GetGroupMessageReaders"
+	GroupMessageService_GetGroupMessageReadByMsgIdAndUserId_FullMethodName = "/msg_v1.GroupMessageService/GetGroupMessageReadByMsgIdAndUserId"
 )
 
 // GroupMessageServiceClient is the client API for GroupMessageService service.
@@ -168,7 +168,7 @@ func _GroupMessageService_GetGroupMessageReadByMsgIdAndUserId_Handler(srv interf
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GroupMessageService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.GroupMessageService",
+	ServiceName: "msg_v1.GroupMessageService",
 	HandlerType: (*GroupMessageServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

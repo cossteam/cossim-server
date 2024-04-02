@@ -20,21 +20,21 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserRelationService_AddFriend_FullMethodName                          = "/v1.UserRelationService/AddFriend"
-	UserRelationService_ManageFriend_FullMethodName                       = "/v1.UserRelationService/ManageFriend"
-	UserRelationService_ManageFriendRevert_FullMethodName                 = "/v1.UserRelationService/ManageFriendRevert"
-	UserRelationService_DeleteFriend_FullMethodName                       = "/v1.UserRelationService/DeleteFriend"
-	UserRelationService_DeleteFriendRevert_FullMethodName                 = "/v1.UserRelationService/DeleteFriendRevert"
-	UserRelationService_AddBlacklist_FullMethodName                       = "/v1.UserRelationService/AddBlacklist"
-	UserRelationService_DeleteBlacklist_FullMethodName                    = "/v1.UserRelationService/DeleteBlacklist"
-	UserRelationService_GetFriendList_FullMethodName                      = "/v1.UserRelationService/GetFriendList"
-	UserRelationService_GetBlacklist_FullMethodName                       = "/v1.UserRelationService/GetBlacklist"
-	UserRelationService_GetUserRelation_FullMethodName                    = "/v1.UserRelationService/GetUserRelation"
-	UserRelationService_GetUserRelationByUserIds_FullMethodName           = "/v1.UserRelationService/GetUserRelationByUserIds"
-	UserRelationService_SetFriendSilentNotification_FullMethodName        = "/v1.UserRelationService/SetFriendSilentNotification"
-	UserRelationService_SetUserOpenBurnAfterReading_FullMethodName        = "/v1.UserRelationService/SetUserOpenBurnAfterReading"
-	UserRelationService_SetUserOpenBurnAfterReadingTimeOut_FullMethodName = "/v1.UserRelationService/SetUserOpenBurnAfterReadingTimeOut"
-	UserRelationService_SetFriendRemark_FullMethodName                    = "/v1.UserRelationService/SetFriendRemark"
+	UserRelationService_AddFriend_FullMethodName                          = "/relation_v1.UserRelationService/AddFriend"
+	UserRelationService_ManageFriend_FullMethodName                       = "/relation_v1.UserRelationService/ManageFriend"
+	UserRelationService_ManageFriendRevert_FullMethodName                 = "/relation_v1.UserRelationService/ManageFriendRevert"
+	UserRelationService_DeleteFriend_FullMethodName                       = "/relation_v1.UserRelationService/DeleteFriend"
+	UserRelationService_DeleteFriendRevert_FullMethodName                 = "/relation_v1.UserRelationService/DeleteFriendRevert"
+	UserRelationService_AddBlacklist_FullMethodName                       = "/relation_v1.UserRelationService/AddBlacklist"
+	UserRelationService_DeleteBlacklist_FullMethodName                    = "/relation_v1.UserRelationService/DeleteBlacklist"
+	UserRelationService_GetFriendList_FullMethodName                      = "/relation_v1.UserRelationService/GetFriendList"
+	UserRelationService_GetBlacklist_FullMethodName                       = "/relation_v1.UserRelationService/GetBlacklist"
+	UserRelationService_GetUserRelation_FullMethodName                    = "/relation_v1.UserRelationService/GetUserRelation"
+	UserRelationService_GetUserRelationByUserIds_FullMethodName           = "/relation_v1.UserRelationService/GetUserRelationByUserIds"
+	UserRelationService_SetFriendSilentNotification_FullMethodName        = "/relation_v1.UserRelationService/SetFriendSilentNotification"
+	UserRelationService_SetUserOpenBurnAfterReading_FullMethodName        = "/relation_v1.UserRelationService/SetUserOpenBurnAfterReading"
+	UserRelationService_SetUserOpenBurnAfterReadingTimeOut_FullMethodName = "/relation_v1.UserRelationService/SetUserOpenBurnAfterReadingTimeOut"
+	UserRelationService_SetFriendRemark_FullMethodName                    = "/relation_v1.UserRelationService/SetFriendRemark"
 )
 
 // UserRelationServiceClient is the client API for UserRelationService service.
@@ -587,7 +587,7 @@ func _UserRelationService_SetFriendRemark_Handler(srv interface{}, ctx context.C
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserRelationService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.UserRelationService",
+	ServiceName: "relation_v1.UserRelationService",
 	HandlerType: (*UserRelationServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

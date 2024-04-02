@@ -33,6 +33,8 @@ type LastMessage struct {
 	AtAllUser          entity.AtAllUserType        `json:"at_all_user"`
 	IsLabel            entity.MessageLabelType     `json:"is_label"`
 	ReplyId            uint                        `json:"reply_id"`
+	IsRead             entity.ReadType             `json:"is_read"`
+	ReadAt             int64                       `json:"read_at"`
 }
 
 type GroupMsgList struct {

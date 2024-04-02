@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupAnnouncementService_CreateGroupAnnouncement_FullMethodName     = "/v1.GroupAnnouncementService/CreateGroupAnnouncement"
-	GroupAnnouncementService_GetGroupAnnouncementList_FullMethodName    = "/v1.GroupAnnouncementService/GetGroupAnnouncementList"
-	GroupAnnouncementService_GetGroupAnnouncement_FullMethodName        = "/v1.GroupAnnouncementService/GetGroupAnnouncement"
-	GroupAnnouncementService_UpdateGroupAnnouncement_FullMethodName     = "/v1.GroupAnnouncementService/UpdateGroupAnnouncement"
-	GroupAnnouncementService_DeleteGroupAnnouncement_FullMethodName     = "/v1.GroupAnnouncementService/DeleteGroupAnnouncement"
-	GroupAnnouncementService_MarkAnnouncementAsRead_FullMethodName      = "/v1.GroupAnnouncementService/MarkAnnouncementAsRead"
-	GroupAnnouncementService_GetReadUsers_FullMethodName                = "/v1.GroupAnnouncementService/GetReadUsers"
-	GroupAnnouncementService_GetAnnouncementReadByUserId_FullMethodName = "/v1.GroupAnnouncementService/GetAnnouncementReadByUserId"
+	GroupAnnouncementService_CreateGroupAnnouncement_FullMethodName     = "/relation_v1.GroupAnnouncementService/CreateGroupAnnouncement"
+	GroupAnnouncementService_GetGroupAnnouncementList_FullMethodName    = "/relation_v1.GroupAnnouncementService/GetGroupAnnouncementList"
+	GroupAnnouncementService_GetGroupAnnouncement_FullMethodName        = "/relation_v1.GroupAnnouncementService/GetGroupAnnouncement"
+	GroupAnnouncementService_UpdateGroupAnnouncement_FullMethodName     = "/relation_v1.GroupAnnouncementService/UpdateGroupAnnouncement"
+	GroupAnnouncementService_DeleteGroupAnnouncement_FullMethodName     = "/relation_v1.GroupAnnouncementService/DeleteGroupAnnouncement"
+	GroupAnnouncementService_MarkAnnouncementAsRead_FullMethodName      = "/relation_v1.GroupAnnouncementService/MarkAnnouncementAsRead"
+	GroupAnnouncementService_GetReadUsers_FullMethodName                = "/relation_v1.GroupAnnouncementService/GetReadUsers"
+	GroupAnnouncementService_GetAnnouncementReadByUserId_FullMethodName = "/relation_v1.GroupAnnouncementService/GetAnnouncementReadByUserId"
 )
 
 // GroupAnnouncementServiceClient is the client API for GroupAnnouncementService service.
@@ -325,7 +325,7 @@ func _GroupAnnouncementService_GetAnnouncementReadByUserId_Handler(srv interface
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GroupAnnouncementService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.GroupAnnouncementService",
+	ServiceName: "relation_v1.GroupAnnouncementService",
 	HandlerType: (*GroupAnnouncementServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

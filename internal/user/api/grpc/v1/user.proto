@@ -1,5 +1,5 @@
 syntax = "proto3";
-package v1;
+package user_v1;
 option go_package = "github.com/cossim/coss-server/internal/user/api/v1";
 
 message UserLoginRequest {

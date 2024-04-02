@@ -20,32 +20,32 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DialogService_CreateDialog_FullMethodName                              = "/v1.DialogService/CreateDialog"
-	DialogService_CreateAndJoinDialogWithGroup_FullMethodName              = "/v1.DialogService/CreateAndJoinDialogWithGroup"
-	DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName        = "/v1.DialogService/CreateAndJoinDialogWithGroupRevert"
-	DialogService_ConfirmFriendAndJoinDialog_FullMethodName                = "/v1.DialogService/ConfirmFriendAndJoinDialog"
-	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName          = "/v1.DialogService/ConfirmFriendAndJoinDialogRevert"
-	DialogService_JoinDialog_FullMethodName                                = "/v1.DialogService/JoinDialog"
-	DialogService_JoinDialogRevert_FullMethodName                          = "/v1.DialogService/JoinDialogRevert"
-	DialogService_GetUserDialogList_FullMethodName                         = "/v1.DialogService/GetUserDialogList"
-	DialogService_GetDialogByIds_FullMethodName                            = "/v1.DialogService/GetDialogByIds"
-	DialogService_GetDialogById_FullMethodName                             = "/v1.DialogService/GetDialogById"
-	DialogService_GetDialogUsersByDialogID_FullMethodName                  = "/v1.DialogService/GetDialogUsersByDialogID"
-	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName          = "/v1.DialogService/GetDialogUserByDialogIDAndUserID"
-	DialogService_GetDialogByGroupId_FullMethodName                        = "/v1.DialogService/GetDialogByGroupId"
-	DialogService_GetDialogByGroupIds_FullMethodName                       = "/v1.DialogService/GetDialogByGroupIds"
-	DialogService_DeleteDialogByIds_FullMethodName                         = "/v1.DialogService/DeleteDialogByIds"
-	DialogService_DeleteDialogById_FullMethodName                          = "/v1.DialogService/DeleteDialogById"
-	DialogService_DeleteDialogByIdRevert_FullMethodName                    = "/v1.DialogService/DeleteDialogByIdRevert"
-	DialogService_DeleteDialogUsersByDialogID_FullMethodName               = "/v1.DialogService/DeleteDialogUsersByDialogID"
-	DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName         = "/v1.DialogService/DeleteDialogUsersByDialogIDRevert"
-	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName       = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
-	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
-	DialogService_CloseOrOpenDialog_FullMethodName                         = "/v1.DialogService/CloseOrOpenDialog"
-	DialogService_BatchCloseOrOpenDialog_FullMethodName                    = "/v1.DialogService/BatchCloseOrOpenDialog"
-	DialogService_TopOrCancelTopDialog_FullMethodName                      = "/v1.DialogService/TopOrCancelTopDialog"
-	DialogService_GetAllUsersInConversation_FullMethodName                 = "/v1.DialogService/GetAllUsersInConversation"
-	DialogService_GetDialogTargetUserId_FullMethodName                     = "/v1.DialogService/GetDialogTargetUserId"
+	DialogService_CreateDialog_FullMethodName                              = "/relation_v1.DialogService/CreateDialog"
+	DialogService_CreateAndJoinDialogWithGroup_FullMethodName              = "/relation_v1.DialogService/CreateAndJoinDialogWithGroup"
+	DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName        = "/relation_v1.DialogService/CreateAndJoinDialogWithGroupRevert"
+	DialogService_ConfirmFriendAndJoinDialog_FullMethodName                = "/relation_v1.DialogService/ConfirmFriendAndJoinDialog"
+	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName          = "/relation_v1.DialogService/ConfirmFriendAndJoinDialogRevert"
+	DialogService_JoinDialog_FullMethodName                                = "/relation_v1.DialogService/JoinDialog"
+	DialogService_JoinDialogRevert_FullMethodName                          = "/relation_v1.DialogService/JoinDialogRevert"
+	DialogService_GetUserDialogList_FullMethodName                         = "/relation_v1.DialogService/GetUserDialogList"
+	DialogService_GetDialogByIds_FullMethodName                            = "/relation_v1.DialogService/GetDialogByIds"
+	DialogService_GetDialogById_FullMethodName                             = "/relation_v1.DialogService/GetDialogById"
+	DialogService_GetDialogUsersByDialogID_FullMethodName                  = "/relation_v1.DialogService/GetDialogUsersByDialogID"
+	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName          = "/relation_v1.DialogService/GetDialogUserByDialogIDAndUserID"
+	DialogService_GetDialogByGroupId_FullMethodName                        = "/relation_v1.DialogService/GetDialogByGroupId"
+	DialogService_GetDialogByGroupIds_FullMethodName                       = "/relation_v1.DialogService/GetDialogByGroupIds"
+	DialogService_DeleteDialogByIds_FullMethodName                         = "/relation_v1.DialogService/DeleteDialogByIds"
+	DialogService_DeleteDialogById_FullMethodName                          = "/relation_v1.DialogService/DeleteDialogById"
+	DialogService_DeleteDialogByIdRevert_FullMethodName                    = "/relation_v1.DialogService/DeleteDialogByIdRevert"
+	DialogService_DeleteDialogUsersByDialogID_FullMethodName               = "/relation_v1.DialogService/DeleteDialogUsersByDialogID"
+	DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName         = "/relation_v1.DialogService/DeleteDialogUsersByDialogIDRevert"
+	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName       = "/relation_v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
+	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/relation_v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
+	DialogService_CloseOrOpenDialog_FullMethodName                         = "/relation_v1.DialogService/CloseOrOpenDialog"
+	DialogService_BatchCloseOrOpenDialog_FullMethodName                    = "/relation_v1.DialogService/BatchCloseOrOpenDialog"
+	DialogService_TopOrCancelTopDialog_FullMethodName                      = "/relation_v1.DialogService/TopOrCancelTopDialog"
+	DialogService_GetAllUsersInConversation_FullMethodName                 = "/relation_v1.DialogService/GetAllUsersInConversation"
+	DialogService_GetDialogTargetUserId_FullMethodName                     = "/relation_v1.DialogService/GetDialogTargetUserId"
 )
 
 // DialogServiceClient is the client API for DialogService service.
@@ -970,7 +970,7 @@ func _DialogService_GetDialogTargetUserId_Handler(srv interface{}, ctx context.C
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DialogService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.DialogService",
+	ServiceName: "relation_v1.DialogService",
 	HandlerType: (*DialogServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package msg.v1;
+package msg_v1;
 option go_package = "github.com/cossim/coss-server/internal/msg/api/grpc/v1";
 
 message SendUserMsgRequest{
@@ -222,16 +222,25 @@ message LastMsg {
   // @inject_tag: json:"is_label"
   MsgLabel IsLabel = 11;
   // @inject_tag: json:"reply_id"
-  uint32 Reply_id = 12;
+  uint32 ReplyId = 12;
+  // @inject_tag: json:"group_id"
+  uint32 GroupId = 13;
+  // @inject_tag: json:"is_read"
+  int32 IsRead=14;
+  // @inject_tag: json:"read_at"
+  int64 ReadAt=15;
 }
 
 message GetLastMsgsResponse {
+  // @inject_tag: json:"last_msgs"
   repeated LastMsg LastMsgs = 1;
 }
 
 message GetLastMsgsByDialogIdsRequest {
   // @inject_tag: json:"dialog_ids"
   repeated uint32 DialogIds = 1;
+  // @inject_tag: json:"user_id"
+  string UserId = 2;
 }
 
 message EditUserMsgRequest {
