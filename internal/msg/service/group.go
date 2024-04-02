@@ -599,6 +599,13 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 		return nil, err
 	}
 
+	info, err := s.userService.UserInfo(c, &usergrpcv1.UserInfoRequest{
+		UserId: uid,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	if dialog.Type != uint32(model.GroupConversation) && dialog.GroupId == 0 {
 		return nil, code.DialogErrTypeNotSupport
 	}
@@ -648,7 +655,11 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 		//给消息发送者推送谁读了消息
 		for _, v := range resp1.UnreadGroupMessage {
 			if v.UserId != uid {
-				data := map[string]interface{}{"msg_id": v.MsgId, "read_user_id": uid}
+				data := map[string]interface{}{"msg_id": v.MsgId, "operator_info": &model.SenderInfo{
+					Name:   info.NickName,
+					UserId: info.UserId,
+					Avatar: info.Avatar,
+				}}
 				bytes, err := utils.StructToBytes(data)
 				if err != nil {
 					s.logger.Error("push err:", zap.Error(err))
@@ -713,7 +724,11 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 	//给消息发送者推送谁读了消息
 	for _, message := range msgs.GroupMessages {
 		if message.UserId != uid {
-			s.SendMsg(message.UserId, driverId, pushv1.WSEventType_GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "read_user_id": uid}, false)
+			s.SendMsg(message.UserId, driverId, pushv1.WSEventType_GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "operator_info": &model.SenderInfo{
+				Name:   info.NickName,
+				UserId: info.UserId,
+				Avatar: info.Avatar,
+			}}, false)
 		}
 	}
 
