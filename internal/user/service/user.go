@@ -54,7 +54,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	keys, err := s.redisClient.ScanKeys(resp.UserId + ":" + driveType + ":*")
 	if err != nil {
 		s.logger.Error("redis scan err", zap.Error(err))
-		return nil, "", code.UserErrErrLogoutFailed
+		return nil, "", code.UserErrLoginFailed
 	}
 
 	//多端设备登录限制
