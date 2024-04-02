@@ -20,13 +20,13 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupJoinRequestService_GetGroupJoinRequestListByUserId_FullMethodName       = "/v1.GroupJoinRequestService/GetGroupJoinRequestListByUserId"
-	GroupJoinRequestService_GetGroupJoinRequestByGroupIdAndUserId_FullMethodName = "/v1.GroupJoinRequestService/GetGroupJoinRequestByGroupIdAndUserId"
-	GroupJoinRequestService_JoinGroup_FullMethodName                             = "/v1.GroupJoinRequestService/JoinGroup"
-	GroupJoinRequestService_InviteJoinGroup_FullMethodName                       = "/v1.GroupJoinRequestService/InviteJoinGroup"
-	GroupJoinRequestService_ManageGroupJoinRequestByID_FullMethodName            = "/v1.GroupJoinRequestService/ManageGroupJoinRequestByID"
-	GroupJoinRequestService_GetGroupJoinRequestByID_FullMethodName               = "/v1.GroupJoinRequestService/GetGroupJoinRequestByID"
-	GroupJoinRequestService_DeleteGroupRecord_FullMethodName                     = "/v1.GroupJoinRequestService/DeleteGroupRecord"
+	GroupJoinRequestService_GetGroupJoinRequestListByUserId_FullMethodName       = "/relation_v1.GroupJoinRequestService/GetGroupJoinRequestListByUserId"
+	GroupJoinRequestService_GetGroupJoinRequestByGroupIdAndUserId_FullMethodName = "/relation_v1.GroupJoinRequestService/GetGroupJoinRequestByGroupIdAndUserId"
+	GroupJoinRequestService_JoinGroup_FullMethodName                             = "/relation_v1.GroupJoinRequestService/JoinGroup"
+	GroupJoinRequestService_InviteJoinGroup_FullMethodName                       = "/relation_v1.GroupJoinRequestService/InviteJoinGroup"
+	GroupJoinRequestService_ManageGroupJoinRequestByID_FullMethodName            = "/relation_v1.GroupJoinRequestService/ManageGroupJoinRequestByID"
+	GroupJoinRequestService_GetGroupJoinRequestByID_FullMethodName               = "/relation_v1.GroupJoinRequestService/GetGroupJoinRequestByID"
+	GroupJoinRequestService_DeleteGroupRecord_FullMethodName                     = "/relation_v1.GroupJoinRequestService/DeleteGroupRecord"
 )
 
 // GroupJoinRequestServiceClient is the client API for GroupJoinRequestService service.
@@ -307,7 +307,7 @@ func _GroupJoinRequestService_DeleteGroupRecord_Handler(srv interface{}, ctx con
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GroupJoinRequestService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.GroupJoinRequestService",
+	ServiceName: "relation_v1.GroupJoinRequestService",
 	HandlerType: (*GroupJoinRequestServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

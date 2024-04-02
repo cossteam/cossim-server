@@ -122,29 +122,68 @@ func (s *Handler) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLas
 			ids = append(ids, uint(id))
 		}
 	}
-	result, err := s.mr.GetLastMsgsByDialogIDs(ids)
+
+	fmt.Println("接收到的对话id", request.DialogIds)
+	fmt.Println("接收到的对话id2", ids)
+
+	//获取群聊对话最后一条消息
+	result1, err := s.mr.GetLastGroupMsgsByDialogIDs(ids)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())
 	}
 
-	if len(result) > 0 {
-		for _, m := range result {
-			resp.LastMsgs = append(resp.LastMsgs, &v1.LastMsg{
-				Id:                     uint32(m.ID),
-				Type:                   uint32(m.Type),
-				CreatedAt:              m.CreateAt,
-				Content:                m.Content,
-				SenderId:               m.SenderId,
-				DialogId:               uint32(m.DialogId),
-				ReceiverId:             m.ReceiverId,
-				IsBurnAfterReadingType: v1.BurnAfterReadingType(m.IsBurnAfterReading),
-				AtUsers:                m.AtUsers,
-				AtAllUser:              v1.AtAllUserType(m.AtAllUser),
-				IsLabel:                v1.MsgLabel(m.IsLabel),
-				ReplyId:                uint32(m.ReplyId),
-			})
-		}
+	result2, err := s.mr.GetLastUserMsgsByDialogIDs(ids)
+	if err != nil {
+		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())
 	}
+
+	for _, m := range result1 {
+		//查询是否已读
+		read, err := s.gmrr.GetGroupMsgReadByMsgIDAndUserID(uint32(m.ID), request.UserId)
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())
+		}
+
+		isRead := v1.ReadType_NotRead
+		if read.ReadAt != 0 {
+			isRead = v1.ReadType_IsRead
+		}
+
+		resp.LastMsgs = append(resp.LastMsgs, &v1.LastMsg{
+			Id:                     uint32(m.ID),
+			Type:                   uint32(m.Type),
+			CreatedAt:              m.CreatedAt,
+			Content:                m.Content,
+			SenderId:               m.UserID,
+			DialogId:               uint32(m.DialogId),
+			IsBurnAfterReadingType: v1.BurnAfterReadingType(m.IsBurnAfterReading),
+			AtUsers:                m.AtUsers,
+			AtAllUser:              v1.AtAllUserType(m.AtAllUser),
+			IsLabel:                v1.MsgLabel(m.IsLabel),
+			ReplyId:                uint32(m.ReplyId),
+			IsRead:                 int32(isRead),
+			GroupId:                uint32(m.GroupID),
+			ReadAt:                 read.ReadAt,
+		})
+	}
+
+	for _, m := range result2 {
+		resp.LastMsgs = append(resp.LastMsgs, &v1.LastMsg{
+			Id:                     uint32(m.ID),
+			Type:                   uint32(m.Type),
+			CreatedAt:              m.CreatedAt,
+			Content:                m.Content,
+			SenderId:               m.SendID,
+			DialogId:               uint32(m.DialogId),
+			ReceiverId:             m.ReceiveID,
+			IsBurnAfterReadingType: v1.BurnAfterReadingType(m.IsBurnAfterReading),
+			IsLabel:                v1.MsgLabel(m.IsLabel),
+			ReplyId:                uint32(m.ReplyId),
+			IsRead:                 int32(m.IsRead),
+			ReadAt:                 m.ReadAt,
+		})
+	}
+
 	return resp, nil
 }
 

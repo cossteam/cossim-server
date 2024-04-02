@@ -20,28 +20,28 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupRelationService_GetGroupUserIDs_FullMethodName                             = "/v1.GroupRelationService/GetGroupUserIDs"
-	GroupRelationService_GetUserGroupIDs_FullMethodName                             = "/v1.GroupRelationService/GetUserGroupIDs"
-	GroupRelationService_GetUserGroupList_FullMethodName                            = "/v1.GroupRelationService/GetUserGroupList"
-	GroupRelationService_GetGroupAdminIds_FullMethodName                            = "/v1.GroupRelationService/GetGroupAdminIds"
-	GroupRelationService_GetUserManageGroupID_FullMethodName                        = "/v1.GroupRelationService/GetUserManageGroupID"
-	GroupRelationService_RemoveFromGroup_FullMethodName                             = "/v1.GroupRelationService/RemoveFromGroup"
-	GroupRelationService_LeaveGroup_FullMethodName                                  = "/v1.GroupRelationService/LeaveGroup"
-	GroupRelationService_LeaveGroupRevert_FullMethodName                            = "/v1.GroupRelationService/LeaveGroupRevert"
-	GroupRelationService_GetGroupRelation_FullMethodName                            = "/v1.GroupRelationService/GetGroupRelation"
-	GroupRelationService_GetBatchGroupRelation_FullMethodName                       = "/v1.GroupRelationService/GetBatchGroupRelation"
-	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName                = "/v1.GroupRelationService/DeleteGroupRelationByGroupId"
-	GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName          = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdRevert"
-	GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName       = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserID"
-	GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName = "/v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserIDRevert"
-	GroupRelationService_CreateGroupAndInviteUsers_FullMethodName                   = "/v1.GroupRelationService/CreateGroupAndInviteUsers"
-	GroupRelationService_CreateGroupAndInviteUsersRevert_FullMethodName             = "/v1.GroupRelationService/CreateGroupAndInviteUsersRevert"
-	GroupRelationService_SetGroupSilentNotification_FullMethodName                  = "/v1.GroupRelationService/SetGroupSilentNotification"
-	GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_FullMethodName      = "/v1.GroupRelationService/RemoveGroupRelationByGroupIdAndUserIDs"
-	GroupRelationService_SetGroupOpenBurnAfterReading_FullMethodName                = "/v1.GroupRelationService/SetGroupOpenBurnAfterReading"
-	GroupRelationService_SetGroupOpenBurnAfterReadingTimeOut_FullMethodName         = "/v1.GroupRelationService/SetGroupOpenBurnAfterReadingTimeOut"
-	GroupRelationService_SetGroupUserRemark_FullMethodName                          = "/v1.GroupRelationService/SetGroupUserRemark"
-	GroupRelationService_AddGroupAdmin_FullMethodName                               = "/v1.GroupRelationService/AddGroupAdmin"
+	GroupRelationService_GetGroupUserIDs_FullMethodName                             = "/relation_v1.GroupRelationService/GetGroupUserIDs"
+	GroupRelationService_GetUserGroupIDs_FullMethodName                             = "/relation_v1.GroupRelationService/GetUserGroupIDs"
+	GroupRelationService_GetUserGroupList_FullMethodName                            = "/relation_v1.GroupRelationService/GetUserGroupList"
+	GroupRelationService_GetGroupAdminIds_FullMethodName                            = "/relation_v1.GroupRelationService/GetGroupAdminIds"
+	GroupRelationService_GetUserManageGroupID_FullMethodName                        = "/relation_v1.GroupRelationService/GetUserManageGroupID"
+	GroupRelationService_RemoveFromGroup_FullMethodName                             = "/relation_v1.GroupRelationService/RemoveFromGroup"
+	GroupRelationService_LeaveGroup_FullMethodName                                  = "/relation_v1.GroupRelationService/LeaveGroup"
+	GroupRelationService_LeaveGroupRevert_FullMethodName                            = "/relation_v1.GroupRelationService/LeaveGroupRevert"
+	GroupRelationService_GetGroupRelation_FullMethodName                            = "/relation_v1.GroupRelationService/GetGroupRelation"
+	GroupRelationService_GetBatchGroupRelation_FullMethodName                       = "/relation_v1.GroupRelationService/GetBatchGroupRelation"
+	GroupRelationService_DeleteGroupRelationByGroupId_FullMethodName                = "/relation_v1.GroupRelationService/DeleteGroupRelationByGroupId"
+	GroupRelationService_DeleteGroupRelationByGroupIdRevert_FullMethodName          = "/relation_v1.GroupRelationService/DeleteGroupRelationByGroupIdRevert"
+	GroupRelationService_DeleteGroupRelationByGroupIdAndUserID_FullMethodName       = "/relation_v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserID"
+	GroupRelationService_DeleteGroupRelationByGroupIdAndUserIDRevert_FullMethodName = "/relation_v1.GroupRelationService/DeleteGroupRelationByGroupIdAndUserIDRevert"
+	GroupRelationService_CreateGroupAndInviteUsers_FullMethodName                   = "/relation_v1.GroupRelationService/CreateGroupAndInviteUsers"
+	GroupRelationService_CreateGroupAndInviteUsersRevert_FullMethodName             = "/relation_v1.GroupRelationService/CreateGroupAndInviteUsersRevert"
+	GroupRelationService_SetGroupSilentNotification_FullMethodName                  = "/relation_v1.GroupRelationService/SetGroupSilentNotification"
+	GroupRelationService_RemoveGroupRelationByGroupIdAndUserIDs_FullMethodName      = "/relation_v1.GroupRelationService/RemoveGroupRelationByGroupIdAndUserIDs"
+	GroupRelationService_SetGroupOpenBurnAfterReading_FullMethodName                = "/relation_v1.GroupRelationService/SetGroupOpenBurnAfterReading"
+	GroupRelationService_SetGroupOpenBurnAfterReadingTimeOut_FullMethodName         = "/relation_v1.GroupRelationService/SetGroupOpenBurnAfterReadingTimeOut"
+	GroupRelationService_SetGroupUserRemark_FullMethodName                          = "/relation_v1.GroupRelationService/SetGroupUserRemark"
+	GroupRelationService_AddGroupAdmin_FullMethodName                               = "/relation_v1.GroupRelationService/AddGroupAdmin"
 )
 
 // GroupRelationServiceClient is the client API for GroupRelationService service.
@@ -832,7 +832,7 @@ func _GroupRelationService_AddGroupAdmin_Handler(srv interface{}, ctx context.Co
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GroupRelationService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.GroupRelationService",
+	ServiceName: "relation_v1.GroupRelationService",
 	HandlerType: (*GroupRelationServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

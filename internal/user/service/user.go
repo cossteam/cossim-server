@@ -158,7 +158,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			ReceiverId: resp.UserId,
 			Content:    result,
 			DialogId:   relation.DialogId,
-			Type:       int32(msggrpcv1.MessageType_Text), //TODO 消息类型枚举
+			Type:       int32(msggrpcv1.MessageType_Text),
 		}
 
 		_, err = s.msgService.SendUserMessage(ctx, msg2)

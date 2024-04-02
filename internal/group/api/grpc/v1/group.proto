@@ -1,5 +1,5 @@
 syntax = "proto3";
-package v1;
+package group_v1;
 option go_package = "github.com/cossim/coss-server/internal/group/api/v1";
 
 message Group {

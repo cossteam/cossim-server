@@ -159,84 +159,14 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	}
 
 	if s.cache {
-		//查询接受者信息
-		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-			UserId: req.ReceiverId,
-		})
+		//更新接受者与发送者对话
+		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
 		if err != nil {
 			return nil, err
 		}
-
-		dialogName := userRelationStatus1.Remark
-		if dialogName == "" {
-			dialogName = info2.NickName
-		}
-
-		msgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
-			UserId:   userID,
-			DialogId: req.DialogId,
-		})
+		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", req.ReceiverId))
 		if err != nil {
 			return nil, err
-		}
-
-		msgs2, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
-			UserId:   req.ReceiverId,
-			DialogId: req.DialogId,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		re := model.UserDialogListResponse{
-			DialogId:          req.DialogId,
-			UserId:            req.ReceiverId,
-			DialogType:        model.ConversationType(dialogs.Type),
-			DialogName:        dialogName,
-			DialogAvatar:      info2.Avatar,
-			DialogUnreadCount: len(msgs.UserMessages),
-			LastMessage: model.Message{
-				MsgType:  uint(req.Type),
-				Content:  req.Content,
-				SenderId: userID,
-				SendAt:   pkgtime.Now(),
-				MsgId:    uint64(message.MsgId),
-				SenderInfo: model.SenderInfo{
-					UserId: info.UserId,
-					Name:   info.NickName,
-					Avatar: info.Avatar,
-				},
-				ReceiverInfo: model.SenderInfo{
-					UserId: info2.UserId,
-					Name:   info2.NickName,
-					Avatar: info2.Avatar,
-				},
-				IsBurnAfterReading: req.IsBurnAfterReadingType,
-				IsLabel:            0,
-				ReplyId:            uint32(req.ReplyId),
-			},
-			DialogCreateAt: dialogs.CreateAt,
-			TopAt:          int64(dialogUser.TopAt),
-		}
-		err = s.updateRedisUserDialogList(userID, re)
-		if err != nil {
-			s.logger.Error("更新用户对话列表失败", zap.Error(err))
-			return nil, code.MsgErrInsertUserMessageFailed
-		}
-		//更新接受者redis对话列表
-		dialogName = userRelationStatus2.Remark
-		if dialogName == "" {
-			dialogName = info.NickName
-		}
-		re.UserId = userID
-		re.DialogName = dialogName
-		re.TopAt = int64(dialogUser2.TopAt)
-		re.DialogUnreadCount = len(msgs2.UserMessages)
-		re.DialogAvatar = info.Avatar
-		err = s.updateRedisUserDialogList(req.ReceiverId, re)
-		if err != nil {
-			s.logger.Error("更新用户对话列表失败", zap.Error(err))
-			return nil, code.MsgErrInsertUserMessageFailed
 		}
 	}
 
@@ -275,25 +205,9 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			ReplyId:            uint32(msg.ReplyId),
 		}
 	}
-
-	//推送
-	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &pushv1.SendWsUserMsg{
-		SenderId:                userID,
-		Content:                 req.Content,
-		MsgType:                 uint32(req.Type),
-		ReplyId:                 uint32(req.ReplyId),
-		MsgId:                   message.MsgId,
-		ReceiverId:              req.ReceiverId,
-		SendAt:                  pkgtime.Now(),
-		DialogId:                req.DialogId,
-		IsBurnAfterReading:      uint32(req.IsBurnAfterReadingType),
-		BurnAfterReadingTimeOut: userRelationStatus1.OpenBurnAfterReadingTimeOut,
-		SenderInfo: &pushv1.SenderInfo{
-			Avatar: info.Avatar,
-			Name:   info.NickName,
-			UserId: userID,
-		},
-		ReplyMsg: &pushv1.MessageInfo{
+	rmsg := &pushv1.MessageInfo{}
+	if resp.ReplyMsg != nil {
+		rmsg = &pushv1.MessageInfo{
 			GroupId:  resp.ReplyMsg.GroupId,
 			MsgType:  uint32(resp.ReplyMsg.MsgType),
 			Content:  resp.ReplyMsg.Content,
@@ -317,7 +231,27 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 			ReplyId:            resp.ReplyMsg.ReplyId,
 			IsRead:             resp.ReplyMsg.IsRead,
 			ReadAt:             resp.ReplyMsg.ReadAt,
+		}
+	}
+
+	//推送
+	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &pushv1.SendWsUserMsg{
+		SenderId:                userID,
+		Content:                 req.Content,
+		MsgType:                 uint32(req.Type),
+		ReplyId:                 uint32(req.ReplyId),
+		MsgId:                   message.MsgId,
+		ReceiverId:              req.ReceiverId,
+		SendAt:                  pkgtime.Now(),
+		DialogId:                req.DialogId,
+		IsBurnAfterReading:      uint32(req.IsBurnAfterReadingType),
+		BurnAfterReadingTimeOut: userRelationStatus1.OpenBurnAfterReadingTimeOut,
+		SenderInfo: &pushv1.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: userID,
 		},
+		ReplyMsg: rmsg,
 	})
 
 	return resp, nil
@@ -571,6 +505,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		s.logger.Error("获取用户会话id", zap.Error(err))
 		return nil, err
 	}
+
 	//获取对话信息
 	infos, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
@@ -617,7 +552,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					UserId: id,
 				})
 				if err != nil {
-					fmt.Println(err)
+					s.logger.Error("获取用户信息失败", zap.Error(err))
 					continue
 				}
 
@@ -627,7 +562,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					DialogId: v.Id,
 				})
 				if err != nil {
-					return nil, err
+					s.logger.Error("获取未读消息失败", zap.Error(err))
 				}
 				re.DialogId = v.Id
 				re.DialogAvatar = info.Avatar
@@ -642,7 +577,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 					FriendId: id,
 				})
 				if err != nil {
-					return nil, err
+					s.logger.Error("获取用户关系失败", zap.Error(err))
 				}
 
 				if relation.Remark != "" {
@@ -657,7 +592,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 				Gid: v.GroupId,
 			})
 			if err != nil {
-				fmt.Println(err)
+				s.logger.Error("获取群聊信息失败", zap.Error(err))
 				continue
 			}
 
@@ -667,7 +602,8 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 				DialogId: v.Id,
 			})
 			if err != nil {
-				return nil, err
+				s.logger.Error("获取群聊关系失败", zap.Error(err))
+				//return nil, err
 			}
 
 			re.DialogAvatar = info.Avatar
@@ -682,19 +618,26 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		for _, msg := range dialogIds.LastMsgs {
 			if msg.DialogId == v.Id {
 				re.LastMessage = model.Message{
-					MsgId:    uint64(msg.Id),
-					Content:  msg.Content,
-					SenderId: msg.SenderId,
-					SendAt:   msg.CreatedAt,
-					MsgType:  uint(msg.Type),
+					MsgId:              uint64(msg.Id),
+					Content:            msg.Content,
+					SenderId:           msg.SenderId,
+					SendAt:             msg.CreatedAt,
+					MsgType:            uint(msg.Type),
+					IsRead:             msg.IsRead,
+					ReadAt:             msg.ReadAt,
+					AtUsers:            msg.AtUsers,
+					AtAllUser:          model.AtAllUserType(msg.AtAllUser),
+					IsLabel:            model.LabelMsgType(msg.IsLabel),
+					IsBurnAfterReading: model.BurnAfterReadingType(msg.IsBurnAfterReadingType),
+					ReplyId:            msg.ReplyId,
 				}
 				if msg.SenderId != "" {
 					info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 						UserId: msg.SenderId,
 					})
 					if err != nil {
-						fmt.Println(err)
-						break
+						s.logger.Error("获取用户信息失败", zap.Error(err))
+						continue
 					}
 					re.LastMessage.SenderInfo = model.SenderInfo{
 						UserId: info.UserId,
@@ -705,20 +648,28 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 						//查询群聊备注
 						relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: v.GroupId, UserId: info.UserId})
 						if err != nil {
-							return nil, err
+							s.logger.Error("查询群聊备注失败", zap.Error(err))
+							//return nil, err
 						}
-						if relation.Remark != "" {
-							re.LastMessage.SenderInfo.Name = relation.Remark
+						if relation != nil {
+							if relation.Remark != "" {
+								re.LastMessage.SenderInfo.Name = relation.Remark
+							}
 						}
+
 					} else if v.Type == 0 && msg.SenderId != userID {
 						//查询用户备注
 						relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: msg.SenderId})
 						if err != nil {
-							return nil, err
+							s.logger.Error("查询用户备注失败", zap.Error(err))
 						}
-						if relation.Remark != "" {
-							re.LastMessage.SenderInfo.Name = relation.Remark
+
+						if relation != nil {
+							if relation.Remark != "" {
+								re.LastMessage.SenderInfo.Name = relation.Remark
+							}
 						}
+
 					}
 				}
 				break
@@ -916,10 +867,14 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 
 	if s.cache {
 		//更新缓存
-		err = s.updateCacheUserDialog(msginfo.DialogId)
+		//err = s.updateCacheUserDialog(msginfo.DialogId)
+		//if err != nil {
+		//	s.logger.Error("更新用户对话失败", zap.Error(err))
+		//	return nil, code.MsgErrDeleteUserMessageFailed
+		//}
+		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
 		if err != nil {
-			s.logger.Error("更新用户对话失败", zap.Error(err))
-			return nil, code.MsgErrDeleteUserMessageFailed
+			return nil, err
 		}
 	}
 
@@ -1467,211 +1422,212 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 	return responses, nil
 }
 
-func (s *Service) updateCacheUserDialog(dialogId uint32) error {
-	//获取最后一条消息，更新缓存
-	lastMsg, err := s.msgService.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
-		DialogIds: []uint32{dialogId},
-	})
-	if err != nil {
-		return err
-	}
+//
+//func (s *Service) updateCacheUserDialog(dialogId uint32) error {
+//	//获取最后一条消息，更新缓存
+//	lastMsg, err := s.msgService.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+//		DialogIds: []uint32{dialogId},
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	if len(lastMsg.LastMsgs) == 0 {
+//		return nil
+//	}
+//	lm := lastMsg.LastMsgs[0]
+//
+//	//查询发送者信息
+//	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+//		UserId: lm.SenderId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	//查询接受者信息
+//	info2, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+//		UserId: lm.ReceiverId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	//获取对话信息
+//	dialogInfo, err := s.relationDialogService.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
+//		DialogId: dialogId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	userRelationStatus1, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+//		UserId:   lm.SenderId,
+//		FriendId: lm.ReceiverId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//	userRelationStatus2, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
+//		UserId:   lm.ReceiverId,
+//		FriendId: lm.SenderId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+//		DialogId: dialogId,
+//		UserId:   lm.SenderId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//	dialogUser2, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+//		DialogId: dialogId,
+//		UserId:   lm.ReceiverId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	msgs, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
+//		UserId:   lm.SenderId,
+//		DialogId: dialogId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	msgs2, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
+//		UserId:   lm.ReceiverId,
+//		DialogId: dialogId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	dialogName := userRelationStatus1.Remark
+//	if dialogName == "" {
+//		dialogName = info2.NickName
+//	}
+//	re := model.UserDialogListResponse{
+//		DialogId:          dialogId,
+//		UserId:            info2.UserId,
+//		DialogType:        model.ConversationType(dialogInfo.Type),
+//		DialogName:        dialogName,
+//		DialogAvatar:      info2.Avatar,
+//		DialogUnreadCount: len(msgs.UserMessages),
+//		LastMessage: model.Message{
+//			MsgType:  uint(lm.Type),
+//			Content:  lm.Content,
+//			SenderId: lm.SenderId,
+//			SendAt:   lm.CreatedAt,
+//			MsgId:    uint64(lm.Id),
+//			SenderInfo: model.SenderInfo{
+//				UserId: info.UserId,
+//				Name:   info.NickName,
+//				Avatar: info.Avatar,
+//			},
+//			ReceiverInfo: model.SenderInfo{
+//				UserId: info2.UserId,
+//				Name:   info2.NickName,
+//				Avatar: info2.Avatar,
+//			},
+//			IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
+//			IsLabel:            model.LabelMsgType(lm.IsLabel),
+//			ReplyId:            lm.ReplyId,
+//		},
+//		DialogCreateAt: dialogInfo.CreateAt,
+//		TopAt:          int64(dialogUser.TopAt),
+//	}
+//	err = s.updateRedisUserDialogList(lm.SenderId, re)
+//	if err != nil {
+//		return err
+//	}
+//	//更新接受者redis对话列表
+//	dialogName = userRelationStatus2.Remark
+//	if dialogName == "" {
+//		dialogName = info.NickName
+//	}
+//	re.UserId = lm.SenderId
+//	re.DialogName = dialogName
+//	re.TopAt = int64(dialogUser2.TopAt)
+//	re.DialogUnreadCount = len(msgs2.UserMessages)
+//	re.DialogAvatar = info.Avatar
+//	err = s.updateRedisUserDialogList(lm.ReceiverId, re)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
-	if len(lastMsg.LastMsgs) == 0 {
-		return nil
-	}
-	lm := lastMsg.LastMsgs[0]
-
-	//查询发送者信息
-	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-		UserId: lm.SenderId,
-	})
-	if err != nil {
-		return err
-	}
-
-	//查询接受者信息
-	info2, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-		UserId: lm.ReceiverId,
-	})
-	if err != nil {
-		return err
-	}
-
-	//获取对话信息
-	dialogInfo, err := s.relationDialogService.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
-		DialogId: dialogId,
-	})
-	if err != nil {
-		return err
-	}
-
-	userRelationStatus1, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
-		UserId:   lm.SenderId,
-		FriendId: lm.ReceiverId,
-	})
-	if err != nil {
-		return err
-	}
-	userRelationStatus2, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
-		UserId:   lm.ReceiverId,
-		FriendId: lm.SenderId,
-	})
-	if err != nil {
-		return err
-	}
-
-	dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-		DialogId: dialogId,
-		UserId:   lm.SenderId,
-	})
-	if err != nil {
-		return err
-	}
-	dialogUser2, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-		DialogId: dialogId,
-		UserId:   lm.ReceiverId,
-	})
-	if err != nil {
-		return err
-	}
-
-	msgs, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
-		UserId:   lm.SenderId,
-		DialogId: dialogId,
-	})
-	if err != nil {
-		return err
-	}
-
-	msgs2, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
-		UserId:   lm.ReceiverId,
-		DialogId: dialogId,
-	})
-	if err != nil {
-		return err
-	}
-
-	dialogName := userRelationStatus1.Remark
-	if dialogName == "" {
-		dialogName = info2.NickName
-	}
-	re := model.UserDialogListResponse{
-		DialogId:          dialogId,
-		UserId:            info2.UserId,
-		DialogType:        model.ConversationType(dialogInfo.Type),
-		DialogName:        dialogName,
-		DialogAvatar:      info2.Avatar,
-		DialogUnreadCount: len(msgs.UserMessages),
-		LastMessage: model.Message{
-			MsgType:  uint(lm.Type),
-			Content:  lm.Content,
-			SenderId: lm.SenderId,
-			SendAt:   lm.CreatedAt,
-			MsgId:    uint64(lm.Id),
-			SenderInfo: model.SenderInfo{
-				UserId: info.UserId,
-				Name:   info.NickName,
-				Avatar: info.Avatar,
-			},
-			ReceiverInfo: model.SenderInfo{
-				UserId: info2.UserId,
-				Name:   info2.NickName,
-				Avatar: info2.Avatar,
-			},
-			IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
-			IsLabel:            model.LabelMsgType(lm.IsLabel),
-			ReplyId:            lm.ReplyId,
-		},
-		DialogCreateAt: dialogInfo.CreateAt,
-		TopAt:          int64(dialogUser.TopAt),
-	}
-	err = s.updateRedisUserDialogList(lm.SenderId, re)
-	if err != nil {
-		return err
-	}
-	//更新接受者redis对话列表
-	dialogName = userRelationStatus2.Remark
-	if dialogName == "" {
-		dialogName = info.NickName
-	}
-	re.UserId = lm.SenderId
-	re.DialogName = dialogName
-	re.TopAt = int64(dialogUser2.TopAt)
-	re.DialogUnreadCount = len(msgs2.UserMessages)
-	re.DialogAvatar = info.Avatar
-	err = s.updateRedisUserDialogList(lm.ReceiverId, re)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// 更新redis里的对话列表数据
-func (s *Service) updateRedisUserDialogList(userID string, msg model.UserDialogListResponse) error {
-	key := fmt.Sprintf("dialog:%s", userID)
-	// 判断key是否存在，存在才继续
-	exists, err := s.redisClient.ExistsKey(key)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return nil
-	}
-
-	found := false
-
-	// 每次处理的元素数量
-	batchSize := 10
-
-	// 获取列表长度
-	length, err := s.redisClient.GetListLength(key)
-	if err != nil {
-		return err
-	}
-
-	for start := 0; start < int(length); start += batchSize {
-		// 获取当前批次的元素
-		values, err := s.redisClient.GetList(key, int64(start), int64(start+batchSize-1))
-		if err != nil {
-			return err
-		}
-
-		if len(values) > 0 {
-			// 类型转换
-			var responseList []model.UserDialogListResponse
-			for _, v := range values {
-				var dialog model.UserDialogListResponse
-				err := json.Unmarshal([]byte(v), &dialog)
-				if err != nil {
-					fmt.Println("Error decoding cached data:", err)
-					continue
-				}
-				responseList = append(responseList, dialog)
-			}
-
-			for i, v := range responseList {
-				if v.DialogId == msg.DialogId {
-					found = true
-					marshal, err := json.Marshal(&msg)
-					if err != nil {
-						return err
-					}
-					err = s.redisClient.UpdateListElement(key, int64(start+i), string(marshal))
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-	//找不到则插入
-	if !found {
-		err := s.redisClient.AddToListLeft(key, []interface{}{msg})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
+//// 更新redis里的对话列表数据
+//func (s *Service) updateRedisUserDialogList(userID string, msg model.UserDialogListResponse) error {
+//	key := fmt.Sprintf("dialog:%s", userID)
+//	// 判断key是否存在，存在才继续
+//	exists, err := s.redisClient.ExistsKey(key)
+//	if err != nil {
+//		return err
+//	}
+//	if !exists {
+//		return nil
+//	}
+//
+//	found := false
+//
+//	// 每次处理的元素数量
+//	batchSize := 10
+//
+//	// 获取列表长度
+//	length, err := s.redisClient.GetListLength(key)
+//	if err != nil {
+//		return err
+//	}
+//
+//	for start := 0; start < int(length); start += batchSize {
+//		// 获取当前批次的元素
+//		values, err := s.redisClient.GetList(key, int64(start), int64(start+batchSize-1))
+//		if err != nil {
+//			return err
+//		}
+//
+//		if len(values) > 0 {
+//			// 类型转换
+//			var responseList []model.UserDialogListResponse
+//			for _, v := range values {
+//				var dialog model.UserDialogListResponse
+//				err := json.Unmarshal([]byte(v), &dialog)
+//				if err != nil {
+//					fmt.Println("Error decoding cached data:", err)
+//					continue
+//				}
+//				responseList = append(responseList, dialog)
+//			}
+//
+//			for i, v := range responseList {
+//				if v.DialogId == msg.DialogId {
+//					found = true
+//					marshal, err := json.Marshal(&msg)
+//					if err != nil {
+//						return err
+//					}
+//					err = s.redisClient.UpdateListElement(key, int64(start+i), string(marshal))
+//					if err != nil {
+//						return err
+//					}
+//				}
+//			}
+//		}
+//	}
+//	//找不到则插入
+//	if !found {
+//		err := s.redisClient.AddToListLeft(key, []interface{}{msg})
+//		if err != nil {
+//			return err
+//		}
+//	}
+//
+//	return nil
+//}

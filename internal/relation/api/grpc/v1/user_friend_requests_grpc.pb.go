@@ -20,13 +20,13 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserFriendRequestService_GetFriendRequestList_FullMethodName                   = "/v1.UserFriendRequestService/GetFriendRequestList"
-	UserFriendRequestService_SendFriendRequest_FullMethodName                      = "/v1.UserFriendRequestService/SendFriendRequest"
-	UserFriendRequestService_ManageFriendRequest_FullMethodName                    = "/v1.UserFriendRequestService/ManageFriendRequest"
-	UserFriendRequestService_GetFriendRequestById_FullMethodName                   = "/v1.UserFriendRequestService/GetFriendRequestById"
-	UserFriendRequestService_GetFriendRequestByUserIdAndFriendId_FullMethodName    = "/v1.UserFriendRequestService/GetFriendRequestByUserIdAndFriendId"
-	UserFriendRequestService_DeleteFriendRequestByUserIdAndFriendId_FullMethodName = "/v1.UserFriendRequestService/DeleteFriendRequestByUserIdAndFriendId"
-	UserFriendRequestService_DeleteFriendRecord_FullMethodName                     = "/v1.UserFriendRequestService/DeleteFriendRecord"
+	UserFriendRequestService_GetFriendRequestList_FullMethodName                   = "/relation_v1.UserFriendRequestService/GetFriendRequestList"
+	UserFriendRequestService_SendFriendRequest_FullMethodName                      = "/relation_v1.UserFriendRequestService/SendFriendRequest"
+	UserFriendRequestService_ManageFriendRequest_FullMethodName                    = "/relation_v1.UserFriendRequestService/ManageFriendRequest"
+	UserFriendRequestService_GetFriendRequestById_FullMethodName                   = "/relation_v1.UserFriendRequestService/GetFriendRequestById"
+	UserFriendRequestService_GetFriendRequestByUserIdAndFriendId_FullMethodName    = "/relation_v1.UserFriendRequestService/GetFriendRequestByUserIdAndFriendId"
+	UserFriendRequestService_DeleteFriendRequestByUserIdAndFriendId_FullMethodName = "/relation_v1.UserFriendRequestService/DeleteFriendRequestByUserIdAndFriendId"
+	UserFriendRequestService_DeleteFriendRecord_FullMethodName                     = "/relation_v1.UserFriendRequestService/DeleteFriendRecord"
 )
 
 // UserFriendRequestServiceClient is the client API for UserFriendRequestService service.
@@ -307,7 +307,7 @@ func _UserFriendRequestService_DeleteFriendRecord_Handler(srv interface{}, ctx c
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserFriendRequestService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.UserFriendRequestService",
+	ServiceName: "relation_v1.UserFriendRequestService",
 	HandlerType: (*UserFriendRequestServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

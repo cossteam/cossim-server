@@ -137,60 +137,6 @@ func (g *MsgRepo) GetLastMsgsForGroupsWithIDs(groupIDs []uint) ([]*entity.GroupM
 	return groupMessages, nil
 }
 
-func (g *MsgRepo) GetLastMsgsByDialogIDs(dialogIds []uint) ([]dataTransformers.LastMessage, error) {
-	// 查询 GroupMessage 表中每个 dialog_id 的最后一条数据
-	var groupMessages []*entity.GroupMessage
-	for _, dialogId := range dialogIds {
-		var lastMsg entity.GroupMessage
-		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, user_id, created_at").Order("created_at DESC").First(&lastMsg)
-		if lastMsg.ID != 0 {
-			groupMessages = append(groupMessages, &lastMsg)
-		}
-	}
-	// 查询 UserMessage 表中每个 dialog_id 的最后一条数据
-	var userMessages []*entity.UserMessage
-	for _, dialogId := range dialogIds {
-		var lastMsg entity.UserMessage
-		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Select("id, dialog_id, content, type, send_id,receive_id, created_at").Order("created_at DESC").First(&lastMsg)
-		if lastMsg.ID != 0 {
-			userMessages = append(userMessages, &lastMsg)
-		}
-	}
-
-	// 合并两个表的数据
-	var result []dataTransformers.LastMessage
-	for _, groupMsg := range groupMessages {
-		result = append(result, dataTransformers.LastMessage{
-			ID:                 groupMsg.ID,
-			DialogId:           groupMsg.DialogId,
-			Content:            groupMsg.Content,
-			Type:               uint(groupMsg.Type),
-			SenderId:           groupMsg.UserID,
-			CreateAt:           groupMsg.CreatedAt,
-			IsBurnAfterReading: groupMsg.IsBurnAfterReading,
-			AtUsers:            groupMsg.AtUsers,
-			AtAllUser:          groupMsg.AtAllUser,
-			ReplyId:            groupMsg.ReplyId,
-			IsLabel:            entity.MessageLabelType(groupMsg.IsLabel),
-		})
-	}
-	for _, userMsg := range userMessages {
-		result = append(result, dataTransformers.LastMessage{
-			ID:                 userMsg.ID,
-			DialogId:           userMsg.DialogId,
-			Content:            userMsg.Content,
-			Type:               uint(userMsg.Type),
-			SenderId:           userMsg.SendID,
-			ReceiverId:         userMsg.ReceiveID,
-			CreateAt:           userMsg.CreatedAt,
-			IsBurnAfterReading: userMsg.IsBurnAfterReading,
-			ReplyId:            userMsg.ReplyId,
-			IsLabel:            entity.MessageLabelType(userMsg.IsLabel),
-		})
-	}
-	return result, nil
-}
-
 func (g *MsgRepo) UpdateUserMessage(msg entity.UserMessage) error {
 	err := g.db.Model(&msg).Updates(msg).Error
 	return err
@@ -469,4 +415,29 @@ func (g *MsgRepo) GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize i
 		return nil, err
 	}
 	return groupMessages, err
+}
+
+func (g *MsgRepo) GetLastUserMsgsByDialogIDs(dialogIds []uint) ([]*entity.UserMessage, error) {
+	userMessages := make([]*entity.UserMessage, 0)
+
+	for _, dialogId := range dialogIds {
+		var lastMsg entity.UserMessage
+		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Order("created_at DESC").First(&lastMsg)
+		if lastMsg.ID != 0 {
+			userMessages = append(userMessages, &lastMsg)
+		}
+	}
+	return userMessages, nil
+}
+
+func (g *MsgRepo) GetLastGroupMsgsByDialogIDs(dialogIds []uint) ([]*entity.GroupMessage, error) {
+	groupMessages := make([]*entity.GroupMessage, 0)
+	for _, dialogId := range dialogIds {
+		var lastMsg entity.GroupMessage
+		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Order("created_at DESC").First(&lastMsg)
+		if lastMsg.ID != 0 {
+			groupMessages = append(groupMessages, &lastMsg)
+		}
+	}
+	return groupMessages, nil
 }

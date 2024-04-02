@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
@@ -20,8 +19,6 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"reflect"
-	"sync"
 )
 
 // 推送群聊消息
@@ -184,17 +181,23 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 	}
 
 	if s.cache {
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
+		//wg := sync.WaitGroup{}
+		//wg.Add(1)
+		//go func() {
+		//	defer wg.Done()
+		//	err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
+		//	if err != nil {
+		//		s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
+		//		return
+		//	}
+		//}()
+		//wg.Wait()
+		for _, id := range uids.UserIds {
+			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
 			if err != nil {
-				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-				return
+				return nil, err
 			}
-		}()
-		wg.Wait()
+		}
 	}
 
 	resp := &model.SendGroupMsgResponse{
@@ -233,24 +236,9 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		}
 	}
 
-	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &pushv1.SendWsGroupMsg{
-		MsgId:              message.MsgId,
-		GroupId:            int64(req.GroupId),
-		SenderId:           userID,
-		Content:            req.Content,
-		MsgType:            uint32(req.Type),
-		ReplyId:            req.ReplyId,
-		SendAt:             pkgtime.Now(),
-		DialogId:           req.DialogId,
-		AtUsers:            req.AtUsers,
-		AtAllUsers:         uint32(req.AtAllUser),
-		IsBurnAfterReading: uint32(req.IsBurnAfterReadingType),
-		SenderInfo: &pushv1.SenderInfo{
-			Avatar: info.Avatar,
-			Name:   info.NickName,
-			UserId: userID,
-		},
-		ReplyMsg: &pushv1.MessageInfo{
+	rmsg := &pushv1.MessageInfo{}
+	if resp.ReplyMsg != nil {
+		rmsg = &pushv1.MessageInfo{
 			GroupId:  resp.ReplyMsg.GroupId,
 			MsgType:  uint32(resp.ReplyMsg.MsgType),
 			Content:  resp.ReplyMsg.Content,
@@ -274,7 +262,26 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			ReplyId:            resp.ReplyMsg.ReplyId,
 			IsRead:             resp.ReplyMsg.IsRead,
 			ReadAt:             resp.ReplyMsg.ReadAt,
+		}
+	}
+	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &pushv1.SendWsGroupMsg{
+		MsgId:              message.MsgId,
+		GroupId:            int64(req.GroupId),
+		SenderId:           userID,
+		Content:            req.Content,
+		MsgType:            uint32(req.Type),
+		ReplyId:            req.ReplyId,
+		SendAt:             pkgtime.Now(),
+		DialogId:           req.DialogId,
+		AtUsers:            req.AtUsers,
+		AtAllUsers:         uint32(req.AtAllUser),
+		IsBurnAfterReading: uint32(req.IsBurnAfterReadingType),
+		SenderInfo: &pushv1.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: userID,
 		},
+		ReplyMsg: rmsg,
 	})
 
 	return resp, nil
@@ -328,17 +335,12 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	s.SendMsgToUsers(userIds.UserIds, driverId, pushv1.WSEventType_EditMsgEvent, msginfo, true)
 
 	if s.cache {
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+		for _, id := range userIds.UserIds {
+			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
 			if err != nil {
-				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-				return
+				return nil, err
 			}
-		}()
-		wg.Wait()
+		}
 	}
 
 	return msgID, nil
@@ -410,17 +412,12 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
 	//
 	if s.cache {
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := s.updateCacheGroupDialog(msginfo.DialogId, userIds.UserIds)
+		for _, id := range userIds.UserIds {
+			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
 			if err != nil {
-				s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-				return
+				return nil, err
 			}
-		}()
-		wg.Wait()
+		}
 	}
 
 	return msg.Id, nil
@@ -757,15 +754,7 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 	}
 
 	if s.cache {
-		userMsgs, err := s.msgService.GetGroupUnreadMessages(c, &msggrpcv1.GetGroupUnreadMessagesRequest{
-			UserId:   uid,
-			DialogId: request.DialogId,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", uid), request.DialogId, "DialogUnreadCount", len(userMsgs.GroupMessages))
+		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", uid))
 		if err != nil {
 			return nil, err
 		}
@@ -833,175 +822,176 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 	return response, nil
 }
 
-func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) error {
-	//获取最后一条消息，更新缓存
-	lastMsg, err := s.msgService.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
-		DialogIds: []uint32{dialogId},
-	})
-	if err != nil {
-		return err
-	}
-
-	if len(lastMsg.LastMsgs) == 0 {
-		return nil
-	}
-	lm := lastMsg.LastMsgs[0]
-
-	//查询发送者信息
-	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-		UserId: lm.SenderId,
-	})
-	if err != nil {
-		return err
-	}
-
-	//获取对话信息
-	dialogInfo, err := s.relationDialogService.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
-		DialogId: dialogId,
-	})
-	if err != nil {
-		return err
-	}
-
-	if dialogInfo.Type != uint32(relationgrpcv1.DialogType_GROUP_DIALOG) {
-		return nil
-	}
-
-	ginfo, err := s.groupService.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{
-		Gid: dialogInfo.GroupId,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, userId := range userIds {
-		dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-			DialogId: dialogId,
-			UserId:   userId,
-		})
-		if err != nil {
-			return err
-		}
-
-		msgs, err := s.msgService.GetGroupUnreadMessages(context.Background(), &msggrpcv1.GetGroupUnreadMessagesRequest{
-			UserId:   userId,
-			DialogId: dialogId,
-		})
-		if err != nil {
-			return err
-		}
-
-		dialogName := ginfo.Name
-
-		re := model.UserDialogListResponse{
-			DialogId:          dialogId,
-			GroupId:           dialogInfo.GroupId,
-			DialogType:        model.ConversationType(dialogInfo.Type),
-			DialogName:        dialogName,
-			DialogAvatar:      ginfo.Avatar,
-			DialogUnreadCount: len(msgs.GroupMessages),
-			LastMessage: model.Message{
-				MsgType:  uint(lm.Type),
-				Content:  lm.Content,
-				SenderId: lm.SenderId,
-				SendAt:   lm.CreatedAt,
-				MsgId:    uint64(lm.Id),
-				SenderInfo: model.SenderInfo{
-					UserId: info.UserId,
-					Name:   info.NickName,
-					Avatar: info.Avatar,
-				},
-				IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
-				IsLabel:            model.LabelMsgType(lm.IsLabel),
-				ReplyId:            lm.ReplyId,
-				AtUsers:            lm.AtUsers,
-				AtAllUser:          model.AtAllUserType(lm.AtAllUser),
-			},
-			DialogCreateAt: dialogInfo.CreateAt,
-			TopAt:          int64(dialogUser.TopAt),
-		}
-		err = s.updateRedisUserDialogList(userId, re)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *Service) updateCacheDialogFieldValue(key string, dialogId uint32, field string, value interface{}) error {
-	exists, err := s.redisClient.ExistsKey(key)
-	if err != nil {
-		return err
-	}
-
-	if !exists {
-		return nil
-	}
-
-	length, err := s.redisClient.GetListLength(key)
-	if err != nil {
-		return err
-	}
-
-	// 每次处理的元素数量
-	batchSize := 10
-
-	for start := 0; start < int(length); start += batchSize {
-		// 获取当前批次的元素
-		values, err := s.redisClient.GetList(key, int64(start), int64(start+batchSize-1))
-		if err != nil {
-			return err
-		}
-
-		if len(values) > 0 {
-			for i, v := range values {
-				var dialog model.UserDialogListResponse
-				err := json.Unmarshal([]byte(v), &dialog)
-				if err != nil {
-					fmt.Println("Error decoding cached data:", err)
-					continue
-				}
-				if dialog.DialogId == dialogId {
-					// 获取结构体的反射值
-					valueOfDialog := reflect.ValueOf(&dialog).Elem()
-
-					structField := valueOfDialog.FieldByName(field)
-
-					// 获取字段的反射值
-					if structField.IsValid() {
-						// 检查字段类型并设置对应类型的值
-						switch structField.Kind() {
-						case reflect.String:
-							structField.SetString(value.(string))
-						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-							// 调整类型断言，确保匹配实际类型
-							structField.SetInt(int64(value.(int)))
-						// 可以根据需要添加其他类型的处理
-						default:
-							fmt.Printf("Unsupported field type: %s\n", structField.Kind())
-							return nil
-						}
-					} else {
-						fmt.Printf("Field %s not found in UserDialogListResponse\n", field)
-						return nil
-					}
-
-					// Marshal updated struct and update the list element
-					marshal, err := json.Marshal(&dialog)
-					if err != nil {
-						return err
-					}
-
-					err = s.redisClient.UpdateListElement(key, int64(start+i), string(marshal))
-					if err != nil {
-						return err
-					}
-					break
-				}
-			}
-		}
-	}
-
-	return nil
-}
+//
+//func (s *Service) updateCacheGroupDialog(dialogId uint32, userIds []string) error {
+//	//获取最后一条消息，更新缓存
+//	lastMsg, err := s.msgService.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+//		DialogIds: []uint32{dialogId},
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	if len(lastMsg.LastMsgs) == 0 {
+//		return nil
+//	}
+//	lm := lastMsg.LastMsgs[0]
+//
+//	//查询发送者信息
+//	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
+//		UserId: lm.SenderId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	//获取对话信息
+//	dialogInfo, err := s.relationDialogService.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
+//		DialogId: dialogId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	if dialogInfo.Type != uint32(relationgrpcv1.DialogType_GROUP_DIALOG) {
+//		return nil
+//	}
+//
+//	ginfo, err := s.groupService.GetGroupInfoByGid(context.Background(), &groupApi.GetGroupInfoRequest{
+//		Gid: dialogInfo.GroupId,
+//	})
+//	if err != nil {
+//		return err
+//	}
+//
+//	for _, userId := range userIds {
+//		dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+//			DialogId: dialogId,
+//			UserId:   userId,
+//		})
+//		if err != nil {
+//			return err
+//		}
+//
+//		msgs, err := s.msgService.GetGroupUnreadMessages(context.Background(), &msggrpcv1.GetGroupUnreadMessagesRequest{
+//			UserId:   userId,
+//			DialogId: dialogId,
+//		})
+//		if err != nil {
+//			return err
+//		}
+//
+//		dialogName := ginfo.Name
+//
+//		re := model.UserDialogListResponse{
+//			DialogId:          dialogId,
+//			GroupId:           dialogInfo.GroupId,
+//			DialogType:        model.ConversationType(dialogInfo.Type),
+//			DialogName:        dialogName,
+//			DialogAvatar:      ginfo.Avatar,
+//			DialogUnreadCount: len(msgs.GroupMessages),
+//			LastMessage: model.Message{
+//				MsgType:  uint(lm.Type),
+//				Content:  lm.Content,
+//				SenderId: lm.SenderId,
+//				SendAt:   lm.CreatedAt,
+//				MsgId:    uint64(lm.Id),
+//				SenderInfo: model.SenderInfo{
+//					UserId: info.UserId,
+//					Name:   info.NickName,
+//					Avatar: info.Avatar,
+//				},
+//				IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
+//				IsLabel:            model.LabelMsgType(lm.IsLabel),
+//				ReplyId:            lm.ReplyId,
+//				AtUsers:            lm.AtUsers,
+//				AtAllUser:          model.AtAllUserType(lm.AtAllUser),
+//			},
+//			DialogCreateAt: dialogInfo.CreateAt,
+//			TopAt:          int64(dialogUser.TopAt),
+//		}
+//		err = s.updateRedisUserDialogList(userId, re)
+//		if err != nil {
+//			return err
+//		}
+//	}
+//
+//	return nil
+//}
+//
+//func (s *Service) updateCacheDialogFieldValue(key string, dialogId uint32, field string, value interface{}) error {
+//	exists, err := s.redisClient.ExistsKey(key)
+//	if err != nil {
+//		return err
+//	}
+//
+//	if !exists {
+//		return nil
+//	}
+//
+//	length, err := s.redisClient.GetListLength(key)
+//	if err != nil {
+//		return err
+//	}
+//
+//	// 每次处理的元素数量
+//	batchSize := 10
+//
+//	for start := 0; start < int(length); start += batchSize {
+//		// 获取当前批次的元素
+//		values, err := s.redisClient.GetList(key, int64(start), int64(start+batchSize-1))
+//		if err != nil {
+//			return err
+//		}
+//
+//		if len(values) > 0 {
+//			for i, v := range values {
+//				var dialog model.UserDialogListResponse
+//				err := json.Unmarshal([]byte(v), &dialog)
+//				if err != nil {
+//					fmt.Println("Error decoding cached data:", err)
+//					continue
+//				}
+//				if dialog.DialogId == dialogId {
+//					// 获取结构体的反射值
+//					valueOfDialog := reflect.ValueOf(&dialog).Elem()
+//
+//					structField := valueOfDialog.FieldByName(field)
+//
+//					// 获取字段的反射值
+//					if structField.IsValid() {
+//						// 检查字段类型并设置对应类型的值
+//						switch structField.Kind() {
+//						case reflect.String:
+//							structField.SetString(value.(string))
+//						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+//							// 调整类型断言，确保匹配实际类型
+//							structField.SetInt(int64(value.(int)))
+//						// 可以根据需要添加其他类型的处理
+//						default:
+//							fmt.Printf("Unsupported field type: %s\n", structField.Kind())
+//							return nil
+//						}
+//					} else {
+//						fmt.Printf("Field %s not found in UserDialogListResponse\n", field)
+//						return nil
+//					}
+//
+//					// Marshal updated struct and update the list element
+//					marshal, err := json.Marshal(&dialog)
+//					if err != nil {
+//						return err
+//					}
+//
+//					err = s.redisClient.UpdateListElement(key, int64(start+i), string(marshal))
+//					if err != nil {
+//						return err
+//					}
+//					break
+//				}
+//			}
+//		}
+//	}
+//
+//	return nil
+//}
