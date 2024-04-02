@@ -124,6 +124,20 @@ func (cm *controllerManager) SetupHTTPServerWithManager(hs *HttpServer) error {
 	if hs.HTTPService == nil {
 		return errors.New("HTTPService == nil")
 	}
+
+	// Create health probes listener. This will throw an error if the bind
+	// address is invalid or already in use.
+	if hs.HealthCheckAddress == "" {
+		hs.HealthCheckAddress = defaultHealthProbeBindAddress
+	}
+
+	// Create health probes listener. This will throw an error if the bind
+	// address is invalid or already in use.
+	httpHealthProbeListener, err := defaultHealthProbeListener(hs.HealthCheckAddress)
+	if err != nil {
+		return err
+	}
+	cm.httpHealthProbeListener = httpHealthProbeListener
 	cm.httpServer = hs
 	cm.httpServer.svc = server2.NewHttpService(cm.config, cm.httpServer, hs.HealthCheckAddress+cm.livenessEndpointName, cm.GetLogger())
 	return nil
