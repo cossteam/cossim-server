@@ -5,25 +5,48 @@ import (
 	"errors"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
+	"log"
 )
 
-func (s *Handler) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
+var _ v1.UserFriendRequestServiceServer = &userFriendRequestServiceServer{}
+
+type userFriendRequestServiceServer struct {
+	db          *gorm.DB
+	cache       cache.RelationUserCache
+	cacheEnable bool
+	ufqr        repository.UserFriendRequestRepository
+}
+
+func (s *userFriendRequestServiceServer) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *Handler) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
-	var resp = &v1.GetFriendRequestListResponse{}
+func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
+	resp := &v1.GetFriendRequestListResponse{}
+
+	if s.cacheEnable {
+		// 尝试从缓存中获取好友请求列表
+		cachedList, err := s.cache.GetFriendRequestList(ctx, request.UserId)
+		if err == nil && cachedList != nil {
+			// 如果缓存中存在，则直接返回缓存的结果
+			return cachedList, nil
+		}
+	}
+
 	list, err := s.ufqr.GetFriendRequestList(request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	}
+
 	for _, friend := range list {
 		resp.FriendRequestList = append(resp.FriendRequestList, &v1.FriendRequestList{
 			ID:         uint32(friend.ID),
@@ -34,10 +57,17 @@ func (s *Handler) GetFriendRequestList(ctx context.Context, request *v1.GetFrien
 			CreateAt:   uint64(friend.CreatedAt),
 		})
 	}
+
+	if s.cacheEnable {
+		if err := s.cache.SetFriendRequestList(ctx, request.UserId, resp, cache.RelationExpireTime); err != nil {
+			log.Printf("set FriendRequestList cache failed: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
-func (s *Handler) SendFriendRequest(ctx context.Context, request *v1.SendFriendRequestStruct) (*v1.SendFriendRequestStructResponse, error) {
+func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, request *v1.SendFriendRequestStruct) (*v1.SendFriendRequestStructResponse, error) {
 	var resp = &v1.SendFriendRequestStructResponse{}
 
 	// 添加自己的
@@ -68,8 +98,9 @@ func (s *Handler) SendFriendRequest(ctx context.Context, request *v1.SendFriendR
 	return resp, nil
 }
 
-func (s *Handler) ManageFriendRequest(ctx context.Context, request *v1.ManageFriendRequestStruct) (*emptypb.Empty, error) {
+func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context, request *v1.ManageFriendRequestStruct) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
+	var uid string
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 
@@ -81,6 +112,7 @@ func (s *Handler) ManageFriendRequest(ctx context.Context, request *v1.ManageFri
 			}
 			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), formatErrorMessage(err))
 		}
+		uid = re.OwnerID
 
 		senderId := re.SenderID
 		receiverId := re.ReceiverID
@@ -170,12 +202,19 @@ func (s *Handler) ManageFriendRequest(ctx context.Context, request *v1.ManageFri
 		return resp, err
 	}
 
+	if s.cacheEnable {
+		if err := s.cache.DeleteFriendRequestList(ctx, uid); err != nil {
+			log.Printf("delete FriendRequestList cache failed: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
-func (s *Handler) GetFriendRequestById(ctx context.Context, in *v1.GetFriendRequestByIdRequest) (*v1.FriendRequestList, error) {
+func (s *userFriendRequestServiceServer) GetFriendRequestById(ctx context.Context, request *v1.GetFriendRequestByIdRequest) (*v1.FriendRequestList, error) {
 	var resp = &v1.FriendRequestList{}
-	if re, err := s.ufqr.GetFriendRequestByID(uint(in.ID)); err != nil {
+
+	if re, err := s.ufqr.GetFriendRequestByID(uint(request.ID)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
 	} else {
 		resp.ID = uint32(re.ID)
@@ -189,9 +228,9 @@ func (s *Handler) GetFriendRequestById(ctx context.Context, in *v1.GetFriendRequ
 	return resp, nil
 }
 
-func (s *Handler) GetFriendRequestByUserIdAndFriendId(ctx context.Context, in *v1.GetFriendRequestByUserIdAndFriendIdRequest) (*v1.FriendRequestList, error) {
+func (s *userFriendRequestServiceServer) GetFriendRequestByUserIdAndFriendId(ctx context.Context, request *v1.GetFriendRequestByUserIdAndFriendIdRequest) (*v1.FriendRequestList, error) {
 	var resp = &v1.FriendRequestList{}
-	if re, err := s.ufqr.GetFriendRequestBySenderIDAndReceiverID(in.UserId, in.FriendId); err != nil {
+	if re, err := s.ufqr.GetFriendRequestBySenderIDAndReceiverID(request.UserId, request.FriendId); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
 		}
@@ -208,15 +247,15 @@ func (s *Handler) GetFriendRequestByUserIdAndFriendId(ctx context.Context, in *v
 	return resp, nil
 }
 
-func (s *Handler) DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, in *v1.DeleteFriendRequestByUserIdAndFriendIdRequest) (*emptypb.Empty, error) {
+func (s *userFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, request *v1.DeleteFriendRequestByUserIdAndFriendIdRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
-	if err := s.ufqr.DeleteFriendRequestByUserIdAndFriendIdRequest(in.UserId, in.FriendId); err != nil {
+	if err := s.ufqr.DeleteFriendRequestByUserIdAndFriendIdRequest(request.UserId, request.FriendId); err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
 	}
 	return resp, nil
 }
 
-func (s *Handler) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRecordRequest) (*emptypb.Empty, error) {
+func (s *userFriendRequestServiceServer) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRecordRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	//fr, err := s.ufqr.GetFriendRequestByID(uint(req.ID))
 	//if err != nil {

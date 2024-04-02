@@ -24,7 +24,7 @@ type UserRelationStatus uint
 
 const (
 	//正常关系
-	UserStatusBlocked UserRelationStatus = iota //拉黑
-	UserStatusNormal                            //正常
+	UserStatusBlocked UserRelationStatus = iota // 拉黑
+	UserStatusNormal                            // 正常
 	UserStatusDeleted                           // 删除
 )

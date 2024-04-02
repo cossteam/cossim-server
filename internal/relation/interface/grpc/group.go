@@ -6,16 +6,27 @@ import (
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/utils/time"
-	codes "google.golang.org/grpc/codes"
+	ptime "github.com/cossim/coss-server/pkg/utils/time"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 )
 
-func (s *Handler) AddGroupAdmin(ctx context.Context, request *v1.AddGroupAdminRequest) (*v1.AddGroupAdminResponse, error) {
+var _ v1.GroupRelationServiceServer = &groupServiceServer{}
+
+type groupServiceServer struct {
+	db    *gorm.DB
+	cache cache.RelationUserCache
+	grr   repository.GroupRelationRepository
+	dr    repository.DialogRepository
+}
+
+func (s *groupServiceServer) AddGroupAdmin(ctx context.Context, request *v1.AddGroupAdminRequest) (*v1.AddGroupAdminResponse, error) {
 	resp := &v1.AddGroupAdminResponse{}
 
 	r1, err := s.grr.GetUserGroupByID(request.GroupID, request.UserID)
@@ -36,7 +47,7 @@ func (s *Handler) AddGroupAdmin(ctx context.Context, request *v1.AddGroupAdminRe
 	return resp, nil
 }
 
-func (s *Handler) GetGroupUserIDs(ctx context.Context, id *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
+func (s *groupServiceServer) GetGroupUserIDs(ctx context.Context, id *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
 	resp := &v1.UserIdsResponse{}
 
 	// 调用持久层方法获取用户群关系列表
@@ -49,7 +60,7 @@ func (s *Handler) GetGroupUserIDs(ctx context.Context, id *v1.GroupIDRequest) (*
 	return resp, nil
 }
 
-func (s *Handler) GetUserGroupIDs(ctx context.Context, request *v1.GetUserGroupIDsRequest) (*v1.GetUserGroupIDsResponse, error) {
+func (s *groupServiceServer) GetUserGroupIDs(ctx context.Context, request *v1.GetUserGroupIDsRequest) (*v1.GetUserGroupIDsResponse, error) {
 	resp := &v1.GetUserGroupIDsResponse{}
 
 	ds, err := s.grr.GetUserJoinedGroupIDs(request.UserId)
@@ -63,7 +74,7 @@ func (s *Handler) GetUserGroupIDs(ctx context.Context, request *v1.GetUserGroupI
 	return resp, nil
 }
 
-func (s *Handler) GetUserGroupList(ctx context.Context, request *v1.GetUserGroupListRequest) (*v1.GetUserGroupListResponse, error) {
+func (s *groupServiceServer) GetUserGroupList(ctx context.Context, request *v1.GetUserGroupListRequest) (*v1.GetUserGroupListResponse, error) {
 	resp := &v1.GetUserGroupListResponse{}
 
 	isAdmin := false
@@ -118,7 +129,7 @@ func (s *Handler) GetUserGroupList(ctx context.Context, request *v1.GetUserGroup
 	return resp, nil
 }
 
-func (s *Handler) RemoveFromGroup(ctx context.Context, request *v1.RemoveFromGroupRequest) (*v1.RemoveFromGroupResponse, error) {
+func (s *groupServiceServer) RemoveFromGroup(ctx context.Context, request *v1.RemoveFromGroupRequest) (*v1.RemoveFromGroupResponse, error) {
 	resp := &v1.RemoveFromGroupResponse{}
 
 	if err := s.grr.DeleteRelationByID(request.GroupId, request.UserId); err != nil {
@@ -128,7 +139,7 @@ func (s *Handler) RemoveFromGroup(ctx context.Context, request *v1.RemoveFromGro
 	return resp, nil
 }
 
-func (s *Handler) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
+func (s *groupServiceServer) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
 	resp := &v1.LeaveGroupResponse{}
 	if err := s.grr.DeleteRelationByID(request.GroupId, request.UserId); err != nil {
 		return resp, status.Error(codes.Aborted, err.Error())
@@ -136,7 +147,7 @@ func (s *Handler) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest)
 	return resp, nil
 }
 
-func (s *Handler) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
+func (s *groupServiceServer) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
 	fmt.Println("revert leave group req => ", request)
 	resp := &v1.LeaveGroupResponse{}
 
@@ -147,7 +158,7 @@ func (s *Handler) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRe
 	return resp, nil
 }
 
-func (s *Handler) GetGroupRelation(ctx context.Context, request *v1.GetGroupRelationRequest) (*v1.GetGroupRelationResponse, error) {
+func (s *groupServiceServer) GetGroupRelation(ctx context.Context, request *v1.GetGroupRelationRequest) (*v1.GetGroupRelationResponse, error) {
 	resp := &v1.GetGroupRelationResponse{}
 
 	relation, err := s.grr.GetUserGroupByID(request.GroupId, request.UserId)
@@ -168,7 +179,7 @@ func (s *Handler) GetGroupRelation(ctx context.Context, request *v1.GetGroupRela
 	return resp, nil
 }
 
-func (s *Handler) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatchGroupRelationRequest) (*v1.GetBatchGroupRelationResponse, error) {
+func (s *groupServiceServer) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatchGroupRelationRequest) (*v1.GetBatchGroupRelationResponse, error) {
 	resp := &v1.GetBatchGroupRelationResponse{}
 	grs, err := s.grr.GetUserGroupByIDs(request.GroupId, request.UserIds)
 	if err != nil {
@@ -189,7 +200,7 @@ func (s *Handler) GetBatchGroupRelation(ctx context.Context, request *v1.GetBatc
 	return resp, nil
 }
 
-func (s *Handler) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.GroupIDRequest) (*emptypb.Empty, error) {
 	err := s.grr.DeleteGroupRelationByID(in.GroupId)
 	if err != nil {
 		return &emptypb.Empty{}, status.Error(codes.Aborted, err.Error())
@@ -197,7 +208,7 @@ func (s *Handler) DeleteGroupRelationByGroupId(ctx context.Context, in *v1.Group
 	return &emptypb.Empty{}, nil
 }
 
-func (s *Handler) DeleteGroupRelationByGroupIdRevert(ctx context.Context, request *v1.GroupIDRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) DeleteGroupRelationByGroupIdRevert(ctx context.Context, request *v1.GroupIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	fmt.Println("DeleteGroupRelationByGroupIdRevert req => ", request)
 
@@ -209,7 +220,7 @@ func (s *Handler) DeleteGroupRelationByGroupIdRevert(ctx context.Context, reques
 	return resp, nil
 }
 
-func (s *Handler) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
+func (s *groupServiceServer) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
 	var resp = &v1.UserIdsResponse{}
 	ids, err := s.grr.GetGroupAdminIds(in.GroupId)
 	if err != nil {
@@ -219,7 +230,7 @@ func (s *Handler) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (
 	return resp, nil
 }
 
-func (s *Handler) GetUserManageGroupID(ctx context.Context, request *v1.GetUserManageGroupIDRequest) (*v1.GetUserManageGroupIDResponse, error) {
+func (s *groupServiceServer) GetUserManageGroupID(ctx context.Context, request *v1.GetUserManageGroupIDRequest) (*v1.GetUserManageGroupIDResponse, error) {
 	resp := &v1.GetUserManageGroupIDResponse{}
 
 	ids, err := s.grr.GetUserManageGroupIDs(request.UserId)
@@ -234,7 +245,7 @@ func (s *Handler) GetUserManageGroupID(ctx context.Context, request *v1.GetUserM
 	return resp, nil
 }
 
-func (s *Handler) DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 
 	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
@@ -246,7 +257,7 @@ func (s *Handler) DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, req
 	return resp, nil
 }
 
-func (s *Handler) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	if err := s.grr.UpdateRelationColumnByGroupAndUser(request.GroupID, request.UserID, "deleted_at", 0); err != nil {
 		//return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
@@ -255,7 +266,7 @@ func (s *Handler) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Contex
 	return resp, nil
 }
 
-func (s *Handler) CreateGroupAndInviteUsers(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*v1.CreateGroupAndInviteUsersResponse, error) {
+func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*v1.CreateGroupAndInviteUsersResponse, error) {
 	resp := &v1.CreateGroupAndInviteUsersResponse{}
 
 	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
@@ -303,7 +314,7 @@ func (s *Handler) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 				Status:      entity.Invitation,
 				Inviter:     request.UserID,
 				OwnerID:     v,
-				InviterTime: time.Now(),
+				InviterTime: ptime.Now(),
 			}
 			requests = append(requests, req)
 		}
@@ -316,7 +327,7 @@ func (s *Handler) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 				Status:      entity.Invitation,
 				Inviter:     request.UserID,
 				OwnerID:     request.UserID,
-				InviterTime: time.Now(),
+				InviterTime: ptime.Now(),
 			}
 			requests = append(requests, req)
 		}
@@ -331,7 +342,7 @@ func (s *Handler) CreateGroupAndInviteUsers(ctx context.Context, request *v1.Cre
 	return resp, nil
 }
 
-func (s *Handler) CreateGroupAndInviteUsersRevert(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) CreateGroupAndInviteUsersRevert(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	ids := []string{request.UserID}
 	for _, v := range request.Member {
@@ -343,7 +354,7 @@ func (s *Handler) CreateGroupAndInviteUsersRevert(ctx context.Context, request *
 	return resp, nil
 }
 
-func (s *Handler) SetGroupSilentNotification(ctx context.Context, in *v1.SetGroupSilentNotificationRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) SetGroupSilentNotification(ctx context.Context, in *v1.SetGroupSilentNotificationRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 	if err := s.grr.SetUserGroupSilentNotification(in.GroupId, in.UserId, entity.SilentNotification(in.IsSilent)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrSetUserGroupSilentNotificationFailed.Code()), err.Error())
@@ -351,7 +362,7 @@ func (s *Handler) SetGroupSilentNotification(ctx context.Context, in *v1.SetGrou
 	return resp, nil
 }
 
-func (s *Handler) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in *v1.RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in *v1.RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		npo := persistence.NewRepositories(tx)
@@ -381,7 +392,7 @@ func (s *Handler) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, in
 	return resp, nil
 }
 
-func (s *Handler) SetGroupOpenBurnAfterReading(ctx context.Context, in *v1.SetGroupOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) SetGroupOpenBurnAfterReading(ctx context.Context, in *v1.SetGroupOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 	if err := s.grr.SetUserGroupOpenBurnAfterReading(in.GroupId, in.UserId, entity.OpenBurnAfterReadingType(in.OpenBurnAfterReading)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupRrrSetUserGroupOpenBurnAfterReadingFailed.Code()), err.Error())
@@ -389,7 +400,7 @@ func (s *Handler) SetGroupOpenBurnAfterReading(ctx context.Context, in *v1.SetGr
 	return resp, nil
 }
 
-func (s *Handler) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, request *v1.SetGroupOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, request *v1.SetGroupOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	if err := s.grr.SetUserGroupOpenBurnAfterReadingTimeOUt(request.GroupId, request.UserId, request.OpenBurnAfterReadingTimeOut); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrSetUserGroupOpenBurnAfterReadingTimeOutFailed.Code()), err.Error())
@@ -397,7 +408,7 @@ func (s *Handler) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Context, reque
 	return resp, nil
 }
 
-func (s *Handler) SetGroupUserRemark(ctx context.Context, request *v1.SetGroupUserRemarkRequest) (*emptypb.Empty, error) {
+func (s *groupServiceServer) SetGroupUserRemark(ctx context.Context, request *v1.SetGroupUserRemarkRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	if err := s.grr.SetUserGroupRemark(request.GroupId, request.UserId, request.Remark); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrSetUserGroupRemarkFailed.Code()), err.Error())

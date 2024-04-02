@@ -26,29 +26,6 @@ import (
 )
 
 func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, error) {
-	//查询是否有缓存
-	values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
-	if err != nil {
-		s.logger.Error("err:" + err.Error())
-		return nil, code.RelationErrGetFriendListFailed
-	}
-	if len(values) > 0 {
-		// 类型转换
-		var responseList []usersorter.User
-		for _, v := range values {
-			var friend usersorter.CustomUserData
-			err := json.Unmarshal([]byte(v), &friend)
-			if err != nil {
-				fmt.Println("Error decoding cached data:", err)
-				continue
-			}
-			responseList = append(responseList, friend)
-		}
-		groupedUsers := usersorter.SortAndGroupUsers(responseList, "NickName")
-
-		return groupedUsers, nil
-	}
-
 	// 获取好友列表
 	friendListResp, err := s.relationUserService.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{UserId: userID})
 	if err != nil {
@@ -92,7 +69,6 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 					Signature:      v.Signature,
 					Preferences:    pre,
 				})
-				fmt.Println("pre", pre)
 				break
 			}
 		}
@@ -105,30 +81,8 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 		result = append(result, item)
 	}
 
-	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("friend:%s", userID))
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		//存储到缓存
-		fmt.Println("len(result)", len(result))
-		err = s.redisClient.AddToList(fmt.Sprintf("friend:%s", userID), result)
-		if err != nil {
-			s.logger.Error("err:" + err.Error())
-			return nil, code.RelationErrGetFriendListFailed
-		}
-
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("friend:%s", userID), 3*24*ostime.Hour)
-		if err != nil {
-			s.logger.Error("err:" + err.Error())
-			return nil, code.RelationErrGetFriendListFailed
-		}
-	}
-
 	// Sort and group by specified field
 	groupedUsers := usersorter.SortAndGroupUsers(data, "NickName")
-	fmt.Println("结果", len(groupedUsers))
 	return groupedUsers, nil
 }
 

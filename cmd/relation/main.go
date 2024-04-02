@@ -34,7 +34,7 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
+	flag.BoolVar(&discover, "discover", true, "Enable service discovery")
 	flag.BoolVar(&register, "register", false, "Enable service register")
 	flag.BoolVar(&remoteConfig, "remote-config", false, "Load config from remote source")
 	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the config center")
@@ -50,16 +50,15 @@ func init() {
 }
 
 func main() {
-	svc := &grpc.Handler{}
 	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
-		Grpc: ctrl.GRPCServer{
-			GRPCService:         svc,
-			HealthzCheckAddress: grpcProbeAddr,
-		},
-		Http: ctrl.HTTPServer{
-			HTTPService:        &http.Handler{RelationClient: svc},
-			HealthCheckAddress: httpProbeAddr,
-		},
+		//Grpc: ctrl.GRPCServer{
+		//	GRPCService:         svc,
+		//	HealthzCheckAddress: grpcProbeAddr,
+		//},
+		//Http: ctrl.HTTPServer{
+		//	HTTPService:        &http.Handler{RelationService: svc},
+		//	HealthCheckAddress: httpProbeAddr,
+		//},
 		Config: ctrl.Config{
 			LoadFromConfigCenter: remoteConfig,
 			RemoteConfigAddr:     remoteConfigAddr,
@@ -76,6 +75,36 @@ func main() {
 		MetricsBindAddress: metricsAddr,
 	})
 	if err != nil {
+		panic(err)
+	}
+
+	cfg := mgr.GetConfig()
+	svc := &grpc.RelationServiceServer{}
+	if err := svc.Init(cfg); err != nil {
+		panic(err)
+	}
+	hs := ctrl.HTTPServer{
+		HTTPService: &http.Handler{
+			RelationService: svc,
+		},
+		HealthCheckAddress: httpProbeAddr,
+	}
+
+	gs := ctrl.GRPCServer{
+		GRPCService:         svc,
+		HealthzCheckAddress: grpcProbeAddr,
+	}
+
+	relationService := &grpc.RelationServiceServer{}
+	if err := relationService.Init(cfg); err != nil {
+		panic(err)
+	}
+
+	if err := mgr.SetupHTTPServerWithManager(&hs); err != nil {
+		panic(err)
+	}
+
+	if err := mgr.SetupGrpcServerWithManager(&gs); err != nil {
 		panic(err)
 	}
 

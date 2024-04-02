@@ -5,7 +5,9 @@ import (
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/time"
@@ -15,7 +17,17 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *Handler) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGroupRequest) (*v1.JoinGroupResponse, error) {
+var _ v1.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{}
+
+type groupJoinRequestServiceServer struct {
+	db    *gorm.DB
+	cache cache.RelationUserCache
+	dr    repository.DialogRepository
+	grr   repository.GroupRelationRepository
+	gjqr  repository.GroupJoinRequestRepository
+}
+
+func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGroupRequest) (*v1.JoinGroupResponse, error) {
 	resp := &v1.JoinGroupResponse{}
 
 	// 获取群组管理员 ID
@@ -73,7 +85,7 @@ func (s *Handler) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGro
 	return resp, nil
 }
 
-func (s *Handler) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
+func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
 	resp := &v1.JoinGroupResponse{}
 	relations := make([]*entity.GroupJoinRequest, 0)
 
@@ -112,7 +124,7 @@ func (s *Handler) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (
 	return resp, nil
 }
 
-func (s *Handler) GetGroupJoinRequestListByUserId(ctx context.Context, request *v1.GetGroupJoinRequestListRequest) (*v1.GroupJoinRequestListResponse, error) {
+func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx context.Context, request *v1.GetGroupJoinRequestListRequest) (*v1.GroupJoinRequestListResponse, error) {
 	var resp = &v1.GroupJoinRequestListResponse{}
 
 	////获取该用户管理的群聊
@@ -165,7 +177,7 @@ func (s *Handler) GetGroupJoinRequestListByUserId(ctx context.Context, request *
 	return resp, nil
 }
 
-func (s *Handler) GetGroupJoinRequestByGroupIdAndUserId(ctx context.Context, request *v1.GetGroupJoinRequestByGroupIdAndUserIdRequest) (*v1.GetGroupJoinRequestByGroupIdAndUserIdResponse, error) {
+func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByGroupIdAndUserId(ctx context.Context, request *v1.GetGroupJoinRequestByGroupIdAndUserIdRequest) (*v1.GetGroupJoinRequestByGroupIdAndUserIdResponse, error) {
 	var resp = &v1.GetGroupJoinRequestByGroupIdAndUserIdResponse{}
 	req, err := s.gjqr.GetGroupJoinRequestByGroupIdAndUserId(uint(request.GroupId), request.UserId)
 	if err != nil {
@@ -186,7 +198,7 @@ func (s *Handler) GetGroupJoinRequestByGroupIdAndUserId(ctx context.Context, req
 	return resp, nil
 }
 
-func (s *Handler) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageGroupJoinRequestByIDRequest) (*emptypb.Empty, error) {
+func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageGroupJoinRequestByIDRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 
 	info, err := s.gjqr.GetGroupJoinRequestByRequestID(uint(in.ID))
@@ -254,7 +266,7 @@ func (s *Handler) ManageGroupJoinRequestByID(ctx context.Context, in *v1.ManageG
 	return resp, nil
 }
 
-func (s *Handler) GetGroupJoinRequestByID(ctx context.Context, request *v1.GetGroupJoinRequestByIDRequest) (*v1.GetGroupJoinRequestByIDResponse, error) {
+func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByID(ctx context.Context, request *v1.GetGroupJoinRequestByIDRequest) (*v1.GetGroupJoinRequestByIDResponse, error) {
 	resp := &v1.GetGroupJoinRequestByIDResponse{}
 
 	r, err := s.gjqr.GetGroupJoinRequestByRequestID(uint(request.ID))
@@ -271,7 +283,7 @@ func (s *Handler) GetGroupJoinRequestByID(ctx context.Context, request *v1.GetGr
 	return resp, nil
 }
 
-func (s *Handler) DeleteGroupRecord(ctx context.Context, req *v1.DeleteGroupRecordRequest) (*emptypb.Empty, error) {
+func (s *groupJoinRequestServiceServer) DeleteGroupRecord(ctx context.Context, req *v1.DeleteGroupRecordRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	if err := s.gjqr.DeleteJoinRequestByID(uint(req.ID)); err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrDeleteGroupJoinRecord.Code()), err.Error())

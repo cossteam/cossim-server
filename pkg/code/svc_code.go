@@ -67,6 +67,7 @@ var (
 	RelationErrSetFriendRemarkFailed                    = New(13022, "设置好友备注失败")
 	RelationErrSetUserOpenBurnAfterReadingTimeOutFailed = New(13023, "设置用户阅后即焚时间失败")
 	RelationErrDeleteUserFriendRecord                   = New(13024, "删除好友申请记录失败")
+	RelationErrAlreadyBlacklist                         = New(13025, "已经在黑名单了")
 
 	RelationErrCreateGroupFailed                                  = New(13101, "创建群聊失败")
 	RelationErrGetGroupIDsFailed                                  = New(13102, "获取群聊成员")

@@ -45,7 +45,8 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.MsgClient)
 
-	return h.enc.ReadKeyPair()
+	//return h.enc.ReadKeyPair()
+	return nil
 }
 
 func (h *Handler) Name() string {

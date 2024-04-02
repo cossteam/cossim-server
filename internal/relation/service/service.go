@@ -45,7 +45,7 @@ type Service struct {
 	redisClient    *cache.RedisClient
 }
 
-func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) *Service {
+func New(ac *pkgconfig.AppConfig, relationService *grpchandler.RelationServiceServer) *Service {
 	s := &Service{
 		rabbitMQClient: setRabbitMQProvider(ac),
 		redisClient:    setupRedis(ac),
@@ -55,12 +55,12 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) *Service {
 		dtmGrpcServer:  ac.Dtm.Addr(),
 	}
 	s.cache = s.setCacheConfig()
-	s.relationGroupService = grpcService
-	s.relationUserService = grpcService
-	s.relationUserFriendRequestService = grpcService
-	s.relationGroupJoinRequestService = grpcService
-	s.relationGroupAnnouncementService = grpcService
-	s.relationDialogService = grpcService
+	s.relationGroupService = relationService.GroupServiceServer
+	s.relationUserService = relationService.UserServiceServer
+	s.relationUserFriendRequestService = relationService.UserFriendRequestServiceServer
+	s.relationGroupJoinRequestService = relationService.GroupJoinRequestServiceServer
+	s.relationGroupAnnouncementService = relationService.GroupAnnouncementServer
+	s.relationDialogService = relationService.DialogServiceServer
 	return s
 }
 
