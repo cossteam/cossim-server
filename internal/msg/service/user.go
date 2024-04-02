@@ -1030,7 +1030,7 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		}
 	}
 
-	s.SendMsgToUsers(ids.UserIds, driverId, pushv1.WSEventType_UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "OperatorInfo": model.SenderInfo{
+	s.SendMsgToUsers(ids.UserIds, driverId, pushv1.WSEventType_UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "operator_info": model.SenderInfo{
 		Avatar: info.Avatar,
 		Name:   info.NickName,
 		UserId: info.UserId,

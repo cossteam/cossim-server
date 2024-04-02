@@ -152,9 +152,9 @@ type GroupMessage struct {
 }
 
 type GetGroupMsgListResponse struct {
-	GroupMessages []*GroupMessage `protobuf:"bytes,1,rep,name=GroupMessages,proto3" json:"group_messages"`
-	Total         int32           `protobuf:"varint,2,opt,name=Total,proto3" json:"total"`
-	CurrentPage   int32           `protobuf:"varint,3,opt,name=CurrentPage,proto3" json:"current_page"`
+	GroupMessages []*GroupMessage `json:"group_messages"`
+	Total         int32           `json:"total"`
+	CurrentPage   int32           `json:"current_page"`
 }
 
 // EditUserMsgRequest represents the request structure for editing user message.
