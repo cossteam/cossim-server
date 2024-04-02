@@ -56,8 +56,8 @@ func (w *JSWebSocket) LocalAddr() string {
 	return ""
 }
 
-func NewWebSocket(connType int) *JSWebSocket {
-	return &JSWebSocket{ConnType: connType}
+func New(connType int, conn *websocket.Conn) *JSWebSocket {
+	return &JSWebSocket{ConnType: connType, Conn: conn}
 }
 
 func (w *JSWebSocket) Close() error {

@@ -22,7 +22,7 @@ services:
       - "9180:9180/tcp"
       - "8080:9080/tcp"
       - "9091:9091/tcp"
-      - "7443:9443/tcp"
+      - "443:9443/tcp"
       - "9092:9092/tcp"
   etcd:
     container_name: cossim_etcd
