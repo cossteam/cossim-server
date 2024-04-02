@@ -129,6 +129,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
 	}
+
 	if id != nil && id.GroupId != 0 {
 		return nil, code.RelationErrGroupRequestAlreadyProcessed
 	}
@@ -141,7 +142,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		GroupId: req.GroupID,
 		UserId:  uid,
 	})
-	if relation != nil {
+	if relation != nil && relation.GroupId != 0 {
 		return nil, code.RelationGroupErrAlreadyInGroup
 	}
 
