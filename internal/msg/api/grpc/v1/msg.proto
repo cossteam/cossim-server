@@ -44,9 +44,27 @@ enum AtAllUserType {
   NotAtAllUser = 0;
   AtAllUser = 1;
 }
+
 enum BurnAfterReadingType{
     NotBurnAfterReading = 0; //非阅后即焚
     IsBurnAfterReading  = 1;                          //阅后即焚消息
+}
+
+// 定义 UserMessageType 枚举类型
+enum MessageType {
+  Unknown = 0; // 未知
+  Text = 1;        // 文本消息
+  Voice = 2;       // 语音消息
+  Image = 3;       // 图片消息
+  Label = 4;       // 标注
+  Notice = 5;      // 群公告
+  File = 6;        // 文件消息
+  Video = 7;       // 视频消息
+  EmojiReply = 8;  // emoji回复
+  VoiceCall = 9;   // 语音通话
+  VideoCall = 10;  // 视频通话
+  Delete = 11;     // 撤回消息
+  CancelLabel = 12; // 取消标注
 }
 
 message GetUserMsgListRequest{
