@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
@@ -90,6 +91,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	if err != nil {
 		s.logger.Error("failed to get user login by driver id and user id", zap.Error(err))
 	}
+
 	_, err = s.userLoginService.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
 		UserId:      resp.UserId,
 		DriverId:    req.DriverId,
@@ -108,6 +110,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			fristLogin = true
 		}
 	}
+
 	if fristLogin {
 		if clientIp == "127.0.0.1" {
 			clientIp = httputil.GetMyPublicIP()
@@ -119,18 +122,56 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			result = fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s", clientIp, info.Country, info.City)
 		}
 
-		data2 := constants.SystemNotificationEventData{
-			UserId:  resp.UserId,
-			Content: result,
-			Type:    1,
-		}
-
-		toBytes, err := utils.StructToBytes(data2)
+		//查询与系统通知的对话id
+		relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+			UserId:   resp.UserId,
+			FriendId: constants.SystemNotification,
+		})
 		if err != nil {
 			return nil, "", err
 		}
 
-		msg := &pushgrpcv1.WsMsg{Uid: constants.SystemNotification, Event: pushgrpcv1.WSEventType_SystemNotificationEvent, PushOffline: false, SendAt: time.Now(), Data: &any.Any{Value: toBytes}}
+		//查询与系统的对话是否关闭
+		dialogUser, err := s.dialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+			DialogId: relation.DialogId,
+			UserId:   resp.UserId,
+		})
+		if err != nil {
+			s.logger.Error("获取用户会话失败", zap.Error(err))
+			return nil, "", err
+		}
+
+		if dialogUser.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
+			_, err := s.dialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+				DialogId: relation.DialogId,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
+				UserId:   resp.UserId,
+			})
+			if err != nil {
+				return nil, "", err
+			}
+		}
+
+		//插入消息
+		msg2 := &msggrpcv1.SendUserMsgRequest{
+			SenderId:   constants.SystemNotification,
+			ReceiverId: resp.UserId,
+			Content:    result,
+			DialogId:   relation.DialogId,
+			Type:       int32(msggrpcv1.MessageType_Text), //TODO 消息类型枚举
+		}
+
+		_, err = s.msgService.SendUserMessage(ctx, msg2)
+		if err != nil {
+			return nil, "", err
+		}
+
+		toBytes, err := utils.StructToBytes(msg2)
+		if err != nil {
+			return nil, "", err
+		}
+
+		msg := &pushgrpcv1.WsMsg{Uid: resp.UserId, Event: pushgrpcv1.WSEventType_SendUserMessageEvent, PushOffline: true, SendAt: time.Now(), Data: &any.Any{Value: toBytes}}
 
 		toBytes2, err := utils.StructToBytes(msg)
 		if err != nil {
