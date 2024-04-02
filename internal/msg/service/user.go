@@ -1039,19 +1039,24 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 	}
 
 	if s.cache {
-		userMsgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
-			UserId:   userid,
-			DialogId: req.DialogId,
-		})
+		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userid))
 		if err != nil {
-			return nil, err
+			s.logger.Error("删除redis失败", zap.Error(err))
+			return nil, nil
 		}
-
-		err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", userid), req.DialogId, "DialogUnreadCount", len(userMsgs.UserMessages))
-		if err != nil {
-			s.logger.Error("更新用户对话未读消息数量失败", zap.Error(err))
-			return nil, err
-		}
+		//userMsgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
+		//	UserId:   userid,
+		//	DialogId: req.DialogId,
+		//})
+		//if err != nil {
+		//	return nil, err
+		//}
+		//
+		//err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", userid), req.DialogId, "DialogUnreadCount", len(userMsgs.UserMessages))
+		//if err != nil {
+		//	s.logger.Error("更新用户对话未读消息数量失败", zap.Error(err))
+		//	return nil, err
+		//}
 	}
 
 	s.SendMsgToUsers(ids.UserIds, driverId, pushv1.WSEventType_UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "operator_info": model.SenderInfo{
