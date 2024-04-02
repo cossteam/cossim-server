@@ -277,23 +277,47 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	}
 
 	//推送
-	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &model.WsUserMsg{
+	s.sendWsUserMsg(userID, req.ReceiverId, driverId, userRelationStatus2.IsSilent, &pushv1.SendWsUserMsg{
 		SenderId:                userID,
 		Content:                 req.Content,
-		MsgType:                 uint(req.Type),
-		ReplyId:                 req.ReplyId,
+		MsgType:                 uint32(req.Type),
+		ReplyId:                 uint32(req.ReplyId),
 		MsgId:                   message.MsgId,
 		ReceiverId:              req.ReceiverId,
 		SendAt:                  pkgtime.Now(),
 		DialogId:                req.DialogId,
-		IsBurnAfterReading:      req.IsBurnAfterReadingType,
+		IsBurnAfterReading:      uint32(req.IsBurnAfterReadingType),
 		BurnAfterReadingTimeOut: userRelationStatus1.OpenBurnAfterReadingTimeOut,
-		SenderInfo: model.SenderInfo{
+		SenderInfo: &pushv1.SenderInfo{
 			Avatar: info.Avatar,
 			Name:   info.NickName,
 			UserId: userID,
 		},
-		ReplyMsg: resp.ReplyMsg,
+		ReplyMsg: &pushv1.MessageInfo{
+			GroupId:  resp.ReplyMsg.GroupId,
+			MsgType:  uint32(resp.ReplyMsg.MsgType),
+			Content:  resp.ReplyMsg.Content,
+			SenderId: resp.ReplyMsg.SenderId,
+			SendAt:   resp.ReplyMsg.SendAt,
+			MsgId:    resp.ReplyMsg.MsgId,
+			SenderInfo: &pushv1.SenderInfo{
+				UserId: resp.ReplyMsg.SenderInfo.UserId,
+				Avatar: resp.ReplyMsg.SenderInfo.Avatar,
+				Name:   resp.ReplyMsg.SenderInfo.Name,
+			},
+			ReceiverInfo: &pushv1.SenderInfo{
+				UserId: resp.ReplyMsg.ReceiverInfo.UserId,
+				Avatar: resp.ReplyMsg.ReceiverInfo.Avatar,
+				Name:   resp.ReplyMsg.ReceiverInfo.Name,
+			},
+			AtAllUser:          uint64(resp.ReplyMsg.AtAllUser),
+			AtUsers:            resp.ReplyMsg.AtUsers,
+			IsBurnAfterReading: uint64(resp.ReplyMsg.IsBurnAfterReading),
+			IsLabel:            int32(resp.ReplyMsg.IsLabel),
+			ReplyId:            resp.ReplyMsg.ReplyId,
+			IsRead:             resp.ReplyMsg.IsRead,
+			ReadAt:             resp.ReplyMsg.ReadAt,
+		},
 	})
 
 	return resp, nil
@@ -304,7 +328,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 //}
 
 // 推送私聊消息
-func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *model.WsUserMsg) {
+func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *pushv1.SendWsUserMsg) {
 
 	bytes, err := utils.StructToBytes(msg)
 	if err != nil {

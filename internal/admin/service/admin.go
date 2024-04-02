@@ -14,6 +14,7 @@ import (
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
 	httputil "github.com/cossim/coss-server/pkg/utils/http"
+	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
 	"github.com/golang/protobuf/ptypes/any"
@@ -169,21 +170,80 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 	for _, v := range list.FriendList {
 		ids = append(ids, v.UserId)
 	}
+	//获取系统通知账号信息
+	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: UserId})
+	if err != nil {
+		return nil, err
+	}
 
 	msgList := make([]*msggrpcv1.SendUserMsgRequest, 0)
-
+	//sendList := make([]*pushgrpcv1.SendWsUserMsg, 0)
+	pushList := make([]*pushgrpcv1.WsMsg, 0)
 	for _, v := range ids {
 		relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: v, FriendId: UserId})
 		if err != nil {
 			return nil, err
 		}
+
+		//获取用户对话信息
+		dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+			DialogId: relation.DialogId,
+			UserId:   v,
+		})
+		if err != nil {
+			s.logger.Error("获取用户会话失败", zap.Error(err))
+			return nil, err
+		}
+
+		//打开对话
+		if dialogUser.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
+			_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+				DialogId: relation.DialogId,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
+				UserId:   v,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		msg2 := &msggrpcv1.SendUserMsgRequest{
 			SenderId:   UserId,
 			ReceiverId: v,
 			Content:    content,
 			DialogId:   relation.DialogId,
-			Type:       1, //todo 消息类型枚举
+			Type:       int32(msggrpcv1.MessageType_Text),
 		}
+
+		send := &pushgrpcv1.SendWsUserMsg{
+			SenderId:                constants.SystemNotification,
+			Content:                 content,
+			MsgType:                 uint32(msggrpcv1.MessageType_Text),
+			ReceiverId:              v,
+			SendAt:                  pkgtime.Now(),
+			DialogId:                relation.DialogId,
+			BurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
+			SenderInfo: &pushgrpcv1.SenderInfo{
+				Avatar: info.Avatar,
+				Name:   info.NickName,
+				UserId: info.UserId,
+			},
+		}
+
+		toBytes, err := utils.StructToBytes(send)
+		if err != nil {
+			s.logger.Error("failed to send push", zap.Error(err))
+			continue
+		}
+
+		push := &pushgrpcv1.WsMsg{
+			Uid:   v,
+			Event: pushgrpcv1.WSEventType_SendUserMessageEvent,
+			Data:  &any.Any{Value: toBytes},
+		}
+
+		pushList = append(pushList, push)
+		//sendList = append(sendList, send)
 		msgList = append(msgList, msg2)
 	}
 
@@ -193,20 +253,17 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 		return nil, err
 	}
 
-	toBytes, err := utils.StructToBytes(&constants.SystemNotificationEventData{
-		UserId:  UserId,
-		Content: content,
-		Type:    1,
-	})
-	msg := pushgrpcv1.PushWsBatchByUserIdsRequest{UserIds: ids, Event: pushgrpcv1.WSEventType_SystemNotificationEvent, PushOffline: true, Data: &any.Any{Value: toBytes}}
+	msg := pushgrpcv1.PushWsBatchRequest{Msgs: pushList}
 	if err != nil {
 		return nil, err
 	}
 
 	data, err := utils.StructToBytes(&msg)
-
+	if err != nil {
+		return nil, err
+	}
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
-		Type: pushgrpcv1.Type_Ws_Batch_User,
+		Type: pushgrpcv1.Type_Ws_Batch,
 		Data: data,
 	})
 	if err != nil {
