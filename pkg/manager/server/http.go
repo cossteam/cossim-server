@@ -47,7 +47,6 @@ func NewHttpService(c *config.AppConfig, svc HTTPService, healthAddr string, log
 		ac:         c,
 		svc:        svc,
 		addr:       c.HTTP.Addr(),
-		sid:        xid.New().String(),
 		healthAddr: c.HTTP.Address + healthAddr,
 	}
 
@@ -76,6 +75,7 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	if s.ac.Register.Register {
+		s.sid = xid.New().String()
 		if err := s.register(); err != nil {
 			return err
 		}
@@ -288,7 +288,7 @@ func (s *HttpService) watchRegistry(ctx context.Context) {
 }
 
 func (s *HttpService) cancel() {
-	if s.registry != nil {
+	if s.registry != nil && s.sid != "" {
 		if err := s.registry.Cancel(s.sid); err != nil {
 			s.logger.Error(err, "Service unregister failed", "service", s.ac.HTTP.Name, "addr", s.ac.HTTP.Addr(), "id", s.sid)
 		}
