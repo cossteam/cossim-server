@@ -52,10 +52,10 @@ func GetBlacklistKey(ownerUserID string) string {
 type RelationUserCache interface {
 	GetRelation(ctx context.Context, ownerUserID string, targetUserID string) (*relationgrpcv1.GetUserRelationResponse, error)
 	GetRelations(ctx context.Context, ownerUserID string, targetUserID []string) ([]*relationgrpcv1.GetUserRelationResponse, error)
+	SetRelation(ctx context.Context, ownerUserID string, targetUserID string, data *relationgrpcv1.GetUserRelationResponse, expiration time.Duration) error
 	DeleteRelation(ctx context.Context, ownerUserID string, targetUserID string) error
 	DeleteRelations(ctx context.Context, ownerUserID string, targetUserIDs []string) error
 	DeleteFriendIDs(ctx context.Context, userIDs ...string) error
-	SetRelation(ctx context.Context, ownerUserID string, targetUserID string, data *relationgrpcv1.GetUserRelationResponse, expiration time.Duration) error
 	GetFriendList(ctx context.Context, ownerUserID string) (*relationgrpcv1.GetFriendListResponse, error)
 	SetFriendList(ctx context.Context, ownerUserID string, data *relationgrpcv1.GetFriendListResponse, expiration time.Duration) error
 	DeleteFriendList(ctx context.Context, ownerUserID ...string) error
