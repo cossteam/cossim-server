@@ -40,12 +40,26 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		return nil, code.RelationErrCreateGroupFailed
 	}
 
-	if len(req.Member) != len(friends.Users) {
-		return nil, code.RelationUserErrFriendRelationNotFound
+	isUserInFriends := func(userID string, friends []*relationgrpcv1.GetUserRelationResponse) bool {
+		for _, friend := range friends {
+			if friend.UserId == userID {
+				return true
+			}
+		}
+		return false
+	}
+
+	//if len(req.Member) != len(friends.Users) {
+	//	return nil, code.RelationUserErrFriendRelationNotFound.CustomMessage("加入的成员有些不是用户好友")
+	//}
+	for _, memberID := range req.Member {
+		if !isUserInFriends(memberID, friends.Users) {
+			return nil, code.RelationUserErrFriendRelationNotFound.CustomMessage(fmt.Sprintf("user %s has abnormal status", memberID))
+		}
 	}
 	for _, friend := range friends.Users {
 		if friend.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-			return nil, code.StatusNotAvailable
+			return nil, code.StatusNotAvailable.CustomMessage(fmt.Sprintf("user %s has abnormal status", friend.UserId))
 		}
 	}
 
