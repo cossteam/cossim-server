@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"fmt"
 	"github.com/cossim/coss-server/internal/msg/api/grpc/dataTransformers"
 	"github.com/cossim/coss-server/internal/msg/domain/entity"
 	"github.com/cossim/coss-server/internal/msg/domain/repository"
@@ -391,8 +392,9 @@ func (g *MsgRepo) PhysicalDeleteGroupMessagesByDialogID(dialogId uint32) error {
 
 func (g *MsgRepo) GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error) {
 	var userMessages []entity.UserMessage
+	fmt.Println("entity.NotBurnAfterReading => ", entity.NotBurnAfterReading)
 	err := g.db.Model(&entity.UserMessage{}).
-		Where("dialog_id = ? AND is_burn_after_reading = ？ AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).
+		Where("dialog_id = ? AND is_burn_after_reading = ? AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).
 		Order("updated_at DESC").
 		Limit(pageSize).
 		Offset(pageSize * (pageNumber - 1)).
