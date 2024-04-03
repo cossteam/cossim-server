@@ -392,7 +392,7 @@ func (g *MsgRepo) PhysicalDeleteGroupMessagesByDialogID(dialogId uint32) error {
 func (g *MsgRepo) GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error) {
 	var userMessages []entity.UserMessage
 	err := g.db.Model(&entity.UserMessage{}).
-		Where("dialog_id = ? AND deleted_at = 0", dialogId).
+		Where("dialog_id = ? AND is_burn_after_reading = ？ AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).
 		Order("updated_at DESC").
 		Limit(pageSize).
 		Offset(pageSize * (pageNumber - 1)).
@@ -422,7 +422,7 @@ func (g *MsgRepo) GetLastUserMsgsByDialogIDs(dialogIds []uint) ([]*entity.UserMe
 
 	for _, dialogId := range dialogIds {
 		var lastMsg entity.UserMessage
-		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Order("created_at DESC").First(&lastMsg)
+		g.db.Where("dialog_id = ? AND deleted_at = 0", dialogId).Order("created_at DESC").First(&lastMsg)
 		if lastMsg.ID != 0 {
 			userMessages = append(userMessages, &lastMsg)
 		}
@@ -434,7 +434,7 @@ func (g *MsgRepo) GetLastGroupMsgsByDialogIDs(dialogIds []uint) ([]*entity.Group
 	groupMessages := make([]*entity.GroupMessage, 0)
 	for _, dialogId := range dialogIds {
 		var lastMsg entity.GroupMessage
-		g.db.Where("dialog_id =? AND deleted_at = 0", dialogId).Order("created_at DESC").First(&lastMsg)
+		g.db.Where("dialog_id = ? AND is_burn_after_reading = ？ AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).Order("created_at DESC").First(&lastMsg)
 		if lastMsg.ID != 0 {
 			groupMessages = append(groupMessages, &lastMsg)
 		}
