@@ -50,7 +50,6 @@ func NewGRPCService(c *config.AppConfig, svc GRPCService, logger logr.Logger, op
 		server:   grpc.NewServer(),
 		logger:   logger.WithValues("kind", "grpc server", "name", c.GRPC.Name),
 		ac:       c,
-		sid:      xid.New().String(),
 		registry: d,
 		svc:      svc,
 	}
@@ -245,6 +244,7 @@ func (s *GrpcService) Start(ctx context.Context) error {
 
 	if s.ac.Register.Register {
 		// 注册服务到注册中心
+		s.sid = xid.New().String()
 		if err := s.register(); err != nil {
 			return err
 		}
@@ -302,7 +302,7 @@ func (s *GrpcService) register() error {
 }
 
 func (s *GrpcService) cancel() {
-	if s.registry != nil {
+	if s.registry != nil && s.sid != "" {
 		if err := s.registry.Cancel(s.sid); err != nil {
 			s.logger.Error(err, "Service unregister failed", "service", s.ac.GRPC.Name, "addr", s.ac.GRPC.Addr(), "id", s.sid)
 		}
