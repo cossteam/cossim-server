@@ -4959,7 +4959,6 @@ const docTemplate = `{
         "model.SetUserFriendRemarkRequest": {
             "type": "object",
             "required": [
-                "remark",
                 "user_id"
             ],
             "properties": {
