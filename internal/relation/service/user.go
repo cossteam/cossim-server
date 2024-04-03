@@ -608,10 +608,10 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 	}
 
 	_, err = s.relationUserService.SetUserOpenBurnAfterReading(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingRequest{
-		UserId:                      userId,
-		FriendId:                    req.UserId,
-		OpenBurnAfterReading:        relationgrpcv1.OpenBurnAfterReadingType(req.Action),
-		OpenBurnAfterReadingTimeOut: req.OpenBurnAfterReadingTimeOut,
+		UserId:               userId,
+		FriendId:             req.UserId,
+		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
+		TimeOut:              req.TimeOut,
 	})
 	if err != nil {
 		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))

@@ -257,21 +257,8 @@ func (s *userFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(
 
 func (s *userFriendRequestServiceServer) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRecordRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
-	//fr, err := s.ufqr.GetFriendRequestByID(uint(req.ID))
-	//if err != nil {
-	//	if errors.Is(err, gorm.ErrRecordNotFound) {
-	//		return nil, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), code.RelationUserErrNoFriendRequestRecords.Message())
-	//	}
-	//	return nil, err
-	//}
-	//
-	//if fr.OwnerID != req.UserId {
-	//	return nil, status.Error(codes.Code(code.Forbidden.Code()), code.Forbidden.Message())
-	//}
-
 	if err := s.ufqr.DeletedById(req.ID); err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
 	}
-
 	return resp, nil
 }

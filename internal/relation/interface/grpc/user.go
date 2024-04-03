@@ -389,7 +389,7 @@ func (s *userServiceServer) SetUserOpenBurnAfterReading(ctx context.Context, req
 		request.UserId,
 		request.FriendId,
 		entity.OpenBurnAfterReadingType(request.OpenBurnAfterReading),
-		request.OpenBurnAfterReadingTimeOut,
+		request.TimeOut,
 	); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingFailed.Code()), err.Error())
 	}
