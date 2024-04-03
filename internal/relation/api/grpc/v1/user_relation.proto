@@ -171,8 +171,10 @@ message SetUserOpenBurnAfterReadingRequest {
   string UserId = 1;
   // @inject_tag: json:"friend_id"
   string FriendId = 2;
+  // @inject_tag: json:"open_burn_after_reading_time_out"
+  int64 OpenBurnAfterReadingTimeOut = 3;
   // @inject_tag: json:"open_burn_after_reading"
-  OpenBurnAfterReadingType  OpenBurnAfterReading = 3;
+  OpenBurnAfterReadingType  OpenBurnAfterReading = 4;
 }
 
 message SetFriendRemarkRequest {
@@ -220,8 +222,6 @@ service UserRelationService {
   rpc SetFriendSilentNotification(SetFriendSilentNotificationRequest) returns (google.protobuf.Empty);
   // 设置阅后即焚开关
   rpc SetUserOpenBurnAfterReading(SetUserOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
-  // 设置阅后即焚超时时间
-  rpc SetUserOpenBurnAfterReadingTimeOut(SetUserOpenBurnAfterReadingTimeOutRequest) returns (google.protobuf.Empty);
   // 设置好友备注
   rpc SetFriendRemark(SetFriendRemarkRequest) returns (google.protobuf.Empty);
 }

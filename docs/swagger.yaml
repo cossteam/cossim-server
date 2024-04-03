@@ -308,6 +308,14 @@ definitions:
     - MessageTypeVideoCall
     - MessageTypeDelete
     - MessageTypeCancelLabel
+  github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - BurnClose
+    - BurnOpen
   github_com_cossim_coss-server_internal_relation_api_http_model.Response:
     properties:
       code:
@@ -739,7 +747,7 @@ definitions:
   model.OpenGroupBurnAfterReadingRequest:
     properties:
       action:
-        type: integer
+        $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType'
       group_id:
         description: 群组ID
         type: integer
@@ -749,6 +757,8 @@ definitions:
   model.OpenUserBurnAfterReadingRequest:
     properties:
       action:
+        $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType'
+      open_burn_after_reading_time_out:
         type: integer
       user_id:
         description: 用户ID
@@ -953,16 +963,6 @@ definitions:
         type: string
     required:
     - user_id
-    type: object
-  model.SetUserOpenBurnAfterReadingTimeOutRequest:
-    properties:
-      friend_id:
-        type: string
-      open_burn_after_reading_time_out:
-        type: integer
-    required:
-    - friend_id
-    - open_burn_after_reading_time_out
     type: object
   model.SetUserSilentNotificationRequest:
     properties:
@@ -2639,7 +2639,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: '是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)'
+      description: '设置阅后即焚(action: 0:关闭, 1:打开)'
       parameters:
       - description: request
         in: body
@@ -2654,29 +2654,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response'
-      summary: '是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)'
-      tags:
-      - UserRelation
-  /relation/user/burn/timeout/set:
-    post:
-      consumes:
-      - application/json
-      description: 设置好友阅后即焚消息销毁时间
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.SetUserOpenBurnAfterReadingTimeOutRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response'
-      summary: 设置好友阅后即焚消息销毁时间
+      summary: '设置阅后即焚(action: 0:关闭, 1:打开)'
       tags:
       - UserRelation
   /relation/user/delete_blacklist:

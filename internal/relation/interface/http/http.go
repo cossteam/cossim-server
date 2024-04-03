@@ -70,10 +70,10 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/switch/e2e/key", h.switchUserE2EPublicKey)
 	//设置用户静默通知
 	u.POST("/silent", h.setUserSilentNotification)
+	// 设置阅后即焚
 	u.POST("/burn/open", h.openUserBurnAfterReading)
-	u.POST("/burn/timeout/set", h.setUserOpenBurnAfterReadingTimeOut)
-
-	u.POST("/remark/set", h.setUserFriendRemark) //设置好友备注
+	//设置好友备注
+	u.POST("/remark/set", h.setUserFriendRemark)
 
 	g := api.Group("/group")
 	g.GET("/member", h.getGroupMember)

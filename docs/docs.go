@@ -2358,7 +2358,7 @@ const docTemplate = `{
         },
         "/relation/user/burn/open": {
             "post": {
-                "description": "是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)",
+                "description": "设置阅后即焚(action: 0:关闭, 1:打开)",
                 "consumes": [
                     "application/json"
                 ],
@@ -2368,7 +2368,7 @@ const docTemplate = `{
                 "tags": [
                     "UserRelation"
                 ],
-                "summary": "是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)",
+                "summary": "设置阅后即焚(action: 0:关闭, 1:打开)",
                 "parameters": [
                     {
                         "description": "request",
@@ -2377,40 +2377,6 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.OpenUserBurnAfterReadingRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/relation/user/burn/timeout/set": {
-            "post": {
-                "description": "设置好友阅后即焚消息销毁时间",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "UserRelation"
-                ],
-                "summary": "设置好友阅后即焚消息销毁时间",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.SetUserOpenBurnAfterReadingTimeOutRequest"
                         }
                     }
                 ],
@@ -4018,6 +3984,17 @@ const docTemplate = `{
                 "MessageTypeCancelLabel"
             ]
         },
+        "github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "BurnClose",
+                "BurnOpen"
+            ]
+        },
         "github_com_cossim_coss-server_internal_relation_api_http_model.Response": {
             "type": "object",
             "properties": {
@@ -4652,7 +4629,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "action": {
-                    "type": "integer"
+                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType"
                 },
                 "group_id": {
                     "description": "群组ID",
@@ -4667,6 +4644,9 @@ const docTemplate = `{
             ],
             "properties": {
                 "action": {
+                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType"
+                },
+                "open_burn_after_reading_time_out": {
                     "type": "integer"
                 },
                 "user_id": {
@@ -4959,7 +4939,6 @@ const docTemplate = `{
         "model.SetUserFriendRemarkRequest": {
             "type": "object",
             "required": [
-                "remark",
                 "user_id"
             ],
             "properties": {
@@ -4970,21 +4949,6 @@ const docTemplate = `{
                 "user_id": {
                     "description": "用户ID",
                     "type": "string"
-                }
-            }
-        },
-        "model.SetUserOpenBurnAfterReadingTimeOutRequest": {
-            "type": "object",
-            "required": [
-                "friend_id",
-                "open_burn_after_reading_time_out"
-            ],
-            "properties": {
-                "friend_id": {
-                    "type": "string"
-                },
-                "open_burn_after_reading_time_out": {
-                    "type": "integer"
                 }
             }
         },
