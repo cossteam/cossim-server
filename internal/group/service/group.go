@@ -42,7 +42,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 
 	isUserInFriends := func(userID string, friends []*relationgrpcv1.GetUserRelationResponse) bool {
 		for _, friend := range friends {
-			if friend.UserId == userID {
+			if friend.FriendId == userID {
 				return true
 			}
 		}
