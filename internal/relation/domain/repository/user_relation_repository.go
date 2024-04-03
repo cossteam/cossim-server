@@ -14,7 +14,6 @@ type UserRelationRepository interface {
 	GetFriendRequestListByUserID(userId string) ([]*entity.UserRelation, error)
 	UpdateRelationColumn(id uint, column string, value interface{}) error
 	SetUserFriendSilentNotification(uid, friendId string, silentNotification entity.SilentNotification) error
-	SetUserOpenBurnAfterReading(uid, friendId string, openBurnAfterReading entity.OpenBurnAfterReadingType) error
+	SetUserOpenBurnAfterReading(uid, friendId string, openBurnAfterReading entity.OpenBurnAfterReadingType, burnAfterReadingTimeOut int64) error
 	SetFriendRemarkByUserIdAndFriendId(userId, friendId string, remark string) error
-	SetUserOpenBurnAfterReadingTimeOUt(uid, friendId string, burnAfterReadingTimeOut int64) error
 }

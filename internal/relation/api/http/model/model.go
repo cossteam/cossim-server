@@ -219,15 +219,16 @@ const (
 )
 
 type OpenUserBurnAfterReadingRequest struct {
-	UserId string                   `json:"user_id" binding:"required"` // 用户ID
-	Action OpenBurnAfterReadingType `json:"action"`
+	UserId                      string                   `json:"user_id" binding:"required"` // 用户ID
+	OpenBurnAfterReadingTimeOut int64                    `json:"open_burn_after_reading_time_out"`
+	Action                      OpenBurnAfterReadingType `json:"action"`
 }
 
 type OpenBurnAfterReadingType uint
 
 const (
-	Close = iota
-	Open
+	BurnClose OpenBurnAfterReadingType = iota
+	BurnOpen
 )
 
 type OpenGroupBurnAfterReadingRequest struct {
@@ -236,7 +237,7 @@ type OpenGroupBurnAfterReadingRequest struct {
 }
 
 func IsValidOpenBurnAfterReadingType(input OpenBurnAfterReadingType) bool {
-	return input == Close || input == Open
+	return input == BurnClose || input == BurnOpen
 }
 
 type CreateGroupAnnouncementRequest struct {
@@ -379,11 +380,6 @@ func (udlr UserDialogListResponse) MarshalBinary() ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
-}
-
-type SetUserOpenBurnAfterReadingTimeOutRequest struct {
-	OpenBurnAfterReadingTimeOut int64  `json:"open_burn_after_reading_time_out" binding:"required"`
-	FriendId                    string `json:"friend_id" binding:"required"`
 }
 
 type SetGroupOpenBurnAfterReadingTimeOutRequest struct {
