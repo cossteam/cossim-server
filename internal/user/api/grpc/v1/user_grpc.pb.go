@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/user.proto
+// source: api/grpc/v1/user.proto
 
 package v1
 
@@ -19,22 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserService_UserLogin_FullMethodName               = "/v1.UserService/UserLogin"
-	UserService_UserRegister_FullMethodName            = "/v1.UserService/UserRegister"
-	UserService_UserInfo_FullMethodName                = "/v1.UserService/UserInfo"
-	UserService_GetBatchUserInfo_FullMethodName        = "/v1.UserService/GetBatchUserInfo"
-	UserService_GetUserInfoByEmail_FullMethodName      = "/v1.UserService/GetUserInfoByEmail"
-	UserService_GetUserInfoByCossId_FullMethodName     = "/v1.UserService/GetUserInfoByCossId"
-	UserService_GetUserPublicKey_FullMethodName        = "/v1.UserService/GetUserPublicKey"
-	UserService_SetUserPublicKey_FullMethodName        = "/v1.UserService/SetUserPublicKey"
-	UserService_ModifyUserInfo_FullMethodName          = "/v1.UserService/ModifyUserInfo"
-	UserService_ModifyUserPassword_FullMethodName      = "/v1.UserService/ModifyUserPassword"
-	UserService_GetUserPasswordByUserId_FullMethodName = "/v1.UserService/GetUserPasswordByUserId"
-	UserService_SetUserSecretBundle_FullMethodName     = "/v1.UserService/SetUserSecretBundle"
-	UserService_GetUserSecretBundle_FullMethodName     = "/v1.UserService/GetUserSecretBundle"
-	UserService_ActivateUser_FullMethodName            = "/v1.UserService/ActivateUser"
-	UserService_CreateUser_FullMethodName              = "/v1.UserService/CreateUser"
-	UserService_CreateUserRollback_FullMethodName      = "/v1.UserService/CreateUserRollback"
+	UserService_UserLogin_FullMethodName               = "/user_v1.UserService/UserLogin"
+	UserService_UserRegister_FullMethodName            = "/user_v1.UserService/UserRegister"
+	UserService_UserInfo_FullMethodName                = "/user_v1.UserService/UserInfo"
+	UserService_GetBatchUserInfo_FullMethodName        = "/user_v1.UserService/GetBatchUserInfo"
+	UserService_GetUserInfoByEmail_FullMethodName      = "/user_v1.UserService/GetUserInfoByEmail"
+	UserService_GetUserInfoByCossId_FullMethodName     = "/user_v1.UserService/GetUserInfoByCossId"
+	UserService_GetUserPublicKey_FullMethodName        = "/user_v1.UserService/GetUserPublicKey"
+	UserService_SetUserPublicKey_FullMethodName        = "/user_v1.UserService/SetUserPublicKey"
+	UserService_ModifyUserInfo_FullMethodName          = "/user_v1.UserService/ModifyUserInfo"
+	UserService_ModifyUserPassword_FullMethodName      = "/user_v1.UserService/ModifyUserPassword"
+	UserService_GetUserPasswordByUserId_FullMethodName = "/user_v1.UserService/GetUserPasswordByUserId"
+	UserService_SetUserSecretBundle_FullMethodName     = "/user_v1.UserService/SetUserSecretBundle"
+	UserService_GetUserSecretBundle_FullMethodName     = "/user_v1.UserService/GetUserSecretBundle"
+	UserService_ActivateUser_FullMethodName            = "/user_v1.UserService/ActivateUser"
+	UserService_CreateUser_FullMethodName              = "/user_v1.UserService/CreateUser"
+	UserService_CreateUserRollback_FullMethodName      = "/user_v1.UserService/CreateUserRollback"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -223,7 +223,7 @@ func (c *userServiceClient) CreateUserRollback(ctx context.Context, in *CreateUs
 }
 
 // UserServiceServer is the server API for UserService service.
-// All implementations must embed UnimplementedUserServiceServer
+// All implementations should embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
 	// 用户登录
@@ -253,10 +253,9 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	// 创建用户回滚
 	CreateUserRollback(context.Context, *CreateUserRollbackRequest) (*CreateUserRollbackResponse, error)
-	mustEmbedUnimplementedUserServiceServer()
 }
 
-// UnimplementedUserServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedUserServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedUserServiceServer struct {
 }
 
@@ -308,7 +307,6 @@ func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserReq
 func (UnimplementedUserServiceServer) CreateUserRollback(context.Context, *CreateUserRollbackRequest) (*CreateUserRollbackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUserRollback not implemented")
 }
-func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
 // UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to UserServiceServer will
@@ -613,7 +611,7 @@ func _UserService_CreateUserRollback_Handler(srv interface{}, ctx context.Contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.UserService",
+	ServiceName: "user_v1.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -682,5 +680,5 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/user.proto",
+	Metadata: "api/grpc/v1/user.proto",
 }

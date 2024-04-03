@@ -104,6 +104,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
+	var lastLoginTime = userLogin.LoginTime
 	fristLogin := false
 	if userLogin != nil {
 		if userLogin.DriverId == "" {
@@ -193,13 +194,15 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	}
 
 	return &model.UserInfoResponse{
-		LoginNumber: data.ID,
-		Email:       resp.Email,
-		UserId:      resp.UserId,
-		Nickname:    resp.NickName,
-		Avatar:      resp.Avatar,
-		Signature:   resp.Signature,
-		CossId:      resp.CossId,
+		LoginNumber:    data.ID,
+		Email:          resp.Email,
+		UserId:         resp.UserId,
+		Nickname:       resp.NickName,
+		Avatar:         resp.Avatar,
+		Signature:      resp.Signature,
+		CossId:         resp.CossId,
+		NewDeviceLogin: fristLogin,
+		LastLoginTime:  lastLoginTime,
 	}, token, nil
 }
 

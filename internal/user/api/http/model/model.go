@@ -38,6 +38,10 @@ type UserInfoResponse struct {
 	RelationStatus UserRelationStatus `json:"relation_status"`
 	LoginNumber    uint               `json:"login_number"`
 	Preferences    *Preferences       `json:"preferences,omitempty"`
+	// NewDeviceLogin 表示是否新设备登录
+	NewDeviceLogin bool `json:"new_device_login"`
+	// LastLoginTime 上次登录时间，如果为0说明用户注册了但从未登录过
+	LastLoginTime int64 `json:"last_login_time"`
 }
 
 type Preferences struct {
