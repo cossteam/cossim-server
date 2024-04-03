@@ -333,6 +333,21 @@ func (s *userServiceServer) GetUserRelation(ctx context.Context, request *v1.Get
 func (s *userServiceServer) GetUserRelationByUserIds(ctx context.Context, request *v1.GetUserRelationByUserIdsRequest) (*v1.GetUserRelationByUserIdsResponse, error) {
 	resp := &v1.GetUserRelationByUserIdsResponse{}
 
+	if request.FriendIds == nil || len(request.FriendIds) == 0 {
+		return resp, nil
+	}
+
+	if s.cacheEnable {
+		r, err := s.cache.GetRelations(ctx, request.UserId, request.FriendIds)
+		if err != nil {
+			return nil, err
+		}
+		if err == nil && r != nil {
+			resp.Users = r
+			return resp, nil
+		}
+	}
+
 	relations, err := s.urr.GetRelationByIDs(request.UserId, request.FriendIds)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrGetUserRelationFailed.Code()), err.Error())
@@ -346,6 +361,17 @@ func (s *userServiceServer) GetUserRelationByUserIds(ctx context.Context, reques
 			DialogId: uint32(relation.DialogId),
 		})
 	}
+
+	go func() {
+		if s.cacheEnable {
+			for _, v := range resp.Users {
+				if err := s.cache.SetRelation(ctx, request.UserId, v.FriendId, v, cache.RelationExpireTime); err != nil {
+					log.Printf("failed to set get user relation cache: %v", err)
+				}
+			}
+		}
+	}()
+
 	return resp, nil
 }
 
@@ -359,17 +385,21 @@ func (s *userServiceServer) SetFriendSilentNotification(ctx context.Context, req
 
 func (s *userServiceServer) SetUserOpenBurnAfterReading(ctx context.Context, request *v1.SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
-	if err := s.urr.SetUserOpenBurnAfterReading(request.UserId, request.FriendId, entity.OpenBurnAfterReadingType(request.OpenBurnAfterReading)); err != nil {
+	if err := s.urr.SetUserOpenBurnAfterReading(
+		request.UserId,
+		request.FriendId,
+		entity.OpenBurnAfterReadingType(request.OpenBurnAfterReading),
+		request.OpenBurnAfterReadingTimeOut,
+	); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingFailed.Code()), err.Error())
 	}
-	return resp, nil
-}
-
-func (s *userServiceServer) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, request *v1.SetUserOpenBurnAfterReadingTimeOutRequest) (*emptypb.Empty, error) {
-	resp := &emptypb.Empty{}
-	err := s.urr.SetUserOpenBurnAfterReadingTimeOUt(request.UserId, request.FriendId, request.OpenBurnAfterReadingTimeOut)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingTimeOutFailed.Code()), err.Error())
+	if s.cacheEnable {
+		if err := s.cache.DeleteRelation(ctx, request.UserId, request.FriendId); err != nil {
+			log.Printf("delete relation cache failed: %v", err)
+		}
+		if err := s.cache.DeleteFriendList(ctx, request.UserId); err != nil {
+			log.Printf("delete friend request list cache failed: %v", err)
+		}
 	}
 	return resp, nil
 }
