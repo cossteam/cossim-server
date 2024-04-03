@@ -219,9 +219,9 @@ const (
 )
 
 type OpenUserBurnAfterReadingRequest struct {
-	UserId                      string                   `json:"user_id" binding:"required"` // 用户ID
-	OpenBurnAfterReadingTimeOut int64                    `json:"open_burn_after_reading_time_out"`
-	Action                      OpenBurnAfterReadingType `json:"action"`
+	UserId  string                   `json:"user_id" binding:"required"` // 用户ID
+	TimeOut int64                    `json:"timeout"`
+	Action  OpenBurnAfterReadingType `json:"action"`
 }
 
 type OpenBurnAfterReadingType uint

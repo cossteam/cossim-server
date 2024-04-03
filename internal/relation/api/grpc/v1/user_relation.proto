@@ -171,8 +171,9 @@ message SetUserOpenBurnAfterReadingRequest {
   string UserId = 1;
   // @inject_tag: json:"friend_id"
   string FriendId = 2;
-  // @inject_tag: json:"open_burn_after_reading_time_out"
-  int64 OpenBurnAfterReadingTimeOut = 3;
+  // TimeOut 阅后即焚时间
+  // @inject_tag: json:"timeout"
+  int64 TimeOut = 3;
   // @inject_tag: json:"open_burn_after_reading"
   OpenBurnAfterReadingType  OpenBurnAfterReading = 4;
 }
@@ -184,15 +185,6 @@ message SetFriendRemarkRequest {
   string FriendId = 2;
   // @inject_tag: json:"remark"
   string remark = 3;
-}
-
-message SetUserOpenBurnAfterReadingTimeOutRequest {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-  // @inject_tag: json:"friend_id"
-  string FriendId = 2;
-  // @inject_tag: json:"open_burn_after_reading_time_out"
-  int64 OpenBurnAfterReadingTimeOut = 3;
 }
 
 service UserRelationService {

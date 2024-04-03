@@ -68,7 +68,7 @@ func (h *Handler) openUserBurnAfterReading(c *gin.Context) {
 		return
 	}
 
-	if req.Action == model.BurnOpen && req.OpenBurnAfterReadingTimeOut == 0 {
+	if req.Action == model.BurnOpen && req.TimeOut == 0 {
 		response.SetFail(c, "设置消息销毁时间不能为0", nil)
 		return
 	}
