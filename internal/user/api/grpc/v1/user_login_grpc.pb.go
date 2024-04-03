@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/user_login.proto
+// source: api/grpc/v1/user_login.proto
 
 package v1
 
@@ -20,12 +20,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserLoginService_InsertUserLogin_FullMethodName                 = "/v1.UserLoginService/InsertUserLogin"
-	UserLoginService_GetUserLoginByToken_FullMethodName             = "/v1.UserLoginService/GetUserLoginByToken"
-	UserLoginService_GetUserLoginByDriverIdAndUserId_FullMethodName = "/v1.UserLoginService/GetUserLoginByDriverIdAndUserId"
-	UserLoginService_UpdateUserLoginTokenByDriverId_FullMethodName  = "/v1.UserLoginService/UpdateUserLoginTokenByDriverId"
-	UserLoginService_GetUserDriverTokenByUserId_FullMethodName      = "/v1.UserLoginService/GetUserDriverTokenByUserId"
-	UserLoginService_GetUserLoginByUserId_FullMethodName            = "/v1.UserLoginService/GetUserLoginByUserId"
+	UserLoginService_InsertUserLogin_FullMethodName                 = "/user_v1.UserLoginService/InsertUserLogin"
+	UserLoginService_GetUserLoginByToken_FullMethodName             = "/user_v1.UserLoginService/GetUserLoginByToken"
+	UserLoginService_GetUserLoginByDriverIdAndUserId_FullMethodName = "/user_v1.UserLoginService/GetUserLoginByDriverIdAndUserId"
+	UserLoginService_UpdateUserLoginTokenByDriverId_FullMethodName  = "/user_v1.UserLoginService/UpdateUserLoginTokenByDriverId"
+	UserLoginService_GetUserDriverTokenByUserId_FullMethodName      = "/user_v1.UserLoginService/GetUserDriverTokenByUserId"
+	UserLoginService_GetUserLoginByUserId_FullMethodName            = "/user_v1.UserLoginService/GetUserLoginByUserId"
 )
 
 // UserLoginServiceClient is the client API for UserLoginService service.
@@ -104,7 +104,7 @@ func (c *userLoginServiceClient) GetUserLoginByUserId(ctx context.Context, in *G
 }
 
 // UserLoginServiceServer is the server API for UserLoginService service.
-// All implementations must embed UnimplementedUserLoginServiceServer
+// All implementations should embed UnimplementedUserLoginServiceServer
 // for forward compatibility
 type UserLoginServiceServer interface {
 	InsertUserLogin(context.Context, *UserLogin) (*emptypb.Empty, error)
@@ -114,10 +114,9 @@ type UserLoginServiceServer interface {
 	GetUserDriverTokenByUserId(context.Context, *GetUserDriverTokenByUserIdRequest) (*GetUserDriverTokenByUserIdResponse, error)
 	// 根据用户ID获取登录信息
 	GetUserLoginByUserId(context.Context, *GetUserLoginByUserIdRequest) (*UserLogin, error)
-	mustEmbedUnimplementedUserLoginServiceServer()
 }
 
-// UnimplementedUserLoginServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedUserLoginServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedUserLoginServiceServer struct {
 }
 
@@ -139,7 +138,6 @@ func (UnimplementedUserLoginServiceServer) GetUserDriverTokenByUserId(context.Co
 func (UnimplementedUserLoginServiceServer) GetUserLoginByUserId(context.Context, *GetUserLoginByUserIdRequest) (*UserLogin, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserLoginByUserId not implemented")
 }
-func (UnimplementedUserLoginServiceServer) mustEmbedUnimplementedUserLoginServiceServer() {}
 
 // UnsafeUserLoginServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to UserLoginServiceServer will
@@ -264,7 +262,7 @@ func _UserLoginService_GetUserLoginByUserId_Handler(srv interface{}, ctx context
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserLoginService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.UserLoginService",
+	ServiceName: "user_v1.UserLoginService",
 	HandlerType: (*UserLoginServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -293,5 +291,5 @@ var UserLoginService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/user_login.proto",
+	Metadata: "api/grpc/v1/user_login.proto",
 }

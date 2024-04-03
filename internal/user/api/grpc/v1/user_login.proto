@@ -20,6 +20,9 @@ message UserLogin {
   // 手机厂商 例如 ios、huawei、xiaomi...
   // @inject_tag: json:"platform"
   string Platform = 6;
+  // 登录时间
+  // @inject_tag: json:"login_time"
+  int64 LoginTime = 7;
 }
 
 message DriverIdAndUserId {

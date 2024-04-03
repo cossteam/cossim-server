@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
@@ -79,13 +78,13 @@ func (s *Handler) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.Dr
 		}
 	}
 	if info != nil {
-		fmt.Println("GetUserLoginByDriverIdAndUserId info => ", info)
 		resp.UserId = info.UserId
 		resp.Token = info.Token
 		resp.DriverId = info.DriverId
 		resp.DriverToken = info.DriverToken
 		resp.Platform = info.Platform
 		resp.ClientType = info.ClientType
+		resp.LoginTime = info.LastAt
 	}
 	return resp, nil
 }
