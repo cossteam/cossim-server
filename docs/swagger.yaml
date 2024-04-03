@@ -952,7 +952,6 @@ definitions:
         description: 用户ID
         type: string
     required:
-    - remark
     - user_id
     type: object
   model.SetUserOpenBurnAfterReadingTimeOutRequest:
