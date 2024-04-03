@@ -280,7 +280,7 @@ type UpdateGroupAnnouncementRequest struct {
 
 type SetUserFriendRemarkRequest struct {
 	UserId string `json:"user_id" binding:"required"` // 用户ID
-	Remark string `json:"remark" binding:"required"`  // 备注
+	Remark string `json:"remark"`                     // 备注
 }
 
 type WsGroupRelationOperatorMsg struct {
