@@ -608,9 +608,10 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 	}
 
 	_, err = s.relationUserService.SetUserOpenBurnAfterReading(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingRequest{
-		UserId:               userId,
-		FriendId:             req.UserId,
-		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
+		UserId:                      userId,
+		FriendId:                    req.UserId,
+		OpenBurnAfterReading:        relationgrpcv1.OpenBurnAfterReadingType(req.Action),
+		OpenBurnAfterReadingTimeOut: req.OpenBurnAfterReadingTimeOut,
 	})
 	if err != nil {
 		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))
@@ -1017,41 +1018,6 @@ func (s *Service) removeRedisUserDialogList(userID string, dialogID uint32) erro
 		//设置key过期时间
 		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*ostime.Hour)
 		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Service) SetUserOpenBurnAfterReadingTimeOut(ctx context.Context, userID string, req *model.SetUserOpenBurnAfterReadingTimeOutRequest) error {
-	_, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-		UserId:   userID,
-		FriendId: req.FriendId,
-	})
-	if err != nil {
-		s.logger.Error("获取好友关系失败", zap.Error(err))
-		return err
-	}
-
-	_, err = s.relationUserService.SetUserOpenBurnAfterReadingTimeOut(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingTimeOutRequest{
-		UserId:                      userID,
-		FriendId:                    req.FriendId,
-		OpenBurnAfterReadingTimeOut: req.OpenBurnAfterReadingTimeOut,
-	})
-	if err != nil {
-		s.logger.Error("设置用户消息阅后即焚失败", zap.Error(err))
-		return err
-	}
-
-	if s.cache {
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return err
-		}
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
 			return err
 		}
 	}

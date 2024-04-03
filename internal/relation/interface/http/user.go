@@ -10,37 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// 设置好友阅后即焚消息销毁时间
-// @Summary 设置好友阅后即焚消息销毁时间
-// @Description 设置好友阅后即焚消息销毁时间
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.SetUserOpenBurnAfterReadingTimeOutRequest true "request"
-// @Success 200 {object} model.Response{}
-// @Router /relation/user/burn/timeout/set [post]
-func (h *Handler) setUserOpenBurnAfterReadingTimeOut(c *gin.Context) {
-	req := new(model.SetUserOpenBurnAfterReadingTimeOutRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	err = h.svc.SetUserOpenBurnAfterReadingTimeOut(c, thisID, req)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "设置成功", nil)
-}
-
 // 修改好友备注
 // @Summary 修改好友备注
 // @Description 修改用户备注
@@ -72,8 +41,8 @@ func (h *Handler) setUserFriendRemark(c *gin.Context) {
 	response.SetSuccess(c, "修改成功", nil)
 }
 
-// @Summary 是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)
-// @Description 是否打开用户阅后即焚消息(action: 0:关闭, 1:打开)
+// @Summary 设置阅后即焚(action: 0:关闭, 1:打开)
+// @Description 设置阅后即焚(action: 0:关闭, 1:打开)
 // @Tags UserRelation
 // @Accept  json
 // @Produce  json
@@ -96,6 +65,11 @@ func (h *Handler) openUserBurnAfterReading(c *gin.Context) {
 
 	if !model.IsValidOpenBurnAfterReadingType(req.Action) {
 		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	if req.Action == model.BurnOpen && req.OpenBurnAfterReadingTimeOut == 0 {
+		response.SetFail(c, "设置消息销毁时间不能为0", nil)
 		return
 	}
 
