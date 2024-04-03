@@ -14,22 +14,27 @@ var (
 
 // Codes is an interface for error code specification.
 type Codes interface {
+	// Error Return a string representation of the error reason.
 	Error() string
+	// Code Return the error code.
 	Code() int
+	// Message Return the error message.
 	Message() string
+	// Reason Sets the error reason and returns a new error code object.
 	Reason(reason error) Codes
+	// CustomMessage Sets an overriding error message using a custom value and returns a new error code object.
+	CustomMessage(overrideValue string) Codes
 }
 
 type CodeC struct {
-	code    int
-	reason  string
-	message string
+	code          int
+	reason        string
+	message       string
+	overrideFlag  bool
+	overrideValue string
 }
 
 func (e CodeC) Error() string {
-	//return strconv.FormatInt(int64(e.code), 10)
-	//return status.Errorf(codes.Code(e.code), "Invalid argument: ID cannot be zero").Error()
-	//return status.Error(codes.Code(e.code), e.reason).Error()
 	return e.reason
 }
 
@@ -39,6 +44,9 @@ func (e CodeC) Code() int {
 
 // Message return error message
 func (e CodeC) Message() string {
+	if e.overrideFlag {
+		return e.overrideValue
+	}
 	if cm, ok := _messages.Load().(map[int]CodeC); ok {
 		if msg, ok := cm[e.Code()]; ok {
 			return msg.message
@@ -55,6 +63,18 @@ func (e CodeC) Reason(reason error) Codes {
 		}
 	}
 	return e
+}
+
+func (e CodeC) CustomMessage(overrideValue string) Codes {
+	newCodeC := CodeC{
+		code:          e.code,
+		reason:        e.reason,
+		message:       e.message,
+		overrideFlag:  true,
+		overrideValue: overrideValue,
+	}
+
+	return newCodeC
 }
 
 func add(e int, msg string) CodeC {
