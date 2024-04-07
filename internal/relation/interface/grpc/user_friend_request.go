@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
@@ -59,11 +58,14 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 		})
 	}
 
-	if s.cacheEnable {
-		if err := s.cache.SetFriendRequestList(ctx, request.UserId, resp, cache.RelationExpireTime); err != nil {
-			log.Printf("set FriendRequestList cache failed: %v", err)
+	// TODO 考虑不使用异步的方式，缓存设置失败了，重试或回滚
+	go func() {
+		if s.cacheEnable {
+			if err := s.cache.SetFriendRequestList(ctx, request.UserId, resp, cache.RelationExpireTime); err != nil {
+				log.Printf("set FriendRequestList cache failed: %v", err)
+			}
 		}
-	}
+	}()
 
 	return resp, nil
 }
@@ -96,9 +98,14 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 		return resp, status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
 	}
 
-	if s.cacheEnable {
-		s.cache.DeleteFriendRequestList(ctx, request.SenderId, request.ReceiverId)
-	}
+	// TODO 考虑不使用异步的方式，缓存设置失败了，重试或回滚
+	go func() {
+		if s.cacheEnable {
+			if err := s.cache.DeleteFriendRequestList(ctx, request.SenderId, request.ReceiverId); err != nil {
+				log.Printf("delete FriendRequestList cache failed: %v", err)
+			}
+		}
+	}()
 
 	return resp, nil
 }
@@ -207,20 +214,20 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 		return resp, err
 	}
 
-	fmt.Println("s.cacheEnable => ", s.cacheEnable)
-
-	if s.cacheEnable {
-		fmt.Println("1111 cacheEnable")
-		if err := s.cache.DeleteFriendRequestList(ctx, senderId, receiverId); err != nil {
-			log.Printf("delete FriendRequestList cache failed: %v", err)
+	// TODO 考虑不使用异步的方式，缓存设置失败了，重试或回滚
+	go func() {
+		if s.cacheEnable {
+			if err := s.cache.DeleteFriendRequestList(ctx, senderId, receiverId); err != nil {
+				log.Printf("delete FriendRequestList cache failed: %v", err)
+			}
+			if err := s.cache.DeleteFriendList(ctx, senderId, receiverId); err != nil {
+				log.Printf("delete FriendRequestList cache failed: %v", err)
+			}
+			if err := s.cache.DeleteRelation(ctx, senderId, receiverId); err != nil {
+				log.Printf("delete FriendRequestList cache failed: %v", err)
+			}
 		}
-		if err := s.cache.DeleteFriendList(ctx, senderId, receiverId); err != nil {
-			log.Printf("delete FriendRequestList cache failed: %v", err)
-		}
-		if err := s.cache.DeleteRelation(ctx, senderId, receiverId); err != nil {
-			log.Printf("delete FriendRequestList cache failed: %v", err)
-		}
-	}
+	}()
 
 	return resp, nil
 }
@@ -274,10 +281,15 @@ func (s *userFriendRequestServiceServer) DeleteFriendRecord(ctx context.Context,
 	if err := s.ufqr.DeletedById(req.ID); err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
 	}
-	if s.cacheEnable {
-		if err := s.cache.DeleteFriendRequestList(ctx, req.UserId); err != nil {
-			log.Printf("delete FriendRequestList cache failed: %v", err)
+
+	// TODO 考虑不使用异步的方式，缓存设置失败了，重试或回滚
+	go func() {
+		if s.cacheEnable {
+			if err := s.cache.DeleteFriendRequestList(ctx, req.UserId); err != nil {
+				log.Printf("delete FriendRequestList cache failed: %v", err)
+			}
 		}
-	}
+	}()
+
 	return resp, nil
 }
