@@ -1013,7 +1013,6 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 		dialogIds = append(dialogIds, v.DialogId)
 	}
 
-	//TODO 验证是否在对话内
 	infos, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: dialogIds,
 	})
@@ -1021,122 +1020,46 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 		s.logger.Error("获取用户会话信息", zap.Error(err))
 		return nil, err
 	}
+
+	//群聊对话
 	var infos2 = make([]*msggrpcv1.GetGroupMsgIdAfterMsgRequest, 0)
+	//私聊对话
 	var infos3 = make([]*msggrpcv1.GetUserMsgIdAfterMsgRequest, 0)
 
 	addToInfos := func(dialogID uint32, msgID uint32, dialogType uint32) {
 		if dialogType == uint32(model.GroupConversation) {
+			if msgID == 0 {
+				err := s.getGroupDialogLast20Msg(ctx, dialogID, responses)
+				if err != nil {
+					s.logger.Error("获取群聊落后消息失败", zap.Error(err))
+					return
+				}
+				return
+			}
 			infos2 = append(infos2, &msggrpcv1.GetGroupMsgIdAfterMsgRequest{
 				DialogId: dialogID,
 				MsgId:    msgID,
 			})
-		} else {
-			infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
-				DialogId: dialogID,
-				MsgId:    msgID,
-			})
+			return
 		}
+
+		if msgID == 0 {
+			err := s.getUserDialogLast20Msg(ctx, dialogID, responses)
+			if err != nil {
+				s.logger.Error("获取群聊落后消息失败", zap.Error(err))
+				return
+			}
+			return
+		}
+		infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
+			DialogId: dialogID,
+			MsgId:    msgID,
+		})
 	}
-	//todo 优化逻辑，封装方法
+
 	for _, i2 := range infos.Dialogs {
 		for _, i3 := range request {
 			if i2.Id == i3.DialogId {
-				if i3.MsgId == 0 {
-					if i2.Type == uint32(model.GroupConversation) {
-						list, err := s.msgService.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
-							DialogId: i3.DialogId,
-							PageNum:  1,
-							PageSize: 20,
-						})
-						if err != nil {
-							return nil, err
-						}
-						msgs := make([]*model.Message, 0)
-						for _, gm := range list.GroupMessages {
-							info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-								UserId: gm.UserId,
-							})
-							if err != nil {
-								return nil, err
-							}
-							msg := model.Message{}
-							msg.GroupId = gm.GroupId
-							msg.MsgId = uint64(gm.Id)
-							msg.MsgType = uint(gm.Type)
-							msg.Content = gm.Content
-							msg.SenderId = gm.UserId
-							msg.SendAt = gm.CreatedAt
-							msg.SenderInfo = model.SenderInfo{
-								Avatar: info.Avatar,
-								Name:   info.NickName,
-								UserId: info.UserId,
-							}
-							msg.AtUsers = gm.AtUsers
-							msg.AtAllUser = model.AtAllUserType(gm.AtAllUser)
-							msg.IsBurnAfterReading = model.BurnAfterReadingType(gm.IsBurnAfterReadingType)
-							msg.ReplyId = gm.ReplyId
-							msg.IsLabel = model.LabelMsgType(gm.IsLabel)
-							msgs = append(msgs, &msg)
-						}
-						responses = append(responses, &model.GetDialogAfterMsgResponse{
-							DialogId: i3.DialogId,
-							Messages: msgs,
-						})
-					} else {
-						list, err := s.msgService.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
-							DialogId: i3.DialogId,
-							PageNum:  1,
-							PageSize: 20,
-						})
-						if err != nil {
-							return nil, err
-						}
-						msgs := make([]*model.Message, 0)
-						for _, um := range list.UserMessages {
-							//查询发送者信息
-							info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-								UserId: um.SenderId,
-							})
-							if err != nil {
-								return nil, err
-							}
-							info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-								UserId: um.ReceiverId,
-							})
-							if err != nil {
-								return nil, err
-							}
-							msg := model.Message{}
-							msg.MsgId = uint64(um.Id)
-							msg.MsgType = uint(um.Type)
-							msg.Content = um.Content
-							msg.SenderId = um.SenderId
-							msg.SendAt = um.CreatedAt
-							msg.SenderInfo = model.SenderInfo{
-								Avatar: info.Avatar,
-								Name:   info.NickName,
-								UserId: info.UserId,
-							}
-							msg.ReceiverInfo = model.SenderInfo{
-								Avatar: info2.Avatar,
-								Name:   info2.NickName,
-								UserId: info2.UserId,
-							}
-							msg.ReadAt = um.ReadAt
-							msg.IsRead = um.IsRead
-							msg.IsBurnAfterReading = model.BurnAfterReadingType(um.IsBurnAfterReadingType)
-							msg.ReplyId = uint32(um.ReplyId)
-							msg.IsLabel = model.LabelMsgType(um.IsLabel)
-							msgs = append(msgs, &msg)
-						}
-						responses = append(responses, &model.GetDialogAfterMsgResponse{
-							DialogId: i3.DialogId,
-							Messages: msgs,
-						})
-					}
-
-					break
-				}
 				addToInfos(i2.Id, i3.MsgId, i2.Type)
 				break
 			}
@@ -1196,6 +1119,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 			Messages: msgs,
 		})
 	}
+
 	//获取私聊消息
 	userlist, err := s.msgService.GetUserMsgIdAfterMsgList(ctx, &msggrpcv1.GetUserMsgIdAfterMsgListRequest{
 		List: infos3,
@@ -1247,5 +1171,106 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 			Messages: msgs,
 		})
 	}
+
 	return responses, nil
+}
+
+// 获取群聊对话的最后二十条消息
+func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) error {
+	list, err := s.msgService.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
+		DialogId: dialogId,
+		PageNum:  1,
+		PageSize: 20,
+	})
+	if err != nil {
+		return err
+	}
+	msgs := make([]*model.Message, 0)
+	for _, gm := range list.GroupMessages {
+		info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			UserId: gm.UserId,
+		})
+		if err != nil {
+			return err
+		}
+		msg := model.Message{}
+		msg.GroupId = gm.GroupId
+		msg.MsgId = uint64(gm.Id)
+		msg.MsgType = uint(gm.Type)
+		msg.Content = gm.Content
+		msg.SenderId = gm.UserId
+		msg.SendAt = gm.CreatedAt
+		msg.SenderInfo = model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: info.UserId,
+		}
+		msg.AtUsers = gm.AtUsers
+		msg.AtAllUser = model.AtAllUserType(gm.AtAllUser)
+		msg.IsBurnAfterReading = model.BurnAfterReadingType(gm.IsBurnAfterReadingType)
+		msg.ReplyId = gm.ReplyId
+		msg.IsLabel = model.LabelMsgType(gm.IsLabel)
+		msgs = append(msgs, &msg)
+	}
+	responses = append(responses, &model.GetDialogAfterMsgResponse{
+		DialogId: dialogId,
+		Messages: msgs,
+	})
+
+	return nil
+}
+
+// 获取私聊对话的最后二十条消息
+func (s *Service) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) error {
+	list, err := s.msgService.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
+		DialogId: dialogId,
+		PageNum:  1,
+		PageSize: 20,
+	})
+	if err != nil {
+		return err
+	}
+	msgs := make([]*model.Message, 0)
+	for _, um := range list.UserMessages {
+		//查询发送者信息
+		info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			UserId: um.SenderId,
+		})
+		if err != nil {
+			return err
+		}
+		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
+			UserId: um.ReceiverId,
+		})
+		if err != nil {
+			return err
+		}
+		msg := model.Message{}
+		msg.MsgId = uint64(um.Id)
+		msg.MsgType = uint(um.Type)
+		msg.Content = um.Content
+		msg.SenderId = um.SenderId
+		msg.SendAt = um.CreatedAt
+		msg.SenderInfo = model.SenderInfo{
+			Avatar: info.Avatar,
+			Name:   info.NickName,
+			UserId: info.UserId,
+		}
+		msg.ReceiverInfo = model.SenderInfo{
+			Avatar: info2.Avatar,
+			Name:   info2.NickName,
+			UserId: info2.UserId,
+		}
+		msg.ReadAt = um.ReadAt
+		msg.IsRead = um.IsRead
+		msg.IsBurnAfterReading = model.BurnAfterReadingType(um.IsBurnAfterReadingType)
+		msg.ReplyId = uint32(um.ReplyId)
+		msg.IsLabel = model.LabelMsgType(um.IsLabel)
+		msgs = append(msgs, &msg)
+	}
+	responses = append(responses, &model.GetDialogAfterMsgResponse{
+		DialogId: dialogId,
+		Messages: msgs,
+	})
+	return nil
 }

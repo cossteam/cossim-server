@@ -127,8 +127,3 @@ func (w *JSWebSocket) IsNil() bool {
 	}
 	return true
 }
-
-func (w *JSWebSocket) GetConnInfo() interface{} {
-	//TODO implement me
-	panic("implement me")
-}
