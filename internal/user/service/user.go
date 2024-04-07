@@ -185,14 +185,6 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		}
 	}
 
-	if s.cache {
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", resp.UserId))
-		if err != nil {
-			return nil, "", err
-		}
-
-	}
-
 	return &model.UserInfoResponse{
 		LoginNumber:    data.ID,
 		Email:          resp.Email,
@@ -262,17 +254,6 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 		return err
 	}
 
-	if s.cache {
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return err
-		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("user:%s", userID))
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -519,35 +500,6 @@ func (s *Service) ModifyUserInfo(ctx context.Context, userID string, req *model.
 		return err
 	}
 
-	if s.cache {
-		//查询所有好友
-		friends, err := s.relationService.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
-			UserId: userID,
-		})
-
-		for _, friend := range friends.FriendList {
-			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", friend.UserId))
-			if err != nil {
-				return err
-			}
-
-			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", friend.UserId))
-			if err != nil {
-				return err
-			}
-		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return err
-		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return err
-		}
-
-	}
 	return nil
 }
 
@@ -795,26 +747,6 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 	})
 	if err != nil {
 		return "", err
-	}
-
-	if s.cache {
-		//查询所有好友
-		friends, err := s.relationService.GetFriendList(ctx, &relationgrpcv1.GetFriendListRequest{
-			UserId: userID,
-		})
-
-		for _, friend := range friends.FriendList {
-			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", friend.UserId))
-			if err != nil {
-				return "", err
-			}
-
-			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", friend.UserId))
-			if err != nil {
-				return "", err
-			}
-		}
-
 	}
 
 	return aUrl, nil

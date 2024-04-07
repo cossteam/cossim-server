@@ -436,7 +436,7 @@ func (g *MsgRepo) GetLastGroupMsgsByDialogIDs(dialogIds []uint) ([]*entity.Group
 	groupMessages := make([]*entity.GroupMessage, 0)
 	for _, dialogId := range dialogIds {
 		var lastMsg entity.GroupMessage
-		g.db.Where("dialog_id = ? AND is_burn_after_reading = ？ AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).Order("created_at DESC").First(&lastMsg)
+		g.db.Where("dialog_id = ?  AND deleted_at = 0", dialogId).Order("created_at DESC").First(&lastMsg)
 		if lastMsg.ID != 0 {
 			groupMessages = append(groupMessages, &lastMsg)
 		}

@@ -81,6 +81,11 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		cache: redis,
 		ufqr:  infra.Ufqr,
 	}
+	s.GroupAnnouncementServer = &groupAnnouncementServer{
+		db:    dbConn,
+		cache: redis,
+		gar:   infra.GAr,
+	}
 	return nil
 }
 

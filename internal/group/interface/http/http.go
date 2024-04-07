@@ -4,7 +4,10 @@ import (
 	"context"
 	mygrpc "github.com/cossim/coss-server/internal/group/interface/grpc"
 	"github.com/cossim/coss-server/internal/group/service"
+	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/manager/server"
+	"gorm.io/gorm"
+	"strconv"
 
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
@@ -30,12 +33,25 @@ type Handler struct {
 	server      *http.Server
 	engine      *gin.Engine
 	GrpcService *mygrpc.Handler
+	db          *gorm.DB
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("group_bff", int8(cfg.Log.Level))
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+
+	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if err != nil {
+		return err
+	}
+
+	dbConn, err := mysql.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	h.db = dbConn
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
 	h.svc = service.New(cfg, h.GrpcService)
 	//return h.enc.ReadKeyPair()
 	return nil
@@ -58,7 +74,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	g := r.Group("/api/v1/group")
-	g.Use(middleware.AuthMiddleware(h.redisClient))
+	g.Use(middleware.AuthMiddleware(h.redisClient, h.db))
 	// 获取群聊信息
 	g.GET("/info", h.getGroupInfoByGid)
 	// 创建群聊

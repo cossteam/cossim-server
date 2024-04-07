@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/api/http/model"
@@ -22,7 +20,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"sort"
-	"time"
 )
 
 func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId string, req *model.SendUserMsgRequest) (interface{}, error) {
@@ -156,18 +153,6 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	if s.cache {
-		//更新接受者与发送者对话
-		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return nil, err
-		}
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", req.ReceiverId))
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	resp := &model.SendUserMsgResponse{
@@ -474,29 +459,6 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 }
 
 func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interface{}, error) {
-	if s.cache {
-		//查询是否有缓存
-		values, err := s.redisClient.GetAllListValues(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			s.logger.Error("err:" + err.Error())
-			return nil, code.DialogErrGetUserDialogListFailed
-		}
-		if len(values) > 0 {
-			// 类型转换
-			var responseList []model.UserDialogListResponse
-			for _, v := range values {
-				var dialog model.UserDialogListResponse
-				err := json.Unmarshal([]byte(v), &dialog)
-				if err != nil {
-					fmt.Println("Error decoding cached data:", err)
-					continue
-				}
-				responseList = append(responseList, dialog)
-			}
-			return responseList, nil
-		}
-	}
-
 	//获取对话id
 	ids, err := s.relationDialogService.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
 		UserId: userID,
@@ -514,6 +476,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		s.logger.Error("获取用户会话信息", zap.Error(err))
 		return nil, err
 	}
+
 	//获取最后一条消息
 	dialogIds, err := s.msgService.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
 		DialogIds: ids.DialogIds,
@@ -683,29 +646,6 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		return responseList[i].LastMessage.SendAt > responseList[j].LastMessage.SendAt
 	})
 
-	if s.cache && len(responseList) > 0 {
-		// 创建一个新的[]interface{}类型的数组
-		var interfaceList []interface{}
-
-		// 遍历responseList数组，并将每个元素转换为interface{}类型后添加到interfaceList数组中
-		for _, dialog := range responseList {
-			interfaceList = append(interfaceList, dialog)
-		}
-
-		//存储到缓存
-		err = s.redisClient.AddToList(fmt.Sprintf("dialog:%s", userID), interfaceList)
-		if err != nil {
-			s.logger.Error("err:" + err.Error())
-			return nil, code.DialogErrGetUserDialogListFailed
-		}
-		//设置key过期时间
-		err = s.redisClient.SetKeyExpiration(fmt.Sprintf("dialog:%s", userID), 3*24*time.Hour)
-		if err != nil {
-			s.logger.Error("err:" + err.Error())
-			return nil, code.DialogErrGetUserDialogListFailed
-		}
-	}
-
 	return responseList, nil
 }
 
@@ -732,7 +672,7 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 	}
 
 	//判断是否在对话内
-	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
+	_, err = s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
 		DialogId: msginfo.DialogId,
 	})
 	if err != nil {
@@ -761,46 +701,6 @@ func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId str
 		s.logger.Error("撤回消息失败", zap.Error(err))
 		return nil, err
 	}
-
-	////查询发送者信息
-	//info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-	//	UserId: userID,
-	//})
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	if s.cache {
-		//更新缓存
-		for _, id := range userIds.GetUserIds() {
-			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	//wsm := model.WsUserOperatorMsg{
-	//	Id:                     msginfo.Id,
-	//	SenderId:               msginfo.SenderId,
-	//	ReceiverId:             msginfo.ReceiverId,
-	//	Content:                msginfo.Content,
-	//	Type:                   msginfo.Type,
-	//	ReplyId:               msginfo.ReplyId,
-	//	IsRead:                 msginfo.IsRead,
-	//	ReadAt:                 msginfo.ReadAt,
-	//	CreatedAt:              msginfo.CreatedAt,
-	//	DialogId:               msginfo.DialogId,
-	//	IsLabel:                model.LabelMsgType(msginfo.IsLabel),
-	//	IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
-	//	OperatorInfo: model.SenderInfo{
-	//		Avatar: info.Avatar,
-	//		Name:   info.NickName,
-	//		UserId: info.UserId,
-	//	},
-	//}
-	//
-	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, wsm, true)
 
 	return msg.Id, nil
 }
@@ -865,19 +765,6 @@ func (s *Service) EditUserMsg(c *gin.Context, userID string, driverId string, ms
 	}
 	msginfo.Content = content
 
-	if s.cache {
-		//更新缓存
-		//err = s.updateCacheUserDialog(msginfo.DialogId)
-		//if err != nil {
-		//	s.logger.Error("更新用户对话失败", zap.Error(err))
-		//	return nil, code.MsgErrDeleteUserMessageFailed
-		//}
-		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	s.SendMsgToUsers(userIds.UserIds, driverId, pushv1.WSEventType_EditMsgEvent, msginfo, true)
 
 	return msgID, nil
@@ -937,13 +824,6 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 			s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))
 			return nil, err
 		}
-		if s.cache {
-			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userid))
-			if err != nil {
-				s.logger.Error("删除redis失败", zap.Error(err))
-				return nil, nil
-			}
-		}
 		return nil, nil
 
 	} else {
@@ -993,27 +873,6 @@ func (s *Service) ReadUserMsgs(ctx context.Context, userid string, driverId stri
 		wsms = append(wsms, wsm)
 	}
 
-	if s.cache {
-		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userid))
-		if err != nil {
-			s.logger.Error("删除redis失败", zap.Error(err))
-			return nil, nil
-		}
-		//userMsgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
-		//	UserId:   userid,
-		//	DialogId: req.DialogId,
-		//})
-		//if err != nil {
-		//	return nil, err
-		//}
-		//
-		//err = s.updateCacheDialogFieldValue(fmt.Sprintf("dialog:%s", userid), req.DialogId, "DialogUnreadCount", len(userMsgs.UserMessages))
-		//if err != nil {
-		//	s.logger.Error("更新用户对话未读消息数量失败", zap.Error(err))
-		//	return nil, err
-		//}
-	}
-
 	s.SendMsgToUsers(ids.UserIds, driverId, pushv1.WSEventType_UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "operator_info": model.SenderInfo{
 		Avatar: info.Avatar,
 		Name:   info.NickName,
@@ -1047,7 +906,6 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 		return nil, err
 	}
 
-	fmt.Println("对话id", userIds.GetUserIds())
 	found := false
 	for _, v := range userIds.UserIds {
 		if v == userID {
@@ -1071,36 +929,6 @@ func (s *Service) LabelUserMessage(ctx context.Context, userID string, driverId 
 	}
 
 	msginfo.IsLabel = msggrpcv1.MsgLabel(label)
-
-	//查询发送者信息
-	//info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-	//	UserId: userID,
-	//})
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	//wsm := model.WsUserOperatorMsg{
-	//	Id:                     msginfo.Id,
-	//	SenderId:               msginfo.SenderId,
-	//	ReceiverId:             msginfo.ReceiverId,
-	//	Content:                msginfo.Content,
-	//	Type:                   msginfo.Type,
-	//	ReplyId:               msginfo.ReplyId,
-	//	IsRead:                 msginfo.IsRead,
-	//	ReadAt:                 msginfo.ReadAt,
-	//	CreatedAt:              msginfo.CreatedAt,
-	//	DialogId:               msginfo.DialogId,
-	//	IsLabel:                model.LabelMsgType(msginfo.IsLabel),
-	//	IsBurnAfterReadingType: model.BurnAfterReadingType(msginfo.IsBurnAfterReadingType),
-	//	OperatorInfo: model.SenderInfo{
-	//		Avatar: info.Avatar,
-	//		Name:   info.NickName,
-	//		UserId: info.UserId,
-	//	},
-	//}
-
-	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.LabelMsgEvent, wsm, true)
 
 	req := &model.SendUserMsgRequest{
 		ReceiverId: msginfo.ReceiverId,
@@ -1421,213 +1249,3 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 	}
 	return responses, nil
 }
-
-//
-//func (s *Service) updateCacheUserDialog(dialogId uint32) error {
-//	//获取最后一条消息，更新缓存
-//	lastMsg, err := s.msgService.GetLastMsgsByDialogIds(context.Background(), &msggrpcv1.GetLastMsgsByDialogIdsRequest{
-//		DialogIds: []uint32{dialogId},
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	if len(lastMsg.LastMsgs) == 0 {
-//		return nil
-//	}
-//	lm := lastMsg.LastMsgs[0]
-//
-//	//查询发送者信息
-//	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-//		UserId: lm.SenderId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	//查询接受者信息
-//	info2, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-//		UserId: lm.ReceiverId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	//获取对话信息
-//	dialogInfo, err := s.relationDialogService.GetDialogById(context.Background(), &relationgrpcv1.GetDialogByIdRequest{
-//		DialogId: dialogId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	userRelationStatus1, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
-//		UserId:   lm.SenderId,
-//		FriendId: lm.ReceiverId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//	userRelationStatus2, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
-//		UserId:   lm.ReceiverId,
-//		FriendId: lm.SenderId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		DialogId: dialogId,
-//		UserId:   lm.SenderId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//	dialogUser2, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		DialogId: dialogId,
-//		UserId:   lm.ReceiverId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	msgs, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
-//		UserId:   lm.SenderId,
-//		DialogId: dialogId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	msgs2, err := s.msgService.GetUnreadUserMsgs(context.Background(), &msggrpcv1.GetUnreadUserMsgsRequest{
-//		UserId:   lm.ReceiverId,
-//		DialogId: dialogId,
-//	})
-//	if err != nil {
-//		return err
-//	}
-//
-//	dialogName := userRelationStatus1.Remark
-//	if dialogName == "" {
-//		dialogName = info2.NickName
-//	}
-//	re := model.UserDialogListResponse{
-//		DialogId:          dialogId,
-//		UserId:            info2.UserId,
-//		DialogType:        model.ConversationType(dialogInfo.Type),
-//		DialogName:        dialogName,
-//		DialogAvatar:      info2.Avatar,
-//		DialogUnreadCount: len(msgs.UserMessages),
-//		LastMessage: model.Message{
-//			MsgType:  uint(lm.Type),
-//			Content:  lm.Content,
-//			SenderId: lm.SenderId,
-//			SendAt:   lm.CreatedAt,
-//			MsgId:    uint64(lm.Id),
-//			SenderInfo: model.SenderInfo{
-//				UserId: info.UserId,
-//				Name:   info.NickName,
-//				Avatar: info.Avatar,
-//			},
-//			ReceiverInfo: model.SenderInfo{
-//				UserId: info2.UserId,
-//				Name:   info2.NickName,
-//				Avatar: info2.Avatar,
-//			},
-//			IsBurnAfterReading: model.BurnAfterReadingType(lm.IsBurnAfterReadingType),
-//			IsLabel:            model.LabelMsgType(lm.IsLabel),
-//			ReplyId:            lm.ReplyId,
-//		},
-//		DialogCreateAt: dialogInfo.CreateAt,
-//		TopAt:          int64(dialogUser.TopAt),
-//	}
-//	err = s.updateRedisUserDialogList(lm.SenderId, re)
-//	if err != nil {
-//		return err
-//	}
-//	//更新接受者redis对话列表
-//	dialogName = userRelationStatus2.Remark
-//	if dialogName == "" {
-//		dialogName = info.NickName
-//	}
-//	re.UserId = lm.SenderId
-//	re.DialogName = dialogName
-//	re.TopAt = int64(dialogUser2.TopAt)
-//	re.DialogUnreadCount = len(msgs2.UserMessages)
-//	re.DialogAvatar = info.Avatar
-//	err = s.updateRedisUserDialogList(lm.ReceiverId, re)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
-
-//// 更新redis里的对话列表数据
-//func (s *Service) updateRedisUserDialogList(userID string, msg model.UserDialogListResponse) error {
-//	key := fmt.Sprintf("dialog:%s", userID)
-//	// 判断key是否存在，存在才继续
-//	exists, err := s.redisClient.ExistsKey(key)
-//	if err != nil {
-//		return err
-//	}
-//	if !exists {
-//		return nil
-//	}
-//
-//	found := false
-//
-//	// 每次处理的元素数量
-//	batchSize := 10
-//
-//	// 获取列表长度
-//	length, err := s.redisClient.GetListLength(key)
-//	if err != nil {
-//		return err
-//	}
-//
-//	for start := 0; start < int(length); start += batchSize {
-//		// 获取当前批次的元素
-//		values, err := s.redisClient.GetList(key, int64(start), int64(start+batchSize-1))
-//		if err != nil {
-//			return err
-//		}
-//
-//		if len(values) > 0 {
-//			// 类型转换
-//			var responseList []model.UserDialogListResponse
-//			for _, v := range values {
-//				var dialog model.UserDialogListResponse
-//				err := json.Unmarshal([]byte(v), &dialog)
-//				if err != nil {
-//					fmt.Println("Error decoding cached data:", err)
-//					continue
-//				}
-//				responseList = append(responseList, dialog)
-//			}
-//
-//			for i, v := range responseList {
-//				if v.DialogId == msg.DialogId {
-//					found = true
-//					marshal, err := json.Marshal(&msg)
-//					if err != nil {
-//						return err
-//					}
-//					err = s.redisClient.UpdateListElement(key, int64(start+i), string(marshal))
-//					if err != nil {
-//						return err
-//					}
-//				}
-//			}
-//		}
-//	}
-//	//找不到则插入
-//	if !found {
-//		err := s.redisClient.AddToListLeft(key, []interface{}{msg})
-//		if err != nil {
-//			return err
-//		}
-//	}
-//
-//	return nil
-//}

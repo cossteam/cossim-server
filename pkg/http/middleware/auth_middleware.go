@@ -5,14 +5,14 @@ import (
 	"github.com/cossim/coss-server/pkg/auth"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"net/http"
 	"strings"
 )
 
-func AuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
+func AuthMiddleware(rdb *cache.RedisClient, conn *gorm.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//头像请求跳过验证
 		if strings.HasPrefix(ctx.FullPath(), "/api/v1/storage/files/download/") {
@@ -44,16 +44,6 @@ func AuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  http.StatusText(http.StatusUnauthorized),
-			})
-			ctx.Abort()
-			return
-		}
-		conn, err := db.NewDefaultMysqlConn().GetConnection()
-		if err != nil {
-			fmt.Printf("获取数据库连接失败: %v", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"code": 500,
-				"msg":  http.StatusText(http.StatusInternalServerError),
 			})
 			ctx.Abort()
 			return

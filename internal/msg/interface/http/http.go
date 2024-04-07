@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/internal/msg/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -14,22 +15,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
+	"strconv"
 )
 
 var (
 	_ server.HTTPService = &Handler{}
 )
-
-//var (
-//	wsRid    int64 = 0            //全局客户端id
-//	wsMutex        = sync.Mutex{} //锁
-//	upgrader       = websocket.Upgrader{
-//		CheckOrigin: func(r *http.Request) bool {
-//			return true
-//		},
-//	}
-//	Pool = make(map[string]map[string][]*client)
-//)
 
 type Handler struct {
 	svc         *service.Service
@@ -37,12 +29,24 @@ type Handler struct {
 	logger      *zap.Logger
 	enc         encryption.Encryptor
 	MsgClient   *grpcHandler.Handler
+	db          *gorm.DB
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("msg_bff", int8(cfg.Log.Level))
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+
+	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if err != nil {
+		return err
+	}
+
+	h.db, err = mysql.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
 	h.svc = service.New(cfg, h.MsgClient)
 
 	//return h.enc.ReadKeyPair()
@@ -66,7 +70,7 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/msg")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.redisClient))
+	u.Use(middleware.AuthMiddleware(h.redisClient, h.db))
 
 	u.POST("/send/user", h.sendUserMsg)
 	u.POST("/send/group", h.sendGroupMsg)

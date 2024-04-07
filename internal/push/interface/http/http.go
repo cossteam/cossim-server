@@ -5,6 +5,7 @@ import (
 	"github.com/cossim/coss-server/internal/push/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -13,7 +14,9 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 )
 
 type Handler struct {
@@ -21,6 +24,7 @@ type Handler struct {
 	enc         encryption.Encryptor
 	redisClient *cache.RedisClient
 	PushService *service.Service
+	db          *gorm.DB
 }
 
 var (
@@ -34,7 +38,18 @@ var (
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 	h.logger = plog.NewDefaultLogger("push_bff", int8(cfg.Log.Level))
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+
+	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if err != nil {
+		return err
+	}
+
+	h.db, err = mysql.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
 	//h.PushService.Init(cfg)
 	//return h.enc.ReadKeyPair()
 	return nil
@@ -55,7 +70,7 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/push")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.redisClient))
+	u.Use(middleware.AuthMiddleware(h.redisClient, h.db))
 	u.GET("/ws", h.ws)
 }
 

@@ -5,13 +5,13 @@ import (
 	"github.com/cossim/coss-server/pkg/auth"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"net/http"
 	"strings"
 )
 
-func AdminAuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
+func AdminAuthMiddleware(rdb *cache.RedisClient, conn *gorm.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取 authorization header
 		tokenString := ""
@@ -26,16 +26,6 @@ func AdminAuthMiddleware(rdb *cache.RedisClient) gin.HandlerFunc {
 				return
 			}
 			tokenString = tokenString[7:]
-		}
-		conn, err := db.NewDefaultMysqlConn().GetConnection()
-		if err != nil {
-			fmt.Printf("获取数据库连接失败: %v", err)
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"code": 500,
-				"msg":  http.StatusText(http.StatusInternalServerError),
-			})
-			ctx.Abort()
-			return
 		}
 
 		a := auth.NewAuthenticator(conn, rdb)

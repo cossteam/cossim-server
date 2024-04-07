@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/api/http/model"
@@ -180,26 +179,6 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, err
 	}
 
-	if s.cache {
-		//wg := sync.WaitGroup{}
-		//wg.Add(1)
-		//go func() {
-		//	defer wg.Done()
-		//	err := s.updateCacheGroupDialog(req.DialogId, uids.UserIds)
-		//	if err != nil {
-		//		s.logger.Error("更新缓存群聊会话失败", zap.Error(err))
-		//		return
-		//	}
-		//}()
-		//wg.Wait()
-		for _, id := range uids.UserIds {
-			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
 	resp := &model.SendGroupMsgResponse{
 		MsgId: message.MsgId,
 	}
@@ -334,15 +313,6 @@ func (s *Service) EditGroupMsg(ctx context.Context, userID string, driverId stri
 	msginfo.Content = content
 	s.SendMsgToUsers(userIds.UserIds, driverId, pushv1.WSEventType_EditMsgEvent, msginfo, true)
 
-	if s.cache {
-		for _, id := range userIds.UserIds {
-			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
 	return msgID, nil
 }
 
@@ -407,17 +377,6 @@ func (s *Service) RecallGroupMsg(ctx context.Context, userID string, driverId st
 	if err != nil {
 		s.logger.Error("撤回群消息失败", zap.Error(err))
 		return nil, err
-	}
-
-	//s.SendMsgToUsers(userIds.UserIds, driverId, constants.RecallMsgEvent, msginfo, true)
-	//
-	if s.cache {
-		for _, id := range userIds.UserIds {
-			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
-			if err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	return msg.Id, nil
@@ -665,13 +624,6 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 			s.logger.Error("设置群聊消息已读失败", zap.Error(err))
 			return nil, err
 		}
-		if s.cache {
-			err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", uid))
-			if err != nil {
-				s.logger.Error("删除redis失败", zap.Error(err))
-				return nil, nil
-			}
-		}
 
 		//给消息发送者推送谁读了消息
 		for _, v := range resp1.UnreadGroupMessage {
@@ -753,12 +705,6 @@ func (s *Service) SetGroupMessagesRead(c context.Context, uid string, driverId s
 		}
 	}
 
-	if s.cache {
-		err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", uid))
-		if err != nil {
-			return nil, err
-		}
-	}
 	return nil, nil
 }
 

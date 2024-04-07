@@ -8,7 +8,6 @@ import (
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/gopenpgp/v2/helper"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
-	"github.com/cossim/coss-server/pkg/db"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"math/big"
@@ -29,6 +28,7 @@ type Encryptor interface {
 	SetPrivateKey(privateKey string)
 	ReadKeyPair() error
 	GetSecretMessage(message string, userID string) (string, error)
+	QueryUser(userID string) (entity.User, error)
 }
 
 // MyEncryptor 结构体实现了 Encryptor 接口
@@ -40,6 +40,7 @@ type MyEncryptor struct {
 	name       string
 	email      string
 	rsaBits    int
+	db         *gorm.DB
 }
 
 // 生成随机对称秘钥
@@ -66,32 +67,33 @@ type SecretResponse struct {
 }
 
 // NewEncryptor 创建一个新的 Encryptor 实例
-func NewEncryptor(passphrase []byte, name, email string, rsaBits int, enable bool) Encryptor {
+func NewEncryptor(passphrase []byte, name, email string, rsaBits int, enable bool, db *gorm.DB) Encryptor {
 	return &MyEncryptor{
 		passphrase: passphrase,
 		name:       name,
 		email:      email,
 		rsaBits:    rsaBits,
 		enable:     enable,
+		db:         db,
 	}
 }
 
-type EncryptedAuthenticator struct {
-	DB *gorm.DB
-}
-
-func NewEncryptedAuthenticator(db *gorm.DB) *EncryptedAuthenticator {
-	return &EncryptedAuthenticator{
-		DB: db,
-	}
-}
+//type EncryptedAuthenticator struct {
+//	DB *gorm.DB
+//}
+//
+//func NewEncryptedAuthenticator(db *gorm.DB) *EncryptedAuthenticator {
+//	return &EncryptedAuthenticator{
+//		DB: db,
+//	}
+//}
 
 const _queryUser = "SELECT * FROM users WHERE id = ?"
 
 // QueryUser retrieves user information by user ID
-func (a *EncryptedAuthenticator) QueryUser(userID string) (entity.User, error) {
+func (e *MyEncryptor) QueryUser(userID string) (entity.User, error) {
 	var user entity.User
-	if err := a.DB.Raw(_queryUser, userID).Scan(&user).Error; err != nil {
+	if err := e.db.Raw(_queryUser, userID).Scan(&user).Error; err != nil {
 		return entity.User{}, err
 	}
 	return user, nil
@@ -102,12 +104,8 @@ func (e *MyEncryptor) GetSecretMessage(message string, userID string) (string, e
 	if !e.enable {
 		return message, nil
 	}
-	conn, err := db.NewDefaultMysqlConn().GetConnection()
-	if err != nil {
-		return message, err
-	}
-	ea := NewEncryptedAuthenticator(conn)
-	userInfo, err := ea.QueryUser(userID)
+
+	userInfo, err := e.QueryUser(userID)
 	if err != nil {
 		return message, err
 	}

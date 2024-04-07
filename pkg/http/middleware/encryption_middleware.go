@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ProtonMail/gopenpgp/v2/helper"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	pkghttp "github.com/cossim/coss-server/pkg/http"
 	resp "github.com/cossim/coss-server/pkg/http/response"
@@ -70,24 +69,7 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 				})
 				return
 			}
-			conn, err := db.NewDefaultMysqlConn().GetConnection()
-			if err != nil {
-				fmt.Println("db conn failed", err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"code": 500,
-					"msg":  http.StatusText(http.StatusInternalServerError),
-				})
-				return
-			}
-			ea := encryption.NewEncryptedAuthenticator(conn)
-			if err != nil {
-				fmt.Println("init db", err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"code": 500,
-					"msg":  http.StatusText(http.StatusInternalServerError),
-				})
-				return
-			}
+
 			var userId string
 			if userIdResponse, exists := c.Get("user_id"); exists {
 				id := userIdResponse.(string)
@@ -110,7 +92,7 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 					"msg":  "响应用户ID为空",
 				})
 			}
-			user, err := ea.QueryUser(userId)
+			user, err := encryptor.QueryUser(userId)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code": 500,
