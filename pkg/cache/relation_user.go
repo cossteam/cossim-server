@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/redis/go-redis/v9"
 	"time"
@@ -63,10 +64,10 @@ type RelationUserCache interface {
 	SetFriendRequest(ctx context.Context, ownerUserID string, data *relationgrpcv1.FriendRequestList, expiration time.Duration) error
 	GetFriendRequestList(ctx context.Context, ownerUserID string) (*relationgrpcv1.GetFriendRequestListResponse, error)
 	SetFriendRequestList(ctx context.Context, ownerUserID string, data *relationgrpcv1.GetFriendRequestListResponse, expiration time.Duration) error
-	DeleteFriendRequestList(ctx context.Context, ownerUserID string) error
+	DeleteFriendRequestList(ctx context.Context, ownerUserID ...string) error
 	GetBlacklist(ctx context.Context, ownerUserID string) (*relationgrpcv1.GetBlacklistResponse, error)
 	SetBlacklist(ctx context.Context, ownerUserID string, data *relationgrpcv1.GetBlacklistResponse, expiration time.Duration) error
-	DeleteBlacklist(ctx context.Context, ownerUserID string) error
+	DeleteBlacklist(ctx context.Context, ownerUserID ...string) error
 }
 
 var _ RelationUserCache = &RelationUserCacheRedis{}
@@ -135,23 +136,31 @@ func (r *RelationUserCacheRedis) DeleteFriendList(ctx context.Context, ownerUser
 		keys = append(keys, GetFriendListKey(userID))
 	}
 
+	fmt.Println("DeleteFriendList => ", keys)
+
 	return r.client.Del(ctx, keys...).Err()
 }
 
-func (r *RelationUserCacheRedis) DeleteFriendRequestList(ctx context.Context, ownerUserID string) error {
-	if ownerUserID == "" {
+func (r *RelationUserCacheRedis) DeleteFriendRequestList(ctx context.Context, ownerUserID ...string) error {
+	if len(ownerUserID) == 0 {
 		return ErrCacheKeyEmpty
 	}
-	key := GetFriendRequestListKey(ownerUserID)
-	return r.client.Del(ctx, key).Err()
+	keys := make([]string, 0, len(ownerUserID))
+	for _, userID := range ownerUserID {
+		keys = append(keys, GetFriendRequestListKey(userID))
+	}
+	return r.client.Del(ctx, keys...).Err()
 }
 
-func (r *RelationUserCacheRedis) DeleteBlacklist(ctx context.Context, ownerUserID string) error {
-	if ownerUserID == "" {
+func (r *RelationUserCacheRedis) DeleteBlacklist(ctx context.Context, ownerUserID ...string) error {
+	if len(ownerUserID) == 0 {
 		return ErrCacheKeyEmpty
 	}
-	key := GetBlacklistKey(ownerUserID)
-	return r.client.Del(ctx, key).Err()
+	keys := make([]string, 0, len(ownerUserID))
+	for _, userID := range ownerUserID {
+		keys = append(keys, GetBlacklistKey(userID))
+	}
+	return r.client.Del(ctx, keys...).Err()
 }
 
 func (r *RelationUserCacheRedis) GetBlacklist(ctx context.Context, ownerUserID string) (*relationgrpcv1.GetBlacklistResponse, error) {

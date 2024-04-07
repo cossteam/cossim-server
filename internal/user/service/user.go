@@ -104,6 +104,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
+	fmt.Println("userLogin.LoginTime => ", userLogin.LoginTime)
+
 	var lastLoginTime = userLogin.LoginTime
 	fristLogin := false
 	if userLogin != nil {

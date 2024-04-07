@@ -331,7 +331,7 @@ func (h *Handler) deleteFriend(c *gin.Context) {
 	}
 
 	if err = h.svc.DeleteFriend(c, userID, req.UserID); err != nil {
-		response.SetFail(c, "删除好友失败", nil)
+		c.Error(err)
 		return
 	}
 

@@ -53,12 +53,16 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 	//}
 	for _, memberID := range req.Member {
 		if !isUserInFriends(memberID, friends.Users) {
-			return nil, code.RelationUserErrFriendRelationNotFound.CustomMessage(fmt.Sprintf("user %s has abnormal status", memberID))
+			info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: memberID})
+			if err != nil {
+				return nil, err
+			}
+			return nil, code.RelationUserErrFriendRelationNotFound.CustomMessage(fmt.Sprintf("%s不是你的好友", info.NickName))
 		}
 	}
 	for _, friend := range friends.Users {
 		if friend.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-			return nil, code.StatusNotAvailable.CustomMessage(fmt.Sprintf("user %s has abnormal status", friend.UserId))
+			return nil, code.StatusNotAvailable.CustomMessage(fmt.Sprintf("%s不是你的好友", friend.Remark))
 		}
 	}
 

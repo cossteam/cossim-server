@@ -59,27 +59,31 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		dr:          infra.Dr,
 	}
 	s.GroupServiceServer = &groupServiceServer{
-		db:    dbConn,
-		cache: redis,
-		grr:   infra.Grr,
-		dr:    infra.Dr,
+		db:          dbConn,
+		cache:       redis,
+		cacheEnable: s.ac.Cache.Enable,
+		grr:         infra.Grr,
+		dr:          infra.Dr,
 	}
 	s.DialogServiceServer = &dialogServiceServer{
-		db:    dbConn,
-		cache: redis,
-		dr:    infra.Dr,
+		db:          dbConn,
+		cache:       redis,
+		cacheEnable: s.ac.Cache.Enable,
+		dr:          infra.Dr,
 	}
 	s.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{
-		db:    dbConn,
-		dr:    infra.Dr,
-		grr:   infra.Grr,
-		gjqr:  infra.Gjqr,
-		cache: redis,
+		db:          dbConn,
+		dr:          infra.Dr,
+		grr:         infra.Grr,
+		gjqr:        infra.Gjqr,
+		cache:       redis,
+		cacheEnable: s.ac.Cache.Enable,
 	}
 	s.UserFriendRequestServiceServer = &userFriendRequestServiceServer{
-		db:    dbConn,
-		cache: redis,
-		ufqr:  infra.Ufqr,
+		db:          dbConn,
+		cache:       redis,
+		cacheEnable: s.ac.Cache.Enable,
+		ufqr:        infra.Ufqr,
 	}
 	s.GroupAnnouncementServer = &groupAnnouncementServer{
 		db:    dbConn,

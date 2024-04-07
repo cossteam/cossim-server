@@ -380,6 +380,14 @@ func (s *userServiceServer) SetFriendSilentNotification(ctx context.Context, req
 	if err := s.urr.SetUserFriendSilentNotification(request.UserId, request.FriendId, entity.SilentNotification(request.IsSilent)); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserFriendSilentNotificationFailed.Code()), err.Error())
 	}
+	if s.cacheEnable {
+		if err := s.cache.DeleteRelation(ctx, request.UserId, request.FriendId); err != nil {
+			log.Printf("delete relation cache failed: %v", err)
+		}
+		if err := s.cache.DeleteFriendList(ctx, request.UserId); err != nil {
+			log.Printf("delete friend request list cache failed: %v", err)
+		}
+	}
 	return resp, nil
 }
 
@@ -408,6 +416,14 @@ func (s *userServiceServer) SetFriendRemark(ctx context.Context, request *v1.Set
 	var resp = &emptypb.Empty{}
 	if err := s.urr.SetFriendRemarkByUserIdAndFriendId(request.UserId, request.FriendId, request.Remark); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetFriendRemarkFailed.Code()), err.Error())
+	}
+	if s.cacheEnable {
+		if err := s.cache.DeleteRelation(ctx, request.UserId, request.FriendId); err != nil {
+			log.Printf("delete relation cache failed: %v", err)
+		}
+		if err := s.cache.DeleteFriendList(ctx, request.UserId, request.FriendId); err != nil {
+			log.Printf("delete friend request list cache failed: %v", err)
+		}
 	}
 	return resp, nil
 }
