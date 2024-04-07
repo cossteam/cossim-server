@@ -314,10 +314,11 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 		}
 
 		data[i] = &model.GroupRequestListResponse{
-			ID:      v.ID,
-			GroupId: v.GroupId,
-			Remark:  v.Remark,
-			Status:  SwitchGroupRequestStatus(userID, v.InviterId, reinfo.UserId, v.Status),
+			ID:       v.ID,
+			GroupId:  v.GroupId,
+			Remark:   v.Remark,
+			CreateAt: int64(v.CreatedAt),
+			Status:   SwitchGroupRequestStatus(userID, v.InviterId, reinfo.UserId, v.Status),
 			ReceiverInfo: &model.UserInfo{
 				UserID:     reinfo.UserId,
 				UserName:   reinfo.NickName,
