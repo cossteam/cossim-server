@@ -24,6 +24,7 @@ type GroupRequestListResponse struct {
 	ReceiverInfo    *UserInfo          `json:"receiver_info" description:"接收者信息"`
 	Status          GroupRequestStatus `json:"status" description:"请求状态"`
 	Remark          string             `json:"remark" description:"申请消息"`
+	CreateAt        int64              `json:"create_at"`
 }
 
 type AddGroupAdminRequest struct {
@@ -51,10 +52,10 @@ type UserRequestListResponse struct {
 	SenderId     string    `json:"sender_id" description:"发送者ID"`
 	ReceiverId   string    `json:"receiver_id" description:"接收者ID"`
 	Remark       string    `json:"remark" description:"申请消息"`
-	RequestAt    uint64    `json:"request_at" description:"申请时间"`
 	Status       uint32    `json:"status" description:"申请状态 (0=申请中, 1=已通过, 2=被拒绝)"`
 	SenderInfo   *UserInfo `json:"sender_info,omitempty"`
 	ReceiverInfo *UserInfo `json:"receiver_info,omitempty"`
+	CreateAt     int64     `json:"create_at"`
 }
 
 type UserInfo struct {

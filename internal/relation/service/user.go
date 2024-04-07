@@ -127,9 +127,9 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 				ID:         v.ID,
 				ReceiverId: v.ReceiverId,
 				Remark:     v.Remark,
-				RequestAt:  v.CreateAt,
 				Status:     uint32(v.Status),
 				SenderId:   v.SenderId,
+				CreateAt:   int64(v.CreateAt),
 				ReceiverInfo: &model.UserInfo{
 					UserID:     info.UserId,
 					UserName:   info.NickName,
@@ -145,9 +145,9 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 				ID:         v.ID,
 				ReceiverId: v.ReceiverId,
 				Remark:     v.Remark,
-				RequestAt:  v.CreateAt,
 				Status:     uint32(v.Status),
 				SenderId:   v.SenderId,
+				CreateAt:   int64(v.CreateAt),
 				ReceiverInfo: &model.UserInfo{
 					UserID:     info.UserId,
 					UserName:   info.NickName,
