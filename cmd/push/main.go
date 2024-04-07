@@ -35,18 +35,18 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&discover, "discover", false, "Enable service discovery")
+	flag.BoolVar(&discover, "discover", true, "Enable service discovery")
 	flag.BoolVar(&register, "register", false, "Enable service register")
 	flag.BoolVar(&remoteConfig, "remote-config", false, "Load config from remote source")
 	flag.StringVar(&remoteConfigAddr, "config-center-addr", "", "Address of the config center")
 	flag.StringVar(&remoteConfigToken, "config-center-token", "", "Token for accessing the config center")
-	flag.BoolVar(&hotReload, "hot-reload", true, "Enable hot reloading")
+	flag.BoolVar(&hotReload, "hot-reload", false, "Enable hot reloading")
 	flag.StringVar(&configKey, "config-key", "service/push", "Service configuration path in the configuration center")
 	//flag.StringVar(&configKeys, "config-keys", "", "The public configuration path on which the service depends. use, separated common/x1,comm/x2")
-	flag.StringVar(&pprofAddr, "pprof-bind-address", ":6060", "The address the pprof endpoint binds to")
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9090", "The address the metric endpoint binds to")
-	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", ":9091", "The address to bind the http health probe endpoint")
-	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", ":9092", "The address to bind the grpc health probe endpoint")
+	flag.StringVar(&pprofAddr, "pprof-bind-address", "0", "The address the pprof endpoint binds to")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metric endpoint binds to")
+	flag.StringVar(&httpProbeAddr, "http-health-probe-bind-address", "0", "The address to bind the http health probe endpoint")
+	flag.StringVar(&grpcProbeAddr, "grpc-health-probe-bind-address", "0", "The address to bind the grpc health probe endpoint")
 	flag.Parse()
 }
 
