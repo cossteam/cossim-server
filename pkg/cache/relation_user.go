@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/redis/go-redis/v9"
 	"time"
@@ -79,7 +78,6 @@ func NewRelationUserCacheRedis(addr, password string, db int) (*RelationUserCach
 		DB:       db,
 	})
 
-	// 测试连接是否成功
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err
@@ -116,7 +114,6 @@ func (r *RelationUserCacheRedis) SetFriendRequest(ctx context.Context, ownerUser
 	if ownerUserID == "" {
 		return ErrCacheKeyEmpty
 	}
-
 	key := GetFriendRequestKey(ownerUserID)
 	b, err := json.Marshal(data)
 	if err != nil {
@@ -129,15 +126,10 @@ func (r *RelationUserCacheRedis) DeleteFriendList(ctx context.Context, ownerUser
 	if len(ownerUserID) == 0 {
 		return ErrCacheKeyEmpty
 	}
-
-	// 构建 Redis 中所有关系对象的键
 	keys := make([]string, 0, len(ownerUserID))
 	for _, userID := range ownerUserID {
 		keys = append(keys, GetFriendListKey(userID))
 	}
-
-	fmt.Println("DeleteFriendList => ", keys)
-
 	return r.client.Del(ctx, keys...).Err()
 }
 
