@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -28,24 +27,22 @@ type IPInfo struct {
 // OnlineIpInfo 通过ip-api.com接口查询IP信息
 // 返回：IP地址的信息（格式：字符串的json）
 func OnlineIpInfo(ip string) *IPInfo {
-	info := &IPInfo{}
+	result := &IPInfo{}
 	url := "http://ip-api.com/json/" + ip + "?lang=zh-CN"
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return info
+		return result
 	}
 	defer resp.Body.Close()
 
 	out, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return info
+		return result
 	}
-	if err := json.Unmarshal(out, info); err != nil {
-		return info
+	if err := json.Unmarshal(out, &result); err != nil {
+		return result
 	}
-	return info
+	return result
 }
 
 func GetMyPublicIP() string {

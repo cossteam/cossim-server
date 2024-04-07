@@ -19,9 +19,10 @@ import (
 var _ v1.DialogServiceServer = &dialogServiceServer{}
 
 type dialogServiceServer struct {
-	db    *gorm.DB
-	cache cache.RelationUserCache
-	dr    repository.DialogRepository
+	db          *gorm.DB
+	cache       cache.RelationUserCache
+	cacheEnable bool
+	dr          repository.DialogRepository
 }
 
 func (s *dialogServiceServer) CreateDialog(ctx context.Context, in *v1.CreateDialogRequest) (*v1.CreateDialogResponse, error) {

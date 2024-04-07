@@ -20,11 +20,12 @@ import (
 var _ v1.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{}
 
 type groupJoinRequestServiceServer struct {
-	db    *gorm.DB
-	cache cache.RelationUserCache
-	dr    repository.DialogRepository
-	grr   repository.GroupRelationRepository
-	gjqr  repository.GroupJoinRequestRepository
+	db          *gorm.DB
+	cache       cache.RelationUserCache
+	cacheEnable bool
+	dr          repository.DialogRepository
+	grr         repository.GroupRelationRepository
+	gjqr        repository.GroupJoinRequestRepository
 }
 
 func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGroupRequest) (*v1.JoinGroupResponse, error) {

@@ -239,11 +239,8 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes})
 	if err != nil {
-		return nil, err
+		s.logger.Error("Failed to push message", zap.Error(err))
 	}
-	//if err = s.publishServiceMessage(ctx, msg); err != nil {
-	//	s.logger.Error("Failed to publish service message", zap.Error(err))
-	//}
 
 	return resp, nil
 }
@@ -299,7 +296,10 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
 		s.logger.Error("获取好友关系失败", zap.Error(err))
-		return code.RelationErrRelationNotFound
+		if relation == nil || relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
+			return code.RelationUserErrFriendRelationNotFound
+		}
+		return err
 	}
 
 	r1 := &relationgrpcv1.DeleteDialogUserByDialogIDAndUserIDRequest{DialogId: relation.DialogId, UserId: userID}
@@ -592,10 +592,6 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 	if err != nil {
 		return nil, err
 	}
-
-	//if err = s.publishServiceMessage(ctx, msg); err != nil {
-	//	s.logger.Error("Failed to publish service message", zap.Error(err))
-	//}
 
 	return responseData, nil
 }

@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
@@ -95,12 +96,16 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 		return resp, status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
 	}
 
+	if s.cacheEnable {
+		s.cache.DeleteFriendRequestList(ctx, request.SenderId, request.ReceiverId)
+	}
+
 	return resp, nil
 }
 
 func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context, request *v1.ManageFriendRequestStruct) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
-	var uid string
+	var senderId, receiverId string
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 
@@ -112,10 +117,9 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 			}
 			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), formatErrorMessage(err))
 		}
-		uid = re.OwnerID
 
-		senderId := re.SenderID
-		receiverId := re.ReceiverID
+		senderId = re.SenderID
+		receiverId = re.ReceiverID
 
 		//拒绝
 		if request.Status == v1.FriendRequestStatus_FriendRequestStatus_REJECT {
@@ -199,11 +203,21 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 
 		return nil
 	}); err != nil {
+		log.Printf("ManageFriendRequest err => %v", err)
 		return resp, err
 	}
 
+	fmt.Println("s.cacheEnable => ", s.cacheEnable)
+
 	if s.cacheEnable {
-		if err := s.cache.DeleteFriendRequestList(ctx, uid); err != nil {
+		fmt.Println("1111 cacheEnable")
+		if err := s.cache.DeleteFriendRequestList(ctx, senderId, receiverId); err != nil {
+			log.Printf("delete FriendRequestList cache failed: %v", err)
+		}
+		if err := s.cache.DeleteFriendList(ctx, senderId, receiverId); err != nil {
+			log.Printf("delete FriendRequestList cache failed: %v", err)
+		}
+		if err := s.cache.DeleteRelation(ctx, senderId, receiverId); err != nil {
 			log.Printf("delete FriendRequestList cache failed: %v", err)
 		}
 	}
@@ -259,6 +273,11 @@ func (s *userFriendRequestServiceServer) DeleteFriendRecord(ctx context.Context,
 	resp := &emptypb.Empty{}
 	if err := s.ufqr.DeletedById(req.ID); err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
+	}
+	if s.cacheEnable {
+		if err := s.cache.DeleteFriendRequestList(ctx, req.UserId); err != nil {
+			log.Printf("delete FriendRequestList cache failed: %v", err)
+		}
 	}
 	return resp, nil
 }

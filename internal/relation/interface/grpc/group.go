@@ -20,10 +20,11 @@ import (
 var _ v1.GroupRelationServiceServer = &groupServiceServer{}
 
 type groupServiceServer struct {
-	db    *gorm.DB
-	cache cache.RelationUserCache
-	grr   repository.GroupRelationRepository
-	dr    repository.DialogRepository
+	db          *gorm.DB
+	cache       cache.RelationUserCache
+	cacheEnable bool
+	grr         repository.GroupRelationRepository
+	dr          repository.DialogRepository
 }
 
 func (s *groupServiceServer) AddGroupAdmin(ctx context.Context, request *v1.AddGroupAdminRequest) (*v1.AddGroupAdminResponse, error) {

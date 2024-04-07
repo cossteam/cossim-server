@@ -15,7 +15,13 @@ func NewUserLoginRepo(db *gorm.DB) *UserLoginRepo {
 }
 
 func (u UserLoginRepo) InsertUserLogin(user *entity.UserLogin) error {
-	return u.db.Where(entity.UserLogin{UserId: user.UserId, DriverId: user.DriverId}).Assign(entity.UserLogin{LoginCount: user.LoginCount, DriverToken: user.DriverToken, Token: user.Token}).FirstOrCreate(&user).Error
+	return u.db.Where(entity.UserLogin{UserId: user.UserId, DriverId: user.DriverId, LastAt: user.LastAt}).
+		Assign(entity.UserLogin{
+			LoginCount:  user.LoginCount,
+			DriverToken: user.DriverToken,
+			Token:       user.Token,
+			LastAt:      user.LastAt}).
+		FirstOrCreate(&user).Error
 }
 
 func (u UserLoginRepo) GetUserLoginByToken(token string) (*entity.UserLogin, error) {
