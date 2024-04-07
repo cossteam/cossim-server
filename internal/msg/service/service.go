@@ -11,7 +11,6 @@ import (
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/encryption"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/rs/xid"
 	"go.uber.org/zap"
@@ -30,7 +29,7 @@ type Service struct {
 	logger              *zap.Logger
 	sid                 string
 	cache               bool
-	enc                 encryption.Encryptor
+	//enc                 encryption.Encryptor
 
 	relationUserService   relationgrpcv1.UserRelationServiceClient
 	relationGroupService  relationgrpcv1.GroupRelationServiceClient
@@ -59,7 +58,7 @@ func New(ac *pkgconfig.AppConfig, handler *grpcHandler.Handler) *Service {
 	s.msgService = handler
 	s.msgGroupService = handler
 	s.cache = s.setCacheConfig()
-	s.setupEncryption(ac)
+	//s.setupEncryption(ac)
 	return s
 }
 
@@ -96,16 +95,16 @@ func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
 	return cache.NewRedisClient(ac.Redis.Addr(), ac.Redis.Password)
 }
 
-func (s *Service) setupEncryption(ac *pkgconfig.AppConfig) {
-	enc2 := encryption.NewEncryptor([]byte(ac.Encryption.Passphrase), ac.Encryption.Name, ac.Encryption.Email, ac.Encryption.RsaBits, ac.Encryption.Enable)
-
-	err := enc2.ReadKeyPair()
-	if err != nil {
-		return
-	}
-
-	s.enc = enc2
-}
+//func (s *Service) setupEncryption(ac *pkgconfig.AppConfig) {
+//	enc2 := encryption.NewEncryptor([]byte(ac.Encryption.Passphrase), ac.Encryption.Name, ac.Encryption.Email, ac.Encryption.RsaBits, ac.Encryption.Enable)
+//
+//	err := enc2.ReadKeyPair()
+//	if err != nil {
+//		return
+//	}
+//
+//	s.enc = enc2
+//}
 
 func (s *Service) setCacheConfig() bool {
 	if s.redisClient == nil && s.ac.Cache.Enable {

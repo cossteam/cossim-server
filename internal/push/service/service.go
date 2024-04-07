@@ -8,11 +8,14 @@ import (
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
+	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
+	"strconv"
 )
 
 type Service struct {
@@ -23,6 +26,7 @@ type Service struct {
 	ac              *pkgconfig.AppConfig
 	enc             encryption.Encryptor
 	Buckets         map[constants.DriverType]*connect.Bucket
+	db              *gorm.DB
 }
 
 var wsRid int64 = 0 //全局客户端id
@@ -33,15 +37,26 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		panic(err)
 	}
 
+	mysql, err := db.NewMySQL(ac.MySQL.Address, strconv.Itoa(ac.MySQL.Port), ac.MySQL.Username, ac.MySQL.Password, ac.MySQL.Database, int64(ac.Log.Level), ac.MySQL.Opts)
+	if err != nil {
+		panic(err)
+	}
+
+	dbConn, err := mysql.GetConnection()
+	if err != nil {
+		panic(err)
+	}
+
 	s := &Service{
 		ac:             ac,
 		logger:         plog.NewDefaultLogger("msg_bff", int8(ac.Log.Level)),
 		rabbitMQClient: mqClient,
 		redisClient:    setupRedis(ac),
-		enc:            setupEncryption(ac),
 		Buckets:        make(map[constants.DriverType]*connect.Bucket),
+		db:             dbConn,
 	}
 
+	s.setupEncryption(ac)
 	for _, driverType := range constants.GetDriverTypeList() {
 		s.Buckets[driverType] = connect.NewBucket()
 	}
@@ -53,13 +68,14 @@ func (s *Service) Init(ac *pkgconfig.AppConfig) {
 	*s = *New(ac)
 }
 
-func setupEncryption(ac *pkgconfig.AppConfig) encryption.Encryptor {
-	return encryption.NewEncryptor(
+func (s *Service) setupEncryption(ac *pkgconfig.AppConfig) {
+	s.enc = encryption.NewEncryptor(
 		[]byte(ac.Encryption.Passphrase),
 		ac.Encryption.Name,
 		ac.Encryption.Email,
 		ac.Encryption.RsaBits,
 		ac.Encryption.Enable,
+		s.db,
 	)
 }
 func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {

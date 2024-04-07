@@ -29,7 +29,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"io/ioutil"
 	"mime/multipart"
-	"sync"
 )
 
 func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*model.CreateGroupResponse, error) {
@@ -120,42 +119,6 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		return nil, code.RelationErrCreateGroupFailed
 	}
 
-	if s.cache {
-		err = s.insertRedisGroupList(req.CreatorId, usersorter.CustomGroupData{
-			GroupID:  groupID,
-			Name:     resp1.Name,
-			Avatar:   resp1.Avatar,
-			Status:   uint(resp1.Status),
-			DialogId: DialogID,
-		})
-		if err != nil {
-			s.logger.Error("CreateGroup", zap.Error(err))
-			return nil, code.RelationErrCreateGroupFailed
-		}
-
-		dialog, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{DialogId: DialogID})
-		if err != nil {
-			s.logger.Error("CreateGroup", zap.Error(err))
-			return nil, code.RelationErrCreateGroupFailed
-		}
-
-		err = s.insertRedisUserDialogList(req.CreatorId, model.UserDialogListResponse{
-			DialogId:          DialogID,
-			GroupId:           groupID,
-			DialogType:        model.ConversationType(dialog.Type),
-			DialogName:        req.Name,
-			DialogAvatar:      req.Avatar,
-			DialogUnreadCount: 0,
-			LastMessage:       model.Message{},
-			DialogCreateAt:    dialog.CreateAt,
-			TopAt:             0,
-		})
-		if err != nil {
-			s.logger.Error("CreateGroup", zap.Error(err))
-			return nil, code.RelationErrCreateGroupFailed
-		}
-	}
-
 	data := map[string]interface{}{"group_id": groupID, "inviter_id": req.CreatorId}
 
 	toBytes, err := utils.StructToBytes(data)
@@ -214,7 +177,7 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	}
 
 	//查询所有群员
-	relation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
+	_, err = s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
 		GroupId: groupID,
 	})
 	if err != nil {
@@ -256,20 +219,6 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 	}); err != nil {
 		s.logger.Error("WorkFlow DeleteGroup", zap.Error(err))
 		return 0, code.GroupErrDeleteGroupFailed
-	}
-
-	if s.cache {
-		for _, res := range relation.UserIds {
-			err := s.removeRedisGroupList(res, groupID)
-			if err != nil {
-				return 0, err
-			}
-
-			err = s.removeRedisUserDialogList(res, dialog.DialogId)
-			if err != nil {
-				return 0, err
-			}
-		}
 	}
 
 	return groupID, err
@@ -314,30 +263,6 @@ func (s *Service) UpdateGroup(ctx context.Context, req *model.UpdateGroupRequest
 	if err != nil {
 		s.logger.Error("更新群聊信息失败", zap.Error(err))
 		return nil, err
-	}
-
-	if s.cache {
-		//查询所有群员
-		relation, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{
-			GroupId: group.Id,
-		})
-		if err != nil {
-			return 0, err
-		}
-
-		wg := sync.WaitGroup{}
-		for _, res := range relation.GroupRelationResponses {
-			go func(id string) {
-				defer wg.Done()
-				wg.Add(1)
-				err := s.removeRedisGroupList(id, group.Id)
-				if err != nil {
-					return
-				}
-			}(res.UserId)
-		}
-
-		wg.Wait()
 	}
 
 	return resp, nil
@@ -644,25 +569,6 @@ func (s *Service) ModifyGroupAvatar(ctx context.Context, userID string, groupID 
 	})
 	if err != nil {
 		return "", err
-	}
-
-	if s.cache {
-		//获取所有群成员
-		members, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
-			GroupId: groupID,
-		})
-
-		for _, id := range members.UserIds {
-			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", id))
-			if err != nil {
-				return "", err
-			}
-
-			err = s.redisClient.DelKey(fmt.Sprintf("group:%s", id))
-			if err != nil {
-				return "", err
-			}
-		}
 	}
 
 	return aUrl, nil

@@ -358,40 +358,40 @@ func (h *Handler) deleteGroupAnnouncement(c *gin.Context) {
 	response.SetSuccess(c, "删除成功", resp)
 }
 
-// @Summary 是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)
-// @Description 是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)
-// @Tags GroupRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.OpenGroupBurnAfterReadingRequest true "request"
-// @Success 200 {object} model.Response{}
-// @Router /relation/group/burn/open [post]
-func (h *Handler) openGroupBurnAfterReading(c *gin.Context) {
-	req := new(model.OpenGroupBurnAfterReadingRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	if !model.IsValidOpenBurnAfterReadingType(req.Action) {
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-	_, err = h.svc.SetGroupBurnAfterReading(c, thisId, req)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "操作成功", nil)
-}
+//// @Summary 是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)
+//// @Description 是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)
+//// @Tags GroupRelation
+//// @Accept  json
+//// @Produce  json
+//// @param request body model.OpenGroupBurnAfterReadingRequest true "request"
+//// @Success 200 {object} model.Response{}
+//// @Router /relation/group/burn/open [post]
+//func (h *Handler) openGroupBurnAfterReading(c *gin.Context) {
+//	req := new(model.OpenGroupBurnAfterReadingRequest)
+//	if err := c.ShouldBindJSON(&req); err != nil {
+//		h.logger.Error("参数验证失败", zap.Error(err))
+//		response.SetFail(c, "参数验证失败", nil)
+//		return
+//	}
+//
+//	thisId, err := pkghttp.ParseTokenReUid(c)
+//	if err != nil {
+//		response.SetFail(c, err.Error(), nil)
+//		return
+//	}
+//
+//	if !model.IsValidOpenBurnAfterReadingType(req.Action) {
+//		response.SetFail(c, "参数验证失败", nil)
+//		return
+//	}
+//	_, err = h.svc.SetGroupBurnAfterReading(c, thisId, req)
+//	if err != nil {
+//		c.Error(err)
+//		return
+//	}
+//
+//	response.SetSuccess(c, "操作成功", nil)
+//}
 
 // @Summary 设置群聊静默通知
 // @Description 设置群聊静默通知

@@ -6,6 +6,7 @@ import (
 	"github.com/cossim/coss-server/internal/user/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -14,6 +15,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
+	"strconv"
 )
 
 var (
@@ -27,12 +30,24 @@ type Handler struct {
 	enc         encryption.Encryptor
 	key         string
 	UserClient  *grpchandler.Handler
+	db          *gorm.DB
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("user_bff", int8(cfg.Log.Level))
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+
+	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if err != nil {
+		return err
+	}
+
+	h.db, err = mysql.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
 	h.svc = service.New(cfg, h.UserClient)
 
 	//if err := h.enc.ReadKeyPair(); err != nil {
@@ -69,7 +84,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/email/code/send", h.sendEmailCode)
 	u.GET("/system/key/get", h.GetSystemPublicKey)
 
-	u.Use(middleware.AuthMiddleware(h.redisClient))
+	u.Use(middleware.AuthMiddleware(h.redisClient, h.db))
 	u.GET("/search", h.search)
 	u.GET("/info", h.getUserInfo)
 	u.POST("/logout", h.logout)

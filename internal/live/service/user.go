@@ -384,16 +384,6 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 		return nil, err
 	}
 
-	// 清除缓存
-	if s.cache {
-		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", senderID)); err != nil {
-			return nil, err
-		}
-		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", receiverId)); err != nil {
-			return nil, err
-		}
-	}
-
 	if err := s.deleteUserRoom(ctx, room); err != nil {
 		return nil, err
 	}
@@ -607,19 +597,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 		if err != nil {
 			return nil, err
 		}
-		//if err := s.publishServiceMessage(ctx, endCallMsg); err != nil {
-		//	s.logger.Error("发送消息失败", zap.Error(err))
-		//}
-	}
 
-	// 清除缓存
-	if s.cache {
-		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", senderID)); err != nil {
-			return nil, err
-		}
-		if err := s.redisClient.DelKey(fmt.Sprintf("dialog:%s", receiverId)); err != nil {
-			return nil, err
-		}
 	}
 
 	return nil, nil

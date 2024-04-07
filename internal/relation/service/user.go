@@ -285,92 +285,6 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 		return nil, err
 	}
 
-	if action == 1 && s.cache {
-		relation2, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
-		if err != nil {
-			if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
-				s.logger.Error("获取好友关系失败", zap.Error(err))
-				return nil, code.RelationErrConfirmFriendFailed
-			}
-		}
-		dialogInfo, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{DialogId: relation2.DialogId})
-		if err != nil {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
-			return nil, code.RelationErrConfirmFriendFailed
-		}
-
-		info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.UserId})
-		if err != nil {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
-			return nil, code.RelationErrConfirmFriendFailed
-		}
-
-		info2, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: relation2.FriendId})
-		if err != nil {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
-			return nil, code.RelationErrConfirmFriendFailed
-		}
-
-		re := model.UserDialogListResponse{
-			DialogId:       relation2.DialogId,
-			UserId:         info2.UserId,
-			DialogType:     model.ConversationType(dialogInfo.Type),
-			DialogName:     info2.NickName,
-			DialogAvatar:   info2.Avatar,
-			DialogCreateAt: dialogInfo.CreateAt,
-		}
-		//更新缓存
-		err = s.insertRedisUserDialogList(info.UserId, re)
-		if err != nil {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
-			return nil, code.RelationErrConfirmFriendFailed
-		}
-
-		re.UserId = info.UserId
-		re.DialogName = info.NickName
-		re.DialogAvatar = info.Avatar
-		err = s.insertRedisUserDialogList(info2.UserId, re)
-		if err != nil {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
-			return nil, code.RelationErrConfirmFriendFailed
-		}
-
-		//err = s.updateRedisFriendList(userId, usersorter.CustomUserData{
-		//	UserID:    info2.UserId,
-		//	NickName:  info2.NickName,
-		//	Email:     info2.Email,
-		//	Tel:       info2.Tel,
-		//	Avatar:    info2.Avatar,
-		//	Signature: info2.Signature,
-		//	Status:    uint(info2.Status),
-		//	DialogId:  relation2.DialogId,
-		//})
-		//if err != nil {
-		//	return nil, err
-		//}
-		if s.cache {
-			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.SenderId))
-			if err != nil {
-				return nil, err
-			}
-
-			err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", qs.ReceiverId))
-			if err != nil {
-				return nil, err
-			}
-
-			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", qs.SenderId))
-			if err != nil {
-				return nil, err
-			}
-
-			err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", qs.ReceiverId))
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
 	// 向用户推送通知
 	resp, err := s.sendFriendManagementNotification(ctx, userId, qs.SenderId, key, relationgrpcv1.RelationStatus(action))
 	if err != nil {
@@ -381,20 +295,6 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 }
 
 func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) error {
-	if s.cache {
-		//查询是否有缓存
-		values, err := s.redisClient.GetAllListValues(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			s.logger.Error("err:" + err.Error())
-			return code.RelationErrDeleteFriendFailed
-		}
-		if len(values) == 1 {
-			err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-			if err != nil {
-				return code.RelationErrDeleteFriendFailed
-			}
-		}
-	}
 
 	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
@@ -449,20 +349,6 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 		return err
 	}
 
-	if s.cache {
-
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", relation.UserId))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return code.RelationErrDeleteFriendFailed
-		}
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", relation.UserId))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return code.RelationErrDeleteFriendFailed
-		}
-	}
-
 	return nil
 }
 
@@ -480,21 +366,6 @@ func (s *Service) AddBlacklist(ctx context.Context, userID, friendID string) (in
 		return nil, err
 	}
 
-	if s.cache {
-
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			s.logger.Error("添加黑名单失败", zap.Error(err))
-			return nil, err
-		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			s.logger.Error("添加黑名单失败", zap.Error(err))
-			return nil, err
-		}
-
-	}
 	return nil, nil
 }
 
@@ -516,19 +387,6 @@ func (s *Service) DeleteBlacklist(ctx context.Context, userID, friendID string) 
 		return nil, err
 	}
 
-	if s.cache {
-
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return nil, err
-		}
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return nil, err
-		}
-	}
 	return nil, nil
 }
 
@@ -581,19 +439,6 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 		return nil, err
 	}
 
-	if s.cache {
-
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return nil, err
-		}
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return nil, err
-		}
-	}
 	return nil, nil
 }
 
@@ -618,18 +463,6 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 		return nil, err
 	}
 
-	if s.cache {
-		err := s.redisClient.DelKey(fmt.Sprintf("friend:%s", userId))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return nil, err
-		}
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userId))
-		if err != nil {
-			s.logger.Error("删除用户好友失败", zap.Error(err))
-			return nil, err
-		}
-	}
 	return nil, nil
 }
 
@@ -793,18 +626,6 @@ func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *m
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	if s.cache {
-		err = s.redisClient.DelKey(fmt.Sprintf("dialog:%s", userID))
-		if err != nil {
-			return nil, err
-		}
-
-		err = s.redisClient.DelKey(fmt.Sprintf("friend:%s", userID))
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return nil, nil
