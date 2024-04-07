@@ -724,7 +724,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	if len(grs.GroupRelationResponses) > 0 {
 		return code.RelationGroupErrInviteFailed
 	}
-	//TODO 添加群聊配置，（是否邀请入群需要管理员权限）
+
 	//查询所有管理员
 	adminIds, err := s.relationGroupService.GetGroupAdminIds(context.Background(), &relationgrpcv1.GroupIDRequest{
 		GroupId: req.GroupID,
