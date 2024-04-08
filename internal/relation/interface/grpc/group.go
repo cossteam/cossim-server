@@ -238,7 +238,7 @@ func (s *groupServiceServer) DeleteGroupRelationByGroupId(ctx context.Context, i
 	}
 
 	if s.cacheEnable {
-		if err := s.cache.DeleteRelationByGroupId(ctx, in.GroupId); err != nil {
+		if err := s.cache.DeleteRelationByGroupID(ctx, in.GroupId); err != nil {
 			log.Printf("delete relation cache failed, err: %v", err)
 		}
 	}
@@ -384,7 +384,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 	}
 
 	if s.cacheEnable {
-		if err := s.cache.DeleteRelationByGroupId(ctx, request.GroupId); err != nil {
+		if err := s.cache.DeleteRelationByGroupID(ctx, request.GroupId); err != nil {
 			log.Printf("delete relation cache failed, err: %v", err)
 		}
 	}
@@ -448,7 +448,7 @@ func (s *groupServiceServer) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.
 	}
 
 	if s.cacheEnable {
-		if err := s.cache.DeleteRelationByGroupId(ctx, request.GroupId); err != nil {
+		if err := s.cache.DeleteRelationByGroupID(ctx, request.GroupId); err != nil {
 			log.Printf("delete relation cache failed, err: %v", err)
 		}
 	}
