@@ -9,6 +9,8 @@ type GroupRelationRepository interface {
 	UpdateRelationColumnByGroupAndUser(gid uint32, uid string, column string, value interface{}) error
 	DeleteRelationByID(gid uint32, uid string) error
 	DeleteUserGroupRelationByGroupIDAndUserID(gid uint32, uid string) error
+
+	// GetGroupUserIDs 获取群聊所有的用户ID
 	GetGroupUserIDs(gid uint32) ([]string, error)
 	GetUserGroupIDs(uid string) ([]uint32, error)
 	GetUserGroupByID(gid uint32, uid string) (*entity.GroupRelation, error)
