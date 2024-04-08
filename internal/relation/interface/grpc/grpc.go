@@ -19,7 +19,6 @@ import (
 
 type RelationServiceServer struct {
 	ac                             *pkgconfig.AppConfig
-	cache                          cache.RelationUserCache
 	UserServiceServer              *userServiceServer
 	GroupServiceServer             *groupServiceServer
 	DialogServiceServer            *dialogServiceServer
@@ -34,11 +33,15 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	redis, err := cache.NewRelationUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	userCache, err := cache.NewRelationUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
 	if err != nil {
 		return err
 	}
-	s.cache = redis
+
+	groupCache, err := cache.NewRelationGroupCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if err != nil {
+		return err
+	}
 
 	dbConn, err := mysql.GetConnection()
 	if err != nil {
@@ -53,21 +56,21 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 	s.ac = cfg
 	s.UserServiceServer = &userServiceServer{
 		db:          dbConn,
-		cache:       redis,
+		cache:       userCache,
 		cacheEnable: s.ac.Cache.Enable,
 		urr:         infra.Urr,
 		dr:          infra.Dr,
 	}
 	s.GroupServiceServer = &groupServiceServer{
 		db:          dbConn,
-		cache:       redis,
+		cache:       groupCache,
 		cacheEnable: s.ac.Cache.Enable,
 		grr:         infra.Grr,
 		dr:          infra.Dr,
 	}
 	s.DialogServiceServer = &dialogServiceServer{
 		db:          dbConn,
-		cache:       redis,
+		cache:       userCache,
 		cacheEnable: s.ac.Cache.Enable,
 		dr:          infra.Dr,
 	}
@@ -76,18 +79,18 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		dr:          infra.Dr,
 		grr:         infra.Grr,
 		gjqr:        infra.Gjqr,
-		cache:       redis,
+		cache:       groupCache,
 		cacheEnable: s.ac.Cache.Enable,
 	}
 	s.UserFriendRequestServiceServer = &userFriendRequestServiceServer{
 		db:          dbConn,
-		cache:       redis,
+		cache:       userCache,
 		cacheEnable: s.ac.Cache.Enable,
 		ufqr:        infra.Ufqr,
 	}
 	s.GroupAnnouncementServer = &groupAnnouncementServer{
 		db:    dbConn,
-		cache: redis,
+		cache: userCache,
 		gar:   infra.GAr,
 	}
 	return nil

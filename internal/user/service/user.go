@@ -183,7 +183,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 
 		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: toBytes2})
 		if err != nil {
-			return nil, "", err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 	}
 
@@ -245,7 +245,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 
 		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: toBytes2})
 		if err != nil {
-			return err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 
 	}

@@ -12,7 +12,6 @@ import (
 	userApi "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
@@ -414,7 +413,7 @@ func (s *Service) SwitchUserE2EPublicKey(ctx context.Context, userID string, fri
 		Data: toBytes,
 	})
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 	return nil, nil
 }
@@ -590,7 +589,7 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes, Type: pushgrpcv1.Type_Ws})
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 
 	return responseData, nil
@@ -625,10 +624,6 @@ func (s *Service) SetUserFriendRemark(ctx context.Context, userID string, req *m
 	}
 
 	return nil, nil
-}
-
-func (s *Service) publishServiceMessage(ctx context.Context, msg *pushgrpcv1.WsMsg) error {
-	return s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 }
 
 func (s *Service) convertDialogType(_type uint32) (relationgrpcv1.DialogType, error) {

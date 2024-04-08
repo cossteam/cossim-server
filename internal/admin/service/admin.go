@@ -266,7 +266,7 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 		Data: data,
 	})
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 
 	return nil, nil

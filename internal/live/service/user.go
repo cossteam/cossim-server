@@ -117,16 +117,12 @@ func (s *Service) CreateUserCall(ctx context.Context, senderID string, req *dto.
 	if err != nil {
 		return nil, err
 	}
-	//if err = s.publishServiceMessage(ctx, msg); err != nil {
-	//	s.logger.Error("发送消息失败", zap.Error(err))
-	//	return nil, err
-	//}
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{
 		Type: pushgrpcv1.Type_Ws,
 		Data: toBytes,
 	})
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 	return &dto.UserCallResponse{
 		Url: s.livekitServer,
@@ -215,7 +211,7 @@ func (s *Service) UserJoinRoom(ctx context.Context, uid, driverId string) (*dto.
 			Data: toBytes,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 	}
 
@@ -381,7 +377,7 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 		Data: toBytes,
 	})
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 
 	if err := s.deleteUserRoom(ctx, room); err != nil {
@@ -406,7 +402,7 @@ func (s *Service) UserRejectRoom(ctx context.Context, uid string, driverId strin
 		Data: toBytes3,
 	})
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 	//if err = s.publishServiceMessage(ctx, msg); err != nil {
 	//	s.logger.Error("发送消息失败", zap.Error(err))
@@ -564,7 +560,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 			Data: toBytes,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 		//if err := s.publishServiceMessage(ctx, msgContent); err != nil {
 		//	s.logger.Error("发送消息失败", zap.Error(err))
@@ -595,7 +591,7 @@ func (s *Service) UserLeaveRoom(ctx context.Context, uid, driverId string) (inte
 			Data: toBytes2,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 
 	}

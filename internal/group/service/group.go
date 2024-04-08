@@ -139,7 +139,7 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 			Data: toBytes2,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("推送消息失败", zap.Error(err))
 		}
 	}
 
@@ -304,6 +304,8 @@ func (s *Service) GetGroupInfoByGid(ctx context.Context, gid uint32, userID stri
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("relation => ", relation)
 
 	per := &model.Preferences{}
 	if relation != nil && relation.GroupId != 0 {

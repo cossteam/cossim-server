@@ -21,7 +21,7 @@ var _ v1.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{}
 
 type groupJoinRequestServiceServer struct {
 	db          *gorm.DB
-	cache       cache.RelationUserCache
+	cache       cache.RelationGroupCache
 	cacheEnable bool
 	dr          repository.DialogRepository
 	grr         repository.GroupRelationRepository
@@ -122,6 +122,7 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
 	}
+
 	return resp, nil
 }
 
