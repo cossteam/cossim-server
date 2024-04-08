@@ -30,7 +30,7 @@ func (u *UserFriendRequestRepo) GetFriendRequestList(userId string) ([]*entity.U
 
 func (u *UserFriendRequestRepo) GetFriendRequestBySenderIDAndReceiverID(senderId string, receiverId string) (*entity.UserFriendRequest, error) {
 	var result entity.UserFriendRequest
-	return &result, u.db.Where("sender_id = ? AND receiver_id = ? AND status = ?", senderId, receiverId, entity.Pending).Order("created_at DESC").First(&result).Error
+	return &result, u.db.Where("sender_id = ? AND receiver_id = ? AND status = ? AND deleted_at = 0", senderId, receiverId, entity.Pending).Order("created_at DESC").First(&result).Error
 }
 
 func (u *UserFriendRequestRepo) GetFriendRequestByID(id uint) (*entity.UserFriendRequest, error) {

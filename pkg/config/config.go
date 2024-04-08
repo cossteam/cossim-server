@@ -157,6 +157,14 @@ type AppConfig struct {
 	Cache               CacheConfig               `mapstructure:"cache" yaml:"cache"`
 }
 
+func (c AppConfig) String() string {
+	yamlBytes, err := yaml.Marshal(c)
+	if err != nil {
+		return ""
+	}
+	return string(yamlBytes)
+}
+
 type EncryptionConfig struct {
 	Enable     bool   `mapstructure:"enable" yaml:"enable"`
 	Name       string `mapstructure:"name" yaml:"name"`

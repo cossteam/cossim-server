@@ -160,7 +160,7 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *model.SendFriendRequest) (interface{}, error) {
 	friendID := req.UserId
 	if friendID == userID {
-		return nil, code.RelationErrSendFriendRequestFailed
+		return nil, code.MyCustomErrorCode.CustomMessage("不能添加自己为好友")
 	}
 	_, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: friendID})
 	if err != nil {
