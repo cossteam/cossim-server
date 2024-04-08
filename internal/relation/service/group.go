@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -10,7 +11,6 @@ import (
 	userApi "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/cossim/coss-server/pkg/utils/usersorter"
@@ -178,8 +178,12 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 
 	for _, id := range adminIds.UserIds {
 		msg := &pushgrpcv1.WsMsg{Uid: id, Event: pushgrpcv1.WSEventType_JoinGroupEvent, PushOffline: true, Data: &any.Any{Value: bytes}, SendAt: time.Now()}
+		toBytes, err := utils.StructToBytes(msg)
+		if err != nil {
+			return nil, err
+		}
 		//通知消息服务有消息需要发送
-		err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes, Type: pushgrpcv1.Type_Ws})
 		if err != nil {
 			s.logger.Error("加入群聊请求申请通知推送失败", zap.Error(err))
 		}
@@ -442,12 +446,8 @@ func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID u
 
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes, Type: pushgrpcv1.Type_Ws})
 	if err != nil {
-		return err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
-	//err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
-	//if err != nil {
-	//	s.logger.Error("通知消息服务有消息需要发送失败", zap.Error(err))
-	//}
 
 	return nil
 }
@@ -517,7 +517,7 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: msgBytes, Type: pushgrpcv1.Type_Ws})
 	if err != nil {
-		return err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 
 	return nil
@@ -596,7 +596,7 @@ func (s *Service) CreateGroupAnnouncement(ctx context.Context, userId string, re
 		}
 		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Data: toBytes, Type: pushgrpcv1.Type_Ws})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 	}
 
@@ -688,6 +688,8 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.GroupErrGroupStatusNotAvailable
 	}
 
+	fmt.Println("InviteGroup 1")
+
 	for _, s2 := range req.Member {
 		//查询是不是已经有邀请
 		id, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
@@ -697,7 +699,8 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		if err != nil {
 			s.logger.Error("获取群聊信息失败", zap.Error(err))
 		}
-		if id != nil && id.GroupId != 0 {
+		fmt.Println("id => ", id)
+		if id != nil && id.GroupId != 0 && (id.Status == relationgrpcv1.GroupRequestStatus_Pending || id.Status == relationgrpcv1.GroupRequestStatus_Invite) {
 			return code.RelationErrGroupRequestAlreadyProcessed
 		}
 	}
@@ -762,7 +765,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	}
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws_Batch_User, Data: toBytes})
 	if err != nil {
-		return err
+		s.logger.Error("推送消息失败", zap.Error(err))
 	}
 
 	data2 := map[string]interface{}{"group_id": req.GroupID, "inviter_id": inviterId}
@@ -779,9 +782,8 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		}
 		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: structToBytes})
 		if err != nil {
-			return err
+			s.logger.Error("推送消息失败", zap.Error(err))
 		}
-		//err = s.rabbitMQClient.PublishServiceMessage(msg_queue.RelationService, msg_queue.MsgService, msg_queue.Service_Exchange, msg_queue.SendMessage, msg)
 	}
 
 	return nil
@@ -1005,7 +1007,7 @@ func (s *Service) UpdateGroupAnnouncement(ctx context.Context, userId string, re
 
 	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws_Batch_User, Data: toBytes})
 	if err != nil {
-		return nil, err
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 
 	return res, nil

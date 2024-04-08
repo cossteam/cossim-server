@@ -56,7 +56,7 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 			Data: bytes2,
 		})
 		if err != nil {
-			return
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 
 	}

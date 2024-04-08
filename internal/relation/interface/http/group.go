@@ -517,7 +517,7 @@ func (h *Handler) inviteGroup(c *gin.Context) {
 
 	if err = h.svc.InviteGroup(c, uid, req); err != nil {
 		h.logger.Error("邀请好友加入群聊失败", zap.Error(err))
-		response.SetFail(c, code.Cause(err).Message(), nil)
+		c.Error(err)
 		return
 	}
 

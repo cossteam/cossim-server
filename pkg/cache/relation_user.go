@@ -252,13 +252,11 @@ func (r *RelationUserCacheRedis) GetRelation(ctx context.Context, ownerUserID st
 }
 
 func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID string, targetUserIDs []string) ([]*relationgrpcv1.GetUserRelationResponse, error) {
-	// 准备 Redis 所有关系对象的键
 	keys := make([]string, len(targetUserIDs))
 	for i, targetUserID := range targetUserIDs {
 		keys[i] = GetFriendKey(ownerUserID, targetUserID)
 	}
 
-	// 使用 Redis 的 MGet 方法一次性获取所有关系对象的值
 	vals, err := r.client.MGet(ctx, keys...).Result()
 	if err != nil {
 		return nil, err
@@ -267,11 +265,9 @@ func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID s
 	relations := make([]*relationgrpcv1.GetUserRelationResponse, len(vals))
 	for i, val := range vals {
 		if val == nil {
-			//relations[i] = nil
 			continue
 		}
 
-		// 解码缓存值为关系对象
 		relation := &relationgrpcv1.GetUserRelationResponse{}
 		if err := json.Unmarshal([]byte(val.(string)), relation); err != nil {
 			return nil, err

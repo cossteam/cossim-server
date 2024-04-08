@@ -40,19 +40,17 @@ type Service struct {
 	groupService                     groupgrpcv1.GroupServiceClient
 	pushService                      pushgrpcv1.PushServiceClient
 
-	msgClient      msggrpcv1.MsgServiceClient
-	rabbitMQClient *msg_queue.RabbitMQ
-	redisClient    *cache.RedisClient
+	msgClient   msggrpcv1.MsgServiceClient
+	redisClient *cache.RedisClient
 }
 
 func New(ac *pkgconfig.AppConfig, relationService *grpchandler.RelationServiceServer) *Service {
 	s := &Service{
-		rabbitMQClient: setRabbitMQProvider(ac),
-		redisClient:    setupRedis(ac),
-		logger:         plog.NewDefaultLogger("relation_bff", int8(ac.Log.Level)),
-		ac:             ac,
-		sid:            xid.New().String(),
-		dtmGrpcServer:  ac.Dtm.Addr(),
+		redisClient:   setupRedis(ac),
+		logger:        plog.NewDefaultLogger("relation_bff", int8(ac.Log.Level)),
+		ac:            ac,
+		sid:           xid.New().String(),
+		dtmGrpcServer: ac.Dtm.Addr(),
 	}
 	s.cache = s.setCacheConfig()
 	s.relationGroupService = relationService.GroupServiceServer

@@ -288,7 +288,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 
 		if err != nil {
 			s.logger.Error("推送失败", zap.Error(err))
-			return
 		}
 		//if _, ok := pool[receiverId]; ok {
 		//	if len(pool[receiverId]) > 0 {
@@ -351,7 +350,6 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 	})
 	if err != nil {
 		s.logger.Error("推送失败", zap.Error(err))
-		return
 	}
 	//if _, ok := pool[senderId]; ok {
 	//	if len(pool[senderId]) > 0 {
@@ -993,7 +991,7 @@ func (s *Service) SendMsg(uid string, driverId string, event pushv1.WSEventType,
 		Data: bytes2,
 	})
 	if err != nil {
-		return
+		s.logger.Error("发送消息失败", zap.Error(err))
 	}
 }
 

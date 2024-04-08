@@ -173,7 +173,7 @@ func (s *Service) CreateGroupCall(ctx context.Context, uid string, gid uint32, m
 			Data: toBytes,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 	}
 
@@ -273,7 +273,7 @@ func (s *Service) GroupJoinRoom(ctx context.Context, gid uint32, uid, driverId s
 			Data: toBytes,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 	}
 
@@ -410,7 +410,7 @@ func (s *Service) GroupRejectRoom(ctx context.Context, gid uint32, uid string) (
 			Data: toBytes,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 
 		//if err = s.publishServiceMessage(ctx, msg); err != nil {
@@ -512,7 +512,7 @@ func (s *Service) GroupLeaveRoom(ctx context.Context, gid uint32, uid string, fo
 			Data: toBytes,
 		})
 		if err != nil {
-			return nil, err
+			s.logger.Error("发送消息失败", zap.Error(err))
 		}
 	}
 
