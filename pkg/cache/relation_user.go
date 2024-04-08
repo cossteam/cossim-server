@@ -3,7 +3,6 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/redis/go-redis/v9"
 	"time"
@@ -18,11 +17,6 @@ const (
 	RelationFriendRequestKey     = RelationKeyPrefix + "friend_request:"
 	RelationFriendRequestListKey = RelationKeyPrefix + "friend_request_list:"
 	RelationBlacklistKey         = RelationKeyPrefix + "blacklist:"
-)
-
-var (
-	ErrCacheContentEmpty = errors.New("cache content cannot be empty")
-	ErrCacheKeyEmpty     = errors.New("cache key cannot be empty")
 )
 
 func GetFriendKey(ownerUserID string, targetUserID string) string {

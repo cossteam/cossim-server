@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/internal/user/domain/repository"
 	"github.com/cossim/coss-server/internal/user/infrastructure/persistence"
 	"github.com/cossim/coss-server/internal/user/utils"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
@@ -20,15 +21,16 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+	"log"
 	"strconv"
 )
 
 type Handler struct {
-	ac  *pkgconfig.AppConfig
-	ur  repository.UserRepository
-	ulr repository.UserLoginRepository
-	api.UnimplementedUserServiceServer
-	api.UnimplementedUserLoginServiceServer
+	ac           *pkgconfig.AppConfig
+	ur           repository.UserRepository
+	ulr          repository.UserLoginRepository
+	cache        cache.UserCache
+	cacheEnabled bool
 }
 
 func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -45,6 +47,11 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
+	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if err != nil {
+		return err
+	}
+
 	infra := persistence.NewRepositories(dbConn)
 	if err = infra.Automigrate(); err != nil {
 		return err
@@ -53,6 +60,8 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	s.ur = infra.UR
 	s.ulr = infra.ULR
 	s.ac = cfg
+	s.cacheEnabled = cfg.Cache.Enable
+	s.cache = userCache
 	return nil
 }
 
@@ -156,6 +165,14 @@ func (s *Handler) UserRegister(ctx context.Context, request *api.UserRegisterReq
 
 func (s *Handler) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
+
+	if s.cacheEnabled {
+		info, err := s.cache.GetUserInfo(ctx, request.UserId)
+		if err == nil && info != nil {
+			return info, nil
+		}
+	}
+
 	userInfo, err := s.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -174,11 +191,27 @@ func (s *Handler) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*
 		Status:    api.UserStatus(userInfo.Status),
 		CossId:    userInfo.CossID,
 	}
+
+	if s.cacheEnabled {
+		if err := s.cache.SetUserInfo(ctx, request.UserId, resp, cache.UserExpireTime); err != nil {
+			log.Printf("无法设置用户信息缓存: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
 func (s *Handler) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
 	resp := &api.GetBatchUserInfoResponse{}
+
+	if s.cacheEnabled {
+		users, err := s.cache.GetUsersInfo(ctx, request.UserIds)
+		if err == nil {
+			resp.Users = users
+			return resp, nil
+		}
+	}
+
 	users, err := s.ur.GetBatchGetUserInfoByIDs(request.UserIds)
 	if err != nil {
 		fmt.Printf("无法获取用户列表信息: %v\n", err)
@@ -262,6 +295,13 @@ func (s *Handler) ModifyUserInfo(ctx context.Context, in *api.User) (*api.UserRe
 		return resp, err
 	}
 	resp = &api.UserResponse{UserId: user.ID}
+
+	if s.cacheEnabled {
+		if err := s.cache.DeleteUsersInfo([]string{user.ID}); err != nil {
+			log.Printf("无法删除用户信息缓存: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
