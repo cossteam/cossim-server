@@ -12,6 +12,7 @@ import (
 const (
 	RelationGroupKey                        = RelationKeyPrefix + "group_info:"
 	RelationGroupJoinRequestListByUserIDKey = RelationKeyPrefix + "group_join_request_list:"
+	RelationGroupUserJoinGroupListKey       = RelationKeyPrefix + "group_user_join_group_list:"
 )
 
 func GetGroupKey(userID string, groupID uint32) string {
@@ -20,6 +21,10 @@ func GetGroupKey(userID string, groupID uint32) string {
 
 func GetGroupJoinRequestListByUserIDKey(userID string) string {
 	return RelationGroupJoinRequestListByUserIDKey + userID
+}
+
+func GetGroupUserJoinGroupListKey(userID string) string {
+	return RelationGroupUserJoinGroupListKey + userID
 }
 
 type RelationGroupCache interface {
@@ -34,6 +39,11 @@ type RelationGroupCache interface {
 	GetGroupJoinRequestListByUser(ctx context.Context, userID string) (*relationgrpcv1.GroupJoinRequestListResponse, error)
 	SetGroupJoinRequestListByUser(ctx context.Context, userID string, data *relationgrpcv1.GroupJoinRequestListResponse, expiration time.Duration) error
 	DeleteGroupJoinRequestListByUser(ctx context.Context, userID ...string) error
+
+	// GetUserGroupIDs 获取用户加入的群聊id列表
+	GetUserGroupIDs(ctx context.Context, userID string) ([]uint32, error)
+	SetUserGroupIDs(ctx context.Context, userID string, groupIDs []uint32) error
+	DeleteUserGroupIDs(ctx context.Context, userID ...string) error
 }
 
 var _ RelationGroupCache = &RelationGroupCacheRedis{}
@@ -57,6 +67,56 @@ func NewRelationGroupCacheRedis(addr, password string, db int) (*RelationGroupCa
 
 type RelationGroupCacheRedis struct {
 	client *redis.Client
+}
+
+func (r *RelationGroupCacheRedis) SetUserGroupIDs(ctx context.Context, userID string, groupIDs []uint32) error {
+	if userID == "" {
+		return ErrCacheKeyEmpty
+	}
+
+	groupIDsStr := make([]string, len(groupIDs))
+	for i, id := range groupIDs {
+		groupIDsStr[i] = strconv.FormatUint(uint64(id), 10)
+	}
+
+	groupIDsJSON, err := json.Marshal(groupIDsStr)
+	if err != nil {
+		return err
+	}
+
+	key := GetGroupUserJoinGroupListKey(userID)
+	return r.client.Set(ctx, key, groupIDsJSON, 0).Err()
+}
+
+func (r *RelationGroupCacheRedis) DeleteUserGroupIDs(ctx context.Context, userID ...string) error {
+	if len(userID) == 0 {
+		return ErrCacheKeyEmpty
+	}
+
+	keys := make([]string, len(userID))
+	for i, id := range userID {
+		keys[i] = GetGroupUserJoinGroupListKey(id)
+	}
+	return r.client.Del(ctx, keys...).Err()
+}
+
+func (r *RelationGroupCacheRedis) GetUserGroupIDs(ctx context.Context, userID string) ([]uint32, error) {
+	if userID == "" {
+		return nil, ErrCacheKeyEmpty
+	}
+
+	key := GetGroupUserJoinGroupListKey(userID)
+	var resp []uint32
+	val, err := r.client.Get(ctx, key).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal([]byte(val), &resp); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 func (r *RelationGroupCacheRedis) DeleteGroupJoinRequestListByUser(ctx context.Context, userIDs ...string) error {
