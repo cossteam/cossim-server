@@ -2,7 +2,13 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"time"
+)
+
+var (
+	ErrCacheContentEmpty = errors.New("cache content cannot be empty")
+	ErrCacheKeyEmpty     = errors.New("cache key cannot be empty")
 )
 
 // Cache 接口定义了一个通用的缓存接口

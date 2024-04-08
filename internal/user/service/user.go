@@ -440,8 +440,6 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 		s.logger.Error("获取用户关系失败", zap.Error(err))
 	}
 
-	fmt.Println("查询用户信息1", userID)
-	fmt.Println("查询用户信息2", thisID)
 	if relation != nil {
 		if thisID != userID && relation.UserId != "" {
 			if relation.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
