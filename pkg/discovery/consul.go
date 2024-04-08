@@ -1,7 +1,6 @@
 package discovery
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/pkg/config"
@@ -441,14 +440,10 @@ func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig
 		return nil, err
 	}
 
-	fmt.Println("newValue => ", newValue)
-
 	err = yaml.Unmarshal([]byte(newValue), ac)
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("ac => ", ac)
 
 	for _, v := range keys {
 		newValue, err = m.cc.Get(v)
@@ -459,6 +454,7 @@ func (m *RemoteConfigManager) Get(key string, keys ...string) (*config.AppConfig
 			return nil, err
 		}
 	}
+	fmt.Println("ac => ", ac)
 	return ac, nil
 }
 
@@ -612,13 +608,6 @@ func (m *RemoteConfigManager) handlerConfig(key string, ac *config.AppConfig, ne
 		return fmt.Errorf("unknown config key: %s", key)
 	}
 
-	marshal1, err := json.Marshal(ac.Dtm)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("更新前配置 => ", string(marshal1))
-
 	// 解析新的配置值
 	var newConfig map[string]interface{}
 	if err := yaml.Unmarshal([]byte(newValue), &newConfig); err != nil {
@@ -629,13 +618,6 @@ func (m *RemoteConfigManager) handlerConfig(key string, ac *config.AppConfig, ne
 	if err := updateConfigField(fieldName, ac, newConfig); err != nil {
 		return err
 	}
-
-	marshal2, err := json.Marshal(ac.Dtm)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("更新后配置 => ", string(marshal2))
 
 	// 持久化到文件
 	if m.persistence && m.configFile != "" {

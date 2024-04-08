@@ -208,6 +208,7 @@ type RequestListResponse struct {
 	UserID   string                `json:"user_id"`
 	Nickname string                `json:"nickname"`
 	Avatar   string                `json:"avatar"`
+	Remark   string                `json:"remark"`
 	Identity GroupRelationIdentity `json:"identity"`
 }
 

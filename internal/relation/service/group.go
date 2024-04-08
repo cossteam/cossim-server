@@ -106,6 +106,7 @@ func (s *Service) GetGroupMember(ctx context.Context, gid uint32, userID string)
 		for _, v1 := range relation.GroupRelationResponses {
 			if v1.UserId == v.UserId {
 				data[i].Identity = model.GroupRelationIdentity(v1.Identity)
+				data[i].Remark = v1.Remark
 			}
 		}
 	}
@@ -724,6 +725,10 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrInviteFailed
 	}
 
+	for _, v := range grs.GroupRelationResponses {
+		fmt.Println("v => ", v)
+	}
+
 	if len(grs.GroupRelationResponses) > 0 {
 		return code.RelationGroupErrInviteFailed
 	}
@@ -1214,7 +1219,10 @@ func (s *Service) DeleteGroupFriendRecord(ctx context.Context, uid string, id ui
 		return code.Forbidden
 	}
 
-	_, err = s.relationGroupJoinRequestService.DeleteGroupRecord(ctx, &relationgrpcv1.DeleteGroupRecordRequest{ID: id})
+	_, err = s.relationGroupJoinRequestService.DeleteGroupRecord(ctx, &relationgrpcv1.DeleteGroupRecordRequest{
+		ID:     id,
+		UserId: uid,
+	})
 	if err != nil {
 		s.logger.Error("删除群聊申请记录失败", zap.Uint32("id", id), zap.String("uid", uid), zap.Error(err))
 		return err

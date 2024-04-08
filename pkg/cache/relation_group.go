@@ -19,7 +19,7 @@ func GetGroupKey(userID string, groupID uint32) string {
 }
 
 func GetGroupJoinRequestListByUserIDKey(userID string) string {
-	return RelationGroupJoinRequestListByUserIDKey + ":" + userID
+	return RelationGroupJoinRequestListByUserIDKey + userID
 }
 
 type RelationGroupCache interface {
@@ -31,7 +31,9 @@ type RelationGroupCache interface {
 	GetBatchGroupRelation(ctx context.Context, userID []string, groupID uint32) (*relationgrpcv1.GetBatchGroupRelationResponse, error)
 	GetGroupMember(ctx context.Context, groupID uint32)
 
-	GetGroupJoinRequestListByUsers(ctx context.Context, userID ...string) (*relationgrpcv1.GroupJoinRequestListResponse, error)
+	GetGroupJoinRequestListByUser(ctx context.Context, userID string) (*relationgrpcv1.GroupJoinRequestListResponse, error)
+	SetGroupJoinRequestListByUser(ctx context.Context, userID string, data *relationgrpcv1.GroupJoinRequestListResponse, expiration time.Duration) error
+	DeleteGroupJoinRequestListByUser(ctx context.Context, userID ...string) error
 }
 
 var _ RelationGroupCache = &RelationGroupCacheRedis{}
@@ -57,37 +59,52 @@ type RelationGroupCacheRedis struct {
 	client *redis.Client
 }
 
+func (r *RelationGroupCacheRedis) DeleteGroupJoinRequestListByUser(ctx context.Context, userIDs ...string) error {
+	if len(userIDs) == 0 {
+		return ErrCacheKeyEmpty
+	}
+
+	keys := make([]string, len(userIDs))
+	for i, targetUserID := range userIDs {
+		keys[i] = GetGroupJoinRequestListByUserIDKey(targetUserID)
+	}
+	return r.client.Del(ctx, keys...).Err()
+}
+
+func (r *RelationGroupCacheRedis) SetGroupJoinRequestListByUser(ctx context.Context, userID string, data *relationgrpcv1.GroupJoinRequestListResponse, expiration time.Duration) error {
+	if userID == "" {
+		return ErrCacheKeyEmpty
+	}
+
+	key := GetGroupJoinRequestListByUserIDKey(userID)
+	if data == nil {
+		return ErrCacheContentEmpty
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return r.client.Set(ctx, key, b, expiration).Err()
+}
+
 func (r *RelationGroupCacheRedis) DeleteRelationByGroupID(ctx context.Context, groupID uint32) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (r *RelationGroupCacheRedis) GetGroupJoinRequestListByUsers(ctx context.Context, userID ...string) (*relationgrpcv1.GroupJoinRequestListResponse, error) {
-	keys := make([]string, len(userID))
-	for i, targetUserID := range userID {
-		keys[i] = GetGroupJoinRequestListByUserIDKey(targetUserID)
-	}
-
-	vals, err := r.client.MGet(ctx, keys...).Result()
+func (r *RelationGroupCacheRedis) GetGroupJoinRequestListByUser(ctx context.Context, userID string) (*relationgrpcv1.GroupJoinRequestListResponse, error) {
+	key := GetGroupJoinRequestListByUserIDKey(userID)
+	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	resp := &relationgrpcv1.GroupJoinRequestListResponse{}
-	for i, val := range vals {
-		if val == nil {
-			continue
-		}
-
-		relation := &relationgrpcv1.GroupJoinRequestResponse{}
-		if err := json.Unmarshal([]byte(val.(string)), relation); err != nil {
-			return nil, err
-		}
-
-		resp.GroupJoinRequestResponses[i] = relation
+	friendRequestList := &relationgrpcv1.GroupJoinRequestListResponse{}
+	if err := json.Unmarshal([]byte(val), friendRequestList); err != nil {
+		return nil, err
 	}
 
-	return resp, nil
+	return friendRequestList, nil
 }
 
 func (r *RelationGroupCacheRedis) GetGroupMember(ctx context.Context, groupID uint32) {
@@ -96,6 +113,10 @@ func (r *RelationGroupCacheRedis) GetGroupMember(ctx context.Context, groupID ui
 }
 
 func (r *RelationGroupCacheRedis) DeleteRelationByGroupId(ctx context.Context, groupID uint32) error {
+	if groupID == 0 {
+		return ErrCacheKeyEmpty
+	}
+
 	// 构建匹配模式，以便扫描符合条件的键
 	pattern := GetGroupKey("*", groupID)
 
@@ -111,6 +132,10 @@ func (r *RelationGroupCacheRedis) DeleteRelationByGroupId(ctx context.Context, g
 }
 
 func (r *RelationGroupCacheRedis) GetBatchGroupRelation(ctx context.Context, userID []string, groupID uint32) (*relationgrpcv1.GetBatchGroupRelationResponse, error) {
+	if groupID == 0 || len(userID) == 0 {
+		return nil, ErrCacheKeyEmpty
+	}
+
 	pipeline := r.client.Pipeline()
 
 	// 创建一个用于存储结果的切片
@@ -153,6 +178,10 @@ func (r *RelationGroupCacheRedis) GetBatchGroupRelation(ctx context.Context, use
 }
 
 func (r *RelationGroupCacheRedis) GetRelation(ctx context.Context, userID string, groupID uint32) (*relationgrpcv1.GetGroupRelationResponse, error) {
+	if groupID == 0 || userID == "" {
+		return nil, ErrCacheKeyEmpty
+	}
+
 	key := GetGroupKey(userID, groupID)
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
@@ -168,6 +197,10 @@ func (r *RelationGroupCacheRedis) GetRelation(ctx context.Context, userID string
 }
 
 func (r *RelationGroupCacheRedis) GetRelations(ctx context.Context, userID string, groupID []uint32) ([]*relationgrpcv1.GetGroupRelationResponse, error) {
+	if len(groupID) == 0 || userID == "" {
+		return nil, ErrCacheKeyEmpty
+	}
+
 	keys := make([]string, len(groupID))
 	for i, targetUserID := range groupID {
 		keys[i] = GetGroupKey(userID, targetUserID)
@@ -196,6 +229,10 @@ func (r *RelationGroupCacheRedis) GetRelations(ctx context.Context, userID strin
 }
 
 func (r *RelationGroupCacheRedis) SetRelation(ctx context.Context, userID string, groupID uint32, data *relationgrpcv1.GetGroupRelationResponse, expiration time.Duration) error {
+	if groupID == 0 || userID == "" {
+		return ErrCacheKeyEmpty
+	}
+
 	key := GetGroupKey(userID, groupID)
 	if data == nil {
 		return ErrCacheContentEmpty
@@ -208,6 +245,10 @@ func (r *RelationGroupCacheRedis) SetRelation(ctx context.Context, userID string
 }
 
 func (r *RelationGroupCacheRedis) DeleteRelation(ctx context.Context, userID string, groupID uint32) error {
+	if groupID == 0 || userID == "" {
+		return ErrCacheKeyEmpty
+	}
+
 	key := GetGroupKey(userID, groupID)
 	return r.client.Del(ctx, key).Err()
 }

@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
+	"log"
 )
 
 var _ v1.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{}
@@ -83,6 +84,14 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
 	}
+
+	request.Member = append(request.Member, request.InviterId)
+	if s.cacheEnable {
+		if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, request.Member...); err != nil {
+			log.Printf("delete group join request list by user failed, err: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
@@ -129,35 +138,13 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx context.Context, request *v1.GetGroupJoinRequestListRequest) (*v1.GroupJoinRequestListResponse, error) {
 	var resp = &v1.GroupJoinRequestListResponse{}
 
-	////获取该用户管理的群聊
-	//ds, err := s.grr.GetUserManageGroupIDs(request.UserId)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//if len(ds) > 0 {
-	//	//获取该用户管理的群聊的申请列表
-	//	ids := make([]uint, 0)
-	//	for _, v := range ds {
-	//		ids = append(ids, uint(v))
-	//	}
-	//	list, err := s.gjqr.GetJoinRequestBatchListByGroupIDs(ids, request.UserId)
-	//	if err != nil {
-	//		return resp, err
-	//	}
-	//	if len(list) > 0 {
-	//		for _, v := range list {
-	//			resp.GroupJoinRequestResponses = append(resp.GroupJoinRequestResponses, &v1.GroupJoinRequestResponse{
-	//				ID:        uint32(v.ID),
-	//				UserId:    v.UserID,
-	//				GroupId:   uint32(v.GroupID),
-	//				Status:    v1.GroupRequestStatus(v.Status),
-	//				InviterId: v.Inviter,
-	//				CreatedAt: uint64(v.CreatedAt),
-	//				Remark:    v.Remark,
-	//			})
-	//		}
-	//	}
-	//}
+	if s.cacheEnable {
+		users, err := s.cache.GetGroupJoinRequestListByUser(ctx, request.UserId)
+		if err == nil && len(users.GroupJoinRequestResponses) != 0 {
+			return users, nil
+		}
+	}
+
 	//获取他自己的申请列表
 	list, err := s.gjqr.GetGroupJoinRequestListByUserId(request.UserId)
 	if err != nil {
@@ -176,6 +163,13 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 			})
 		}
 	}
+
+	if s.cacheEnable {
+		if err := s.cache.SetGroupJoinRequestListByUser(ctx, request.UserId, resp, cache.RelationExpireTime); err != nil {
+			log.Printf("set group join request list by user failed, err: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
@@ -213,6 +207,13 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		if err := s.gjqr.ManageGroupJoinRequestByID(info.GroupID, info.UserID, entity.RequestStatus(in.Status)); err != nil {
 			return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
+
+		if s.cacheEnable {
+			if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, info.UserID, info.Inviter); err != nil {
+				log.Printf("delete group join request list by user failed, err: %v", err)
+			}
+		}
+
 		return resp, nil
 	}
 
@@ -265,6 +266,12 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		return resp, err
 	}
 
+	if s.cacheEnable {
+		if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, info.UserID, info.Inviter); err != nil {
+			log.Printf("delete group join request list by user failed, err: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
@@ -287,8 +294,18 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByID(ctx context.Cont
 
 func (s *groupJoinRequestServiceServer) DeleteGroupRecord(ctx context.Context, req *v1.DeleteGroupRecordRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
+
+	if req.ID == 0 || req.UserId == "" {
+		return nil, status.Error(codes.Code(code.InvalidParameter.Code()), code.InvalidParameter.Message())
+	}
+
 	if err := s.gjqr.DeleteJoinRequestByID(uint(req.ID)); err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrDeleteGroupJoinRecord.Code()), err.Error())
+	}
+	if s.cacheEnable {
+		if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, req.UserId); err != nil {
+			log.Printf("delete group join request list by user failed, err: %v", err)
+		}
 	}
 	return resp, nil
 }
