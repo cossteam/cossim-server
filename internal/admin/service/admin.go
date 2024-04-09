@@ -24,6 +24,8 @@ import (
 	"github.com/o1egl/govatar"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"image/png"
 )
 
@@ -92,7 +94,7 @@ func (s *Service) InitAdmin() error {
 
 		})
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 		// 创建初始化数据
 		resp2, err := s.userService.CreateUser(context.Background(), &usergrpcv1.CreateUserRequest{
@@ -107,7 +109,7 @@ func (s *Service) InitAdmin() error {
 
 		})
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
@@ -125,7 +127,7 @@ func (s *Service) InitAdmin() error {
 
 		err = s.repo.Ar.InsertAndUpdateAdmin(&entity.Admin{UserId: UserId, Role: entity.SuperAdminRole, Status: entity.NormalStatus})
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 		return err
 	}); err != nil {

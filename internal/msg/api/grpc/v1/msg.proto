@@ -538,13 +538,30 @@ message UnreadGroupMessage {
   string UserId = 2;
 }
 
+message MsgIdRequest{
+  // @inject_tag: json:"msg_id"
+  uint32 MsgId = 1;
+}
+
+message SendUserMsgRevertResponse{
+
+}
+
+message SendGroupMsgRevertResponse{
+
+}
+
 service MsgService {
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
+  //发送私聊消息
+  rpc SendUserMessageRevert(MsgIdRequest)returns (SendUserMsgRevertResponse);
   //群发私聊消息
   rpc SendMultiUserMessage(SendMultiUserMsgRequest) returns(SendMultiUserMsgResponse);
   //发送群消息
   rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
+  //发送群消息回滚
+  rpc SendGroupMessageRevert(MsgIdRequest)returns (SendGroupMsgRevertResponse);
   //获取用户消息列表
   rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
   //获取私聊对话最新消息

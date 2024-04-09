@@ -19,6 +19,8 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"sort"
 )
 
@@ -93,7 +95,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 				UserId:   userID,
 			})
 			if err != nil {
-				return err
+				return status.Error(codes.Aborted, err.Error())
 			}
 
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
@@ -113,7 +115,7 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 				UserId:   dialogUser2.UserId,
 			})
 			if err != nil {
-				return err
+				return status.Error(codes.Aborted, err.Error())
 			}
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 				_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
@@ -136,15 +138,20 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		})
 		if err != nil {
 			s.logger.Error("发送消息失败", zap.Error(err))
-			return code.MsgErrInsertUserMessageFailed
+			return status.Error(codes.Aborted, err.Error())
 		}
+
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err := s.msgService.SendUserMessageRevert(wf.Context, &msggrpcv1.MsgIdRequest{MsgId: message.MsgId})
+			return err
+		})
 
 		return err
 	}); err != nil {
-		return "", code.MsgErrInsertUserMessageFailed
+		return "", err
 	}
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		return "", err
+		return "", code.MsgErrInsertUserMessageFailed
 	}
 
 	//查询发送者信息

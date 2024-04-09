@@ -28,6 +28,8 @@ import (
 	"github.com/o1egl/govatar"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"image/png"
 	"io/ioutil"
 	"mime/multipart"
@@ -315,11 +317,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 			Avatar:          aUrl,
 		})
 		if err != nil {
-			s.logger.Error("failed to register user", zap.Error(err))
-			if strings.Contains(err.Error(), "邮箱已被注册") {
-				return code.UserErrEmailAlreadyRegistered
-			}
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 		UserId = resp.UserId
 
@@ -331,7 +329,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 		_, err = s.userService.UserInfo(wf.Context, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
 		if err != nil {
 			s.logger.Error("failed to register user", zap.Error(err))
-			return code.UserErrRegistrationFailed
+			return status.Error(codes.Aborted, err.Error())
 		}
 
 		//添加系统好友
@@ -340,8 +338,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 			FriendId: constants.SystemNotification,
 		})
 		if err != nil {
-			s.logger.Error("failed to register user", zap.Error(err))
-			return code.UserErrRegistrationFailed
+			return status.Error(codes.Aborted, err.Error())
 		}
 
 		return err
@@ -350,7 +347,10 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	}
 
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		return "", err
+		if strings.Contains(err.Error(), "邮箱已被注册") {
+			return "", code.UserErrEmailAlreadyRegistered
+		}
+		return "", code.UserErrRegistrationFailed
 	}
 
 	if s.ac.Email.Enable {

@@ -15,6 +15,8 @@ import (
 	"strconv"
 )
 
+var _ api.MsgServiceServer = &Handler{}
+
 type Handler struct {
 	db   *gorm.DB
 	ac   *pkgconfig.AppConfig

@@ -21,6 +21,8 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	ostime "time"
 )
 
@@ -310,42 +312,36 @@ func (s *Service) DeleteFriend(ctx context.Context, userID, friendID string) err
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		_, err := s.relationDialogService.DeleteDialogUserByDialogIDAndUserID(wf.Context, r1)
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			_, err := s.relationDialogService.DeleteDialogUserByDialogIDAndUserIDRevert(wf.Context, r1)
-			if err != nil {
-				return err
-			}
-			return nil
+			return err
 		})
 
 		_, err = s.relationUserService.DeleteFriend(wf.Context, r2)
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			_, err := s.relationUserService.DeleteFriendRevert(wf.Context, r2)
-			if err != nil {
-				return err
-			}
-			return nil
+			return err
 		})
 
 		_, err = s.msgClient.ConfirmDeleteUserMessageByDialogId(wf.Context, r3)
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 
 		return err
 	}); err != nil {
-		return code.RelationErrDeleteFriendFailed
+		return err
 	}
 
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		return err
+		return code.RelationErrDeleteFriendFailed
 	}
 
 	return nil
@@ -463,98 +459,6 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 	}
 
 	return nil, nil
-}
-
-// manageFriend2 不存在好友关系，创建新的关系
-func (s *Service) manageFriend2(ctx context.Context, userId, friendId string, status relationgrpcv1.RelationStatus) (uint32, error) {
-	var dialogId uint32
-	// 创建 DTM 分布式事务工作流
-	workflow.InitGrpc(s.dtmGrpcServer, s.relationServiceAddr, grpc.NewServer())
-	gid := shortuuid.New()
-	wfName := "manage_friend_workflow_2_" + gid
-	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		r1 := &relationgrpcv1.ConfirmFriendAndJoinDialogRequest{
-			OwnerId: userId,
-			UserId:  friendId,
-		}
-		resp1, err := s.relationDialogService.ConfirmFriendAndJoinDialog(ctx, r1)
-		if err != nil {
-			return err
-		}
-		dialogId = resp1.Id
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.relationDialogService.ConfirmFriendAndJoinDialogRevert(ctx, &relationgrpcv1.ConfirmFriendAndJoinDialogRevertRequest{DialogId: resp1.Id, OwnerId: userId, UserId: friendId})
-			return err
-		})
-
-		r2 := &relationgrpcv1.ManageFriendRequest{
-			UserId:   userId,
-			FriendId: friendId,
-			Status:   status,
-			DialogId: resp1.Id,
-		}
-		_, err = s.relationUserService.ManageFriend(ctx, r2)
-		if err != nil {
-			return err
-		}
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.relationUserService.ManageFriendRevert(ctx, r2)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-
-		return nil
-	}); err != nil {
-		s.logger.Error("workflow RegisterGRPC manageFriend2", zap.Error(err))
-		return 0, code.RelationErrConfirmFriendFailed
-	}
-	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		s.logger.Error("workflow manageFriend2", zap.Error(err))
-		return 0, code.RelationErrConfirmFriendFailed
-	}
-
-	return dialogId, nil
-}
-
-// manageFriend3 只修改关系状态 现在只是拒绝操作
-func (s *Service) manageFriend3(ctx context.Context, userId, friendId string, dialogId uint32, status relationgrpcv1.RelationStatus) error {
-	// 创建 DTM 分布式事务工作流
-	gid := shortuuid.New()
-	wfName := "manage_friend_workflow_3_" + gid
-	var err error
-	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		mfr := &relationgrpcv1.ManageFriendRequest{
-			UserId:   userId,
-			FriendId: friendId,
-			DialogId: dialogId,
-			Status:   status,
-		}
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.relationUserService.ManageFriendRevert(ctx, mfr)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if _, err = s.relationUserService.ManageFriend(ctx, mfr); err != nil {
-			return err
-		}
-
-		return nil
-	}); err != nil {
-		s.logger.Error("workflow RegisterGRPC manageFriend3", zap.Error(err))
-		return code.RelationErrRejectFriendFailed
-	}
-
-	// 执行 DTM 分布式事务工作流
-	if err = workflow.Execute(wfName, gid, nil); err != nil {
-		s.logger.Error("workflow manageFriend3", zap.Error(err))
-		return code.RelationErrRejectFriendFailed
-	}
-
-	return nil
 }
 
 func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, targetID, E2EPublicKey string, status relationgrpcv1.RelationStatus) (interface{}, error) {
