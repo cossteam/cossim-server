@@ -55,6 +55,22 @@ func (s *Handler) SendGroupMessage(ctx context.Context, request *v1.SendGroupMsg
 	}, nil
 }
 
+func (s *Handler) SendUserMessageRevert(ctx context.Context, request *v1.MsgIdRequest) (*v1.SendUserMsgRevertResponse, error) {
+	resp := &v1.SendUserMsgRevertResponse{}
+	if err := s.mr.PhysicalDeleteUserMessage(request.MsgId); err != nil {
+		return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Handler) SendGroupMessageRevert(ctx context.Context, request *v1.MsgIdRequest) (*v1.SendGroupMsgRevertResponse, error) {
+	resp := &v1.SendGroupMsgRevertResponse{}
+	if err := s.mr.PhysicalDeleteGroupMessage(request.MsgId); err != nil {
+		return resp, status.Error(codes.Code(code.MsgErrDeleteGroupMessageFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
 func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsgListRequest) (*v1.GetUserMsgListResponse, error) {
 	resp := &v1.GetUserMsgListResponse{}
 

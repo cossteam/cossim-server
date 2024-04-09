@@ -26,6 +26,8 @@ import (
 	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"io/ioutil"
 	"mime/multipart"
@@ -91,23 +93,28 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 		// 创建群聊
 		resp1, err = s.groupService.CreateGroup(wf.Context, r1)
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
+
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			_, err = s.groupService.CreateGroupRevert(wf.Context, &groupgrpcv1.CreateGroupRequest{Group: &groupgrpcv1.Group{
 				Id: resp1.Id,
 			}})
 			return err
 		})
+
 		groupID = resp1.Id
 		r22.GroupId = groupID
 		r22.Member = req.Member
 		r22.UserID = req.CreatorId
+
 		resp2, err := s.relationGroupService.CreateGroupAndInviteUsers(wf.Context, r22)
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
+
 		DialogID = resp2.DialogId
+
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			_, err = s.relationGroupService.CreateGroupAndInviteUsersRevert(wf.Context, r22)
 			return err
@@ -115,9 +122,9 @@ func (s *Service) CreateGroup(ctx context.Context, req *groupgrpcv1.Group) (*mod
 
 		return err
 	}); err != nil {
-		s.logger.Error("WorkFlow CreateGroup", zap.Error(err))
-		return nil, code.RelationErrCreateGroupFailed
+		return nil, err
 	}
+
 	if err = workflow.Execute(wfName, gid, nil); err != nil {
 		s.logger.Error("WorkFlow CreateGroup", zap.Error(err))
 		return nil, code.RelationErrCreateGroupFailed

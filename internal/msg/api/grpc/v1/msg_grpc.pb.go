@@ -20,8 +20,10 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	MsgService_SendUserMessage_FullMethodName                      = "/msg_v1.MsgService/SendUserMessage"
+	MsgService_SendUserMessageRevert_FullMethodName                = "/msg_v1.MsgService/SendUserMessageRevert"
 	MsgService_SendMultiUserMessage_FullMethodName                 = "/msg_v1.MsgService/SendMultiUserMessage"
 	MsgService_SendGroupMessage_FullMethodName                     = "/msg_v1.MsgService/SendGroupMessage"
+	MsgService_SendGroupMessageRevert_FullMethodName               = "/msg_v1.MsgService/SendGroupMessageRevert"
 	MsgService_GetUserMessageList_FullMethodName                   = "/msg_v1.MsgService/GetUserMessageList"
 	MsgService_GetUserLastMessageList_FullMethodName               = "/msg_v1.MsgService/GetUserLastMessageList"
 	MsgService_GetGroupLastMessageList_FullMethodName              = "/msg_v1.MsgService/GetGroupLastMessageList"
@@ -63,10 +65,14 @@ const (
 type MsgServiceClient interface {
 	// 发送私聊消息
 	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
+	// 发送私聊消息
+	SendUserMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendUserMsgRevertResponse, error)
 	// 群发私聊消息
 	SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error)
 	// 发送群消息
 	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
+	// 发送群消息回滚
+	SendGroupMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendGroupMsgRevertResponse, error)
 	// 获取用户消息列表
 	GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error)
 	// 获取私聊对话最新消息
@@ -152,6 +158,15 @@ func (c *msgServiceClient) SendUserMessage(ctx context.Context, in *SendUserMsgR
 	return out, nil
 }
 
+func (c *msgServiceClient) SendUserMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendUserMsgRevertResponse, error) {
+	out := new(SendUserMsgRevertResponse)
+	err := c.cc.Invoke(ctx, MsgService_SendUserMessageRevert_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgServiceClient) SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error) {
 	out := new(SendMultiUserMsgResponse)
 	err := c.cc.Invoke(ctx, MsgService_SendMultiUserMessage_FullMethodName, in, out, opts...)
@@ -164,6 +179,15 @@ func (c *msgServiceClient) SendMultiUserMessage(ctx context.Context, in *SendMul
 func (c *msgServiceClient) SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error) {
 	out := new(SendGroupMsgResponse)
 	err := c.cc.Invoke(ctx, MsgService_SendGroupMessage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgServiceClient) SendGroupMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendGroupMsgRevertResponse, error) {
+	out := new(SendGroupMsgRevertResponse)
+	err := c.cc.Invoke(ctx, MsgService_SendGroupMessageRevert_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -473,10 +497,14 @@ func (c *msgServiceClient) DeleteGroupMessageByDialogIdRollback(ctx context.Cont
 type MsgServiceServer interface {
 	// 发送私聊消息
 	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
+	// 发送私聊消息
+	SendUserMessageRevert(context.Context, *MsgIdRequest) (*SendUserMsgRevertResponse, error)
 	// 群发私聊消息
 	SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error)
 	// 发送群消息
 	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
+	// 发送群消息回滚
+	SendGroupMessageRevert(context.Context, *MsgIdRequest) (*SendGroupMsgRevertResponse, error)
 	// 获取用户消息列表
 	GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error)
 	// 获取私聊对话最新消息
@@ -552,11 +580,17 @@ type UnimplementedMsgServiceServer struct {
 func (UnimplementedMsgServiceServer) SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendUserMessage not implemented")
 }
+func (UnimplementedMsgServiceServer) SendUserMessageRevert(context.Context, *MsgIdRequest) (*SendUserMsgRevertResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendUserMessageRevert not implemented")
+}
 func (UnimplementedMsgServiceServer) SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMultiUserMessage not implemented")
 }
 func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendGroupMessage not implemented")
+}
+func (UnimplementedMsgServiceServer) SendGroupMessageRevert(context.Context, *MsgIdRequest) (*SendGroupMsgRevertResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendGroupMessageRevert not implemented")
 }
 func (UnimplementedMsgServiceServer) GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessageList not implemented")
@@ -687,6 +721,24 @@ func _MsgService_SendUserMessage_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_SendUserMessageRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).SendUserMessageRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_SendUserMessageRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).SendUserMessageRevert(ctx, req.(*MsgIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MsgService_SendMultiUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendMultiUserMsgRequest)
 	if err := dec(in); err != nil {
@@ -719,6 +771,24 @@ func _MsgService_SendGroupMessage_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServiceServer).SendGroupMessage(ctx, req.(*SendGroupMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MsgService_SendGroupMessageRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).SendGroupMessageRevert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_SendGroupMessageRevert_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).SendGroupMessageRevert(ctx, req.(*MsgIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1329,12 +1399,20 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MsgService_SendUserMessage_Handler,
 		},
 		{
+			MethodName: "SendUserMessageRevert",
+			Handler:    _MsgService_SendUserMessageRevert_Handler,
+		},
+		{
 			MethodName: "SendMultiUserMessage",
 			Handler:    _MsgService_SendMultiUserMessage_Handler,
 		},
 		{
 			MethodName: "SendGroupMessage",
 			Handler:    _MsgService_SendGroupMessage_Handler,
+		},
+		{
+			MethodName: "SendGroupMessageRevert",
+			Handler:    _MsgService_SendGroupMessageRevert_Handler,
 		},
 		{
 			MethodName: "GetUserMessageList",

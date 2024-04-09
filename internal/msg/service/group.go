@@ -18,6 +18,8 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // 推送群聊消息
@@ -119,8 +121,9 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			UserIds:  uids.UserIds,
 		})
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
+
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			_, err := s.relationDialogService.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
 				DialogId: req.DialogId,
@@ -144,8 +147,14 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		// 发送成功进行消息推送
 		if err != nil {
 			s.logger.Error("发送消息失败", zap.Error(err))
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
+
+		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
+			_, err := s.msgService.SendGroupMessageRevert(wf.Context, &msggrpcv1.MsgIdRequest{MsgId: message.MsgId})
+
+			return err
+		})
 		// 发送成功后添加自己的已读记录
 		data2 := &msggrpcv1.SetGroupMessageReadRequest{
 			MsgId:    message.MsgId,
@@ -161,14 +170,15 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 			List: list,
 		})
 		if err != nil {
-			return err
+			return status.Error(codes.Aborted, err.Error())
 		}
 		return err
 	}); err != nil {
 		return "", err
 	}
+
 	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		return "", err
+		return "", code.MsgErrInsertGroupMessageFailed
 	}
 
 	//查询发送者信息
