@@ -449,9 +449,25 @@ func (cm *controllerManager) reloadConfiguration() error {
 	}
 	cm.httpHealthProbeListener = httpHealthProbeListener
 
+	// Metrics should be served whether the controller is leader or not.
+	// (If we don't serve metrics for non-leaders, prometheus will still scrape
+	// the pod but will get a connection refused).
+	if cm.metricsListener != nil {
+		cm.serveMetrics()
+	}
+
 	// Serve health probes.
-	if err := cm.addHealthProbeServer(); err != nil {
-		return fmt.Errorf("failed to add health probe httpServer: %w", err)
+	if cm.httpHealthProbeListener != nil {
+		if err := cm.addHealthProbeServer(); err != nil {
+			return fmt.Errorf("failed to add health probe httpServer: %w", err)
+		}
+	}
+
+	// Add pprof httpServer
+	if cm.pprofListener != nil {
+		if err := cm.addPprofServer(); err != nil {
+			return fmt.Errorf("failed to add pprof httpServer: %w", err)
+		}
 	}
 
 	return nil
