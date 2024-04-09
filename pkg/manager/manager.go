@@ -448,7 +448,6 @@ func (r *runnableGroup) Start(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():
-				fmt.Println("11111")
 				if err := ctx.Err(); !errors.Is(err, context.Canceled) {
 					retErr = err
 				}

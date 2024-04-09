@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.1
-// source: api/v1/group.proto
+// source: api/grpc/v1/group.proto
 
 package v1
 
@@ -19,13 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupService_GetGroupInfoByGid_FullMethodName      = "/v1.GroupService/GetGroupInfoByGid"
-	GroupService_GetBatchGroupInfoByIDs_FullMethodName = "/v1.GroupService/GetBatchGroupInfoByIDs"
-	GroupService_UpdateGroup_FullMethodName            = "/v1.GroupService/UpdateGroup"
-	GroupService_CreateGroup_FullMethodName            = "/v1.GroupService/CreateGroup"
-	GroupService_CreateGroupRevert_FullMethodName      = "/v1.GroupService/CreateGroupRevert"
-	GroupService_DeleteGroup_FullMethodName            = "/v1.GroupService/DeleteGroup"
-	GroupService_DeleteGroupRevert_FullMethodName      = "/v1.GroupService/DeleteGroupRevert"
+	GroupService_GetGroupInfoByGid_FullMethodName      = "/group_v1.GroupService/GetGroupInfoByGid"
+	GroupService_GetBatchGroupInfoByIDs_FullMethodName = "/group_v1.GroupService/GetBatchGroupInfoByIDs"
+	GroupService_UpdateGroup_FullMethodName            = "/group_v1.GroupService/UpdateGroup"
+	GroupService_CreateGroup_FullMethodName            = "/group_v1.GroupService/CreateGroup"
+	GroupService_CreateGroupRevert_FullMethodName      = "/group_v1.GroupService/CreateGroupRevert"
+	GroupService_DeleteGroup_FullMethodName            = "/group_v1.GroupService/DeleteGroup"
+	GroupService_DeleteGroupRevert_FullMethodName      = "/group_v1.GroupService/DeleteGroupRevert"
 )
 
 // GroupServiceClient is the client API for GroupService service.
@@ -119,8 +119,8 @@ func (c *groupServiceClient) DeleteGroupRevert(ctx context.Context, in *DeleteGr
 	return out, nil
 }
 
-// GroupServiceServer is the interface API for GroupService service.
-// All implementations must embed UnimplementedGroupServiceServer
+// GroupServiceServer is the server API for GroupService service.
+// All implementations should embed UnimplementedGroupServiceServer
 // for forward compatibility
 type GroupServiceServer interface {
 	// 通过群组ID获取群组信息
@@ -137,10 +137,9 @@ type GroupServiceServer interface {
 	DeleteGroup(context.Context, *DeleteGroupRequest) (*EmptyResponse, error)
 	// 删除群组回滚操作
 	DeleteGroupRevert(context.Context, *DeleteGroupRequest) (*EmptyResponse, error)
-	mustEmbedUnimplementedGroupServiceServer()
 }
 
-// UnimplementedGroupServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedGroupServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedGroupServiceServer struct {
 }
 
@@ -165,7 +164,6 @@ func (UnimplementedGroupServiceServer) DeleteGroup(context.Context, *DeleteGroup
 func (UnimplementedGroupServiceServer) DeleteGroupRevert(context.Context, *DeleteGroupRequest) (*EmptyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupRevert not implemented")
 }
-func (UnimplementedGroupServiceServer) mustEmbedUnimplementedGroupServiceServer() {}
 
 // UnsafeGroupServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to GroupServiceServer will
@@ -308,7 +306,7 @@ func _GroupService_DeleteGroupRevert_Handler(srv interface{}, ctx context.Contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GroupService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.GroupService",
+	ServiceName: "group_v1.GroupService",
 	HandlerType: (*GroupServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -341,5 +339,5 @@ var GroupService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/group.proto",
+	Metadata: "api/grpc/v1/group.proto",
 }

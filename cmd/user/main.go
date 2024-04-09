@@ -50,7 +50,7 @@ func init() {
 }
 
 func main() {
-	svc := &grpc.Handler{}
+	svc := &grpc.UserServiceServer{}
 	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
 		Grpc: ctrl.GRPCServer{
 			GRPCService:         svc,

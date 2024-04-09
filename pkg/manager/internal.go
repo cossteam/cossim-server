@@ -290,14 +290,12 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	defer close(stopComplete)
 	// This must be deferred after closing stopComplete, otherwise we deadlock.
 	defer func() {
-		// https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/gettyimages-459889618-1533579787.jpg
 		stopErr := cm.engageStopProcedure(stopComplete)
 		if stopErr != nil {
 			if err != nil {
 				// Utilerrors.Aggregate allows to use errors.Is for all contained errors
 				// whereas fmt.Errorf allows wrapping at most one error which means the
 				// other one can not be found anymore.
-				//err = kerrors.NewAggregate([]error{err, stopErr})
 			} else {
 				err = stopErr
 			}

@@ -117,8 +117,7 @@ func (s *RelationServiceServer) RegisterHealth(srv *grpc.Server) {
 }
 
 func (s *RelationServiceServer) Stop(ctx context.Context) error {
-	//TODO implement me
-	return nil
+	return s.UserServiceServer.cache.DeleteAllCache(ctx)
 }
 
 func (s *RelationServiceServer) DiscoverServices(services map[string]*grpc.ClientConn) error {

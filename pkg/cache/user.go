@@ -24,6 +24,7 @@ type UserCache interface {
 	GetUsersInfo(ctx context.Context, userID []string) ([]*usergrpcv1.UserInfoResponse, error)
 	SetUserInfo(ctx context.Context, userID string, data *usergrpcv1.UserInfoResponse, expiration time.Duration) error
 	DeleteUsersInfo(userIDs []string) error
+	DeleteAllCache(ctx context.Context) error
 }
 
 var _ UserCache = &UserCacheRedis{}
@@ -47,6 +48,21 @@ func NewUserCacheRedis(addr, password string, db int) (*UserCacheRedis, error) {
 
 type UserCacheRedis struct {
 	client *redis.Client
+}
+
+func (u *UserCacheRedis) DeleteAllCache(ctx context.Context) error {
+	keys := make([]string, 0)
+	iter := u.client.Scan(ctx, 0, UserKeyPrefix+"*", 0).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	return u.client.Del(ctx, keys...).Err()
 }
 
 func (u *UserCacheRedis) GetUserInfo(ctx context.Context, userID string) (*usergrpcv1.UserInfoResponse, error) {

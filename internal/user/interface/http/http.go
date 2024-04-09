@@ -29,7 +29,7 @@ type Handler struct {
 	svc         *service.Service
 	enc         encryption.Encryptor
 	key         string
-	UserClient  *grpchandler.Handler
+	UserClient  *grpchandler.UserServiceServer
 	db          *gorm.DB
 }
 

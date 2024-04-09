@@ -3,19 +3,19 @@ package grpc
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/version"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"log"
 
 	//"github.com/cossim/coss-interface/internal/group/api/grpc/v1"
 	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/domain/entity"
 	"github.com/cossim/coss-server/internal/group/domain/repository"
 	"github.com/cossim/coss-server/internal/group/infrastructure/persistence"
-	"github.com/rs/xid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health"
@@ -24,22 +24,23 @@ import (
 	"strconv"
 )
 
-type Handler struct {
-	gr  repository.GroupRepository
-	ac  *pkgconfig.AppConfig
-	sid string
-	api.UnimplementedGroupServiceServer
+type GroupServiceServer struct {
+	gr          repository.GroupRepository
+	ac          *pkgconfig.AppConfig
+	cache       cache.GroupCache
+	cacheEnable bool
+	closeFunc   func() error
 }
 
-func (s *Handler) Register(srv *grpc.Server) {
+func (s *GroupServiceServer) Register(srv *grpc.Server) {
 	api.RegisterGroupServiceServer(srv, s)
 }
 
-func (s *Handler) RegisterHealth(srv *grpc.Server) {
+func (s *GroupServiceServer) RegisterHealth(srv *grpc.Server) {
 	grpc_health_v1.RegisterHealthServer(srv, health.NewServer())
 }
 
-func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
+func (s *GroupServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
 	if err != nil {
 		return err
@@ -53,26 +54,41 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	if err = infra.Automigrate(); err != nil {
 		return err
 	}
-	fmt.Println("初始化db")
+
+	groupCache, err := cache.NewGroupCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if err != nil {
+		return err
+	}
+
+	s.closeFunc = func() error {
+		return groupCache.Close()
+	}
+
 	s.gr = infra.Gr
 	s.ac = cfg
-	s.sid = xid.New().String()
+	s.cache = groupCache
+	s.cacheEnable = cfg.Cache.Enable
 	return nil
 }
 
-func (s *Handler) Name() string {
+func (s *GroupServiceServer) Name() string {
 	return "group_service"
 }
 
-func (s *Handler) Version() string {
+func (s *GroupServiceServer) Version() string {
 	return version.FullVersion()
 }
 
-func (s *Handler) Stop(ctx context.Context) error { return nil }
+func (s *GroupServiceServer) Stop(ctx context.Context) error {
+	if err := s.cache.DeleteAllCache(ctx); err != nil {
+		log.Printf("delete all group cache error: %v", err)
+	}
+	return s.closeFunc()
+}
 
-func (s *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
+func (s *GroupServiceServer) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
 
-func (s *Handler) GetGroupInfoByGid(ctx context.Context, request *api.GetGroupInfoRequest) (*api.Group, error) {
+func (s *GroupServiceServer) GetGroupInfoByGid(ctx context.Context, request *api.GetGroupInfoRequest) (*api.Group, error) {
 	resp := &api.Group{}
 
 	group, err := s.gr.GetGroupInfoByGid(uint(request.GetGid()))
@@ -96,16 +112,24 @@ func (s *Handler) GetGroupInfoByGid(ctx context.Context, request *api.GetGroupIn
 	return resp, nil
 }
 
-func (s *Handler) GetBatchGroupInfoByIDs(ctx context.Context, request *api.GetBatchGroupInfoRequest) (*api.GetBatchGroupInfoResponse, error) {
+func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request *api.GetBatchGroupInfoRequest) (*api.GetBatchGroupInfoResponse, error) {
 	resp := &api.GetBatchGroupInfoResponse{}
 
-	if len(request.GetGroupIds()) == 0 {
-		return resp, nil
+	if len(request.GroupIds) == 0 {
+		return resp, code.MyCustomErrorCode.CustomMessage("group ids is empty")
+	}
+
+	if s.cacheEnable {
+		groups, err := s.cache.GetGroups(ctx, request.GroupIds)
+		if err == nil && len(groups) > 0 {
+			resp.Groups = groups
+			return resp, nil
+		}
 	}
 
 	//将uint32转成uint
-	groupIds := make([]uint, len(request.GetGroupIds()))
-	for i, id := range request.GetGroupIds() {
+	groupIds := make([]uint, len(request.GroupIds))
+	for i, id := range request.GroupIds {
 		groupIds[i] = uint(id)
 	}
 
@@ -131,11 +155,16 @@ func (s *Handler) GetBatchGroupInfoByIDs(ctx context.Context, request *api.GetBa
 
 	resp.Groups = groupAPIs
 
-	fmt.Println("len => ", len(resp.Groups))
+	if s.cacheEnable {
+		if err = s.cache.SetGroup(ctx, resp.Groups...); err != nil {
+			log.Printf("set group cache failed: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
-func (s *Handler) UpdateGroup(ctx context.Context, request *api.UpdateGroupRequest) (*api.Group, error) {
+func (s *GroupServiceServer) UpdateGroup(ctx context.Context, request *api.UpdateGroupRequest) (*api.Group, error) {
 	resp := &api.Group{}
 
 	group := &entity.Group{
@@ -165,10 +194,17 @@ func (s *Handler) UpdateGroup(ctx context.Context, request *api.UpdateGroupReque
 		Name:            updatedGroup.Name,
 		Avatar:          updatedGroup.Avatar,
 	}
+
+	if s.cacheEnable {
+		if err := s.cache.SetGroup(ctx, resp); err != nil {
+			log.Printf("set group cache failed: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
-func (s *Handler) CreateGroup(ctx context.Context, request *api.CreateGroupRequest) (*api.Group, error) {
+func (s *GroupServiceServer) CreateGroup(ctx context.Context, request *api.CreateGroupRequest) (*api.Group, error) {
 	resp := &api.Group{}
 
 	group := &entity.Group{
@@ -179,7 +215,6 @@ func (s *Handler) CreateGroup(ctx context.Context, request *api.CreateGroupReque
 		Name:            request.Group.Name,
 		Avatar:          request.GetGroup().Avatar,
 	}
-	fmt.Println("gr ->", s.gr)
 
 	createdGroup, err := s.gr.InsertGroup(group)
 	if err != nil {
@@ -196,10 +231,11 @@ func (s *Handler) CreateGroup(ctx context.Context, request *api.CreateGroupReque
 		Name:            createdGroup.Name,
 		Avatar:          createdGroup.Avatar,
 	}
+
 	return resp, nil
 }
 
-func (s *Handler) CreateGroupRevert(ctx context.Context, request *api.CreateGroupRequest) (*api.Group, error) {
+func (s *GroupServiceServer) CreateGroupRevert(ctx context.Context, request *api.CreateGroupRequest) (*api.Group, error) {
 	resp := &api.Group{}
 	if err := s.gr.DeleteGroup(uint(request.Group.Id)); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
@@ -207,7 +243,7 @@ func (s *Handler) CreateGroupRevert(ctx context.Context, request *api.CreateGrou
 	return resp, nil
 }
 
-func (s *Handler) DeleteGroup(ctx context.Context, request *api.DeleteGroupRequest) (*api.EmptyResponse, error) {
+func (s *GroupServiceServer) DeleteGroup(ctx context.Context, request *api.DeleteGroupRequest) (*api.EmptyResponse, error) {
 	resp := &api.EmptyResponse{}
 
 	//return resp, status.Error(codes.Aborted, errors.New("测试回滚").Error())
@@ -215,10 +251,17 @@ func (s *Handler) DeleteGroup(ctx context.Context, request *api.DeleteGroupReque
 	if err := s.gr.DeleteGroup(uint(request.GetGid())); err != nil {
 		return resp, status.Error(codes.Aborted, err.Error())
 	}
+
+	if s.cacheEnable {
+		if err := s.cache.DeleteGroup(ctx, request.Gid); err != nil {
+			log.Printf("set group cache failed: %v", err)
+		}
+	}
+
 	return resp, nil
 }
 
-func (s *Handler) DeleteGroupRevert(ctx context.Context, request *api.DeleteGroupRequest) (*api.EmptyResponse, error) {
+func (s *GroupServiceServer) DeleteGroupRevert(ctx context.Context, request *api.DeleteGroupRequest) (*api.EmptyResponse, error) {
 	resp := &api.EmptyResponse{}
 	if err := s.gr.UpdateGroupByGroupID(uint(request.GetGid()), map[string]interface{}{
 		"deleted_at": 0,

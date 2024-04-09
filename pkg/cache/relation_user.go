@@ -61,6 +61,7 @@ type RelationUserCache interface {
 	GetBlacklist(ctx context.Context, ownerUserID string) (*relationgrpcv1.GetBlacklistResponse, error)
 	SetBlacklist(ctx context.Context, ownerUserID string, data *relationgrpcv1.GetBlacklistResponse, expiration time.Duration) error
 	DeleteBlacklist(ctx context.Context, ownerUserID ...string) error
+	DeleteAllCache(ctx context.Context) error
 }
 
 var _ RelationUserCache = &RelationUserCacheRedis{}
@@ -84,6 +85,21 @@ func NewRelationUserCacheRedis(addr, password string, db int) (*RelationUserCach
 
 type RelationUserCacheRedis struct {
 	client *redis.Client
+}
+
+func (u *RelationUserCacheRedis) DeleteAllCache(ctx context.Context) error {
+	keys := make([]string, 0)
+	iter := u.client.Scan(ctx, 0, RelationKeyPrefix+"*", 0).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	return u.client.Del(ctx, keys...).Err()
 }
 
 func (r *RelationUserCacheRedis) GetFriendRequest(ctx context.Context, ownerUserID string) (*relationgrpcv1.FriendRequestList, error) {

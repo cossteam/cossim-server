@@ -32,7 +32,7 @@ type Handler struct {
 	svc         *service.Service
 	server      *http.Server
 	engine      *gin.Engine
-	GrpcService *mygrpc.Handler
+	GrpcService *mygrpc.GroupServiceServer
 	db          *gorm.DB
 }
 

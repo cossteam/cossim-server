@@ -269,6 +269,7 @@ func (s *GrpcService) Start(ctx context.Context) error {
 		s.logger.Info("Shutting down grpcServer", "addr", lisAddr)
 		s.cancel()
 		s.server.GracefulStop()
+		s.svc.Stop(context.Background())
 		close(serverShutdown)
 	}()
 

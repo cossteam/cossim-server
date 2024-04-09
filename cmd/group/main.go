@@ -50,7 +50,7 @@ func init() {
 }
 
 func main() {
-	grpcService := &grpc.Handler{}
+	grpcService := &grpc.GroupServiceServer{}
 	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
 		Http: ctrl.HTTPServer{
 			HTTPService:        &http.Handler{GrpcService: grpcService},
