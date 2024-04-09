@@ -23,6 +23,14 @@ func (s *Handler) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRe
 		return resp, status.Error(codes.Code(code.MsgErrInsertUserMessageFailed.Code()), err.Error())
 	}
 	resp.MsgId = uint32(msg.ID)
+
+	//if s.cacheEnable {
+	//	fmt.Println("DeleteLastMessage => ", request.DialogId)
+	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogId); err != nil {
+	//		log.Printf("delete last message failed: %v", err)
+	//	}
+	//}
+
 	return resp, err
 }
 
@@ -33,6 +41,14 @@ func (s *Handler) SendGroupMessage(ctx context.Context, request *v1.SendGroupMsg
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrInsertGroupMessageFailed.Code()), err.Error())
 	}
+
+	//if s.cacheEnable {
+	//	fmt.Println("DeleteLastMessage => ", request.DialogId)
+	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogId); err != nil {
+	//		log.Printf("delete last message failed: %v", err)
+	//	}
+	//}
+
 	return &v1.SendGroupMsgResponse{
 		MsgId:   uint32(ums.ID),
 		GroupId: uint32(ums.GroupID),
@@ -116,6 +132,13 @@ func (s *Handler) GetLastMsgsForGroupsWithIDs(ctx context.Context, request *v1.G
 func (s *Handler) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLastMsgsByDialogIdsRequest) (*v1.GetLastMsgsResponse, error) {
 	resp := &v1.GetLastMsgsResponse{}
 
+	//if s.cacheEnable {
+	//	ds, err := s.cache.GetLastMessageByDialogIDs(ctx, request.DialogIds...)
+	//	if err == nil && len(ds.LastMsgs) > 0 && len(ds.LastMsgs) == len(request.DialogIds) {
+	//		return ds, nil
+	//	}
+	//}
+
 	ids := make([]uint, 0)
 	if len(request.DialogIds) > 0 {
 		for _, id := range request.DialogIds {
@@ -184,6 +207,14 @@ func (s *Handler) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLas
 		})
 	}
 
+	//if s.cacheEnable {
+	//	for _, v := range resp.LastMsgs {
+	//		if err := s.cache.SetLastMessage(ctx, v.DialogId, v, cache.MsgExpireTime); err != nil {
+	//			log.Printf("set last message to cache failed, err: %v", err)
+	//		}
+	//	}
+	//}
+
 	return resp, nil
 }
 
@@ -203,6 +234,12 @@ func (s *Handler) EditUserMessage(ctx context.Context, request *v1.EditUserMsgRe
 	if err := s.mr.UpdateUserMessage(msg); err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrEditUserMessageFailed.Code()), err.Error())
 	}
+	//
+	//if s.cacheEnable {
+	//	if err := s.cache.DeleteLastMessage(ctx, request.UserMessage.DialogId); err != nil {
+	//		log.Printf("delete last message failed: %v", err)
+	//	}
+	//}
 
 	return resp, nil
 }
@@ -213,6 +250,13 @@ func (s *Handler) DeleteUserMessage(ctx context.Context, request *v1.DeleteUserM
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
 	}
+
+	//if s.cacheEnable {
+	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogId); err != nil {
+	//		log.Printf("delete last message failed: %v", err)
+	//	}
+	//}
+
 	return &v1.UserMessage{
 		Id: request.MsgId,
 	}, nil
@@ -243,6 +287,13 @@ func (s *Handler) EditGroupMessage(ctx context.Context, request *v1.EditGroupMsg
 		GroupId:   uint32(msg.GroupID),
 		ReadCount: int32(msg.ReadCount),
 	}
+	//
+	//if s.cacheEnable {
+	//	if err := s.cache.DeleteLastMessage(ctx, request.GroupMessage.DialogId); err != nil {
+	//		log.Printf("delete last message failed: %v", err)
+	//	}
+	//}
+
 	return resp, nil
 }
 
@@ -251,6 +302,13 @@ func (s *Handler) DeleteGroupMessage(ctx context.Context, request *v1.DeleteGrou
 	if err := s.mr.LogicalDeleteGroupMessage(request.MsgId); err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrDeleteGroupMessageFailed.Code()), err.Error())
 	}
+
+	//if s.cacheEnable {
+	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogId); err != nil {
+	//		log.Printf("delete last message failed: %v", err)
+	//	}
+	//}
+
 	return &v1.GroupMessage{
 		Id: request.MsgId,
 	}, nil

@@ -468,7 +468,7 @@ func (c *msgServiceClient) DeleteGroupMessageByDialogIdRollback(ctx context.Cont
 }
 
 // MsgServiceServer is the server API for MsgService service.
-// All implementations must embed UnimplementedMsgServiceServer
+// All implementations should embed UnimplementedMsgServiceServer
 // for forward compatibility
 type MsgServiceServer interface {
 	// 发送私聊消息
@@ -543,10 +543,9 @@ type MsgServiceServer interface {
 	DeleteUserMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
 	// 根据对话id删除群聊消息回滚
 	DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
-	mustEmbedUnimplementedMsgServiceServer()
 }
 
-// UnimplementedMsgServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedMsgServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedMsgServiceServer struct {
 }
 
@@ -658,7 +657,6 @@ func (UnimplementedMsgServiceServer) DeleteUserMessageByDialogIdRollback(context
 func (UnimplementedMsgServiceServer) DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessageByDialogIdRollback not implemented")
 }
-func (UnimplementedMsgServiceServer) mustEmbedUnimplementedMsgServiceServer() {}
 
 // UnsafeMsgServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to MsgServiceServer will

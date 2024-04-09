@@ -2,14 +2,12 @@ package grpc
 
 import (
 	"context"
-	"github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	api "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/domain/repository"
 	"github.com/cossim/coss-server/internal/msg/infrastructure/persistence"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/version"
-	"github.com/rs/xid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -18,14 +16,12 @@ import (
 )
 
 type Handler struct {
-	db       *gorm.DB
-	ac       *pkgconfig.AppConfig
-	sid      string
-	mr       repository.MsgRepository
-	gmrr     repository.GroupMsgReadRepository
-	stopFunc func()
-	v1.UnimplementedMsgServiceServer
-	v1.UnimplementedGroupMessageServiceServer
+	db   *gorm.DB
+	ac   *pkgconfig.AppConfig
+	mr   repository.MsgRepository
+	gmrr repository.GroupMsgReadRepository
+	//cache       cache.MsgCache
+	//cacheEnable bool
 }
 
 func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -38,8 +34,11 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	if err != nil {
 		return err
 	}
-	s.stopFunc = func() {
-	}
+
+	//msgCache, err := cache.NewMsgCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	//if err != nil {
+	//	return err
+	//}
 
 	infra := persistence.NewRepositories(dbConn)
 	if err = infra.Automigrate(); err != nil {
@@ -50,7 +49,8 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	s.gmrr = infra.Gmrr
 	s.db = dbConn
 	s.ac = cfg
-	s.sid = xid.New().String()
+	//s.cache = msgCache
+	//s.cacheEnable = cfg.Cache.Enable
 	return nil
 }
 

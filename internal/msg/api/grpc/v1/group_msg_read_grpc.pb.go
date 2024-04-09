@@ -72,7 +72,7 @@ func (c *groupMessageServiceClient) GetGroupMessageReadByMsgIdAndUserId(ctx cont
 }
 
 // GroupMessageServiceServer is the server API for GroupMessageService service.
-// All implementations must embed UnimplementedGroupMessageServiceServer
+// All implementations should embed UnimplementedGroupMessageServiceServer
 // for forward compatibility
 type GroupMessageServiceServer interface {
 	// 设置群聊消息已读
@@ -81,10 +81,9 @@ type GroupMessageServiceServer interface {
 	GetGroupMessageReaders(context.Context, *GetGroupMessageReadersRequest) (*GetGroupMessageReadersResponse, error)
 	// 根据消息id与用户id查询是否已经读取过
 	GetGroupMessageReadByMsgIdAndUserId(context.Context, *GetGroupMessageReadByMsgIdAndUserIdRequest) (*GetGroupMessageReadByMsgIdAndUserIdResponse, error)
-	mustEmbedUnimplementedGroupMessageServiceServer()
 }
 
-// UnimplementedGroupMessageServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedGroupMessageServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedGroupMessageServiceServer struct {
 }
 
@@ -97,7 +96,6 @@ func (UnimplementedGroupMessageServiceServer) GetGroupMessageReaders(context.Con
 func (UnimplementedGroupMessageServiceServer) GetGroupMessageReadByMsgIdAndUserId(context.Context, *GetGroupMessageReadByMsgIdAndUserIdRequest) (*GetGroupMessageReadByMsgIdAndUserIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessageReadByMsgIdAndUserId not implemented")
 }
-func (UnimplementedGroupMessageServiceServer) mustEmbedUnimplementedGroupMessageServiceServer() {}
 
 // UnsafeGroupMessageServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to GroupMessageServiceServer will
