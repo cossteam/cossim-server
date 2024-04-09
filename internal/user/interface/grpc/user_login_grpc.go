@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *Handler) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*emptypb.Empty, error) {
+func (s *UserServiceServer) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *Handler) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*empty
 	return resp, nil
 }
 
-func (s *Handler) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginByTokenRequest) (*v1.UserLogin, error) {
+func (s *UserServiceServer) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginByTokenRequest) (*v1.UserLogin, error) {
 	resp := &v1.UserLogin{}
 	info, err := s.ulr.GetUserLoginByToken(in.Token)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *Handler) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginBy
 	return resp, nil
 }
 
-func (s *Handler) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.DriverIdAndUserId) (*v1.UserLogin, error) {
+func (s *UserServiceServer) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.DriverIdAndUserId) (*v1.UserLogin, error) {
 	resp := &v1.UserLogin{}
 	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
 	if err != nil {
@@ -91,7 +91,7 @@ func (s *Handler) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.Dr
 	return resp, nil
 }
 
-func (s *Handler) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.TokenUpdate) (*emptypb.Empty, error) {
+func (s *UserServiceServer) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.TokenUpdate) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 	err := s.ulr.UpdateUserLoginTokenByDriverId(in.DriverId, in.Token, in.UserId)
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *Handler) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.Tok
 	return resp, nil
 }
 
-func (s *Handler) GetUserDriverTokenByUserId(ctx context.Context, request *v1.GetUserDriverTokenByUserIdRequest) (*v1.GetUserDriverTokenByUserIdResponse, error) {
+func (s *UserServiceServer) GetUserDriverTokenByUserId(ctx context.Context, request *v1.GetUserDriverTokenByUserIdRequest) (*v1.GetUserDriverTokenByUserIdResponse, error) {
 	resp := &v1.GetUserDriverTokenByUserIdResponse{}
 	tokenList, err := s.ulr.GetUserDriverTokenByUserId(request.UserId)
 	if err != nil {
@@ -116,7 +116,7 @@ func (s *Handler) GetUserDriverTokenByUserId(ctx context.Context, request *v1.Ge
 	return resp, nil
 }
 
-func (s *Handler) GetUserLoginByUserId(ctx context.Context, in *v1.GetUserLoginByUserIdRequest) (*v1.UserLogin, error) {
+func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, in *v1.GetUserLoginByUserIdRequest) (*v1.UserLogin, error) {
 	var resp = &v1.UserLogin{}
 	info, err := s.ulr.GetUserByUserId(in.UserId)
 	if err != nil {

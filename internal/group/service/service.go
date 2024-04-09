@@ -34,7 +34,7 @@ type Service struct {
 	cache               bool
 
 	groupService groupgrpcv1.GroupServiceServer
-	//groupClient           *mgrpc.Handler
+	//groupClient           *mgrpc.GroupServiceServer
 	relationDialogService relationgrpcv1.DialogServiceClient
 	relationGroupService  relationgrpcv1.GroupRelationServiceClient
 	relationUserService   relationgrpcv1.UserRelationServiceClient
@@ -46,7 +46,7 @@ type Service struct {
 	sp             storage.StorageProvider
 }
 
-func New(ac *pkgconfig.AppConfig, grpcService *mgrpc.Handler) *Service {
+func New(ac *pkgconfig.AppConfig, grpcService *mgrpc.GroupServiceServer) *Service {
 	logger := setupLogger(ac)
 	rabbitMQClient := setRabbitMQProvider(ac)
 	svc := &Service{

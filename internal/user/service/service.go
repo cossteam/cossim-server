@@ -37,7 +37,6 @@ type Service struct {
 	storageService storage.StorageProvider
 	redisClient    *cache.RedisClient
 	smtpClient     email.EmailProvider
-	rabbitMQClient *msg_queue.RabbitMQ
 
 	dtmGrpcServer       string
 	relationServiceAddr string
@@ -50,18 +49,16 @@ type Service struct {
 	cache               bool
 }
 
-func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.Handler) (s *Service) {
+func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s *Service) {
 	s = &Service{
 		ac:              ac,
 		logger:          plog.NewDefaultLogger("user_bff", int8(ac.Log.Level)),
 		sid:             xid.New().String(),
 		tokenExpiration: 60 * 60 * 24 * 3 * time.Second,
-		rabbitMQClient:  setRabbitMQProvider(ac),
-		//appPath:         path,
-		storageService: setMinIOProvider(ac),
-		dtmGrpcServer:  ac.Dtm.Addr(),
-		downloadURL:    "/api/v1/storage/files/download",
-		smtpClient:     setupSmtpProvider(ac),
+		storageService:  setMinIOProvider(ac),
+		dtmGrpcServer:   ac.Dtm.Addr(),
+		downloadURL:     "/api/v1/storage/files/download",
+		smtpClient:      setupSmtpProvider(ac),
 	}
 	s.setLoadSystem()
 	s.setupRedisClient()
@@ -98,9 +95,6 @@ func (s *Service) setCacheConfig() bool {
 
 func (s *Service) setupRedisClient() {
 	s.redisClient = cache.NewRedisClient(s.ac.Redis.Addr(), s.ac.Redis.Password)
-}
-
-func (s *Service) Ping() {
 }
 
 func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
