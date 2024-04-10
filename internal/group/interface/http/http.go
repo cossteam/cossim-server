@@ -2,20 +2,18 @@ package http
 
 import (
 	"context"
+	"fmt"
 	mygrpc "github.com/cossim/coss-server/internal/group/interface/grpc"
 	"github.com/cossim/coss-server/internal/group/service"
-	"github.com/cossim/coss-server/pkg/db"
-	"github.com/cossim/coss-server/pkg/manager/server"
-	"gorm.io/gorm"
-	"strconv"
-
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
+	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net/http"
@@ -26,43 +24,35 @@ var (
 )
 
 type Handler struct {
-	redisClient *cache.RedisClient
+	userCache   cache.UserCache
 	logger      *zap.Logger
 	enc         encryption.Encryptor
 	svc         *service.Service
 	server      *http.Server
 	engine      *gin.Engine
 	GrpcService *mygrpc.GroupServiceServer
-	db          *gorm.DB
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("group_bff", int8(cfg.Log.Level))
 
-	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
-	if err != nil {
-		return err
-	}
+	userCache := cache.NewUserCacheRedisWithClient(redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s", cfg.Redis.Addr()),
+		Password: cfg.Redis.Password,
+		DB:       0,
+	}))
 
-	dbConn, err := mysql.GetConnection()
-	if err != nil {
-		return err
-	}
-
-	h.db = dbConn
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
+	h.userCache = userCache
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.GrpcService)
-	//return h.enc.ReadKeyPair()
+	if cfg.Encryption.Enable {
+		return h.enc.ReadKeyPair()
+	}
 	return nil
 }
 
 func (h *Handler) Name() string {
 	return "group_bff"
-}
-
-func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
-	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
 func (h *Handler) Version() string {
@@ -74,7 +64,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	g := r.Group("/api/v1/group")
-	g.Use(middleware.AuthMiddleware(h.redisClient.Client))
+	g.Use(middleware.AuthMiddleware(h.userCache))
 	// 获取群聊信息
 	g.GET("/info", h.getGroupInfoByGid)
 	// 创建群聊

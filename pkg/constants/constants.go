@@ -12,8 +12,9 @@ const (
 )
 
 const (
-	UserID   = "user_id"
-	DriverID = "driver_id"
+	UserID    = "user_id"
+	DriverID  = "driver_id"
+	PublicKey = "public_key"
 )
 
 func DetermineClientType(clientType DriverType) DriverType {

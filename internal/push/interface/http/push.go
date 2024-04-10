@@ -46,6 +46,6 @@ func (h *Handler) ws(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	h.PushService.Ws(conn, uid, driverId, deviceType, token)
+	h.PushService.Ws(c, conn, uid, driverId, deviceType, token)
 
 }

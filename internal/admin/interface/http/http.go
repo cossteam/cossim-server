@@ -44,9 +44,11 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg)
-	//return h.enc.ReadKeyPair()
+	if cfg.Encryption.Enable {
+		return h.enc.ReadKeyPair()
+	}
 	return nil
 }
 

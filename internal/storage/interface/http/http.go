@@ -2,21 +2,20 @@ package http
 
 import (
 	"context"
+	"fmt"
 	grpcinter "github.com/cossim/coss-server/internal/storage/interface/grpc"
 	"github.com/cossim/coss-server/internal/storage/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"gorm.io/gorm"
-	"strconv"
 )
 
 var (
@@ -25,32 +24,30 @@ var (
 
 type Handler struct {
 	StorageClient *grpcinter.Handler
-	redisClient   *cache.RedisClient
 	logger        *zap.Logger
 	enc           encryption.Encryptor
 	sid           string
 	svc           *service.Service
 	minioAddr     string
-	db            *gorm.DB
+	userCache     cache.UserCache
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("storage_bff", int8(cfg.Log.Level))
 	h.minioAddr = cfg.OSS.Addr()
+	userCache := cache.NewUserCacheRedisWithClient(redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s", cfg.Redis.Addr()),
+		Password: cfg.Redis.Password,
+		DB:       0,
+	}))
 
-	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
-	if err != nil {
-		return err
-	}
-
-	h.db, err = mysql.GetConnection()
-	if err != nil {
-		return err
-	}
-
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
+	h.userCache = userCache
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.StorageClient)
+	if cfg.Encryption.Enable {
+		return h.enc.ReadKeyPair()
+	}
+	return nil
 	return nil
 }
 
@@ -62,17 +59,13 @@ func (h *Handler) Version() string {
 	return version.FullVersion()
 }
 
-func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
-	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
-}
-
 // @title CossApi
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/storage")
 	api.GET("/files/download/:type/:id", h.download)
-	api.Use(middleware.AuthMiddleware(h.redisClient.Client))
+	api.Use(middleware.AuthMiddleware(h.userCache))
 
 	api.GET("/files/:id", h.getFileInfo)
 	api.POST("/files", h.upload)

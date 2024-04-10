@@ -7,12 +7,11 @@ import (
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"net/http"
 	"strings"
 )
 
-func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
+func AuthMiddleware(userCache cache.UserCache) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//头像请求跳过验证
 		if strings.HasPrefix(ctx.FullPath(), "/api/v1/storage/files/download/") {
@@ -60,8 +59,6 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		userCache := cache.NewUserCacheRedisWithClient(redisClient)
-
 		infos, err := userCache.GetUserLoginInfos(ctx, claims.UserId)
 		if err != nil {
 			return
@@ -85,6 +82,7 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 		}
 		ctx.Set(constants.UserID, claims.UserId)
 		ctx.Set(constants.DriverID, claims.DriverId)
+		ctx.Set(constants.PublicKey, claims.PublicKey)
 		ctx.Next()
 	}
 }
