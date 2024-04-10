@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/cossim/coss-server/internal/live/api/dto"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -27,13 +27,7 @@ func (h *Handler) GroupCreate(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.CreateGroupCall(c, userID, req.GroupID, req.Member, req.Option)
 	if err != nil {
 		c.Error(err)
@@ -62,20 +56,9 @@ func (h *Handler) GroupJoin(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	resp, err := h.svc.GroupJoinRoom(c, req.GroupID, userID, driverId)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.GroupJoinRoom(c, req.GroupID, userID, driverID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -102,13 +85,7 @@ func (h *Handler) GroupShow(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.GroupShowRoom(c, uint32(gid), userID)
 	if err != nil {
 		c.Error(err)
@@ -136,13 +113,7 @@ func (h *Handler) GroupReject(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.GroupRejectRoom(c, req.GroupID, userID)
 	if err != nil {
 		c.Error(err)
@@ -170,13 +141,7 @@ func (h *Handler) GroupLeave(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.GroupLeaveRoom(c, req.GroupID, userID, req.Force)
 	if err != nil {
 		c.Error(err)

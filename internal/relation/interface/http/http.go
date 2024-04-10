@@ -70,7 +70,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	gin.SetMode(gin.ReleaseMode)
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/relation")
-	api.Use(middleware.AuthMiddleware(h.redisClient, h.db))
+	api.Use(middleware.AuthMiddleware(h.redisClient.Client))
 
 	u := api.Group("/user")
 	u.GET("/friend_list", h.friendList)

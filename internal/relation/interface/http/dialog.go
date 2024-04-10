@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/cossim/coss-server/internal/relation/api/http/model"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -24,18 +24,13 @@ func (h *Handler) closeOrOpenDialog(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	if !model.IsValidOpenAction(req.Action) {
 		response.SetFail(c, "打开或关闭对话失败", nil)
 		return
 	}
 
-	_, err = h.svc.OpenOrCloseDialog(c, thisId, req)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.OpenOrCloseDialog(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -60,18 +55,13 @@ func (h *Handler) topOrCancelTopDialog(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	if !model.IsValidTopAction(req.Action) {
 		response.SetFail(c, "置顶或取消置顶对话失败", nil)
 		return
 	}
 
-	_, err = h.svc.TopOrCancelTopDialog(c, thisId, req)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.TopOrCancelTopDialog(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return

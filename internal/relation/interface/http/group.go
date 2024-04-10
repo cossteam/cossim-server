@@ -4,8 +4,7 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/api/http/model"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/http"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -29,13 +28,8 @@ func (h *Handler) addGroupAdmin(c *gin.Context) {
 		return
 	}
 
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	err = h.svc.AddGroupAdmin(c, thisID, req)
+	userID := c.Value(constants.UserID).(string)
+	err := h.svc.AddGroupAdmin(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -60,13 +54,9 @@ func (h *Handler) setGroupUserRemark(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 
-	err = h.svc.SetGroupUserRemark(c, thisID, req)
+	userID := c.Value(constants.UserID).(string)
+	err := h.svc.SetGroupUserRemark(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -91,13 +81,9 @@ func (h *Handler) setGroupOpenBurnAfterReadingTimeOut(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 
-	err = h.svc.SetGroupOpenBurnAfterReadingTimeOut(c, thisID, req)
+	userID := c.Value(constants.UserID).(string)
+	err := h.svc.SetGroupOpenBurnAfterReadingTimeOut(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -122,13 +108,9 @@ func (h *Handler) readGroupAnnouncement(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 
-	_, err = h.svc.ReadGroupAnnouncement(c, thisID, req)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.ReadGroupAnnouncement(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -167,13 +149,8 @@ func (h *Handler) getReadGroupAnnouncementList(c *gin.Context) {
 		return
 	}
 
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetReadGroupAnnouncementUserList(c, thisID, uint32(aId), uint32(groupId))
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetReadGroupAnnouncementUserList(c, userID, uint32(aId), uint32(groupId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -198,13 +175,8 @@ func (h *Handler) createGroupAnnouncement(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.CreateGroupAnnouncement(c, thisId, req)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.CreateGroupAnnouncement(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -235,13 +207,8 @@ func (h *Handler) getGroupAnnouncementList(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetGroupAnnouncementList(c, thisId, uint32(groupId))
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetGroupAnnouncementList(c, userID, uint32(groupId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -280,13 +247,8 @@ func (h *Handler) getGroupAnnouncementDetail(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetGroupAnnouncementDetail(c, thisId, uint32(aId), uint32(groupId))
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetGroupAnnouncementDetail(c, userID, uint32(aId), uint32(groupId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -312,13 +274,8 @@ func (h *Handler) updateGroupAnnouncement(c *gin.Context) {
 		return
 	}
 
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.UpdateGroupAnnouncement(c, thisID, req)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.UpdateGroupAnnouncement(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -343,13 +300,9 @@ func (h *Handler) deleteGroupAnnouncement(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 
-	resp, err := h.svc.DeleteGroupAnnouncement(c, thisID, req)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.DeleteGroupAnnouncement(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -409,18 +362,13 @@ func (h *Handler) setGroupSilentNotification(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	if !model.IsValidSilentNotificationType(req.IsSilent) {
 		response.SetFail(c, "设置消息标注状态失败", nil)
 		return
 	}
 
-	_, err = h.svc.SetGroupSilentNotification(c, req.GroupId, thisId, req.IsSilent)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.SetGroupSilentNotification(c, req.GroupId, userID, req.IsSilent)
 	if err != nil {
 		c.Error(err)
 		return
@@ -450,13 +398,7 @@ func (h *Handler) getGroupMember(c *gin.Context) {
 		return
 	}
 
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.GetGroupMember(c, uint32(gid), userID)
 	if err != nil {
 		c.Error(err)
@@ -477,13 +419,7 @@ func (h *Handler) getGroupMember(c *gin.Context) {
 // @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=等待, 1=已通过, 2=已拒绝, 3=邀请发送者, 4=邀请接收者)"
 // @Router /relation/group/request_list [get]
 func (h *Handler) groupRequestList(c *gin.Context) {
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.GroupRequestList(c, userID)
 	if err != nil {
 		c.Error(err)
@@ -509,13 +445,8 @@ func (h *Handler) inviteGroup(c *gin.Context) {
 		return
 	}
 
-	uid, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	if err = h.svc.InviteGroup(c, uid, req); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.InviteGroup(c, userID, req); err != nil {
 		c.Error(err)
 		return
 	}
@@ -539,13 +470,8 @@ func (h *Handler) joinGroup(c *gin.Context) {
 		return
 	}
 
-	uid, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.JoinGroup(c, uid, req)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.JoinGroup(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -576,12 +502,6 @@ func (h *Handler) manageJoinGroup(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	var status relationgrpcv1.GroupRequestStatus
 	var msg string
 	if req.Action == model.ActionAccepted {
@@ -592,7 +512,8 @@ func (h *Handler) manageJoinGroup(c *gin.Context) {
 		msg = "拒绝加入群聊"
 	}
 
-	if err = h.svc.ManageJoinGroup(c, req.GroupID, req.ID, userID, status); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.ManageJoinGroup(c, req.GroupID, req.ID, userID, status); err != nil {
 		h.logger.Error("用户管理群聊申请", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
@@ -623,12 +544,6 @@ func (h *Handler) adminManageJoinGroup(c *gin.Context) {
 		return
 	}
 
-	adminID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	var status relationgrpcv1.GroupRequestStatus
 	var msg string
 	if req.Action == model.ActionAccepted {
@@ -639,7 +554,8 @@ func (h *Handler) adminManageJoinGroup(c *gin.Context) {
 		msg = "拒绝加入群聊"
 	}
 
-	if err = h.svc.AdminManageJoinGroup(c, req.ID, req.GroupID, adminID, status); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.AdminManageJoinGroup(c, req.ID, req.GroupID, userID, status); err != nil {
 		h.logger.Error("管理员管理群聊申请", zap.Error(err))
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
@@ -664,12 +580,7 @@ func (h *Handler) removeUserFromGroup(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	for _, d := range req.Member {
 		if userID == d {
 			response.SetFail(c, "不能将自己从群聊中移除", nil)
@@ -677,7 +588,7 @@ func (h *Handler) removeUserFromGroup(c *gin.Context) {
 		}
 	}
 
-	if err = h.svc.RemoveUserFromGroup(c, req.GroupID, userID, req.Member); err != nil {
+	if err := h.svc.RemoveUserFromGroup(c, req.GroupID, userID, req.Member); err != nil {
 		h.logger.Error("RemoveUserFromGroup Failed", zap.Error(err))
 		response.SetFail(c, err.Error(), nil)
 		return
@@ -702,13 +613,8 @@ func (h *Handler) quitGroup(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	if err = h.svc.QuitGroup(c, req.GroupID, userID); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.QuitGroup(c, req.GroupID, userID); err != nil {
 		response.SetFail(c, err.Error(), nil)
 		return
 	}
@@ -732,14 +638,8 @@ func (h *Handler) deleteGroupRequestRecord(c *gin.Context) {
 		return
 	}
 
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	if err = h.svc.DeleteGroupFriendRecord(c, userID, req.ID); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.DeleteGroupFriendRecord(c, userID, req.ID); err != nil {
 		c.Error(err)
 		return
 	}

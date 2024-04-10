@@ -87,6 +87,35 @@ func (s *UserServiceServer) Stop(ctx context.Context) error {
 
 func (s *UserServiceServer) DiscoverServices(services map[string]*grpc.ClientConn) error { return nil }
 
+func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessRequest) (*api.AccessResponse, error) {
+	resp := &api.AccessResponse{}
+
+	info, err := s.ur.GetUserInfoByUid(request.UserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+		}
+		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
+	}
+
+	if info.Status != entity.UserStatusNormal {
+		return nil, code.UserErrStatusException
+	}
+
+	infos, err := s.cache.GetUserLoginInfos(ctx, request.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range infos {
+		if v.UserId == request.UserID && v.Token == request.Token {
+			return nil, nil
+		}
+	}
+
+	return nil, code.Unauthorized
+}
+
 // 用户登录
 func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	resp := &api.UserLoginResponse{}
@@ -115,7 +144,6 @@ func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLogi
 	if err != nil {
 		return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
-
 	switch userInfo.Status {
 	case entity.UserStatusLock:
 		return resp, status.Error(codes.Code(code.UserErrLocked.Code()), code.UserErrLocked.Message())
@@ -132,6 +160,7 @@ func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLogi
 			Avatar:    userInfo.Avatar,
 			Signature: userInfo.Signature,
 			CossId:    userInfo.CossID,
+			PublicKey: userInfo.PublicKey,
 		}, nil
 	default:
 		return resp, status.Error(codes.Code(code.UserErrStatusException.Code()), code.UserErrStatusException.Message())

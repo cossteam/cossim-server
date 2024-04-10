@@ -70,7 +70,7 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/msg")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.redisClient, h.db))
+	u.Use(middleware.AuthMiddleware(h.redisClient.Client))
 
 	u.POST("/send/user", h.sendUserMsg)
 	u.POST("/send/group", h.sendGroupMsg)

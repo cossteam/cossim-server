@@ -19,6 +19,94 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	UserAuthService_Access_FullMethodName = "/user_v1.UserAuthService/Access"
+)
+
+// UserAuthServiceClient is the client API for UserAuthService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type UserAuthServiceClient interface {
+	Access(ctx context.Context, in *AccessRequest, opts ...grpc.CallOption) (*AccessResponse, error)
+}
+
+type userAuthServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewUserAuthServiceClient(cc grpc.ClientConnInterface) UserAuthServiceClient {
+	return &userAuthServiceClient{cc}
+}
+
+func (c *userAuthServiceClient) Access(ctx context.Context, in *AccessRequest, opts ...grpc.CallOption) (*AccessResponse, error) {
+	out := new(AccessResponse)
+	err := c.cc.Invoke(ctx, UserAuthService_Access_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// UserAuthServiceServer is the server API for UserAuthService service.
+// All implementations should embed UnimplementedUserAuthServiceServer
+// for forward compatibility
+type UserAuthServiceServer interface {
+	Access(context.Context, *AccessRequest) (*AccessResponse, error)
+}
+
+// UnimplementedUserAuthServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedUserAuthServiceServer struct {
+}
+
+func (UnimplementedUserAuthServiceServer) Access(context.Context, *AccessRequest) (*AccessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Access not implemented")
+}
+
+// UnsafeUserAuthServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to UserAuthServiceServer will
+// result in compilation errors.
+type UnsafeUserAuthServiceServer interface {
+	mustEmbedUnimplementedUserAuthServiceServer()
+}
+
+func RegisterUserAuthServiceServer(s grpc.ServiceRegistrar, srv UserAuthServiceServer) {
+	s.RegisterService(&UserAuthService_ServiceDesc, srv)
+}
+
+func _UserAuthService_Access_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserAuthServiceServer).Access(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserAuthService_Access_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserAuthServiceServer).Access(ctx, req.(*AccessRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// UserAuthService_ServiceDesc is the grpc.ServiceDesc for UserAuthService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var UserAuthService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "user_v1.UserAuthService",
+	HandlerType: (*UserAuthServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Access",
+			Handler:    _UserAuthService_Access_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "api/grpc/v1/user.proto",
+}
+
+const (
 	UserService_UserLogin_FullMethodName               = "/user_v1.UserService/UserLogin"
 	UserService_UserRegister_FullMethodName            = "/user_v1.UserService/UserRegister"
 	UserService_UserInfo_FullMethodName                = "/user_v1.UserService/UserInfo"

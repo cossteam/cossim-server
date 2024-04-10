@@ -11,6 +11,11 @@ const (
 	UnDefinedClient DriverType = "UnDefined"
 )
 
+const (
+	UserID   = "user_id"
+	DriverID = "driver_id"
+)
+
 func DetermineClientType(clientType DriverType) DriverType {
 	if clientType == MobileClient || clientType == DesktopClient {
 		return clientType

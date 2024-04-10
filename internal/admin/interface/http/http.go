@@ -61,9 +61,10 @@ func (h *Handler) Version() string {
 // @title CossApi
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/admin")
-	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
+	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.RecoveryMiddleware())
 	//u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("admin")))
 	u.Use(middleware.AdminAuthMiddleware(h.redisClient, h.db))
+	u.Use(middleware.EncryptionMiddleware(h.enc))
 	u.POST("/notification/send_all", h.sendAllNotification)
 }
 

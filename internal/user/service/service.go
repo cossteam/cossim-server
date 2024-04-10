@@ -35,8 +35,9 @@ type Service struct {
 	msgService       msggrpcv1.MsgServiceClient
 
 	storageService storage.StorageProvider
-	redisClient    *cache.RedisClient
-	smtpClient     email.EmailProvider
+	//redisClient    *cache.RedisClient
+	smtpClient email.EmailProvider
+	userCache  cache.UserCache
 
 	dtmGrpcServer       string
 	relationServiceAddr string
@@ -60,9 +61,14 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s
 		downloadURL:     "/api/v1/storage/files/download",
 		smtpClient:      setupSmtpProvider(ac),
 	}
+	userCache, err := cache.NewUserCacheRedis(s.ac.Redis.Addr(), s.ac.Redis.Password, 0)
+	if err != nil {
+		panic(err)
+	}
 	s.setLoadSystem()
 	s.setupRedisClient()
-	s.cache = s.setCacheConfig()
+	s.userCache = userCache
+	s.cache = s.ac.Cache.Enable
 	s.userService = grpcService
 	s.userLoginService = grpcService
 	return s
@@ -86,15 +92,8 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 	return nil
 }
 
-func (s *Service) setCacheConfig() bool {
-	if s.redisClient == nil && s.ac.Cache.Enable {
-		panic("redis is nil")
-	}
-	return s.ac.Cache.Enable
-}
-
 func (s *Service) setupRedisClient() {
-	s.redisClient = cache.NewRedisClient(s.ac.Redis.Addr(), s.ac.Redis.Password)
+	//s.redisClient = cache.NewRedisClient(s.ac.Redis.Addr(), s.ac.Redis.Password)
 }
 
 func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {

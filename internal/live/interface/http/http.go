@@ -65,9 +65,9 @@ func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
+	r.Use(middleware.AuthMiddleware(h.redisClient.Client))
 	u := r.Group("/api/v1/live/user")
 
-	u.Use(middleware.AuthMiddleware(h.redisClient, h.db))
 	u.GET("/show", h.UserShow)
 	u.POST("/create", h.UserCreate)
 	u.POST("/join", h.UserJoin)
@@ -75,7 +75,6 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/leave", h.UserLeave)
 
 	g := r.Group("/api/v1/live/group")
-	g.Use(middleware.AuthMiddleware(h.redisClient, h.db))
 	g.GET("/show", h.GroupShow)
 	g.POST("/create", h.GroupCreate)
 	g.POST("/join", h.GroupJoin)

@@ -3,7 +3,6 @@ package http
 import (
 	"github.com/cossim/coss-server/internal/user/api/http/model"
 	"github.com/cossim/coss-server/pkg/constants"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
@@ -62,22 +61,17 @@ func (h *Handler) logout(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 	tokenString := c.GetHeader("Authorization")
-
 	token := tokenString[7:]
 
+	userID := c.Value(constants.UserID).(string)
 	deviceType := c.Request.Header.Get("X-Device-Type")
 	deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
-	if err = h.svc.Logout(c, thisId, token, req, deviceType); err != nil {
+	if err := h.svc.Logout(c, userID, token, req, deviceType); err != nil {
 		c.Error(err)
 		return
 	}
-	c.Set("user_id", thisId)
+	c.Set("user_id", userID)
 	response.SetSuccess(c, "退出登录成功", nil)
 }
 
@@ -151,13 +145,7 @@ func (h *Handler) search(c *gin.Context) {
 	//	return
 	//}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.Search(c, userID, email)
 	if err != nil {
 		c.Error(err)
@@ -183,13 +171,7 @@ func (h *Handler) getUserInfo(c *gin.Context) {
 		return
 	}
 
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	thisID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.GetUserInfo(c, thisID, userId)
 	if err != nil {
 		c.Error(err)
@@ -216,14 +198,8 @@ func (h *Handler) setUserPublicKey(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.SetUserPublicKey(c, thisId, req.PublicKey)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.SetUserPublicKey(c, userID, req.PublicKey)
 	if err != nil {
 		c.Error(err)
 		return
@@ -241,7 +217,7 @@ func (h *Handler) setUserPublicKey(c *gin.Context) {
 // @Param email query string false "邮箱"
 // @Success		200 {object} model.Response{}
 // @Router /user/system/key/get [get]
-func (h *Handler) GetSystemPublicKey(c *gin.Context) {
+func (h *Handler) getSystemPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": h.key})
 }
 
@@ -262,19 +238,13 @@ func (h *Handler) modifyUserInfo(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	if err = h.svc.ModifyUserInfo(c, thisId, req); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.ModifyUserInfo(c, userID, req); err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": userID})
 }
 
 // @Summary 修改用户密码
@@ -294,12 +264,6 @@ func (h *Handler) modifyUserPassword(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 	req.Password = strings.TrimSpace(req.Password)
 	req.OldPasswprd = strings.TrimSpace(req.OldPasswprd)
 	req.ConfirmPass = strings.TrimSpace(req.ConfirmPass)
@@ -326,12 +290,13 @@ func (h *Handler) modifyUserPassword(c *gin.Context) {
 		return
 	}
 
-	if err = h.svc.ModifyUserPassword(c, thisId, req); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.ModifyUserPassword(c, userID, req); err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": userID})
 }
 
 // @Summary 修改用户密钥包
@@ -351,20 +316,14 @@ func (h *Handler) modifyUserSecretBundle(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.ModifyUserSecretBundle(c, thisId, req)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.ModifyUserSecretBundle(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "修改成功", gin.H{"user_id": thisId})
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": userID})
 }
 
 // @Summary 获取用户密钥包
@@ -379,11 +338,6 @@ func (h *Handler) getUserSecretBundle(c *gin.Context) {
 	userId := c.Query("user_id")
 	if userId == "" {
 		response.Fail(c, "参数错误", nil)
-		return
-	}
-	_, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
 		return
 	}
 
@@ -404,12 +358,12 @@ func (h *Handler) getUserSecretBundle(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /user/clients/get [get]
 func (h *Handler) getUserLoginClients(c *gin.Context) {
-	thisId, err := pkghttp.ParseTokenReUid(c)
+	userID := c.Value(constants.UserID).(string)
+	clients, err := h.svc.GetUserLoginClients(c, userID)
 	if err != nil {
-		response.SetFail(c, err.Error(), nil)
+		c.Error(err)
 		return
 	}
-	clients, err := h.svc.GetUserLoginClients(c, thisId)
 
 	response.SetSuccess(c, "获取成功", clients)
 }
@@ -456,7 +410,8 @@ func (h *Handler) resetUserPublicKey(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.ResetUserPublicKey(c, req)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.ResetUserPublicKey(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -499,12 +454,6 @@ func (h *Handler) sendEmailCode(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /user/avatar/modify [post]
 func (h *Handler) modifyUserAvatar(c *gin.Context) {
-	userId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	// Parse form data
 	if err := c.Request.ParseMultipartForm(25 << 20); // 25 MB limit
 	err != nil {
@@ -533,11 +482,12 @@ func (h *Handler) modifyUserAvatar(c *gin.Context) {
 		return
 	}
 
-	url, err := h.svc.ModifyUserAvatar(c, userId, file)
+	userID := c.Value(constants.UserID).(string)
+	url, err := h.svc.ModifyUserAvatar(c, userID, file)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "修改成功", gin.H{"user_id": userId, "avatar": url})
+	response.SetSuccess(c, "修改成功", gin.H{"user_id": userID, "avatar": url})
 }
