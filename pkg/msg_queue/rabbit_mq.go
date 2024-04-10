@@ -81,7 +81,7 @@ func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "application/json",
 			Body:        msg,
 		})
 }
@@ -125,7 +125,7 @@ func (r *RabbitMQ) PublishEncryptedMessage(queueName string, body string) error 
 }
 
 // ConsumeMessages 用于消费消息
-func ConsumeMessages(queueName string, channel *amqp.Channel) (amqp.Delivery, bool, error) {
+func ConsumeMessages(queueName string, channel *amqp.Channel) ([]byte, bool, error) {
 	q, err := channel.QueueDeclare(
 		queueName,
 		false,
@@ -135,15 +135,15 @@ func ConsumeMessages(queueName string, channel *amqp.Channel) (amqp.Delivery, bo
 		nil,
 	)
 	if err != nil {
-		return amqp.Delivery{}, false, err
+		return nil, false, err
 	}
 	msg, ok, err := channel.Get(q.Name, true)
 	if err != nil {
 		fmt.Println(err)
-		return amqp.Delivery{}, false, err
+		return nil, false, err
 	}
 
-	return msg, ok, nil
+	return msg.Body, ok, nil
 }
 
 func (r *RabbitMQ) ConsumeMessagesWithChan(queueName string) (<-chan amqp.Delivery, error) {

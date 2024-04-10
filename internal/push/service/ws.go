@@ -153,6 +153,7 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 		if !msg.PushOffline && ui == nil {
 			continue
 		}
+
 		if msg.PushOffline && ui == nil {
 			//不在线则推送到消息队列
 			err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
@@ -160,7 +161,7 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 				fmt.Println("发布消息失败：", err)
 				continue
 			}
-			continue
+			break
 		}
 
 		err = i2.SendMessage(msg.Uid, message)
@@ -320,9 +321,33 @@ func (s *Service) wsOnlineClients(msg *pushgrpcv1.WsMsg, c *connect.WebsocketCli
 			return
 		}
 
-		err = c.Conn.WriteMessage(websocket.TextMessage, msg2.Body)
+		var a interface{}
+		err = json.Unmarshal(msg2, &a)
 		if err != nil {
-			fmt.Println("发送消息失败：", err)
+			fmt.Println("解析失败:", err)
+			return
+		}
+
+		mm := a.(string)
+		// 尝试解析消息
+		var data2 map[string]interface{}
+		err = json.Unmarshal([]byte(mm), &data2)
+		if err != nil {
+			s.logger.Error("转换消息失败1", zap.Error(err))
+			return
+		}
+
+		// 尝试将解析后的数据转换为字节
+		wsData, err := json.Marshal(data2)
+		if err != nil {
+			s.logger.Error("转换消息失败2", zap.Error(err))
+			return
+		}
+
+		// 尝试将数据写入 WebSocket 连接
+		err = c.Conn.WriteMessage(websocket.TextMessage, wsData)
+		if err != nil {
+			s.logger.Error("推送队列离线消息失败", zap.Error(err))
 			return
 		}
 	}
