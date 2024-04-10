@@ -600,6 +600,8 @@ definitions:
     type: object
   model.GroupRequestListResponse:
     properties:
+      create_at:
+        type: integer
       creator_id:
         type: string
       group_avatar:
@@ -744,21 +746,11 @@ definitions:
     required:
     - secret_bundle
     type: object
-  model.OpenGroupBurnAfterReadingRequest:
-    properties:
-      action:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType'
-      group_id:
-        description: 群组ID
-        type: integer
-    required:
-    - group_id
-    type: object
   model.OpenUserBurnAfterReadingRequest:
     properties:
       action:
         $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType'
-      open_burn_after_reading_time_out:
+      timeout:
         type: integer
       user_id:
         description: 用户ID
@@ -1075,8 +1067,14 @@ definitions:
         type: string
       email:
         type: string
+      last_login_time:
+        description: LastLoginTime 上次登录时间，如果为0说明用户注册了但从未登录过
+        type: integer
       login_number:
         type: integer
+      new_device_login:
+        description: NewDeviceLogin 表示是否新设备登录
+        type: boolean
       nickname:
         type: string
       preferences:
@@ -1108,6 +1106,8 @@ definitions:
     - UserRelationStatusBlacked
   model.UserRequestListResponse:
     properties:
+      create_at:
+        type: integer
       id:
         type: integer
       receiver_id:
@@ -1116,8 +1116,6 @@ definitions:
         $ref: '#/definitions/model.UserInfo'
       remark:
         type: string
-      request_at:
-        type: integer
       sender_id:
         type: string
       sender_info:
@@ -2311,28 +2309,6 @@ paths:
           schema:
             $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response'
       summary: 获取已读公告用户
-      tags:
-      - GroupRelation
-  /relation/group/burn/open:
-    post:
-      consumes:
-      - application/json
-      description: '是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)'
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.OpenGroupBurnAfterReadingRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response'
-      summary: '是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)'
       tags:
       - GroupRelation
   /relation/group/burn/timeout/set:
