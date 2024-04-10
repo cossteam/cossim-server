@@ -5,7 +5,6 @@ import (
 	"github.com/cossim/coss-server/internal/push/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -14,17 +13,14 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"gorm.io/gorm"
 	"net/http"
-	"strconv"
 )
 
 type Handler struct {
 	logger      *zap.Logger
 	enc         encryption.Encryptor
-	redisClient *cache.RedisClient
 	PushService *service.Service
-	db          *gorm.DB
+	userCache   cache.UserCache
 }
 
 var (
@@ -36,27 +32,17 @@ var (
 )
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 	h.logger = plog.NewDefaultLogger("push_bff", int8(cfg.Log.Level))
-
-	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if cfg.Encryption.Enable {
+		return h.enc.ReadKeyPair()
+	}
+	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
 	if err != nil {
 		return err
 	}
-
-	h.db, err = mysql.GetConnection()
-	if err != nil {
-		return err
-	}
-
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
-	//h.PushService.Init(cfg)
-	//return h.enc.ReadKeyPair()
+	h.userCache = userCache
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	return nil
-}
-
-func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
-	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
 }
 
 func (h *Handler) Name() string {
@@ -70,7 +56,7 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/push")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.redisClient.Client))
+	u.Use(middleware.AuthMiddleware(h.userCache))
 	u.GET("/ws", h.ws)
 }
 

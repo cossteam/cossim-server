@@ -33,7 +33,9 @@ type Handler struct {
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("admin_bff", int8(cfg.Log.Level))
-
+	if cfg.Encryption.Enable {
+		return h.enc.ReadKeyPair()
+	}
 	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
 	if err != nil {
 		return err
@@ -44,9 +46,8 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg)
-	//return h.enc.ReadKeyPair()
 	return nil
 }
 

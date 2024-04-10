@@ -85,15 +85,8 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 					"msg":  "响应用户ID为空",
 				})
 			}
-			user, err := encryptor.QueryUser(userId)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"code": 500,
-					"msg":  "用户不存在",
-				})
-				return
-			}
-			if user.PublicKey == "" {
+			publicKey := c.Value(constants.PublicKey).(string)
+			if publicKey == "" {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code": 500,
 					"msg":  "用户未设置公钥,加密失败",
@@ -101,7 +94,7 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 				return
 			}
 			// 进行加密操作
-			encryptedResponse, err := encryptor.SecretMessage(string(msgStr), user.PublicKey, []byte(rkey))
+			encryptedResponse, err := encryptor.SecretMessage(string(msgStr), publicKey, []byte(rkey))
 			if err != nil {
 				fmt.Println("加密失败：", err)
 				c.JSON(http.StatusInternalServerError, gin.H{

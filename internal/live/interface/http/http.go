@@ -5,7 +5,6 @@ import (
 	"github.com/cossim/coss-server/internal/live/service"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -14,8 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"gorm.io/gorm"
-	"strconv"
 )
 
 var (
@@ -23,30 +20,25 @@ var (
 )
 
 type Handler struct {
-	svc         *service.Service
-	redisClient *cache.RedisClient
-	logger      *zap.Logger
-	enc         encryption.Encryptor
-	db          *gorm.DB
+	svc       *service.Service
+	logger    *zap.Logger
+	enc       encryption.Encryptor
+	userCache cache.UserCache
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	h.setupRedisClient(cfg)
-	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if cfg.Encryption.Enable {
+		return h.enc.ReadKeyPair()
+	}
+	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
 	if err != nil {
 		return err
 	}
-
-	dbConn, err := mysql.GetConnection()
-	if err != nil {
-		return err
-	}
-
-	h.db = dbConn
+	h.userCache = userCache
 	h.logger = plog.NewDefaultLogger("live_bff", int8(cfg.Log.Level))
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable, h.db)
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg)
-	return h.enc.ReadKeyPair()
+	return nil
 }
 
 func (h *Handler) Name() string {
@@ -57,15 +49,11 @@ func (h *Handler) Version() string {
 	return version.FullVersion()
 }
 
-func (h *Handler) setupRedisClient(cfg *pkgconfig.AppConfig) {
-	h.redisClient = cache.NewRedisClient(cfg.Redis.Addr(), cfg.Redis.Password)
-}
-
 // @title CossApi
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	r.Use(middleware.AuthMiddleware(h.redisClient.Client))
+	r.Use(middleware.AuthMiddleware(h.userCache))
 	u := r.Group("/api/v1/live/user")
 
 	u.GET("/show", h.UserShow)

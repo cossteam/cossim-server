@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceType, token string) {
+func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driverId string, deviceType, token string) {
 	defer conn.Close()
 	//用户上线
 	wsRid++
@@ -54,7 +54,7 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 		return
 	}
 	//保存到线程池
-	s.wsOnlineClients(&pushgrpcv1.WsMsg{Uid: uid, DriverId: driverId, Event: pushgrpcv1.WSEventType_OnlineEvent, Rid: wsRid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}, cli)
+	s.wsOnlineClients(ctx, &pushgrpcv1.WsMsg{Uid: uid, DriverId: driverId, Event: pushgrpcv1.WSEventType_OnlineEvent, Rid: wsRid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}, cli)
 
 	go cli.Conn.CheckHeartbeat(30 * time.Second)
 
@@ -124,7 +124,7 @@ func (s *Service) Ws(conn *websocket.Conn, uid string, driverId string, deviceTy
 				}
 			}
 			//用户下线
-			s.wsOfflineClients(uid)
+			s.wsOfflineClients(ctx, uid)
 			err = cli.Conn.Close()
 			if err != nil {
 				return
@@ -143,7 +143,7 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 			return nil, err
 		}
 
-		message, err := s.enc.GetSecretMessage(string(bytes), msg.Uid)
+		message, err := s.enc.GetSecretMessage(ctx, string(bytes), msg.Uid)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +181,7 @@ func (s *Service) PushWsBatch(ctx context.Context, request *pushgrpcv1.PushWsBat
 				return nil, err
 			}
 
-			message, err := s.enc.GetSecretMessage(string(bytes), msg.Uid)
+			message, err := s.enc.GetSecretMessage(ctx, string(bytes), msg.Uid)
 			if err != nil {
 				return nil, err
 			}
@@ -237,7 +237,7 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 			return nil, fmt.Errorf("加密客户端错误%v", zap.Error(nil))
 		}
 
-		message, err := s.enc.GetSecretMessage(string(bytes), msg.Uid)
+		message, err := s.enc.GetSecretMessage(ctx, string(bytes), msg.Uid)
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +268,7 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 }
 
 // 用户上线
-func (s *Service) wsOnlineClients(msg *pushgrpcv1.WsMsg, c *connect.WebsocketClient) {
+func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c *connect.WebsocketClient) {
 	//通知前端接收离线消息
 	//TODO 添加上线的设备类型
 	//js, _ := json.Marshal(msg)
@@ -286,7 +286,7 @@ func (s *Service) wsOnlineClients(msg *pushgrpcv1.WsMsg, c *connect.WebsocketCli
 		return
 	}
 
-	message, err := s.enc.GetSecretMessage(string(js), msg.Uid)
+	message, err := s.enc.GetSecretMessage(ctx, string(js), msg.Uid)
 	if err != nil {
 		fmt.Println("加密失败：", err)
 		return
@@ -299,14 +299,14 @@ func (s *Service) wsOnlineClients(msg *pushgrpcv1.WsMsg, c *connect.WebsocketCli
 		return
 	}
 
-	err = s.pushAllFriendOnlineStatus(c, msg.Uid)
+	err = s.pushAllFriendOnlineStatus(ctx, c, msg.Uid)
 	if err != nil {
 		fmt.Println("推送好友在线状态失败：", err)
 		return
 	}
 
 	//修改在线状态
-	err = s.addUserWsCount(msg.Uid)
+	err = s.addUserWsCount(ctx, msg.Uid)
 	if err != nil {
 		fmt.Println("修改在线状态失败：", err)
 		return
@@ -353,15 +353,15 @@ func (s *Service) wsOnlineClients(msg *pushgrpcv1.WsMsg, c *connect.WebsocketCli
 	}
 }
 
-func (s *Service) wsOfflineClients(uid string) {
-	err := s.reduceUserWsCount(uid)
+func (s *Service) wsOfflineClients(ctx context.Context, uid string) {
+	err := s.reduceUserWsCount(ctx, uid)
 	if err != nil {
 		fmt.Println("修改在线状态失败：", err)
 		return
 	}
 }
 
-func (s *Service) addUserWsCount(uid string) error {
+func (s *Service) addUserWsCount(ctx context.Context, uid string) error {
 
 	exists, err := s.redisClient.ExistsKey(uid)
 	if err != nil {
@@ -369,7 +369,7 @@ func (s *Service) addUserWsCount(uid string) error {
 	}
 
 	//给好友推送上线
-	err = s.pushFriendStatus(onlineEvent, uid)
+	err = s.pushFriendStatus(ctx, onlineEvent, uid)
 	if err != nil {
 		return err
 	}
@@ -391,7 +391,7 @@ func (s *Service) addUserWsCount(uid string) error {
 	}
 }
 
-func (s *Service) reduceUserWsCount(uid string) error {
+func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
 
 	exists, err := s.redisClient.ExistsKey(uid)
 	if err != nil {
@@ -399,7 +399,7 @@ func (s *Service) reduceUserWsCount(uid string) error {
 	}
 	if !exists {
 		//给好友推送下线
-		err := s.pushFriendStatus(offlineEvent, uid)
+		err := s.pushFriendStatus(ctx, offlineEvent, uid)
 		if err != nil {
 			return err
 		}
@@ -417,7 +417,7 @@ func (s *Service) reduceUserWsCount(uid string) error {
 		fmt.Printf("%s账号当前还有%d个客户端在线", uid, num)
 		if num == 1 {
 			//给好友推送下线
-			err := s.pushFriendStatus(offlineEvent, uid)
+			err := s.pushFriendStatus(ctx, offlineEvent, uid)
 			if err != nil {
 				return err
 			}
@@ -438,7 +438,7 @@ const (
 )
 
 // 给好友推送离线或上线通知
-func (s *Service) pushFriendStatus(v status, uid string) error {
+func (s *Service) pushFriendStatus(ctx context.Context, v status, uid string) error {
 	//查询所有好友
 	list, err := s.relationService.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: uid})
 	if err != nil {
@@ -462,7 +462,7 @@ func (s *Service) pushFriendStatus(v status, uid string) error {
 				return fmt.Errorf("加密客户端错误%v", zap.Error(nil))
 			}
 
-			message, err := s.enc.GetSecretMessage(string(js), uid)
+			message, err := s.enc.GetSecretMessage(ctx, string(js), uid)
 			if err != nil {
 				fmt.Println("加密失败：", err)
 				continue
@@ -482,7 +482,7 @@ func (s *Service) pushFriendStatus(v status, uid string) error {
 }
 
 // 获取所有好友在线状态
-func (s *Service) pushAllFriendOnlineStatus(c *connect.WebsocketClient, uid string) error {
+func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c *connect.WebsocketClient, uid string) error {
 	fmt.Println("pushAllFriendOnlineStatus", s.relationService)
 	if c.Conn.IsNil() || c.Conn.WriteMessage(websocket.PingMessage, nil) != nil {
 		log.Println("连接已关闭，不再推送消息")
@@ -534,7 +534,7 @@ func (s *Service) pushAllFriendOnlineStatus(c *connect.WebsocketClient, uid stri
 		log.Println("加密客户端错误", zap.Error(nil))
 		return nil
 	}
-	message, err := s.enc.GetSecretMessage(string(js), uid)
+	message, err := s.enc.GetSecretMessage(ctx, string(js), uid)
 	if err != nil {
 		fmt.Println("加密失败：", err)
 		return fmt.Errorf("加密失败：%v", err)
