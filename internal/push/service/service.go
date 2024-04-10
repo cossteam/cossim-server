@@ -75,7 +75,6 @@ func (s *Service) setupEncryption(ac *pkgconfig.AppConfig) {
 		ac.Encryption.Email,
 		ac.Encryption.RsaBits,
 		ac.Encryption.Enable,
-		s.db,
 	)
 }
 func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {

@@ -10,7 +10,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	enc := encryption.NewEncryptor([]byte(conf.Conf.Passphrase), conf.Conf.Name, conf.Conf.Email, conf.Conf.RsaBits, conf.Conf.Enable, nil)
+	enc := encryption.NewEncryptor([]byte(conf.Conf.Passphrase), conf.Conf.Name, conf.Conf.Email, conf.Conf.RsaBits, conf.Conf.Enable)
 	err = enc.GenerateKeyPair()
 	if err != nil {
 		panic(err)

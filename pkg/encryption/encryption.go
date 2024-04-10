@@ -1,14 +1,14 @@
 package encryption
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/gopenpgp/v2/helper"
-	"github.com/cossim/coss-server/internal/user/domain/entity"
-	"gorm.io/gorm"
+	"github.com/cossim/coss-server/pkg/constants"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -27,8 +27,7 @@ type Encryptor interface {
 	SetPublicKey(publicKey string)
 	SetPrivateKey(privateKey string)
 	ReadKeyPair() error
-	GetSecretMessage(message string, userID string) (string, error)
-	QueryUser(userID string) (entity.User, error)
+	GetSecretMessage(ctx context.Context, message string, userID string) (string, error)
 }
 
 // MyEncryptor 结构体实现了 Encryptor 接口
@@ -40,7 +39,6 @@ type MyEncryptor struct {
 	name       string
 	email      string
 	rsaBits    int
-	db         *gorm.DB
 }
 
 // 生成随机对称秘钥
@@ -67,14 +65,13 @@ type SecretResponse struct {
 }
 
 // NewEncryptor 创建一个新的 Encryptor 实例
-func NewEncryptor(passphrase []byte, name, email string, rsaBits int, enable bool, db *gorm.DB) Encryptor {
+func NewEncryptor(passphrase []byte, name, email string, rsaBits int, enable bool) Encryptor {
 	return &MyEncryptor{
 		passphrase: passphrase,
 		name:       name,
 		email:      email,
 		rsaBits:    rsaBits,
 		enable:     enable,
-		db:         db,
 	}
 }
 
@@ -88,28 +85,30 @@ func NewEncryptor(passphrase []byte, name, email string, rsaBits int, enable boo
 //	}
 //}
 
-const _queryUser = "SELECT * FROM users WHERE id = ?"
-
-// QueryUser retrieves user information by user ID
-func (e *MyEncryptor) QueryUser(userID string) (entity.User, error) {
-	var user entity.User
-	if err := e.db.Raw(_queryUser, userID).Scan(&user).Error; err != nil {
-		return entity.User{}, err
-	}
-	return user, nil
-}
+//const _queryUser = "SELECT * FROM users WHERE id = ?"
+//
+//// QueryUser retrieves user information by user ID
+//func (e *MyEncryptor) QueryUser(userID string) (entity.User, error) {
+//	var user entity.User
+//	if err := e.db.Raw(_queryUser, userID).Scan(&user).Error; err != nil {
+//		return entity.User{}, err
+//	}
+//	return user, nil
+//}
 
 // 根据用户id返回加密后消息
-func (e *MyEncryptor) GetSecretMessage(message string, userID string) (string, error) {
+func (e *MyEncryptor) GetSecretMessage(ctx context.Context, message string, userID string) (string, error) {
 	if !e.enable {
 		return message, nil
 	}
 
-	userInfo, err := e.QueryUser(userID)
-	if err != nil {
-		return message, err
-	}
-	if userInfo.PublicKey == "" {
+	publicKey := ctx.Value(constants.PublicKey).(string)
+
+	//userInfo, err := e.QueryUser(userID)
+	//if err != nil {
+	//	return message, err
+	//}
+	if publicKey == "" {
 		return message, fmt.Errorf("publicKey is nil")
 	}
 	rkey, err := GenerateRandomKey(32)
@@ -124,7 +123,7 @@ func (e *MyEncryptor) GetSecretMessage(message string, userID string) (string, e
 		return message, err
 	}
 	data.Message = armor
-	marmor, err := helper.EncryptMessageArmored(userInfo.PublicKey, rkey)
+	marmor, err := helper.EncryptMessageArmored(publicKey, rkey)
 	if err != nil {
 		return message, err
 	}
