@@ -4,7 +4,7 @@ import (
 	"context"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/storage/api/http/model"
-	http2 "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -24,13 +24,6 @@ import (
 // @Success		200 {object} model.Response{}
 // @Router /storage/files [post]
 func (h *Handler) upload(c *gin.Context) {
-	userID, err := http2.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
 	// 获取表单中的整数字段，如果字段不存在或无法解析为整数，则使用默认值 0
 	value := c.PostForm("type")
 	if value == "" {
@@ -59,6 +52,7 @@ func (h *Handler) upload(c *gin.Context) {
 		return
 	}
 
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.Upload(c, userID, file, _Type)
 	if err != nil {
 		return

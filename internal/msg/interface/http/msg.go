@@ -1,9 +1,8 @@
 package http
 
 import (
-	"fmt"
 	"github.com/cossim/coss-server/internal/msg/api/http/model"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -25,25 +24,15 @@ func (h *Handler) sendUserMsg(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 
 	if !model.IsValidMessageType(req.Type) {
-		h.logger.Error("消息类型错误", zap.Error(err))
 		response.SetFail(c, "消息类型错误", nil)
 		return
 	}
 
-	resp, err := h.svc.SendUserMsg(c, thisId, driverId, req)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.SendUserMsg(c, userID, driverID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -67,23 +56,15 @@ func (h *Handler) sendGroupMsg(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
 	if req.GroupId == 0 {
 		response.SetFail(c, "群聊id不正确", nil)
 		return
 	}
 
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.SendGroupMsg(c, thisId, driverId, req)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.SendGroupMsg(c, userID, driverID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -115,11 +96,6 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 		response.SetFail(c, "参数错误", nil)
 		return
 	}
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 	pageNum, _ := strconv.Atoi(num)
 	pageSize, _ := strconv.Atoi(size)
 	mt, _ := strconv.Atoi(msgType)
@@ -136,7 +112,8 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 		PageSize: pageSize,
 	}
 
-	resp, err := h.svc.GetUserMessageList(c, thisId, msgListRequest)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetUserMessageList(c, userID, msgListRequest)
 	if err != nil {
 		c.Error(err)
 		return
@@ -170,11 +147,6 @@ func (h *Handler) getGroupMsgList(c *gin.Context) {
 		response.SetFail(c, "参数错误", nil)
 		return
 	}
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 
 	gidInt, _ := strconv.Atoi(gid)
 	pageNum, _ := strconv.Atoi(num)
@@ -194,7 +166,8 @@ func (h *Handler) getGroupMsgList(c *gin.Context) {
 		PageSize: pageSize,
 	}
 
-	resp, err := h.svc.GetGroupMessageList(c, thisId, msgListRequest)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetGroupMessageList(c, userID, msgListRequest)
 	if err != nil {
 		c.Error(err)
 		return
@@ -212,13 +185,8 @@ func (h *Handler) getGroupMsgList(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /msg/dialog/list [get]
 func (h *Handler) getUserDialogList(c *gin.Context) {
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetUserDialogList(c, thisId)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetUserDialogList(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -243,19 +211,9 @@ func (h *Handler) editUserMsg(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.EditUserMsg(c, thisId, driverId, req.MsgId, req.Content)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.EditUserMsg(c, userID, driverID, req.MsgId, req.Content)
 	if err != nil {
 		c.Error(err)
 		return
@@ -280,19 +238,9 @@ func (h *Handler) editGroupMsg(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.EditGroupMsg(c, thisId, driverId, req.MsgId, req.Content)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.EditGroupMsg(c, userID, driverID, req.MsgId, req.Content)
 	if err != nil {
 		c.Error(err)
 		return
@@ -317,19 +265,9 @@ func (h *Handler) recallUserMsg(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.RecallUserMsg(c, thisId, driverId, req.MsgId)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.RecallUserMsg(c, userID, driverID, req.MsgId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -354,19 +292,9 @@ func (h *Handler) recallGroupMsg(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.RecallGroupMsg(c, thisId, driverId, req.MsgId)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.RecallGroupMsg(c, userID, driverID, req.MsgId)
 	if err != nil {
 		c.Error(err)
 		return
@@ -391,24 +319,14 @@ func (h *Handler) labelUserMessage(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	if !model.IsValidLabelMsgType(req.IsLabel) {
 		response.SetFail(c, "设置消息标注状态失败", nil)
 		return
 	}
 
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.LabelUserMessage(c, thisId, driverId, req.MsgID, req.IsLabel)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	_, err := h.svc.LabelUserMessage(c, userID, driverID, req.MsgID, req.IsLabel)
 	if err != nil {
 		c.Error(err)
 		return
@@ -433,24 +351,14 @@ func (h *Handler) labelGroupMessage(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	if !model.IsValidLabelMsgType(req.IsLabel) {
 		response.SetFail(c, "设置消息标注状态失败", nil)
 		return
 	}
 
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.LabelGroupMessage(c, thisId, driverId, req.MsgID, req.IsLabel)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	_, err := h.svc.LabelGroupMessage(c, userID, driverID, req.MsgID, req.IsLabel)
 	if err != nil {
 		c.Error(err)
 		return
@@ -481,13 +389,8 @@ func (h *Handler) getUserLabelMsgList(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetUserLabelMsgList(c, thisId, uint32(dialogId))
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetUserLabelMsgList(c, userID, uint32(dialogId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -518,13 +421,8 @@ func (h *Handler) getGroupLabelMsgList(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetGroupLabelMsgList(c, thisId, uint32(dialogId))
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetGroupLabelMsgList(c, userID, uint32(dialogId))
 	if err != nil {
 		c.Error(err)
 		return
@@ -549,19 +447,9 @@ func (h *Handler) readUserMsgs(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.ReadUserMsgs(c, thisId, driverId, req)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	_, err := h.svc.ReadUserMsgs(c, userID, driverID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -586,12 +474,8 @@ func (h *Handler) getDialogAfterMsg(c *gin.Context) {
 		return
 	}
 
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-	resp, err := h.svc.GetDialogAfterMsg(c, thisID, *req)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetDialogAfterMsg(c, userID, *req)
 	if err != nil {
 		c.Error(err)
 	}
@@ -614,19 +498,9 @@ func (h *Handler) setGroupMessagesRead(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.SetGroupMessagesRead(c, thisId, driverId, req)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	_, err := h.svc.SetGroupMessagesRead(c, userID, driverID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -662,14 +536,9 @@ func (h *Handler) getGroupMessageReaders(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	// 执行获取消息已读人员的逻辑
-	resp, err := h.svc.GetGroupMessageReadersResponse(c, thisId, uint32(msgID), uint32(dialogID), uint32(groupID))
+	resp, err := h.svc.GetGroupMessageReadersResponse(c, userID, uint32(msgID), uint32(dialogID), uint32(groupID))
 	if err != nil {
 		c.Error(err)
 		return

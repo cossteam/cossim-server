@@ -34,9 +34,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"regexp"
-	"strconv"
 	"strings"
-	ostime "time"
 )
 
 func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string, clientIp string) (*model.UserInfoResponse, string, error) {
@@ -49,29 +47,29 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
-	token, err := utils.GenerateToken(resp.UserId, resp.Email, req.DriverId)
+	token, err := utils.GenerateToken(resp.UserId, resp.Email, req.DriverId, resp.PublicKey)
 	if err != nil {
 		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
-	keys, err := s.redisClient.ScanKeys(resp.UserId + ":" + driveType + ":*")
+
+	infos, err := s.userCache.GetUserLoginInfos(ctx, resp.UserId)
 	if err != nil {
-		s.logger.Error("redis scan err", zap.Error(err))
-		return nil, "", code.UserErrLoginFailed
+		return nil, "", err
 	}
 
 	//多端设备登录限制
 	if s.ac.MultipleDeviceLimit.Enable {
-		if len(keys) >= s.ac.MultipleDeviceLimit.Max {
+		if len(infos) >= s.ac.MultipleDeviceLimit.Max {
 			fmt.Println("登录设备达到限制")
 			return nil, "", code.UserErrLoginFailed
 		}
 
 	}
 
-	id := len(keys) + 1
+	driveID := len(infos) + 1
 	data := cache.UserInfo{
-		ID:         uint(id),
+		ID:         uint(driveID),
 		UserId:     resp.UserId,
 		Token:      token,
 		DriverType: driveType,
@@ -79,8 +77,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		ClientIP:   clientIp,
 	}
 
-	err = s.redisClient.SetKey(resp.UserId+":"+driveType+":"+strconv.Itoa(id), data, 60*60*24*7*ostime.Second)
-	if err != nil {
+	if err := s.userCache.SetUserLoginInfo(ctx, resp.UserId, driveType, driveID, &data, cache.UserLoginExpireTime); err != nil {
+		s.logger.Error("failed to set user login info", zap.Error(err))
 		return nil, "", err
 	}
 
@@ -91,7 +89,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		DriverId: req.DriverId,
 	})
 	if err != nil {
-		s.logger.Error("failed to get user login by driver id and user id", zap.Error(err))
+		s.logger.Error("failed to get user login by driver driveID and user driveID", zap.Error(err))
 	}
 
 	_, err = s.userLoginService.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
@@ -105,8 +103,6 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	if err != nil {
 		return nil, "", err
 	}
-
-	fmt.Println("userLogin.LoginTime => ", userLogin.LoginTime)
 
 	var lastLoginTime = userLogin.LoginTime
 	fristLogin := false
@@ -203,25 +199,14 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 }
 
 func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest, driverType string) error {
-	value, err := s.redisClient.GetKey(userID + ":" + driverType + ":" + strconv.Itoa(int(request.LoginNumber)))
-	if err != nil {
-		s.logger.Error("redis get err", zap.Error(err))
-		return err
-	}
-
-	if value == nil {
-		return nil
-	}
-
-	data := value.(string)
-
-	info, err := cache.GetUserInfo(data)
+	loginInfo, err := s.userCache.GetUserLoginInfo(ctx, userID, driverType, int(request.LoginNumber))
 	if err != nil {
 		return err
 	}
+
 	//通知消息服务关闭ws
-	rid := info.Rid
-	t := info.DriverType
+	rid := loginInfo.Rid
+	t := loginInfo.DriverType
 
 	data2 := &constants.OfflineEventData{
 		Rid:        rid,
@@ -252,10 +237,9 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 
 	}
 
-	//删除客户端信息
-	err = s.redisClient.DelKey(userID + ":" + driverType + ":" + strconv.Itoa(int(request.LoginNumber)))
-	if err != nil {
-		return err
+	// 删除客户端信息
+	if err := s.userCache.DeleteUserLoginInfo(ctx, userID, driverType, int(request.LoginNumber)); err != nil {
+		s.logger.Error("failed to delete user login info", zap.Error(err))
 	}
 
 	return nil
@@ -354,12 +338,9 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 	}
 
 	if s.ac.Email.Enable {
-		//生成uuid
 		ekey := uuid.New().String()
 
-		//保存到redis
-		err = s.redisClient.SetKey(ekey, UserId, 30*ostime.Minute)
-		if err != nil {
+		if err = s.userCache.SetUserEmailVerificationCode(ctx, UserId, ekey, cache.UserEmailVerificationCodeExpireTime); err != nil {
 			return "", err
 		}
 
@@ -582,17 +563,11 @@ func (s *Service) GetUserSecretBundle(ctx context.Context, userID string) (*mode
 }
 
 func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*model.GetUserLoginClientsResponse, error) {
+	users, err := s.userCache.GetUserLoginInfos(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
 
-	values, err := s.redisClient.GetAllListValues(userID)
-	if err != nil {
-		s.logger.Error("获取用户登录客户端失败：", zap.Error(err))
-		return nil, code.UserErrGetUserLoginClientsFailed
-	}
-	users, err := cache.GetUserInfoList(values)
-	if err != nil {
-		s.logger.Error("获取用户登录客户端失败：", zap.Error(err))
-		return nil, code.UserErrGetUserLoginClientsFailed
-	}
 	var clients []*model.GetUserLoginClientsResponse
 	for _, user := range users {
 		clients = append(clients, &model.GetUserLoginClientsResponse{
@@ -606,15 +581,13 @@ func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*mo
 }
 
 func (s *Service) UserActivate(ctx context.Context, userID string, key string) (interface{}, error) {
-	value, err := s.redisClient.GetKey(key)
-	if err != nil {
-		s.logger.Error("激活用户失败", zap.Error(err))
-		return nil, code.UserErrActivateUserFailed
+	verificationCode, err2 := s.userCache.GetUserEmailVerificationCode(ctx, userID)
+	if err2 != nil {
+		return nil, err2
 	}
 
-	if value != userID {
-		s.logger.Error("激活用户失败", zap.Error(err))
-		return nil, code.UserErrActivateUserFailed
+	if verificationCode != key {
+		return nil, code.MyCustomErrorCode.CustomMessage("验证码不存在或已过期")
 	}
 
 	resp, err := s.userService.ActivateUser(ctx, &usergrpcv1.UserRequest{
@@ -626,24 +599,14 @@ func (s *Service) UserActivate(ctx context.Context, userID string, key string) (
 		return nil, code.UserErrActivateUserFailed
 	}
 
-	//删除缓存
-	err = s.redisClient.DelKey(key)
-	if err != nil {
-		s.logger.Error("激活用户失败", zap.Error(err))
-		return nil, code.UserErrActivateUserFailed
+	if err := s.userCache.DeleteUserEmailVerificationCode(ctx, userID); err != nil {
+		s.logger.Error("删除用户邮箱激活验证码失败", zap.Error(err))
 	}
 
 	return resp, nil
 }
 
-func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublicKeyRequest) (interface{}, error) {
-	//查询redis是否存在该验证码
-	value, err := s.redisClient.GetKey(req.Code)
-	if err != nil {
-		s.logger.Error("重置用户公钥失败", zap.Error(err))
-		return nil, code.UserErrResetPublicKeyFailed
-	}
-
+func (s *Service) ResetUserPublicKey(ctx context.Context, userID string, req *model.ResetPublicKeyRequest) (interface{}, error) {
 	info, err := s.userService.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
 		Email: req.Email,
 	})
@@ -652,8 +615,13 @@ func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublic
 		return nil, code.UserErrNotExist
 	}
 
-	if value != info.UserId {
-		return nil, code.UserErrResetPublicKeyFailed
+	verificationCode, err := s.userCache.GetUserVerificationCode(ctx, userID, req.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	if verificationCode != req.Code {
+		return nil, code.MyCustomErrorCode.CustomMessage("验证码不存在或已过期")
 	}
 
 	_, err = s.userService.SetUserPublicKey(ctx, &usergrpcv1.SetPublicKeyRequest{
@@ -664,17 +632,14 @@ func (s *Service) ResetUserPublicKey(ctx context.Context, req *model.ResetPublic
 		return nil, err
 	}
 
-	err = s.redisClient.DelKey(req.Code)
-	if err != nil {
-		s.logger.Error("重置用户公钥失败", zap.Error(err))
-		return nil, code.UserErrResetPublicKeyFailed
+	if err := s.userCache.DeleteUserVerificationCode(ctx, userID, req.Code); err != nil {
+		s.logger.Error("删除用户邮箱验证码失败", zap.Error(err))
 	}
 
-	return value, nil
+	return verificationCode, nil
 }
 
 func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{}, error) {
-	//查询用户是否存在
 	info, err := s.userService.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{
 		Email: email,
 	})
@@ -683,23 +648,18 @@ func (s *Service) SendEmailCode(ctx context.Context, email string) (interface{},
 		return nil, code.UserErrNotExist
 	}
 
-	//生成验证码
 	code1 := utils.RandomNum()
-
-	//设置验证码(30分钟超时)
-	err = s.redisClient.SetKey(code1, info.UserId, 30*ostime.Minute)
-	if err != nil {
+	if err := s.userCache.SetUserVerificationCode(ctx, info.UserId, code1, cache.UserVerificationCodeExpireTime); err != nil {
 		s.logger.Error("发送邮箱验证码失败", zap.Error(err))
-		return nil, code.UserErrSendEmailCodeFailed
+		return nil, err
 	}
 
 	if s.ac.Email.Enable {
-		err := s.smtpClient.SendEmail(email, "重置pgp验证码(请妥善保管,有效时间30分钟)", code1)
-		if err != nil {
+		if err := s.smtpClient.SendEmail(email, "重置pgp验证码(请妥善保管,有效时间5分钟)", code1); err != nil {
 			return nil, err
 		}
 	}
-	return nil, err
+	return nil, nil
 }
 
 // 修改用户头像

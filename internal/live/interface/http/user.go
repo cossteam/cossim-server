@@ -2,10 +2,9 @@ package http
 
 import (
 	"github.com/cossim/coss-server/internal/live/api/dto"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // UserCreate
@@ -26,13 +25,7 @@ func (h *Handler) UserCreate(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.CreateUserCall(c, userID, req)
 	if err != nil {
 		c.Error(err)
@@ -60,20 +53,9 @@ func (h *Handler) UserJoin(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.Fail(c, "token解析失败", nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	resp, err := h.svc.UserJoinRoom(c, userID, driverId)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.UserJoinRoom(c, userID, driverID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -92,13 +74,8 @@ func (h *Handler) UserJoin(c *gin.Context) {
 // @Success		200 {object} dto.Response{data=dto.UserShowResponse} "participant=通话参与者"
 // @Router /live/user/show [get]
 func (h *Handler) UserShow(c *gin.Context) {
-	uid, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	resp, err := h.svc.GetUserRoom(c, uid)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetUserRoom(c, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -124,19 +101,9 @@ func (h *Handler) UserReject(c *gin.Context) {
 	//	return
 	//}
 
-	uid, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	resp, err := h.svc.UserRejectRoom(c, uid, driverId)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.UserRejectRoom(c, userID, driverID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -162,19 +129,9 @@ func (h *Handler) UserLeave(c *gin.Context) {
 	//	return
 	//}
 
-	uid, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	driverId, err := pkghttp.ParseTokenReDriverId(c)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	resp, err := h.svc.UserLeaveRoom(c, uid, driverId)
+	userID := c.Value(constants.UserID).(string)
+	driverID := c.Value(constants.DriverID).(string)
+	resp, err := h.svc.UserLeaveRoom(c, userID, driverID)
 	if err != nil {
 		c.Error(err)
 		return

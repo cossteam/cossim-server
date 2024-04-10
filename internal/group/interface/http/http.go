@@ -74,7 +74,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	g := r.Group("/api/v1/group")
-	g.Use(middleware.AuthMiddleware(h.redisClient, h.db))
+	g.Use(middleware.AuthMiddleware(h.redisClient.Client))
 	// 获取群聊信息
 	g.GET("/info", h.getGroupInfoByGid)
 	// 创建群聊

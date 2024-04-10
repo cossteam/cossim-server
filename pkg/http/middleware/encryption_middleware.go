@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ProtonMail/gopenpgp/v2/helper"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/encryption"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
 	resp "github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -77,14 +77,7 @@ func EncryptionMiddleware(encryptor encryption.Encryptor) gin.HandlerFunc {
 					userId = id
 				}
 			} else {
-				userId, err = pkghttp.ParseTokenReUid(c)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{
-						"code": 401,
-						"msg":  err.Error(),
-					})
-					return
-				}
+				userId = c.Value(constants.UserID).(string)
 			}
 			if userId == "" {
 				c.JSON(http.StatusInternalServerError, gin.H{

@@ -24,6 +24,8 @@ message UserLoginResponse {
   string Signature=6;
   // @inject_tag: json:"coss_id"
   string CossId=7;
+  // @inject_tag: json:"public_key"
+  string PublicKey = 8;
 }
 
 message UserRegisterRequest {
@@ -204,6 +206,22 @@ message CreateUserRollbackResponse {
 message GetUserInfoByCossIdlRequest{
   // @inject_tag: json:"coss_id"
   string CossId = 1;
+}
+
+message AccessRequest {
+  // @inject_tag: json:"user_id"
+  string UserID = 1;
+
+  // @inject_tag: json:"token"
+  string Token = 2;
+}
+
+message AccessResponse {
+
+}
+
+service UserAuthService {
+  rpc Access(AccessRequest) returns(AccessResponse);
 }
 
 service UserService {

@@ -3,8 +3,7 @@ package http
 import (
 	"github.com/cossim/coss-server/internal/relation/api/http/model"
 	"github.com/cossim/coss-server/pkg/code"
-	"github.com/cossim/coss-server/pkg/http"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -26,13 +25,9 @@ func (h *Handler) setUserFriendRemark(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
 
-	_, err = h.svc.SetUserFriendRemark(c, thisID, req)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.SetUserFriendRemark(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -57,12 +52,6 @@ func (h *Handler) openUserBurnAfterReading(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	if !model.IsValidOpenBurnAfterReadingType(req.Action) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
@@ -73,7 +62,8 @@ func (h *Handler) openUserBurnAfterReading(c *gin.Context) {
 		return
 	}
 
-	_, err = h.svc.SetUserBurnAfterReading(c, thisId, req)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.SetUserBurnAfterReading(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -98,18 +88,13 @@ func (h *Handler) setUserSilentNotification(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
 	if !model.IsValidSilentNotificationType(req.IsSilent) {
 		response.SetFail(c, "设置消息标注状态失败", nil)
 		return
 	}
 
-	_, err = h.svc.UserSilentNotification(c, thisId, req.UserId, req.IsSilent)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.UserSilentNotification(c, userID, req.UserId, req.IsSilent)
 	if err != nil {
 		c.Error(err)
 		return
@@ -135,14 +120,8 @@ func (h *Handler) switchUserE2EPublicKey(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID，可以从请求中的token中解析出来，前提是你的登录接口已经设置了正确的token
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	_, err = h.svc.SwitchUserE2EPublicKey(c, thisId, req.UserId, req.PublicKey)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.SwitchUserE2EPublicKey(c, userID, req.UserId, req.PublicKey)
 	if err != nil {
 		c.Error(err)
 		return
@@ -158,13 +137,7 @@ func (h *Handler) switchUserE2EPublicKey(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/blacklist [get]
 func (h *Handler) blackList(c *gin.Context) {
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.BlackList(c, userID)
 	if err != nil {
 		c.Error(err)
@@ -181,13 +154,7 @@ func (h *Handler) blackList(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /relation/user/friend_list [get]
 func (h *Handler) friendList(c *gin.Context) {
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.FriendList(c, userID)
 	if err != nil {
 		c.Error(err)
@@ -204,13 +171,7 @@ func (h *Handler) friendList(c *gin.Context) {
 // @Success		200 {object} model.Response{data=[]usersorter.CustomGroupData} "status 0:正常状态；1:被封禁状态；2:被删除状态"
 // @Router /relation/group/list [get]
 func (h *Handler) getUserGroupList(c *gin.Context) {
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.GetUserGroupList(c, userID)
 	if err != nil {
 		c.Error(err)
@@ -227,13 +188,7 @@ func (h *Handler) getUserGroupList(c *gin.Context) {
 // @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
 // @Router /relation/user/request_list [get]
 func (h *Handler) userRequestList(c *gin.Context) {
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
+	userID := c.Value(constants.UserID).(string)
 	resp, err := h.svc.UserRequestList(c, userID)
 	if err != nil {
 		c.Error(err)
@@ -259,14 +214,8 @@ func (h *Handler) deleteBlacklist(c *gin.Context) {
 		return
 	}
 
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	_, err = h.svc.DeleteBlacklist(c, userID, req.UserID)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.DeleteBlacklist(c, userID, req.UserID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -291,14 +240,8 @@ func (h *Handler) addBlacklist(c *gin.Context) {
 		return
 	}
 
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	_, err = h.svc.AddBlacklist(c, userID, req.UserID)
+	userID := c.Value(constants.UserID).(string)
+	_, err := h.svc.AddBlacklist(c, userID, req.UserID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -323,14 +266,8 @@ func (h *Handler) deleteFriend(c *gin.Context) {
 		return
 	}
 
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	if err = h.svc.DeleteFriend(c, userID, req.UserID); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.DeleteFriend(c, userID, req.UserID); err != nil {
 		c.Error(err)
 		return
 	}
@@ -360,20 +297,14 @@ func (h *Handler) manageFriend(c *gin.Context) {
 		return
 	}
 
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	responseData, err := h.svc.ManageFriend(c, userID, req.RequestID, int32(req.Action), req.E2EPublicKey)
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.ManageFriend(c, userID, req.RequestID, int32(req.Action), req.E2EPublicKey)
 	if err != nil {
 		response.SetFail(c, code.Cause(err).Message(), nil)
 		return
 	}
 
-	response.SetSuccess(c, "管理好友申请成功", responseData)
+	response.SetSuccess(c, "管理好友申请成功", resp)
 }
 
 // @Summary 发送好友请求
@@ -391,12 +322,9 @@ func (h *Handler) addFriend(c *gin.Context) {
 		response.SetFail(c, "参数验证失败", nil)
 		return
 	}
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-	resp, err := h.svc.SendFriendRequest(c, thisId, req)
+
+	userID := c.Value(constants.UserID).(string)
+	resp, err := h.svc.SendFriendRequest(c, userID, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -421,14 +349,8 @@ func (h *Handler) deleteUserRequestRecord(c *gin.Context) {
 		return
 	}
 
-	userID, err := http.ParseTokenReUid(c)
-	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
-		response.SetFail(c, "token解析失败", nil)
-		return
-	}
-
-	if err = h.svc.DeleteUserFriendRecord(c, userID, req.ID); err != nil {
+	userID := c.Value(constants.UserID).(string)
+	if err := h.svc.DeleteUserFriendRecord(c, userID, req.ID); err != nil {
 		c.Error(err)
 		return
 	}

@@ -4,7 +4,7 @@ import (
 	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/api/http/model"
 	"github.com/cossim/coss-server/pkg/code"
-	pkghttp "github.com/cossim/coss-server/pkg/http"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -32,13 +32,8 @@ func (h *Handler) getGroupInfoByGid(c *gin.Context) {
 		return
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.GetGroupInfoByGid(c, uint32(gidInt), userID)
+	uid := c.Value(constants.UserID).(string)
+	resp, err := h.svc.GetGroupInfoByGid(c, uint32(gidInt), uid)
 	if err != nil {
 		c.Error(err)
 		return
@@ -96,13 +91,8 @@ func (h *Handler) updateGroup(c *gin.Context) {
 		response.SetFail(c, "群聊类型错误", nil)
 	}
 
-	userID, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	resp, err := h.svc.UpdateGroup(c, req, userID)
+	uid := c.Value(constants.UserID).(string)
+	resp, err := h.svc.UpdateGroup(c, req, uid)
 	if err != nil {
 		c.Error(err)
 		return
@@ -126,11 +116,8 @@ func (h *Handler) createGroup(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
+	userID := c.Value(constants.UserID).(string)
+
 	//判断参数如果不属于枚举定义的则返回错误
 	if !model.IsValidGroupType(api.GroupType(req.Type)) {
 		response.SetFail(c, "群聊类型错误", nil)
@@ -138,7 +125,7 @@ func (h *Handler) createGroup(c *gin.Context) {
 	}
 	group := &api.Group{
 		Type:      api.GroupType(int32(req.Type)),
-		CreatorId: thisId,
+		CreatorId: userID,
 		Name:      req.Name,
 		Avatar:    req.Avatar,
 		Member:    req.Member,
@@ -178,13 +165,8 @@ func (h *Handler) deleteGroup(c *gin.Context) {
 		return
 	}
 
-	thisId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
-
-	groupId, err := h.svc.DeleteGroup(c, req.GroupId, thisId)
+	userID := c.Value(constants.UserID).(string)
+	groupId, err := h.svc.DeleteGroup(c, req.GroupId, userID)
 	if err != nil {
 		h.logger.Error("删除群聊失败", zap.Error(err))
 		response.SetFail(c, "删除群聊失败", nil)
@@ -217,11 +199,7 @@ func (h *Handler) modifyGroupAvatar(c *gin.Context) {
 		return
 	}
 
-	userId, err := pkghttp.ParseTokenReUid(c)
-	if err != nil {
-		response.SetFail(c, err.Error(), nil)
-		return
-	}
+	userID := c.Value(constants.UserID).(string)
 
 	// Parse form data
 	if err := c.Request.ParseMultipartForm(25 << 20); // 25 MB limit
@@ -251,11 +229,11 @@ func (h *Handler) modifyGroupAvatar(c *gin.Context) {
 		return
 	}
 
-	url, err := h.svc.ModifyGroupAvatar(c, userId, uint32(groupId), file)
+	url, err := h.svc.ModifyGroupAvatar(c, userID, uint32(groupId), file)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "修改成功", gin.H{"group_id": userId, "avatar": url})
+	response.SetSuccess(c, "修改成功", gin.H{"group_id": userID, "avatar": url})
 }
