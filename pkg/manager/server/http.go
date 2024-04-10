@@ -11,6 +11,7 @@ import (
 	"github.com/cossim/coss-server/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
+	_ "github.com/mbobakov/grpc-consul-resolver"
 	"github.com/rs/xid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -132,80 +133,106 @@ type svcT struct {
 }
 
 func (s *HttpService) discover(ctx context.Context) {
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
+	serviceMap := make(map[string]*grpc.ClientConn)
+	for _, c := range s.ac.Discovers {
+		var addr string
+		if c.Direct {
+			addr = c.Addr()
+		} else {
+			addr = fmt.Sprintf("consul://%s/%s?wait=14s&healthy=true", s.ac.Register.Addr(), c.Name)
+		}
+		conn, err := grpc.Dial(
+			addr,
+			grpc.WithInsecure(),
+			grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`))
+		if err != nil {
+			s.logger.Error(err, "Failed to connect to gRPC server", "service", c.Name)
+			continue
+		}
+		serviceMap[c.Name] = conn
+	}
 
-	var allDirect = true
-	serviceMap := make(map[string]*svcT)
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			for _, c := range s.ac.Discovers {
-				var addr string
-				var err error
-				if c.Direct {
-					addr = c.Addr()
-				} else {
-					addr, err = s.registry.Discover(c.Name)
-					if err != nil {
-						s.logger.Error(err, "Failed to discover gRPC server", "service", c.Name)
-						continue
-					}
-					allDirect = false
-				}
-
-				if svc, ok := serviceMap[c.Name]; ok {
-					if svc.addr == addr {
-						//fmt.Printf("原地址 => %s 发现后地址 => %s 服务发现无变化\n", svc.addr, addr)
-						continue
-					}
-					svc.addr = addr
-					svc.f = true
-				} else {
-					serviceMap[c.Name] = &svcT{
-						addr: addr,
-						f:    true,
-					}
-				}
-			}
-
-			allFalse := true
-			for _, v := range serviceMap {
-				if v.f {
-					allFalse = false
-					break
-				}
-			}
-
-			if allFalse {
-				continue
-			}
-
-			ss := make(map[string]*grpc.ClientConn)
-			for k, v := range serviceMap {
-				if !v.f {
-					continue
-				}
-				v.f = false
-				conn, err := grpc.Dial(v.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-				if err != nil {
-					s.logger.Error(err, "Failed to connect to gRPC server", "service", k)
-					continue
-				}
-				ss[k] = conn
-			}
-			if len(ss) > 0 {
-				if err := s.svc.DiscoverServices(ss); err != nil {
-					s.logger.Error(err, "Failed to set up gRPC clients")
-				}
-			}
-			if allDirect {
-				return
-			}
+	if len(serviceMap) > 0 {
+		if err := s.svc.DiscoverServices(serviceMap); err != nil {
+			s.logger.Error(err, "Failed to set up gRPC clients")
 		}
 	}
+
+	//
+	//ticker := time.NewTicker(5 * time.Second)
+	//defer ticker.Stop()
+	//
+	//var allDirect = true
+	//serviceMap := make(map[string]*svcT)
+	//for {
+	//	select {
+	//	case <-ctx.Done():
+	//		return
+	//	case <-ticker.C:
+	//		for _, c := range s.ac.Discovers {
+	//			var addr string
+	//			var err error
+	//			if c.Direct {
+	//				addr = c.Addr()
+	//			} else {
+	//				addr, err = s.registry.Discover(c.Name)
+	//				if err != nil {
+	//					s.logger.Error(err, "Failed to discover gRPC server", "service", c.Name)
+	//					continue
+	//				}
+	//				allDirect = false
+	//			}
+	//
+	//			if svc, ok := serviceMap[c.Name]; ok {
+	//				if svc.addr == addr {
+	//					//fmt.Printf("原地址 => %s 发现后地址 => %s 服务发现无变化\n", svc.addr, addr)
+	//					continue
+	//				}
+	//				svc.addr = addr
+	//				svc.f = true
+	//			} else {
+	//				serviceMap[c.Name] = &svcT{
+	//					addr: addr,
+	//					f:    true,
+	//				}
+	//			}
+	//		}
+	//
+	//		allFalse := true
+	//		for _, v := range serviceMap {
+	//			if v.f {
+	//				allFalse = false
+	//				break
+	//			}
+	//		}
+	//
+	//		if allFalse {
+	//			continue
+	//		}
+	//
+	//		ss := make(map[string]*grpc.ClientConn)
+	//		for k, v := range serviceMap {
+	//			if !v.f {
+	//				continue
+	//			}
+	//			v.f = false
+	//			conn, err := grpc.Dial(v.addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	//			if err != nil {
+	//				s.logger.Error(err, "Failed to connect to gRPC server", "service", k)
+	//				continue
+	//			}
+	//			ss[k] = conn
+	//		}
+	//		if len(ss) > 0 {
+	//			if err := s.svc.DiscoverServices(ss); err != nil {
+	//				s.logger.Error(err, "Failed to set up gRPC clients")
+	//			}
+	//		}
+	//		if allDirect {
+	//			return
+	//		}
+	//	}
+	//}
 }
 
 func (s *HttpService) Discover() error {
