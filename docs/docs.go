@@ -1849,40 +1849,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/relation/group/burn/open": {
-            "post": {
-                "description": "是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "GroupRelation"
-                ],
-                "summary": "是否打开群聊阅后即焚消息(action: 0:关闭, 1:打开)",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.OpenGroupBurnAfterReadingRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/relation/group/burn/timeout/set": {
             "post": {
                 "description": "设置群聊阅后即焚消息销毁时间",
@@ -4407,6 +4373,9 @@ const docTemplate = `{
         "model.GroupRequestListResponse": {
             "type": "object",
             "properties": {
+                "create_at": {
+                    "type": "integer"
+                },
                 "creator_id": {
                     "type": "string"
                 },
@@ -4622,21 +4591,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.OpenGroupBurnAfterReadingRequest": {
-            "type": "object",
-            "required": [
-                "group_id"
-            ],
-            "properties": {
-                "action": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType"
-                },
-                "group_id": {
-                    "description": "群组ID",
-                    "type": "integer"
-                }
-            }
-        },
         "model.OpenUserBurnAfterReadingRequest": {
             "type": "object",
             "required": [
@@ -4646,7 +4600,7 @@ const docTemplate = `{
                 "action": {
                     "$ref": "#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType"
                 },
-                "open_burn_after_reading_time_out": {
+                "timeout": {
                     "type": "integer"
                 },
                 "user_id": {
@@ -5117,8 +5071,16 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "last_login_time": {
+                    "description": "LastLoginTime 上次登录时间，如果为0说明用户注册了但从未登录过",
+                    "type": "integer"
+                },
                 "login_number": {
                     "type": "integer"
+                },
+                "new_device_login": {
+                    "description": "NewDeviceLogin 表示是否新设备登录",
+                    "type": "boolean"
                 },
                 "nickname": {
                     "type": "string"
@@ -5164,6 +5126,9 @@ const docTemplate = `{
         "model.UserRequestListResponse": {
             "type": "object",
             "properties": {
+                "create_at": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -5175,9 +5140,6 @@ const docTemplate = `{
                 },
                 "remark": {
                     "type": "string"
-                },
-                "request_at": {
-                    "type": "integer"
                 },
                 "sender_id": {
                     "type": "string"
