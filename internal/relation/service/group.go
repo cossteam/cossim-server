@@ -120,6 +120,16 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, err
 	}
 
+	groupRelation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
+	if err != nil {
+		s.logger.Error("获取群聊成员失败", zap.Error(err))
+		return nil, err
+	}
+
+	if len(groupRelation.UserIds) >= int(group.MaxMembersLimit) {
+		return nil, code.RelationGroupErrGroupFull
+	}
+
 	// 查询是不是已经有邀请
 	id, err := s.relationGroupJoinRequestService.GetGroupJoinRequestByGroupIdAndUserId(ctx, &relationgrpcv1.GetGroupJoinRequestByGroupIdAndUserIdRequest{
 		GroupId: req.GroupID,
@@ -136,6 +146,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
 		return nil, code.GroupErrGroupStatusNotAvailable
 	}
+
 	//判断是否在群聊中
 	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: req.GroupID,
@@ -143,15 +154,6 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 	})
 	if relation != nil && relation.GroupId != 0 {
 		return nil, code.RelationGroupErrAlreadyInGroup
-	}
-
-	groupRelation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
-	if err != nil {
-		s.logger.Error("获取群聊成员失败", zap.Error(err))
-		return nil, err
-	}
-	if len(groupRelation.UserIds) >= int(group.MaxMembersLimit) {
-		return nil, code.RelationGroupErrGroupFull
 	}
 
 	// 添加群聊申请记录

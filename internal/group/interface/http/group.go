@@ -141,6 +141,11 @@ func (h *Handler) createGroup(c *gin.Context) {
 		group.MaxMembersLimit = model.DefaultGroup
 	}
 
+	if len(group.Member) > int(group.MaxMembersLimit) {
+		response.SetFail(c, "群聊人数超过限制", nil)
+		return
+	}
+
 	resp, err := h.svc.CreateGroup(c, group)
 	if err != nil {
 		h.logger.Error("创建群聊失败", zap.Error(err))
