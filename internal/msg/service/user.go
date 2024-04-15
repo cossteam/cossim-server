@@ -250,10 +250,6 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 	return resp, nil
 }
 
-//func (s *Service) InsertMsgAndSendWsMsg(ctx context.Context, req *msggrpcv1.SendUserMsgRequest, driverId string) (*msggrpcv1.SendUserMsgResponse, error) {
-//
-//}
-
 // 推送私聊消息
 func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *pushv1.SendWsUserMsg) {
 

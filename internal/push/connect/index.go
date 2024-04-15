@@ -62,7 +62,6 @@ func (u *UserIndex) SendMessage(message string) error {
 	if len(u.WsClients) == 0 {
 		return nil
 	}
-	fmt.Println("当前该用户桶内有" + fmt.Sprintf("%d", len(u.WsClients)) + "个ws客户端链接")
 	for _, client := range u.WsClients {
 		if client.Conn.IsNil() {
 			u.DeleteByRid(client.Rid)

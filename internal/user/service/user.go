@@ -61,7 +61,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	//多端设备登录限制
 	if s.ac.MultipleDeviceLimit.Enable {
 		if len(infos) >= s.ac.MultipleDeviceLimit.Max {
-			fmt.Println("登录设备达到限制")
+			s.logger.Error("user login failed", zap.Error(err))
 			return nil, "", code.UserErrLoginFailed
 		}
 
@@ -123,6 +123,11 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			result = fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s", clientIp, info.Country, info.City)
 		}
 
+		//查询系统通知信息
+		systemInfo, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
+		if err != nil {
+			return nil, "", err
+		}
 		//查询与系统通知的对话id
 		relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 			UserId:   resp.UserId,
@@ -162,12 +167,26 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			Type:       int32(msggrpcv1.MessageType_Text),
 		}
 
-		_, err = s.msgService.SendUserMessage(ctx, msg2)
+		id, err := s.msgService.SendUserMessage(ctx, msg2)
 		if err != nil {
 			return nil, "", err
 		}
 
-		toBytes, err := utils.StructToBytes(msg2)
+		rmsg := &pushgrpcv1.SendWsUserMsg{
+			MsgType:    uint32(msggrpcv1.MessageType_Text),
+			DialogId:   relation.DialogId,
+			Content:    result,
+			SenderId:   constants.SystemNotification,
+			ReceiverId: resp.UserId,
+			SendAt:     time.Now(),
+			MsgId:      id.MsgId,
+			SenderInfo: &pushgrpcv1.SenderInfo{
+				UserId: systemInfo.UserId,
+				Avatar: systemInfo.Avatar,
+				Name:   systemInfo.NickName,
+			},
+		}
+		toBytes, err := utils.StructToBytes(rmsg)
 		if err != nil {
 			return nil, "", err
 		}
