@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -118,6 +117,16 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
 		return nil, err
+	}
+
+	if group.Type == groupApi.GroupType_TypeEncrypted {
+		relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: uid})
+		if err != nil {
+			return nil, err
+		}
+		if relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_OWNER && relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
+			return nil, code.Forbidden
+		}
 	}
 
 	groupRelation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
@@ -691,7 +700,24 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.GroupErrGroupStatusNotAvailable
 	}
 
-	fmt.Println("InviteGroup 1")
+	if group.Type == groupApi.GroupType_TypeEncrypted {
+		relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: inviterId})
+		if err != nil {
+			return err
+		}
+		if relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_OWNER && relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
+			return code.Forbidden
+		}
+	}
+	//查询群聊人数
+	ds, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
+	if err != nil {
+		return err
+	}
+
+	if len(ds.UserIds) >= int(group.MaxMembersLimit) {
+		return code.RelationGroupErrGroupFull
+	}
 
 	for _, s2 := range req.Member {
 		//查询是不是已经有邀请
@@ -702,7 +728,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		if err != nil {
 			s.logger.Error("获取群聊信息失败", zap.Error(err))
 		}
-		fmt.Println("id => ", id)
+
 		if id != nil && id.GroupId != 0 && (id.Status == relationgrpcv1.GroupRequestStatus_Pending || id.Status == relationgrpcv1.GroupRequestStatus_Invite) {
 			return code.RelationErrGroupRequestAlreadyProcessed
 		}
@@ -721,14 +747,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	grs, err := s.relationGroupService.GetBatchGroupRelation(ctx, &relationgrpcv1.GetBatchGroupRelationRequest{GroupId: req.GroupID, UserIds: req.Member})
 	if err != nil {
 		s.logger.Error("获取用户群组关系失败", zap.Error(err))
-		//if !errors.Is(code.Cause(err), code.RelationGroupErrRelationNotFound) {
-		//	return code.RelationGroupErrInviteFailed
-		//}
 		return code.RelationGroupErrInviteFailed
-	}
-
-	for _, v := range grs.GroupRelationResponses {
-		fmt.Println("v => ", v)
 	}
 
 	if len(grs.GroupRelationResponses) > 0 {
