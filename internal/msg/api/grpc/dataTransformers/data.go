@@ -38,7 +38,7 @@ type LastMessage struct {
 }
 
 type GroupMsgList struct {
-	GroupID    uint32                 `json:"group_id"`    //群聊id
+	DialogId   uint32                 `json:"dialog_id"`
 	UserID     string                 `json:"user_id"`     //发送者id（筛选条件）
 	Content    string                 `json:"content"`     //消息内容(筛选条件)
 	MsgType    entity.UserMessageType `json:"msg_type"`    //消息类型(筛选条件)

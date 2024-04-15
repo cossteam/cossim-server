@@ -304,19 +304,37 @@ func (s *Service) sendWsUserMsg(senderId, receiverId, driverId string, silent re
 
 func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *model.MsgListRequest) (interface{}, error) {
 	msg, err := s.msgService.GetUserMessageList(ctx, &msggrpcv1.GetUserMsgListRequest{
-		UserId:   userID,     //当前用户
-		FriendId: req.UserId, //好友id
+		DialogId: req.DialogId,
+		UserId:   userID,
 		Content:  req.Content,
 		Type:     req.Type,
 		PageNum:  int32(req.PageNum),
 		PageSize: int32(req.PageSize),
+		MsgId:    uint64(req.MsgId),
 	})
 	if err != nil {
 		s.logger.Error("获取用户消息列表失败", zap.Error(err))
 		return nil, err
 	}
+
+	//查询对话用户
+	id, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{DialogId: req.DialogId})
+	if err != nil {
+		return nil, err
+	}
+	id2 := make([]string, 0)
+	for _, v := range id.UserIds {
+		if v != userID {
+			id2 = append(id2, v)
+		}
+	}
+
+	if len(id2) == 0 {
+		return nil, code.DialogErrGetDialogUserByDialogIDAndUserIDFailed
+	}
+
 	//查询关系
-	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: req.UserId})
+	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: id2[0]})
 	if err != nil {
 		s.logger.Error("获取用户关系失败", zap.Error(err))
 		return nil, err
@@ -955,7 +973,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 	addToInfos := func(dialogID uint32, msgID uint32, dialogType uint32) {
 		if dialogType == uint32(model.GroupConversation) {
 			if msgID == 0 {
-				err := s.getGroupDialogLast20Msg(ctx, dialogID, responses)
+				responses, err = s.getGroupDialogLast20Msg(ctx, dialogID, responses)
 				if err != nil {
 					s.logger.Error("获取群聊落后消息失败", zap.Error(err))
 					return
@@ -970,7 +988,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 		}
 
 		if msgID == 0 {
-			err := s.getUserDialogLast20Msg(ctx, dialogID, responses)
+			responses, err = s.getUserDialogLast20Msg(ctx, dialogID, responses)
 			if err != nil {
 				s.logger.Error("获取群聊落后消息失败", zap.Error(err))
 				return
@@ -1102,14 +1120,14 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 }
 
 // 获取群聊对话的最后二十条消息
-func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) error {
+func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) ([]*model.GetDialogAfterMsgResponse, error) {
 	list, err := s.msgService.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
 		DialogId: dialogId,
 		PageNum:  1,
 		PageSize: 20,
 	})
 	if err != nil {
-		return err
+		return responses, err
 	}
 	msgs := make([]*model.Message, 0)
 	for _, gm := range list.GroupMessages {
@@ -1117,7 +1135,7 @@ func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, 
 			UserId: gm.UserId,
 		})
 		if err != nil {
-			return err
+			return responses, err
 		}
 		msg := model.Message{}
 		msg.GroupId = gm.GroupId
@@ -1143,18 +1161,18 @@ func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, 
 		Messages: msgs,
 	})
 
-	return nil
+	return responses, nil
 }
 
 // 获取私聊对话的最后二十条消息
-func (s *Service) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) error {
+func (s *Service) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) ([]*model.GetDialogAfterMsgResponse, error) {
 	list, err := s.msgService.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
 		DialogId: dialogId,
 		PageNum:  1,
 		PageSize: 20,
 	})
 	if err != nil {
-		return err
+		return responses, err
 	}
 	msgs := make([]*model.Message, 0)
 	for _, um := range list.UserMessages {
@@ -1163,13 +1181,13 @@ func (s *Service) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, r
 			UserId: um.SenderId,
 		})
 		if err != nil {
-			return err
+			return responses, err
 		}
 		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 			UserId: um.ReceiverId,
 		})
 		if err != nil {
-			return err
+			return responses, err
 		}
 		msg := model.Message{}
 		msg.MsgId = uint64(um.Id)
@@ -1198,5 +1216,5 @@ func (s *Service) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, r
 		DialogId: dialogId,
 		Messages: msgs,
 	})
-	return nil
+	return responses, nil
 }
