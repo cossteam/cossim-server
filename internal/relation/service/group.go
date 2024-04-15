@@ -120,13 +120,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 	}
 
 	if group.Type == groupApi.GroupType_TypeEncrypted {
-		relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: uid})
-		if err != nil {
-			return nil, err
-		}
-		if relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_OWNER && relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
-			return nil, code.Forbidden
-		}
+		return nil, code.Forbidden
 	}
 
 	groupRelation, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
