@@ -57,6 +57,8 @@ func (u *UserIndex) DeleteByRid(rid int64) {
 }
 
 func (u *UserIndex) SendMessage(message string) error {
+	u.cLock.Lock()
+	defer u.cLock.Unlock()
 	if len(u.WsClients) == 0 {
 		return nil
 	}

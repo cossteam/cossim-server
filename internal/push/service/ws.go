@@ -23,8 +23,7 @@ import (
 )
 
 func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driverId string, deviceType, token string) {
-	defer conn.Close()
-	//用户上线
+	//新建websocket客户端
 	wsRid++
 	cli := connect.NewWebsocketClient(wsRid, conn)
 	bucket := s.Buckets[constants.DriverType(deviceType)]
@@ -35,14 +34,16 @@ func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driv
 
 	index := bucket.GetUserIndex(uid)
 
+	defer conn.Close()
 	defer func(client *connect.WebsocketClient, index *connect.UserIndex, rid int64) {
 		client.Conn.Close()
 		index.DeleteByRid(rid)
 	}(cli, index, wsRid)
 
+	//设备限制
 	if s.ac.MultipleDeviceLimit.Enable {
 		if index.GetLength() >= s.ac.MultipleDeviceLimit.Max {
-			fmt.Println("用户登录设备达到上限")
+			s.logger.Error("用户登录设备达到上限")
 			return
 		}
 	}
@@ -130,6 +131,10 @@ func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driv
 				return
 			}
 			index.DeleteByRid(wsRid)
+			if index.GetLength() == 0 {
+				s.logger.Info("该用户最后一个客户端已经离线,删除索引")
+				bucket.DeleteByUserID(uid)
+			}
 			return
 		}
 	}
@@ -137,38 +142,40 @@ func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driv
 
 func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv1.PushResponse, error) {
 	resp := &pushgrpcv1.PushResponse{}
+	pushd := false
+
+	bytes, err := wsMsgToJSON(msg, false)
+	if err != nil {
+		return nil, err
+	}
+	message, err := s.enc.GetSecretMessage(ctx, string(bytes), msg.Uid)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, i2 := range s.Buckets {
-		bytes, err := wsMsgToJSON(msg, false)
-		if err != nil {
-			return nil, err
-		}
-
-		message, err := s.enc.GetSecretMessage(ctx, string(bytes), msg.Uid)
-		if err != nil {
-			return nil, err
-		}
-
 		ui := i2.GetUserIndex(msg.Uid)
-
 		if !msg.PushOffline && ui == nil {
 			continue
 		}
 
-		if msg.PushOffline && ui == nil {
-			//不在线则推送到消息队列
-			err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
+		if ui != nil && ui.GetLength() > 0 {
+			err = i2.SendMessage(msg.Uid, message)
 			if err != nil {
-				fmt.Println("发布消息失败：", err)
-				continue
+				return resp, err
 			}
-			break
+			pushd = true
 		}
 
-		err = i2.SendMessage(msg.Uid, message)
+	}
+	if msg.PushOffline && !pushd {
+		//不在线则推送到消息队列
+		err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
 		if err != nil {
-			return resp, err
+			s.logger.Error("发布消息失败", zap.Error(err))
 		}
 	}
+
 	return resp, nil
 }
 
@@ -269,13 +276,7 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 
 // 用户上线
 func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c *connect.WebsocketClient) {
-	//通知前端接收离线消息
-	//TODO 添加上线的设备类型
-	//js, _ := json.Marshal(msg)
-	//if s.enc == nil {
-	//	log.Println("加密客户端错误", zap.Error(nil))
-	//	return
-	//}
+
 	js, err := wsMsgToJSON(msg, false)
 	if err != nil {
 		fmt.Println("转换消息失败：", err)
