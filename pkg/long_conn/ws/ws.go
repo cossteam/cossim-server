@@ -35,7 +35,6 @@ func (w *JSWebSocket) CheckHeartbeat(interval time.Duration) {
 				log.Printf("Failed to send ping: %v\n", err)
 				return
 			}
-			//log.Println("Ping sent successfully")
 		}
 	}
 }
