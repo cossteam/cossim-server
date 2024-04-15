@@ -178,7 +178,7 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID uint32, userID string
 		return 0, err
 	}
 
-	if sf.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
+	if sf.Identity != relationgrpcv1.GroupIdentity_IDENTITY_OWNER {
 		return 0, code.Forbidden
 	}
 
