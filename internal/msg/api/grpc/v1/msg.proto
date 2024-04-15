@@ -68,10 +68,10 @@ enum MessageType {
 }
 
 message GetUserMsgListRequest{
-  // @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-  string UserId=1;
-  // @inject_tag: json:"friend_id" form:"friend_id" uri:"friend_id"
-  string FriendId = 2;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId=1;
+  // @inject_tag: json:"user_id"
+  string UserId=2;
   // @inject_tag: json:"type" form:"type" uri:"type"
   int32 Type = 3;
   // @inject_tag: json:"content" form:"content" uri:"content"
@@ -80,6 +80,8 @@ message GetUserMsgListRequest{
   int32 PageSize = 5;
   // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
   int32 PageNum = 6;
+  // @inject_tag: json:"msg_id"
+  uint64 MsgId = 7;
 }
 
 message UserMessage{
@@ -424,8 +426,10 @@ message GetGroupMsgListRequest {
   int32 PageSize = 4;
   // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
   int32 PageNum = 5;
-  // @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
-  int32 GroupId = 6;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId=6;
+  // @inject_tag: json:"msg_id"
+  uint64 MsgId = 7;
 }
 
 message GetGroupMessagesByIdsRequest{

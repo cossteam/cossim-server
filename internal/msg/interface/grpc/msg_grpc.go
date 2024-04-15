@@ -74,7 +74,29 @@ func (s *Handler) SendGroupMessageRevert(ctx context.Context, request *v1.MsgIdR
 func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsgListRequest) (*v1.GetUserMsgListResponse, error) {
 	resp := &v1.GetUserMsgListResponse{}
 
-	ums, total, current := s.mr.GetUserMsgList(request.GetUserId(), request.GetFriendId(), request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
+	if request.MsgId != 0 {
+		list, total, err := s.mr.GetUserMsgIdBeforeMsgList(request.DialogId, uint32(request.MsgId), int(request.PageSize))
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range list {
+			resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
+				Id:         uint32(m.ID),
+				SenderId:   m.SendID,
+				ReceiverId: m.ReceiveID,
+				Content:    m.Content,
+				Type:       uint32(int32(m.Type)),
+				ReplyId:    uint64(m.ReplyId),
+				IsRead:     int32(m.IsRead),
+				ReadAt:     m.ReadAt,
+				CreatedAt:  m.CreatedAt,
+				DialogId:   uint32(m.DialogId),
+			})
+		}
+		resp.Total = total
+		return resp, nil
+	}
+	ums, total, current := s.mr.GetUserMsgList(request.DialogId, request.UserId, request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
 
 	for _, m := range ums {
 		resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
@@ -576,8 +598,36 @@ func (s *Handler) GetGroupMsgIdAfterMsgList(ctx context.Context, in *v1.GetGroup
 
 func (s *Handler) GetGroupMessageList(ctx context.Context, in *v1.GetGroupMsgListRequest) (*v1.GetGroupMsgListResponse, error) {
 	var resp = &v1.GetGroupMsgListResponse{}
+	if in.MsgId != 0 {
+		list, total, err := s.mr.GetGroupMsgIdBeforeMsgList(in.DialogId, uint32(in.MsgId), int(in.PageSize))
+		if err != nil {
+			return nil, err
+		}
+
+		if len(list) > 0 {
+			for _, msg := range list {
+				resp.GroupMessages = append(resp.GroupMessages, &v1.GroupMessage{
+					Id:        uint32(msg.ID),
+					UserId:    msg.UserID,
+					Content:   msg.Content,
+					Type:      uint32(int32(msg.Type)),
+					ReplyId:   uint32(msg.ReplyId),
+					GroupId:   uint32(msg.GroupID),
+					ReadCount: int32(msg.ReadCount),
+					CreatedAt: msg.CreatedAt,
+					DialogId:  uint32(msg.DialogId),
+					IsLabel:   v1.MsgLabel(msg.IsLabel),
+					AtUsers:   msg.AtUsers,
+					AtAllUser: v1.AtAllUserType(msg.AtAllUser),
+				})
+			}
+		}
+
+		resp.Total = total
+		return resp, nil
+	}
 	list, err := s.mr.GetGroupMsgList(dataTransformers.GroupMsgList{
-		GroupID:    uint32(in.GroupId),
+		DialogId:   uint32(in.DialogId),
 		Content:    in.Content,
 		UserID:     in.UserId,
 		MsgType:    entity.UserMessageType(in.Type),

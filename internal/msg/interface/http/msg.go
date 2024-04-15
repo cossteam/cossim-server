@@ -78,9 +78,11 @@ func (h *Handler) sendGroupMsg(c *gin.Context) {
 // @Tags Msg
 // @Accept  json
 // @Produce  json
-// @Param user_id query string true "用户id"
+// @Param dialog_id query string true "对话id"
 // @Param type query string false "类型"
+// @Param user_id query string false "用户id"
 // @Param content query string false "消息"
+// @Param msg_id query int false "消息id"
 // @Param page_num query int true "页码"
 // @Param page_size query int true "页大小"
 // @Success		200 {object} model.Response{}
@@ -88,14 +90,19 @@ func (h *Handler) sendGroupMsg(c *gin.Context) {
 func (h *Handler) getUserMsgList(c *gin.Context) {
 	var num = c.Query("page_num")
 	var size = c.Query("page_size")
-	var id = c.Query("user_id")
+	var id = c.Query("dialog_id")
 	var msgType = c.Query("type")
 	var content = c.Query("content")
+	var msgId = c.Query("msg_id")
+	var uid = c.Query("user_id")
 
 	if num == "" || size == "" || id == "" {
 		response.SetFail(c, "参数错误", nil)
 		return
 	}
+
+	mId, _ := strconv.Atoi(msgId)
+	dialogId, _ := strconv.Atoi(id)
 	pageNum, _ := strconv.Atoi(num)
 	pageSize, _ := strconv.Atoi(size)
 	mt, _ := strconv.Atoi(msgType)
@@ -105,11 +112,13 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 	}
 
 	var msgListRequest = &model.MsgListRequest{
-		UserId:   id,
+		UserId:   uid,
+		DialogId: uint32(dialogId),
 		Type:     int32(mt),
 		Content:  content,
 		PageNum:  pageNum,
 		PageSize: pageSize,
+		MsgId:    uint32(mId),
 	}
 
 	userID := c.Value(constants.UserID).(string)
@@ -127,7 +136,8 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 // @Tags Msg
 // @Accept  json
 // @Produce  json
-// @Param group_id query string true "群聊id"
+// @Param dialog_id query string true "对话id"
+// @Param msg_id query int false "消息id"
 // @Param user_id query string false "用户id"
 // @Param type query string false "类型"
 // @Param content query string false "消息"
@@ -136,34 +146,37 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 // @Success		200 {object} model.Response{}
 // @Router /msg/list/group [get]
 func (h *Handler) getGroupMsgList(c *gin.Context) {
-	var gid = c.Query("group_id")
+	var dialogId = c.Query("dialog_id")
 	var num = c.Query("page_num")
 	var size = c.Query("page_size")
 	var id = c.Query("user_id")
 	var msgType = c.Query("type")
 	var content = c.Query("content")
+	var msgId = c.Query("msg_id")
 
-	if num == "" || size == "" || gid == "" {
+	if num == "" || size == "" || dialogId == "" {
 		response.SetFail(c, "参数错误", nil)
 		return
 	}
 
-	gidInt, _ := strconv.Atoi(gid)
+	did, _ := strconv.Atoi(dialogId)
 	pageNum, _ := strconv.Atoi(num)
 	pageSize, _ := strconv.Atoi(size)
+	mId, _ := strconv.Atoi(msgId)
 	mt, _ := strconv.Atoi(msgType)
 	if pageNum == 0 || pageSize == 0 {
 		response.SetFail(c, "参数错误", nil)
 		return
 	}
 
-	var msgListRequest = &model.GroupMsgListRequest{
-		GroupId:  uint32(gidInt),
+	var msgListRequest = &model.MsgListRequest{
+		DialogId: uint32(did),
 		UserId:   id,
 		Type:     int32(mt),
 		Content:  content,
 		PageNum:  pageNum,
 		PageSize: pageSize,
+		MsgId:    uint32(mId),
 	}
 
 	userID := c.Value(constants.UserID).(string)

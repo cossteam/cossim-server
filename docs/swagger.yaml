@@ -1788,11 +1788,15 @@ paths:
       - application/json
       description: 获取群聊消息
       parameters:
-      - description: 群聊id
+      - description: 对话id
         in: query
-        name: group_id
+        name: dialog_id
         required: true
         type: string
+      - description: 消息id
+        in: query
+        name: msg_id
+        type: integer
       - description: 用户id
         in: query
         name: user_id
@@ -1831,19 +1835,27 @@ paths:
       - application/json
       description: 获取私聊消息
       parameters:
-      - description: 用户id
+      - description: 对话id
         in: query
-        name: user_id
+        name: dialog_id
         required: true
         type: string
       - description: 类型
         in: query
         name: type
         type: string
+      - description: 用户id
+        in: query
+        name: user_id
+        type: string
       - description: 消息
         in: query
         name: content
         type: string
+      - description: 消息id
+        in: query
+        name: msg_id
+        type: integer
       - description: 页码
         in: query
         name: page_num

@@ -478,9 +478,21 @@ func (s *Service) GetGroupLabelMsgList(ctx context.Context, userID string, dialo
 	return msgs, nil
 }
 
-func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.GroupMsgListRequest) (interface{}, error) {
-	_, err := s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
-		Gid: request.GroupId,
+func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.MsgListRequest) (interface{}, error) {
+	//查询对话信息
+	byId, err := s.relationDialogService.GetDialogById(c, &relationgrpcv1.GetDialogByIdRequest{
+		DialogId: request.DialogId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if byId.GroupId == 0 {
+		return nil, code.MsgErrGetGroupMsgListFailed
+	}
+
+	_, err = s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
+		Gid: byId.GroupId,
 	})
 	if err != nil {
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
@@ -488,7 +500,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 	}
 
 	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
-		GroupId: request.GroupId,
+		GroupId: byId.GroupId,
 		UserId:  id,
 	})
 	if err != nil {
@@ -497,12 +509,13 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 	}
 
 	msg, err := s.msgService.GetGroupMessageList(c, &msggrpcv1.GetGroupMsgListRequest{
-		GroupId:  int32(request.GroupId),
+		DialogId: request.DialogId,
 		UserId:   request.UserId,
 		Content:  request.Content,
 		Type:     request.Type,
 		PageNum:  int32(request.PageNum),
 		PageSize: int32(request.PageSize),
+		MsgId:    uint64(request.MsgId),
 	})
 	if err != nil {
 		s.logger.Error("获取群聊消息列表失败", zap.Error(err))
@@ -539,7 +552,7 @@ func (s *Service) GetGroupMessageList(c *gin.Context, id string, request *model.
 		}
 
 		sendRelation, err := s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
-			GroupId: request.GroupId,
+			GroupId: byId.GroupId,
 			UserId:  v.UserId,
 		})
 		if err != nil {

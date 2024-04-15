@@ -10,7 +10,7 @@ type MsgRepository interface {
 	InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.UserMessage, error)
 	//群发消息
 	InsertUserMessages(message []entity.UserMessage) error
-	GetUserMsgList(uid, friendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) ([]entity.UserMessage, int32, int32)
+	GetUserMsgList(dialogId uint32, sendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) ([]entity.UserMessage, int32, int32)
 	GetLastMsgsForUserWithFriends(userID string, friendIDs []string) ([]*entity.UserMessage, error)
 	UpdateUserMessage(msg entity.UserMessage) error
 	GetUserMsgByID(msgId uint32) (*entity.UserMessage, error)
@@ -23,6 +23,7 @@ type MsgRepository interface {
 	//批量查询阅后即焚消息id
 	GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogId uint32) ([]*entity.UserMessage, error)
 	GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error)
+	GetUserMsgIdBeforeMsgList(dialogId uint32, msgId uint32, pageSize int) ([]*entity.UserMessage, int32, error)
 	UpdateUserMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error
 	// 获取最新的指定范围的消息
 	GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error)
@@ -42,6 +43,7 @@ type MsgRepository interface {
 	UpdateGroupMsgColumn(msgId uint32, column string, value interface{}) error
 	GetGroupMsgLabelByDialogId(dialogId uint32) ([]*entity.GroupMessage, error)
 	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error)
+	GetGroupMsgIdBeforeMsgList(dialogId uint32, msgId uint32, pageSize int) ([]*entity.GroupMessage, int32, error)
 	GetGroupMsgIdsByDialogID(dialogId uint32) ([]uint32, error)
 	UpdateGroupMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error
 

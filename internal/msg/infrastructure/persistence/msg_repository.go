@@ -72,33 +72,29 @@ func (g *MsgRepo) InsertGroupMessage(uid string, groupId uint, msg string, msgTy
 	return content, nil
 }
 
-func (g *MsgRepo) GetUserMsgList(userId, friendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) ([]entity.UserMessage, int32, int32) {
+func (g *MsgRepo) GetUserMsgList(dialogId uint32, sendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) ([]entity.UserMessage, int32, int32) {
 	var results []entity.UserMessage
 
 	query := g.db.Model(&entity.UserMessage{})
-	query = query.Where("(send_id = ? AND receive_id = ?) OR (send_id = ? AND receive_id = ?)", userId, friendId, friendId, userId).Order("created_at DESC")
+	query = query.Where("dialog_id = ? ", dialogId).Order("created_at DESC")
 
+	var count int64
+	err := query.Count(&count).Error
+	if err != nil {
+		return nil, 0, 0
+	}
 	if content != "" {
 		query = query.Where("content LIKE ?", "%"+content+"%")
 	}
-
+	if sendId != "" {
+		query = query.Where("send_id = ?", sendId)
+	}
 	if entity.IsValidMessageType(msgType) {
 		query = query.Where("msg_type = ?", msgType)
 	}
 
 	offset := (pageNumber - 1) * pageSize
 	query = query.Offset(offset).Limit(pageSize).Find(&results)
-	var count int64
-	// 注意：这里的 query 是一个新的查询，需要重新构建条件
-	countQuery := g.db.Model(&entity.UserMessage{})
-	countQuery = countQuery.Where("(send_id = ? AND receive_id = ?) OR (send_id = ? AND receive_id = ?)", userId, friendId, friendId, userId)
-	if content != "" {
-		countQuery = countQuery.Where("content LIKE ?", "%"+content+"%")
-	}
-	if entity.IsValidMessageType(msgType) {
-		countQuery = countQuery.Where("msg_type = ?", msgType)
-	}
-	countQuery.Count(&count)
 
 	return results, int32(count), int32(pageNumber)
 
@@ -297,7 +293,7 @@ func (g *MsgRepo) GetGroupMsgList(list dataTransformers.GroupMsgList) (*dataTran
 	response := &dataTransformers.GroupMsgListResponse{}
 
 	query := g.db.Model(&entity.GroupMessage{}).
-		Where("group_id = ? AND deleted_at = 0", list.GroupID)
+		Where("dialog_id = ? AND deleted_at = 0", list.DialogId)
 
 	var total int64
 	err := query.Count(&total).Error
@@ -440,4 +436,42 @@ func (g *MsgRepo) GetLastGroupMsgsByDialogIDs(dialogIds []uint) ([]*entity.Group
 		}
 	}
 	return groupMessages, nil
+}
+
+func (g *MsgRepo) GetUserMsgIdBeforeMsgList(dialogId uint32, msgId uint32, pageSize int) ([]*entity.UserMessage, int32, error) {
+	var userMessages []*entity.UserMessage
+	query := g.db.Model(&entity.UserMessage{}).
+		Where("dialog_id = ? AND id < ? AND deleted_at = 0", dialogId, msgId)
+
+	var total int64
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = query.Order("id DESC").
+		Limit(pageSize).
+		Find(&userMessages).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return userMessages, int32(total), err
+}
+
+func (g *MsgRepo) GetGroupMsgIdBeforeMsgList(dialogId uint32, msgId uint32, pageSize int) ([]*entity.GroupMessage, int32, error) {
+	var groupMessages []*entity.GroupMessage
+	query := g.db.Model(&entity.GroupMessage{}).
+		Where("dialog_id = ? AND id < ? AND deleted_at = 0", dialogId, msgId)
+
+	var total int64
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = query.Order("id DESC").
+		Limit(pageSize).
+		Find(&groupMessages).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return groupMessages, int32(total), err
 }

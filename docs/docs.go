@@ -1054,10 +1054,16 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "群聊id",
-                        "name": "group_id",
+                        "description": "对话id",
+                        "name": "dialog_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "消息id",
+                        "name": "msg_id",
+                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -1118,8 +1124,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "用户id",
-                        "name": "user_id",
+                        "description": "对话id",
+                        "name": "dialog_id",
                         "in": "query",
                         "required": true
                     },
@@ -1131,8 +1137,20 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "用户id",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "消息",
                         "name": "content",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "消息id",
+                        "name": "msg_id",
                         "in": "query"
                     },
                     {

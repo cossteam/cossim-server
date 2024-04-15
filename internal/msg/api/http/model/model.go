@@ -49,21 +49,24 @@ func isValidAtAllUserType(atAllUserType AtAllUserType) bool {
 }
 
 type MsgListRequest struct {
-	UserId   string `json:"user_id" binding:"required"`
+	DialogId uint32 `json:"dialog_id" binding:"required"`
+	UserId   string `json:"user_id"`
 	Type     int32  `json:"type"`
+	MsgId    uint32 `json:"msg_id"`
 	Content  string `json:"content"`
 	PageNum  int    `json:"page_num" binding:"required"`
 	PageSize int    `json:"page_size" binding:"required"`
 }
 
-type GroupMsgListRequest struct {
-	GroupId  uint32 `json:"group_id" binding:"required"`
-	UserId   string `json:"user_id"`
-	Type     int32  `json:"type"`
-	Content  string `json:"content"`
-	PageNum  int    `json:"page_num" binding:"required"`
-	PageSize int    `json:"page_size" binding:"required"`
-}
+//type GroupMsgListRequest struct {
+//	GroupId  uint32 `json:"group_id" binding:"required"`
+//	UserId   string `json:"user_id"`
+//	Type     int32  `json:"type"`
+//	MsgId    uint32 `json:"msg_id"`
+//	Content  string `json:"content"`
+//	PageNum  int    `json:"page_num" binding:"required"`
+//	PageSize int    `json:"page_size" binding:"required"`
+//}
 
 type SenderInfo struct {
 	UserId string `json:"user_id"`
