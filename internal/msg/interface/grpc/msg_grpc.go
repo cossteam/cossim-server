@@ -170,22 +170,12 @@ func (s *Handler) GetLastMsgsForGroupsWithIDs(ctx context.Context, request *v1.G
 func (s *Handler) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLastMsgsByDialogIdsRequest) (*v1.GetLastMsgsResponse, error) {
 	resp := &v1.GetLastMsgsResponse{}
 
-	//if s.cacheEnable {
-	//	ds, err := s.cache.GetLastMessageByDialogIDs(ctx, request.DialogIds...)
-	//	if err == nil && len(ds.LastMsgs) > 0 && len(ds.LastMsgs) == len(request.DialogIds) {
-	//		return ds, nil
-	//	}
-	//}
-
 	ids := make([]uint, 0)
 	if len(request.DialogIds) > 0 {
 		for _, id := range request.DialogIds {
 			ids = append(ids, uint(id))
 		}
 	}
-
-	fmt.Println("接收到的对话id", request.DialogIds)
-	fmt.Println("接收到的对话id2", ids)
 
 	//获取群聊对话最后一条消息
 	result1, err := s.mr.GetLastGroupMsgsByDialogIDs(ids)
