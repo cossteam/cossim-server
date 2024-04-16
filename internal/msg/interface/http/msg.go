@@ -96,9 +96,16 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 	var msgId = c.Query("msg_id")
 	var uid = c.Query("user_id")
 
-	if num == "" || size == "" || id == "" {
+	if id == "" {
 		response.SetFail(c, "参数错误", nil)
 		return
+	}
+
+	if num == "" {
+		num = "1"
+	}
+	if size == "" {
+		size = "20"
 	}
 
 	mId, _ := strconv.Atoi(msgId)
@@ -154,9 +161,16 @@ func (h *Handler) getGroupMsgList(c *gin.Context) {
 	var content = c.Query("content")
 	var msgId = c.Query("msg_id")
 
-	if num == "" || size == "" || dialogId == "" {
+	if dialogId == "" {
 		response.SetFail(c, "参数错误", nil)
 		return
+	}
+
+	if num == "" {
+		num = "1"
+	}
+	if size == "" {
+		size = "20"
 	}
 
 	did, _ := strconv.Atoi(dialogId)
@@ -203,9 +217,11 @@ func (h *Handler) getUserDialogList(c *gin.Context) {
 	var num = c.Query("page_num")
 	var size = c.Query("page_size")
 
-	if num == "" || size == "" {
-		response.SetFail(c, "参数错误", nil)
-		return
+	if num == "" {
+		num = "1"
+	}
+	if size == "" {
+		size = "20"
 	}
 
 	pageNum, _ := strconv.Atoi(num)
