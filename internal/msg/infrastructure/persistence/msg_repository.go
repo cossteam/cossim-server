@@ -408,7 +408,7 @@ func (g *MsgRepo) GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize in
 	var total int64
 	query := g.db.Model(&entity.UserMessage{}).
 		Where("dialog_id = ? AND is_burn_after_reading = ? AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).
-		Order("updated_at DESC")
+		Order("id DESC")
 
 	err := g.db.Model(&entity.UserMessage{}).
 		Where("dialog_id = ?  AND deleted_at = 0", dialogId).Count(&total).Error
@@ -429,7 +429,7 @@ func (g *MsgRepo) GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize i
 	var total int64
 	query := g.db.Model(&entity.GroupMessage{}).
 		Where("dialog_id = ? AND deleted_at = 0", dialogId).
-		Order("updated_at DESC")
+		Order("id DESC")
 
 	err := g.db.Model(&entity.GroupMessage{}).
 		Where("dialog_id = ? AND deleted_at = 0", dialogId).Count(&total).Error
