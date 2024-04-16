@@ -186,17 +186,19 @@ func (h *Handler) getUserGroupList(c *gin.Context) {
 // @Description 好友申请列表
 // @Tags UserRelation
 // @Produce  json
-// @Param page_num query int true "页码"
-// @Param page_size query int true "页大小"
+// @Param page_num query int false "页码"
+// @Param page_size query int false "页大小"
 // @Success		200 {object} model.Response{data=model.UserRequestListResponseList} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
 // @Router /relation/user/request_list [get]
 func (h *Handler) userRequestList(c *gin.Context) {
 	var num = c.Query("page_num")
 	var size = c.Query("page_size")
 
-	if num == "" || size == "" {
-		response.SetFail(c, "参数错误", nil)
-		return
+	if num == "" {
+		num = "1"
+	}
+	if size == "" {
+		size = "20"
 	}
 
 	pageNum, _ := strconv.Atoi(num)
