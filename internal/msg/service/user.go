@@ -973,7 +973,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 	addToInfos := func(dialogID uint32, msgID uint32, dialogType uint32) {
 		if dialogType == uint32(model.GroupConversation) {
 			if msgID == 0 {
-				responses, err = s.getGroupDialogLast20Msg(ctx, dialogID, responses)
+				responses, err = s.getGroupDialogLast20Msg(ctx, userID, dialogID, responses)
 				if err != nil {
 					s.logger.Error("获取群聊落后消息失败", zap.Error(err))
 					return
@@ -1053,7 +1053,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 			msg.ReplyId = i3.ReplyId
 			msg.IsLabel = model.LabelMsgType(i3.IsLabel)
 			msg.ReadAt = readmsg.ReadAt
-			if msg.ReplyId != 0 {
+			if msg.ReadAt != 0 {
 				msg.IsRead = int32(msggrpcv1.ReadType_IsRead)
 			}
 			msgs = append(msgs, &msg)
@@ -1081,6 +1081,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 			if err != nil {
 				return nil, err
 			}
+
 			info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
 				UserId: i3.ReceiverId,
 			})
@@ -1120,7 +1121,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 }
 
 // 获取群聊对话的最后二十条消息
-func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) ([]*model.GetDialogAfterMsgResponse, error) {
+func (s *Service) getGroupDialogLast20Msg(ctx context.Context, thisID string, dialogId uint32, responses []*model.GetDialogAfterMsgResponse) ([]*model.GetDialogAfterMsgResponse, error) {
 	list, err := s.msgService.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
 		DialogId: dialogId,
 		PageNum:  1,
@@ -1136,6 +1137,15 @@ func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, 
 		})
 		if err != nil {
 			return responses, err
+		}
+
+		readmsg, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(ctx, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
+			MsgId:  gm.Id,
+			UserId: thisID,
+		})
+		if err != nil {
+			s.logger.Error("获取消息是否已读失败", zap.Error(err))
+			continue
 		}
 		msg := model.Message{}
 		msg.GroupId = gm.GroupId
@@ -1154,6 +1164,10 @@ func (s *Service) getGroupDialogLast20Msg(ctx context.Context, dialogId uint32, 
 		msg.IsBurnAfterReading = model.BurnAfterReadingType(gm.IsBurnAfterReadingType)
 		msg.ReplyId = gm.ReplyId
 		msg.IsLabel = model.LabelMsgType(gm.IsLabel)
+		msg.ReadAt = readmsg.ReadAt
+		if msg.ReadAt != 0 {
+			msg.IsRead = int32(msggrpcv1.ReadType_IsRead)
+		}
 		msgs = append(msgs, &msg)
 	}
 	responses = append(responses, &model.GetDialogAfterMsgResponse{
