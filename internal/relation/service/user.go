@@ -106,9 +106,9 @@ func (s *Service) BlackList(ctx context.Context, userID string) (interface{}, er
 	return blacklist, nil
 }
 
-func (s *Service) UserRequestList(ctx context.Context, userID string) (interface{}, error) {
+func (s *Service) UserRequestList(ctx context.Context, userID string, pageSize int, pageNum int) (interface{}, error) {
 
-	reqList, err := s.relationUserFriendRequestService.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID})
+	reqList, err := s.relationUserFriendRequestService.GetFriendRequestList(ctx, &relationgrpcv1.GetFriendRequestListRequest{UserId: userID, PageSize: uint32(pageSize), PageNum: uint32(pageNum)})
 	if err != nil {
 		s.logger.Error("user service GetFriendRequestList", zap.Error(err))
 		return nil, err
@@ -154,7 +154,11 @@ func (s *Service) UserRequestList(ctx context.Context, userID string) (interface
 			})
 		}
 	}
-	return data, nil
+	return &model.UserRequestListResponseList{
+		List:        data,
+		Total:       int64(reqList.Total),
+		CurrentPage: int32(pageNum),
+	}, nil
 }
 func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *model.SendFriendRequest) (interface{}, error) {
 	friendID := req.UserId

@@ -832,6 +832,22 @@ const docTemplate = `{
                     "Msg"
                 ],
                 "summary": "获取用户对话列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页大小",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2189,6 +2205,20 @@ const docTemplate = `{
                 "summary": "获取群聊申请列表",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页大小",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
                         "type": "string",
                         "description": "Bearer JWT",
                         "name": "Authorization",
@@ -2208,7 +2238,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.GroupRequestListResponse"
+                                            "$ref": "#/definitions/model.GroupRequestListResponseList"
                                         }
                                     }
                                 }
@@ -2574,6 +2604,22 @@ const docTemplate = `{
                     "UserRelation"
                 ],
                 "summary": "好友申请列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page_num",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页大小",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)",
@@ -2586,10 +2632,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.UserRequestListResponse"
-                                            }
+                                            "$ref": "#/definitions/model.UserRequestListResponseList"
                                         }
                                     }
                                 }
@@ -4432,6 +4475,23 @@ const docTemplate = `{
                 }
             }
         },
+        "model.GroupRequestListResponseList": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer"
+                },
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.GroupRequestListResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.GroupRequestStatus": {
             "type": "integer",
             "enum": [
@@ -5166,6 +5226,23 @@ const docTemplate = `{
                     "$ref": "#/definitions/model.UserInfo"
                 },
                 "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.UserRequestListResponseList": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer"
+                },
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.UserRequestListResponse"
+                    }
+                },
+                "total": {
                     "type": "integer"
                 }
             }

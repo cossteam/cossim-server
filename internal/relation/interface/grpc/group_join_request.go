@@ -146,10 +146,11 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 	}
 
 	//获取他自己的申请列表
-	list, err := s.gjqr.GetGroupJoinRequestListByUserId(request.UserId)
+	list, total, err := s.gjqr.GetGroupJoinRequestListByUserId(request.UserId, int(request.PageSize), int(request.PageNum))
 	if err != nil {
 		return resp, err
 	}
+	resp.Total = uint64(total)
 	if len(list) > 0 {
 		for _, v := range list {
 			resp.GroupJoinRequestResponses = append(resp.GroupJoinRequestResponses, &v1.GroupJoinRequestResponse{

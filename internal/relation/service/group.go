@@ -291,8 +291,8 @@ func (s *Service) SetGroupBurnAfterReading(ctx context.Context, userId string, r
 	return nil, nil
 }
 
-func (s *Service) GroupRequestList(ctx context.Context, userID string) (interface{}, error) {
-	reqList, err := s.relationGroupJoinRequestService.GetGroupJoinRequestListByUserId(ctx, &relationgrpcv1.GetGroupJoinRequestListRequest{UserId: userID})
+func (s *Service) GroupRequestList(ctx context.Context, userID string, pageSize int, pageNum int) (interface{}, error) {
+	reqList, err := s.relationGroupJoinRequestService.GetGroupJoinRequestListByUserId(ctx, &relationgrpcv1.GetGroupJoinRequestListRequest{UserId: userID, PageSize: uint32(pageSize), PageNum: uint32(pageNum)})
 	if err != nil {
 		s.logger.Error("获取群聊申请列表失败", zap.Error(err))
 		return nil, err
@@ -379,7 +379,12 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string) (interfac
 			v.GroupStatus = uint32(groupInfo.Status)
 		}
 	}
-	return data, nil
+
+	return &model.GroupRequestListResponseList{
+		List:        data,
+		Total:       int64(reqList.Total),
+		CurrentPage: int32(pageNum),
+	}, nil
 }
 
 func (s *Service) AdminManageJoinGroup(ctx context.Context, requestID, groupID uint32, userID string, status relationgrpcv1.GroupRequestStatus) error {

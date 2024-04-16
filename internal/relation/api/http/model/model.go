@@ -27,6 +27,12 @@ type GroupRequestListResponse struct {
 	CreateAt        int64              `json:"create_at"`
 }
 
+type GroupRequestListResponseList struct {
+	List        []*GroupRequestListResponse `json:"list"`
+	Total       int64                       `json:"total"`
+	CurrentPage int32                       `json:"current_page"`
+}
+
 type AddGroupAdminRequest struct {
 	GroupID uint32   `json:"group_id" binding:"required"`
 	UserIDs []string `json:"user_ids" binding:"required"`
@@ -56,6 +62,12 @@ type UserRequestListResponse struct {
 	SenderInfo   *UserInfo `json:"sender_info,omitempty"`
 	ReceiverInfo *UserInfo `json:"receiver_info,omitempty"`
 	CreateAt     int64     `json:"create_at"`
+}
+
+type UserRequestListResponseList struct {
+	List        []*UserRequestListResponse `json:"list"`
+	Total       int64                      `json:"total"`
+	CurrentPage int32                      `json:"current_page"`
 }
 
 type UserInfo struct {

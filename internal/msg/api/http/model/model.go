@@ -58,15 +58,11 @@ type MsgListRequest struct {
 	PageSize int    `json:"page_size" binding:"required"`
 }
 
-//type GroupMsgListRequest struct {
-//	GroupId  uint32 `json:"group_id" binding:"required"`
-//	UserId   string `json:"user_id"`
-//	Type     int32  `json:"type"`
-//	MsgId    uint32 `json:"msg_id"`
-//	Content  string `json:"content"`
-//	PageNum  int    `json:"page_num" binding:"required"`
-//	PageSize int    `json:"page_size" binding:"required"`
-//}
+type GetUserDialogListResponse struct {
+	DialogList  []UserDialogListResponse `json:"list"`
+	Total       int64                    `json:"total"`
+	CurrentPage int32                    `json:"current_page"`
+}
 
 type SenderInfo struct {
 	UserId string `json:"user_id"`
@@ -233,6 +229,7 @@ type AfterMsg struct {
 type GetDialogAfterMsgResponse struct {
 	DialogId uint32     `json:"dialog_id"`
 	Messages []*Message `json:"msg_list"`
+	Total    int64      `json:"total"`
 }
 
 type GetDialogAfterMsgListResponse struct {

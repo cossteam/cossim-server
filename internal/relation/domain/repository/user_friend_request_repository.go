@@ -4,7 +4,7 @@ import "github.com/cossim/coss-server/internal/relation/domain/entity"
 
 type UserFriendRequestRepository interface {
 	AddFriendRequest(entity *entity.UserFriendRequest) (*entity.UserFriendRequest, error)
-	GetFriendRequestList(userId string) ([]*entity.UserFriendRequest, error)
+	GetFriendRequestList(userId string, pageSize, pageNum int) ([]*entity.UserFriendRequest, int64, error)
 	GetFriendRequestBySenderIDAndReceiverID(senderId string, receiverId string) (*entity.UserFriendRequest, error)
 	GetFriendRequestByID(id uint) (*entity.UserFriendRequest, error)
 	UpdateFriendRequestStatus(senderId string, receiverId string, status entity.RequestStatus) error

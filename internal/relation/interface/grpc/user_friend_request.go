@@ -42,7 +42,7 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 		}
 	}
 
-	list, err := s.ufqr.GetFriendRequestList(request.UserId)
+	list, total, err := s.ufqr.GetFriendRequestList(request.UserId, int(request.PageSize), int(request.PageNum))
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	}
@@ -57,6 +57,7 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 			CreateAt:   uint64(friend.CreatedAt),
 		})
 	}
+	resp.Total = uint64(total)
 
 	// TODO 考虑不使用异步的方式，缓存设置失败了，重试或回滚
 	go func() {

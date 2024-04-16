@@ -415,12 +415,28 @@ func (h *Handler) getGroupMember(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security Bearer
+// @Param page_num query int true "页码"
+// @Param page_size query int true "页大小"
 // @Param Authorization header string true "Bearer JWT"
-// @Success		200 {object} model.Response{data=model.GroupRequestListResponse} "status (0=等待, 1=已通过, 2=已拒绝, 3=邀请发送者, 4=邀请接收者)"
+// @Success		200 {object} model.Response{data=model.GroupRequestListResponseList} "status (0=等待, 1=已通过, 2=已拒绝, 3=邀请发送者, 4=邀请接收者)"
 // @Router /relation/group/request_list [get]
 func (h *Handler) groupRequestList(c *gin.Context) {
+	var num = c.Query("page_num")
+	var size = c.Query("page_size")
+
+	if num == "" || size == "" {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	pageNum, _ := strconv.Atoi(num)
+	pageSize, _ := strconv.Atoi(size)
+	if pageNum == 0 || pageSize == 0 {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
 	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.GroupRequestList(c, userID)
+	resp, err := h.svc.GroupRequestList(c, userID, pageSize, pageNum)
 	if err != nil {
 		c.Error(err)
 		return

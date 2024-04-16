@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"strconv"
 )
 
 // 修改好友备注
@@ -185,11 +186,27 @@ func (h *Handler) getUserGroupList(c *gin.Context) {
 // @Description 好友申请列表
 // @Tags UserRelation
 // @Produce  json
-// @Success		200 {object} model.Response{data=[]model.UserRequestListResponse} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
+// @Param page_num query int true "页码"
+// @Param page_size query int true "页大小"
+// @Success		200 {object} model.Response{data=model.UserRequestListResponseList} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
 // @Router /relation/user/request_list [get]
 func (h *Handler) userRequestList(c *gin.Context) {
+	var num = c.Query("page_num")
+	var size = c.Query("page_size")
+
+	if num == "" || size == "" {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	pageNum, _ := strconv.Atoi(num)
+	pageSize, _ := strconv.Atoi(size)
+	if pageNum == 0 || pageSize == 0 {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
 	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.UserRequestList(c, userID)
+	resp, err := h.svc.UserRequestList(c, userID, pageSize, pageNum)
 	if err != nil {
 		c.Error(err)
 		return
