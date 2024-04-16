@@ -22,12 +22,12 @@ type MsgRepository interface {
 	GetUnreadUserMsgs(uid string, dialogId uint32) ([]*entity.UserMessage, error)
 	//批量查询阅后即焚消息id
 	GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint32, dialogId uint32) ([]*entity.UserMessage, error)
-	GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error)
+	GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, int64, error)
 	GetUserMsgIdBeforeMsgList(dialogId uint32, msgId uint32, pageSize int) ([]*entity.UserMessage, int32, error)
 	UpdateUserMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error
 	// 获取最新的指定范围的消息
-	GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error)
-	GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, error)
+	GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, int64, error)
+	GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, int64, error)
 	GetLastUserMsgsByDialogIDs(dialogIds []uint) ([]*entity.UserMessage, error)
 
 	ReadAllUserMsg(uid string, dialogId uint32) error
@@ -42,7 +42,7 @@ type MsgRepository interface {
 	GetGroupMsgList(response dataTransformers.GroupMsgList) (*dataTransformers.GroupMsgListResponse, error)
 	UpdateGroupMsgColumn(msgId uint32, column string, value interface{}) error
 	GetGroupMsgLabelByDialogId(dialogId uint32) ([]*entity.GroupMessage, error)
-	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error)
+	GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, int64, error)
 	GetGroupMsgIdBeforeMsgList(dialogId uint32, msgId uint32, pageSize int) ([]*entity.GroupMessage, int32, error)
 	GetGroupMsgIdsByDialogID(dialogId uint32) ([]uint32, error)
 	UpdateGroupMsgColumnByDialogId(dialogId uint32, column string, value interface{}) error

@@ -22,10 +22,20 @@ func (u *UserFriendRequestRepo) AddFriendRequest(ent *entity.UserFriendRequest) 
 }
 
 // GetFriendRequestList 获取指定用户 ID 的用户好友请求列表。
-func (u *UserFriendRequestRepo) GetFriendRequestList(userId string) ([]*entity.UserFriendRequest, error) {
+func (u *UserFriendRequestRepo) GetFriendRequestList(userId string, pageSize, pageNum int) ([]*entity.UserFriendRequest, int64, error) {
 	var result []*entity.UserFriendRequest
-	err := u.db.Where("owner_id = ? AND deleted_at = 0", userId).Find(&result).Error
-	return result, err
+	var total int64
+
+	query := u.db.Model(&entity.UserFriendRequest{}).Where("owner_id = ? AND deleted_at = 0", userId).Order("created_at DESC")
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&result).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return result, total, nil
 }
 
 func (u *UserFriendRequestRepo) GetFriendRequestBySenderIDAndReceiverID(senderId string, receiverId string) (*entity.UserFriendRequest, error) {

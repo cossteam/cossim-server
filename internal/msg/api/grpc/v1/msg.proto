@@ -181,11 +181,15 @@ message GroupMsgRequest {
 message UserMessages {
   // @inject_tag: json:"user_messages"
   repeated UserMessage UserMessages = 1;
+  // @inject_tag: json:"total"
+  uint64 Total = 2;
 }
 
 message GroupMessages {
   // @inject_tag: json:"group_messages"
   repeated GroupMessage GroupMessages = 1;
+  // @inject_tag: json:"total"
+  uint64 Total = 2;
 }
 
 message UserMsgsRequest {
@@ -384,6 +388,8 @@ message GetUserMsgIdAfterMsgResponse{
   repeated UserMessage UserMessages = 1;
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 2;
+  // @inject_tag: json:"total"
+  uint64 Total = 3;
 }
 
 message GetUserMsgIdAfterMsgListResponse {
@@ -408,6 +414,8 @@ message GetGroupMsgIdAfterMsgResponse{
   repeated GroupMessage GroupMessages = 1;
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 2;
+  // @inject_tag: json:"total"
+  uint64 Total = 3;
 }
 
 message GetGroupMsgIdAfterMsgListResponse {

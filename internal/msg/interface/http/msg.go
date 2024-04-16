@@ -195,11 +195,28 @@ func (h *Handler) getGroupMsgList(c *gin.Context) {
 // @Tags Msg
 // @Accept  json
 // @Produce  json
+// @Param page_num query int true "页码"
+// @Param page_size query int true "页大小"
 // @Success		200 {object} model.Response{}
 // @Router /msg/dialog/list [get]
 func (h *Handler) getUserDialogList(c *gin.Context) {
+	var num = c.Query("page_num")
+	var size = c.Query("page_size")
+
+	if num == "" || size == "" {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	pageNum, _ := strconv.Atoi(num)
+	pageSize, _ := strconv.Atoi(size)
+	if pageNum == 0 || pageSize == 0 {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
 	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.GetUserDialogList(c, userID)
+	resp, err := h.svc.GetUserDialogList(c, userID, pageSize, pageNum)
 	if err != nil {
 		c.Error(err)
 		return

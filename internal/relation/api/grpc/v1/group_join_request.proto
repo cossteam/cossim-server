@@ -14,6 +14,10 @@ enum GroupRequestStatus {
 message GetGroupJoinRequestListRequest {
   // @inject_tag: json:"string"
   string UserId = 1;
+  // @inject_tag: json:"page_size"
+  uint32 PageSize = 2;
+  // @inject_tag: json:"page_num"
+  uint32 PageNum = 3;
 }
 
 message GroupJoinRequestResponse {
@@ -36,6 +40,8 @@ message GroupJoinRequestResponse {
 message GroupJoinRequestListResponse {
   // @inject_tag: json:"group_join_request_list"
   repeated GroupJoinRequestResponse GroupJoinRequestResponses = 1;
+  // @inject_tag: json:"total"
+  uint64 Total = 2;
 }
 
 message GetGroupJoinRequestByGroupIdAndUserIdRequest {

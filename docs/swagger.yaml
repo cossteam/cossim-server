@@ -627,6 +627,17 @@ definitions:
       status:
         $ref: '#/definitions/model.GroupRequestStatus'
     type: object
+  model.GroupRequestListResponseList:
+    properties:
+      current_page:
+        type: integer
+      list:
+        items:
+          $ref: '#/definitions/model.GroupRequestListResponse'
+        type: array
+      total:
+        type: integer
+    type: object
   model.GroupRequestStatus:
     enum:
     - 0
@@ -1121,6 +1132,17 @@ definitions:
       sender_info:
         $ref: '#/definitions/model.UserInfo'
       status:
+        type: integer
+    type: object
+  model.UserRequestListResponseList:
+    properties:
+      current_page:
+        type: integer
+      list:
+        items:
+          $ref: '#/definitions/model.UserRequestListResponse'
+        type: array
+      total:
         type: integer
     type: object
   model.UserStatus:
@@ -1644,6 +1666,17 @@ paths:
       consumes:
       - application/json
       description: 获取用户对话列表
+      parameters:
+      - description: 页码
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - description: 页大小
+        in: query
+        name: page_size
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -2522,6 +2555,16 @@ paths:
       - application/json
       description: 获取用户的群聊申请列表
       parameters:
+      - description: 页码
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - description: 页大小
+        in: query
+        name: page_size
+        required: true
+        type: integer
       - description: Bearer JWT
         in: header
         name: Authorization
@@ -2537,7 +2580,7 @@ paths:
             - $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/model.GroupRequestListResponse'
+                  $ref: '#/definitions/model.GroupRequestListResponseList'
               type: object
       security:
       - Bearer: []
@@ -2771,6 +2814,17 @@ paths:
   /relation/user/request_list:
     get:
       description: 好友申请列表
+      parameters:
+      - description: 页码
+        in: query
+        name: page_num
+        required: true
+        type: integer
+      - description: 页大小
+        in: query
+        name: page_size
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -2781,9 +2835,7 @@ paths:
             - $ref: '#/definitions/github_com_cossim_coss-server_internal_relation_api_http_model.Response'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/model.UserRequestListResponse'
-                  type: array
+                  $ref: '#/definitions/model.UserRequestListResponseList'
               type: object
       summary: 好友申请列表
       tags:

@@ -25,9 +25,9 @@ func (g *GroupJoinRequestRepo) AddJoinRequest(en *entity.GroupJoinRequest) (*ent
 	return en, nil
 }
 
-func (g *GroupJoinRequestRepo) GetJoinRequestListByID(userId string) ([]*entity.GroupJoinRequest, error) {
+func (g *GroupJoinRequestRepo) GetJoinRequestListByID(id uint32) ([]*entity.GroupJoinRequest, error) {
 	var result []*entity.GroupJoinRequest
-	if err := g.db.Where("id = ? AND deleted_at = 0", userId).Find(&result).Error; err != nil {
+	if err := g.db.Where("id = ? AND deleted_at = 0", id).Find(&result).Error; err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -43,12 +43,19 @@ func (g *GroupJoinRequestRepo) AddJoinRequestBatch(en []*entity.GroupJoinRequest
 	return en, nil
 }
 
-func (g *GroupJoinRequestRepo) GetGroupJoinRequestListByUserId(userID string) ([]*entity.GroupJoinRequest, error) {
+func (g *GroupJoinRequestRepo) GetGroupJoinRequestListByUserId(userID string, pageSize, pageNum int) ([]*entity.GroupJoinRequest, int64, error) {
 	var result []*entity.GroupJoinRequest
-	if err := g.db.Where("owner_id = ? AND deleted_at = 0", userID).Find(&result).Error; err != nil {
-		return nil, err
+	var total int64
+	query := g.db.Model(&entity.GroupJoinRequest{}).Where("owner_id = ? AND deleted_at = 0", userID).Order("created_at DESC")
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
 	}
-	return result, nil
+	err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&result).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return result, total, nil
 }
 
 func (g *GroupJoinRequestRepo) GetGroupJoinRequestByGroupIdAndUserId(groupID uint, userID string) (*entity.GroupJoinRequest, error) {

@@ -402,10 +402,12 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 	return resp, nil
 }
 
-func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interface{}, error) {
+func (s *Service) GetUserDialogList(ctx context.Context, userID string, pageSize int, pageNum int) (interface{}, error) {
 	//获取对话id
 	ids, err := s.relationDialogService.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
-		UserId: userID,
+		UserId:   userID,
+		PageNum:  uint32(pageNum),
+		PageSize: uint32(pageSize),
 	})
 	if err != nil {
 		s.logger.Error("获取用户会话id", zap.Error(err))
@@ -590,7 +592,11 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string) (interfa
 		return responseList[i].LastMessage.SendAt > responseList[j].LastMessage.SendAt
 	})
 
-	return responseList, nil
+	return model.GetUserDialogListResponse{
+		DialogList:  responseList,
+		Total:       int64(ids.Total),
+		CurrentPage: int32(pageNum),
+	}, nil
 }
 
 func (s *Service) RecallUserMsg(ctx context.Context, userID string, driverId string, msgID uint32) (interface{}, error) {
@@ -1061,6 +1067,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 		responses = append(responses, &model.GetDialogAfterMsgResponse{
 			DialogId: i2.DialogId,
 			Messages: msgs,
+			Total:    int64(i2.Total),
 		})
 	}
 
@@ -1114,6 +1121,7 @@ func (s *Service) GetDialogAfterMsg(ctx context.Context, userID string, request 
 		responses = append(responses, &model.GetDialogAfterMsgResponse{
 			DialogId: i2.DialogId,
 			Messages: msgs,
+			Total:    int64(i2.Total),
 		})
 	}
 
@@ -1173,6 +1181,7 @@ func (s *Service) getGroupDialogLast20Msg(ctx context.Context, thisID string, di
 	responses = append(responses, &model.GetDialogAfterMsgResponse{
 		DialogId: dialogId,
 		Messages: msgs,
+		Total:    int64(list.Total),
 	})
 
 	return responses, nil
@@ -1229,6 +1238,7 @@ func (s *Service) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, r
 	responses = append(responses, &model.GetDialogAfterMsgResponse{
 		DialogId: dialogId,
 		Messages: msgs,
+		Total:    int64(list.Total),
 	})
 	return responses, nil
 }

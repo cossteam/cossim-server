@@ -7,11 +7,17 @@ import "google/protobuf/empty.proto";
 message GetFriendRequestListRequest {
   // @inject_tag: json:"user_id"
   string UserId = 1;
+  // @inject_tag: json:"page_size"
+  uint32 PageSize = 2;
+  // @inject_tag: json:"page_num"
+  uint32 PageNum = 3;
 }
 
 message GetFriendRequestListResponse {
   // @inject_tag: json:"friend_request_list"
   repeated FriendRequestList FriendRequestList = 1;
+  // @inject_tag: json:"total"
+  uint64 Total = 2;
 }
 
 message FriendRequestList {

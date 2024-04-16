@@ -159,7 +159,6 @@ func (s *dialogServiceServer) JoinDialog(ctx context.Context, in *v1.JoinDialogR
 }
 
 func (s *dialogServiceServer) JoinDialogRevert(ctx context.Context, request *v1.JoinDialogRequest) (*v1.JoinDialogResponse, error) {
-	fmt.Println("JoinDialogRevert req => ", request)
 	resp := &v1.JoinDialogResponse{}
 	if err := s.dr.DeleteDialogUserByDialogIDAndUserID(uint(request.DialogId), []string{request.UserId}); err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
@@ -169,7 +168,7 @@ func (s *dialogServiceServer) JoinDialogRevert(ctx context.Context, request *v1.
 
 func (s *dialogServiceServer) GetUserDialogList(ctx context.Context, in *v1.GetUserDialogListRequest) (*v1.GetUserDialogListResponse, error) {
 	resp := &v1.GetUserDialogListResponse{}
-	ids, err := s.dr.GetUserDialogs(in.UserId)
+	ids, total, err := s.dr.GetUserDialogs(in.UserId, int(in.PageSize), int(in.PageNum))
 	if err != nil {
 		return resp, status.Error(codes.Code(code.DialogErrGetUserDialogListFailed.Code()), err.Error())
 	}
@@ -179,6 +178,7 @@ func (s *dialogServiceServer) GetUserDialogList(ctx context.Context, in *v1.GetU
 			nids = append(nids, uint32(id))
 		}
 	}
+	resp.Total = uint64(total)
 	resp.DialogIds = nids
 	return resp, nil
 }

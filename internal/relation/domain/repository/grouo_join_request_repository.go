@@ -6,11 +6,11 @@ type GroupJoinRequestRepository interface {
 	// 添加入群申请
 	AddJoinRequest(entity *entity.GroupJoinRequest) (*entity.GroupJoinRequest, error)
 	//获取用户入群申请列表
-	GetJoinRequestListByID(userId string) ([]*entity.GroupJoinRequest, error)
+	GetJoinRequestListByID(id uint32) ([]*entity.GroupJoinRequest, error)
 	//批量添加入群申请
 	AddJoinRequestBatch(entity []*entity.GroupJoinRequest) ([]*entity.GroupJoinRequest, error)
 	//获取用户入群申请列表
-	GetGroupJoinRequestListByUserId(userID string) ([]*entity.GroupJoinRequest, error)
+	GetGroupJoinRequestListByUserId(userID string, pageSize, pageNum int) ([]*entity.GroupJoinRequest, int64, error)
 	//根据群ID和用户ID获取用户入群申请列表
 	GetGroupJoinRequestByGroupIdAndUserId(groupID uint, userID string) (*entity.GroupJoinRequest, error)
 	// 管理用户入群申请状态

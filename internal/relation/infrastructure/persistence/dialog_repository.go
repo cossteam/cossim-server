@@ -63,14 +63,22 @@ func (g *DialogRepo) JoinBatchDialog(dialogID uint, userIDs []string) ([]*entity
 }
 
 // 查询用户对话列表
-func (g *DialogRepo) GetUserDialogs(userID string) ([]uint, error) {
+func (g *DialogRepo) GetUserDialogs(userID string, pageSize, pageNum int) ([]uint, int64, error) {
 	var dialogs []uint
-	if err := g.db.Model(&entity.DialogUser{}).
-		Where("user_id = ? AND is_show = ? AND deleted_at = 0", userID, entity.IsShow).
-		Pluck("dialog_id", &dialogs).Error; err != nil {
-		return nil, err
+	var total int64
+	query := g.db.Model(&entity.DialogUser{}).Where("user_id = ? AND is_show = ? AND deleted_at = 0", userID, entity.IsShow)
+	err := query.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
 	}
-	return dialogs, nil
+	err = query.Order("created_at DESC").
+		Limit(pageSize).
+		Offset((pageNum-1)*pageSize).
+		Pluck("dialog_id", &dialogs).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return dialogs, total, nil
 }
 
 func (g *DialogRepo) GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error) {

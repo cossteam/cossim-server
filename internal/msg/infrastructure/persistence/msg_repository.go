@@ -271,22 +271,40 @@ func (g *MsgRepo) LogicalDeleteGroupMessages(msgIds []uint32) error {
 		Update("deleted_at", time.Now()).Error
 }
 
-func (g *MsgRepo) GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, error) {
+func (g *MsgRepo) GetUserMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.UserMessage, int64, error) {
 	var userMessages []*entity.UserMessage
-	err := g.db.Model(&entity.UserMessage{}).
+	var total int64
+	query := g.db.Model(&entity.UserMessage{}).
 		Where("dialog_id = ? AND id > ? AND deleted_at = 0", dialogId, msgIds).
-		Order("id ASC").
-		Find(&userMessages).Error
-	return userMessages, err
+		Order("id ASC")
+	err := g.db.Model(&entity.UserMessage{}).
+		Where("dialog_id = ?  AND deleted_at = 0", dialogId).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = query.Find(&userMessages).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return userMessages, total, err
 }
 
-func (g *MsgRepo) GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, error) {
+func (g *MsgRepo) GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*entity.GroupMessage, int64, error) {
 	var groupMessages []*entity.GroupMessage
-	err := g.db.Model(&entity.GroupMessage{}).
+	var total int64
+	query := g.db.Model(&entity.GroupMessage{}).
 		Where("dialog_id = ? AND id > ? AND deleted_at = 0", dialogId, msgIds).
-		Order("id ASC").
-		Find(&groupMessages).Error
-	return groupMessages, err
+		Order("id ASC")
+	err := g.db.Model(&entity.GroupMessage{}).
+		Where("dialog_id = ? AND deleted_at = 0", dialogId, msgIds).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = query.Find(&groupMessages).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return groupMessages, total, err
 }
 
 func (g *MsgRepo) GetGroupMsgList(list dataTransformers.GroupMsgList) (*dataTransformers.GroupMsgListResponse, error) {
@@ -385,32 +403,46 @@ func (g *MsgRepo) PhysicalDeleteGroupMessagesByDialogID(dialogId uint32) error {
 	return g.db.Where("dialog_id = ?", dialogId).Delete(&entity.GroupMessage{}).Error
 }
 
-func (g *MsgRepo) GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, error) {
+func (g *MsgRepo) GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, int64, error) {
 	var userMessages []entity.UserMessage
-	err := g.db.Model(&entity.UserMessage{}).
+	var total int64
+	query := g.db.Model(&entity.UserMessage{}).
 		Where("dialog_id = ? AND is_burn_after_reading = ? AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).
-		Order("updated_at DESC").
-		Limit(pageSize).
+		Order("updated_at DESC")
+
+	err := g.db.Model(&entity.UserMessage{}).
+		Where("dialog_id = ?  AND deleted_at = 0", dialogId).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = query.Limit(pageSize).
 		Offset(pageSize * (pageNumber - 1)).
 		Find(&userMessages).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return userMessages, err
+	return userMessages, total, err
 }
 
-func (g *MsgRepo) GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, error) {
+func (g *MsgRepo) GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, int64, error) {
 	var groupMessages []entity.GroupMessage
-	err := g.db.Model(&entity.GroupMessage{}).
+	var total int64
+	query := g.db.Model(&entity.GroupMessage{}).
 		Where("dialog_id = ? AND deleted_at = 0", dialogId).
-		Order("updated_at DESC").
-		Limit(pageSize).
+		Order("updated_at DESC")
+
+	err := g.db.Model(&entity.GroupMessage{}).
+		Where("dialog_id = ? AND deleted_at = 0", dialogId).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	err = query.Limit(pageSize).
 		Offset(pageSize * (pageNumber - 1)).
 		Find(&groupMessages).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return groupMessages, err
+	return groupMessages, total, err
 }
 
 func (g *MsgRepo) GetLastUserMsgsByDialogIDs(dialogIds []uint) ([]*entity.UserMessage, error) {
@@ -444,7 +476,7 @@ func (g *MsgRepo) GetUserMsgIdBeforeMsgList(dialogId uint32, msgId uint32, pageS
 		Where("dialog_id = ? AND id < ? AND deleted_at = 0", dialogId, msgId)
 
 	var total int64
-	err := query.Count(&total).Error
+	err := g.db.Model(&entity.UserMessage{}).Where("dialog_id = ? AND deleted_at = 0", dialogId).Count(&total).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -463,7 +495,7 @@ func (g *MsgRepo) GetGroupMsgIdBeforeMsgList(dialogId uint32, msgId uint32, page
 		Where("dialog_id = ? AND id < ? AND deleted_at = 0", dialogId, msgId)
 
 	var total int64
-	err := query.Count(&total).Error
+	err := g.db.Model(&entity.GroupMessage{}).Where("dialog_id = ? AND deleted_at = 0", dialogId).Count(&total).Error
 	if err != nil {
 		return nil, 0, err
 	}

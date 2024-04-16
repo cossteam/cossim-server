@@ -542,7 +542,7 @@ func (s *Handler) GetUserMsgIdAfterMsgList(ctx context.Context, in *v1.GetUserMs
 	var resp = &v1.GetUserMsgIdAfterMsgListResponse{}
 	if len(in.List) > 0 {
 		for _, v := range in.List {
-			list, err := s.mr.GetUserMsgIdAfterMsgList(v.DialogId, v.MsgId)
+			list, total, err := s.mr.GetUserMsgIdAfterMsgList(v.DialogId, v.MsgId)
 			if err != nil {
 				return nil, err
 			}
@@ -559,6 +559,7 @@ func (s *Handler) GetUserMsgIdAfterMsgList(ctx context.Context, in *v1.GetUserMs
 						CreatedAt:  msg.CreatedAt,
 					})
 				}
+				mlist.Total = uint64(total)
 				mlist.DialogId = v.DialogId
 				resp.Messages = append(resp.Messages, mlist)
 			}
@@ -571,7 +572,7 @@ func (s *Handler) GetGroupMsgIdAfterMsgList(ctx context.Context, in *v1.GetGroup
 	var resp = &v1.GetGroupMsgIdAfterMsgListResponse{}
 	if len(in.List) > 0 {
 		for _, v := range in.List {
-			list, err := s.mr.GetGroupMsgIdAfterMsgList(v.DialogId, v.MsgId)
+			list, total, err := s.mr.GetGroupMsgIdAfterMsgList(v.DialogId, v.MsgId)
 			if err != nil {
 				return nil, err
 			}
@@ -588,6 +589,7 @@ func (s *Handler) GetGroupMsgIdAfterMsgList(ctx context.Context, in *v1.GetGroup
 						ReadCount: int32(msg.ReadCount),
 					})
 				}
+				mlist.Total = uint64(total)
 				mlist.DialogId = v.DialogId
 				resp.Messages = append(resp.Messages, mlist)
 			}
@@ -622,12 +624,11 @@ func (s *Handler) GetGroupMessageList(ctx context.Context, in *v1.GetGroupMsgLis
 				})
 			}
 		}
-
 		resp.Total = total
 		return resp, nil
 	}
 	list, err := s.mr.GetGroupMsgList(dataTransformers.GroupMsgList{
-		DialogId:   uint32(in.DialogId),
+		DialogId:   in.DialogId,
 		Content:    in.Content,
 		UserID:     in.UserId,
 		MsgType:    entity.UserMessageType(in.Type),
@@ -843,7 +844,7 @@ func (s *Handler) DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *
 
 func (s *Handler) GetUserLastMessageList(ctx context.Context, request *v1.GetLastMsgListRequest) (*v1.UserMessages, error) {
 	resp := &v1.UserMessages{}
-	msgs, err := s.mr.GetUserDialogLastMsgs(request.DialogId, int(request.PageNum), int(request.PageSize))
+	msgs, total, err := s.mr.GetUserDialogLastMsgs(request.DialogId, int(request.PageNum), int(request.PageSize))
 	if err != nil {
 		return nil, status.Error(codes.Code(code.GetMsgErrGetUserMsgByIDFailed.Code()), err.Error())
 	}
@@ -865,12 +866,13 @@ func (s *Handler) GetUserLastMessageList(ctx context.Context, request *v1.GetLas
 			})
 		}
 	}
+	resp.Total = uint64(total)
 	return resp, nil
 }
 
 func (s *Handler) GetGroupLastMessageList(ctx context.Context, request *v1.GetLastMsgListRequest) (*v1.GroupMessages, error) {
 	resp := &v1.GroupMessages{}
-	msgs, err := s.mr.GetGroupDialogLastMsgs(request.DialogId, int(request.PageNum), int(request.PageSize))
+	msgs, total, err := s.mr.GetGroupDialogLastMsgs(request.DialogId, int(request.PageNum), int(request.PageSize))
 	if err != nil {
 		return nil, status.Error(codes.Code(code.GetMsgErrGetUserMsgByIDFailed.Code()), err.Error())
 	}
@@ -893,6 +895,7 @@ func (s *Handler) GetGroupLastMessageList(ctx context.Context, request *v1.GetLa
 			})
 		}
 	}
+	resp.Total = uint64(total)
 	return resp, nil
 }
 

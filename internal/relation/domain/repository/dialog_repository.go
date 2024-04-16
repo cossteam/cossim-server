@@ -8,7 +8,7 @@ type DialogRepository interface {
 	CreateDialog(ownerID string, dialogType entity.DialogType, groupID uint) (*entity.Dialog, error)
 	JoinDialog(dialogID uint, userID string) (*entity.DialogUser, error)
 	JoinBatchDialog(dialogID uint, userIDs []string) ([]*entity.DialogUser, error)
-	GetUserDialogs(userID string) ([]uint, error)
+	GetUserDialogs(userID string, pageSize, pageNum int) ([]uint, int64, error)
 	GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
 	GetDialogById(dialogID uint) (*entity.Dialog, error)
 	GetDialogTargetUserId(dialogID uint, userID string) ([]string, error)
