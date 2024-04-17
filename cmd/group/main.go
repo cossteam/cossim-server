@@ -2,12 +2,14 @@ package main
 
 import (
 	"flag"
-	"github.com/cossim/coss-server/internal/group/interface/grpc"
-	"github.com/cossim/coss-server/internal/group/interface/http"
+	"github.com/cossim/coss-server/internal/group/interfaces"
+	"github.com/cossim/coss-server/internal/group/rpc"
+	"github.com/cossim/coss-server/internal/group/service"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/healthz"
+	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/manager/signals"
 	"strings"
 )
@@ -31,6 +33,8 @@ var (
 		discovery.CommonMQConfigKey,
 		discovery.CommonDtmConfigKey,
 	}, ",")
+
+	serviceName = "group"
 )
 
 func init() {
@@ -50,12 +54,12 @@ func init() {
 }
 
 func main() {
-	grpcService := &grpc.GroupServiceServer{}
+	grpcService := &rpc.GroupServiceServer{}
 	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
-		Http: ctrl.HTTPServer{
-			HTTPService:        &http.Handler{GrpcService: grpcService},
-			HealthCheckAddress: httpProbeAddr,
-		},
+		//Http: ctrl.HTTPServer{
+		//	HTTPService:        httpServer,
+		//	HealthCheckAddress: httpProbeAddr,
+		//},
 		Grpc: ctrl.GRPCServer{
 			GRPCService:         grpcService,
 			HealthzCheckAddress: grpcProbeAddr,
@@ -83,7 +87,19 @@ func main() {
 		panic(err)
 	}
 
-	if err = mgr.Start(signals.SetupSignalHandler()); err != nil {
+	ctx := signals.SetupSignalHandler()
+	logger := plog.NewDefaultLogger(serviceName, int8(mgr.GetConfig().Log.Level))
+	app := service.NewApplication(ctx, mgr.GetConfig(), logger)
+	hs := ctrl.HTTPServer{
+		HTTPService:        interfaces.NewHttpServer(app),
+		HealthCheckAddress: httpProbeAddr,
+	}
+
+	if err := mgr.SetupHTTPServerWithManager(&hs); err != nil {
+		panic(err)
+	}
+
+	if err = mgr.Start(ctx); err != nil {
 		panic(err)
 	}
 }

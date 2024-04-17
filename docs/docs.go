@@ -49,9 +49,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/group/avatar/modify": {
+        "/group": {
             "post": {
-                "description": "修改群聊头像",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "创建一个新的群聊",
                 "consumes": [
                     "application/json"
                 ],
@@ -59,174 +64,65 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Group"
-                ],
-                "summary": "修改群聊头像",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "头像文件",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "群聊id",
-                        "name": "group_id",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/group/create": {
-            "post": {
-                "description": "创建群聊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Group"
+                    "group"
                 ],
                 "summary": "创建群聊",
                 "parameters": [
                     {
-                        "description": "请求体",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.CreateGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/group/delete": {
-            "post": {
-                "description": "删除群聊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Group"
-                ],
-                "summary": "删除群聊",
-                "parameters": [
-                    {
-                        "description": "群聊id",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.DeleteGroupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/group/getBatch": {
-            "get": {
-                "description": "批量获取群聊信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Group"
-                ],
-                "summary": "批量获取群聊信息",
-                "parameters": [
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "description": "群聊ID列表",
-                        "name": "group_ids",
-                        "in": "query",
+                        "type": "string",
+                        "description": "Authentication header",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "创建一个新的群聊",
+                        "name": "requestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.CreateGroupRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "成功创建群聊",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response"
+                            "$ref": "#/definitions/interfaces.Group"
                         }
                     }
                 }
             }
         },
-        "/group/info": {
+        "/group/{id}": {
             "get": {
-                "description": "获取群聊信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+                "description": "根据群聊ID获取群聊的详细信息",
                 "tags": [
-                    "Group"
+                    "group"
                 ],
                 "summary": "获取群聊信息",
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "uint32",
                         "description": "群聊ID",
-                        "name": "group_id",
-                        "in": "query",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "返回群聊信息",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response"
+                            "$ref": "#/definitions/interfaces.GroupInfo"
                         }
                     }
                 }
-            }
-        },
-        "/group/update/": {
-            "post": {
-                "description": "更新群聊信息",
+            },
+            "put": {
+                "description": "更新现有群聊的信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -234,25 +130,68 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Group"
+                    "group"
                 ],
                 "summary": "更新群聊信息",
                 "parameters": [
                     {
-                        "description": "0(公开群);1(私密群)",
-                        "name": "request",
+                        "type": "integer",
+                        "description": "要更新的群聊ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新现有群聊的信息",
+                        "name": "requestBody",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UpdateGroupRequest"
+                            "$ref": "#/definitions/interfaces.UpdateGroupRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "成功更新群聊信息",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response"
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "群主解散创建的群聊",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "group"
+                ],
+                "summary": "删除群聊",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "uint32",
+                        "description": "要删除的群聊ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功删除群聊",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -2208,15 +2147,13 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "页码",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "页大小",
                         "name": "page_size",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -2609,15 +2546,13 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "页码",
                         "name": "page_num",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "页大小",
                         "name": "page_size",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3874,18 +3809,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_cossim_coss-server_internal_group_api_http_model.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType": {
             "type": "integer",
             "enum": [
@@ -4105,6 +4028,148 @@ const docTemplate = `{
                 "IsSilentNotification"
             ]
         },
+        "interfaces.CreateGroupRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "Avatar 群组头像",
+                    "type": "string"
+                },
+                "member": {
+                    "description": "Member 群组成员列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "description": "Name 群组名称",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type 群组类型",
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.Group": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "Avatar 群组头像",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Id 群聊ID",
+                    "type": "integer"
+                },
+                "members": {
+                    "description": "Members 群组成员列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "description": "Name 群聊名称",
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.GroupInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "Avatar 群组头像",
+                    "type": "string"
+                },
+                "creator_id": {
+                    "description": "CreatorId 创建者ID",
+                    "type": "string"
+                },
+                "dialog_id": {
+                    "description": "DialogId 对话ID",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "Id 群聊ID",
+                    "type": "integer"
+                },
+                "max_members_limit": {
+                    "description": "MaxMembersLimit 群组成员上限",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Name 群聊名称",
+                    "type": "string"
+                },
+                "preferences": {
+                    "$ref": "#/definitions/interfaces.Preferences"
+                },
+                "status": {
+                    "description": "Status 群组状态",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type 群组类型",
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.Preferences": {
+            "type": "object",
+            "properties": {
+                "entry_method": {
+                    "description": "EntryMethod 进入方式",
+                    "type": "integer"
+                },
+                "identity": {
+                    "description": "Identity 身份",
+                    "type": "integer"
+                },
+                "inviter": {
+                    "description": "Inviter 邀请者",
+                    "type": "string"
+                },
+                "joined_at": {
+                    "description": "JoinedAt 加入时间",
+                    "type": "integer"
+                },
+                "mute_end_time": {
+                    "description": "MuteEndTime 静音结束时间",
+                    "type": "integer"
+                },
+                "open_burn_after_reading": {
+                    "description": "OpenBurnAfterReading 阅后即焚开启",
+                    "type": "integer"
+                },
+                "remark": {
+                    "description": "Remark 备注",
+                    "type": "string"
+                },
+                "silent_notification": {
+                    "description": "SilentNotification 静默通知",
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.UpdateGroupRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "Avatar 新的群组头像",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name 新的群组名称",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type 新的群组类型",
+                    "type": "integer"
+                }
+            }
+        },
         "model.AbortUploadRequest": {
             "type": "object",
             "required": [
@@ -4244,30 +4309,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CreateGroupRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "member": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "description": "Type 群聊类型",
-                    "type": "integer"
-                }
-            }
-        },
         "model.DeleteBlacklistRequest": {
             "type": "object",
             "required": [
@@ -4303,17 +4344,6 @@ const docTemplate = `{
                 },
                 "id": {
                     "description": "公告ID",
-                    "type": "integer"
-                }
-            }
-        },
-        "model.DeleteGroupRequest": {
-            "type": "object",
-            "required": [
-                "group_id"
-            ],
-            "properties": {
-                "group_id": {
                     "type": "integer"
                 }
             }
@@ -5083,23 +5113,6 @@ const docTemplate = `{
                 "title": {
                     "description": "公告标题",
                     "type": "string"
-                }
-            }
-        },
-        "model.UpdateGroupRequest": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "group_id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "integer"
                 }
             }
         },

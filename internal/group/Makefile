@@ -55,6 +55,11 @@ gen: ## generate protobuf file
 	@go fmt ./...
 	@protoc-go-inject-tag -input=api/grpc/v1/*.pb.go
 
+.PHONY: gen-openapi
+gen-openapi:
+	@oapi-codegen -generate gin -o interfaces/openapi.gen.go -package interfaces api/openapi/group.yaml
+	@oapi-codegen -generate types -o interfaces/openapi.types.go -package interfaces api/openapi/group.yaml
+
 run: # Run Develop server
 	@go run ../../cmd/$(PROJECT_NAME)/main.go --config ./config/config.yaml
 

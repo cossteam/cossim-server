@@ -203,14 +203,6 @@ definitions:
       msg:
         type: string
     type: object
-  github_com_cossim_coss-server_internal_group_api_http_model.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      msg:
-        type: string
-    type: object
   github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType:
     enum:
     - 0
@@ -373,6 +365,108 @@ definitions:
     x-enum-varnames:
     - NotSilentNotification
     - IsSilentNotification
+  interfaces.CreateGroupRequest:
+    properties:
+      avatar:
+        description: Avatar 群组头像
+        type: string
+      member:
+        description: Member 群组成员列表
+        items:
+          type: string
+        type: array
+      name:
+        description: Name 群组名称
+        type: string
+      type:
+        description: Type 群组类型
+        type: integer
+    type: object
+  interfaces.Group:
+    properties:
+      avatar:
+        description: Avatar 群组头像
+        type: string
+      id:
+        description: Id 群聊ID
+        type: integer
+      members:
+        description: Members 群组成员列表
+        items:
+          type: string
+        type: array
+      name:
+        description: Name 群聊名称
+        type: string
+    type: object
+  interfaces.GroupInfo:
+    properties:
+      avatar:
+        description: Avatar 群组头像
+        type: string
+      creator_id:
+        description: CreatorId 创建者ID
+        type: string
+      dialog_id:
+        description: DialogId 对话ID
+        type: integer
+      id:
+        description: Id 群聊ID
+        type: integer
+      max_members_limit:
+        description: MaxMembersLimit 群组成员上限
+        type: integer
+      name:
+        description: Name 群聊名称
+        type: string
+      preferences:
+        $ref: '#/definitions/interfaces.Preferences'
+      status:
+        description: Status 群组状态
+        type: integer
+      type:
+        description: Type 群组类型
+        type: integer
+    type: object
+  interfaces.Preferences:
+    properties:
+      entry_method:
+        description: EntryMethod 进入方式
+        type: integer
+      identity:
+        description: Identity 身份
+        type: integer
+      inviter:
+        description: Inviter 邀请者
+        type: string
+      joined_at:
+        description: JoinedAt 加入时间
+        type: integer
+      mute_end_time:
+        description: MuteEndTime 静音结束时间
+        type: integer
+      open_burn_after_reading:
+        description: OpenBurnAfterReading 阅后即焚开启
+        type: integer
+      remark:
+        description: Remark 备注
+        type: string
+      silent_notification:
+        description: SilentNotification 静默通知
+        type: integer
+    type: object
+  interfaces.UpdateGroupRequest:
+    properties:
+      avatar:
+        description: Avatar 新的群组头像
+        type: string
+      name:
+        description: Name 新的群组名称
+        type: string
+      type:
+        description: Type 新的群组类型
+        type: integer
+    type: object
   model.AbortUploadRequest:
     properties:
       key:
@@ -468,22 +562,6 @@ definitions:
     - content
     - group_id
     type: object
-  model.CreateGroupRequest:
-    properties:
-      avatar:
-        type: string
-      member:
-        items:
-          type: string
-        type: array
-      name:
-        type: string
-      type:
-        description: Type 群聊类型
-        type: integer
-    required:
-    - name
-    type: object
   model.DeleteBlacklistRequest:
     properties:
       user_id:
@@ -509,13 +587,6 @@ definitions:
     required:
     - group_id
     - id
-    type: object
-  model.DeleteGroupRequest:
-    properties:
-      group_id:
-        type: integer
-    required:
-    - group_id
     type: object
   model.DeleteRecordRequest:
     properties:
@@ -1037,17 +1108,6 @@ definitions:
     - id
     - title
     type: object
-  model.UpdateGroupRequest:
-    properties:
-      avatar:
-        type: string
-      group_id:
-        type: integer
-      name:
-        type: string
-      type:
-        type: integer
-    type: object
   model.UserInfo:
     properties:
       user_avatar:
@@ -1191,143 +1251,102 @@ paths:
       summary: 发送全体通知
       tags:
       - Admin
-  /group/avatar/modify:
+  /group:
     post:
       consumes:
       - application/json
-      description: 修改群聊头像
+      description: 创建一个新的群聊
       parameters:
-      - description: 头像文件
-        in: formData
-        name: file
+      - description: Authentication header
+        in: header
+        name: Authorization
         required: true
-        type: file
-      - description: 群聊id
-        in: formData
-        name: group_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response'
-      summary: 修改群聊头像
-      tags:
-      - Group
-  /group/create:
-    post:
-      consumes:
-      - application/json
-      description: 创建群聊
-      parameters:
-      - description: 请求体
+        type: string
+      - description: 创建一个新的群聊
         in: body
-        name: request
+        name: requestBody
         required: true
         schema:
-          $ref: '#/definitions/model.CreateGroupRequest'
+          $ref: '#/definitions/interfaces.CreateGroupRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: 成功创建群聊
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response'
+            $ref: '#/definitions/interfaces.Group'
+      security:
+      - ApiKeyAuth: []
       summary: 创建群聊
       tags:
-      - Group
-  /group/delete:
-    post:
+      - group
+  /group/{id}:
+    delete:
       consumes:
       - application/json
-      description: 删除群聊
+      description: 群主解散创建的群聊
       parameters:
-      - description: 群聊id
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.DeleteGroupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response'
-      summary: 删除群聊
-      tags:
-      - Group
-  /group/getBatch:
-    get:
-      consumes:
-      - application/json
-      description: 批量获取群聊信息
-      parameters:
-      - collectionFormat: csv
-        description: 群聊ID列表
-        in: query
-        items:
-          type: string
-        name: group_ids
-        required: true
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response'
-      summary: 批量获取群聊信息
-      tags:
-      - Group
-  /group/info:
-    get:
-      consumes:
-      - application/json
-      description: 获取群聊信息
-      parameters:
-      - description: 群聊ID
-        in: query
-        name: group_id
+      - description: 要删除的群聊ID
+        format: uint32
+        in: path
+        name: id
         required: true
         type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: 成功删除群聊
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response'
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除群聊
+      tags:
+      - group
+    get:
+      description: 根据群聊ID获取群聊的详细信息
+      parameters:
+      - description: 群聊ID
+        format: uint32
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: 返回群聊信息
+          schema:
+            $ref: '#/definitions/interfaces.GroupInfo'
       summary: 获取群聊信息
       tags:
-      - Group
-  /group/update/:
-    post:
+      - group
+    put:
       consumes:
       - application/json
-      description: 更新群聊信息
+      description: 更新现有群聊的信息
       parameters:
-      - description: 0(公开群);1(私密群)
+      - description: 要更新的群聊ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新现有群聊的信息
         in: body
-        name: request
+        name: requestBody
         required: true
         schema:
-          $ref: '#/definitions/model.UpdateGroupRequest'
+          $ref: '#/definitions/interfaces.UpdateGroupRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: 成功更新群聊信息
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_group_api_http_model.Response'
+            type: string
       summary: 更新群聊信息
       tags:
-      - Group
+      - group
   /live/group/create:
     post:
       consumes:
@@ -2558,12 +2577,10 @@ paths:
       - description: 页码
         in: query
         name: page_num
-        required: true
         type: integer
       - description: 页大小
         in: query
         name: page_size
-        required: true
         type: integer
       - description: Bearer JWT
         in: header
@@ -2818,12 +2835,10 @@ paths:
       - description: 页码
         in: query
         name: page_num
-        required: true
         type: integer
       - description: 页大小
         in: query
         name: page_size
-        required: true
         type: integer
       produces:
       - application/json

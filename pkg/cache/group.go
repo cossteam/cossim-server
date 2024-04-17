@@ -25,6 +25,7 @@ type GroupCache interface {
 	DeleteGroup(ctx context.Context, groupID ...uint32) error
 	SetGroup(ctx context.Context, groups ...*groupgrpcv1.Group) error
 	DeleteAllCache(ctx context.Context) error
+	Close() error
 }
 
 var _ GroupCache = &GroupCacheRedis{}
