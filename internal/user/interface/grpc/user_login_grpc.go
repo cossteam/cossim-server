@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
@@ -78,7 +77,7 @@ func (s *UserServiceServer) GetUserLoginByDriverIdAndUserId(ctx context.Context,
 			return resp, status.Error(codes.Code(code.UserErrGetUserLoginByDriverIdAndUserIdFailed.Code()), err.Error())
 		}
 	}
-	fmt.Println("GetUserLoginByDriverIdAndUserId info => ", info)
+
 	if info != nil {
 		resp.UserId = info.UserId
 		resp.Token = info.Token
