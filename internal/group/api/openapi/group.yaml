@@ -1,0 +1,313 @@
+openapi: 3.0.3
+info:
+  title: 群组服务 API
+  description: 这是一个群组服务的 API，用于创建、删除、获取和更新群聊信息。
+  version: 1.0.0
+servers:
+  - url: http://api.example.com
+tags:
+  - name: group
+    description: Everything about Group
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+paths:
+  /group:
+    post:
+      tags:
+        - group
+      summary: 创建群聊
+      description: 创建一个新的群聊
+      operationId: createGroup
+      requestBody:
+        description: 创建一个新的群聊
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+        required: true
+      responses:
+        '200':
+          description: 成功创建群聊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateGroupResponse'
+    get:
+      tags:
+        - group
+      summary: 获取所有群聊信息
+      description: 获取系统中所有群聊的信息列表
+      operationId: getAllGroup
+      responses:
+        '200':
+          description: 返回所有群聊信息
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+  /group/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: 群聊ID
+        schema:
+          type: integer
+          format: uint32
+    get:
+      tags:
+        - group
+      summary: 获取群聊信息
+      description: 根据群聊ID获取群聊的详细信息
+      operationId: getGroup
+      responses:
+        '200':
+          description: 返回群聊信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInfo'
+    put:
+      tags:
+        - group
+      summary: 更新群聊信息
+      description: 更新现有群聊的信息
+      operationId: updateGroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 要更新的群聊ID
+          schema:
+            type: integer
+            format: uint32
+      requestBody:
+        description: 更新现有群聊的信息
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupRequest'
+        required: true
+      responses:
+        '200':
+          description: 成功更新群聊信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInfo'
+    delete:
+      tags:
+        - group
+      summary: 删除群聊
+      description: 删除系统中指定的群聊
+      operationId: deleteGroup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 要删除的群聊ID
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        '200':
+          description: 成功删除群聊
+components:
+  schemas:
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint32
+          description: 群聊ID
+        name:
+          type: string
+          description: 群聊名称
+        avatar:
+          type: string
+          description: 群组头像
+        members:
+          type: array
+          items:
+            type: string
+          description: 群组成员列表
+    CreateGroupRequest:
+      type: object
+      properties:
+        type:
+          type: integer
+          format: uint32
+          description: 群组类型
+          x-go-type-skip-optional-pointer: true
+        name:
+          type: string
+          description: 群组名称
+          x-go-type-skip-optional-pointer: true
+        avatar:
+          type: string
+          description: 群组头像
+          x-go-type-skip-optional-pointer: true
+        member:
+          type: array
+          items:
+            type: string
+          description: 群组成员列表
+          x-go-type-skip-optional-pointer: true
+      required:
+        - name
+    CreateGroupResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint32
+          description: 群聊ID
+          x-go-type-skip-optional-pointer: true
+        avatar:
+          type: string
+          description: 群组头像
+          x-go-type-skip-optional-pointer: true
+        name:
+          type: string
+          description: 群聊名称
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          format: uint32
+          description: 群组类型
+          x-go-type-skip-optional-pointer: true
+        status:
+          type: integer
+          description: 群组状态
+          x-go-type-skip-optional-pointer: true
+        max_members_limit:
+          type: integer
+          description: 群组成员上限
+          x-go-type-skip-optional-pointer: true
+        creator_id:
+          type: string
+          description: 创建者ID
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          format: uint32
+          description: 对话ID
+          x-go-type-skip-optional-pointer: true
+    DeleteGroupRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint32
+          description: 要删除的群组ID
+      required:
+        - id
+    GroupInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint32
+          description: 群聊ID
+          x-go-type-skip-optional-pointer: true
+        avatar:
+          type: string
+          description: 群组头像
+          x-go-type-skip-optional-pointer: true
+        name:
+          type: string
+          description: 群聊名称
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          format: uint32
+          description: 群组类型
+          x-go-type-skip-optional-pointer: true
+        status:
+          type: integer
+          description: 群组状态
+          x-go-type-skip-optional-pointer: true
+        max_members_limit:
+          type: integer
+          description: 群组成员上限
+          x-go-type-skip-optional-pointer: true
+        creator_id:
+          type: string
+          description: 创建者ID
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          format: uint32
+          description: 对话ID
+          x-go-type-skip-optional-pointer: true
+        preferences:
+          $ref: '#/components/schemas/Preferences'
+    Preferences:
+      type: object
+      properties:
+        entry_method:
+          type: integer
+          format: uint
+          description: 进入方式
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        joined_at:
+          type: integer
+          format: int64
+          description: 加入时间
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        mute_end_time:
+          type: integer
+          format: int64
+          description: 静音结束时间
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        silent_notification:
+          type: integer
+          format: uint
+          description: 静默通知
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        inviter:
+          type: string
+          description: 邀请者
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        remark:
+          type: string
+          description: 备注
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        open_burn_after_reading:
+          type: integer
+          format: uint
+          description: 阅后即焚开启
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        identity:
+          type: integer
+          format: uint
+          description: 身份
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    UpdateGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 新的群组名称
+          x-go-type-skip-optional-pointer: true
+        avatar:
+          type: string
+          description: 新的群组头像
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          format: uint32
+          description: 新的群组类型
+          x-go-type-skip-optional-pointer: true

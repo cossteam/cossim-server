@@ -888,7 +888,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 //	return nil
 //}
 //
-//func (s *Service) updateCacheDialogFieldValue(key string, dialogId uint32, field string, value interface{}) error {
+//func (s *Service) updateCacheDialogFieldValue(key string, dialogId uint32, field string, value interfaces{}) error {
 //	exists, err := s.redisClient.ExistsKey(key)
 //	if err != nil {
 //		return err

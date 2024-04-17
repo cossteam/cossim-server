@@ -207,8 +207,8 @@ func (s *UserServiceServer) UserInfo(ctx context.Context, request *api.UserInfoR
 	userInfo, err := s.ur.GetUserInfoByUid(request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			//return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
-			return resp, status.Error(codes.Aborted, err.Error())
+			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
+			//return resp, status.Error(codes.Aborted, err.Error())
 		}
 		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
