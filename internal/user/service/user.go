@@ -104,7 +104,12 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
-	var lastLoginTime = userLogin.LoginTime
+	id, err := s.userLoginService.GetUserLoginByUserId(ctx, &usergrpcv1.GetUserLoginByUserIdRequest{UserId: resp.UserId})
+	if err != nil {
+		return nil, "", err
+	}
+
+	var lastLoginTime = id.LoginTime
 	fristLogin := false
 	if userLogin != nil {
 		if userLogin.DriverId == "" {

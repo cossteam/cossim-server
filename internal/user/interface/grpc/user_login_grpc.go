@@ -128,6 +128,7 @@ func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, in *v1.Get
 		resp.DriverToken = info.DriverToken
 		resp.Platform = info.Platform
 		resp.ClientType = info.ClientType
+		resp.LoginTime = info.LastAt
 	}
 	return resp, nil
 }

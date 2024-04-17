@@ -57,7 +57,7 @@ func (u UserLoginRepo) GetUserDriverTokenByUserId(userId string) ([]string, erro
 
 func (u UserLoginRepo) GetUserByUserId(userId string) (*entity.UserLogin, error) {
 	var user *entity.UserLogin
-	err := u.db.Where("user_id = ?", userId).First(&user).Error
+	err := u.db.Where("user_id = ?", userId).Order("created_at DESC").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
