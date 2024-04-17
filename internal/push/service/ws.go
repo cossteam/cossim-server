@@ -168,11 +168,14 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 
 	}
 	if msg.PushOffline && !pushd {
-		//不在线则推送到消息队列
-		err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
-		if err != nil {
-			s.logger.Error("发布消息失败", zap.Error(err))
-		}
+		go func() {
+			//不在线则推送到消息队列
+			err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
+			if err != nil {
+				s.logger.Error("发布消息失败", zap.Error(err))
+			}
+		}()
+
 	}
 
 	return resp, nil
@@ -199,11 +202,12 @@ func (s *Service) PushWsBatch(ctx context.Context, request *pushgrpcv1.PushWsBat
 			}
 			if msg.PushOffline && ui == nil {
 				//不在线则推送到消息队列
-				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
-				if err != nil {
-					s.logger.Error("发布消息失败：", zap.Error(err))
-					continue
-				}
+				go func() {
+					err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
+					if err != nil {
+						s.logger.Error("发布消息失败：", zap.Error(err))
+					}
+				}()
 				continue
 			}
 
@@ -255,12 +259,14 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 				continue
 			}
 			if msg.PushOffline && ui == nil {
-				//不在线则推送到消息队列
-				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
-				if err != nil {
-					s.logger.Error("发布消息失败：", zap.Error(err))
-					continue
-				}
+				go func() {
+
+					//不在线则推送到消息队列
+					err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
+					if err != nil {
+						s.logger.Error("发布消息失败：", zap.Error(err))
+					}
+				}()
 				continue
 			}
 

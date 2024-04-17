@@ -47,6 +47,15 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
+	id, err := s.userLoginService.GetUserLoginByUserId(ctx, &usergrpcv1.GetUserLoginByUserIdRequest{UserId: resp.UserId})
+	if err != nil {
+		s.logger.Error("failed to get user login by user id", zap.Error(err))
+	}
+	var lastLoginTime int64 = 0
+	if id != nil {
+		lastLoginTime = id.LoginTime
+	}
+
 	token, err := utils.GenerateToken(resp.UserId, resp.Email, req.DriverId, resp.PublicKey)
 	if err != nil {
 		s.logger.Error("failed to generate user token", zap.Error(err))
@@ -104,12 +113,6 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
-	id, err := s.userLoginService.GetUserLoginByUserId(ctx, &usergrpcv1.GetUserLoginByUserIdRequest{UserId: resp.UserId})
-	if err != nil {
-		return nil, "", err
-	}
-
-	var lastLoginTime = id.LoginTime
 	fristLogin := false
 	if userLogin != nil {
 		if userLogin.DriverId == "" {
