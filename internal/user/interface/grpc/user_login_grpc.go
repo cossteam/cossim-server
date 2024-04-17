@@ -119,7 +119,7 @@ func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, in *v1.Get
 	var resp = &v1.UserLogin{}
 	info, err := s.ulr.GetUserByUserId(in.UserId)
 	if err != nil {
-		return nil, status.Error(codes.Code(code.UserErrCreateUserRollbackFailed.Code()), err.Error())
+		return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 	if info != nil {
 		resp.UserId = info.UserId
