@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,7 @@ var _ long_conn.LongConn = &JSWebSocket{}
 type JSWebSocket struct {
 	ConnType int
 	Conn     *websocket.Conn
+	lock     *sync.Mutex
 }
 
 func (w *JSWebSocket) CheckHeartbeat(interval time.Duration) {
@@ -29,12 +31,15 @@ func (w *JSWebSocket) CheckHeartbeat(interval time.Duration) {
 	for {
 		select {
 		case <-ticker.C:
+			w.lock.Lock()
 			// 发送 ping 消息
 			err := w.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
 				log.Printf("Failed to send ping: %v\n", err)
+				w.lock.Unlock()
 				return
 			}
+			w.lock.Unlock()
 		}
 	}
 }
@@ -64,7 +69,15 @@ func (w *JSWebSocket) Close() error {
 }
 
 func (w *JSWebSocket) WriteMessage(messageType int, message []byte) error {
-	return w.Conn.WriteMessage(messageType, message)
+	w.lock.Lock()
+	err := w.Conn.WriteMessage(messageType, message)
+	if err != nil {
+		w.lock.Unlock()
+		return err
+	}
+	w.lock.Unlock()
+
+	return nil
 }
 
 func (w *JSWebSocket) ReadMessage() (int, []byte, error) {
