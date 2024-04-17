@@ -17,7 +17,6 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
-	"log"
 	"strconv"
 	"time"
 )
@@ -202,7 +201,7 @@ func (s *Service) PushWsBatch(ctx context.Context, request *pushgrpcv1.PushWsBat
 				//不在线则推送到消息队列
 				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
 				if err != nil {
-					fmt.Println("发布消息失败：", err)
+					s.logger.Error("发布消息失败：", zap.Error(err))
 					continue
 				}
 				continue
@@ -240,7 +239,7 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 		}
 
 		if s.enc == nil {
-			log.Println("加密客户端错误", zap.Error(nil))
+			s.logger.Error("加密客户端错误", zap.Error(nil))
 			return nil, fmt.Errorf("加密客户端错误%v", zap.Error(nil))
 		}
 
@@ -259,7 +258,7 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 				//不在线则推送到消息队列
 				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
 				if err != nil {
-					fmt.Println("发布消息失败：", err)
+					s.logger.Error("发布消息失败：", zap.Error(err))
 					continue
 				}
 				continue
@@ -279,37 +278,37 @@ func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c 
 
 	js, err := wsMsgToJSON(msg, false)
 	if err != nil {
-		fmt.Println("转换消息失败：", err)
+		s.logger.Error("上线失败：", zap.Error(err))
 		return
 	}
 	if s.enc == nil {
-		log.Println("加密客户端错误", zap.Error(nil))
+		s.logger.Error("加密客户端错误", zap.Error(nil))
 		return
 	}
 
 	message, err := s.enc.GetSecretMessage(ctx, string(js), msg.Uid)
 	if err != nil {
-		fmt.Println("加密失败：", err)
+		s.logger.Error("上线失败：", zap.Error(err))
 		return
 	}
 
 	//上线推送消息
 	err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 	if err != nil {
-		fmt.Println("发送消息失败：", err)
+		s.logger.Error("上线失败：", zap.Error(err))
 		return
 	}
 
 	err = s.pushAllFriendOnlineStatus(ctx, c, msg.Uid)
 	if err != nil {
-		fmt.Println("推送好友在线状态失败：", err)
+		s.logger.Error("上线失败：", zap.Error(err))
 		return
 	}
 
 	//修改在线状态
 	err = s.addUserWsCount(ctx, msg.Uid)
 	if err != nil {
-		fmt.Println("修改在线状态失败：", err)
+		s.logger.Error("上线失败：", zap.Error(err))
 		return
 	}
 
@@ -325,7 +324,7 @@ func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c 
 		var a interface{}
 		err = json.Unmarshal(msg2, &a)
 		if err != nil {
-			fmt.Println("解析失败:", err)
+			s.logger.Error("上线失败：", zap.Error(err))
 			return
 		}
 
@@ -357,7 +356,7 @@ func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c 
 func (s *Service) wsOfflineClients(ctx context.Context, uid string) {
 	err := s.reduceUserWsCount(ctx, uid)
 	if err != nil {
-		fmt.Println("修改在线状态失败：", err)
+		s.logger.Error("修改在线状态失败：", zap.Error(err))
 		return
 	}
 }
@@ -415,7 +414,6 @@ func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%s账号当前还有%d个客户端在线", uid, num)
 		if num == 1 {
 			//给好友推送下线
 			err := s.pushFriendStatus(ctx, offlineEvent, uid)
@@ -454,23 +452,21 @@ func (s *Service) pushFriendStatus(ctx context.Context, v status, uid string) er
 			msg := &pushgrpcv1.WsMsg{Uid: friend.UserId, Event: pushgrpcv1.WSEventType_FriendUpdateOnlineStatusEvent, Rid: 0, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}
 			js, _ := wsMsgToJSON(msg, false)
 			if s.enc == nil {
-				log.Println("加密客户端错误", zap.Error(nil))
+				s.logger.Error("推送上线通知失败：", zap.Error(err))
 				continue
 			}
 
 			if s.enc == nil {
-				log.Println("加密客户端错误", zap.Error(nil))
 				return fmt.Errorf("加密客户端错误%v", zap.Error(nil))
 			}
 
 			message, err := s.enc.GetSecretMessage(ctx, string(js), uid)
 			if err != nil {
-				fmt.Println("加密失败：", err)
+				s.logger.Error("推送上线通知失败：", zap.Error(err))
 				continue
 			}
 
-			for key, i2 := range s.Buckets {
-				fmt.Println("bucket =>", key)
+			for _, i2 := range s.Buckets {
 				err := i2.SendMessage(friend.UserId, message)
 				if err != nil {
 					s.logger.Error("推送消息失败", zap.Error(err))
@@ -484,12 +480,9 @@ func (s *Service) pushFriendStatus(ctx context.Context, v status, uid string) er
 
 // 获取所有好友在线状态
 func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c *connect.WebsocketClient, uid string) error {
-	fmt.Println("pushAllFriendOnlineStatus", s.relationService)
 	if c.Conn.IsNil() || c.Conn.WriteMessage(websocket.PingMessage, nil) != nil {
-		log.Println("连接已关闭，不再推送消息")
 		return nil
 	}
-	fmt.Println("relationService", s.relationService)
 	//查询所有好友
 	list, err := s.relationService.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: uid})
 	if err != nil {
@@ -532,12 +525,11 @@ func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c *connect.Webs
 	msg := &pushgrpcv1.WsMsg{Uid: uid, Event: pushgrpcv1.WSEventType_PushAllFriendOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}
 	js, _ := wsMsgToJSON(msg, true)
 	if s.enc == nil {
-		log.Println("加密客户端错误", zap.Error(nil))
+		s.logger.Error("转换失败：", zap.Error(err))
 		return nil
 	}
 	message, err := s.enc.GetSecretMessage(ctx, string(js), uid)
 	if err != nil {
-		fmt.Println("加密失败：", err)
 		return fmt.Errorf("加密失败：%v", err)
 	}
 	err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))

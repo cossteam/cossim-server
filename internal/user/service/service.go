@@ -13,7 +13,6 @@ import (
 	"github.com/cossim/coss-server/pkg/email"
 	"github.com/cossim/coss-server/pkg/email/smtp"
 	plog "github.com/cossim/coss-server/pkg/log"
-	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/rs/xid"
@@ -94,14 +93,6 @@ func (s *Service) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) e
 
 func (s *Service) setupRedisClient() {
 	//s.redisClient = cache.NewRedisClient(s.ac.Redis.Addr(), s.ac.Redis.Password)
-}
-
-func setRabbitMQProvider(ac *pkgconfig.AppConfig) *msg_queue.RabbitMQ {
-	rmq, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", ac.MessageQueue.Username, ac.MessageQueue.Password, ac.MessageQueue.Addr()))
-	if err != nil {
-		panic(err)
-	}
-	return rmq
 }
 
 func setMinIOProvider(ac *pkgconfig.AppConfig) storage.StorageProvider {
