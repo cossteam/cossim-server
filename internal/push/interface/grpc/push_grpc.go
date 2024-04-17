@@ -9,7 +9,6 @@ import (
 
 func (h *Handler) Push(ctx context.Context, request *v1.PushRequest) (*v1.PushResponse, error) {
 	resp := &v1.PushResponse{}
-	fmt.Println("Push request received")
 	switch request.Type {
 	case v1.Type_Ws:
 		bytes := request.GetData()

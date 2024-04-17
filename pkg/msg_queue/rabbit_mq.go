@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"github.com/cossim/coss-server/pkg/encryption"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"sync"
 )
 
 type RabbitMQ struct {
 	connection *amqp.Connection
 	channel    *amqp.Channel
+	lock       *sync.Mutex
 }
 
 // NewRabbitMQ 用于创建 RabbitMQ 结构实例
@@ -29,6 +31,7 @@ func NewRabbitMQ(url string) (*RabbitMQ, error) {
 	return &RabbitMQ{
 		connection: conn,
 		channel:    ch,
+		lock:       &sync.Mutex{},
 	}, nil
 }
 func (r *RabbitMQ) NewChannel() (*amqp.Channel, error) {
@@ -55,6 +58,8 @@ func (r *RabbitMQ) Close() {
 
 // PublishMessage 用于发布消息
 func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	q, err := r.channel.QueueDeclare(
 		queueName,
 		false,
@@ -64,7 +69,6 @@ func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
 		nil,
 	)
 	if err != nil {
-		fmt.Println("Failed to declare a queue :", err)
 		return err
 	}
 	var msg []byte
@@ -87,6 +91,8 @@ func (r *RabbitMQ) PublishMessage(queueName string, body interface{}) error {
 }
 
 func (r *RabbitMQ) PublishEncryptedMessage(queueName string, body string) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	q, err := r.channel.QueueDeclare(
 		queueName,
 		false,
@@ -96,7 +102,6 @@ func (r *RabbitMQ) PublishEncryptedMessage(queueName string, body string) error 
 		nil,
 	)
 	if err != nil {
-		fmt.Println("Failed to declare a queue :", err)
 		return err
 	}
 	var enMsg encryption.SecretResponse
@@ -172,6 +177,8 @@ func (r *RabbitMQ) ConsumeMessagesWithChan(queueName string) (<-chan amqp.Delive
 
 // 删除空闲的队列和资源
 func (r *RabbitMQ) DeleteEmptyQueue(queueName string) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	//channel, err := r.NewChannel()
 	_, err := r.channel.QueueDelete(queueName, true, false, false)
 	if err != nil {
@@ -181,6 +188,8 @@ func (r *RabbitMQ) DeleteEmptyQueue(queueName string) error {
 }
 
 func (r *RabbitMQ) ConsumeServiceMessages(queueName ServiceType, exchangeName string) (<-chan amqp.Delivery, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	//channel, err := r.NewChannel()
 	err := r.channel.ExchangeDeclare(
 		exchangeName,
@@ -225,6 +234,8 @@ func (r *RabbitMQ) PublishServiceMessage(serviceName, targetName ServiceType, ex
 	//if err != nil {
 	//	return err
 	//}
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	err := r.channel.ExchangeDeclare(
 		exchangeName,
 		amqp.ExchangeDirect,
@@ -246,7 +257,6 @@ func (r *RabbitMQ) PublishServiceMessage(serviceName, targetName ServiceType, ex
 		nil,
 	)
 	if err != nil {
-		fmt.Println("Failed to declare a queue :", err)
 		return err
 	}
 
