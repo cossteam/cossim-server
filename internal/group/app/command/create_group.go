@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
+	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/domain/group"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
@@ -121,6 +122,15 @@ func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (Creat
 		}
 	}
 
+	// TODO 暂时写死，应该在 group grpc 定义类型大小
+	var maxMembersLimit int
+	switch groupgrpcv1.GroupType(cmd.Type) {
+	case groupgrpcv1.GroupType_TypeEncrypted:
+		maxMembersLimit = 1000
+	default:
+		maxMembersLimit = 500
+	}
+
 	var groupID uint32
 	// 创建 DTM 分布式事务工作流
 	workflow.InitGrpc(h.dtmGrpcServer, h.groupServiceAddr, grpc.NewServer())
@@ -131,7 +141,7 @@ func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (Creat
 		if err := h.groupRepo.Create(ctx, &group.Group{
 			Type:            group.Type(cmd.Type),
 			Status:          group.StatusNormal,
-			MaxMembersLimit: cmd.MaxMember,
+			MaxMembersLimit: maxMembersLimit,
 			CreatorID:       cmd.CreateID,
 			Name:            cmd.Name,
 			Avatar:          cmd.Avatar,
