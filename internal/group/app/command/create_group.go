@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/group/api/http/model"
+	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/domain/group"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
@@ -122,12 +122,13 @@ func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (Creat
 		}
 	}
 
+	// TODO 暂时写死，应该在 group grpc 定义类型大小
 	var maxMembersLimit int
-	switch api.GroupType(cmd.Type) {
-	case api.GroupType_TypeEncrypted:
-		maxMembersLimit = model.EncryptedGroup
+	switch groupgrpcv1.GroupType(cmd.Type) {
+	case groupgrpcv1.GroupType_TypeEncrypted:
+		maxMembersLimit = 1000
 	default:
-		maxMembersLimit = model.DefaultGroup
+		maxMembersLimit = 500
 	}
 
 	var groupID uint32
