@@ -429,6 +429,11 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 	}
 
 	if s.cacheEnable {
+		ids := append([]string{request.UserID}, request.Member...)
+		if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, ids...); err != nil {
+			log.Printf("delete relation cache failed, err: %v", err)
+			//return nil, err
+		}
 		//if err := s.cache.DeleteRelationByGroupID(ctx, request.GroupId); err != nil {
 		//	log.Printf("delete relation cache failed, err: %v", err)
 		//}
