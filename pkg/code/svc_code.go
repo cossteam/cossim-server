@@ -34,6 +34,7 @@ var (
 	UserErrGetUserDriverTokenByUserIdFailed      = New(10029, "获取用户登录设备令牌失败")
 	UserErrCossIdAlreadyRegistered               = New(10030, "coss_id 已被注册")
 	UserErrCossIdFormat                          = New(10031, "coss_id错误格式(只能包含大小写字母、数字和下划线，并且长度在10到20个字符之间)")
+	UserErrDeleteUserLoginByIDFailed             = New(10032, "删除用户登录信息失败")
 
 	// 文件存储服务状态码定义
 	StorageErrParseFilePathFailed    = New(11000, "解析文件路径失败")

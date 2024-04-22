@@ -266,7 +266,6 @@ func (s *UserServiceServer) GetBatchUserInfo(ctx context.Context, request *api.G
 
 func (s *UserServiceServer) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
-	userInfo := &entity.User{}
 	userInfo, err := s.ur.GetUserInfoByEmail(request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -289,6 +288,7 @@ func (s *UserServiceServer) GetUserInfoByEmail(ctx context.Context, request *api
 		Signature: userInfo.Signature,
 		Status:    api.UserStatus(userInfo.Status),
 		CossId:    userInfo.CossID,
+		PublicKey: userInfo.PublicKey,
 	}
 	return resp, nil
 }

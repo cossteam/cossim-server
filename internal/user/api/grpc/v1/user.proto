@@ -79,6 +79,8 @@ message UserInfoResponse {
   UserStatus Status = 7;
   // @inject_tag: json:"coss_id"
   string CossId=8;
+  // @inject_tag: json:"public_key"
+  string PublicKey = 9;
 }
 
 message GetBatchUserInfoRequest {
