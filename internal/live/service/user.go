@@ -805,7 +805,6 @@ func (s *Service) getRedisUserRoom(ctx context.Context, uid string) (*model.Room
 
 	roomInfo, err := s.redisClient.GetKey(liveRoomPrefix + d1.Room)
 	if err != nil {
-		fmt.Println("d1.Room => ", d1.Room)
 		if strings.Contains(err.Error(), "redis: nil") {
 			if err := s.redisClient.DelKey(liveUserPrefix + uid); err != nil {
 				s.logger.Error("获取用户通话信息失败后删除房间失败", zap.Error(err))

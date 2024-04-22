@@ -272,8 +272,8 @@ func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID s
 		return nil, err
 	}
 
-	relations := make([]*relationgrpcv1.GetUserRelationResponse, len(vals))
-	for i, val := range vals {
+	relations := make([]*relationgrpcv1.GetUserRelationResponse, 0)
+	for _, val := range vals {
 		if val == nil {
 			continue
 		}
@@ -283,7 +283,11 @@ func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID s
 			return nil, err
 		}
 
-		relations[i] = relation
+		relations = append(relations, relation)
+	}
+
+	if len(relations) == 0 {
+		return nil, ErrCacheContentEmpty
 	}
 
 	return relations, nil
