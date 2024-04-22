@@ -123,3 +123,12 @@ func Code(code int) Codes {
 	// 如果找不到对应的错误码，返回一个默认的 InternalServerError
 	return InternalServerError.Reason(fmt.Errorf("unknown error code: %d", code))
 }
+
+func IsCode(err error, c Codes) bool {
+	//var e Codes
+	var e Codes
+	if errors.As(err, &e) {
+		return e.Code() == c.Code()
+	}
+	return false
+}
