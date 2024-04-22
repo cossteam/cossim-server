@@ -563,6 +563,15 @@ message SendGroupMsgRevertResponse{
 
 }
 
+message DeleteUserMsgByIDRequest{
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+message DeleteUserMsgByIDResponse{
+
+}
+
 service MsgService {
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
@@ -646,4 +655,6 @@ service MsgService {
   rpc DeleteUserMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
   //根据对话id删除群聊消息回滚
   rpc DeleteGroupMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+  //根据消息id删除私聊消息
+  rpc DeleteUserMessageById(DeleteUserMsgByIDRequest) returns (DeleteUserMsgByIDResponse);
 }

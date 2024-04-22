@@ -62,12 +62,24 @@ message GetUserLoginByUserIdRequest {
   string UserId = 1;
 }
 
+message InsertUserLoginResponse{
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
+message UserLoginIDRequest {
+  // @inject_tag: json:"id"
+  uint32 ID = 1;
+}
+
 service UserLoginService {
-  rpc InsertUserLogin(UserLogin) returns (google.protobuf.Empty) {}
+  rpc InsertUserLogin(UserLogin) returns (InsertUserLoginResponse) {}
   rpc GetUserLoginByToken(GetUserLoginByTokenRequest) returns (UserLogin) {}
   rpc GetUserLoginByDriverIdAndUserId(DriverIdAndUserId) returns (UserLogin) {}
   rpc UpdateUserLoginTokenByDriverId(TokenUpdate) returns (google.protobuf.Empty) {}
   rpc GetUserDriverTokenByUserId(GetUserDriverTokenByUserIdRequest) returns (GetUserDriverTokenByUserIdResponse) {}
   // 根据用户ID获取登录信息
   rpc GetUserLoginByUserId(GetUserLoginByUserIdRequest) returns (UserLogin) {}
+  //根据ID删除登录信息
+  rpc DeleteUserLoginByID(UserLoginIDRequest) returns (google.protobuf.Empty) {}
 }
