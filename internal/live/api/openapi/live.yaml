@@ -1,0 +1,342 @@
+openapi: 3.0.0
+info:
+  title: cossim live api
+  version: 1.0.0
+paths:
+  /api/v1/live:
+    post:
+      summary: 创建通话
+      description: 创建通话
+      operationId: createRoom
+      tags:
+        - live
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: 请求体参数
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+      responses:
+        '200':
+          description: 创建通话成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRoomResponse'
+  /api/v1/live/{id}:
+    get:
+      summary: 获取通话房间信息
+      description: 获取通话房间信息
+      operationId: getRoom
+      tags:
+        - live
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 要退出的通话房间ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取通话信息成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+    delete:
+      summary: 删除通话
+      description: 用户退出当前通话
+      operationId: deleteRoom
+      tags:
+        - live
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 要退出的通话房间ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功退出通话
+  /api/v1/live/{id}/join:
+    post:
+      summary: 加入通话
+      description: 加入已存在的通话房间
+      operationId: joinRoom
+      tags:
+        - live
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 要加入的通话房间ID
+          schema:
+            type: string
+      requestBody:
+        description: 请求体参数
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinRoomRequest'
+      responses:
+        '200':
+          description: 成功加入通话
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JoinRoomResponse'
+  /api/v1/live/{id}/reject:
+    post:
+      summary: 拒绝通话
+      description: 拒绝加入通话
+      operationId: rejectRoom
+      tags:
+        - live
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 要拒绝的通话房间ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功拒绝通话
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/live/user:
+    get:
+      summary: 获取用户当前通话房间信息
+      description: 获取用户当前通话房间信息
+      operationId: getUserRoom
+      tags:
+        - live
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 获取用户当前通话信息成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+  /api/v1/live/group/{groupId}:
+    get:
+      summary: 获取群聊当前通话房间信息
+      description: 获取群聊当前通话房间信息
+      operationId: getGroupRoom
+      tags:
+        - live
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: 群组ID
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        '200':
+          description: 获取群聊当前通话信息成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Response:
+      type: object
+#      properties:
+    CreateRoomRequest:
+      type: object
+      required:
+        - type
+        - member
+      properties:
+        if:
+          properties:
+            type:
+              enum:
+                - group
+        then:
+          required:
+            - group_id
+        type:
+          type: string
+          enum:
+            - user
+            - group
+          description: 通话类型
+          example: "user"
+          x-go-type-skip-optional-pointer: true
+        group_id:
+          type: integer
+          format: uint32
+          description: 群组ID
+          x-go-type-skip-optional-pointer: true
+        member:
+          type: array
+          description: ID of the user who will receive the call
+          minItems: 1
+          maxItems: 255
+          items:
+            type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        option:
+          $ref: '#/components/schemas/RoomOption'
+    CreateRoomResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          description: webRtc服务器地址
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        room:
+          type: string
+          description: 房间ID
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+#        option:
+#          $ref: '#/components/schemas/RoomOption'
+    JoinRoomRequest:
+      type: object
+      properties:
+        option:
+          $ref: '#/components/schemas/RoomOption'
+    JoinRoomResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          description: webRtc服务器地址
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        token:
+          type: string
+          description: 加入通话的token
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    Room:
+      type: object
+      properties:
+        start_at:
+          type: integer
+          format: int64
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        duration:
+          type: integer
+          format: int64
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        room:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        video_call_record_url:
+          type: string
+          x-go-type-skip-optional-pointer: true
+        participant:
+          type: array
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/ParticipantInfo'
+    RoomOption:
+      type: object
+      x-omitempty: false
+      x-go-type-skip-optional-pointer: true
+      properties:
+        video_enabled:
+          type: boolean
+          description: Whether to enable video
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        audio_enabled:
+          type: boolean
+          description: Whether to enable audio
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        resolution:
+          type: string
+          description: Resolution
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        frame_rate:
+          type: integer
+          format: int
+          description: Frame rate
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        codec:
+          type: string
+          description: Codec
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    ParticipantInfo:
+      type: object
+      properties:
+#        uid:
+#          type: string
+#          description: User ID
+#          x-omitempty: false
+##          x-go-type-skip-optional-pointer: true
+#        room:
+#          type: string
+#          description: Room ID
+#          x-omitempty: false
+#          x-go-type-skip-optional-pointer: true
+        identity:
+          type: string
+          description: User nickname
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        state:
+          type: integer
+          format: int8
+          description: Room Status
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        joined_at:
+          type: integer
+          format: int64
+          description: Join time
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        name:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_publisher:
+          type: boolean
+          description: Whether the participant is the creator
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
