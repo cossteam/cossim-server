@@ -199,7 +199,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			return nil, "", err
 		}
 
-		msg := &pushgrpcv1.WsMsg{Uid: resp.UserId, Event: pushgrpcv1.WSEventType_SendUserMessageEvent, PushOffline: true, SendAt: time.Now(), Data: &any.Any{Value: toBytes}}
+		msg := &pushgrpcv1.WsMsg{Uid: resp.UserId, DriverId: req.DriverId, Event: pushgrpcv1.WSEventType_SendUserMessageEvent, PushOffline: true, SendAt: time.Now(), Data: &any.Any{Value: toBytes}}
 
 		toBytes2, err := utils.StructToBytes(msg)
 		if err != nil {
