@@ -71,7 +71,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	if s.ac.MultipleDeviceLimit.Enable {
 		if len(infos) >= s.ac.MultipleDeviceLimit.Max {
 			s.logger.Error("user login failed", zap.Error(err))
-			return nil, "", code.UserErrLoginFailed
+			return nil, "", code.MyCustomErrorCode.CustomMessage("登录设备超出限制")
 		}
 
 	}
@@ -251,6 +251,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 			Event:  pushgrpcv1.WSEventType_OfflineEvent,
 			Data:   &any.Any{Value: toBytes},
 			SendAt: time.Now(),
+			Rid:    rid,
 		}
 		toBytes2, err := utils.StructToBytes(msg)
 		if err != nil {

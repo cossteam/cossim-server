@@ -45,9 +45,14 @@ func (u *UserIndex) Get() []*WebsocketClient {
 func (u *UserIndex) DeleteByRid(rid int64) {
 	u.cLock.Lock()
 	defer u.cLock.Unlock()
-	fmt.Println("清理ws客户端链接", rid)
 	for i, client := range u.WsClients {
 		if client.Rid == rid {
+			//关闭该链接
+			err := client.Conn.Close()
+			if err != nil {
+				fmt.Println("关闭ws客户端链接失败", err)
+				return
+			}
 			// 通过将切片中对应元素与最后一个元素交换位置，然后缩减切片长度的方式删除元素
 			u.WsClients[i] = u.WsClients[len(u.WsClients)-1]
 			u.WsClients = u.WsClients[:len(u.WsClients)-1]

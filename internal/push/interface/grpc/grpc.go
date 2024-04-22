@@ -4,6 +4,7 @@ import (
 	"context"
 	api "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/push/service"
+	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/version"
@@ -19,6 +20,7 @@ type Handler struct {
 	sid         string
 	logger      *zap.Logger
 	PushService *service.Service
+	cache       cache.PushCache
 	api.UnimplementedPushServiceServer
 }
 
@@ -26,6 +28,11 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.ac = cfg
 	h.sid = xid.New().String()
 	h.logger = plog.NewDefaultLogger("push_service", int8(cfg.Log.Level))
+	cache2, err := cache.NewPushCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if err != nil {
+		return err
+	}
+	h.cache = cache2
 	//h.pushService = pushService
 	//h.PushService.Init(cfg)
 	return nil
@@ -51,8 +58,7 @@ func (h *Handler) RegisterHealth(s *grpc.Server) {
 }
 
 func (h *Handler) Stop(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	return h.cache.DeleteAllCache(ctx)
 }
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
