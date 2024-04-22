@@ -896,11 +896,3 @@ func (s *Handler) ReadAllUserMsg(ctx context.Context, request *v1.ReadAllUserMsg
 	}
 	return resp, nil
 }
-
-func (s *Handler) DeleteUserMessageById(ctx context.Context, request *v1.DeleteUserMsgByIDRequest) (*v1.DeleteUserMsgByIDResponse, error) {
-	resp := &v1.DeleteUserMsgByIDResponse{}
-	if err := s.mr.PhysicalDeleteUserMessage(request.ID); err != nil {
-		return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
-	}
-	return resp, nil
-}

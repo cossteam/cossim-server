@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
@@ -13,17 +12,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *UserServiceServer) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*v1.InsertUserLoginResponse, error) {
-	resp := &v1.InsertUserLoginResponse{}
+func (s *UserServiceServer) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*emptypb.Empty, error) {
+	resp := &emptypb.Empty{}
 	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+			return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	}
-	var info2 *entity.UserLogin
 	if info != nil {
-		info2 = &entity.UserLogin{
+		err := s.ulr.InsertUserLogin(&entity.UserLogin{
 			UserId:      in.UserId,
 			Token:       in.Token,
 			DriverId:    in.DriverId,
@@ -32,13 +30,12 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, in *v1.UserLogi
 			ClientType:  in.ClientType,
 			Platform:    in.Platform,
 			LoginCount:  info.LoginCount + 1,
-		}
-		err := s.ulr.InsertUserLogin(info2)
+		})
 		if err != nil {
-			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
+			return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	} else {
-		info2 = &entity.UserLogin{
+		err := s.ulr.InsertUserLogin(&entity.UserLogin{
 			UserId:      in.UserId,
 			Token:       in.Token,
 			DriverId:    in.DriverId,
@@ -47,16 +44,12 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, in *v1.UserLogi
 			ClientType:  in.ClientType,
 			Platform:    in.Platform,
 			LoginCount:  1,
-		}
-		err := s.ulr.InsertUserLogin(info2)
+		})
 		if err != nil {
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	}
 
-	resp.ID = uint32(info2.ID)
-
-	fmt.Println("resp.ID", resp.ID)
 	return resp, nil
 }
 
@@ -136,15 +129,6 @@ func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, in *v1.Get
 		resp.Platform = info.Platform
 		resp.ClientType = info.ClientType
 		resp.LoginTime = info.LastAt
-	}
-	return resp, nil
-}
-
-func (s *UserServiceServer) DeleteUserLoginByID(ctx context.Context, in *v1.UserLoginIDRequest) (*emptypb.Empty, error) {
-	resp := &emptypb.Empty{}
-	err := s.ulr.DeleteUserLoginByID(in.ID)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.UserErrDeleteUserLoginByIDFailed.Code()), err.Error())
 	}
 	return resp, nil
 }

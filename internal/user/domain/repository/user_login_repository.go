@@ -8,7 +8,6 @@ type UserLoginRepository interface {
 	UpdateUserLoginTokenByDriverId(driverId string, token string, userId string) error
 	GetUserLoginByToken(token string) (*entity.UserLogin, error)
 	GetUserDriverTokenByUserId(userId string) ([]string, error)
-	GetUserLoginById(id uint32) (*entity.UserLogin, error)
-	DeleteUserLoginByID(id uint32) error
+
 	GetUserByUserId(userId string) (*entity.UserLogin, error)
 }

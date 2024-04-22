@@ -38,13 +38,16 @@ import (
 )
 
 func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string, clientIp string) (*model.UserInfoResponse, string, error) {
-	userInfo, err := s.userService.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{Email: req.Email})
+	resp, err := s.userService.UserLogin(ctx, &usergrpcv1.UserLoginRequest{
+		Email:    req.Email,
+		Password: utils.HashString(req.Password),
+	})
 	if err != nil {
-		s.logger.Error("failed to get user info by email", zap.Error(err))
+		s.logger.Error("user login failed", zap.Error(err))
 		return nil, "", err
 	}
 
-	id, err := s.userLoginService.GetUserLoginByUserId(ctx, &usergrpcv1.GetUserLoginByUserIdRequest{UserId: userInfo.UserId})
+	id, err := s.userLoginService.GetUserLoginByUserId(ctx, &usergrpcv1.GetUserLoginByUserIdRequest{UserId: resp.UserId})
 	if err != nil {
 		s.logger.Error("failed to get user login by user id", zap.Error(err))
 	}
@@ -53,13 +56,13 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		lastLoginTime = id.LoginTime
 	}
 
-	token, err := utils.GenerateToken(userInfo.UserId, userInfo.Email, req.DriverId, userInfo.PublicKey)
+	token, err := utils.GenerateToken(resp.UserId, resp.Email, req.DriverId, resp.PublicKey)
 	if err != nil {
 		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
 
-	infos, err := s.userCache.GetUserLoginInfos(ctx, userInfo.UserId)
+	infos, err := s.userCache.GetUserLoginInfos(ctx, resp.UserId)
 	if err != nil {
 		return nil, "", err
 	}
@@ -70,16 +73,44 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			s.logger.Error("user login failed", zap.Error(err))
 			return nil, "", code.MyCustomErrorCode.CustomMessage("登录设备超出限制")
 		}
+
+	}
+
+	driveID := len(infos) + 1
+	data := cache.UserInfo{
+		ID:         uint(driveID),
+		UserId:     resp.UserId,
+		Token:      token,
+		DriverType: driveType,
+		CreateAt:   time.Now(),
+		ClientIP:   clientIp,
+	}
+
+	if err := s.userCache.SetUserLoginInfo(ctx, resp.UserId, driveType, driveID, &data, cache.UserLoginExpireTime); err != nil {
+		s.logger.Error("failed to set user login info", zap.Error(err))
+		return nil, "", err
 	}
 
 	// 推送登录提醒
 	// 查询是否在该设备第一次登录
 	userLogin, err := s.userLoginService.GetUserLoginByDriverIdAndUserId(ctx, &usergrpcv1.DriverIdAndUserId{
-		UserId:   userInfo.UserId,
+		UserId:   resp.UserId,
 		DriverId: req.DriverId,
 	})
 	if err != nil {
 		s.logger.Error("failed to get user login by driver driveID and user driveID", zap.Error(err))
+	}
+
+	_, err = s.userLoginService.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
+		UserId:      resp.UserId,
+		DriverId:    req.DriverId,
+		Token:       token,
+		DriverToken: req.DriverToken,
+		ClientType:  driveType,
+		Platform:    req.Platform,
+	})
+	if err != nil {
+		return nil, "", err
 	}
 
 	fristLogin := false
@@ -89,91 +120,106 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		}
 	}
 
-	driveID := len(infos) + 1
-	data2 := cache.UserInfo{
-		ID:         uint(driveID),
-		UserId:     userInfo.UserId,
-		Token:      token,
-		DriverType: driveType,
-		CreateAt:   time.Now(),
-		ClientIP:   clientIp,
-	}
+	if fristLogin {
+		if clientIp == "127.0.0.1" {
+			clientIp = httputil.GetMyPublicIP()
+		}
+		info := httputil.OnlineIpInfo(clientIp)
 
-	workflow.InitGrpc(s.dtmGrpcServer, s.userGrpcServer, grpc.NewServer())
-	gid := shortuuid.New()
-	wfName := "login_user_workflow_" + gid
-	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		if err := s.userCache.SetUserLoginInfo(wf.Context, userInfo.UserId, driveType, driveID, &data2, cache.UserLoginExpireTime); err != nil {
-			s.logger.Error("failed to set user login info", zap.Error(err))
-			return status.Error(codes.Aborted, err.Error())
+		result := fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s %s", clientIp, info.Country, info.RegionName, info.City)
+		if info.RegionName == info.City {
+			result = fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s", clientIp, info.Country, info.City)
 		}
 
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			err = s.userCache.DeleteUserLoginInfo(wf.Context, userInfo.UserId, driveType, driveID)
-			return err
-		})
-
-		ul, err := s.userLoginService.InsertUserLogin(ctx, &usergrpcv1.UserLogin{
-			UserId:      userInfo.UserId,
-			DriverId:    req.DriverId,
-			Token:       token,
-			DriverToken: req.DriverToken,
-			ClientType:  driveType,
-			Platform:    req.Platform,
+		//查询系统通知信息
+		systemInfo, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
+		if err != nil {
+			return nil, "", err
+		}
+		//查询与系统通知的对话id
+		relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+			UserId:   resp.UserId,
+			FriendId: constants.SystemNotification,
 		})
 		if err != nil {
-			return status.Error(codes.Aborted, err.Error())
+			return nil, "", err
 		}
 
-		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			_, err = s.userLoginService.DeleteUserLoginByID(wf.Context, &usergrpcv1.UserLoginIDRequest{ID: ul.ID})
-			return err
+		//查询与系统的对话是否关闭
+		dialogUser, err := s.dialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
+			DialogId: relation.DialogId,
+			UserId:   resp.UserId,
 		})
+		if err != nil {
+			s.logger.Error("获取用户会话失败", zap.Error(err))
+			return nil, "", err
+		}
 
-		if fristLogin {
-			_, msgId, err := s.pushFirstLogin(ctx, userInfo, "", req.DriverId)
-			if err != nil {
-				return status.Error(codes.Aborted, err.Error())
-			}
-
-			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-				_, err := s.msgService.DeleteUserMessageById(ctx, &msggrpcv1.DeleteUserMsgByIDRequest{
-					ID: msgId,
-				})
-				return err
+		if dialogUser.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
+			_, err := s.dialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
+				DialogId: relation.DialogId,
+				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
+				UserId:   resp.UserId,
 			})
+			if err != nil {
+				return nil, "", err
+			}
 		}
 
-		_, err = s.userService.UserLogin(ctx, &usergrpcv1.UserLoginRequest{
-			Email:    req.Email,
-			Password: utils.HashString(req.Password),
-		})
+		//插入消息
+		msg2 := &msggrpcv1.SendUserMsgRequest{
+			SenderId:   constants.SystemNotification,
+			ReceiverId: resp.UserId,
+			Content:    result,
+			DialogId:   relation.DialogId,
+			Type:       int32(msggrpcv1.MessageType_Text),
+		}
+
+		id, err := s.msgService.SendUserMessage(ctx, msg2)
 		if err != nil {
-			s.logger.Error("user login failed", zap.Error(err))
-			return status.Error(codes.Aborted, err.Error())
+			return nil, "", err
 		}
 
-		return nil
-	}); err != nil {
-		return nil, "", err
-	}
-
-	if err := workflow.Execute(wfName, gid, nil); err != nil {
-		if strings.Contains(err.Error(), "用户不存在或密码错误") {
-			return nil, "", code.UserErrNotExistOrPassword
+		rmsg := &pushgrpcv1.SendWsUserMsg{
+			MsgType:    uint32(msggrpcv1.MessageType_Text),
+			DialogId:   relation.DialogId,
+			Content:    result,
+			SenderId:   constants.SystemNotification,
+			ReceiverId: resp.UserId,
+			SendAt:     time.Now(),
+			MsgId:      id.MsgId,
+			SenderInfo: &pushgrpcv1.SenderInfo{
+				UserId: systemInfo.UserId,
+				Avatar: systemInfo.Avatar,
+				Name:   systemInfo.NickName,
+			},
 		}
-		return nil, "", code.UserErrLoginFailed
+		toBytes, err := utils.StructToBytes(rmsg)
+		if err != nil {
+			return nil, "", err
+		}
+
+		msg := &pushgrpcv1.WsMsg{Uid: resp.UserId, DriverId: req.DriverId, Event: pushgrpcv1.WSEventType_SendUserMessageEvent, PushOffline: true, SendAt: time.Now(), Data: &any.Any{Value: toBytes}}
+
+		toBytes2, err := utils.StructToBytes(msg)
+		if err != nil {
+			return nil, "", err
+		}
+
+		_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: toBytes2})
+		if err != nil {
+			s.logger.Error("发送消息失败", zap.Error(err))
+		}
 	}
 
 	return &model.UserInfoResponse{
-		LoginNumber:    data2.ID,
-		Status:         model.UserStatus(userInfo.Status),
-		Email:          userInfo.Email,
-		UserId:         userInfo.UserId,
-		Nickname:       userInfo.NickName,
-		Avatar:         userInfo.Avatar,
-		Signature:      userInfo.Signature,
-		CossId:         userInfo.CossId,
+		LoginNumber:    data.ID,
+		Email:          resp.Email,
+		UserId:         resp.UserId,
+		Nickname:       resp.NickName,
+		Avatar:         resp.Avatar,
+		Signature:      resp.Signature,
+		CossId:         resp.CossId,
 		NewDeviceLogin: fristLogin,
 		LastLoginTime:  lastLoginTime,
 	}, token, nil
@@ -691,98 +737,4 @@ func (s *Service) ModifyUserAvatar(ctx context.Context, userID string, avatar mu
 	}
 
 	return aUrl, nil
-}
-
-func (s *Service) pushFirstLogin(ctx context.Context, userInfo *usergrpcv1.UserInfoResponse, clientIp, driverId string) (uint32, uint32, error) {
-	if clientIp == "127.0.0.1" {
-		clientIp = httputil.GetMyPublicIP()
-	}
-	info := httputil.OnlineIpInfo(clientIp)
-
-	result := fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s %s", clientIp, info.Country, info.RegionName, info.City)
-	if info.RegionName == info.City {
-		result = fmt.Sprintf("您在新设备登录，IP地址为：%s\n位置为：%s %s", clientIp, info.Country, info.City)
-	}
-
-	//查询系统通知信息
-	systemInfo, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: constants.SystemNotification})
-	if err != nil {
-		return 0, 0, err
-	}
-	//查询与系统通知的对话id
-	relation, err := s.relationService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-		UserId:   userInfo.UserId,
-		FriendId: constants.SystemNotification,
-	})
-	if err != nil {
-		return 0, 0, err
-	}
-
-	//查询与系统的对话是否关闭
-	dialogUser, err := s.dialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-		DialogId: relation.DialogId,
-		UserId:   userInfo.UserId,
-	})
-	if err != nil {
-		s.logger.Error("获取用户会话失败", zap.Error(err))
-		return 0, 0, err
-	}
-
-	if dialogUser.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
-		_, err := s.dialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
-			DialogId: relation.DialogId,
-			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
-			UserId:   userInfo.UserId,
-		})
-		if err != nil {
-			return 0, 0, err
-		}
-	}
-
-	//插入消息
-	msg2 := &msggrpcv1.SendUserMsgRequest{
-		SenderId:   constants.SystemNotification,
-		ReceiverId: userInfo.UserId,
-		Content:    result,
-		DialogId:   relation.DialogId,
-		Type:       int32(msggrpcv1.MessageType_Text),
-	}
-
-	id, err := s.msgService.SendUserMessage(ctx, msg2)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	rmsg := &pushgrpcv1.SendWsUserMsg{
-		MsgType:    uint32(msggrpcv1.MessageType_Text),
-		DialogId:   relation.DialogId,
-		Content:    result,
-		SenderId:   constants.SystemNotification,
-		ReceiverId: userInfo.UserId,
-		SendAt:     time.Now(),
-		MsgId:      id.MsgId,
-		SenderInfo: &pushgrpcv1.SenderInfo{
-			UserId: systemInfo.UserId,
-			Avatar: systemInfo.Avatar,
-			Name:   systemInfo.NickName,
-		},
-	}
-
-	toBytes, err := utils.StructToBytes(rmsg)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	msg := &pushgrpcv1.WsMsg{Uid: userInfo.UserId, DriverId: driverId, Event: pushgrpcv1.WSEventType_SendUserMessageEvent, PushOffline: true, SendAt: time.Now(), Data: &any.Any{Value: toBytes}}
-
-	toBytes2, err := utils.StructToBytes(msg)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	_, err = s.pushService.Push(ctx, &pushgrpcv1.PushRequest{Type: pushgrpcv1.Type_Ws, Data: toBytes2})
-	if err != nil {
-		s.logger.Error("发送消息失败", zap.Error(err))
-	}
-	return relation.DialogId, id.MsgId, err
 }

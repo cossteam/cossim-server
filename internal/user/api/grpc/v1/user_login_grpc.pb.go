@@ -26,22 +26,19 @@ const (
 	UserLoginService_UpdateUserLoginTokenByDriverId_FullMethodName  = "/user_v1.UserLoginService/UpdateUserLoginTokenByDriverId"
 	UserLoginService_GetUserDriverTokenByUserId_FullMethodName      = "/user_v1.UserLoginService/GetUserDriverTokenByUserId"
 	UserLoginService_GetUserLoginByUserId_FullMethodName            = "/user_v1.UserLoginService/GetUserLoginByUserId"
-	UserLoginService_DeleteUserLoginByID_FullMethodName             = "/user_v1.UserLoginService/DeleteUserLoginByID"
 )
 
 // UserLoginServiceClient is the client API for UserLoginService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserLoginServiceClient interface {
-	InsertUserLogin(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*InsertUserLoginResponse, error)
+	InsertUserLogin(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetUserLoginByToken(ctx context.Context, in *GetUserLoginByTokenRequest, opts ...grpc.CallOption) (*UserLogin, error)
 	GetUserLoginByDriverIdAndUserId(ctx context.Context, in *DriverIdAndUserId, opts ...grpc.CallOption) (*UserLogin, error)
 	UpdateUserLoginTokenByDriverId(ctx context.Context, in *TokenUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetUserDriverTokenByUserId(ctx context.Context, in *GetUserDriverTokenByUserIdRequest, opts ...grpc.CallOption) (*GetUserDriverTokenByUserIdResponse, error)
 	// 根据用户ID获取登录信息
 	GetUserLoginByUserId(ctx context.Context, in *GetUserLoginByUserIdRequest, opts ...grpc.CallOption) (*UserLogin, error)
-	// 根据ID删除登录信息
-	DeleteUserLoginByID(ctx context.Context, in *UserLoginIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userLoginServiceClient struct {
@@ -52,8 +49,8 @@ func NewUserLoginServiceClient(cc grpc.ClientConnInterface) UserLoginServiceClie
 	return &userLoginServiceClient{cc}
 }
 
-func (c *userLoginServiceClient) InsertUserLogin(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*InsertUserLoginResponse, error) {
-	out := new(InsertUserLoginResponse)
+func (c *userLoginServiceClient) InsertUserLogin(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, UserLoginService_InsertUserLogin_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -106,35 +103,24 @@ func (c *userLoginServiceClient) GetUserLoginByUserId(ctx context.Context, in *G
 	return out, nil
 }
 
-func (c *userLoginServiceClient) DeleteUserLoginByID(ctx context.Context, in *UserLoginIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, UserLoginService_DeleteUserLoginByID_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserLoginServiceServer is the server API for UserLoginService service.
 // All implementations should embed UnimplementedUserLoginServiceServer
 // for forward compatibility
 type UserLoginServiceServer interface {
-	InsertUserLogin(context.Context, *UserLogin) (*InsertUserLoginResponse, error)
+	InsertUserLogin(context.Context, *UserLogin) (*emptypb.Empty, error)
 	GetUserLoginByToken(context.Context, *GetUserLoginByTokenRequest) (*UserLogin, error)
 	GetUserLoginByDriverIdAndUserId(context.Context, *DriverIdAndUserId) (*UserLogin, error)
 	UpdateUserLoginTokenByDriverId(context.Context, *TokenUpdate) (*emptypb.Empty, error)
 	GetUserDriverTokenByUserId(context.Context, *GetUserDriverTokenByUserIdRequest) (*GetUserDriverTokenByUserIdResponse, error)
 	// 根据用户ID获取登录信息
 	GetUserLoginByUserId(context.Context, *GetUserLoginByUserIdRequest) (*UserLogin, error)
-	// 根据ID删除登录信息
-	DeleteUserLoginByID(context.Context, *UserLoginIDRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedUserLoginServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedUserLoginServiceServer struct {
 }
 
-func (UnimplementedUserLoginServiceServer) InsertUserLogin(context.Context, *UserLogin) (*InsertUserLoginResponse, error) {
+func (UnimplementedUserLoginServiceServer) InsertUserLogin(context.Context, *UserLogin) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InsertUserLogin not implemented")
 }
 func (UnimplementedUserLoginServiceServer) GetUserLoginByToken(context.Context, *GetUserLoginByTokenRequest) (*UserLogin, error) {
@@ -151,9 +137,6 @@ func (UnimplementedUserLoginServiceServer) GetUserDriverTokenByUserId(context.Co
 }
 func (UnimplementedUserLoginServiceServer) GetUserLoginByUserId(context.Context, *GetUserLoginByUserIdRequest) (*UserLogin, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserLoginByUserId not implemented")
-}
-func (UnimplementedUserLoginServiceServer) DeleteUserLoginByID(context.Context, *UserLoginIDRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserLoginByID not implemented")
 }
 
 // UnsafeUserLoginServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -275,24 +258,6 @@ func _UserLoginService_GetUserLoginByUserId_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserLoginService_DeleteUserLoginByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserLoginIDRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserLoginServiceServer).DeleteUserLoginByID(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserLoginService_DeleteUserLoginByID_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserLoginServiceServer).DeleteUserLoginByID(ctx, req.(*UserLoginIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UserLoginService_ServiceDesc is the grpc.ServiceDesc for UserLoginService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -323,10 +288,6 @@ var UserLoginService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserLoginByUserId",
 			Handler:    _UserLoginService_GetUserLoginByUserId_Handler,
-		},
-		{
-			MethodName: "DeleteUserLoginByID",
-			Handler:    _UserLoginService_DeleteUserLoginByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
