@@ -59,7 +59,7 @@ func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driv
 	go cli.Conn.CheckHeartbeat(30 * time.Second)
 
 	//更新登录信息
-	keys, err := s.redisClient.ScanKeys(uid + ":" + deviceType + ":*")
+	keys, err := s.redisClient.ScanKeys(cache.UserLoginKey + uid + ":" + deviceType + ":*")
 	if err != nil {
 		s.logger.Error("获取用户信息失败1", zap.Error(err))
 		return
@@ -159,6 +159,9 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 		}
 
 		if ui != nil && ui.GetLength() > 0 {
+			if msg.Event == pushgrpcv1.WSEventType_OfflineEvent {
+				ui.DeleteByRid(msg.Rid)
+			}
 			err = i2.SendMessage(msg.Uid, message)
 			if err != nil {
 				return resp, err
@@ -368,8 +371,8 @@ func (s *Service) wsOfflineClients(ctx context.Context, uid string) {
 }
 
 func (s *Service) addUserWsCount(ctx context.Context, uid string) error {
-
-	exists, err := s.redisClient.ExistsKey(uid)
+	key := fmt.Sprintf("%s%s", cache.PushKeyPrefix, uid)
+	exists, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
@@ -381,9 +384,9 @@ func (s *Service) addUserWsCount(ctx context.Context, uid string) error {
 	}
 
 	if !exists {
-		return s.redisClient.SetKey(uid, 1, 0)
+		return s.redisClient.SetKey(key, 1, 0)
 	} else {
-		value, err := s.redisClient.GetKey(uid)
+		value, err := s.redisClient.GetKey(key)
 		if err != nil {
 			return err
 		}
@@ -393,13 +396,13 @@ func (s *Service) addUserWsCount(ctx context.Context, uid string) error {
 			return err
 		}
 		num++
-		return s.redisClient.SetKey(uid, num, 0)
+		return s.redisClient.SetKey(key, num, 0)
 	}
 }
 
 func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
-
-	exists, err := s.redisClient.ExistsKey(uid)
+	key := fmt.Sprintf("%s%s", cache.PushKeyPrefix, uid)
+	exists, err := s.redisClient.ExistsKey(key)
 	if err != nil {
 		return err
 	}
@@ -411,7 +414,7 @@ func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
 		}
 		return nil
 	} else {
-		value, err := s.redisClient.GetKey(uid)
+		value, err := s.redisClient.GetKey(key)
 		if err != nil {
 			return err
 		}
@@ -426,10 +429,10 @@ func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
 			if err != nil {
 				return err
 			}
-			return s.redisClient.DelKey(uid)
+			return s.redisClient.DelKey(key)
 		} else {
 			num--
-			return s.redisClient.SetKey(uid, num, 0)
+			return s.redisClient.SetKey(key, num, 0)
 		}
 	}
 }
