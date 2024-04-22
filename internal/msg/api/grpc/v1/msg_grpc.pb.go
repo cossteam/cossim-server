@@ -57,6 +57,7 @@ const (
 	MsgService_DeleteGroupMessageByDialogId_FullMethodName         = "/msg_v1.MsgService/DeleteGroupMessageByDialogId"
 	MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName  = "/msg_v1.MsgService/DeleteUserMessageByDialogIdRollback"
 	MsgService_DeleteGroupMessageByDialogIdRollback_FullMethodName = "/msg_v1.MsgService/DeleteGroupMessageByDialogIdRollback"
+	MsgService_DeleteUserMessageById_FullMethodName                = "/msg_v1.MsgService/DeleteUserMessageById"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -139,6 +140,8 @@ type MsgServiceClient interface {
 	DeleteUserMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
 	// 根据对话id删除群聊消息回滚
 	DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error)
+	// 根据消息id删除私聊消息
+	DeleteUserMessageById(ctx context.Context, in *DeleteUserMsgByIDRequest, opts ...grpc.CallOption) (*DeleteUserMsgByIDResponse, error)
 }
 
 type msgServiceClient struct {
@@ -491,6 +494,15 @@ func (c *msgServiceClient) DeleteGroupMessageByDialogIdRollback(ctx context.Cont
 	return out, nil
 }
 
+func (c *msgServiceClient) DeleteUserMessageById(ctx context.Context, in *DeleteUserMsgByIDRequest, opts ...grpc.CallOption) (*DeleteUserMsgByIDResponse, error) {
+	out := new(DeleteUserMsgByIDResponse)
+	err := c.cc.Invoke(ctx, MsgService_DeleteUserMessageById_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServiceServer is the server API for MsgService service.
 // All implementations should embed UnimplementedMsgServiceServer
 // for forward compatibility
@@ -571,6 +583,8 @@ type MsgServiceServer interface {
 	DeleteUserMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
 	// 根据对话id删除群聊消息回滚
 	DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
+	// 根据消息id删除私聊消息
+	DeleteUserMessageById(context.Context, *DeleteUserMsgByIDRequest) (*DeleteUserMsgByIDResponse, error)
 }
 
 // UnimplementedMsgServiceServer should be embedded to have forward compatible implementations.
@@ -690,6 +704,9 @@ func (UnimplementedMsgServiceServer) DeleteUserMessageByDialogIdRollback(context
 }
 func (UnimplementedMsgServiceServer) DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessageByDialogIdRollback not implemented")
+}
+func (UnimplementedMsgServiceServer) DeleteUserMessageById(context.Context, *DeleteUserMsgByIDRequest) (*DeleteUserMsgByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessageById not implemented")
 }
 
 // UnsafeMsgServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -1387,6 +1404,24 @@ func _MsgService_DeleteGroupMessageByDialogIdRollback_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MsgService_DeleteUserMessageById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserMsgByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServiceServer).DeleteUserMessageById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MsgService_DeleteUserMessageById_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServiceServer).DeleteUserMessageById(ctx, req.(*DeleteUserMsgByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MsgService_ServiceDesc is the grpc.ServiceDesc for MsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1545,6 +1580,10 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteGroupMessageByDialogIdRollback",
 			Handler:    _MsgService_DeleteGroupMessageByDialogIdRollback_Handler,
+		},
+		{
+			MethodName: "DeleteUserMessageById",
+			Handler:    _MsgService_DeleteUserMessageById_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
