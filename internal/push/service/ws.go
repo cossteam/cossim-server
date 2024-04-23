@@ -59,7 +59,7 @@ func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driv
 	go cli.Conn.CheckHeartbeat(30 * time.Second)
 
 	//更新登录信息
-	keys, err := s.redisClient.ScanKeys(cache.UserLoginKey + uid + ":" + deviceType + ":*")
+	keys, err := s.redisClient.ScanKeys("user:login:" + uid + ":" + deviceType + ":*")
 	if err != nil {
 		s.logger.Error("获取用户信息失败1", zap.Error(err))
 		return

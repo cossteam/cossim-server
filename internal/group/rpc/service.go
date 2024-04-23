@@ -2,10 +2,11 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/group/adapters"
 	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/group/cache"
 	"github.com/cossim/coss-server/internal/group/domain/group"
-	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/manager/server"
@@ -24,33 +25,44 @@ const (
 )
 
 type GroupServiceServer struct {
-	repo        group.Repository
-	cache       cache.GroupCache
-	cacheEnable bool
+	repo group.Repository
+	stop func() func(ctx context.Context) error
 }
 
 func (s *GroupServiceServer) Init(cfg *pkgconfig.AppConfig) error {
+	fmt.Println("sb")
 	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
 	if err != nil {
+		log.Printf("init mysql error: %v\n", err)
 		return err
 	}
 	dbConn, err := mysql.GetConnection()
 	if err != nil {
+		log.Printf("get mysql connection error: %v\n", err)
 		return err
 	}
 
-	repo := adapters.NewMySQLGroupRepository(dbConn)
+	gcache, err := cache.NewGroupCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if err != nil {
+		log.Printf("init group cache error: %v\n", err)
+		return err
+	}
+
+	s.stop = func() func(ctx context.Context) error {
+		return func(ctx context.Context) error {
+			if err := gcache.DeleteAllCache(ctx); err != nil {
+				log.Printf("delete all group cache error: %v\n", err)
+			}
+			return gcache.Close()
+		}
+	}
+
+	repo := adapters.NewMySQLGroupRepository(dbConn, gcache)
 	if err = repo.Automigrate(); err != nil {
+		log.Printf("automigrate error: %v\n", err)
 		return err
 	}
 	s.repo = repo
-
-	groupCache, err := cache.NewGroupCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
-	s.cache = groupCache
-	s.cacheEnable = cfg.Cache.Enable
 	return nil
 }
 
@@ -71,13 +83,7 @@ func (s *GroupServiceServer) RegisterHealth(srv *grpc.Server) {
 }
 
 func (s *GroupServiceServer) Stop(ctx context.Context) error {
-	if s.cacheEnable && s.cache != nil {
-		if err := s.cache.DeleteAllCache(ctx); err != nil {
-			log.Printf("delete all group cache error: %v", err)
-		}
-		return s.cache.Close()
-	}
-	return nil
+	return s.stop()(ctx)
 }
 
 func (s *GroupServiceServer) DiscoverServices(services map[string]*grpc.ClientConn) error {

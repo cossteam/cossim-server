@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/push/service"
-	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/internal/user/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"

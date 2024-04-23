@@ -6,7 +6,7 @@ import (
 	"github.com/cossim/coss-server/internal/live/app"
 	"github.com/cossim/coss-server/internal/live/app/command"
 	"github.com/cossim/coss-server/internal/live/app/query"
-	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/internal/user/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/encryption"

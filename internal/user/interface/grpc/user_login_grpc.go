@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/user/domain/entity"
+	"github.com/cossim/coss-server/internal/user/domain/user"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
@@ -13,42 +13,42 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *UserServiceServer) InsertUserLogin(ctx context.Context, in *v1.UserLogin) (*v1.InsertUserLoginResponse, error) {
+func (s *UserServiceServer) InsertUserLogin(ctx context.Context, request *v1.UserLogin) (*v1.InsertUserLoginResponse, error) {
 	resp := &v1.InsertUserLoginResponse{}
-	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
+	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(ctx, request.DriverId, request.UserId)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	}
-	var info2 *entity.UserLogin
+	var info2 *user.UserLogin
 	if info != nil {
-		info2 = &entity.UserLogin{
-			UserId:      in.UserId,
-			Token:       in.Token,
-			DriverId:    in.DriverId,
+		info2 = &user.UserLogin{
+			UserId:      request.UserId,
+			Token:       request.Token,
+			DriverId:    request.DriverId,
 			LastAt:      time.Now(),
-			DriverToken: in.DriverToken,
-			ClientType:  in.ClientType,
-			Platform:    in.Platform,
+			DriverToken: request.DriverToken,
+			ClientType:  request.ClientType,
+			Platform:    request.Platform,
 			LoginCount:  info.LoginCount + 1,
 		}
-		err := s.ulr.InsertUserLogin(info2)
+		err := s.ulr.InsertUserLogin(ctx, info2)
 		if err != nil {
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	} else {
-		info2 = &entity.UserLogin{
-			UserId:      in.UserId,
-			Token:       in.Token,
-			DriverId:    in.DriverId,
+		info2 = &user.UserLogin{
+			UserId:      request.UserId,
+			Token:       request.Token,
+			DriverId:    request.DriverId,
 			LastAt:      time.Now(),
-			DriverToken: in.DriverToken,
-			ClientType:  in.ClientType,
-			Platform:    in.Platform,
+			DriverToken: request.DriverToken,
+			ClientType:  request.ClientType,
+			Platform:    request.Platform,
 			LoginCount:  1,
 		}
-		err := s.ulr.InsertUserLogin(info2)
+		err := s.ulr.InsertUserLogin(ctx, info2)
 		if err != nil {
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
@@ -60,9 +60,9 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, in *v1.UserLogi
 	return resp, nil
 }
 
-func (s *UserServiceServer) GetUserLoginByToken(ctx context.Context, in *v1.GetUserLoginByTokenRequest) (*v1.UserLogin, error) {
+func (s *UserServiceServer) GetUserLoginByToken(ctx context.Context, request *v1.GetUserLoginByTokenRequest) (*v1.UserLogin, error) {
 	resp := &v1.UserLogin{}
-	info, err := s.ulr.GetUserLoginByToken(in.Token)
+	info, err := s.ulr.GetUserLoginByToken(ctx, request.Token)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
@@ -76,9 +76,9 @@ func (s *UserServiceServer) GetUserLoginByToken(ctx context.Context, in *v1.GetU
 	return resp, nil
 }
 
-func (s *UserServiceServer) GetUserLoginByDriverIdAndUserId(ctx context.Context, in *v1.DriverIdAndUserId) (*v1.UserLogin, error) {
+func (s *UserServiceServer) GetUserLoginByDriverIdAndUserId(ctx context.Context, request *v1.DriverIdAndUserId) (*v1.UserLogin, error) {
 	resp := &v1.UserLogin{}
-	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(in.DriverId, in.UserId)
+	info, err := s.ulr.GetUserLoginByDriverIdAndUserId(ctx, request.DriverId, request.UserId)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return resp, status.Error(codes.Code(code.UserErrGetUserLoginByDriverIdAndUserIdFailed.Code()), err.Error())
@@ -97,9 +97,9 @@ func (s *UserServiceServer) GetUserLoginByDriverIdAndUserId(ctx context.Context,
 	return resp, nil
 }
 
-func (s *UserServiceServer) UpdateUserLoginTokenByDriverId(ctx context.Context, in *v1.TokenUpdate) (*emptypb.Empty, error) {
+func (s *UserServiceServer) UpdateUserLoginTokenByDriverId(ctx context.Context, request *v1.TokenUpdate) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
-	err := s.ulr.UpdateUserLoginTokenByDriverId(in.DriverId, in.Token, in.UserId)
+	err := s.ulr.UpdateUserLoginTokenByDriverId(ctx, request.DriverId, request.Token, request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.UserErrUpdateUserLoginTokenFailed.Code()), err.Error())
 	}
@@ -108,7 +108,7 @@ func (s *UserServiceServer) UpdateUserLoginTokenByDriverId(ctx context.Context, 
 
 func (s *UserServiceServer) GetUserDriverTokenByUserId(ctx context.Context, request *v1.GetUserDriverTokenByUserIdRequest) (*v1.GetUserDriverTokenByUserIdResponse, error) {
 	resp := &v1.GetUserDriverTokenByUserIdResponse{}
-	tokenList, err := s.ulr.GetUserDriverTokenByUserId(request.UserId)
+	tokenList, err := s.ulr.GetUserDriverTokenByUserId(ctx, request.UserId)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return resp, status.Error(codes.Code(code.UserErrGetUserDriverTokenByUserIdFailed.Code()), err.Error())
@@ -122,9 +122,9 @@ func (s *UserServiceServer) GetUserDriverTokenByUserId(ctx context.Context, requ
 	return resp, nil
 }
 
-func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, in *v1.GetUserLoginByUserIdRequest) (*v1.UserLogin, error) {
+func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, request *v1.GetUserLoginByUserIdRequest) (*v1.UserLogin, error) {
 	var resp = &v1.UserLogin{}
-	info, err := s.ulr.GetUserByUserId(in.UserId)
+	info, err := s.ulr.GetUserByUserId(ctx, request.UserId)
 	if err != nil {
 		return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
@@ -140,9 +140,9 @@ func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, in *v1.Get
 	return resp, nil
 }
 
-func (s *UserServiceServer) DeleteUserLoginByID(ctx context.Context, in *v1.UserLoginIDRequest) (*emptypb.Empty, error) {
+func (s *UserServiceServer) DeleteUserLoginByID(ctx context.Context, request *v1.UserLoginIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
-	err := s.ulr.DeleteUserLoginByID(in.ID)
+	err := s.ulr.DeleteUserLoginByID(ctx, request.ID)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.UserErrDeleteUserLoginByIDFailed.Code()), err.Error())
 	}
