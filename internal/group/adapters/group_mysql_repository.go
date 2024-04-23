@@ -3,11 +3,13 @@ package adapters
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/internal/group/cache"
 	"github.com/cossim/coss-server/internal/group/domain/group"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"log"
 )
 
 type BaseModel struct {
@@ -78,18 +80,20 @@ func (m *GroupModel) ToEntity() (*group.Group, error) {
 	}, nil
 }
 
+const mySQLDeadlockErrorCode = 1213
+
 var _ group.Repository = &MySQLGroupRepository{}
 
-func NewMySQLGroupRepository(db *gorm.DB) *MySQLGroupRepository {
+func NewMySQLGroupRepository(db *gorm.DB, cache cache.GroupCache) *MySQLGroupRepository {
 	return &MySQLGroupRepository{
-		db: db,
+		db:    db,
+		cache: cache,
 	}
 }
 
 type MySQLGroupRepository struct {
-	db *gorm.DB
-
-	// groupFactory
+	db    *gorm.DB
+	cache cache.GroupCache
 }
 
 func (m *MySQLGroupRepository) Automigrate() error {
@@ -101,10 +105,24 @@ func (m *MySQLGroupRepository) UpdateFields(ctx context.Context, id uint32, fiel
 }
 
 func (m *MySQLGroupRepository) Get(ctx context.Context, id uint32) (*group.Group, error) {
-	model := &GroupModel{}
+	cachedGroup, err := m.cache.GetGroup(ctx, id)
+	if err == nil && cachedGroup != nil {
+		return cachedGroup, nil
 
+	}
+
+	model := &GroupModel{}
 	if err := m.db.WithContext(ctx).First(&model, id).Error; err != nil {
 		return nil, err
+	}
+
+	entity, err := model.ToEntity()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.cache.SetGroup(ctx, entity); err != nil {
+		log.Println("Error caching group:", err)
 	}
 
 	return model.ToEntity()
@@ -130,8 +148,6 @@ func (m *MySQLGroupRepository) Update(ctx context.Context, group *group.Group, u
 
 	return nil
 }
-
-const mySQLDeadlockErrorCode = 1213
 
 func (m *MySQLGroupRepository) Create(ctx context.Context, group *group.Group, createFn func(h *group.Group) (*group.Group, error)) error {
 	for {
@@ -168,40 +184,54 @@ func (m *MySQLGroupRepository) Delete(ctx context.Context, id uint32) error {
 	return err
 }
 
+// Find retrieves groups based on the provided query.
 func (m *MySQLGroupRepository) Find(ctx context.Context, query group.Query) ([]*group.Group, error) {
-	var groups []*group.Group
+	if m.cache == nil {
+		return m.findWithoutCache(ctx, query)
+	}
 
+	cacheKey := m.generateCacheKey(query)
+	cachedGroups, err := m.cache.GetGroups(ctx, cacheKey)
+	if err == nil && cachedGroups != nil {
+		return cachedGroups, nil
+	}
+
+	groups, err := m.findWithoutCache(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.cache.SetGroup(ctx, groups...); err != nil {
+		log.Println("Error caching groups:", err)
+	}
+
+	return groups, nil
+}
+
+// findWithoutCache executes the query directly without using cache.
+func (m *MySQLGroupRepository) findWithoutCache(ctx context.Context, query group.Query) ([]*group.Group, error) {
+	// Perform query directly on the database
 	var models []*GroupModel
 
 	db := m.db.WithContext(ctx)
 
-	// 根据 ID 列表进行筛选
+	// Apply filters
 	if len(query.ID) > 0 {
 		db = db.Where("id IN (?)", query.ID)
 	}
-
-	// 根据名称进行筛选
 	if query.Name != "" {
 		db = db.Where("name LIKE ?", "%"+query.Name+"%")
 	}
-
-	// 根据用户 ID 列表进行筛选
 	if len(query.UserID) > 0 {
 		db = db.Joins("JOIN group_members ON groups.id = group_members.group_id").
 			Where("group_members.user_id IN (?)", query.UserID)
 	}
-
-	// 根据创建时间范围进行筛选
 	if query.CreateAt != nil {
 		db = db.Where("created_at >= ?", query.CreateAt)
 	}
-
-	// 根据更新时间范围进行筛选
 	if query.UpdateAt != nil {
 		db = db.Where("updated_at >= ?", query.UpdateAt)
 	}
-
-	// 设置分页参数
 	if query.Limit > 0 {
 		db = db.Limit(query.Limit)
 	}
@@ -209,18 +239,28 @@ func (m *MySQLGroupRepository) Find(ctx context.Context, query group.Query) ([]*
 		db = db.Offset(query.Offset)
 	}
 
-	// 执行查询
 	if err := db.Find(&models).Error; err != nil {
 		return nil, err
 	}
 
-	for _, model := range models {
+	// Convert models to entities
+	groups := make([]*group.Group, len(models))
+	for i, model := range models {
 		entity, err := model.ToEntity()
 		if err != nil {
 			return nil, err
 		}
-		groups = append(groups, entity)
+		groups[i] = entity
 	}
 
 	return groups, nil
+}
+
+// generateCacheKey generates a cache key based on the query parameters.
+func (m *MySQLGroupRepository) generateCacheKey(query group.Query) []uint32 {
+	// Example: concatenate query parameters to form a cache key
+	// This is a simplistic approach; you might need to customize it based on your specific requirements
+	cacheKey := make([]uint32, 0, len(query.ID))
+	cacheKey = append(cacheKey, query.ID...)
+	return cacheKey
 }

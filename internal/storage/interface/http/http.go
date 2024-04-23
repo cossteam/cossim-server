@@ -4,7 +4,7 @@ import (
 	"context"
 	grpcinter "github.com/cossim/coss-server/internal/storage/interface/grpc"
 	"github.com/cossim/coss-server/internal/storage/service"
-	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/internal/user/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"

@@ -6,9 +6,9 @@ import (
 )
 
 type Query struct {
-	ID       []uint     // 群聊 ID 列表
+	ID       []uint32   // 群聊 ID 列表
 	Name     string     // 群聊名称
-	UserID   []uint     // 包含的用户 ID 列表
+	UserID   []string   // 包含的用户 ID 列表
 	CreateAt *time.Time // 创建时间范围
 	UpdateAt *time.Time // 更新时间范围
 	Limit    int        // 限制结果数量

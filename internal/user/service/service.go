@@ -7,8 +7,8 @@ import (
 	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	userv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/cache"
 	grpchandler "github.com/cossim/coss-server/internal/user/interface/grpc"
-	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/email"
 	"github.com/cossim/coss-server/pkg/email/smtp"
@@ -47,6 +47,8 @@ type Service struct {
 	gatewayPort         string
 	tokenExpiration     time.Duration
 	cache               bool
+
+	stop func() func(ctx context.Context) error
 }
 
 func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s *Service) {
@@ -64,6 +66,16 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s
 	if err != nil {
 		panic(err)
 	}
+
+	s.stop = func() func(ctx context.Context) error {
+		return func(ctx context.Context) error {
+			if err := userCache.DeleteAllCache(ctx); err != nil {
+				s.logger.Warn("delete all cache error", zap.Error(err))
+			}
+			return userCache.Close()
+		}
+	}
+
 	s.setLoadSystem()
 	s.setupRedisClient()
 	s.userCache = userCache

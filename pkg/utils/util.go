@@ -8,6 +8,7 @@ import (
 	"github.com/sony/sonyflake"
 	"golang.org/x/net/html"
 	"math/rand"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -124,4 +125,11 @@ func BytesToStruct(data []byte, out interface{}) error {
 		return err
 	}
 	return nil
+}
+
+// NewErrorWithStack 创建带有调用栈信息的错误消息
+func NewErrorWithStack(message string) error {
+	pc, file, line, _ := runtime.Caller(1)
+	funcName := runtime.FuncForPC(pc).Name()
+	return fmt.Errorf("%s %s:%d - %s", message, file, line, funcName)
 }

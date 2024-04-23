@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	"log"
 )
 
 var _ groupgrpcv1.GroupServiceServer = &GroupServiceServer{}
@@ -35,12 +34,6 @@ func (s *GroupServiceServer) GetGroupInfoByGid(ctx context.Context, request *gro
 		Avatar:          group.Avatar,
 	}
 
-	if s.cacheEnable {
-		if err = s.cache.SetGroup(ctx, resp); err != nil {
-			log.Printf("set group cache failed: %v", err)
-		}
-	}
-
 	return resp, nil
 }
 
@@ -51,21 +44,18 @@ func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request
 		return resp, code.MyCustomErrorCode.CustomMessage("group ids is empty")
 	}
 
-	if s.cacheEnable {
-		groups, err := s.cache.GetGroups(ctx, request.GroupIds)
-		if err == nil && len(groups) > 0 {
-			resp.Groups = groups
-			return resp, nil
-		}
-	}
-
 	//将uint32转成uint
 	groupIds := make([]uint, len(request.GroupIds))
 	for i, id := range request.GroupIds {
 		groupIds[i] = uint(id)
 	}
 
-	groups, err := s.repo.Find(ctx, group.Query{ID: groupIds})
+	groupIDsUint32 := make([]uint32, len(groupIds))
+	for i, id := range groupIds {
+		groupIDsUint32[i] = uint32(id)
+	}
+
+	groups, err := s.repo.Find(ctx, group.Query{ID: groupIDsUint32})
 	if err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
 	}
@@ -85,13 +75,6 @@ func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request
 	}
 
 	resp.Groups = groupAPIs
-
-	if s.cacheEnable {
-		if err = s.cache.SetGroup(ctx, resp.Groups...); err != nil {
-			log.Printf("set group cache failed: %v", err)
-		}
-	}
-
 	return resp, nil
 }
 
@@ -121,12 +104,6 @@ func (s *GroupServiceServer) UpdateGroup(ctx context.Context, request *groupgrpc
 		return nil, nil
 	}); err != nil {
 		return nil, err
-	}
-
-	if s.cacheEnable {
-		if err := s.cache.SetGroup(ctx, resp); err != nil {
-			log.Printf("set group cache failed: %v", err)
-		}
 	}
 
 	return resp, nil
@@ -175,12 +152,6 @@ func (s *GroupServiceServer) DeleteGroup(ctx context.Context, request *groupgrpc
 
 	if err := s.repo.Delete(ctx, request.GetGid()); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
-	}
-
-	if s.cacheEnable {
-		if err := s.cache.DeleteGroup(ctx, request.Gid); err != nil {
-			log.Printf("set group cache failed: %v", err)
-		}
 	}
 
 	return resp, nil

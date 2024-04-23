@@ -1,25 +1,25 @@
 package persistence
 
 import (
-	"github.com/cossim/coss-server/internal/user/domain/entity"
-	"github.com/cossim/coss-server/internal/user/domain/repository"
+	"github.com/cossim/coss-server/internal/user/cache"
+	"github.com/cossim/coss-server/internal/user/domain/user"
 	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	UR  repository.UserRepository
-	ULR repository.UserLoginRepository
+	UR  user.UserRepository
+	ULR user.UserLoginRepository
 	db  *gorm.DB
 }
 
-func NewRepositories(db *gorm.DB) *Repositories {
+func NewRepositories(db *gorm.DB, cache cache.UserCache) *Repositories {
 	return &Repositories{
-		UR:  NewUserRepo(db),
-		ULR: NewUserLoginRepo(db),
+		UR:  NewMySQLUserRepository(db, cache),
+		ULR: NewMySQLUserLoginRepository(db, cache),
 		db:  db,
 	}
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.User{}, &entity.UserLogin{})
+	return s.db.AutoMigrate(&UserModel{}, &UserLoginModel{})
 }

@@ -11,7 +11,8 @@ import (
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/api/http/model"
-	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/internal/user/cache"
+	"github.com/cossim/coss-server/internal/user/domain/user"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
@@ -26,6 +27,7 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 	"github.com/minio/minio-go/v7"
 	"github.com/o1egl/govatar"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -64,6 +66,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 		return nil, "", err
 	}
 
+	fmt.Println("infos => ", infos)
+
 	//多端设备登录限制
 	if s.ac.MultipleDeviceLimit.Enable {
 		if len(infos) >= s.ac.MultipleDeviceLimit.Max {
@@ -90,12 +94,12 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	}
 
 	driveID := len(infos) + 1
-	data2 := cache.UserInfo{
+	data2 := user.UserLogin{
 		ID:         uint(driveID),
 		UserId:     userInfo.UserId,
 		Token:      token,
 		DriverType: driveType,
-		CreateAt:   time.Now(),
+		CreatedAt:  time.Now(),
 		ClientIP:   clientIp,
 	}
 
@@ -182,6 +186,10 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest, driverType string) error {
 	loginInfo, err := s.userCache.GetUserLoginInfo(ctx, userID, driverType, int(request.LoginNumber))
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return code.MyCustomErrorCode.CustomMessage("登录信息不存在")
+		}
+		s.logger.Error("failed to get user login info", zap.Error(err))
 		return err
 	}
 
@@ -196,6 +204,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 
 	toBytes, err := utils.StructToBytes(data2)
 	if err != nil {
+		s.logger.Error("failed to struct to bytes", zap.Error(err))
 		return err
 	}
 
@@ -556,7 +565,7 @@ func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*mo
 			ClientIP:    user.ClientIP,
 			DriverType:  user.DriverType,
 			LoginNumber: user.ID,
-			LoginAt:     user.CreateAt,
+			LoginAt:     user.CreatedAt,
 		})
 	}
 	return clients, nil
@@ -784,5 +793,5 @@ func (s *Service) pushFirstLogin(ctx context.Context, userInfo *usergrpcv1.UserI
 	if err != nil {
 		s.logger.Error("发送消息失败", zap.Error(err))
 	}
-	return relation.DialogId, id.MsgId, err
+	return relation.DialogId, id.MsgId, nil
 }
