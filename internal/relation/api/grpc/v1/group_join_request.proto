@@ -75,6 +75,8 @@ message JoinGroupRequest {
   string UserId = 2;  // 用户id
   // @inject_tag: json:"msg"
   string Msg = 3; // 申请信息
+  // @inject_tag: json:"join_approve"
+  bool JoinApprove = 4;
 }
 
 message JoinGroupResponse {

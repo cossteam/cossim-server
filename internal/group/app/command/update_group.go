@@ -2,11 +2,13 @@ package command
 
 import (
 	"context"
+	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/cache"
 	"github.com/cossim/coss-server/internal/group/domain/group"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/decorator"
 	"go.uber.org/zap"
+	"time"
 )
 
 type UpdateGroup struct {
@@ -87,7 +89,7 @@ func (h *updateGroupHandler) Handle(ctx context.Context, cmd UpdateGroup) (*Upda
 	}
 
 	updateFields := map[string]interface{}{}
-	if cmd.Encrypt != nil {
+	if cmd.Encrypt != nil && *cmd.Type == uint(groupgrpcv1.GroupType_Private) {
 		updateFields["encrypt"] = *cmd.Encrypt
 	}
 	if cmd.Name != nil {
@@ -97,8 +99,10 @@ func (h *updateGroupHandler) Handle(ctx context.Context, cmd UpdateGroup) (*Upda
 		updateFields["name"] = *cmd.Avatar
 	}
 	if cmd.SilenceTime != nil {
+		if *cmd.SilenceTime < time.Now().Unix() {
+			return nil, code.MyCustomErrorCode.CustomMessage("silence_time cannot be in the past")
+		}
 		updateFields["silence_time"] = *cmd.SilenceTime
-
 	}
 	if cmd.JoinApprove != nil {
 		updateFields["join_approve"] = *cmd.JoinApprove
