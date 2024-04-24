@@ -174,6 +174,12 @@ definitions:
       avatar:
         description: Avatar 群组头像
         type: string
+      encrypt:
+        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
+        type: boolean
+      join_approve:
+        description: JoinApprove 入群审批
+        type: boolean
       member:
         description: Member 群组成员列表
         items:
@@ -183,14 +189,27 @@ definitions:
         description: Name 群组名称
         type: string
       type:
-        description: Type 群组类型
-        type: integer
+        allOf:
+        - $ref: '#/definitions/interfaces.CreateGroupRequestType'
+        description: Type 群组类型 0(私密群) 1(公开群)
     type: object
+  interfaces.CreateGroupRequestType:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - CreateGroupRequestTypeN0
+    - CreateGroupRequestTypeN1
   interfaces.CreateRoomRequest:
     properties:
       group_id:
         description: GroupId 群组ID
         type: integer
+      if:
+        properties:
+          type: {}
+        type: object
       member:
         description: Member ID of the user who will receive the call
         items:
@@ -198,14 +217,27 @@ definitions:
         type: array
       option:
         $ref: '#/definitions/interfaces.RoomOption'
+      then: {}
       type:
+        allOf:
+        - $ref: '#/definitions/interfaces.CreateRoomRequestType'
         description: Type 通话类型
-        type: string
     type: object
+  interfaces.CreateRoomRequestType:
+    enum:
+    - group
+    - user
+    type: string
+    x-enum-varnames:
+    - Group
+    - User
   interfaces.CreateRoomResponse:
     properties:
       room:
         description: Room 房间ID
+        type: string
+      url:
+        description: Url webRtc服务器地址
         type: string
     type: object
   interfaces.Group:
@@ -236,9 +268,15 @@ definitions:
       dialog_id:
         description: DialogId 对话ID
         type: integer
+      encrypt:
+        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
+        type: boolean
       id:
         description: Id 群聊ID
         type: integer
+      join_approve:
+        description: JoinApprove 入群审批
+        type: boolean
       max_members_limit:
         description: MaxMembersLimit 群组成员上限
         type: integer
@@ -247,6 +285,9 @@ definitions:
         type: string
       preferences:
         $ref: '#/definitions/interfaces.Preferences'
+      silence_time:
+        description: SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言
+        type: integer
       status:
         description: Status 群组状态
         type: integer
@@ -281,15 +322,9 @@ definitions:
         type: integer
       name:
         type: string
-      room:
-        description: Room Room ID
-        type: string
       state:
         description: State Room Status
         type: integer
-      uid:
-        description: Uid User ID
-        type: string
     type: object
   interfaces.Preferences:
     properties:
@@ -359,15 +394,33 @@ definitions:
   interfaces.UpdateGroupRequest:
     properties:
       avatar:
-        description: Avatar 新的群组头像
+        description: Avatar 新的群聊头像
         type: string
+      encrypt:
+        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
+        type: boolean
+      join_approve:
+        description: JoinApprove 入群审批
+        type: boolean
       name:
-        description: Name 新的群组名称
+        description: Name 新的群聊名称
         type: string
-      type:
-        description: Type 新的群组类型
+      silence_time:
+        description: SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言
         type: integer
+      type:
+        allOf:
+        - $ref: '#/definitions/interfaces.UpdateGroupRequestType'
+        description: Type 群组类型 0(私密群) 1(公开群)
     type: object
+  interfaces.UpdateGroupRequestType:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - UpdateGroupRequestTypeN0
+    - UpdateGroupRequestTypeN1
   model.AbortUploadRequest:
     properties:
       key:
@@ -1152,7 +1205,7 @@ paths:
       summary: 发送全体通知
       tags:
       - Admin
-  /group:
+  /api/v1/group:
     post:
       consumes:
       - application/json
@@ -1181,7 +1234,7 @@ paths:
       summary: 创建群聊
       tags:
       - group
-  /group/{id}:
+  /api/v1/group/{id}:
     delete:
       consumes:
       - application/json
@@ -1361,6 +1414,23 @@ paths:
       security:
       - bearerAuth: []
       summary: 拒绝通话
+      tags:
+      - live
+  /live/group/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取群聊通话信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取群聊通话信息成功
+          schema:
+            $ref: '#/definitions/interfaces.Room'
+      security:
+      - bearerAuth: []
+      summary: 获取群聊通话
       tags:
       - live
   /live/user:

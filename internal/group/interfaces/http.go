@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/group/app"
 	"github.com/cossim/coss-server/internal/group/app/command"
 	"github.com/cossim/coss-server/internal/group/app/query"
@@ -14,9 +15,12 @@ import (
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/gin-gonic/gin"
+	oapimiddleware "github.com/oapi-codegen/gin-middleware"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"os"
 )
 
 var _ ServerInterface = &HttpServer{}
@@ -66,7 +70,30 @@ func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
 	r.Use(middleware.AuthMiddleware(h.userCache))
-	RegisterHandlers(r.Group("/api/v1"), h)
+
+	swagger, err := GetSwagger()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
+		os.Exit(1)
+	}
+	// Clear out the servers array in the swagger spec, that skips validating
+	// that server names match. We don't know how this thing will be run.
+	swagger.Servers = nil
+
+	validatorOptions := &oapimiddleware.Options{
+		ErrorHandler: func(c *gin.Context, message string, statusCode int) {
+			response.SetFail(c, message, nil)
+		},
+	}
+	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+		return nil
+	}
+
+	// Use our validation middleware to check all requests against the
+	// OpenAPI schema.
+	r.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, validatorOptions))
+
+	RegisterHandlers(r, h)
 }
 
 func (h *HttpServer) Health(r gin.IRouter) string {
@@ -95,7 +122,7 @@ func (h *HttpServer) GetAllGroup(c *gin.Context) {
 // @Param requestBody body CreateGroupRequest true "创建一个新的群聊"
 // @Security ApiKeyAuth
 // @Success 200 {object} Group "成功创建群聊"
-// @Router /group [post]
+// @Router /api/v1/group [post]
 func (h *HttpServer) CreateGroup(c *gin.Context) {
 	req := &CreateGroupRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -105,11 +132,13 @@ func (h *HttpServer) CreateGroup(c *gin.Context) {
 
 	uid := c.Value(constants.UserID).(string)
 	createGroup, err := h.app.Commands.CreateGroup.Handle(c, command.CreateGroup{
-		CreateID: uid,
-		Name:     req.Name,
-		Avatar:   req.Avatar,
-		Type:     req.Type,
-		Member:   req.Member,
+		CreateID:    uid,
+		Name:        req.Name,
+		Avatar:      req.Avatar,
+		Type:        uint(req.Type),
+		Member:      req.Member,
+		Encrypt:     req.Encrypt,
+		JoinApprove: req.JoinApprove,
 	})
 	if err != nil {
 		c.Error(err)
@@ -141,7 +170,7 @@ func createGroupToResponse(createGroup *command.CreateGroupResponse) *CreateGrou
 // @Param id path integer true "要删除的群聊ID" format(uint32)
 // @Security ApiKeyAuth
 // @Success 200 {string} string "成功删除群聊"
-// @Router /group/{id} [delete]
+// @Router /api/v1/group/{id} [delete]
 func (h *HttpServer) DeleteGroup(c *gin.Context, id uint32) {
 	uid := c.Value(constants.UserID).(string)
 	resp, err := h.app.Commands.DeleteGroup.Handle(c, command.DeleteGroup{
@@ -161,7 +190,7 @@ func (h *HttpServer) DeleteGroup(c *gin.Context, id uint32) {
 // @Tags group
 // @Param id path integer true "群聊ID" format(uint32)
 // @Success 200 {object} GroupInfo "返回群聊信息"
-// @Router /group/{id} [get]
+// @Router /api/v1/group/{id} [get]
 func (h *HttpServer) GetGroup(c *gin.Context, id uint32) {
 	getGroup, err := h.app.Queries.GetGroup.Handle(c, query.GetGroup{
 		ID:     id,
@@ -184,6 +213,9 @@ func getGroupToResponse(getGroup *query.GroupInfo) *GroupInfo {
 		Name:            getGroup.Name,
 		Status:          getGroup.Status,
 		Type:            getGroup.Type,
+		SilenceTime:     getGroup.SilenceTime,
+		Encrypt:         getGroup.Encrypt,
+		JoinApprove:     getGroup.JoinApprove,
 		Preferences: &Preferences{
 			EntryMethod:          getGroup.Preferences.EntryMethod,
 			Identity:             getGroup.Preferences.Identity,
@@ -206,7 +238,7 @@ func getGroupToResponse(getGroup *query.GroupInfo) *GroupInfo {
 // @Param id path uint32 true "要更新的群聊ID"
 // @Param requestBody body UpdateGroupRequest true "更新现有群聊的信息"
 // @Success 200 {object} string "成功更新群聊信息"
-// @Router /group/{id} [put]
+// @Router /api/v1/group/{id} [put]
 func (h *HttpServer) UpdateGroup(c *gin.Context, id uint32) {
 	req := &UpdateGroupRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -215,12 +247,20 @@ func (h *HttpServer) UpdateGroup(c *gin.Context, id uint32) {
 	}
 
 	uid := c.Value(constants.UserID).(string)
+	var t *uint
+	if req.Type != nil {
+		tt := uint(*req.Type)
+		t = &tt
+	}
 	resp, err := h.app.Commands.UpdateGroup.Handle(c, command.UpdateGroup{
-		ID:     id,
-		Type:   req.Type,
-		UserID: uid,
-		Name:   req.Name,
-		Avatar: req.Avatar,
+		ID:          id,
+		Type:        t,
+		UserID:      uid,
+		Name:        req.Name,
+		Avatar:      req.Avatar,
+		SilenceTime: req.SilenceTime,
+		Encrypt:     req.Encrypt,
+		JoinApprove: req.JoinApprove,
 	})
 	if err != nil {
 		c.Error(err)

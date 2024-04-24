@@ -119,7 +119,7 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		return nil, err
 	}
 
-	if group.Type == groupApi.GroupType_TypeEncrypted {
+	if group.Type == groupApi.GroupType_Private {
 		return nil, code.Forbidden
 	}
 
@@ -699,7 +699,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.GroupErrGroupStatusNotAvailable
 	}
 
-	if group.Type == groupApi.GroupType_TypeEncrypted {
+	if group.Type == groupApi.GroupType_Private {
 		relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: inviterId})
 		if err != nil {
 			return err

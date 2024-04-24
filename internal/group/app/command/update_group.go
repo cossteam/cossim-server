@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/cache"
 	"github.com/cossim/coss-server/internal/group/domain/group"
 	"github.com/cossim/coss-server/pkg/code"
@@ -11,11 +10,14 @@ import (
 )
 
 type UpdateGroup struct {
-	ID     uint32 `json:"id"`
-	Type   uint32 `json:"type"`
-	UserID string `json:"user_id"`
-	Name   string `json:"name"`
-	Avatar string `json:"avatar"`
+	ID          uint32
+	Type        *uint
+	UserID      string
+	Name        *string
+	Avatar      *string
+	SilenceTime *int64
+	Encrypt     *bool
+	JoinApprove *bool
 }
 
 const (
@@ -66,13 +68,6 @@ func NewUpdateGroupHandler(
 }
 
 func (h *updateGroupHandler) Handle(ctx context.Context, cmd UpdateGroup) (*UpdateGroupResponse, error) {
-	isValidGroupType := func(value groupgrpcv1.GroupType) bool {
-		return value == groupgrpcv1.GroupType_TypeEncrypted || value == groupgrpcv1.GroupType_TypeDefault
-	}
-	if !isValidGroupType(groupgrpcv1.GroupType(cmd.Type)) {
-		return nil, code.InvalidParameter
-	}
-
 	owner, err := h.relationGroupService.IsGroupOwner(ctx, cmd.ID, cmd.UserID)
 	if err != nil {
 		return nil, err
@@ -91,40 +86,29 @@ func (h *updateGroupHandler) Handle(ctx context.Context, cmd UpdateGroup) (*Upda
 		return nil, code.GroupErrGroupNotFound
 	}
 
-	var MaxMembersLimit int
+	updateFields := map[string]interface{}{}
+	if cmd.Encrypt != nil {
+		updateFields["encrypt"] = *cmd.Encrypt
+	}
+	if cmd.Name != nil {
+		updateFields["name"] = *cmd.Name
+	}
+	if cmd.Avatar != nil {
+		updateFields["name"] = *cmd.Avatar
+	}
+	if cmd.SilenceTime != nil {
+		updateFields["silence_time"] = *cmd.SilenceTime
 
-	switch cmd.Type {
-	case uint32(groupgrpcv1.GroupType_TypeEncrypted):
-		MaxMembersLimit = EncryptedGroup
-	default:
-		MaxMembersLimit = DefaultGroup
+	}
+	if cmd.JoinApprove != nil {
+		updateFields["join_approve"] = *cmd.JoinApprove
 	}
 
-	if r.Name != cmd.Name && cmd.Name != "" {
-		r.Name = cmd.Name
-	}
-	if r.Avatar != cmd.Avatar && cmd.Avatar != "" {
-		r.Avatar = cmd.Avatar
-	}
-	if r.Type != cmd.Type {
-		r.Type = cmd.Type
+	if len(updateFields) == 0 {
+		return nil, code.MyCustomErrorCode.CustomMessage("no update fields")
 	}
 
-	if err := h.groupRepo.Update(ctx, &group.Group{
-		ID:              r.ID,
-		Type:            group.Type(r.Type),
-		MaxMembersLimit: MaxMembersLimit,
-		Name:            r.Name,
-		Avatar:          r.Avatar,
-		CreatorID:       r.CreatorID,
-	}, func(e *group.Group) (*group.Group, error) {
-		if h.cacheEnable {
-			if err := h.cache.DeleteGroup(ctx, e.ID); err != nil {
-				h.logger.Error("delete group cache error", zap.Error(err))
-			}
-		}
-		return nil, nil
-	}); err != nil {
+	if err := h.groupRepo.UpdateFields(ctx, r.ID, updateFields); err != nil {
 		return nil, err
 	}
 

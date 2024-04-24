@@ -76,11 +76,14 @@ type PushService interface {
 
 type Group struct {
 	ID              uint32
-	Type            uint32
+	Type            uint
 	MaxMembersLimit int32
 	Name            string
 	Avatar          string
 	CreatorID       string
+	SilenceTime     int64
+	JoinApprove     bool
+	Encrypt         bool
 }
 
 type GroupService interface {

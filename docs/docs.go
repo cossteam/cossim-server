@@ -49,7 +49,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/group": {
+        "/api/v1/group": {
             "post": {
                 "security": [
                     {
@@ -95,7 +95,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/group/{id}": {
+        "/api/v1/group/{id}": {
             "get": {
                 "description": "根据群聊ID获取群聊的详细信息",
                 "tags": [
@@ -231,6 +231,34 @@ const docTemplate = `{
                         "description": "创建通话成功",
                         "schema": {
                             "$ref": "#/definitions/interfaces.CreateRoomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/live/group/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "获取群聊通话信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "live"
+                ],
+                "summary": "获取群聊通话",
+                "responses": {
+                    "200": {
+                        "description": "获取群聊通话信息成功",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.Room"
                         }
                     }
                 }
@@ -3436,6 +3464,14 @@ const docTemplate = `{
                     "description": "Avatar 群组头像",
                     "type": "string"
                 },
+                "encrypt": {
+                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
+                    "type": "boolean"
+                },
+                "join_approve": {
+                    "description": "JoinApprove 入群审批",
+                    "type": "boolean"
+                },
                 "member": {
                     "description": "Member 群组成员列表",
                     "type": "array",
@@ -3448,10 +3484,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "description": "Type 群组类型",
-                    "type": "integer"
+                    "description": "Type 群组类型 0(私密群) 1(公开群)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/interfaces.CreateGroupRequestType"
+                        }
+                    ]
                 }
             }
+        },
+        "interfaces.CreateGroupRequestType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "CreateGroupRequestTypeN0",
+                "CreateGroupRequestTypeN1"
+            ]
         },
         "interfaces.CreateRoomRequest": {
             "type": "object",
@@ -3459,6 +3510,12 @@ const docTemplate = `{
                 "group_id": {
                     "description": "GroupId 群组ID",
                     "type": "integer"
+                },
+                "if": {
+                    "type": "object",
+                    "properties": {
+                        "type": {}
+                    }
                 },
                 "member": {
                     "description": "Member ID of the user who will receive the call",
@@ -3470,17 +3527,37 @@ const docTemplate = `{
                 "option": {
                     "$ref": "#/definitions/interfaces.RoomOption"
                 },
+                "then": {},
                 "type": {
                     "description": "Type 通话类型",
-                    "type": "string"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/interfaces.CreateRoomRequestType"
+                        }
+                    ]
                 }
             }
+        },
+        "interfaces.CreateRoomRequestType": {
+            "type": "string",
+            "enum": [
+                "group",
+                "user"
+            ],
+            "x-enum-varnames": [
+                "Group",
+                "User"
+            ]
         },
         "interfaces.CreateRoomResponse": {
             "type": "object",
             "properties": {
                 "room": {
                     "description": "Room 房间ID",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "Url webRtc服务器地址",
                     "type": "string"
                 }
             }
@@ -3524,9 +3601,17 @@ const docTemplate = `{
                     "description": "DialogId 对话ID",
                     "type": "integer"
                 },
+                "encrypt": {
+                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
+                    "type": "boolean"
+                },
                 "id": {
                     "description": "Id 群聊ID",
                     "type": "integer"
+                },
+                "join_approve": {
+                    "description": "JoinApprove 入群审批",
+                    "type": "boolean"
                 },
                 "max_members_limit": {
                     "description": "MaxMembersLimit 群组成员上限",
@@ -3538,6 +3623,10 @@ const docTemplate = `{
                 },
                 "preferences": {
                     "$ref": "#/definitions/interfaces.Preferences"
+                },
+                "silence_time": {
+                    "description": "SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言",
+                    "type": "integer"
                 },
                 "status": {
                     "description": "Status 群组状态",
@@ -3588,17 +3677,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "room": {
-                    "description": "Room Room ID",
-                    "type": "string"
-                },
                 "state": {
                     "description": "State Room Status",
                     "type": "integer"
-                },
-                "uid": {
-                    "description": "Uid User ID",
-                    "type": "string"
                 }
             }
         },
@@ -3698,18 +3779,45 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
-                    "description": "Avatar 新的群组头像",
+                    "description": "Avatar 新的群聊头像",
                     "type": "string"
+                },
+                "encrypt": {
+                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
+                    "type": "boolean"
+                },
+                "join_approve": {
+                    "description": "JoinApprove 入群审批",
+                    "type": "boolean"
                 },
                 "name": {
-                    "description": "Name 新的群组名称",
+                    "description": "Name 新的群聊名称",
                     "type": "string"
                 },
-                "type": {
-                    "description": "Type 新的群组类型",
+                "silence_time": {
+                    "description": "SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言",
                     "type": "integer"
+                },
+                "type": {
+                    "description": "Type 群组类型 0(私密群) 1(公开群)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/interfaces.UpdateGroupRequestType"
+                        }
+                    ]
                 }
             }
+        },
+        "interfaces.UpdateGroupRequestType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "UpdateGroupRequestTypeN0",
+                "UpdateGroupRequestTypeN1"
+            ]
         },
         "model.AbortUploadRequest": {
             "type": "object",

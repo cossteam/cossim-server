@@ -35,6 +35,10 @@ func (s *RelationUserGrpc) IsFriendsWithAll(ctx context.Context, currentUserID s
 }
 
 func (s *RelationUserGrpc) GetUserRelationships(ctx context.Context, currentUserID string, userIDs []string) (map[string]command.UserRelationship, error) {
+	if len(userIDs) == 0 {
+		return map[string]command.UserRelationship{}, nil
+	}
+
 	friends, err := s.client.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: currentUserID, FriendIds: userIDs})
 	if err != nil {
 		return nil, code.RelationErrCreateGroupFailed

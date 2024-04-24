@@ -19,6 +19,15 @@ message Group {
   string Avatar = 7;
   // @inject_tag: json:"member"
   repeated string Member = 8; // 创建群聊的时候邀请的成员
+  // @inject_tag: json:"silence_time"
+  // 禁言时间，如果为0表示不开启禁言
+  int64 SilenceTime = 9;
+  // @inject_tag: json:"join_approve"
+  // 入群申请是否需要审核
+  bool JoinApprove = 10;
+  // @inject_tag: json:"encrypt"
+  // 是否开启群聊加密，只有当群聊类型为私密时有效
+  bool  Encrypt = 11;
 }
 
 message GetGroupInfoRequest {
@@ -59,8 +68,8 @@ enum GroupStatus {
   GROUP_STATUS_DELETED = 2;  // 删除状态
 }
 enum GroupType {
-  TypeDefault  = 0; // 公开群
-  TypeEncrypted = 1; // 私有群
+  Private  = 0; // 私有群
+  Public = 1; // 公开群
 }
 
 service GroupService {

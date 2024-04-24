@@ -1,15 +1,18 @@
 package query
 
 type GroupInfo struct {
-	Id              uint32       `json:"id"`
-	Avatar          string       `json:"avatar"`
-	Name            string       `json:"name"`
-	Type            uint32       `json:"type"`
-	Status          int          `json:"status"`
-	MaxMembersLimit int32        `json:"max_members_limit"`
-	CreatorId       string       `json:"creator_id"`
-	DialogId        uint32       `json:"dialog_id"`
-	Preferences     *Preferences `json:"preferences,omitempty"`
+	Id              uint32
+	Avatar          string
+	Name            string
+	Type            uint32
+	Status          int
+	MaxMembersLimit int32
+	CreatorId       string
+	DialogId        uint32
+	SilenceTime     int64
+	JoinApprove     bool
+	Encrypt         bool
+	Preferences     *Preferences
 }
 
 type Preferences struct {

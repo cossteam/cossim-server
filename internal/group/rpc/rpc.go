@@ -16,7 +16,7 @@ var _ groupgrpcv1.GroupServiceServer = &GroupServiceServer{}
 func (s *GroupServiceServer) GetGroupInfoByGid(ctx context.Context, request *groupgrpcv1.GetGroupInfoRequest) (*groupgrpcv1.Group, error) {
 	resp := &groupgrpcv1.Group{}
 
-	group, err := s.repo.Get(ctx, request.Gid)
+	entity, err := s.repo.Get(ctx, request.Gid)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.GroupErrGroupNotFound.Code()), err.Error())
@@ -25,13 +25,16 @@ func (s *GroupServiceServer) GetGroupInfoByGid(ctx context.Context, request *gro
 	}
 
 	resp = &groupgrpcv1.Group{
-		Id:              group.ID,
-		Type:            groupgrpcv1.GroupType(group.Type),
-		Status:          groupgrpcv1.GroupStatus(group.Status),
-		MaxMembersLimit: int32(group.MaxMembersLimit),
-		CreatorId:       group.CreatorID,
-		Name:            group.Name,
-		Avatar:          group.Avatar,
+		Id:              entity.ID,
+		Type:            groupgrpcv1.GroupType(entity.Type),
+		Status:          groupgrpcv1.GroupStatus(entity.Status),
+		MaxMembersLimit: int32(entity.MaxMembersLimit),
+		CreatorId:       entity.CreatorID,
+		Name:            entity.Name,
+		Avatar:          entity.Avatar,
+		SilenceTime:     entity.SilenceTime,
+		JoinApprove:     entity.JoinApprove,
+		Encrypt:         entity.Encrypt,
 	}
 
 	return resp, nil
@@ -41,7 +44,7 @@ func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request
 	resp := &groupgrpcv1.GetBatchGroupInfoResponse{}
 
 	if len(request.GroupIds) == 0 {
-		return resp, code.MyCustomErrorCode.CustomMessage("group ids is empty")
+		return resp, code.MyCustomErrorCode.CustomMessage("entity ids is empty")
 	}
 
 	//将uint32转成uint
@@ -55,21 +58,24 @@ func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request
 		groupIDsUint32[i] = uint32(id)
 	}
 
-	groups, err := s.repo.Find(ctx, group.Query{ID: groupIDsUint32})
+	entitys, err := s.repo.Find(ctx, group.Query{ID: groupIDsUint32})
 	if err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
 	}
 
 	var groupAPIs []*groupgrpcv1.Group
-	for _, group := range groups {
+	for _, entity := range entitys {
 		groupAPI := &groupgrpcv1.Group{
-			Id:              group.ID,
-			Type:            groupgrpcv1.GroupType(group.Type),
-			Status:          groupgrpcv1.GroupStatus(group.Status),
-			MaxMembersLimit: int32(group.MaxMembersLimit),
-			CreatorId:       group.CreatorID,
-			Name:            group.Name,
-			Avatar:          group.Avatar,
+			Id:              entity.ID,
+			Type:            groupgrpcv1.GroupType(entity.Type),
+			Status:          groupgrpcv1.GroupStatus(entity.Status),
+			MaxMembersLimit: int32(entity.MaxMembersLimit),
+			CreatorId:       entity.CreatorID,
+			Name:            entity.Name,
+			Avatar:          entity.Avatar,
+			SilenceTime:     entity.SilenceTime,
+			JoinApprove:     entity.JoinApprove,
+			Encrypt:         entity.Encrypt,
 		}
 		groupAPIs = append(groupAPIs, groupAPI)
 	}
@@ -81,7 +87,7 @@ func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request
 func (s *GroupServiceServer) UpdateGroup(ctx context.Context, request *groupgrpcv1.UpdateGroupRequest) (*groupgrpcv1.Group, error) {
 	resp := &groupgrpcv1.Group{}
 
-	po := &group.Group{
+	entity := &group.Group{
 		ID:              request.Group.Id,
 		Type:            group.Type(request.Group.Type),
 		Status:          group.Status(request.Group.Status),
@@ -89,9 +95,12 @@ func (s *GroupServiceServer) UpdateGroup(ctx context.Context, request *groupgrpc
 		CreatorID:       request.Group.CreatorId,
 		Name:            request.Group.Name,
 		Avatar:          request.Group.Avatar,
+		SilenceTime:     request.Group.SilenceTime,
+		JoinApprove:     request.Group.JoinApprove,
+		Encrypt:         request.Group.Encrypt,
 	}
 
-	if err := s.repo.Update(ctx, po, func(h *group.Group) (*group.Group, error) {
+	if err := s.repo.Update(ctx, entity, func(h *group.Group) (*group.Group, error) {
 		resp = &groupgrpcv1.Group{
 			Id:              h.ID,
 			Type:            groupgrpcv1.GroupType(h.Type),
@@ -100,6 +109,9 @@ func (s *GroupServiceServer) UpdateGroup(ctx context.Context, request *groupgrpc
 			CreatorId:       h.CreatorID,
 			Name:            h.Name,
 			Avatar:          h.Avatar,
+			SilenceTime:     h.SilenceTime,
+			JoinApprove:     h.JoinApprove,
+			Encrypt:         h.Encrypt,
 		}
 		return nil, nil
 	}); err != nil {
@@ -112,16 +124,19 @@ func (s *GroupServiceServer) UpdateGroup(ctx context.Context, request *groupgrpc
 func (s *GroupServiceServer) CreateGroup(ctx context.Context, request *groupgrpcv1.CreateGroupRequest) (*groupgrpcv1.Group, error) {
 	resp := &groupgrpcv1.Group{}
 
-	po := &group.Group{
-		Type:            group.Type(request.GetGroup().Type),
-		Status:          group.Status(request.GetGroup().Status),
-		MaxMembersLimit: int(request.GetGroup().MaxMembersLimit),
-		CreatorID:       request.GetGroup().CreatorId,
+	entity := &group.Group{
+		Type:            group.Type(request.Group.Type),
+		Status:          group.Status(request.Group.Status),
+		MaxMembersLimit: int(request.Group.MaxMembersLimit),
+		CreatorID:       request.Group.CreatorId,
 		Name:            request.Group.Name,
-		Avatar:          request.GetGroup().Avatar,
+		Avatar:          request.Group.Avatar,
+		SilenceTime:     request.Group.SilenceTime,
+		JoinApprove:     request.Group.JoinApprove,
+		Encrypt:         request.Group.Encrypt,
 	}
 
-	if err := s.repo.Create(ctx, po, func(h *group.Group) (*group.Group, error) {
+	if err := s.repo.Create(ctx, entity, func(h *group.Group) (*group.Group, error) {
 		resp = &groupgrpcv1.Group{
 			Id:              h.ID,
 			Type:            groupgrpcv1.GroupType(h.Type),
@@ -130,6 +145,9 @@ func (s *GroupServiceServer) CreateGroup(ctx context.Context, request *groupgrpc
 			CreatorId:       h.CreatorID,
 			Name:            h.Name,
 			Avatar:          h.Avatar,
+			SilenceTime:     h.SilenceTime,
+			JoinApprove:     h.JoinApprove,
+			Encrypt:         h.Encrypt,
 		}
 		return nil, nil
 	}); err != nil {

@@ -156,6 +156,7 @@ var (
 	GroupErrSetGroupMsgReadFailed                 = New(15010, "设置群聊消息已读状态失败")
 	GroupErrGetGroupMsgReadersFailed              = New(15011, "获取群聊消息阅读者失败")
 	GroupErrGetGroupMsgReadByMsgIdAndUserIdFailed = New(15012, "获取群聊消息阅读者失败")
+	GroupErrGroupIsSilence                        = New(15013, "群聊禁言中")
 
 	// 通话服务错误码定义
 	LiveErrCreateCallFailed         = New(16000, "创建通话失败")
