@@ -109,14 +109,25 @@ func (m *MySQLGroupRepository) Automigrate() error {
 }
 
 func (m *MySQLGroupRepository) UpdateFields(ctx context.Context, id uint32, fields map[string]interface{}) error {
-	return m.db.WithContext(ctx).Model(&GroupModel{}).Where("id = ?", id).Unscoped().Updates(fields).Error
+	if err := m.db.WithContext(ctx).Model(&GroupModel{}).Where("id = ?", id).Unscoped().Updates(fields).Error; err != nil {
+		return err
+	}
+
+	if m.cache != nil {
+		if err := m.cache.DeleteGroup(ctx, id); err != nil {
+			log.Println("Error deleting group from cache:", err)
+		}
+	}
+
+	return nil
 }
 
 func (m *MySQLGroupRepository) Get(ctx context.Context, id uint32) (*group.Group, error) {
-	cachedGroup, err := m.cache.GetGroup(ctx, id)
-	if err == nil && cachedGroup != nil {
-		return cachedGroup, nil
-
+	if m.cache != nil {
+		cachedGroup, err := m.cache.GetGroup(ctx, id)
+		if err == nil && cachedGroup != nil {
+			return cachedGroup, nil
+		}
 	}
 
 	model := &GroupModel{}
@@ -129,8 +140,10 @@ func (m *MySQLGroupRepository) Get(ctx context.Context, id uint32) (*group.Group
 		return nil, err
 	}
 
-	if err := m.cache.SetGroup(ctx, entity); err != nil {
-		log.Println("Error caching group:", err)
+	if m.cache != nil {
+		if err := m.cache.SetGroup(ctx, entity); err != nil {
+			log.Println("Error caching group:", err)
+		}
 	}
 
 	return model.ToEntity()
@@ -169,8 +182,6 @@ func (m *MySQLGroupRepository) Update(ctx context.Context, group *group.Group, u
 	//	}
 	//}
 
-	fmt.Println("model => ", model)
-
 	// 再次保存更新后的数据
 	if err := m.db.WithContext(ctx).Save(model).Error; err != nil {
 		return err
@@ -183,6 +194,16 @@ func (m *MySQLGroupRepository) Update(ctx context.Context, group *group.Group, u
 	_, err := updateFn(group)
 	if err != nil {
 		return err
+	}
+
+	if m.cache != nil {
+		entity, err := model.ToEntity()
+		if err != nil {
+			return err
+		}
+		if err := m.cache.SetGroup(ctx, entity); err != nil {
+			log.Println("Error caching group:", err)
+		}
 	}
 
 	return nil
@@ -219,8 +240,17 @@ func (m *MySQLGroupRepository) create(ctx context.Context, group *group.Group, c
 }
 
 func (m *MySQLGroupRepository) Delete(ctx context.Context, id uint32) error {
-	err := m.db.WithContext(ctx).Delete(&GroupModel{}, id).Error
-	return err
+	if err := m.db.WithContext(ctx).Delete(&GroupModel{}, id).Error; err != nil {
+		return err
+	}
+
+	if m.cache != nil {
+		if err := m.cache.DeleteGroup(ctx, id); err != nil {
+			log.Println("Error caching group:", err)
+		}
+	}
+
+	return nil
 }
 
 // Find retrieves groups based on the provided query.
