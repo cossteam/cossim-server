@@ -89,7 +89,7 @@ func (r *MySQLUserLoginRepository) InsertUserLogin(ctx context.Context, user *us
 		return err
 	}
 
-	return r.db.WithContext(ctx).Where(UserLoginModel{
+	if err := r.db.WithContext(ctx).Where(UserLoginModel{
 		UserId:   model.UserId,
 		DriverId: model.DriverId,
 		LastAt:   model.LastAt,
@@ -100,7 +100,13 @@ func (r *MySQLUserLoginRepository) InsertUserLogin(ctx context.Context, user *us
 			Token:       model.Token,
 			LastAt:      model.LastAt,
 		}).
-		FirstOrCreate(&model).Error
+		FirstOrCreate(&model).Error; err != nil {
+		return err
+	}
+
+	user.ID = model.ID
+
+	return nil
 }
 
 func (r *MySQLUserLoginRepository) GetUserLoginByDriverIdAndUserId(ctx context.Context, driverId, userId string) (*user.UserLogin, error) {
