@@ -131,7 +131,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 		})
 
 		if fristLogin {
-			_, msgId, err := s.pushFirstLogin(ctx, userInfo, "", req.DriverId)
+			_, msgId, err := s.pushFirstLogin(ctx, userInfo, clientIp, req.DriverId)
 			if err != nil {
 				return status.Error(codes.Aborted, err.Error())
 			}
