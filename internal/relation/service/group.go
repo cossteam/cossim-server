@@ -128,9 +128,31 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		s.logger.Error("获取群聊成员失败", zap.Error(err))
 		return nil, err
 	}
-
 	if len(groupRelation.UserIds) >= int(group.MaxMembersLimit) {
 		return nil, code.RelationGroupErrGroupFull
+	}
+
+	if !group.JoinApprove {
+		// 直接加入群聊
+		_, err = s.relationGroupJoinRequestService.JoinGroup(ctx, &relationgrpcv1.JoinGroupRequest{
+			UserId:      uid,
+			GroupId:     req.GroupID,
+			JoinApprove: false,
+		})
+		if err != nil {
+			s.logger.Error("加入群聊失败", zap.Error(err))
+			return nil, err
+		}
+		return nil, nil
+	}
+
+	//判断是否在群聊中
+	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+		GroupId: req.GroupID,
+		UserId:  uid,
+	})
+	if relation != nil && relation.GroupId != 0 {
+		return nil, code.RelationGroupErrAlreadyInGroup
 	}
 
 	// 查询是不是已经有邀请
@@ -142,21 +164,12 @@ func (s *Service) JoinGroup(ctx context.Context, uid string, req *model.JoinGrou
 		s.logger.Error("获取群聊信息失败", zap.Error(err))
 	}
 
-	if id != nil && id.GroupId != 0 {
+	if id != nil && id.GroupId != 0 && id.Status == relationgrpcv1.GroupRequestStatus_Pending {
 		return nil, code.RelationErrGroupRequestAlreadyProcessed
 	}
 
 	if group.Status != groupApi.GroupStatus_GROUP_STATUS_NORMAL {
 		return nil, code.GroupErrGroupStatusNotAvailable
-	}
-
-	//判断是否在群聊中
-	relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
-		GroupId: req.GroupID,
-		UserId:  uid,
-	})
-	if relation != nil && relation.GroupId != 0 {
-		return nil, code.RelationGroupErrAlreadyInGroup
 	}
 
 	// 添加群聊申请记录

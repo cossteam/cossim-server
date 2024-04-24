@@ -74,6 +74,10 @@ func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId stri
 		return nil, err
 	}
 
+	if group.Status != groupgrpcv1.GroupStatus_GROUP_STATUS_NORMAL {
+		return nil, code.GroupErrGroupStatusNotAvailable
+	}
+
 	if group.SilenceTime != 0 {
 		return nil, code.GroupErrGroupIsSilence
 	}

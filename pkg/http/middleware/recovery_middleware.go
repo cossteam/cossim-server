@@ -45,15 +45,13 @@ func GRPCErrorMiddleware(logger *zap.Logger) gin.HandlerFunc {
 
 func HandleError(c *gin.Context, logger *zap.Logger, err error) {
 	// 判断 gRPC 错误码
-	if grpcCode := status.Code(err); grpcCode == codes.Unavailable {
-		// 连接不可用错误处理
-		logger.Error("service unavailable", zap.Error(err))
-	} else if grpcCode == codes.Unauthenticated {
-		// 未认证错误处理
-		logger.Error("service unauthenticated", zap.Error(err))
-	} else {
-		logger.Error("service error", zap.Error(err))
-	}
+	//if grpcCode := status.Code(err); grpcCode == codes.Unavailable {
+	//	// 连接不可用错误处理
+	//	logger.Error("service unavailable", zap.Error(err))
+	//} else if grpcCode == codes.Unauthenticated {
+	//	// 未认证错误处理
+	//	logger.Error("service unauthenticated", zap.Error(err))
+	//}
 
 	var ec code.Codes
 	if st, ok := status.FromError(err); ok {
@@ -65,6 +63,7 @@ func HandleError(c *gin.Context, logger *zap.Logger, err error) {
 			return
 		}
 	}
+	logger.Error("service error", zap.String("msg", ec.Message()), zap.Error(ec))
 	response.Fail(c, ec.Message(), nil)
 }
 

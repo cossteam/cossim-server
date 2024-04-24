@@ -99,6 +99,48 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 	resp := &v1.JoinGroupResponse{}
 	relations := make([]*entity.GroupJoinRequest, 0)
 
+	//获取对话id
+	dialog, err := s.dr.GetDialogByGroupId(uint(request.GroupId))
+	if err != nil {
+		return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
+	}
+
+	if !request.JoinApprove {
+		if err := s.db.Transaction(func(tx *gorm.DB) error {
+			npo := persistence.NewRepositories(tx)
+
+			//加入对话
+			_, err := npo.Dr.JoinDialog(dialog.ID, request.UserId)
+			if err != nil {
+				return err
+			}
+
+			gr := &entity.GroupRelation{
+				GroupID:     uint(request.GroupId),
+				UserID:      request.UserId,
+				Identity:    entity.IdentityUser,
+				JoinedAt:    time.Now(),
+				EntryMethod: entity.EntrySearch,
+			}
+			//加入群聊
+			if _, err := s.grr.CreateRelation(gr); err != nil {
+				return err
+			}
+
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+
+		if s.cacheEnable {
+			if err := s.cache.DeleteRelation(ctx, request.UserId, request.GroupId); err != nil {
+				log.Printf("delete group relation list by user failed, err: %v", err)
+			}
+		}
+
+		return nil, nil
+	}
+
 	// 添加管理员群聊申请记录
 	ids, err := s.grr.GetGroupAdminIds(request.GroupId)
 	if err != nil {
