@@ -57,7 +57,7 @@ gen: ## generate protobuf file
 
 .PHONY: gen-openapi
 gen-openapi:
-	@oapi-codegen -generate gin -o interfaces/openapi.gen.go -package interfaces api/openapi/group.yaml
+	@oapi-codegen -generate spec,gin -o interfaces/openapi.gen.go -package interfaces api/openapi/group.yaml
 	@oapi-codegen -generate types -o interfaces/openapi.types.go -package interfaces api/openapi/group.yaml
 
 run: # Run Develop server

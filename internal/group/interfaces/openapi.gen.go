@@ -4,9 +4,16 @@
 package interfaces
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
+	"path"
+	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
 )
@@ -14,19 +21,19 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// 获取所有群聊信息
-	// (GET /group)
+	// (GET /api/v1/group)
 	GetAllGroup(c *gin.Context)
 	// 创建群聊
-	// (POST /group)
+	// (POST /api/v1/group)
 	CreateGroup(c *gin.Context)
 	// 删除群聊
-	// (DELETE /group/{id})
+	// (DELETE /api/v1/group/{id})
 	DeleteGroup(c *gin.Context, id uint32)
 	// 获取群聊信息
-	// (GET /group/{id})
+	// (GET /api/v1/group/{id})
 	GetGroup(c *gin.Context, id uint32)
 	// 更新群聊信息
-	// (PUT /group/{id})
+	// (PUT /api/v1/group/{id})
 	UpdateGroup(c *gin.Context, id uint32)
 }
 
@@ -164,9 +171,112 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.GET(options.BaseURL+"/group", wrapper.GetAllGroup)
-	router.POST(options.BaseURL+"/group", wrapper.CreateGroup)
-	router.DELETE(options.BaseURL+"/group/:id", wrapper.DeleteGroup)
-	router.GET(options.BaseURL+"/group/:id", wrapper.GetGroup)
-	router.PUT(options.BaseURL+"/group/:id", wrapper.UpdateGroup)
+	router.GET(options.BaseURL+"/api/v1/group", wrapper.GetAllGroup)
+	router.POST(options.BaseURL+"/api/v1/group", wrapper.CreateGroup)
+	router.DELETE(options.BaseURL+"/api/v1/group/:id", wrapper.DeleteGroup)
+	router.GET(options.BaseURL+"/api/v1/group/:id", wrapper.GetGroup)
+	router.PUT(options.BaseURL+"/api/v1/group/:id", wrapper.UpdateGroup)
+}
+
+// Base64 encoded, gzipped, json marshaled Swagger object
+var swaggerSpec = []string{
+
+	"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",
+	"/2AFx+dtHQAA",
+}
+
+// GetSwagger returns the content of the embedded swagger specification file
+// or error if failed to decode
+func decodeSpec() ([]byte, error) {
+	zipped, err := base64.StdEncoding.DecodeString(strings.Join(swaggerSpec, ""))
+	if err != nil {
+		return nil, fmt.Errorf("error base64 decoding spec: %w", err)
+	}
+	zr, err := gzip.NewReader(bytes.NewReader(zipped))
+	if err != nil {
+		return nil, fmt.Errorf("error decompressing spec: %w", err)
+	}
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(zr)
+	if err != nil {
+		return nil, fmt.Errorf("error decompressing spec: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+var rawSpec = decodeSpecCached()
+
+// a naive cached of a decoded swagger spec
+func decodeSpecCached() func() ([]byte, error) {
+	data, err := decodeSpec()
+	return func() ([]byte, error) {
+		return data, err
+	}
+}
+
+// Constructs a synthetic filesystem for resolving external references when loading openapi specifications.
+func PathToRawSpec(pathToFile string) map[string]func() ([]byte, error) {
+	res := make(map[string]func() ([]byte, error))
+	if len(pathToFile) > 0 {
+		res[pathToFile] = rawSpec
+	}
+
+	return res
+}
+
+// GetSwagger returns the Swagger specification corresponding to the generated code
+// in this file. The external references of Swagger specification are resolved.
+// The logic of resolving external references is tightly connected to "import-mapping" feature.
+// Externally referenced files must be embedded in the corresponding golang packages.
+// Urls can be supported but this task was out of the scope.
+func GetSwagger() (swagger *openapi3.T, err error) {
+	resolvePath := PathToRawSpec("")
+
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	loader.ReadFromURIFunc = func(loader *openapi3.Loader, url *url.URL) ([]byte, error) {
+		pathToFile := url.String()
+		pathToFile = path.Clean(pathToFile)
+		getSpec, ok := resolvePath[pathToFile]
+		if !ok {
+			err1 := fmt.Errorf("path not found: %s", pathToFile)
+			return nil, err1
+		}
+		return getSpec()
+	}
+	var specData []byte
+	specData, err = rawSpec()
+	if err != nil {
+		return
+	}
+	swagger, err = loader.LoadFromData(specData)
+	if err != nil {
+		return
+	}
+	return
 }

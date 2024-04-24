@@ -27,6 +27,9 @@ type GroupModel struct {
 	CreatorID       string `gorm:"type:varchar(64);comment:创建者id"`
 	Name            string `gorm:"comment:群聊名称"`
 	Avatar          string `gorm:"default:'';comment:头像（群）"`
+	SilenceTime     int64  `gorm:"comment:全员禁言结束时间"`
+	JoinApprove     bool   `gorm:"default:false;comment:是否开启入群验证"`
+	Encrypt         bool   `gorm:"default:false;comment:是否开启群聊加密，只有当群聊类型为私密群时，该字段才有效"`
 }
 
 func (bm *BaseModel) TableName() string {
@@ -54,13 +57,15 @@ func (m *GroupModel) FromEntity(e *group.Group) error {
 		return err
 	}
 	m.ID = e.ID
-	m.CreatedAt = e.CreatedAt
 	m.Type = uint(e.Type)
 	m.Status = uint(e.Status)
 	m.MaxMembersLimit = e.MaxMembersLimit
 	m.CreatorID = e.CreatorID
 	m.Name = e.Name
 	m.Avatar = e.Avatar
+	m.SilenceTime = e.SilenceTime
+	m.JoinApprove = e.JoinApprove
+	m.Encrypt = e.Encrypt
 	return nil
 }
 
@@ -77,6 +82,9 @@ func (m *GroupModel) ToEntity() (*group.Group, error) {
 		CreatorID:       m.CreatorID,
 		Name:            m.Name,
 		Avatar:          m.Avatar,
+		SilenceTime:     m.SilenceTime,
+		JoinApprove:     m.JoinApprove,
+		Encrypt:         m.Encrypt,
 	}, nil
 }
 
@@ -101,7 +109,7 @@ func (m *MySQLGroupRepository) Automigrate() error {
 }
 
 func (m *MySQLGroupRepository) UpdateFields(ctx context.Context, id uint32, fields map[string]interface{}) error {
-	return m.db.WithContext(ctx).Where("id = ?", id).Unscoped().Updates(fields).Error
+	return m.db.WithContext(ctx).Model(&GroupModel{}).Where("id = ?", id).Unscoped().Updates(fields).Error
 }
 
 func (m *MySQLGroupRepository) Get(ctx context.Context, id uint32) (*group.Group, error) {
@@ -133,6 +141,37 @@ func (m *MySQLGroupRepository) Update(ctx context.Context, group *group.Group, u
 	if err := model.FromEntity(group); err != nil {
 		return err
 	}
+
+	//// 查询数据库中原始数据
+	//originalModel := &GroupModel{}
+	//if err := m.db.WithContext(ctx).First(originalModel, "id = ?", group.ID).Error; err != nil {
+	//	return err
+	//}
+	//
+	//// 获取更新后的字段列表
+	//updatedFields := make(map[string]interface{})
+	//updatedFieldsValue := reflect.ValueOf(model).Elem()
+	//for i := 0; i < updatedFieldsValue.NumField(); i++ {
+	//	fieldName := updatedFieldsValue.Type().Field(i).Name
+	//	fieldValue := updatedFieldsValue.Field(i).Interface()
+	//	updatedFields[fieldName] = fieldValue
+	//}
+	//
+	//// 遍历对比字段值并更新
+	//for fieldName, updatedValue := range updatedFields {
+	//	originalValue := reflect.ValueOf(originalModel).Elem().FieldByName(fieldName).Interface()
+	//	if reflect.DeepEqual(updatedValue, originalValue) {
+	//		// 如果更新后的值与原始值相同，则使用原始数据的值
+	//		reflect.ValueOf(model).Elem().FieldByName(fieldName).Set(reflect.ValueOf(originalValue))
+	//	} else {
+	//		// 否则使用更新后的值
+	//		reflect.ValueOf(model).Elem().FieldByName(fieldName).Set(reflect.ValueOf(updatedValue))
+	//	}
+	//}
+
+	fmt.Println("model => ", model)
+
+	// 再次保存更新后的数据
 	if err := m.db.WithContext(ctx).Save(model).Error; err != nil {
 		return err
 	}

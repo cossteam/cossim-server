@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
+	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/api/http/model"
 	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
@@ -65,6 +66,17 @@ func (s *Service) sendWsGroupMsg(ctx context.Context, uIds []string, driverId st
 }
 
 func (s *Service) SendGroupMsg(ctx context.Context, userID string, driverId string, req *model.SendGroupMsgRequest) (interface{}, error) {
+	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
+		Gid: req.GroupId,
+	})
+	if err != nil {
+		s.logger.Error("获取群聊信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	if group.SilenceTime != 0 {
+		return nil, code.GroupErrGroupIsSilence
+	}
 
 	if !model.IsAllowedConversationType(req.IsBurnAfterReadingType) {
 		return nil, code.MsgErrInsertUserMessageFailed

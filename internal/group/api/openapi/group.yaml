@@ -12,7 +12,7 @@ tags:
       description: Find out more
       url: http://swagger.io
 paths:
-  /group:
+  /api/v1/group:
     post:
       tags:
         - group
@@ -48,7 +48,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Group'
-  /group/{id}:
+  /api/v1/group/{id}:
     parameters:
       - name: id
         in: path
@@ -116,6 +116,21 @@ paths:
         '200':
           description: 成功删除群聊
 components:
+  requestBodies:
+    UpdateGroupRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/UpdateGroupRequest"
+              - $ref: "#/components/schemas/EncryptTrueTypePrivate"
+    CreateGroupRequest:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/CreateGroupRequest"
+              - $ref: "#/components/schemas/EncryptTrueTypePrivate"
   schemas:
     Group:
       type: object
@@ -140,8 +155,9 @@ components:
       properties:
         type:
           type: integer
-          format: uint32
-          description: 群组类型
+          format: uint
+          description: 群组类型 0(私密群) 1(公开群)
+          enum: [0, 1]
           x-go-type-skip-optional-pointer: true
         name:
           type: string
@@ -157,8 +173,17 @@ components:
             type: string
           description: 群组成员列表
           x-go-type-skip-optional-pointer: true
+        join_approve:
+          type: boolean
+          description: 入群审批
+          x-go-type-skip-optional-pointer: true
+        encrypt:
+          type: boolean
+          description: 是否开启加密，只有当群聊为私密群才能开启
+          x-go-type-skip-optional-pointer: true
       required:
         - name
+        - type
     CreateGroupResponse:
       type: object
       properties:
@@ -244,6 +269,19 @@ components:
           format: uint32
           description: 对话ID
           x-go-type-skip-optional-pointer: true
+        silence_time:
+          type: integer
+          format: int64
+          description: 群禁言结束时间，不为0表示开启群聊全员禁言
+          x-go-type-skip-optional-pointer: true
+        join_approve:
+          type: boolean
+          description: 入群审批
+          x-go-type-skip-optional-pointer: true
+        encrypt:
+          type: boolean
+          description: 是否开启加密，只有当群聊为私密群才能开启
+          x-go-type-skip-optional-pointer: true
         preferences:
           $ref: '#/components/schemas/Preferences'
     Preferences:
@@ -300,14 +338,36 @@ components:
       properties:
         name:
           type: string
-          description: 新的群组名称
-          x-go-type-skip-optional-pointer: true
+          description: 新的群聊名称
+#          x-go-type-skip-optional-pointer: true
         avatar:
           type: string
-          description: 新的群组头像
-          x-go-type-skip-optional-pointer: true
+          description: 新的群聊头像
+#          x-go-type-skip-optional-pointer: true
         type:
           type: integer
-          format: uint32
-          description: 新的群组类型
-          x-go-type-skip-optional-pointer: true
+          format: uint
+          description: 群组类型 0(私密群) 1(公开群)
+          enum: [0, 1]
+#          x-go-type-skip-optional-pointer: true
+        silence_time:
+          type: integer
+          format: int64
+          description: 群禁言结束时间，不为0表示开启群聊全员禁言
+#          x-go-type-skip-optional-pointer: true
+        join_approve:
+          type: boolean
+          description: 入群审批
+#          x-go-type-skip-optional-pointer: true
+        encrypt:
+          type: boolean
+          description: 是否开启加密，只有当群聊为私密群才能开启
+#          x-go-type-skip-optional-pointer: true
+    EncryptTrueTypePrivate:
+      allOf:
+        - $ref: "#/components/schemas/UpdateGroupRequest"
+        - properties:
+            encrypt:
+              enum: [ true ]
+            type:
+              enum: [ 1 ]

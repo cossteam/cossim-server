@@ -26,10 +26,13 @@ func (s *GroupGrpc) Get(ctx context.Context, id uint32) (*command.Group, error) 
 
 	return &command.Group{
 		ID:              resp.Id,
-		Type:            uint32(resp.Type),
+		Type:            uint(resp.Type),
 		Name:            resp.Name,
 		Avatar:          resp.Avatar,
 		MaxMembersLimit: resp.MaxMembersLimit,
 		CreatorID:       resp.CreatorId,
+		SilenceTime:     resp.SilenceTime,
+		JoinApprove:     resp.JoinApprove,
+		Encrypt:         resp.Encrypt,
 	}, nil
 }

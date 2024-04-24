@@ -102,6 +102,9 @@ func (h *getGroupHandler) Handle(ctx context.Context, cmd GetGroup) (*GroupInfo,
 		MaxMembersLimit: int32(r.MaxMembersLimit),
 		CreatorId:       r.CreatorID,
 		DialogId:        dialogID,
+		SilenceTime:     r.SilenceTime,
+		Encrypt:         r.Encrypt,
+		JoinApprove:     r.JoinApprove,
 		Preferences:     per,
 	}, nil
 }

@@ -3,7 +3,6 @@ package command
 import (
 	"context"
 	"fmt"
-	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/domain/group"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
@@ -23,23 +22,25 @@ import (
 )
 
 type CreateGroup struct {
-	CreateID  string   `json:"create_id"`
-	Name      string   `json:"name"`
-	Avatar    string   `json:"avatar"`
-	Type      uint32   `json:"type"`
-	MaxMember int      `json:"max_member"`
-	Member    []string `json:"member"`
+	Type        uint
+	Encrypt     bool
+	JoinApprove bool
+	CreateID    string
+	Name        string
+	Avatar      string
+	Member      []string
+	MaxMember   int
 }
 
 type CreateGroupResponse struct {
-	ID              uint32 `json:"id"`
-	Avatar          string `json:"avatar"`
-	Name            string `json:"name"`
-	Type            uint32 `json:"type"`
-	Status          int    `json:"status"`
-	MaxMembersLimit int    `json:"max_members_limit"`
-	CreatorID       string `json:"creator_id"`
-	DialogID        uint32 `json:"dialog_id"`
+	ID              uint32
+	Type            uint32
+	DialogID        uint32
+	Status          int
+	MaxMembersLimit int
+	Avatar          string
+	Name            string
+	CreatorID       string
 }
 
 type CreateGroupHandler decorator.CommandHandler[CreateGroup, CreateGroupResponse]
@@ -92,15 +93,6 @@ func NewCreateGroupHandler(
 func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (CreateGroupResponse, error) {
 	resp := CreateGroupResponse{}
 
-	fmt.Println("cmd => ", cmd)
-
-	isValidGroupType := func(value api.GroupType) bool {
-		return value == api.GroupType_TypeEncrypted || value == api.GroupType_TypeDefault
-	}
-	if !isValidGroupType(api.GroupType(cmd.Type)) {
-		return resp, code.InvalidParameter
-	}
-
 	friends, err := h.relationUserService.GetUserRelationships(ctx, cmd.CreateID, cmd.Member)
 	if err != nil {
 		h.logger.Error("get user relationships failed", zap.Error(err))
@@ -108,7 +100,6 @@ func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (Creat
 	}
 	isUserInFriends := func(userID string, friends map[string]UserRelationship) bool {
 		relationship, exists := friends[userID]
-		fmt.Println("relationship => ", relationship)
 		return exists && relationship.Status == UserRelationNormal
 	}
 	for _, memberID := range cmd.Member {
@@ -125,7 +116,7 @@ func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (Creat
 	// TODO 暂时写死，应该在 group grpc 定义类型大小
 	var maxMembersLimit int
 	switch groupgrpcv1.GroupType(cmd.Type) {
-	case groupgrpcv1.GroupType_TypeEncrypted:
+	case groupgrpcv1.GroupType_Public:
 		maxMembersLimit = 1000
 	default:
 		maxMembersLimit = 500
@@ -145,6 +136,8 @@ func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (Creat
 			CreatorID:       cmd.CreateID,
 			Name:            cmd.Name,
 			Avatar:          cmd.Avatar,
+			JoinApprove:     cmd.JoinApprove,
+			Encrypt:         cmd.Encrypt,
 		}, func(e *group.Group) (*group.Group, error) {
 			groupID = e.ID
 			resp.ID = e.ID

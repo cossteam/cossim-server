@@ -29,7 +29,7 @@ func GinLogger(lg *zap.Logger) gin.HandlerFunc {
 		}
 
 		cost := time.Since(start)
-		lg.Info(fmt.Sprintf("%s | %d | %.6fms | %s | %s %s",
+		lg.Debug(fmt.Sprintf("%s | %d | %.6fms | %s | %s %s",
 			start.Format("2006/01/02 - 15:04:05"),
 			c.Writer.Status(),
 			float64(cost.Nanoseconds())/float64(time.Millisecond),
