@@ -96,8 +96,6 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 				dtmGrpcServer,
 				relationGroupService,
 				groupService,
-				ac.Cache.Enable,
-				groupCache,
 			),
 		},
 		Queries: app.Queries{

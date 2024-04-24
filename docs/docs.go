@@ -1113,11 +1113,11 @@ const docTemplate = `{
                 }
             }
         },
-        "/msg/ws": {
+        "/push/ws": {
             "get": {
                 "description": "websocket请求",
                 "tags": [
-                    "Msg"
+                    "Push"
                 ],
                 "summary": "websocket请求",
                 "responses": {}

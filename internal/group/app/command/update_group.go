@@ -3,7 +3,6 @@ package command
 import (
 	"context"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/group/cache"
 	"github.com/cossim/coss-server/internal/group/domain/group"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/decorator"
@@ -35,12 +34,8 @@ type UpdateGroupHandler decorator.CommandHandler[UpdateGroup, *UpdateGroupRespon
 var _ decorator.CommandHandler[UpdateGroup, *UpdateGroupResponse] = &updateGroupHandler{}
 
 type updateGroupHandler struct {
-	groupRepo group.Repository
-	logger    *zap.Logger
-
-	cache       cache.GroupCache
-	cacheEnable bool
-
+	groupRepo            group.Repository
+	logger               *zap.Logger
 	relationGroupService RelationGroupService
 	groupService         GroupService
 }
@@ -51,8 +46,6 @@ func NewUpdateGroupHandler(
 	dtmGrpcServer string,
 	relationGroupService RelationGroupService,
 	groupService GroupService,
-	cacheEnable bool,
-	cache cache.GroupCache,
 ) UpdateGroupHandler {
 	if repo == nil {
 		panic("nil repo")
@@ -63,8 +56,6 @@ func NewUpdateGroupHandler(
 		logger:               logger,
 		relationGroupService: relationGroupService,
 		groupService:         groupService,
-		cacheEnable:          cacheEnable,
-		cache:                cache,
 	}
 	return h
 }
