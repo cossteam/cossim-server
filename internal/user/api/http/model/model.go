@@ -148,10 +148,10 @@ type UserSecretBundleResponse struct {
 }
 
 type GetUserLoginClientsResponse struct {
-	ClientIP    string `json:"client_ip"`
-	DriverType  string `json:"driver_type"`
-	LoginNumber uint   `json:"login_number"`
-	LoginAt     int64  `json:"login_at"`
+	ClientIP string `json:"client_ip"`
+	//DriverType  string `json:"driver_type"`
+	LoginNumber uint  `json:"login_number"`
+	LoginAt     int64 `json:"login_at"`
 }
 
 type ResetPublicKeyRequest struct {

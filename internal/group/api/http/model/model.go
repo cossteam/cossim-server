@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 )
 
 type Response struct {
@@ -75,9 +74,9 @@ const (
 	OpenBurnAfterReading                                  //开启阅后即焚消息
 )
 
-func IsValidGroupType(value api.GroupType) bool {
-	return value == api.GroupType_TypeEncrypted || value == api.GroupType_TypeDefault
-}
+//func IsValidGroupType(value api.GroupType) bool {
+//	return value == api.GroupType_TypeEncrypted || value == api.GroupType_TypeDefault
+//}
 
 type DeleteGroupRequest struct {
 	GroupId uint32 `json:"group_id" binding:"required"`

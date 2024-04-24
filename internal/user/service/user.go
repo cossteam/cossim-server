@@ -39,7 +39,7 @@ import (
 	"strings"
 )
 
-func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType string, clientIp string) (*model.UserInfoResponse, string, error) {
+func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp string) (*model.UserInfoResponse, string, error) {
 	userInfo, err := s.userService.GetUserInfoByEmail(ctx, &usergrpcv1.GetUserInfoByEmailRequest{Email: req.Email})
 	if err != nil {
 		s.logger.Error("failed to get user info by email", zap.Error(err))
@@ -65,8 +65,6 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	if err != nil {
 		return nil, "", err
 	}
-
-	fmt.Println("infos => ", infos)
 
 	//多端设备登录限制
 	if s.ac.MultipleDeviceLimit.Enable {
@@ -95,25 +93,24 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 
 	driveID := len(infos) + 1
 	data2 := user.UserLogin{
-		ID:         uint(driveID),
-		UserId:     userInfo.UserId,
-		Token:      token,
-		DriverType: driveType,
-		CreatedAt:  time.Now(),
-		ClientIP:   clientIp,
+		ID:        uint(driveID),
+		UserId:    userInfo.UserId,
+		Token:     token,
+		CreatedAt: time.Now(),
+		ClientIP:  clientIp,
 	}
 
 	workflow.InitGrpc(s.dtmGrpcServer, s.userGrpcServer, grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "login_user_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		if err := s.userCache.SetUserLoginInfo(wf.Context, userInfo.UserId, driveType, driveID, &data2, cache.UserLoginExpireTime); err != nil {
+		if err := s.userCache.SetUserLoginInfo(wf.Context, userInfo.UserId, driveID, &data2, cache.UserLoginExpireTime); err != nil {
 			s.logger.Error("failed to set user login info", zap.Error(err))
 			return status.Error(codes.Aborted, err.Error())
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			err = s.userCache.DeleteUserLoginInfo(wf.Context, userInfo.UserId, driveType, driveID)
+			err = s.userCache.DeleteUserLoginInfo(wf.Context, userInfo.UserId, driveID)
 			return err
 		})
 
@@ -122,7 +119,6 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 			DriverId:    req.DriverId,
 			Token:       token,
 			DriverToken: req.DriverToken,
-			ClientType:  driveType,
 			Platform:    req.Platform,
 		})
 		if err != nil {
@@ -183,8 +179,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, driveType 
 	}, token, nil
 }
 
-func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest, driverType string) error {
-	loginInfo, err := s.userCache.GetUserLoginInfo(ctx, userID, driverType, int(request.LoginNumber))
+func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest) error {
+	loginInfo, err := s.userCache.GetUserLoginInfo(ctx, userID, int(request.LoginNumber))
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return code.MyCustomErrorCode.CustomMessage("登录信息不存在")
@@ -195,11 +191,9 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 
 	//通知消息服务关闭ws
 	rid := loginInfo.Rid
-	t := loginInfo.DriverType
 
 	data2 := &constants.OfflineEventData{
-		Rid:        rid,
-		DriverType: constants.DriverType(t),
+		Rid: rid,
 	}
 
 	toBytes, err := utils.StructToBytes(data2)
@@ -208,13 +202,13 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 		return err
 	}
 
-	if rid != 0 {
+	if rid != "" {
 		msg := &pushgrpcv1.WsMsg{
 			Uid:    userID,
 			Event:  pushgrpcv1.WSEventType_OfflineEvent,
 			Data:   &any.Any{Value: toBytes},
 			SendAt: time.Now(),
-			Rid:    rid,
+			Rid:    loginInfo.Rid,
 		}
 		toBytes2, err := utils.StructToBytes(msg)
 		if err != nil {
@@ -229,7 +223,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 	}
 
 	// 删除客户端信息
-	if err := s.userCache.DeleteUserLoginInfo(ctx, userID, driverType, int(request.LoginNumber)); err != nil {
+	if err := s.userCache.DeleteUserLoginInfo(ctx, userID, int(request.LoginNumber)); err != nil {
 		s.logger.Error("failed to delete user login info", zap.Error(err))
 	}
 
@@ -563,7 +557,6 @@ func (s *Service) GetUserLoginClients(ctx context.Context, userID string) ([]*mo
 	for _, user := range users {
 		clients = append(clients, &model.GetUserLoginClientsResponse{
 			ClientIP:    user.ClientIP,
-			DriverType:  user.DriverType,
 			LoginNumber: user.ID,
 			LoginAt:     user.CreatedAt,
 		})

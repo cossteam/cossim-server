@@ -6,143 +6,133 @@ import (
 	"fmt"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/push/api/http/model"
-	"github.com/cossim/coss-server/internal/push/connect"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
-	"github.com/cossim/coss-server/pkg/constants"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/msg_queue"
 	"github.com/cossim/coss-server/pkg/utils"
 	myos "github.com/cossim/coss-server/pkg/utils/time"
 	pkgtime "github.com/cossim/coss-server/pkg/utils/time"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/gorilla/websocket"
+	any "github.com/golang/protobuf/ptypes/any"
+	socketio "github.com/googollee/go-socket.io"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
 )
 
-func (s *Service) Ws(ctx context.Context, conn *websocket.Conn, uid string, driverId string, deviceType, token string) {
-	//新建websocket客户端
-	wsRid++
-	cli := connect.NewWebsocketClient(wsRid, conn)
-	bucket := s.Buckets[constants.DriverType(deviceType)]
-
-	if bucket.GetUserIndex(uid) == nil {
-		bucket.Push(connect.NewUserIndex(uid))
-	}
-
-	index := bucket.GetUserIndex(uid)
-
-	defer conn.Close()
-	defer func(client *connect.WebsocketClient, index *connect.UserIndex, rid int64) {
-		client.Conn.Close()
-		index.DeleteByRid(rid)
-	}(cli, index, wsRid)
-
+func (s *Service) Ws(ctx context.Context, conn socketio.Conn, uid string, driverId string, rid, token string) error {
 	//设备限制
 	if s.ac.MultipleDeviceLimit.Enable {
-		if index.GetLength() >= s.ac.MultipleDeviceLimit.Max {
+		if s.SocketServer.RoomLen("/", uid) > s.ac.MultipleDeviceLimit.Max {
 			s.logger.Error("用户登录设备达到上限")
-			return
+			return code.MyCustomErrorCode.CustomMessage("登录设备超出限制")
 		}
 	}
 
-	index.Push(cli)
-	bytes, err := utils.StructToBytes(model.OnlineEventData{DriverType: deviceType})
+	//index.Push(cli)
+	bytes, err := utils.StructToBytes(model.OnlineEventData{})
 	if err != nil {
 		s.logger.Error("序列化失败", zap.Error(err))
-		return
+		return err
 	}
-	//保存到线程池
-	s.wsOnlineClients(ctx, &pushgrpcv1.WsMsg{Uid: uid, DriverId: driverId, Event: pushgrpcv1.WSEventType_OnlineEvent, Rid: wsRid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}, cli)
 
-	go cli.Conn.CheckHeartbeat(30 * time.Second)
+	//保存到线程池
+	err = s.WsOnlineClients(ctx, &pushgrpcv1.WsMsg{Uid: uid, DriverId: driverId, Event: pushgrpcv1.WSEventType_OnlineEvent, Rid: rid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}, conn)
+	if err != nil {
+		s.logger.Error("上线", zap.Error(err))
+		return err
+	}
+
+	//go cli.Conn.CheckHeartbeat(30 * time.Second)
 
 	//更新登录信息
-	keys, err := s.redisClient.ScanKeys("user:login:" + uid + ":" + deviceType + ":*")
+	keys, err := s.redisClient.ScanKeys("user:login:" + uid + ":*")
 	if err != nil {
 		s.logger.Error("获取用户信息失败1", zap.Error(err))
-		return
+		return err
 	}
 
 	for _, key := range keys {
 		v, err := s.redisClient.GetKey(key)
 		if err != nil {
 			s.logger.Error("获取用户信息失败", zap.Error(err))
-			return
+			return err
 		}
 		strKey := v.(string)
 		info, err := cache.GetUserInfo(strKey)
 		if err != nil {
 			s.logger.Error("获取用户信息失败", zap.Error(err))
-			return
+			return err
 		}
 		if info.Token == token {
-			info.Rid = cli.Rid
+			info.Rid = rid
 			resp := cache.GetUserInfoToInterfaces(info)
 			err := s.redisClient.SetKey(key, resp, 60*60*24*7*time.Second)
 			if err != nil {
 				s.logger.Error("保存用户信息失败", zap.Error(err))
-				return
+				return err
 			}
 			break
 		}
 	}
-	//读取客户端消息
-	for {
-		_, _, err := conn.ReadMessage()
-		if err != nil {
-			s.logger.Error("读取消息失败", zap.Error(err))
-			//删除redis里的rid
-			keys, err := s.redisClient.ScanKeys(uid + ":" + deviceType + ":*")
-			if err != nil {
-				s.logger.Error("获取用户信息失败1", zap.Error(err))
-				return
-			}
+	return nil
 
-			for _, key := range keys {
-				v, err := s.redisClient.GetKey(key)
-				if err != nil {
-					s.logger.Error("获取用户信息失败", zap.Error(err))
-					return
-				}
-				strKey := v.(string)
-				info, err := cache.GetUserInfo(strKey)
-				if err != nil {
-					s.logger.Error("获取用户信息失败", zap.Error(err))
-					return
-				}
-				if info.Token == token {
-					info.Rid = 0
-					resp := cache.GetUserInfoToInterfaces(info)
-					err := s.redisClient.SetKey(key, resp, 60*60*24*7*time.Second)
-					if err != nil {
-						s.logger.Error("保存用户信息失败", zap.Error(err))
-						return
-					}
-					break
-				}
-			}
-			//用户下线
-			s.wsOfflineClients(ctx, uid)
-			err = cli.Conn.Close()
-			if err != nil {
-				return
-			}
-			index.DeleteByRid(wsRid)
-			if index.GetLength() == 0 {
-				s.logger.Info("该用户最后一个客户端已经离线,删除索引")
-				bucket.DeleteByUserID(uid)
-			}
-			return
-		}
-	}
+	//读取客户端消息
+	//for {
+	//	_, _, err := conn.ReadMessage()
+	//	if err != nil {
+	//		s.logger.Error("读取消息失败", zap.Error(err))
+	//		//删除redis里的rid
+	//		keys, err := s.redisClient.ScanKeys(uid + ":" + deviceType + ":*")
+	//		if err != nil {
+	//			s.logger.Error("获取用户信息失败1", zap.Error(err))
+	//			return
+	//		}
+	//
+	//		for _, key := range keys {
+	//			v, err := s.redisClient.GetKey(key)
+	//			if err != nil {
+	//				s.logger.Error("获取用户信息失败", zap.Error(err))
+	//				return
+	//			}
+	//			strKey := v.(string)
+	//			info, err := cache.GetUserInfo(strKey)
+	//			if err != nil {
+	//				s.logger.Error("获取用户信息失败", zap.Error(err))
+	//				return
+	//			}
+	//			if info.Token == token {
+	//				info.Rid = 0
+	//				resp := cache.GetUserInfoToInterfaces(info)
+	//				err := s.redisClient.SetKey(key, resp, 60*60*24*7*time.Second)
+	//				if err != nil {
+	//					s.logger.Error("保存用户信息失败", zap.Error(err))
+	//					return
+	//				}
+	//				break
+	//			}
+	//		}
+	//		//用户下线
+	//		err = cli.Conn.Close()
+	//		if err != nil {
+	//			return
+	//		}
+	//		index.DeleteByRid(wsRid)
+	//		if index.GetLength() == 0 {
+	//			s.logger.Info("该用户最后一个客户端已经离线,删除索引")
+	//			bucket.DeleteByUserID(uid)
+	//		}
+	//		return
+	//	}
+	//}
 }
 
 func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv1.PushResponse, error) {
+	if msg.Event == pushgrpcv1.WSEventType_OfflineEvent {
+		go s.SocketServer.Remove(msg.Rid)
+	}
 	resp := &pushgrpcv1.PushResponse{}
 	pushd := false
-
 	bytes, err := wsMsgToJSON(msg, false)
 	if err != nil {
 		return nil, err
@@ -152,24 +142,11 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 		return nil, err
 	}
 
-	for _, i2 := range s.Buckets {
-		ui := i2.GetUserIndex(msg.Uid)
-		if !msg.PushOffline && ui == nil {
-			continue
-		}
-
-		if ui != nil && ui.GetLength() > 0 {
-			if msg.Event == pushgrpcv1.WSEventType_OfflineEvent {
-				ui.DeleteByRid(msg.Rid)
-			}
-			err = i2.SendMessage(msg.Uid, message)
-			if err != nil {
-				return resp, err
-			}
-			pushd = true
-		}
-
+	if s.SocketServer.RoomLen("/", msg.Uid) > 0 {
+		go s.SocketServer.BroadcastToRoom("/", msg.Uid, "reply", message)
+		pushd = true
 	}
+
 	if msg.PushOffline && !pushd {
 		go func() {
 			//不在线则推送到消息队列
@@ -178,7 +155,6 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 				s.logger.Error("发布消息失败", zap.Error(err))
 			}
 		}()
-
 	}
 
 	return resp, nil
@@ -186,39 +162,33 @@ func (s *Service) PushWs(ctx context.Context, msg *pushgrpcv1.WsMsg) (*pushgrpcv
 
 func (s *Service) PushWsBatch(ctx context.Context, request *pushgrpcv1.PushWsBatchRequest) (*pushgrpcv1.PushResponse, error) {
 	resp := &pushgrpcv1.PushResponse{}
-	for _, i2 := range s.Buckets {
-		for _, msg := range request.Msgs {
-			bytes, err := wsMsgToJSON(msg, false)
-			if err != nil {
-				return nil, err
-			}
-
-			message, err := s.enc.GetSecretMessage(ctx, string(bytes), msg.Uid)
-			if err != nil {
-				return nil, err
-			}
-
-			ui := i2.GetUserIndex(msg.Uid)
-
-			if !msg.PushOffline && ui == nil {
-				continue
-			}
-			if msg.PushOffline && ui == nil {
-				//不在线则推送到消息队列
-				go func() {
-					err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
-					if err != nil {
-						s.logger.Error("发布消息失败：", zap.Error(err))
-					}
-				}()
-				continue
-			}
-
-			err = i2.SendMessage(msg.Uid, message)
-			if err != nil {
-				return resp, err
-			}
+	for _, msg := range request.Msgs {
+		bytes, err := wsMsgToJSON(msg, false)
+		if err != nil {
+			return nil, err
 		}
+
+		message, err := s.enc.GetSecretMessage(ctx, string(bytes), msg.Uid)
+		if err != nil {
+			return nil, err
+		}
+
+		ui := s.SocketServer.RoomLen("/", msg.Uid)
+		if !msg.PushOffline && ui > 0 {
+			continue
+		}
+		if msg.PushOffline && ui > 0 {
+			//不在线则推送到消息队列
+			go func() {
+				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
+				if err != nil {
+					s.logger.Error("发布消息失败：", zap.Error(err))
+				}
+			}()
+			continue
+		}
+
+		go s.SocketServer.BroadcastToRoom("/", msg.Uid, "reply", message)
 	}
 	return resp, nil
 }
@@ -229,17 +199,13 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 		msg := &pushgrpcv1.WsMsg{
 			Uid:         id,
 			Event:       request.Event,
-			Rid:         0,
+			Rid:         "",
 			DriverId:    request.DriverId,
 			SendAt:      myos.Now(),
 			Data:        request.Data,
 			PushOffline: request.PushOffline,
 		}
 
-		//bytes, err := utils.StructToBytes(msg)
-		//if err != nil {
-		//	return resp, err
-		//}
 		bytes, err := wsMsgToJSON(msg, false)
 		if err != nil {
 			return nil, err
@@ -255,70 +221,58 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 			return nil, err
 		}
 
-		for _, bucket := range s.Buckets {
-			ui := bucket.GetUserIndex(msg.Uid)
-
-			if !msg.PushOffline && ui == nil {
-				continue
-			}
-			if msg.PushOffline && ui == nil {
-				go func() {
-
-					//不在线则推送到消息队列
-					err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
-					if err != nil {
-						s.logger.Error("发布消息失败：", zap.Error(err))
-					}
-				}()
-				continue
-			}
-
-			err := bucket.SendMessage(id, string(message))
-			if err != nil {
-				return resp, err
-			}
+		ui := s.SocketServer.RoomLen("/", msg.Uid)
+		if !msg.PushOffline && ui > 0 {
+			continue
 		}
+		if msg.PushOffline && ui > 0 {
+			go func() {
+				//不在线则推送到消息队列
+				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
+				if err != nil {
+					s.logger.Error("发布消息失败：", zap.Error(err))
+				}
+			}()
+			continue
+		}
+
+		go s.SocketServer.BroadcastToRoom("/", msg.Uid, "reply", message)
+
 	}
 	return resp, nil
 }
 
 // 用户上线
-func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c *connect.WebsocketClient) {
+func (s *Service) WsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, client socketio.Conn) error {
 
 	js, err := wsMsgToJSON(msg, false)
 	if err != nil {
 		s.logger.Error("上线失败：", zap.Error(err))
-		return
+		return err
 	}
 	if s.enc == nil {
 		s.logger.Error("加密客户端错误", zap.Error(nil))
-		return
+		return err
 	}
 
 	message, err := s.enc.GetSecretMessage(ctx, string(js), msg.Uid)
 	if err != nil {
 		s.logger.Error("上线失败：", zap.Error(err))
-		return
+		return err
 	}
 
 	//上线推送消息
-	err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+	go client.Emit("reply", message)
+	err = s.pushAllFriendOnlineStatus(ctx, client, msg.Uid, msg.Rid)
 	if err != nil {
 		s.logger.Error("上线失败：", zap.Error(err))
-		return
-	}
-
-	err = s.pushAllFriendOnlineStatus(ctx, c, msg.Uid)
-	if err != nil {
-		s.logger.Error("上线失败：", zap.Error(err))
-		return
+		return err
 	}
 
 	//修改在线状态
-	err = s.addUserWsCount(ctx, msg.Uid)
+	err = s.pushFriendStatus(ctx, onlineEvent, msg.Uid, msg.Rid)
 	if err != nil {
-		s.logger.Error("上线失败：", zap.Error(err))
-		return
+		return err
 	}
 
 	for {
@@ -327,14 +281,14 @@ func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c 
 			//c.queue.Stop()
 			//拉取完之后删除队列
 			_ = s.rabbitMQClient.DeleteEmptyQueue(msg.Uid)
-			return
+			return err
 		}
 
 		var a interface{}
 		err = json.Unmarshal(msg2, &a)
 		if err != nil {
 			s.logger.Error("上线失败：", zap.Error(err))
-			return
+			return err
 		}
 
 		mm := a.(string)
@@ -343,99 +297,76 @@ func (s *Service) wsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, c 
 		err = json.Unmarshal([]byte(mm), &data2)
 		if err != nil {
 			s.logger.Error("转换消息失败1", zap.Error(err))
-			return
+			return err
 		}
 
 		// 尝试将解析后的数据转换为字节
 		wsData, err := json.Marshal(data2)
 		if err != nil {
 			s.logger.Error("转换消息失败2", zap.Error(err))
-			return
+			return err
 		}
 
 		// 尝试将数据写入 WebSocket 连接
-		err = c.Conn.WriteMessage(websocket.TextMessage, wsData)
-		if err != nil {
-			s.logger.Error("推送队列离线消息失败", zap.Error(err))
-			return
-		}
+		go client.Emit("reply", string(wsData))
 	}
 }
 
-func (s *Service) wsOfflineClients(ctx context.Context, uid string) {
-	err := s.reduceUserWsCount(ctx, uid)
-	if err != nil {
-		s.logger.Error("修改在线状态失败：", zap.Error(err))
-		return
-	}
-}
-
-func (s *Service) addUserWsCount(ctx context.Context, uid string) error {
-	key := fmt.Sprintf("%s%s", cache.PushKeyPrefix, uid)
-	exists, err := s.redisClient.ExistsKey(key)
+func (s *Service) WsOfflineClients(ctx context.Context, uid, rid string) error {
+	err := s.pushFriendStatus(ctx, offlineEvent, uid, rid)
 	if err != nil {
 		return err
 	}
-
-	//给好友推送上线
-	err = s.pushFriendStatus(ctx, onlineEvent, uid)
-	if err != nil {
-		return err
-	}
-
-	if !exists {
-		return s.redisClient.SetKey(key, 1, 0)
-	} else {
-		value, err := s.redisClient.GetKey(key)
-		if err != nil {
-			return err
-		}
-		str := value.(string)
-		num, err := strconv.Atoi(str)
-		if err != nil {
-			return err
-		}
-		num++
-		return s.redisClient.SetKey(key, num, 0)
-	}
+	return nil
 }
 
-func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
-	key := fmt.Sprintf("%s%s", cache.PushKeyPrefix, uid)
-	exists, err := s.redisClient.ExistsKey(key)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		//给好友推送下线
-		err := s.pushFriendStatus(ctx, offlineEvent, uid)
-		if err != nil {
-			return err
-		}
-		return nil
-	} else {
-		value, err := s.redisClient.GetKey(key)
-		if err != nil {
-			return err
-		}
-		str := value.(string)
-		num, err := strconv.Atoi(str)
-		if err != nil {
-			return err
-		}
-		if num == 1 {
-			//给好友推送下线
-			err := s.pushFriendStatus(ctx, offlineEvent, uid)
-			if err != nil {
-				return err
-			}
-			return s.redisClient.DelKey(key)
-		} else {
-			num--
-			return s.redisClient.SetKey(key, num, 0)
-		}
-	}
-}
+//func (s *Service) addUserWsCount(ctx context.Context, uid string) error {
+//
+//
+//	//给好友推送上线
+//	err := s.pushFriendStatus(ctx, onlineEvent, uid)
+//	if err != nil {
+//		return err
+//	}
+//
+//}
+
+//func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
+//	key := fmt.Sprintf("%s%s", cache.PushKeyPrefix, uid)
+//	exists, err := s.redisClient.ExistsKey(key)
+//	if err != nil {
+//		return err
+//	}
+//	if !exists {
+//		//给好友推送下线
+//		err := s.pushFriendStatus(ctx, offlineEvent, uid)
+//		if err != nil {
+//			return err
+//		}
+//		return nil
+//	} else {
+//		value, err := s.redisClient.GetKey(key)
+//		if err != nil {
+//			return err
+//		}
+//		str := value.(string)
+//		num, err := strconv.Atoi(str)
+//		if err != nil {
+//			return err
+//		}
+//		if num == 1 {
+//			//给好友推送下线
+//			err := s.pushFriendStatus(ctx, offlineEvent, uid)
+//			if err != nil {
+//				return err
+//			}
+//			return s.redisClient.DelKey(key)
+//		} else {
+//			num--
+//			return s.redisClient.SetKey(key, num, 0)
+//		}
+//	}
+//}
 
 type status uint
 
@@ -446,7 +377,7 @@ const (
 )
 
 // 给好友推送离线或上线通知
-func (s *Service) pushFriendStatus(ctx context.Context, v status, uid string) error {
+func (s *Service) pushFriendStatus(ctx context.Context, v status, uid, rid string) error {
 	//查询所有好友
 	list, err := s.relationService.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: uid})
 	if err != nil {
@@ -458,7 +389,7 @@ func (s *Service) pushFriendStatus(ctx context.Context, v status, uid string) er
 			return err
 		}
 		for _, friend := range list.FriendList {
-			msg := &pushgrpcv1.WsMsg{Uid: friend.UserId, Event: pushgrpcv1.WSEventType_FriendUpdateOnlineStatusEvent, Rid: 0, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}
+			msg := &pushgrpcv1.WsMsg{Uid: friend.UserId, Event: pushgrpcv1.WSEventType_FriendUpdateOnlineStatusEvent, Rid: rid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}
 			js, _ := wsMsgToJSON(msg, false)
 			if s.enc == nil {
 				s.logger.Error("推送上线通知失败：", zap.Error(err))
@@ -475,23 +406,21 @@ func (s *Service) pushFriendStatus(ctx context.Context, v status, uid string) er
 				continue
 			}
 
-			for _, i2 := range s.Buckets {
-				err := i2.SendMessage(friend.UserId, message)
-				if err != nil {
-					s.logger.Error("推送消息失败", zap.Error(err))
-					continue
-				}
-			}
+			//for _, i2 := range s.Buckets {
+			//	err := i2.SendMessage(friend.UserId, message)
+			//	if err != nil {
+			//		s.logger.Error("推送消息失败", zap.Error(err))
+			//		continue
+			//	}
+			//}
+			go s.SocketServer.BroadcastToRoom("/", friend.UserId, "reply", message)
 		}
 	}
 	return nil
 }
 
 // 获取所有好友在线状态
-func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c *connect.WebsocketClient, uid string) error {
-	if c.Conn.IsNil() || c.Conn.WriteMessage(websocket.PingMessage, nil) != nil {
-		return nil
-	}
+func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c socketio.Conn, uid string, rid string) error {
 	//查询所有好友
 	list, err := s.relationService.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: uid})
 	if err != nil {
@@ -531,7 +460,7 @@ func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c *connect.Webs
 		return err
 	}
 
-	msg := &pushgrpcv1.WsMsg{Uid: uid, Event: pushgrpcv1.WSEventType_PushAllFriendOnlineStatusEvent, Rid: c.Rid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}
+	msg := &pushgrpcv1.WsMsg{Uid: uid, Event: pushgrpcv1.WSEventType_PushAllFriendOnlineStatusEvent, Rid: rid, SendAt: pkgtime.Now(), Data: &any.Any{Value: bytes}}
 	js, _ := wsMsgToJSON(msg, true)
 	if s.enc == nil {
 		s.logger.Error("转换失败：", zap.Error(err))
@@ -541,10 +470,8 @@ func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c *connect.Webs
 	if err != nil {
 		return fmt.Errorf("加密失败：%v", err)
 	}
-	err = c.Conn.WriteMessage(websocket.TextMessage, []byte(message))
-	if err != nil {
-		return err
-	}
+
+	go c.Emit("reply", message)
 	return nil
 }
 

@@ -14,8 +14,10 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		if ctx.Request.Method == http.MethodOptions {
 			ctx.AbortWithStatus(200)
-		} else {
-			ctx.Next()
 		}
+
+		ctx.Request.Header.Del("Origin")
+		ctx.Next()
+
 	}
 }

@@ -1,7 +1,8 @@
 package model
 
 type OnlineEventData struct {
-	DriverType string `json:"driver_type"`
+	//DriverType string `json:"driver_type"`
+	Rid string `json:"rid"`
 }
 
 type FriendOnlineStatusMsg struct {

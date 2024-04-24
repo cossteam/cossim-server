@@ -47,21 +47,19 @@ func (c *pushServiceClient) Push(ctx context.Context, in *PushRequest, opts ...g
 }
 
 // PushServiceServer is the server API for PushService service.
-// All implementations must embed UnimplementedPushServiceServer
+// All implementations should embed UnimplementedPushServiceServer
 // for forward compatibility
 type PushServiceServer interface {
 	Push(context.Context, *PushRequest) (*PushResponse, error)
-	mustEmbedUnimplementedPushServiceServer()
 }
 
-// UnimplementedPushServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedPushServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedPushServiceServer struct {
 }
 
 func (UnimplementedPushServiceServer) Push(context.Context, *PushRequest) (*PushResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Push not implemented")
 }
-func (UnimplementedPushServiceServer) mustEmbedUnimplementedPushServiceServer() {}
 
 // UnsafePushServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to PushServiceServer will

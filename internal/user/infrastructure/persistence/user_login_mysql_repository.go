@@ -17,7 +17,6 @@ type UserLoginModel struct {
 	Token       string `gorm:"type:longtext;comment:登录token" json:"token"`
 	DriverId    string `gorm:"type:longtext;comment:登录设备id" json:"driver_id"`
 	DriverToken string `gorm:"type:varchar(255);comment:登录设备token" json:"driver_token"`
-	ClientType  string `gorm:"type:varchar(20);comment:客户端类型" json:"client_type"`
 	Platform    string `gorm:"type:varchar(50);comment:手机厂商" json:"platform"`
 }
 
@@ -39,7 +38,6 @@ func (m *UserLoginModel) FromEntity(ul *user.UserLogin) error {
 	m.Token = ul.Token
 	m.DriverId = ul.DriverId
 	m.DriverToken = ul.DriverToken
-	m.ClientType = ul.ClientType
 	m.Platform = ul.Platform
 	m.BaseModel = BaseModel{
 		ID:        ul.ID,
@@ -58,7 +56,6 @@ func (m *UserLoginModel) ToEntity() (*user.UserLogin, error) {
 		Token:       m.Token,
 		DriverId:    m.DriverId,
 		DriverToken: m.DriverToken,
-		ClientType:  m.ClientType,
 		Platform:    m.Platform,
 		ID:          m.ID,
 		CreatedAt:   m.CreatedAt,
@@ -122,7 +119,7 @@ func (r *MySQLUserLoginRepository) GetUserLoginByDriverIdAndUserId(ctx context.C
 	}
 
 	if r.cache != nil {
-		if err := r.cache.SetUserLoginInfo(ctx, entity.UserId, entity.ClientType, int(entity.LoginCount), entity, cache.UserExpireTime); err != nil {
+		if err := r.cache.SetUserLoginInfo(ctx, entity.UserId, int(entity.LoginCount), entity, cache.UserExpireTime); err != nil {
 			log.Printf("cache set user login info error: %v", utils.NewErrorWithStack(err.Error()))
 		}
 	}
@@ -209,7 +206,7 @@ func (r *MySQLUserLoginRepository) DeleteUserLoginByID(ctx context.Context, id u
 	}
 
 	if r.cache != nil {
-		if err := r.cache.DeleteUserLoginInfo(ctx, model.UserId, model.ClientType, int(model.LoginCount)); err != nil {
+		if err := r.cache.DeleteUserLoginInfo(ctx, model.UserId, int(model.LoginCount)); err != nil {
 			log.Printf("cache del user login info error: %v", utils.NewErrorWithStack(err.Error()))
 		}
 	}

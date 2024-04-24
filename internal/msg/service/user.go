@@ -933,7 +933,7 @@ func (s *Service) SendMsg(uid string, driverId string, event pushv1.WSEventType,
 		return
 	}
 
-	m := &pushv1.WsMsg{Uid: uid, DriverId: driverId, Event: event, Rid: 0, Data: &any.Any{Value: bytes}, PushOffline: pushOffline, SendAt: pkgtime.Now()}
+	m := &pushv1.WsMsg{Uid: uid, DriverId: driverId, Event: event, Rid: "", Data: &any.Any{Value: bytes}, PushOffline: pushOffline, SendAt: pkgtime.Now()}
 	bytes2, err := utils.StructToBytes(m)
 	if err != nil {
 		return

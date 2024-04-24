@@ -11,13 +11,13 @@ import (
 )
 
 type UserInfo struct {
-	ID         uint   `json:"id"`
-	UserId     string `json:"user_id"`
-	Token      string `json:"token"`
-	DriverType string `json:"driver_type"`
-	CreateAt   int64  `json:"create_at"`
-	ClientIP   string `json:"client_ip"`
-	Rid        int64  `json:"rid"`
+	ID     uint   `json:"id"`
+	UserId string `json:"user_id"`
+	Token  string `json:"token"`
+	//DriverType string `json:"driver_type"`
+	CreateAt int64  `json:"create_at"`
+	ClientIP string `json:"client_ip"`
+	Rid      string `json:"rid"`
 }
 
 func (i UserInfo) MarshalBinary() ([]byte, error) {
@@ -241,15 +241,15 @@ func GetUserInfoToInterfaces(data *UserInfo) interface{} {
 }
 
 // 根据客户端类型分类用户登录信息列表
-func CategorizeByDriveType(data []*UserInfo) map[string][]*UserInfo {
-	result := make(map[string][]*UserInfo)
-
-	for _, userInfo := range data {
-		result[userInfo.DriverType] = append(result[userInfo.DriverType], userInfo)
-	}
-
-	return result
-}
+//func CategorizeByDriveType(data []*UserInfo) map[string][]*UserInfo {
+//	result := make(map[string][]*UserInfo)
+//
+//	for _, userInfo := range data {
+//		result[userInfo.DriverType] = append(result[userInfo.DriverType], userInfo)
+//	}
+//
+//	return result
+//}
 
 func (r *RedisClient) SetKey(key string, data interface{}, expiration time.Duration) error {
 	r.lock.Lock()

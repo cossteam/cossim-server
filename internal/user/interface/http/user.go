@@ -33,9 +33,9 @@ func (h *Handler) login(c *gin.Context) {
 	//	return
 	//}
 
-	deviceType := c.Request.Header.Get("X-Device-Type")
-	deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
-	resp, token, err := h.svc.Login(c, req, deviceType, c.ClientIP())
+	//deviceType := c.Request.Header.Get("X-Device-Type")
+	//deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
+	resp, token, err := h.svc.Login(c, req, c.ClientIP())
 	if err != nil {
 		c.Error(err)
 		return
@@ -65,9 +65,9 @@ func (h *Handler) logout(c *gin.Context) {
 	token := tokenString[7:]
 
 	userID := c.Value(constants.UserID).(string)
-	deviceType := c.Request.Header.Get("X-Device-Type")
-	deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
-	if err := h.svc.Logout(c, userID, token, req, deviceType); err != nil {
+	//deviceType := c.Request.Header.Get("X-Device-Type")
+	//deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
+	if err := h.svc.Logout(c, userID, token, req); err != nil {
 		c.Error(err)
 		return
 	}
