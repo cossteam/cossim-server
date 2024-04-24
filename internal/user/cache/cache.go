@@ -35,8 +35,8 @@ func GetUserLoginKey(userID string) string {
 	return UserLoginKey + userID
 }
 
-func GetUserLoginDriveKey(userID string, driverType string, index int) string {
-	return UserLoginKey + userID + ":" + driverType + ":" + fmt.Sprintf("%d", index)
+func GetUserLoginDriveKey(userID string, index int) string {
+	return UserLoginKey + userID + ":" + fmt.Sprintf("%d", index)
 }
 
 func GetUserVerificationCodeKey(userID, code string) string {
@@ -53,10 +53,10 @@ type UserCache interface {
 	SetUserInfo(ctx context.Context, userID string, data *user.User, expiration time.Duration) error
 	DeleteUsersInfo(ctx context.Context, userIDs []string) error
 	DeleteAllCache(ctx context.Context) error
-	GetUserLoginInfo(ctx context.Context, userID, driverType string, index int) (*user.UserLogin, error)
-	SetUserLoginInfo(ctx context.Context, userID, driverType string, index int, data *user.UserLogin, expiration time.Duration) error
+	GetUserLoginInfo(ctx context.Context, userID string, index int) (*user.UserLogin, error)
+	SetUserLoginInfo(ctx context.Context, userID string, index int, data *user.UserLogin, expiration time.Duration) error
 	GetUsersLoginInfo(ctx context.Context, userID []string) ([]*user.UserLogin, error)
-	DeleteUserLoginInfo(ctx context.Context, userID string, driverType string, index int) error
+	DeleteUserLoginInfo(ctx context.Context, userID string, index int) error
 	DeleteUserAllLoginInfo(ctx context.Context, userID string) error
 	GetUserLoginInfos(ctx context.Context, userID string) ([]*user.UserLogin, error)
 	GetUserEmailVerificationCode(ctx context.Context, userID string) (string, error)
@@ -193,7 +193,7 @@ func (u *UserCacheRedis) DeleteUserEmailVerificationCode(ctx context.Context, us
 	return u.client.Del(ctx, key).Err()
 }
 
-func (u *UserCacheRedis) SetUserLoginInfo(ctx context.Context, userID string, driverType string, index int, data *user.UserLogin, expiration time.Duration) error {
+func (u *UserCacheRedis) SetUserLoginInfo(ctx context.Context, userID string, index int, data *user.UserLogin, expiration time.Duration) error {
 	if userID == "" {
 		return ErrCacheKeyEmpty
 	}
@@ -201,7 +201,7 @@ func (u *UserCacheRedis) SetUserLoginInfo(ctx context.Context, userID string, dr
 		return ErrCacheContentEmpty
 	}
 
-	key := GetUserLoginDriveKey(userID, driverType, index)
+	key := GetUserLoginDriveKey(userID, index)
 
 	userInfoJSON, err := json.Marshal(data)
 	if err != nil {
@@ -244,11 +244,11 @@ func (u *UserCacheRedis) GetUserLoginInfos(ctx context.Context, userID string) (
 	return userInfoList, nil
 }
 
-func (u *UserCacheRedis) GetUserLoginInfo(ctx context.Context, userID string, driverType string, index int) (*user.UserLogin, error) {
+func (u *UserCacheRedis) GetUserLoginInfo(ctx context.Context, userID string, index int) (*user.UserLogin, error) {
 	if userID == "" {
 		return nil, ErrCacheKeyEmpty
 	}
-	key := GetUserLoginDriveKey(userID, driverType, index)
+	key := GetUserLoginDriveKey(userID, index)
 	data, err := u.client.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
@@ -293,11 +293,11 @@ func (u *UserCacheRedis) GetUsersLoginInfo(ctx context.Context, userIDs []string
 	return userInfoList, nil
 }
 
-func (u *UserCacheRedis) DeleteUserLoginInfo(ctx context.Context, userID string, driverType string, index int) error {
+func (u *UserCacheRedis) DeleteUserLoginInfo(ctx context.Context, userID string, index int) error {
 	if userID == "" {
 		return ErrCacheKeyEmpty
 	}
-	key := GetUserLoginDriveKey(userID, driverType, index)
+	key := GetUserLoginDriveKey(userID, index)
 	return u.client.Del(ctx, key).Err()
 }
 

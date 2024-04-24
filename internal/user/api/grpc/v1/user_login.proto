@@ -14,9 +14,6 @@ message UserLogin {
   // 设备token 用于推送到指定设备
   // @inject_tag: json:"driver_token"
   string DriverToken = 4;
-  // 客户端类型 例如 Mobile Desktop UnDefined
-  // @inject_tag: json:"client_type"
-  string ClientType = 5;
   // 手机厂商 例如 ios、huawei、xiaomi...
   // @inject_tag: json:"platform"
   string Platform = 6;

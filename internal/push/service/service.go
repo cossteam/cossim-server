@@ -3,15 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/cossim/coss-server/internal/push/connect"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/encryption"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/msg_queue"
+	socketio "github.com/googollee/go-socket.io"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -25,11 +24,12 @@ type Service struct {
 	redisClient     *cache.RedisClient
 	ac              *pkgconfig.AppConfig
 	enc             encryption.Encryptor
-	Buckets         map[constants.DriverType]*connect.Bucket
-	db              *gorm.DB
+	//Buckets         map[constants.DriverType]*connect.Bucket
+	db           *gorm.DB
+	SocketServer *socketio.Server
 }
 
-var wsRid int64 = 0 //全局客户端id
+//var wsRid int64 = 0 //全局客户端id
 
 func New(ac *pkgconfig.AppConfig) *Service {
 	mqClient, err := msg_queue.NewRabbitMQ(fmt.Sprintf("amqp://%s:%s@%s", ac.MessageQueue.Username, ac.MessageQueue.Password, ac.MessageQueue.Addr()))
@@ -52,14 +52,15 @@ func New(ac *pkgconfig.AppConfig) *Service {
 		logger:         plog.NewDefaultLogger("msg_bff", int8(ac.Log.Level)),
 		rabbitMQClient: mqClient,
 		redisClient:    setupRedis(ac),
-		Buckets:        make(map[constants.DriverType]*connect.Bucket),
-		db:             dbConn,
+		//Buckets:        make(map[constants.DriverType]*connect.Bucket),
+		db:           dbConn,
+		SocketServer: socketio.NewServer(nil),
 	}
 
 	s.setupEncryption(ac)
-	for _, driverType := range constants.GetDriverTypeList() {
-		s.Buckets[driverType] = connect.NewBucket()
-	}
+	//for _, driverType := range constants.GetDriverTypeList() {
+	//	s.Buckets[driverType] = connect.NewBucket()
+	//}
 
 	return s
 }
@@ -82,7 +83,7 @@ func setupRedis(ac *pkgconfig.AppConfig) *cache.RedisClient {
 }
 
 func (s *Service) Stop(ctx context.Context) error {
-	s.Buckets = make(map[constants.DriverType]*connect.Bucket)
+	//s.Buckets = make(map[constants.DriverType]*connect.Bucket)
 	s.rabbitMQClient.Close()
 	return nil
 }

@@ -161,7 +161,7 @@ message WsMsg {
   // @inject_tag: json:"event"
   WSEventType Event = 2;
   // @inject_tag: json:"rid"
-  int64 Rid = 3;
+  string Rid = 3;
   // @inject_tag: json:"driver_id"
   string DriverId = 4;
   // @inject_tag: json:"send_at"

@@ -57,11 +57,10 @@ type UserLogin struct {
 	Token       string
 	DriverId    string
 	DriverToken string
-	ClientType  string
 	DriverType  string
 	Platform    string
 	ClientIP    string
-	Rid         int64
+	Rid         string
 }
 
 //type BaseModel struct {

@@ -29,7 +29,6 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, request *v1.Use
 			DriverId:    request.DriverId,
 			LastAt:      time.Now(),
 			DriverToken: request.DriverToken,
-			ClientType:  request.ClientType,
 			Platform:    request.Platform,
 			LoginCount:  info.LoginCount + 1,
 		}
@@ -44,7 +43,6 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, request *v1.Use
 			DriverId:    request.DriverId,
 			LastAt:      time.Now(),
 			DriverToken: request.DriverToken,
-			ClientType:  request.ClientType,
 			Platform:    request.Platform,
 			LoginCount:  1,
 		}
@@ -91,7 +89,6 @@ func (s *UserServiceServer) GetUserLoginByDriverIdAndUserId(ctx context.Context,
 		resp.DriverId = info.DriverId
 		resp.DriverToken = info.DriverToken
 		resp.Platform = info.Platform
-		resp.ClientType = info.ClientType
 		resp.LoginTime = info.LastAt
 	}
 	return resp, nil
@@ -134,7 +131,6 @@ func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, request *v
 		resp.DriverId = info.DriverId
 		resp.DriverToken = info.DriverToken
 		resp.Platform = info.Platform
-		resp.ClientType = info.ClientType
 		resp.LoginTime = info.LastAt
 	}
 	return resp, nil

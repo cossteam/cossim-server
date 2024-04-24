@@ -111,8 +111,8 @@ type SystemNotificationEventData struct {
 //}
 
 type OfflineEventData struct {
-	Rid        int64      `json:"rid"`
-	DriverType DriverType `json:"driver_type"`
+	Rid string `json:"rid"`
+	//DriverType DriverType `json:"driver_type"`
 }
 
 type ManageFriendEventData struct {

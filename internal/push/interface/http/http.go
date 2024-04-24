@@ -10,26 +10,27 @@ import (
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/version"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+	socketio "github.com/googollee/go-socket.io"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"net/http"
+	"log"
 )
 
 type Handler struct {
-	logger      *zap.Logger
-	enc         encryption.Encryptor
-	PushService *service.Service
-	userCache   cache.UserCache
+	logger       *zap.Logger
+	enc          encryption.Encryptor
+	PushService  *service.Service
+	userCache    cache.UserCache
+	socketServer *socketio.Server
 }
 
-var (
-	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-)
+//var (
+//	upgrader = websocket.Upgrader{
+//		CheckOrigin: func(r *http.Request) bool {
+//			return true
+//		},
+//	}
+//)
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("push_bff", int8(cfg.Log.Level))
@@ -41,6 +42,8 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 	h.userCache = userCache
+	h.socketServer = h.PushService.SocketServer
+	h.setupSocketEvent()
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	return nil
 }
@@ -57,7 +60,9 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/push")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	u.Use(middleware.AuthMiddleware(h.userCache))
-	u.GET("/ws", h.ws)
+	u.GET("/ws/*any", gin.WrapH(h.socketServer))
+	u.POST("/ws/*any", gin.WrapH(h.socketServer))
+
 }
 
 func (h *Handler) Health(r gin.IRouter) string {
@@ -66,8 +71,11 @@ func (h *Handler) Health(r gin.IRouter) string {
 }
 
 func (h *Handler) Stop(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	err := h.socketServer.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
@@ -77,4 +85,36 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 		}
 	}
 	return nil
+}
+
+func (h *Handler) setupSocketEvent() {
+	if h.socketServer == nil {
+		panic("socketio server is nil")
+	}
+	h.socketServer.OnConnect("/", h.ws)
+
+	h.socketServer.OnEvent("/", "reply", func(s socketio.Conn, msg string) {
+		s.Emit("reply", "服务端触发客户端事件： "+msg)
+		//h.socketServer.BroadcastToRoom()
+	})
+
+	h.socketServer.OnEvent("/", "bye", func(s socketio.Conn) string {
+		last := s.Context().(string)
+		s.Emit("bye", last)
+		s.Close()
+		return last
+	})
+
+	h.socketServer.OnError("/", func(s socketio.Conn, e error) {
+		//h.disconnect(s, "")
+		h.logger.Error("socketio error", zap.Error(e))
+	})
+
+	h.socketServer.OnDisconnect("/", h.disconnect)
+
+	go func() {
+		if err := h.socketServer.Serve(); err != nil {
+			log.Fatalf("socketio listen error: %s\n", err)
+		}
+	}()
 }
