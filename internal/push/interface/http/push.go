@@ -45,45 +45,17 @@ func (h *Handler) disconnect(s socketio.Conn, msg string) {
 
 }
 
-// @Summary websocket请求
-// @Tags Push
-// @Description websocket请求
-// @Router /push/ws [get]
-//func (h *Handler) ws(c *gin.Context) {
-//	var uid string
-//	var driverId string
-//	token := c.Query("token")
-//	//判断设备类型
-//	deviceType := c.Request.Header.Get("X-Device-Type")
-//	deviceType = string(constants.DetermineClientType(constants.DriverType(deviceType)))
-//
-//	if token == "" {
-//		//id, err := pkghttp.ParseTokenReUid(c)
-//		//if err != nil {
-//		//	h.logger.Error("token解析失败", zap.Error(err))
-//		//	return
-//		//}
-//		//uid = id
-//		return
-//	} else {
-//		_, c2, err := utils.ParseToken(token)
-//		if err != nil {
-//			h.logger.Error("token解析失败", zap.Error(err))
-//			return
-//		}
-//		uid = c2.UserId
-//		driverId = c2.DriverId
-//	}
-//	if uid == "" {
-//		return
-//	}
-//
-//	//升级http请求为websocket
-//	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-//	if err != nil {
-//		c.Error(err)
-//		return
-//	}
-//	h.PushService.Ws(c, conn, uid, driverId, deviceType, token)
-//
-//}
+func (h *Handler) reply(s socketio.Conn, msg string) {
+	s.Emit("reply", "服务端触发客户端事件： "+msg)
+}
+
+func (h *Handler) bye(s socketio.Conn) string {
+	last := s.Context().(string)
+	s.Emit("bye", last)
+	s.Close()
+	return last
+}
+
+func (h *Handler) error(s socketio.Conn, e error) {
+	h.logger.Error("socketio error", zap.Error(e))
+}
