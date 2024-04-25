@@ -24,14 +24,6 @@ type Handler struct {
 	socketServer *socketio.Server
 }
 
-//var (
-//	upgrader = websocket.Upgrader{
-//		CheckOrigin: func(r *http.Request) bool {
-//			return true
-//		},
-//	}
-//)
-
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("push_bff", int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
@@ -92,25 +84,10 @@ func (h *Handler) setupSocketEvent() {
 		panic("socketio server is nil")
 	}
 	h.socketServer.OnConnect("/", h.ws)
-
-	h.socketServer.OnEvent("/", "reply", func(s socketio.Conn, msg string) {
-		s.Emit("reply", "服务端触发客户端事件： "+msg)
-		//h.socketServer.BroadcastToRoom()
-	})
-
-	h.socketServer.OnEvent("/", "bye", func(s socketio.Conn) string {
-		last := s.Context().(string)
-		s.Emit("bye", last)
-		s.Close()
-		return last
-	})
-
-	h.socketServer.OnError("/", func(s socketio.Conn, e error) {
-		//h.disconnect(s, "")
-		h.logger.Error("socketio error", zap.Error(e))
-	})
-
+	h.socketServer.OnError("/", h.error)
 	h.socketServer.OnDisconnect("/", h.disconnect)
+	h.socketServer.OnEvent("/", "reply", h.reply)
+	h.socketServer.OnEvent("/", "bye", h.bye)
 
 	go func() {
 		if err := h.socketServer.Serve(); err != nil {
