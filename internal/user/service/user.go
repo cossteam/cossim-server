@@ -91,9 +91,9 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 		}
 	}
 
-	driveID := len(infos) + 1
+	index := len(infos) + 1
 	data2 := user.UserLogin{
-		ID:        uint(driveID),
+		ID:        uint(index),
 		UserId:    userInfo.UserId,
 		Token:     token,
 		CreatedAt: time.Now(),
@@ -104,13 +104,13 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 	gid := shortuuid.New()
 	wfName := "login_user_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		if err := s.userCache.SetUserLoginInfo(wf.Context, userInfo.UserId, driveID, &data2, cache.UserLoginExpireTime); err != nil {
+		if err := s.userCache.SetUserLoginInfo(wf.Context, userInfo.UserId, index, &data2, cache.UserLoginExpireTime); err != nil {
 			s.logger.Error("failed to set user login info", zap.Error(err))
 			return status.Error(codes.Aborted, err.Error())
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			err = s.userCache.DeleteUserLoginInfo(wf.Context, userInfo.UserId, driveID)
+			err = s.userCache.DeleteUserLoginInfo(wf.Context, userInfo.UserId, index)
 			return err
 		})
 

@@ -118,11 +118,11 @@ func (r *MySQLUserLoginRepository) GetUserLoginByDriverIdAndUserId(ctx context.C
 		return nil, err
 	}
 
-	if r.cache != nil {
-		if err := r.cache.SetUserLoginInfo(ctx, entity.UserId, int(entity.LoginCount), entity, cache.UserExpireTime); err != nil {
-			log.Printf("cache set user login info error: %v", utils.NewErrorWithStack(err.Error()))
-		}
-	}
+	//if r.cache != nil {
+	//	if err := r.cache.SetUserLoginInfo(ctx, entity.UserId, int(entity.LoginCount), entity, cache.UserExpireTime); err != nil {
+	//		log.Printf("cache set user login info error: %v", utils.NewErrorWithStack(err.Error()))
+	//	}
+	//}
 
 	return entity, nil
 }
