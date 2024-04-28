@@ -20,6 +20,7 @@ type userFriendRequestServiceServer struct {
 	db *gorm.DB
 	//ufqr        repository.UserFriendRequestRepository
 	ufqr relation.UserFriendRequestRepository
+	ur   relation.UserRepository
 }
 
 func (s *userFriendRequestServiceServer) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
@@ -74,7 +75,17 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
 	}
-	resp.ID = uint32(re1.ID)
+	resp.ID = re1.ID
+
+	// 对方拉黑了，不允许添加
+	re2, err := s.ur.Get(ctx, request.ReceiverId, request.SenderId)
+	if err != nil {
+		return nil, err
+	}
+
+	if re2.Status == relation.UserStatusBlocked {
+		return resp, nil
+	}
 
 	// 添加对方的
 	_, err = s.ufqr.Create(ctx, &relation.UserFriendRequest{
