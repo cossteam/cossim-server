@@ -224,7 +224,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		return nil, nil
 	}
 
-	//删除之前的
+	// 删除之前的
 	_, err = s.relationUserFriendRequestService.DeleteFriendRequestByUserIdAndFriendId(ctx, &relationgrpcv1.DeleteFriendRequestByUserIdAndFriendIdRequest{
 		UserId:   userID,
 		FriendId: friendID,
@@ -236,6 +236,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	}
 
 	// 创建好友申请
+	// 被拉黑了只创建自己的好友申请记录，对方是没有的
 	resp, err := s.relationUserFriendRequestService.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
 		SenderId:   userID,
 		ReceiverId: friendID,
@@ -244,6 +245,11 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	if err != nil {
 		s.logger.Error("添加好友失败", zap.Error(err))
 		return nil, code.RelationErrSendFriendRequestFailed
+	}
+
+	// 被拉黑了不推送消息
+	if relation2.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
+		return resp, nil
 	}
 
 	wsMsgData := constants.AddFriendEventData{

@@ -77,6 +77,7 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 	s.UserFriendRequestServiceServer = &userFriendRequestServiceServer{
 		db:   dbConn,
 		ufqr: infra.Ufqr,
+		ur:   infra.Urr,
 	}
 	s.GroupAnnouncementServer = &groupAnnouncementServer{
 		db:  dbConn,
