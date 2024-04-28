@@ -2,7 +2,7 @@ package command
 
 import (
 	"context"
-	"github.com/cossim/coss-server/internal/group/domain/group"
+	"github.com/cossim/coss-server/internal/group/domain/repository"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/decorator"
 	"github.com/dtm-labs/client/dtmcli"
@@ -23,7 +23,7 @@ type DeleteGroupResponse struct {
 type DeleteGroupHandler decorator.CommandHandler[DeleteGroup, *DeleteGroupResponse]
 
 type deleteGroupHandler struct {
-	groupRepo             group.Repository
+	groupRepo             repository.Repository
 	relationGroupService  RelationGroupService
 	relationDialogService RelationDialogService
 	logger                *zap.Logger
@@ -32,7 +32,7 @@ type deleteGroupHandler struct {
 }
 
 func NewDeleteGroupHandler(
-	repo group.Repository,
+	repo repository.Repository,
 	logger *zap.Logger,
 	dtmGrpcServer string,
 	relationGroupService RelationGroupService,

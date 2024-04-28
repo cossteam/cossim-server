@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/group/domain/group"
+	"github.com/cossim/coss-server/internal/group/domain/entity"
+	"github.com/cossim/coss-server/internal/group/domain/repository"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/decorator"
@@ -46,7 +47,7 @@ type CreateGroupResponse struct {
 type CreateGroupHandler decorator.CommandHandler[CreateGroup, CreateGroupResponse]
 
 type createGroupHandler struct {
-	groupRepo            group.Repository
+	groupRepo            repository.Repository
 	relationUserService  RelationUserService
 	relationGroupService RelationGroupService
 	userService          UserService
@@ -58,7 +59,7 @@ type createGroupHandler struct {
 }
 
 func NewCreateGroupHandler(
-	repo group.Repository,
+	repo repository.Repository,
 	logger *zap.Logger,
 	dtmGrpcServer string,
 	userService UserService,
@@ -129,16 +130,16 @@ func (h *createGroupHandler) Handle(ctx context.Context, cmd CreateGroup) (Creat
 	wfName := "create_group_workflow_" + gid
 	if err = workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		// 创建群聊
-		if err := h.groupRepo.Create(ctx, &group.Group{
-			Type:            group.Type(cmd.Type),
-			Status:          group.StatusNormal,
+		if err := h.groupRepo.Create(ctx, &entity.Group{
+			Type:            entity.Type(cmd.Type),
+			Status:          entity.StatusNormal,
 			MaxMembersLimit: maxMembersLimit,
 			CreatorID:       cmd.CreateID,
 			Name:            cmd.Name,
 			Avatar:          cmd.Avatar,
 			JoinApprove:     cmd.JoinApprove,
 			Encrypt:         cmd.Encrypt,
-		}, func(e *group.Group) (*group.Group, error) {
+		}, func(e *entity.Group) (*entity.Group, error) {
 			groupID = e.ID
 			resp.ID = e.ID
 			resp.Avatar = e.Avatar

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/internal/group/app/command"
-	"github.com/cossim/coss-server/internal/group/domain/group"
+	"github.com/cossim/coss-server/internal/group/domain/repository"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/decorator"
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ type GetGroupHandler decorator.CommandHandler[GetGroup, *GroupInfo]
 var _ decorator.CommandHandler[GetGroup, *GroupInfo] = &getGroupHandler{}
 
 type getGroupHandler struct {
-	groupRepo             group.Repository
+	groupRepo             repository.Repository
 	relationGroupService  command.RelationGroupService
 	relationDialogService command.RelationDialogService
 	logger                *zap.Logger
@@ -32,7 +32,7 @@ type getGroupHandler struct {
 }
 
 func NewGetGroupHandler(
-	repo group.Repository,
+	repo repository.Repository,
 	logger *zap.Logger,
 	dtmGrpcServer string,
 	relationGroupService command.RelationGroupService,
@@ -53,6 +53,7 @@ func NewGetGroupHandler(
 }
 
 func (h *getGroupHandler) Handle(ctx context.Context, cmd GetGroup) (*GroupInfo, error) {
+	fmt.Println("get group => ", cmd)
 	r, err := h.groupRepo.Get(ctx, cmd.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

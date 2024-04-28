@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/cossim/coss-server/internal/group/interfaces"
-	"github.com/cossim/coss-server/internal/group/rpc"
+	"github.com/cossim/coss-server/internal/group/interfaces/grpc"
 	"github.com/cossim/coss-server/internal/group/service"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
@@ -54,7 +54,7 @@ func init() {
 }
 
 func main() {
-	grpcService := &rpc.GroupServiceServer{}
+	grpcService := &grpc.GroupServiceServer{}
 	mgr, err := ctrl.NewManager(config.GetConfigOrDie(), ctrl.Options{
 		//Http: ctrl.HTTPServer{
 		//	HTTPService:        httpServer,

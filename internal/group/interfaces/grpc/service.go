@@ -1,4 +1,4 @@
-package rpc
+package grpc
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/cossim/coss-server/internal/group/adapters"
 	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/cache"
-	"github.com/cossim/coss-server/internal/group/domain/group"
+	"github.com/cossim/coss-server/internal/group/domain/repository"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/manager/server"
@@ -25,7 +25,7 @@ const (
 )
 
 type GroupServiceServer struct {
-	repo group.Repository
+	repo repository.Repository
 	stop func() func(ctx context.Context) error
 }
 

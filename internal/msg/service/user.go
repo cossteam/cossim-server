@@ -414,6 +414,8 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string, pageSize
 		return nil, err
 	}
 
+	fmt.Println("ids => ", ids)
+
 	//获取对话信息
 	infos, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
 		DialogIds: ids.DialogIds,
@@ -440,6 +442,7 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string, pageSize
 			DialogId: v.Id,
 			UserId:   userID,
 		})
+		fmt.Println("du => ", du)
 		if err != nil {
 			s.logger.Error("获取对话用户信息失败", zap.Error(err))
 			return nil, err

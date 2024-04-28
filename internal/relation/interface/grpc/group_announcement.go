@@ -3,9 +3,7 @@ package grpc
 import (
 	"context"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/relation/domain/entity"
-	"github.com/cossim/coss-server/internal/relation/domain/repository"
-	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/internal/relation/domain/relation"
 	"github.com/cossim/coss-server/pkg/code"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,33 +13,59 @@ import (
 var _ v1.GroupAnnouncementServiceServer = &groupAnnouncementServer{}
 
 type groupAnnouncementServer struct {
-	db    *gorm.DB
-	cache cache.RelationUserCache
-	gar   repository.GroupAnnouncementRepository
+	db  *gorm.DB
+	gar relation.GroupAnnouncementRepository
 }
 
-func (s *groupAnnouncementServer) CreateGroupAnnouncement(ctx context.Context, in *v1.CreateGroupAnnouncementRequest) (*v1.CreateGroupAnnouncementResponse, error) {
+func (s *groupAnnouncementServer) CreateGroupAnnouncement(ctx context.Context, request *v1.CreateGroupAnnouncementRequest) (*v1.CreateGroupAnnouncementResponse, error) {
 	announcement := &v1.CreateGroupAnnouncementResponse{}
-	if err := s.gar.CreateGroupAnnouncement(&entity.GroupAnnouncement{
-		Content: in.Content,
-		GroupID: in.GroupId,
-		Title:   in.Title,
-		UserID:  in.UserId,
-	}); err != nil {
-		return announcement, status.Error(codes.Code(code.RelationGroupErrCreateGroupAnnouncementFailed.Code()), err.Error())
+
+	// TODO 改用 Validation 验证
+	if request.GroupId == 0 || request.UserId == "" || request.Title == "" || request.Content == "" {
+		return nil, code.InvalidParameter
 	}
+
+	// TODO 验证用户是否是群主
+
+	//if err := s.gar.CreateGroupAnnouncement(&entity.GroupAnnouncement{
+	//	Content: in.Content,
+	//	GroupID: in.GroupId,
+	//	Title:   in.Title,
+	//	UserID:  in.UserId,
+	//}); err != nil {
+	//	return announcement, status.Error(codes.Code(code.RelationGroupErrCreateGroupAnnouncementFailed.Code()), err.Error())
+	//}
+
+	ra, err := s.gar.Create(ctx, &relation.GroupAnnouncement{
+		GroupID: request.GroupId,
+		Title:   request.Title,
+		Content: request.Content,
+		UserID:  request.UserId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	announcement.ID = ra.ID
 	return announcement, nil
 }
 
-func (s *groupAnnouncementServer) GetGroupAnnouncementList(ctx context.Context, in *v1.GetGroupAnnouncementListRequest) (*v1.GetGroupAnnouncementListResponse, error) {
+func (s *groupAnnouncementServer) GetGroupAnnouncementList(ctx context.Context, request *v1.GetGroupAnnouncementListRequest) (*v1.GetGroupAnnouncementListResponse, error) {
 	resp := &v1.GetGroupAnnouncementListResponse{}
-	announcements, err := s.gar.GetGroupAnnouncementList(in.GroupId)
+	//announcements, err := s.gar.GetGroupAnnouncementList(request.GroupId)
+	//if err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementListFailed.Code()), err.Error())
+	//}
+
+	announcements, err := s.gar.Find(ctx, &relation.GroupAnnouncementQuery{
+		GroupID: []uint32{request.GroupId},
+	})
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementListFailed.Code()), err.Error())
+		return nil, err
 	}
+
 	for _, announcement := range announcements {
-		resp.AnnouncementList = append(resp.GetAnnouncementList(), &v1.GroupAnnouncementInfo{
-			ID:        uint32(announcement.ID),
+		resp.AnnouncementList = append(resp.AnnouncementList, &v1.GroupAnnouncementInfo{
+			ID:        announcement.ID,
 			Content:   announcement.Content,
 			GroupId:   announcement.GroupID,
 			Title:     announcement.Title,
@@ -54,14 +78,20 @@ func (s *groupAnnouncementServer) GetGroupAnnouncementList(ctx context.Context, 
 	return resp, nil
 }
 
-func (s *groupAnnouncementServer) GetGroupAnnouncement(ctx context.Context, in *v1.GetGroupAnnouncementRequest) (*v1.GetGroupAnnouncementResponse, error) {
+func (s *groupAnnouncementServer) GetGroupAnnouncement(ctx context.Context, request *v1.GetGroupAnnouncementRequest) (*v1.GetGroupAnnouncementResponse, error) {
 	resp := &v1.GetGroupAnnouncementResponse{}
-	announcement, err := s.gar.GetGroupAnnouncement(in.ID)
+	//announcement, err := s.gar.GetGroupAnnouncement(request.ID)
+	//if err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementFailed.Code()), err.Error())
+	//}
+
+	announcement, err := s.gar.Get(ctx, request.ID)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementFailed.Code()), err.Error())
+		return nil, err
 	}
+
 	resp.AnnouncementInfo = &v1.GroupAnnouncementInfo{
-		ID:        uint32(announcement.ID),
+		ID:        announcement.ID,
 		Content:   announcement.Content,
 		GroupId:   announcement.GroupID,
 		Title:     announcement.Title,
@@ -72,42 +102,61 @@ func (s *groupAnnouncementServer) GetGroupAnnouncement(ctx context.Context, in *
 	return resp, nil
 }
 
-func (s *groupAnnouncementServer) UpdateGroupAnnouncement(ctx context.Context, in *v1.UpdateGroupAnnouncementRequest) (*v1.UpdateGroupAnnouncementResponse, error) {
+func (s *groupAnnouncementServer) UpdateGroupAnnouncement(ctx context.Context, request *v1.UpdateGroupAnnouncementRequest) (*v1.UpdateGroupAnnouncementResponse, error) {
 	resp := &v1.UpdateGroupAnnouncementResponse{}
-	if err := s.gar.UpdateGroupAnnouncement(&entity.GroupAnnouncement{
-		BaseModel: entity.BaseModel{
-			ID: uint(in.ID),
-		},
-		Content: in.Content,
-		Title:   in.Title,
+	//if err := s.gar.UpdateGroupAnnouncement(&entity.GroupAnnouncement{
+	//	BaseModel: entity.BaseModel{
+	//		ID: uint(request.ID),
+	//	},
+	//	Content: request.Content,
+	//	Title:   request.Title,
+	//}); err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationGroupErrUpdateGroupAnnouncementFailed.Code()), err.Error())
+	//}
+
+	if err := s.gar.Update(ctx, &relation.UpdateGroupAnnouncement{
+		ID:      request.ID,
+		Title:   request.Title,
+		Content: request.Content,
 	}); err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrUpdateGroupAnnouncementFailed.Code()), err.Error())
+		return nil, err
 	}
-	resp.ID = in.ID
+
+	resp.ID = request.ID
 	return resp, nil
 }
 
-func (s *groupAnnouncementServer) DeleteGroupAnnouncement(ctx context.Context, in *v1.DeleteGroupAnnouncementRequest) (*v1.DeleteGroupAnnouncementResponse, error) {
+func (s *groupAnnouncementServer) DeleteGroupAnnouncement(ctx context.Context, request *v1.DeleteGroupAnnouncementRequest) (*v1.DeleteGroupAnnouncementResponse, error) {
 	resp := &v1.DeleteGroupAnnouncementResponse{}
-	if err := s.gar.DeleteGroupAnnouncement(in.ID); err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrDeleteGroupAnnouncementFailed.Code()), err.Error())
+	//if err := s.gar.DeleteGroupAnnouncement(request.ID); err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationGroupErrDeleteGroupAnnouncementFailed.Code()), err.Error())
+	//}
+
+	if err := s.gar.Delete(ctx, request.ID); err != nil {
+		return nil, err
 	}
-	resp.ID = in.ID
+
+	resp.ID = request.ID
 	return resp, nil
 }
 
 func (s *groupAnnouncementServer) MarkAnnouncementAsRead(ctx context.Context, request *v1.MarkAnnouncementAsReadRequest) (*v1.MarkAnnouncementAsReadResponse, error) {
 	resp := &v1.MarkAnnouncementAsReadResponse{}
-	err := s.gar.MarkAnnouncementAsRead(uint(request.GroupId), uint(request.AnnouncementId), request.UserIds)
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrGroupAnnouncementReadFailed.Code()), err.Error())
+	//err := s.gar.MarkAnnouncementAsRead(uint(request.GroupId), uint(request.AnnouncementId), request.UserIds)
+	//if err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationErrGroupAnnouncementReadFailed.Code()), err.Error())
+	//}
+
+	if err := s.gar.MarkAsRead(ctx, request.GroupId, request.AnnouncementId, request.UserIds); err != nil {
+		return nil, err
 	}
+
 	return resp, nil
 }
 
 func (s *groupAnnouncementServer) GetReadUsers(ctx context.Context, request *v1.GetReadUsersRequest) (*v1.GetReadUsersResponse, error) {
 	resp := &v1.GetReadUsersResponse{}
-	list, err := s.gar.GetReadUsers(uint(request.GroupId), uint(request.AnnouncementId))
+	list, err := s.gar.GetReadUsers(ctx, request.GroupId, request.AnnouncementId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrGetGroupAnnouncementReadUsersFailed.Code()), err.Error())
 	}
@@ -117,9 +166,9 @@ func (s *groupAnnouncementServer) GetReadUsers(ctx context.Context, request *v1.
 			reads = append(reads, &v1.AnnouncementRead{
 				UserId:         v.UserId,
 				ReadAt:         uint64(v.ReadAt),
-				GroupId:        uint32(v.GroupID),
-				AnnouncementId: uint32(v.AnnouncementId),
-				ID:             uint32(v.ID),
+				GroupId:        v.GroupID,
+				AnnouncementId: v.AnnouncementId,
+				ID:             v.ID,
 			})
 		}
 		resp.AnnouncementReadUsers = reads
@@ -129,13 +178,19 @@ func (s *groupAnnouncementServer) GetReadUsers(ctx context.Context, request *v1.
 
 func (s *groupAnnouncementServer) GetAnnouncementReadByUserId(ctx context.Context, request *v1.GetAnnouncementReadByUserIdRequest) (*v1.GetAnnouncementReadByUserIdResponse, error) {
 	resp := &v1.GetAnnouncementReadByUserIdResponse{}
-	read, err := s.gar.GetAnnouncementReadByUserId(uint(request.GroupId), uint(request.AnnouncementId), request.UserId)
+	//read, err := s.gar.GetAnnouncementReadByUserId(uint(request.GroupId), uint(request.AnnouncementId), request.UserId)
+	//if err != nil {
+	//	return resp, status.Error(codes.Code(code.RelationErrGetGroupAnnouncementReadFailed.Code()), err.Error())
+	//}
+
+	read, err := s.gar.GetReadByUserId(ctx, request.GroupId, request.AnnouncementId, request.UserId)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrGetGroupAnnouncementReadFailed.Code()), err.Error())
+		return nil, err
 	}
-	resp.ID = uint32(read.ID)
-	resp.AnnouncementId = uint32(read.AnnouncementId)
-	resp.GroupId = uint32(read.GroupID)
+
+	resp.ID = read.ID
+	resp.AnnouncementId = read.AnnouncementId
+	resp.GroupId = read.GroupID
 	resp.ReadAt = uint64(read.ReadAt)
 	resp.UserId = read.UserId
 	return resp, nil

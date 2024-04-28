@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	api "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/relation/infrastructure/persistence"
-	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/version"
@@ -33,15 +32,15 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	userCache, err := cache.NewRelationUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
-
-	groupCache, err := cache.NewRelationGroupCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
+	//userCache, err := cache.NewRelationUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//groupCache, err := cache.NewRelationGroupCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	//if err != nil {
+	//	return err
+	//}
 
 	dbConn, err := mysql.GetConnection()
 	if err != nil {
@@ -55,43 +54,33 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 
 	s.ac = cfg
 	s.UserServiceServer = &userServiceServer{
-		db:          dbConn,
-		cache:       userCache,
-		cacheEnable: s.ac.Cache.Enable,
-		urr:         infra.Urr,
-		dr:          infra.Dr,
+		db:  dbConn,
+		urr: infra.Urr,
+		dr:  infra.Dr,
 	}
 	s.GroupServiceServer = &groupServiceServer{
-		db:          dbConn,
-		cache:       groupCache,
-		cacheEnable: s.ac.Cache.Enable,
-		grr:         infra.Grr,
-		dr:          infra.Dr,
+		db:  dbConn,
+		grr: infra.Grr,
+		dr:  infra.Dr,
 	}
 	s.DialogServiceServer = &dialogServiceServer{
-		db:          dbConn,
-		cache:       userCache,
-		cacheEnable: s.ac.Cache.Enable,
-		dr:          infra.Dr,
+		db:  dbConn,
+		dr:  infra.Dr,
+		dur: infra.Dur,
 	}
 	s.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{
-		db:          dbConn,
-		dr:          infra.Dr,
-		grr:         infra.Grr,
-		gjqr:        infra.Gjqr,
-		cache:       groupCache,
-		cacheEnable: s.ac.Cache.Enable,
+		db:   dbConn,
+		dr:   infra.Dr,
+		grr:  infra.Grr,
+		gjqr: infra.Gjqr,
 	}
 	s.UserFriendRequestServiceServer = &userFriendRequestServiceServer{
-		db:          dbConn,
-		cache:       userCache,
-		cacheEnable: s.ac.Cache.Enable,
-		ufqr:        infra.Ufqr,
+		db:   dbConn,
+		ufqr: infra.Ufqr,
 	}
 	s.GroupAnnouncementServer = &groupAnnouncementServer{
-		db:    dbConn,
-		cache: userCache,
-		gar:   infra.GAr,
+		db:  dbConn,
+		gar: infra.GAr,
 	}
 	return nil
 }
@@ -117,7 +106,8 @@ func (s *RelationServiceServer) RegisterHealth(srv *grpc.Server) {
 }
 
 func (s *RelationServiceServer) Stop(ctx context.Context) error {
-	return s.UserServiceServer.cache.DeleteAllCache(ctx)
+	//return s.UserServiceServer.cache.DeleteAllCache(ctx)
+	return nil
 }
 
 func (s *RelationServiceServer) DiscoverServices(services map[string]*grpc.ClientConn) error {

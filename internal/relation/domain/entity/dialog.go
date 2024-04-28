@@ -6,10 +6,11 @@ import (
 )
 
 type Dialog struct {
-	BaseModel
-	OwnerId string     `gorm:"comment:用户id" json:"owner_id"`
-	Type    DialogType `gorm:"comment:对话类型" json:"type"`
-	GroupId uint       `gorm:"comment:群组id" json:"group_id"`
+	ID        uint       `gorm:"primaryKey;autoIncrement;" json:"id"`
+	CreatedAt int64      `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`
+	OwnerId   string     `gorm:"comment:用户id" json:"owner_id"`
+	Type      DialogType `gorm:"comment:对话类型" json:"type"`
+	GroupId   uint       `gorm:"comment:群组id" json:"group_id"`
 }
 
 type BaseModel struct {
@@ -31,7 +32,7 @@ func (bm *BaseModel) BeforeUpdate(tx *gorm.DB) error {
 	return nil
 }
 
-type DialogType uint32
+type DialogType uint8
 
 const (
 	UserDialog = iota
