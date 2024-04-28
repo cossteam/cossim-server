@@ -80,8 +80,14 @@ type MySQLRelationGroupRepository struct {
 }
 
 func (m *MySQLRelationGroupRepository) UpdateFieldsByGroupID(ctx context.Context, id uint32, fields map[string]interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	if err := m.db.WithContext(ctx).Model(&GroupRelationModel{}).
+		Where("id = ?", id).
+		Updates(fields).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *MySQLRelationGroupRepository) Get(ctx context.Context, id uint32) (*relation.GroupRelation, error) {
