@@ -10,9 +10,9 @@ type GroupAnnouncementRepository struct {
 	db *gorm.DB
 }
 
-func NewGroupAnnouncementRepository(db *gorm.DB) *GroupAnnouncementRepository {
-	return &GroupAnnouncementRepository{db: db}
-}
+//func NewGroupAnnouncementRepository(db *gorm.DB) *GroupAnnouncementRepository {
+//	return &GroupAnnouncementRepository{db: db}
+//}
 
 func (g *GroupAnnouncementRepository) CreateGroupAnnouncement(announcement *entity.GroupAnnouncement) error {
 	return g.db.Create(announcement).Error

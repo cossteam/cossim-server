@@ -263,10 +263,19 @@ func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, ui
 		return nil, err
 	}
 
+	var isSilent bool
+	switch silent {
+	case model.NotSilent:
+		isSilent = false
+	case model.IsSilent:
+		isSilent = true
+
+	}
+
 	_, err = s.relationGroupService.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
 		GroupId:  gid,
 		UserId:   uid,
-		IsSilent: relationgrpcv1.GroupSilentNotificationType(silent),
+		IsSilent: isSilent,
 	})
 	if err != nil {
 		s.logger.Error("设置群聊静默通知失败", zap.Error(err))

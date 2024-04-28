@@ -4,6 +4,50 @@ option go_package = "github.com/cossim/coss-server/internal/relation/api/grpc/v1
 import "google/protobuf/empty.proto";
 import "api/grpc/v1/group_relation.proto";
 
+service UserRelationService {
+  // 添加好友
+  rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
+  // 管理好友
+  rpc ManageFriend(ManageFriendRequest) returns (ManageFriendResponse);
+  // 管理好友回滚
+  rpc ManageFriendRevert(ManageFriendRequest) returns (ManageFriendResponse);
+  // 删除好友
+  rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
+  // 删除好友回滚
+  rpc DeleteFriendRevert(DeleteFriendRequest) returns (DeleteFriendResponse);
+  // 添加黑名单
+  rpc AddBlacklist(AddBlacklistRequest) returns (AddBlacklistResponse);
+  // 移出黑名单
+  rpc DeleteBlacklist(DeleteBlacklistRequest) returns (DeleteBlacklistResponse);
+  // 获取好友列表
+  rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
+  // 获取黑名单列表
+  rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
+  // 获取用户关系
+  rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
+  // 批量获取用户关系
+  rpc GetUserRelationByUserIds(GetUserRelationByUserIdsRequest) returns (GetUserRelationByUserIdsResponse);
+  // 设置好友静默通知
+  rpc SetFriendSilentNotification(SetFriendSilentNotificationRequest) returns (google.protobuf.Empty);
+  // 设置阅后即焚开关
+  rpc SetUserOpenBurnAfterReading(SetUserOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
+  // 设置好友备注
+  rpc SetFriendRemark(SetFriendRemarkRequest) returns (google.protobuf.Empty);
+  // 单向删除好友后再添加回好友
+  rpc AddFriendAfterDelete(AddFriendAfterDeleteRequest) returns (AddFriendAfterDeleteResponse);
+}
+
+message AddFriendAfterDeleteRequest {
+  // @inject_tag: json:"user_id"
+  string UserId = 1;    // 用户id
+  // @inject_tag: json:"friend_id"
+  string FriendId = 2;  // 好友id
+}
+
+message AddFriendAfterDeleteResponse {
+
+}
+
 message AddFriendRequest {
   // @inject_tag: json:"user_id"
   string UserId = 1;    // 用户id
@@ -185,35 +229,4 @@ message SetFriendRemarkRequest {
   string FriendId = 2;
   // @inject_tag: json:"remark"
   string remark = 3;
-}
-
-service UserRelationService {
-  // 添加好友
-  rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
-  // 管理好友
-  rpc ManageFriend(ManageFriendRequest) returns (ManageFriendResponse);
-  // 管理好友回滚
-  rpc ManageFriendRevert(ManageFriendRequest) returns (ManageFriendResponse);
-  // 删除好友
-  rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
-  // 删除好友回滚
-  rpc DeleteFriendRevert(DeleteFriendRequest) returns (DeleteFriendResponse);
-  // 添加黑名单
-  rpc AddBlacklist(AddBlacklistRequest) returns (AddBlacklistResponse);
-  // 移出黑名单
-  rpc DeleteBlacklist(DeleteBlacklistRequest) returns (DeleteBlacklistResponse);
-  // 获取好友列表
-  rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
-  // 获取黑名单列表
-  rpc GetBlacklist(GetBlacklistRequest) returns (GetBlacklistResponse);
-  // 获取用户关系
-  rpc GetUserRelation(GetUserRelationRequest) returns (GetUserRelationResponse);
-  // 批量获取用户关系
-  rpc GetUserRelationByUserIds(GetUserRelationByUserIdsRequest) returns (GetUserRelationByUserIdsResponse);
-  // 设置好友静默通知
-  rpc SetFriendSilentNotification(SetFriendSilentNotificationRequest) returns (google.protobuf.Empty);
-  // 设置阅后即焚开关
-  rpc SetUserOpenBurnAfterReading(SetUserOpenBurnAfterReadingRequest) returns (google.protobuf.Empty);
-  // 设置好友备注
-  rpc SetFriendRemark(SetFriendRemarkRequest) returns (google.protobuf.Empty);
 }

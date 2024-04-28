@@ -34,6 +34,7 @@ const (
 	UserRelationService_SetFriendSilentNotification_FullMethodName = "/relation_v1.UserRelationService/SetFriendSilentNotification"
 	UserRelationService_SetUserOpenBurnAfterReading_FullMethodName = "/relation_v1.UserRelationService/SetUserOpenBurnAfterReading"
 	UserRelationService_SetFriendRemark_FullMethodName             = "/relation_v1.UserRelationService/SetFriendRemark"
+	UserRelationService_AddFriendAfterDelete_FullMethodName        = "/relation_v1.UserRelationService/AddFriendAfterDelete"
 )
 
 // UserRelationServiceClient is the client API for UserRelationService service.
@@ -68,6 +69,8 @@ type UserRelationServiceClient interface {
 	SetUserOpenBurnAfterReading(ctx context.Context, in *SetUserOpenBurnAfterReadingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 设置好友备注
 	SetFriendRemark(ctx context.Context, in *SetFriendRemarkRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 单向删除好友后再添加回好友
+	AddFriendAfterDelete(ctx context.Context, in *AddFriendAfterDeleteRequest, opts ...grpc.CallOption) (*AddFriendAfterDeleteResponse, error)
 }
 
 type userRelationServiceClient struct {
@@ -204,6 +207,15 @@ func (c *userRelationServiceClient) SetFriendRemark(ctx context.Context, in *Set
 	return out, nil
 }
 
+func (c *userRelationServiceClient) AddFriendAfterDelete(ctx context.Context, in *AddFriendAfterDeleteRequest, opts ...grpc.CallOption) (*AddFriendAfterDeleteResponse, error) {
+	out := new(AddFriendAfterDeleteResponse)
+	err := c.cc.Invoke(ctx, UserRelationService_AddFriendAfterDelete_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserRelationServiceServer is the server API for UserRelationService service.
 // All implementations should embed UnimplementedUserRelationServiceServer
 // for forward compatibility
@@ -236,6 +248,8 @@ type UserRelationServiceServer interface {
 	SetUserOpenBurnAfterReading(context.Context, *SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error)
 	// 设置好友备注
 	SetFriendRemark(context.Context, *SetFriendRemarkRequest) (*emptypb.Empty, error)
+	// 单向删除好友后再添加回好友
+	AddFriendAfterDelete(context.Context, *AddFriendAfterDeleteRequest) (*AddFriendAfterDeleteResponse, error)
 }
 
 // UnimplementedUserRelationServiceServer should be embedded to have forward compatible implementations.
@@ -283,6 +297,9 @@ func (UnimplementedUserRelationServiceServer) SetUserOpenBurnAfterReading(contex
 }
 func (UnimplementedUserRelationServiceServer) SetFriendRemark(context.Context, *SetFriendRemarkRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetFriendRemark not implemented")
+}
+func (UnimplementedUserRelationServiceServer) AddFriendAfterDelete(context.Context, *AddFriendAfterDeleteRequest) (*AddFriendAfterDeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddFriendAfterDelete not implemented")
 }
 
 // UnsafeUserRelationServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -548,6 +565,24 @@ func _UserRelationService_SetFriendRemark_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserRelationService_AddFriendAfterDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddFriendAfterDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserRelationServiceServer).AddFriendAfterDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserRelationService_AddFriendAfterDelete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserRelationServiceServer).AddFriendAfterDelete(ctx, req.(*AddFriendAfterDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserRelationService_ServiceDesc is the grpc.ServiceDesc for UserRelationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -610,6 +645,10 @@ var UserRelationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetFriendRemark",
 			Handler:    _UserRelationService_SetFriendRemark_Handler,
+		},
+		{
+			MethodName: "AddFriendAfterDelete",
+			Handler:    _UserRelationService_AddFriendAfterDelete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

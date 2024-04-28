@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/cossim/coss-server/internal/group/domain/group"
+	"github.com/cossim/coss-server/internal/group/domain/entity"
 	"github.com/redis/go-redis/v9"
 	"strconv"
 	"time"
@@ -26,10 +26,10 @@ func GetGroupInfoKey(groupID uint32) string {
 }
 
 type GroupCache interface {
-	GetGroup(ctx context.Context, groupID uint32) (*group.Group, error)
-	GetGroups(ctx context.Context, groupID []uint32) ([]*group.Group, error)
+	GetGroup(ctx context.Context, groupID uint32) (*entity.Group, error)
+	GetGroups(ctx context.Context, groupID []uint32) ([]*entity.Group, error)
 	DeleteGroup(ctx context.Context, groupID ...uint32) error
-	SetGroup(ctx context.Context, groups ...*group.Group) error
+	SetGroup(ctx context.Context, groups ...*entity.Group) error
 	DeleteAllCache(ctx context.Context) error
 	Close() error
 }
@@ -76,7 +76,7 @@ func (g *GroupCacheRedis) DeleteAllCache(ctx context.Context) error {
 	return g.client.Del(ctx, keys...).Err()
 }
 
-func (g *GroupCacheRedis) SetGroup(ctx context.Context, groups ...*group.Group) error {
+func (g *GroupCacheRedis) SetGroup(ctx context.Context, groups ...*entity.Group) error {
 	if len(groups) == 0 {
 		return ErrCacheKeyEmpty
 	}
@@ -108,7 +108,7 @@ func (g *GroupCacheRedis) SetGroup(ctx context.Context, groups ...*group.Group) 
 	return nil
 }
 
-func (g *GroupCacheRedis) GetGroup(ctx context.Context, groupID uint32) (*group.Group, error) {
+func (g *GroupCacheRedis) GetGroup(ctx context.Context, groupID uint32) (*entity.Group, error) {
 	key := GetGroupInfoKey(groupID)
 	groupJSON, err := g.client.Get(ctx, key).Result()
 	if err != nil {
@@ -118,7 +118,7 @@ func (g *GroupCacheRedis) GetGroup(ctx context.Context, groupID uint32) (*group.
 		return nil, err
 	}
 
-	group := &group.Group{}
+	group := &entity.Group{}
 	if err = json.Unmarshal([]byte(groupJSON), group); err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (g *GroupCacheRedis) GetGroup(ctx context.Context, groupID uint32) (*group.
 	return group, nil
 }
 
-func (g *GroupCacheRedis) GetGroups(ctx context.Context, groupIDs []uint32) ([]*group.Group, error) {
+func (g *GroupCacheRedis) GetGroups(ctx context.Context, groupIDs []uint32) ([]*entity.Group, error) {
 	if len(groupIDs) == 0 {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -141,13 +141,13 @@ func (g *GroupCacheRedis) GetGroups(ctx context.Context, groupIDs []uint32) ([]*
 		return nil, err
 	}
 
-	groups := make([]*group.Group, 0, len(groupIDs))
+	groups := make([]*entity.Group, 0, len(groupIDs))
 	for _, groupJSON := range groupJSONs {
 		if groupJSON == nil {
 			continue
 		}
 
-		group := &group.Group{}
+		group := &entity.Group{}
 		if err := json.Unmarshal([]byte(groupJSON.(string)), group); err != nil {
 			return nil, err
 		}

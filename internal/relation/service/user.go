@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -114,6 +115,8 @@ func (s *Service) UserRequestList(ctx context.Context, userID string, pageSize i
 		return nil, err
 	}
 
+	fmt.Println("reqList => ", reqList)
+
 	var data []*model.UserRequestListResponse
 	for _, v := range reqList.FriendRequestList {
 		if v.SenderId == userID {
@@ -196,10 +199,29 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 			return nil, err
 		}
 	}
-	if relation != nil {
-		if relation.DialogId != 0 {
-			return nil, code.RelationErrAlreadyFriends
+	if relation != nil && relation.DialogId != 0 {
+		return nil, code.RelationErrAlreadyFriends
+	}
+
+	relation2, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: friendID, FriendId: userID})
+	if err != nil {
+		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
+			s.logger.Error("获取好友关系失败", zap.Error(err))
+			return nil, err
 		}
+	}
+
+	// 单删之后再添加
+	if relation2.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
+		_, err := s.relationUserService.AddFriendAfterDelete(ctx, &relationgrpcv1.AddFriendAfterDeleteRequest{
+			UserId:   userID,
+			FriendId: friendID,
+		})
+		if err != nil {
+			s.logger.Error("单删添加好友失败", zap.Error(err))
+			return nil, err
+		}
+		return nil, nil
 	}
 
 	//删除之前的
@@ -208,7 +230,9 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		FriendId: friendID,
 	})
 	if err != nil {
-		return nil, err
+		if code.Code(code.RelationUserErrNoFriendRequestRecords.Code()) != code.Cause(err) {
+			return nil, err
+		}
 	}
 
 	// 创建好友申请

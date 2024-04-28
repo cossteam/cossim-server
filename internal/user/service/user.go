@@ -63,6 +63,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 
 	infos, err := s.userCache.GetUserLoginInfos(ctx, userInfo.UserId)
 	if err != nil {
+		s.logger.Error("failed to get user login infos", zap.Error(err))
 		return nil, "", err
 	}
 
@@ -155,6 +156,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 
 		return nil
 	}); err != nil {
+		s.logger.Error("failed to register workflow", zap.Error(err))
 		return nil, "", err
 	}
 
