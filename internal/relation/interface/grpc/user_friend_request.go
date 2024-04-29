@@ -64,39 +64,43 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, request *v1.SendFriendRequestStruct) (*v1.SendFriendRequestStructResponse, error) {
 	var resp = &v1.SendFriendRequestStructResponse{}
 
-	// 添加自己的
-	re1, err := s.ufqr.Create(ctx, &relation.UserFriendRequest{
-		SenderID:   request.SenderId,
-		ReceiverID: request.ReceiverId,
-		Remark:     request.Remark,
-		OwnerID:    request.SenderId,
-		Status:     relation.Pending,
-	})
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
-	}
-	resp.ID = re1.ID
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		npo := persistence.NewRepositories(tx)
 
-	// 对方拉黑了，不允许添加
-	re2, err := s.ur.Get(ctx, request.ReceiverId, request.SenderId)
-	if err != nil {
-		return nil, err
-	}
+		// 添加自己的
+		re1, err := npo.Ufqr.Create(ctx, &relation.UserFriendRequest{
+			SenderID:   request.SenderId,
+			ReceiverID: request.ReceiverId,
+			Remark:     request.Remark,
+			OwnerID:    request.SenderId,
+			Status:     relation.Pending,
+		})
+		if err != nil {
+			return status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
+		}
 
-	if re2.Status == relation.UserStatusBlocked {
-		return resp, nil
-	}
+		// 对方拉黑了，不允许添加
+		re2, err := s.ur.Get(ctx, request.ReceiverId, request.SenderId)
+		if err == nil && re2.Status == relation.UserStatusBlocked {
+			return nil
+		}
 
-	// 添加对方的
-	_, err = s.ufqr.Create(ctx, &relation.UserFriendRequest{
-		SenderID:   request.SenderId,
-		ReceiverID: request.ReceiverId,
-		Remark:     request.Remark,
-		OwnerID:    request.ReceiverId,
-		Status:     relation.Pending,
-	})
-	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
+		// 添加对方的
+		_, err = npo.Ufqr.Create(ctx, &relation.UserFriendRequest{
+			SenderID:   request.SenderId,
+			ReceiverID: request.ReceiverId,
+			Remark:     request.Remark,
+			OwnerID:    request.ReceiverId,
+			Status:     relation.Pending,
+		})
+		if err != nil {
+			return status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
+		}
+		resp.ID = re1.ID
+		return nil
+	}); err != nil {
+		log.Printf("ManageFriendRequest err => %v", err)
+		return resp, err
 	}
 
 	//// TODO 考虑不使用异步的方式，缓存设置失败了，重试或回滚
