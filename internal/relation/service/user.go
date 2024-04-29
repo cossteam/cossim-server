@@ -236,7 +236,6 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	}
 
 	// 创建好友申请
-	// 被拉黑了只创建自己的好友申请记录，对方是没有的
 	resp, err := s.relationUserFriendRequestService.SendFriendRequest(ctx, &relationgrpcv1.SendFriendRequestStruct{
 		SenderId:   userID,
 		ReceiverId: friendID,
