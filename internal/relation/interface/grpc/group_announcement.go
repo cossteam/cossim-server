@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,7 +14,7 @@ var _ v1.GroupAnnouncementServiceServer = &groupAnnouncementServer{}
 
 type groupAnnouncementServer struct {
 	db  *gorm.DB
-	gar relation.GroupAnnouncementRepository
+	gar entity.GroupAnnouncementRepository
 }
 
 func (s *groupAnnouncementServer) CreateGroupAnnouncement(ctx context.Context, request *v1.CreateGroupAnnouncementRequest) (*v1.CreateGroupAnnouncementResponse, error) {
@@ -36,7 +36,7 @@ func (s *groupAnnouncementServer) CreateGroupAnnouncement(ctx context.Context, r
 	//	return announcement, status.Error(codes.Code(code.RelationGroupErrCreateGroupAnnouncementFailed.Code()), err.Error())
 	//}
 
-	ra, err := s.gar.Create(ctx, &relation.GroupAnnouncement{
+	ra, err := s.gar.Create(ctx, &entity.GroupAnnouncement{
 		GroupID: request.GroupId,
 		Title:   request.Title,
 		Content: request.Content,
@@ -56,7 +56,7 @@ func (s *groupAnnouncementServer) GetGroupAnnouncementList(ctx context.Context, 
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementListFailed.Code()), err.Error())
 	//}
 
-	announcements, err := s.gar.Find(ctx, &relation.GroupAnnouncementQuery{
+	announcements, err := s.gar.Find(ctx, &entity.GroupAnnouncementQuery{
 		GroupID: []uint32{request.GroupId},
 	})
 	if err != nil {
@@ -114,7 +114,7 @@ func (s *groupAnnouncementServer) UpdateGroupAnnouncement(ctx context.Context, r
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrUpdateGroupAnnouncementFailed.Code()), err.Error())
 	//}
 
-	if err := s.gar.Update(ctx, &relation.UpdateGroupAnnouncement{
+	if err := s.gar.Update(ctx, &entity.UpdateGroupAnnouncement{
 		ID:      request.ID,
 		Title:   request.Title,
 		Content: request.Content,

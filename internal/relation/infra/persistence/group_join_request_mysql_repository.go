@@ -3,7 +3,8 @@ package persistence
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -24,7 +25,7 @@ func (m *GroupJoinRequestModel) TableName() string {
 	return "group_join_requests"
 }
 
-func (m *GroupJoinRequestModel) FromEntity(e *relation.GroupJoinRequest) {
+func (m *GroupJoinRequestModel) FromEntity(e *repository.GroupJoinRequest) {
 	m.ID = e.ID
 	m.GroupID = e.GroupID
 	m.InviterTime = e.InviterTime
@@ -35,8 +36,8 @@ func (m *GroupJoinRequestModel) FromEntity(e *relation.GroupJoinRequest) {
 	m.Status = uint8(e.Status)
 }
 
-func (m *GroupJoinRequestModel) ToEntity() *relation.GroupJoinRequest {
-	e := &relation.GroupJoinRequest{}
+func (m *GroupJoinRequestModel) ToEntity() *repository.GroupJoinRequest {
+	e := &repository.GroupJoinRequest{}
 	e.ID = m.ID
 	e.CreatedAt = m.CreatedAt
 	e.InviterTime = m.InviterTime
@@ -45,11 +46,11 @@ func (m *GroupJoinRequestModel) ToEntity() *relation.GroupJoinRequest {
 	e.Inviter = m.Inviter
 	e.Remark = m.Remark
 	e.OwnerID = m.OwnerID
-	e.Status = relation.RequestStatus(m.Status)
+	e.Status = entity.RequestStatus(m.Status)
 	return e
 }
 
-var _ relation.GroupJoinRequestRepository = &MySQLGroupJoinRequestRepository{}
+var _ repository.GroupJoinRequestRepository = &MySQLGroupJoinRequestRepository{}
 
 func NewMySQLGroupJoinRequestRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLGroupJoinRequestRepository {
 	return &MySQLGroupJoinRequestRepository{
@@ -62,7 +63,7 @@ type MySQLGroupJoinRequestRepository struct {
 	db *gorm.DB
 }
 
-func (m *MySQLGroupJoinRequestRepository) GetByGroupIDAndUserID(ctx context.Context, groupID uint32, userID string) (*relation.GroupJoinRequest, error) {
+func (m *MySQLGroupJoinRequestRepository) GetByGroupIDAndUserID(ctx context.Context, groupID uint32, userID string) (*repository.GroupJoinRequest, error) {
 	var model GroupJoinRequestModel
 
 	if err := m.db.WithContext(ctx).
@@ -74,7 +75,7 @@ func (m *MySQLGroupJoinRequestRepository) GetByGroupIDAndUserID(ctx context.Cont
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLGroupJoinRequestRepository) Get(ctx context.Context, id uint32) (*relation.GroupJoinRequest, error) {
+func (m *MySQLGroupJoinRequestRepository) Get(ctx context.Context, id uint32) (*repository.GroupJoinRequest, error) {
 	var model GroupJoinRequestModel
 
 	if err := m.db.WithContext(ctx).Where("id = ?", id).First(&model).Error; err != nil {
@@ -84,7 +85,7 @@ func (m *MySQLGroupJoinRequestRepository) Get(ctx context.Context, id uint32) (*
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLGroupJoinRequestRepository) Create(ctx context.Context, entity *relation.GroupJoinRequest) (*relation.GroupJoinRequest, error) {
+func (m *MySQLGroupJoinRequestRepository) Create(ctx context.Context, entity *repository.GroupJoinRequest) (*repository.GroupJoinRequest, error) {
 	var model GroupJoinRequestModel
 	model.FromEntity(entity)
 
@@ -95,7 +96,7 @@ func (m *MySQLGroupJoinRequestRepository) Create(ctx context.Context, entity *re
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLGroupJoinRequestRepository) Find(ctx context.Context, query *relation.GroupJoinRequestQuery) ([]*relation.GroupJoinRequest, error) {
+func (m *MySQLGroupJoinRequestRepository) Find(ctx context.Context, query *repository.GroupJoinRequestQuery) ([]*repository.GroupJoinRequest, error) {
 	var models []GroupJoinRequestModel
 
 	db := m.db.Model(&GroupJoinRequestModel{})
@@ -120,7 +121,7 @@ func (m *MySQLGroupJoinRequestRepository) Find(ctx context.Context, query *relat
 		return nil, errors.Wrap(result.Error, "failed to find user friend requests")
 	}
 
-	var es []*relation.GroupJoinRequest
+	var es []*repository.GroupJoinRequest
 
 	for _, model := range models {
 		es = append(es, model.ToEntity())
@@ -129,7 +130,7 @@ func (m *MySQLGroupJoinRequestRepository) Find(ctx context.Context, query *relat
 	return es, nil
 }
 
-func (m *MySQLGroupJoinRequestRepository) Creates(ctx context.Context, entity []*relation.GroupJoinRequest) ([]*relation.GroupJoinRequest, error) {
+func (m *MySQLGroupJoinRequestRepository) Creates(ctx context.Context, entity []*repository.GroupJoinRequest) ([]*repository.GroupJoinRequest, error) {
 	var models []GroupJoinRequestModel
 
 	if len(entity) == 0 {
@@ -146,7 +147,7 @@ func (m *MySQLGroupJoinRequestRepository) Creates(ctx context.Context, entity []
 		return nil, err
 	}
 
-	var es []*relation.GroupJoinRequest
+	var es []*repository.GroupJoinRequest
 
 	for _, model := range models {
 		es = append(es, model.ToEntity())
@@ -155,7 +156,7 @@ func (m *MySQLGroupJoinRequestRepository) Creates(ctx context.Context, entity []
 	return es, nil
 }
 
-func (m *MySQLGroupJoinRequestRepository) UpdateStatus(ctx context.Context, id uint32, status relation.RequestStatus) error {
+func (m *MySQLGroupJoinRequestRepository) UpdateStatus(ctx context.Context, id uint32, status entity.RequestStatus) error {
 	var model GroupJoinRequestModel
 	model.Status = uint8(status)
 

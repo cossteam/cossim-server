@@ -5,7 +5,8 @@ import (
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/cache"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
@@ -23,9 +24,9 @@ type groupJoinRequestServiceServer struct {
 	db          *gorm.DB
 	cache       cache.RelationGroupCache
 	cacheEnable bool
-	dr          relation.DialogRepository
-	grr         relation.GroupRepository
-	gjqr        relation.GroupJoinRequestRepository
+	dr          repository.DialogRepository
+	grr         repository.GroupRepository
+	gjqr        repository.GroupJoinRequestRepository
 }
 
 func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGroupRequest) (*v1.JoinGroupResponse, error) {
@@ -38,7 +39,7 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	}
 
 	// 构建关系切片
-	relations := make([]*relation.GroupJoinRequest, 0)
+	relations := make([]*repository.GroupJoinRequest, 0)
 	var notifiy []string
 	notifiy = append(notifiy, request.InviterId)
 	notifiy = append(notifiy, adminIDs...)
@@ -51,13 +52,13 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	for _, userID := range request.Member {
 		fmt.Println("添加被邀请人记录")
 
-		userGroup := &relation.GroupJoinRequest{
+		userGroup := &repository.GroupJoinRequest{
 			UserID:      userID,
 			GroupID:     request.GroupId,
 			Inviter:     request.InviterId,
 			OwnerID:     userID,
 			InviterTime: time.Now(),
-			Status:      relation.Invitation,
+			Status:      entity.Invitation,
 		}
 		relations = append(relations, userGroup)
 	}
@@ -66,13 +67,13 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	for _, id := range notifiy {
 		for _, userID := range request.Member {
 			fmt.Println("添加管理员记录")
-			userGroup := &relation.GroupJoinRequest{
+			userGroup := &repository.GroupJoinRequest{
 				UserID:      userID,
 				GroupID:     request.GroupId,
 				Inviter:     request.InviterId,
 				OwnerID:     id,
 				InviterTime: time.Now(),
-				Status:      relation.Invitation,
+				Status:      entity.Invitation,
 			}
 			relations = append(relations, userGroup)
 		}
@@ -96,7 +97,7 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 
 func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
 	resp := &v1.JoinGroupResponse{}
-	relations := make([]*relation.GroupJoinRequest, 0)
+	relations := make([]*repository.GroupJoinRequest, 0)
 
 	// 获取对话id
 	//dialog, err := s.dr.GetDialogByGroupId(uint(request.GroupId))
@@ -119,19 +120,19 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 			//	return err
 			//}
 
-			if _, err := npo.Dur.Create(ctx, &relation.CreateDialogUser{
+			if _, err := npo.Dur.Create(ctx, &repository.CreateDialogUser{
 				DialogID: uint32(dialog.ID),
 				UserID:   request.UserId,
 			}); err != nil {
 				return err
 			}
 
-			gr := &relation.CreateGroupRelation{
+			gr := &repository.CreateGroupRelation{
 				GroupID:     request.GroupId,
 				UserID:      request.UserId,
-				Identity:    relation.IdentityUser,
+				Identity:    entity.IdentityUser,
 				JoinedAt:    time.Now(),
-				EntryMethod: relation.EntrySearch,
+				EntryMethod: entity.EntrySearch,
 			}
 			// 加入群聊
 			if _, err := s.grr.Create(ctx, gr); err != nil {
@@ -158,25 +159,25 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 		return resp, err
 	}
 	for _, id := range ids {
-		userGroup := &relation.GroupJoinRequest{
+		userGroup := &repository.GroupJoinRequest{
 			UserID:      id,
 			GroupID:     request.GroupId,
 			Remark:      request.Msg,
 			OwnerID:     id,
 			InviterTime: time.Now(),
-			Status:      relation.Pending,
+			Status:      entity.Pending,
 		}
 		relations = append(relations, userGroup)
 	}
 
 	// 添加用户群聊申请记录
-	ur := &relation.GroupJoinRequest{
+	ur := &repository.GroupJoinRequest{
 		GroupID:     request.GroupId,
 		UserID:      request.UserId,
 		Remark:      request.Msg,
 		OwnerID:     request.UserId,
 		InviterTime: time.Now(),
-		Status:      relation.Pending,
+		Status:      entity.Pending,
 	}
 	relations = append(relations, ur)
 
@@ -204,7 +205,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 	//	return resp, err
 	//}
 
-	list, err := s.gjqr.Find(ctx, &relation.GroupJoinRequestQuery{
+	list, err := s.gjqr.Find(ctx, &repository.GroupJoinRequestQuery{
 		UserID:   []string{request.UserId},
 		PageSize: int(request.PageSize),
 		PageNum:  int(request.PageNum),
@@ -240,7 +241,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByGroupIdAndUserId(ctx context.Context, request *v1.GetGroupJoinRequestByGroupIdAndUserIdRequest) (*v1.GetGroupJoinRequestByGroupIdAndUserIdResponse, error) {
 	var resp = &v1.GetGroupJoinRequestByGroupIdAndUserIdResponse{}
 
-	find, err := s.gjqr.Find(ctx, &relation.GroupJoinRequestQuery{
+	find, err := s.gjqr.Find(ctx, &repository.GroupJoinRequestQuery{
 		UserID:  []string{request.UserId},
 		GroupID: []uint32{request.GroupId},
 	})
@@ -287,7 +288,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		//	return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		//}
 
-		if err := s.gjqr.UpdateStatus(ctx, info.ID, relation.RequestStatus(request.Status)); err != nil {
+		if err := s.gjqr.UpdateStatus(ctx, info.ID, entity.RequestStatus(request.Status)); err != nil {
 			return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
 
@@ -329,7 +330,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		//	return err
 		//}
 
-		if _, err := npo.Dur.Create(ctx, &relation.CreateDialogUser{
+		if _, err := npo.Dur.Create(ctx, &repository.CreateDialogUser{
 			DialogID: dialog.ID,
 			UserID:   info.UserID,
 		}); err != nil {
@@ -340,21 +341,21 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		//if err := npo.Gjqr.ManageGroupJoinRequestByID(info.GroupID, info.UserID, relation.RequestStatus(request.Status)); err != nil {
 		//	return status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		//}
-		if err := npo.Gjqr.UpdateStatus(ctx, info.ID, relation.RequestStatus(request.Status)); err != nil {
+		if err := npo.Gjqr.UpdateStatus(ctx, info.ID, entity.RequestStatus(request.Status)); err != nil {
 			return status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
 
-		gr := &relation.CreateGroupRelation{
+		gr := &repository.CreateGroupRelation{
 			GroupID:     info.GroupID,
 			UserID:      info.UserID,
-			Identity:    relation.IdentityUser,
+			Identity:    entity.IdentityUser,
 			JoinedAt:    time.Now(),
-			EntryMethod: relation.EntrySearch,
+			EntryMethod: entity.EntrySearch,
 		}
 
 		if info.Inviter != "" {
 			gr.Inviter = info.Inviter
-			gr.EntryMethod = relation.EntryInvitation
+			gr.EntryMethod = entity.EntryInvitation
 		}
 		//加入群聊
 		_, err = npo.Grr.Create(ctx, gr)

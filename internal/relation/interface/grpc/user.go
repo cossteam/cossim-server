@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	"google.golang.org/grpc/codes"
@@ -19,8 +20,8 @@ var _ v1.UserRelationServiceServer = &userServiceServer{}
 type userServiceServer struct {
 	db *gorm.DB
 	//urr         repository.UserRelationRepository
-	urr relation.UserRepository
-	dr  relation.DialogRepository
+	urr repository.UserRepository
+	dr  repository.DialogRepository
 }
 
 func (s *userServiceServer) AddFriendAfterDelete(ctx context.Context, request *v1.AddFriendAfterDeleteRequest) (*v1.AddFriendAfterDeleteResponse, error) {
@@ -31,7 +32,7 @@ func (s *userServiceServer) AddFriendAfterDelete(ctx context.Context, request *v
 		if err != nil {
 			return err
 		}
-		if r1.Status != relation.UserStatusNormal {
+		if r1.Status != entity.UserStatusNormal {
 			return code.RelationUserErrFriendRelationNotFound
 		}
 
@@ -39,7 +40,7 @@ func (s *userServiceServer) AddFriendAfterDelete(ctx context.Context, request *v
 			return err
 		}
 		var dat int64 = 0
-		if err := npo.Dur.UpdateDialogStatus(ctx, &relation.UpdateDialogStatusParam{
+		if err := npo.Dur.UpdateDialogStatus(ctx, &repository.UpdateDialogStatusParam{
 			DialogID:  r1.DialogId,
 			UserID:    []string{request.UserId},
 			DeletedAt: &dat,
@@ -81,10 +82,10 @@ func (s *userServiceServer) AddFriend(ctx context.Context, request *v1.AddFriend
 	}
 
 	if rel != nil {
-		if _, err := s.urr.Create(ctx, &relation.UserRelation{
+		if _, err := s.urr.Create(ctx, &entity.UserRelation{
 			UserID:   request.UserId,
 			FriendID: request.FriendId,
-			Status:   relation.UserRelationStatus(v1.RelationStatus_RELATION_NORMAL),
+			Status:   entity.UserRelationStatus(v1.RelationStatus_RELATION_NORMAL),
 			DialogId: rel.DialogId,
 		}); err != nil {
 			return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), formatErrorMessage(err))
@@ -100,8 +101,8 @@ func (s *userServiceServer) AddFriend(ctx context.Context, request *v1.AddFriend
 		//	return err
 		//}
 
-		dialog, err := npo.Dr.Create(ctx, &relation.CreateDialog{
-			Type:    relation.DialogType(v1.DialogType_USER_DIALOG),
+		dialog, err := npo.Dr.Create(ctx, &repository.CreateDialog{
+			Type:    entity.DialogType(v1.DialogType_USER_DIALOG),
 			OwnerId: request.UserId,
 			GroupId: 0,
 		})
@@ -214,16 +215,16 @@ func (s *userServiceServer) AddBlacklist(ctx context.Context, request *v1.AddBla
 		return resp, status.Error(codes.Code(code.RelationErrAddBlacklistFailed.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
 	}
 
-	if rel.Status == relation.UserStatusBlocked {
+	if rel.Status == entity.UserStatusBlocked {
 		return resp, code.RelationErrAlreadyBlacklist
 	}
 
-	if rel.Status != relation.UserStatusNormal {
+	if rel.Status != entity.UserStatusNormal {
 		return resp, code.RelationUserErrFriendRelationNotFound
 	}
 
 	//rel.Status = relation.UserStatusBlocked
-	if err = s.urr.UpdateStatus(ctx, rel.ID, relation.UserStatusBlocked); err != nil {
+	if err = s.urr.UpdateStatus(ctx, rel.ID, entity.UserStatusBlocked); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrAddBlacklistFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
 
@@ -255,7 +256,7 @@ func (s *userServiceServer) DeleteBlacklist(ctx context.Context, request *v1.Del
 		return resp, status.Error(codes.Code(code.RelationErrDeleteBlacklistFailed.Code()), fmt.Sprintf("failed to retrieve relation: %v", err))
 	}
 
-	if err = s.urr.UpdateStatus(ctx, rel.ID, relation.UserStatusNormal); err != nil {
+	if err = s.urr.UpdateStatus(ctx, rel.ID, entity.UserStatusNormal); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrDeleteBlacklistFailed.Code()), fmt.Sprintf("failed to update relation: %v", err))
 	}
 
@@ -432,7 +433,7 @@ func (s *userServiceServer) GetUserRelationByUserIds(ctx context.Context, reques
 	//	}
 	//}
 
-	relations, err := s.urr.Find(ctx, &relation.UserQuery{
+	relations, err := s.urr.Find(ctx, &repository.UserQuery{
 		UserId:   request.UserId,
 		FriendId: request.FriendIds,
 	})

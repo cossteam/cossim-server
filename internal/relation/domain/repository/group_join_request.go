@@ -1,4 +1,8 @@
-package relation
+package repository
+
+import (
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+)
 
 type GroupJoinRequestList struct {
 	List  []*GroupJoinRequest
@@ -14,5 +18,5 @@ type GroupJoinRequest struct {
 	Inviter     string
 	Remark      string
 	OwnerID     string
-	Status      RequestStatus
+	Status      entity.RequestStatus
 }

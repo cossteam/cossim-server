@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	"google.golang.org/grpc/codes"
@@ -19,8 +20,8 @@ var _ v1.UserFriendRequestServiceServer = &userFriendRequestServiceServer{}
 type userFriendRequestServiceServer struct {
 	db *gorm.DB
 	//ufqr        repository.UserFriendRequestRepository
-	ufqr relation.UserFriendRequestRepository
-	ur   relation.UserRepository
+	ufqr repository.UserFriendRequestRepository
+	ur   repository.UserRepository
 }
 
 func (s *userFriendRequestServiceServer) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
@@ -31,7 +32,7 @@ func (s *userFriendRequestServiceServer) ManageFriend(ctx context.Context, reque
 func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
 	resp := &v1.GetFriendRequestListResponse{}
 
-	list, err := s.ufqr.Find(ctx, &relation.UserFriendRequestQuery{
+	list, err := s.ufqr.Find(ctx, &repository.UserFriendRequestQuery{
 		UserID:   request.UserId,
 		PageSize: int(request.PageSize),
 		PageNum:  int(request.PageNum),
@@ -68,12 +69,12 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 		npo := persistence.NewRepositories(tx)
 
 		// 添加自己的
-		re1, err := npo.Ufqr.Create(ctx, &relation.UserFriendRequest{
+		re1, err := npo.Ufqr.Create(ctx, &entity.UserFriendRequest{
 			SenderID:   request.SenderId,
 			ReceiverID: request.ReceiverId,
 			Remark:     request.Remark,
 			OwnerID:    request.SenderId,
-			Status:     relation.Pending,
+			Status:     entity.Pending,
 		})
 		if err != nil {
 			return status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
@@ -81,17 +82,17 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 
 		// 对方拉黑了，不允许添加
 		re2, err := s.ur.Get(ctx, request.ReceiverId, request.SenderId)
-		if err == nil && re2.Status == relation.UserStatusBlocked {
+		if err == nil && re2.Status == entity.UserStatusBlocked {
 			return nil
 		}
 
 		// 添加对方的
-		_, err = npo.Ufqr.Create(ctx, &relation.UserFriendRequest{
+		_, err = npo.Ufqr.Create(ctx, &entity.UserFriendRequest{
 			SenderID:   request.SenderId,
 			ReceiverID: request.ReceiverId,
 			Remark:     request.Remark,
 			OwnerID:    request.ReceiverId,
-			Status:     relation.Pending,
+			Status:     entity.Pending,
 		})
 		if err != nil {
 			return status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
@@ -135,13 +136,13 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 
 		//拒绝
 		if request.Status == v1.FriendRequestStatus_FriendRequestStatus_REJECT {
-			if err := npo.Ufqr.UpdateStatus(ctx, re.ID, relation.Rejected); err != nil {
+			if err := npo.Ufqr.UpdateStatus(ctx, re.ID, entity.Rejected); err != nil {
 				return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 			}
 			return nil
 		} else {
 			// 修改状态
-			find, err := npo.Ufqr.Find(ctx, &relation.UserFriendRequestQuery{
+			find, err := npo.Ufqr.Find(ctx, &repository.UserFriendRequestQuery{
 				SenderId:   senderId,
 				ReceiverId: receiverId,
 			})
@@ -150,8 +151,8 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 			}
 
 			for _, v := range find.List {
-				if v.Status == relation.Pending {
-					if err := npo.Ufqr.UpdateStatus(ctx, v.ID, relation.Accepted); err != nil {
+				if v.Status == entity.Pending {
+					if err := npo.Ufqr.UpdateStatus(ctx, v.ID, entity.Accepted); err != nil {
 						return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 					}
 				}
@@ -171,7 +172,7 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 			return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "")
 		}
 
-		re.Status = relation.RequestStatus(request.Status)
+		re.Status = entity.RequestStatus(request.Status)
 
 		// 如果是单删
 		oldrelation, err := npo.Urr.Get(ctx, receiverId, senderId)
@@ -181,17 +182,17 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 
 		if oldrelation != nil {
 			//添加关系
-			_, err := npo.Urr.Create(ctx, &relation.UserRelation{
+			_, err := npo.Urr.Create(ctx, &entity.UserRelation{
 				UserID:   re.SenderID,
 				FriendID: re.ReceiverID,
-				Status:   relation.UserStatusNormal,
+				Status:   entity.UserStatusNormal,
 				DialogId: oldrelation.DialogId,
 			})
 			if err != nil {
 				return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 			}
 			//加入对话
-			_, err = npo.Dur.Create(ctx, &relation.CreateDialogUser{
+			_, err = npo.Dur.Create(ctx, &repository.CreateDialogUser{
 				DialogID: oldrelation.DialogId,
 				UserID:   senderId,
 			})
@@ -202,8 +203,8 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 		}
 
 		// 创建对话
-		dialog, err := npo.Dr.Create(ctx, &relation.CreateDialog{
-			Type:    relation.UserDialog,
+		dialog, err := npo.Dr.Create(ctx, &repository.CreateDialog{
+			Type:    entity.UserDialog,
 			OwnerId: senderId,
 			GroupId: 0,
 		})
@@ -328,7 +329,7 @@ func (s *userFriendRequestServiceServer) GetFriendRequestByUserIdAndFriendId(ctx
 func (s *userFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, request *v1.DeleteFriendRequestByUserIdAndFriendIdRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 
-	find, err := s.ufqr.Find(ctx, &relation.UserFriendRequestQuery{
+	find, err := s.ufqr.Find(ctx, &repository.UserFriendRequestQuery{
 		SenderId:   request.UserId,
 		ReceiverId: request.FriendId,
 		PageSize:   5,

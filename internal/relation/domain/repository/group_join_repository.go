@@ -1,6 +1,9 @@
-package relation
+package repository
 
-import "context"
+import (
+	"context"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+)
 
 type GroupJoinRequestQuery struct {
 	ID       []uint
@@ -15,7 +18,7 @@ type GroupJoinRequestRepository interface {
 	Create(ctx context.Context, entity *GroupJoinRequest) (*GroupJoinRequest, error)
 	Find(ctx context.Context, query *GroupJoinRequestQuery) ([]*GroupJoinRequest, error)
 	Creates(ctx context.Context, entity []*GroupJoinRequest) ([]*GroupJoinRequest, error)
-	UpdateStatus(ctx context.Context, id uint32, status RequestStatus) error
+	UpdateStatus(ctx context.Context, id uint32, status entity.RequestStatus) error
 	Delete(ctx context.Context, id uint32) error
 
 	GetByGroupIDAndUserID(ctx context.Context, groupID uint32, userID string) (*GroupJoinRequest, error)

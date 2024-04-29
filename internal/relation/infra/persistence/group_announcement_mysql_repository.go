@@ -3,7 +3,7 @@ package persistence
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
@@ -20,7 +20,7 @@ func (m *GroupAnnouncementModel) TableName() string {
 	return "group_announcements"
 }
 
-func (m *GroupAnnouncementModel) FromEntity(e *relation.GroupAnnouncement) error {
+func (m *GroupAnnouncementModel) FromEntity(e *entity.GroupAnnouncement) error {
 	m.ID = e.ID
 	m.GroupID = e.GroupID
 	m.Title = e.Title
@@ -29,8 +29,8 @@ func (m *GroupAnnouncementModel) FromEntity(e *relation.GroupAnnouncement) error
 	return nil
 }
 
-func (m *GroupAnnouncementModel) ToEntity() *relation.GroupAnnouncement {
-	return &relation.GroupAnnouncement{
+func (m *GroupAnnouncementModel) ToEntity() *entity.GroupAnnouncement {
+	return &entity.GroupAnnouncement{
 		ID:        m.ID,
 		GroupID:   m.GroupID,
 		Title:     m.Title,
@@ -54,7 +54,7 @@ func (m *GroupAnnouncementReadModel) TableName() string {
 	return "group_announcement_reads"
 }
 
-func (m *GroupAnnouncementReadModel) FromEntity(e *relation.GroupAnnouncementRead) error {
+func (m *GroupAnnouncementReadModel) FromEntity(e *entity.GroupAnnouncementRead) error {
 	m.ID = e.ID
 	m.AnnouncementID = e.AnnouncementId
 	m.DialogID = e.DialogId
@@ -64,8 +64,8 @@ func (m *GroupAnnouncementReadModel) FromEntity(e *relation.GroupAnnouncementRea
 	return nil
 }
 
-func (m *GroupAnnouncementReadModel) ToEntity() *relation.GroupAnnouncementRead {
-	return &relation.GroupAnnouncementRead{
+func (m *GroupAnnouncementReadModel) ToEntity() *entity.GroupAnnouncementRead {
+	return &entity.GroupAnnouncementRead{
 		ID:             m.ID,
 		ReadAt:         m.ReadAt,
 		UserId:         m.UserID,
@@ -76,7 +76,7 @@ func (m *GroupAnnouncementReadModel) ToEntity() *relation.GroupAnnouncementRead 
 	}
 }
 
-var _ relation.GroupAnnouncementRepository = &MySQLRelationGroupAnnouncementRepository{}
+var _ entity.GroupAnnouncementRepository = &MySQLRelationGroupAnnouncementRepository{}
 
 func NewMySQLRelationGroupAnnouncementRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLRelationGroupAnnouncementRepository {
 	return &MySQLRelationGroupAnnouncementRepository{
@@ -89,7 +89,7 @@ type MySQLRelationGroupAnnouncementRepository struct {
 	db *gorm.DB
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) Create(ctx context.Context, announcement *relation.GroupAnnouncement) (*relation.GroupAnnouncement, error) {
+func (m *MySQLRelationGroupAnnouncementRepository) Create(ctx context.Context, announcement *entity.GroupAnnouncement) (*entity.GroupAnnouncement, error) {
 	var model GroupAnnouncementModel
 
 	if err := model.FromEntity(announcement); err != nil {
@@ -103,7 +103,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) Create(ctx context.Context, a
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, query *relation.GroupAnnouncementQuery) ([]*relation.GroupAnnouncement, error) {
+func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, query *entity.GroupAnnouncementQuery) ([]*entity.GroupAnnouncement, error) {
 	var models []GroupAnnouncementModel
 
 	db := m.db.Model(&GroupAnnouncementModel{})
@@ -129,7 +129,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, que
 		return nil, err
 	}
 
-	var announcements = make([]*relation.GroupAnnouncement, 0)
+	var announcements = make([]*entity.GroupAnnouncement, 0)
 	for _, model := range models {
 		announcements = append(announcements, model.ToEntity())
 	}
@@ -137,7 +137,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, que
 	return announcements, nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) Get(ctx context.Context, announcementID uint32) (*relation.GroupAnnouncement, error) {
+func (m *MySQLRelationGroupAnnouncementRepository) Get(ctx context.Context, announcementID uint32) (*entity.GroupAnnouncement, error) {
 	var model GroupAnnouncementModel
 	if err := m.db.WithContext(ctx).
 		Where("id = ? AND deleted_at = 0", announcementID).
@@ -149,7 +149,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) Get(ctx context.Context, anno
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) Update(ctx context.Context, announcement *relation.UpdateGroupAnnouncement) error {
+func (m *MySQLRelationGroupAnnouncementRepository) Update(ctx context.Context, announcement *entity.UpdateGroupAnnouncement) error {
 	var model GroupAnnouncementModel
 
 	if err := m.db.WithContext(ctx).
@@ -199,7 +199,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) MarkAsRead(ctx context.Contex
 	return nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) GetReadUsers(ctx context.Context, groupId, announcementId uint32) ([]*relation.GroupAnnouncementRead, error) {
+func (m *MySQLRelationGroupAnnouncementRepository) GetReadUsers(ctx context.Context, groupId, announcementId uint32) ([]*entity.GroupAnnouncementRead, error) {
 	var users []*GroupAnnouncementReadModel
 
 	if err := m.db.WithContext(ctx).
@@ -210,7 +210,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) GetReadUsers(ctx context.Cont
 		return nil, err
 	}
 
-	var es []*relation.GroupAnnouncementRead
+	var es []*entity.GroupAnnouncementRead
 	for _, user := range users {
 		es = append(es, user.ToEntity())
 	}
@@ -218,7 +218,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) GetReadUsers(ctx context.Cont
 	return es, nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) GetReadByUserId(ctx context.Context, groupId, announcementId uint32, userId string) (*relation.GroupAnnouncementRead, error) {
+func (m *MySQLRelationGroupAnnouncementRepository) GetReadByUserId(ctx context.Context, groupId, announcementId uint32, userId string) (*entity.GroupAnnouncementRead, error) {
 	var model GroupAnnouncementReadModel
 
 	if err := m.db.WithContext(ctx).

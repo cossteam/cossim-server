@@ -1,4 +1,4 @@
-package relation
+package entity
 
 type FriendRequestList struct {
 	List  []*FriendRequest

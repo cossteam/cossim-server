@@ -1,38 +1,78 @@
 package repository
 
 import (
+	"context"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 )
 
+type DialogQuery struct {
+	DialogID []uint32
+	GroupID  []uint32
+	UserID   []string
+	PageSize int
+	PageNum  int
+}
+
+type CreateDialog struct {
+	Type    entity.DialogType
+	OwnerId string
+	GroupId uint32
+}
+
 type DialogRepository interface {
-	CreateDialog(ownerID string, dialogType entity.DialogType, groupID uint) (*entity.Dialog, error)
-	JoinDialog(dialogID uint, userID string) (*entity.DialogUser, error)
-	JoinBatchDialog(dialogID uint, userIDs []string) ([]*entity.DialogUser, error)
-	GetUserDialogs(userID string, pageSize, pageNum int) ([]uint, int64, error)
-	GetDialogsByIDs(dialogIDs []uint) ([]*entity.Dialog, error)
-	GetDialogById(dialogID uint) (*entity.Dialog, error)
-	GetDialogTargetUserId(dialogID uint, userID string) ([]string, error)
+	Get(ctx context.Context, id uint32) (*entity.Dialog, error)
+	Create(ctx context.Context, createDialog *CreateDialog) (*entity.Dialog, error)
+	Creates(ctx context.Context, dialog []*entity.Dialog) ([]*entity.Dialog, error)
+	Update(ctx context.Context, dialog *entity.Dialog) (*entity.Dialog, error)
+	Delete(ctx context.Context, id ...uint32) error
+	Find(ctx context.Context, query *DialogQuery) ([]*entity.Dialog, error)
 
-	GetDialogUsersByDialogID(dialogID uint) ([]*entity.DialogUser, error)
-	GetDialogAllUsers(dialogID uint) ([]*entity.DialogUser, error)
-	GetDialogUserByDialogIDAndUserID(dialogID uint, userID string) (*entity.DialogUser, error)
-	GetDialogByGroupId(groupId uint) (*entity.Dialog, error)
-	GetDialogByGroupIds(groupIds []uint) ([]*entity.Dialog, error)
+	GetByGroupID(ctx context.Context, groupID uint32) (*entity.Dialog, error)
 
-	DeleteDialogByIds(dialogIDs []uint) error
-	RealDeleteDialogById(dialogID uint) error
-	DeleteDialogByDialogID(dialogID uint) error
-	DeleteDialogUserByDialogID(dialogID uint) error
-	DeleteDialogUserByDialogIDAndUserID(dialogID uint, userID []string) error
+	// UpdateFields 根据会话ID更新会话信息 Dialog
+	UpdateFields(ctx context.Context, dialogID uint, updateFields map[string]interface{}) error
+}
 
-	// UpdateDialogByDialogID 根据会话ID更新会话信息
-	UpdateDialogByDialogID(dialogID uint, updateFields map[string]interface{}) error
-	// UpdateDialogUserByDialogID 根据会话ID更新会话所有用户信息
-	UpdateDialogUserByDialogID(dialogID uint, updateFields map[string]interface{}) error
-	// UpdateDialogUserByDialogIDAndUserID 根据会话ID和用户ID更新会话成员信息
-	UpdateDialogUserByDialogIDAndUserID(dialogID uint, userID string, updateFields map[string]interface{}) error
-	// UpdateDialogColumnByDialogID 根据会话ID更新会话信息
-	UpdateDialogUserColumnByDialogIDAndUserId(dialogID uint, userID string, column string, value interface{}) error
-	//根据对话id与多个uid更新会话成员信息
-	UpdateDialogUserByDialogIDAndUserIds(dialogID uint, userIDs []string, column string, value interface{}) error
+type DialogUserQuery struct {
+	DialogID []uint32
+	UserID   []string
+	Force    bool
+	PageSize int
+	PageNum  int
+}
+
+type CreateDialogUser struct {
+	DialogID uint32
+	UserID   string
+}
+
+type UpdateDialogStatusParam struct {
+	DialogID  uint32
+	UserID    []string
+	IsShow    *bool
+	TopAt     *int64
+	DeletedAt *int64
+}
+
+type DialogUserRepository interface {
+	Get(ctx context.Context, id uint32) (*entity.DialogUser, error)
+	Create(ctx context.Context, createDialogUser *CreateDialogUser) (*entity.DialogUser, error)
+	Creates(ctx context.Context, dialogID uint32, userID []string) ([]*entity.DialogUser, error)
+	Update(ctx context.Context, dialog *entity.DialogUser) (*entity.DialogUser, error)
+	Delete(ctx context.Context, id ...uint32) error
+	Find(ctx context.Context, query *DialogUserQuery) ([]*entity.DialogUser, error)
+
+	// ListByDialogID 获取对话下的所有用户
+	ListByDialogID(ctx context.Context, dialogID uint32) ([]*entity.DialogUser, error)
+
+	// DeleteByDialogID 根据对话id删除用户对话
+	DeleteByDialogID(ctx context.Context, dialogID uint32) error
+
+	// DeleteByDialogIDAndUserID 根据对话id和用户id删除用户对话关系
+	DeleteByDialogIDAndUserID(ctx context.Context, dialogID uint32, userID ...string) error
+
+	UpdateDialogStatus(ctx context.Context, Param *UpdateDialogStatusParam) error
+
+	// UpdateFields 根据id更新会话用户信息 DialogUser
+	UpdateFields(ctx context.Context, id uint32, updateFields map[string]interface{}) error
 }
