@@ -5,7 +5,7 @@ import (
 	"errors"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
@@ -23,8 +23,8 @@ type groupServiceServer struct {
 	db          *gorm.DB
 	cache       cache.RelationGroupCache
 	cacheEnable bool
-	grr         relation.GroupRepository
-	dr          relation.DialogRepository
+	grr         repository.GroupRepository
+	dr          repository.DialogRepository
 }
 
 func (s *groupServiceServer) AddGroupAdmin(ctx context.Context, request *v1.AddGroupAdminRequest) (*v1.AddGroupAdminResponse, error) {
@@ -35,12 +35,12 @@ func (s *groupServiceServer) AddGroupAdmin(ctx context.Context, request *v1.AddG
 		return nil, err
 	}
 
-	if r1.Identity != relation.IdentityAdmin {
+	if r1.Identity != entity.IdentityAdmin {
 		return nil, code.Forbidden
 	}
 
 	for _, v := range request.UserIDs {
-		if err := s.grr.UpdateIdentity(ctx, r1.GroupID, v, relation.IdentityAdmin); err != nil {
+		if err := s.grr.UpdateIdentity(ctx, r1.GroupID, v, entity.IdentityAdmin); err != nil {
 			return nil, code.RelationErrGroupAddAdmin.Reason(err)
 		}
 	}
@@ -124,7 +124,7 @@ func (s *groupServiceServer) GetUserGroupList(ctx context.Context, request *v1.G
 				return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 			}
 
-			if gr.Identity != relation.IdentityUser {
+			if gr.Identity != entity.IdentityUser {
 				isAdmin = true
 			} else {
 				isAdmin = false
@@ -417,7 +417,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		//	return err
 		//}
 
-		dialog, err2 := npo.Dr.Create(ctx, &relation.CreateDialog{
+		dialog, err2 := npo.Dr.Create(ctx, &repository.CreateDialog{
 			Type:    entity.GroupDialog,
 			OwnerId: request.UserID,
 			GroupId: request.GroupId,
@@ -434,7 +434,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		//	return err
 		//}
 
-		if _, err := npo.Dur.Create(ctx, &relation.CreateDialogUser{
+		if _, err := npo.Dur.Create(ctx, &repository.CreateDialogUser{
 			DialogID: dialog.ID,
 			UserID:   request.UserID,
 		}); err != nil {
@@ -453,16 +453,16 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		//}
 
 		// 群主加入群聊
-		if _, err := npo.Grr.Create(ctx, &relation.CreateGroupRelation{
+		if _, err := npo.Grr.Create(ctx, &repository.CreateGroupRelation{
 			GroupID:  request.GroupId,
 			UserID:   request.UserID,
-			Identity: relation.IdentityOwner,
+			Identity: entity.IdentityOwner,
 		}); err != nil {
 			return err
 		}
 
 		//发送邀请给其他成员
-		requests := make([]*relation.GroupJoinRequest, 0)
+		requests := make([]*repository.GroupJoinRequest, 0)
 
 		//gjr1 := &entity.GroupJoinRequest{
 		//	UserID:      request.UserID,
@@ -474,10 +474,10 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		//requests = append(requests, gjr1)
 
 		for _, v := range request.Member {
-			req := &relation.GroupJoinRequest{
+			req := &repository.GroupJoinRequest{
 				UserID:      v,
 				GroupID:     request.GroupId,
-				Status:      relation.Invitation,
+				Status:      entity.Invitation,
 				Inviter:     request.UserID,
 				OwnerID:     v,
 				InviterTime: ptime.Now(),
@@ -486,10 +486,10 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		}
 
 		for _, s2 := range request.Member {
-			req := &relation.GroupJoinRequest{
+			req := &repository.GroupJoinRequest{
 				UserID:      s2,
 				GroupID:     request.GroupId,
-				Status:      relation.Invitation,
+				Status:      entity.Invitation,
 				Inviter:     request.UserID,
 				OwnerID:     request.UserID,
 				InviterTime: ptime.Now(),

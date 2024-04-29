@@ -1,18 +1,19 @@
 package persistence
 
 import (
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	Urr  relation.UserRepository
-	Grr  relation.GroupRepository
-	Ufqr relation.UserFriendRequestRepository
-	Gjqr relation.GroupJoinRequestRepository
-	GAr  relation.GroupAnnouncementRepository
-	Dr   relation.DialogRepository
-	Dur  relation.DialogUserRepository
+	Urr  repository.UserRepository
+	Grr  repository.GroupRepository
+	Ufqr repository.UserFriendRequestRepository
+	Gjqr repository.GroupJoinRequestRepository
+	GAr  entity.GroupAnnouncementRepository
+	Dr   repository.DialogRepository
+	Dur  repository.DialogUserRepository
 	db   *gorm.DB
 }
 

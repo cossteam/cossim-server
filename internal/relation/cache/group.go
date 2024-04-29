@@ -3,7 +3,8 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/redis/go-redis/v9"
 	"strconv"
 	"time"
@@ -28,19 +29,19 @@ func GetGroupUserJoinGroupListKey(userID string) string {
 }
 
 type RelationGroupCache interface {
-	GetRelation(ctx context.Context, userID string, groupID uint32) (*relation.GroupRelation, error)
-	GetRelations(ctx context.Context, userID string, groupID []uint32) (*relation.GroupRelationList, error)
-	SetRelation(ctx context.Context, userID string, groupID uint32, data *relation.GroupRelation, expiration time.Duration) error
+	GetRelation(ctx context.Context, userID string, groupID uint32) (*entity.GroupRelation, error)
+	GetRelations(ctx context.Context, userID string, groupID []uint32) (*entity.GroupRelationList, error)
+	SetRelation(ctx context.Context, userID string, groupID uint32, data *entity.GroupRelation, expiration time.Duration) error
 	DeleteRelation(ctx context.Context, userID string, groupID uint32) error
 
 	DeleteRelationByGroupID(ctx context.Context, groupID uint32) error
 
-	GetUsersGroupRelation(ctx context.Context, userID []string, groupID uint32) (*relation.GroupRelationList, error)
+	GetUsersGroupRelation(ctx context.Context, userID []string, groupID uint32) (*entity.GroupRelationList, error)
 
 	GetGroupMember(ctx context.Context, groupID uint32)
 
-	GetGroupJoinRequestListByUser(ctx context.Context, userID string) (*relation.GroupJoinRequestList, error)
-	SetGroupJoinRequestListByUser(ctx context.Context, userID string, data *relation.GroupJoinRequestList, expiration time.Duration) error
+	GetGroupJoinRequestListByUser(ctx context.Context, userID string) (*repository.GroupJoinRequestList, error)
+	SetGroupJoinRequestListByUser(ctx context.Context, userID string, data *repository.GroupJoinRequestList, expiration time.Duration) error
 
 	DeleteGroupJoinRequestListByUser(ctx context.Context, userID ...string) error
 
@@ -135,7 +136,7 @@ func (r *RelationGroupCacheRedis) DeleteGroupJoinRequestListByUser(ctx context.C
 	return r.client.Del(ctx, keys...).Err()
 }
 
-func (r *RelationGroupCacheRedis) SetGroupJoinRequestListByUser(ctx context.Context, userID string, data *relation.GroupJoinRequestList, expiration time.Duration) error {
+func (r *RelationGroupCacheRedis) SetGroupJoinRequestListByUser(ctx context.Context, userID string, data *repository.GroupJoinRequestList, expiration time.Duration) error {
 	if userID == "" {
 		return ErrCacheKeyEmpty
 	}
@@ -156,14 +157,14 @@ func (r *RelationGroupCacheRedis) DeleteRelationByGroupID(ctx context.Context, g
 	panic("implement me")
 }
 
-func (r *RelationGroupCacheRedis) GetGroupJoinRequestListByUser(ctx context.Context, userID string) (*relation.GroupJoinRequestList, error) {
+func (r *RelationGroupCacheRedis) GetGroupJoinRequestListByUser(ctx context.Context, userID string) (*repository.GroupJoinRequestList, error) {
 	key := GetGroupJoinRequestListByUserIDKey(userID)
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	friendRequestList := &relation.GroupJoinRequestList{}
+	friendRequestList := &repository.GroupJoinRequestList{}
 	if err := json.Unmarshal([]byte(val), friendRequestList); err != nil {
 		return nil, err
 	}
@@ -195,14 +196,14 @@ func (r *RelationGroupCacheRedis) DeleteRelationByGroupId(ctx context.Context, g
 	return iter.Err()
 }
 
-func (r *RelationGroupCacheRedis) GetUsersGroupRelation(ctx context.Context, userID []string, groupID uint32) (*relation.GroupRelationList, error) {
+func (r *RelationGroupCacheRedis) GetUsersGroupRelation(ctx context.Context, userID []string, groupID uint32) (*entity.GroupRelationList, error) {
 	if groupID == 0 || len(userID) == 0 {
 		return nil, ErrCacheKeyEmpty
 	}
 
 	pipeline := r.client.Pipeline()
 
-	results := &relation.GroupRelationList{}
+	results := &entity.GroupRelationList{}
 
 	for _, uID := range userID {
 		key := GetGroupKey(uID, groupID)
@@ -223,7 +224,7 @@ func (r *RelationGroupCacheRedis) GetUsersGroupRelation(ctx context.Context, use
 				return nil, err
 			}
 		} else {
-			var response relation.GroupRelation
+			var response entity.GroupRelation
 			err = json.Unmarshal([]byte(result), &response)
 			if err != nil {
 				return nil, err
@@ -237,7 +238,7 @@ func (r *RelationGroupCacheRedis) GetUsersGroupRelation(ctx context.Context, use
 	return results, nil
 }
 
-func (r *RelationGroupCacheRedis) GetRelation(ctx context.Context, userID string, groupID uint32) (*relation.GroupRelation, error) {
+func (r *RelationGroupCacheRedis) GetRelation(ctx context.Context, userID string, groupID uint32) (*entity.GroupRelation, error) {
 	if groupID == 0 || userID == "" {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -248,7 +249,7 @@ func (r *RelationGroupCacheRedis) GetRelation(ctx context.Context, userID string
 		return nil, err
 	}
 
-	rel := &relation.GroupRelation{}
+	rel := &entity.GroupRelation{}
 	if err := json.Unmarshal([]byte(val), rel); err != nil {
 		return nil, err
 	}
@@ -256,7 +257,7 @@ func (r *RelationGroupCacheRedis) GetRelation(ctx context.Context, userID string
 	return rel, nil
 }
 
-func (r *RelationGroupCacheRedis) GetRelations(ctx context.Context, userID string, groupID []uint32) (*relation.GroupRelationList, error) {
+func (r *RelationGroupCacheRedis) GetRelations(ctx context.Context, userID string, groupID []uint32) (*entity.GroupRelationList, error) {
 	if len(groupID) == 0 || userID == "" {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -271,13 +272,13 @@ func (r *RelationGroupCacheRedis) GetRelations(ctx context.Context, userID strin
 		return nil, err
 	}
 
-	relations := &relation.GroupRelationList{}
+	relations := &entity.GroupRelationList{}
 	for _, val := range vals {
 		if val == nil {
 			continue
 		}
 
-		rel := &relation.GroupRelation{}
+		rel := &entity.GroupRelation{}
 		if err := json.Unmarshal([]byte(val.(string)), rel); err != nil {
 			return nil, err
 		}
@@ -289,7 +290,7 @@ func (r *RelationGroupCacheRedis) GetRelations(ctx context.Context, userID strin
 	return relations, nil
 }
 
-func (r *RelationGroupCacheRedis) SetRelation(ctx context.Context, userID string, groupID uint32, data *relation.GroupRelation, expiration time.Duration) error {
+func (r *RelationGroupCacheRedis) SetRelation(ctx context.Context, userID string, groupID uint32, data *entity.GroupRelation, expiration time.Duration) error {
 	if groupID == 0 || userID == "" {
 		return ErrCacheKeyEmpty
 	}

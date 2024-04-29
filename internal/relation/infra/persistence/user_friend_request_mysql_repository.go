@@ -3,7 +3,8 @@ package persistence
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -22,7 +23,7 @@ func (m *UserFriendRequestModel) TableName() string {
 	return "user_friend_requests"
 }
 
-func (m *UserFriendRequestModel) FromEntity(u *relation.UserFriendRequest) error {
+func (m *UserFriendRequestModel) FromEntity(u *entity.UserFriendRequest) error {
 	m.ID = u.ID
 	m.SenderID = u.SenderID
 	m.ReceiverID = u.ReceiverID
@@ -32,19 +33,19 @@ func (m *UserFriendRequestModel) FromEntity(u *relation.UserFriendRequest) error
 	return nil
 }
 
-func (m *UserFriendRequestModel) ToEntity() (*relation.UserFriendRequest, error) {
-	return &relation.UserFriendRequest{
+func (m *UserFriendRequestModel) ToEntity() (*entity.UserFriendRequest, error) {
+	return &entity.UserFriendRequest{
 		ID:         uint32(m.ID),
 		CreatedAt:  m.CreatedAt,
 		SenderID:   m.SenderID,
 		ReceiverID: m.ReceiverID,
 		Remark:     m.Remark,
 		OwnerID:    m.OwnerID,
-		Status:     relation.RequestStatus(m.Status),
+		Status:     entity.RequestStatus(m.Status),
 	}, nil
 }
 
-var _ relation.UserFriendRequestRepository = &MySQLUserFriendRequestRepository{}
+var _ repository.UserFriendRequestRepository = &MySQLUserFriendRequestRepository{}
 
 func NewMySQLUserFriendRequestRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLUserFriendRequestRepository {
 	return &MySQLUserFriendRequestRepository{
@@ -57,11 +58,11 @@ type MySQLUserFriendRequestRepository struct {
 	db *gorm.DB
 }
 
-func (m *MySQLUserFriendRequestRepository) GetByUserIdAndFriendId(ctx context.Context, senderId, receiverId string) (*relation.UserFriendRequest, error) {
+func (m *MySQLUserFriendRequestRepository) GetByUserIdAndFriendId(ctx context.Context, senderId, receiverId string) (*entity.UserFriendRequest, error) {
 	var model UserFriendRequestModel
 
 	if err := m.db.WithContext(ctx).
-		Where("sender_id = ? AND receiver_id = ? AND status = ? AND deleted_at = 0", senderId, receiverId, relation.Pending).
+		Where("sender_id = ? AND receiver_id = ? AND status = ? AND deleted_at = 0", senderId, receiverId, entity.Pending).
 		First(&model).Error; err != nil {
 		return nil, err
 	}
@@ -74,7 +75,7 @@ func (m *MySQLUserFriendRequestRepository) GetByUserIdAndFriendId(ctx context.Co
 	return entity, nil
 }
 
-func (m *MySQLUserFriendRequestRepository) UpdateStatus(ctx context.Context, id uint32, status relation.RequestStatus) error {
+func (m *MySQLUserFriendRequestRepository) UpdateStatus(ctx context.Context, id uint32, status entity.RequestStatus) error {
 	if err := m.db.Model(&UserFriendRequestModel{}).Where("id = ?", id).Update("status", status).Error; err != nil {
 		return err
 	}
@@ -84,7 +85,7 @@ func (m *MySQLUserFriendRequestRepository) UpdateStatus(ctx context.Context, id 
 	return nil
 }
 
-func (m *MySQLUserFriendRequestRepository) Get(ctx context.Context, id uint32) (*relation.UserFriendRequest, error) {
+func (m *MySQLUserFriendRequestRepository) Get(ctx context.Context, id uint32) (*entity.UserFriendRequest, error) {
 	// TODO cache
 
 	var model UserFriendRequestModel
@@ -101,7 +102,7 @@ func (m *MySQLUserFriendRequestRepository) Get(ctx context.Context, id uint32) (
 	return entity, nil
 }
 
-func (m *MySQLUserFriendRequestRepository) Create(ctx context.Context, entity *relation.UserFriendRequest) (*relation.UserFriendRequest, error) {
+func (m *MySQLUserFriendRequestRepository) Create(ctx context.Context, entity *entity.UserFriendRequest) (*entity.UserFriendRequest, error) {
 	var model UserFriendRequestModel
 
 	if err := model.FromEntity(entity); err != nil {
@@ -120,7 +121,7 @@ func (m *MySQLUserFriendRequestRepository) Create(ctx context.Context, entity *r
 	return entity, nil
 }
 
-func (m *MySQLUserFriendRequestRepository) Find(ctx context.Context, query *relation.UserFriendRequestQuery) (*relation.UserFriendRequestList, error) {
+func (m *MySQLUserFriendRequestRepository) Find(ctx context.Context, query *repository.UserFriendRequestQuery) (*entity.UserFriendRequestList, error) {
 	var userFriendRequests []*UserFriendRequestModel
 
 	db := m.db
@@ -151,7 +152,7 @@ func (m *MySQLUserFriendRequestRepository) Find(ctx context.Context, query *rela
 		return nil, errors.Wrap(result.Error, "failed to find user friend requests")
 	}
 
-	ufrs := &relation.UserFriendRequestList{
+	ufrs := &entity.UserFriendRequestList{
 		Total: result.RowsAffected,
 	}
 	for _, model := range userFriendRequests {

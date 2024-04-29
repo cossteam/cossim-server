@@ -3,7 +3,8 @@ package persistence
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
@@ -20,7 +21,7 @@ func (m *DialogUserModel) TableName() string {
 	return "dialog_users"
 }
 
-func (m *DialogUserModel) FromEntity(e *relation.DialogUser) error {
+func (m *DialogUserModel) FromEntity(e *entity.DialogUser) error {
 	m.ID = e.ID
 	m.DialogId = e.DialogId
 	m.UserId = e.UserId
@@ -29,8 +30,8 @@ func (m *DialogUserModel) FromEntity(e *relation.DialogUser) error {
 	return nil
 }
 
-func (m *DialogUserModel) ToEntity() *relation.DialogUser {
-	return &relation.DialogUser{
+func (m *DialogUserModel) ToEntity() *entity.DialogUser {
+	return &entity.DialogUser{
 		ID:        m.ID,
 		CreatedAt: m.CreatedAt,
 		DialogId:  m.DialogId,
@@ -40,7 +41,7 @@ func (m *DialogUserModel) ToEntity() *relation.DialogUser {
 	}
 }
 
-var _ relation.DialogUserRepository = &MySQLDialogUserRepository{}
+var _ repository.DialogUserRepository = &MySQLDialogUserRepository{}
 
 func NewMySQLDialogUserRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLDialogUserRepository {
 	return &MySQLDialogUserRepository{
@@ -53,7 +54,7 @@ type MySQLDialogUserRepository struct {
 	db *gorm.DB
 }
 
-func (m *MySQLDialogUserRepository) UpdateDialogStatus(ctx context.Context, param *relation.UpdateDialogStatusParam) error {
+func (m *MySQLDialogUserRepository) UpdateDialogStatus(ctx context.Context, param *repository.UpdateDialogStatusParam) error {
 	fields := map[string]interface{}{}
 	db := m.db.WithContext(ctx)
 	if param.UserID != nil && len(param.UserID) > 0 {
@@ -77,7 +78,7 @@ func (m *MySQLDialogUserRepository) UpdateDialogStatus(ctx context.Context, para
 		Error
 }
 
-func (m *MySQLDialogUserRepository) Creates(ctx context.Context, dialogID uint32, userIDs []string) ([]*relation.DialogUser, error) {
+func (m *MySQLDialogUserRepository) Creates(ctx context.Context, dialogID uint32, userIDs []string) ([]*entity.DialogUser, error) {
 	var models []DialogUserModel
 
 	for _, userID := range userIDs {
@@ -94,7 +95,7 @@ func (m *MySQLDialogUserRepository) Creates(ctx context.Context, dialogID uint32
 		return nil, err
 	}
 
-	var dialogUsers []*relation.DialogUser
+	var dialogUsers []*entity.DialogUser
 	for _, model := range models {
 		dialogUsers = append(dialogUsers, model.ToEntity())
 	}
@@ -102,7 +103,7 @@ func (m *MySQLDialogUserRepository) Creates(ctx context.Context, dialogID uint32
 	return dialogUsers, nil
 }
 
-func (m *MySQLDialogUserRepository) Get(ctx context.Context, id uint32) (*relation.DialogUser, error) {
+func (m *MySQLDialogUserRepository) Get(ctx context.Context, id uint32) (*entity.DialogUser, error) {
 	var model DialogUserModel
 
 	if err := m.db.WithContext(ctx).
@@ -115,7 +116,7 @@ func (m *MySQLDialogUserRepository) Get(ctx context.Context, id uint32) (*relati
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLDialogUserRepository) Create(ctx context.Context, createDialogUser *relation.CreateDialogUser) (*relation.DialogUser, error) {
+func (m *MySQLDialogUserRepository) Create(ctx context.Context, createDialogUser *repository.CreateDialogUser) (*entity.DialogUser, error) {
 	model := DialogUserModel{
 		DialogId: createDialogUser.DialogID,
 		UserId:   createDialogUser.UserID,
@@ -131,7 +132,7 @@ func (m *MySQLDialogUserRepository) Create(ctx context.Context, createDialogUser
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLDialogUserRepository) Update(ctx context.Context, dialog *relation.DialogUser) (*relation.DialogUser, error) {
+func (m *MySQLDialogUserRepository) Update(ctx context.Context, dialog *entity.DialogUser) (*entity.DialogUser, error) {
 	var model DialogUserModel
 
 	if err := m.db.WithContext(ctx).
@@ -152,7 +153,7 @@ func (m *MySQLDialogUserRepository) Delete(ctx context.Context, id ...uint32) er
 		Error
 }
 
-func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *relation.DialogUserQuery) ([]*relation.DialogUser, error) {
+func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *repository.DialogUserQuery) ([]*entity.DialogUser, error) {
 	var models []DialogUserModel
 
 	db := m.db.Model(&DialogUserModel{})
@@ -178,7 +179,7 @@ func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *relation.Di
 		return nil, err
 	}
 
-	var dialogs []*relation.DialogUser
+	var dialogs []*entity.DialogUser
 	for _, model := range models {
 		dialogs = append(dialogs, model.ToEntity())
 	}
@@ -186,7 +187,7 @@ func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *relation.Di
 	return dialogs, nil
 }
 
-func (m *MySQLDialogUserRepository) ListByDialogID(ctx context.Context, dialogID uint32) ([]*relation.DialogUser, error) {
+func (m *MySQLDialogUserRepository) ListByDialogID(ctx context.Context, dialogID uint32) ([]*entity.DialogUser, error) {
 	var models []DialogUserModel
 	if err := m.db.
 		Model(&DialogUserModel{}).
@@ -195,7 +196,7 @@ func (m *MySQLDialogUserRepository) ListByDialogID(ctx context.Context, dialogID
 		return nil, err
 	}
 
-	var dialogUsers = make([]*relation.DialogUser, 0)
+	var dialogUsers = make([]*entity.DialogUser, 0)
 	for _, model := range models {
 		dialogUsers = append(dialogUsers, model.ToEntity())
 	}

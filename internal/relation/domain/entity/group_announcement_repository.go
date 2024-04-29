@@ -1,4 +1,4 @@
-package relation
+package entity
 
 import (
 	"context"

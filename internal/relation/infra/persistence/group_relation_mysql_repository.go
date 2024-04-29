@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 	"time"
@@ -32,7 +32,7 @@ func (m *GroupRelationModel) TableName() string {
 	return "group_relations"
 }
 
-func (m *GroupRelationModel) FromEntity(u *relation.GroupRelation) error {
+func (m *GroupRelationModel) FromEntity(u *entity.GroupRelation) error {
 	m.ID = u.ID
 	m.GroupID = u.GroupID
 	m.Identity = uint8(u.Identity)
@@ -48,13 +48,13 @@ func (m *GroupRelationModel) FromEntity(u *relation.GroupRelation) error {
 	return nil
 }
 
-func (m *GroupRelationModel) ToEntity() *relation.GroupRelation {
-	return &relation.GroupRelation{
+func (m *GroupRelationModel) ToEntity() *entity.GroupRelation {
+	return &entity.GroupRelation{
 		ID:                 m.ID,
 		CreatedAt:          m.CreatedAt,
 		GroupID:            m.GroupID,
-		Identity:           relation.GroupIdentity(m.Identity),
-		EntryMethod:        relation.EntryMethod(m.EntryMethod),
+		Identity:           entity.GroupIdentity(m.Identity),
+		EntryMethod:        entity.EntryMethod(m.EntryMethod),
 		JoinedAt:           m.JoinedAt,
 		MuteEndTime:        m.MuteEndTime,
 		UserID:             m.UserID,
@@ -66,7 +66,7 @@ func (m *GroupRelationModel) ToEntity() *relation.GroupRelation {
 	}
 }
 
-var _ relation.GroupRepository = &MySQLRelationGroupRepository{}
+var _ repository.GroupRepository = &MySQLRelationGroupRepository{}
 
 func NewMySQLRelationGroupRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLRelationGroupRepository {
 	return &MySQLRelationGroupRepository{
@@ -90,7 +90,7 @@ func (m *MySQLRelationGroupRepository) UpdateFieldsByGroupID(ctx context.Context
 	return nil
 }
 
-func (m *MySQLRelationGroupRepository) Get(ctx context.Context, id uint32) (*relation.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) Get(ctx context.Context, id uint32) (*entity.GroupRelation, error) {
 	var model GroupRelationModel
 	if err := m.db.WithContext(ctx).
 		Where("id = ?", id).
@@ -102,7 +102,7 @@ func (m *MySQLRelationGroupRepository) Get(ctx context.Context, id uint32) (*rel
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupRepository) Create(ctx context.Context, createGroupRelation *relation.CreateGroupRelation) (*relation.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) Create(ctx context.Context, createGroupRelation *repository.CreateGroupRelation) (*entity.GroupRelation, error) {
 	model := &GroupRelationModel{
 		GroupID:     createGroupRelation.GroupID,
 		Identity:    uint8(createGroupRelation.Identity),
@@ -121,7 +121,7 @@ func (m *MySQLRelationGroupRepository) Create(ctx context.Context, createGroupRe
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupRepository) Update(ctx context.Context, ur *relation.GroupRelation) (*relation.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) Update(ctx context.Context, ur *entity.GroupRelation) (*entity.GroupRelation, error) {
 	var model GroupRelationModel
 
 	if err := model.FromEntity(ur); err != nil {
@@ -171,7 +171,7 @@ func (m *MySQLRelationGroupRepository) GetUserGroupIDs(ctx context.Context, uid 
 	return groupIDs, nil
 }
 
-func (m *MySQLRelationGroupRepository) GetUserGroupByGroupIDAndUserID(ctx context.Context, gid uint32, uid string) (*relation.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) GetUserGroupByGroupIDAndUserID(ctx context.Context, gid uint32, uid string) (*entity.GroupRelation, error) {
 	var model GroupRelationModel
 	if err := m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
@@ -183,7 +183,7 @@ func (m *MySQLRelationGroupRepository) GetUserGroupByGroupIDAndUserID(ctx contex
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupRepository) GetUsersGroupByGroupIDAndUserIDs(ctx context.Context, gid uint32, uids []string) ([]*relation.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) GetUsersGroupByGroupIDAndUserIDs(ctx context.Context, gid uint32, uids []string) ([]*entity.GroupRelation, error) {
 	var ugs []*GroupRelationModel
 	if err := m.db.WithContext(ctx).
 		Where(" group_id = ? and user_id IN (?) AND deleted_at = 0", gid, uids).
@@ -191,7 +191,7 @@ func (m *MySQLRelationGroupRepository) GetUsersGroupByGroupIDAndUserIDs(ctx cont
 		return nil, err
 	}
 
-	var ugs2 = make([]*relation.GroupRelation, 0)
+	var ugs2 = make([]*entity.GroupRelation, 0)
 	for _, ug := range ugs {
 		ugs2 = append(ugs2, ug.ToEntity())
 	}
@@ -233,7 +233,7 @@ func (m *MySQLRelationGroupRepository) DeleteByGroupIDAndUserID(ctx context.Cont
 	return nil
 }
 
-func (m *MySQLRelationGroupRepository) ListJoinRequest(ctx context.Context, gids []uint32) ([]*relation.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) ListJoinRequest(ctx context.Context, gids []uint32) ([]*entity.GroupRelation, error) {
 	var joinRequests []*GroupRelationModel
 
 	if err := m.db.WithContext(ctx).
@@ -243,7 +243,7 @@ func (m *MySQLRelationGroupRepository) ListJoinRequest(ctx context.Context, gids
 		return nil, err
 	}
 
-	var joinRequests2 = make([]*relation.GroupRelation, 0)
+	var joinRequests2 = make([]*entity.GroupRelation, 0)
 	for _, joinRequest := range joinRequests {
 		joinRequests2 = append(joinRequests2, joinRequest.ToEntity())
 	}
@@ -255,7 +255,7 @@ func (m *MySQLRelationGroupRepository) ListGroupAdmin(ctx context.Context, gid u
 	var adminIds []string
 	if err := m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
-		Where("(identity = ? or identity = ?)AND group_id = ? AND deleted_at = 0", relation.IdentityAdmin, relation.IdentityOwner, gid).
+		Where("(identity = ? or identity = ?)AND group_id = ? AND deleted_at = 0", entity.IdentityAdmin, entity.IdentityOwner, gid).
 		Pluck("user_id", &adminIds).Error; err != nil {
 		return nil, err
 	}
@@ -269,7 +269,7 @@ func (m *MySQLRelationGroupRepository) SetUserGroupRemark(ctx context.Context, g
 		Update("remark", remark).Error
 }
 
-func (m *MySQLRelationGroupRepository) UpdateIdentity(ctx context.Context, gid uint32, uid string, identity relation.GroupIdentity) error {
+func (m *MySQLRelationGroupRepository) UpdateIdentity(ctx context.Context, gid uint32, uid string, identity entity.GroupIdentity) error {
 	var model GroupRelationModel
 	model.Identity = uint8(identity)
 	return m.db.WithContext(ctx).

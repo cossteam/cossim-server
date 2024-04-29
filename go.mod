@@ -18,7 +18,6 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/googollee/go-socket.io v1.8.0-rc.1
-	github.com/gorilla/websocket v1.5.1
 	github.com/hashicorp/consul/api v1.25.1
 	github.com/lithammer/shortuuid/v3 v3.0.7
 	github.com/livekit/protocol v1.9.7
@@ -93,6 +92,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gomodule/redigo v1.8.9 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
+	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect

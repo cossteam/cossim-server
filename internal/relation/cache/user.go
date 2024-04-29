@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -50,20 +50,20 @@ func GetBlacklistKey(ownerUserID string) string {
 }
 
 type RelationUserCache interface {
-	GetRelation(ctx context.Context, ownerUserID string, targetUserID string) (*relation.UserRelation, error)
-	GetRelations(ctx context.Context, ownerUserID string, targetUserID []string) ([]*relation.UserRelation, error)
-	SetRelation(ctx context.Context, ownerUserID string, targetUserID string, data *relation.UserRelation, expiration time.Duration) error
+	GetRelation(ctx context.Context, ownerUserID string, targetUserID string) (*entity.UserRelation, error)
+	GetRelations(ctx context.Context, ownerUserID string, targetUserID []string) ([]*entity.UserRelation, error)
+	SetRelation(ctx context.Context, ownerUserID string, targetUserID string, data *entity.UserRelation, expiration time.Duration) error
 	DeleteRelation(ctx context.Context, ownerUserID string, targetUserIDs []string) error
 	DeleteFriendIDs(ctx context.Context, userIDs ...string) error
-	GetFriendList(ctx context.Context, ownerUserID string) ([]*relation.Friend, error)
-	SetFriendList(ctx context.Context, ownerUserID string, data []*relation.Friend, expiration time.Duration) error
+	GetFriendList(ctx context.Context, ownerUserID string) ([]*entity.Friend, error)
+	SetFriendList(ctx context.Context, ownerUserID string, data []*entity.Friend, expiration time.Duration) error
 	DeleteFriendList(ctx context.Context, ownerUserID ...string) error
-	SetFriendRequest(ctx context.Context, ownerUserID string, data *relation.FriendRequestList, expiration time.Duration) error
-	GetFriendRequestList(ctx context.Context, ownerUserID string) (*relation.FriendRequestList, error)
-	SetFriendRequestList(ctx context.Context, ownerUserID string, data *relation.FriendRequestList, expiration time.Duration) error
+	SetFriendRequest(ctx context.Context, ownerUserID string, data *entity.FriendRequestList, expiration time.Duration) error
+	GetFriendRequestList(ctx context.Context, ownerUserID string) (*entity.FriendRequestList, error)
+	SetFriendRequestList(ctx context.Context, ownerUserID string, data *entity.FriendRequestList, expiration time.Duration) error
 	DeleteFriendRequestList(ctx context.Context, ownerUserID ...string) error
-	GetBlacklist(ctx context.Context, ownerUserID string) (*relation.Blacklist, error)
-	SetBlacklist(ctx context.Context, ownerUserID string, data *relation.Blacklist, expiration time.Duration) error
+	GetBlacklist(ctx context.Context, ownerUserID string) (*entity.Blacklist, error)
+	SetBlacklist(ctx context.Context, ownerUserID string, data *entity.Blacklist, expiration time.Duration) error
 	DeleteBlacklist(ctx context.Context, ownerUserID ...string) error
 	DeleteAllCache(ctx context.Context) error
 }
@@ -91,14 +91,14 @@ type RelationUserCacheRedis struct {
 	client *redis.Client
 }
 
-func (r *RelationUserCacheRedis) GetRelation(ctx context.Context, ownerUserID string, targetUserID string) (*relation.UserRelation, error) {
+func (r *RelationUserCacheRedis) GetRelation(ctx context.Context, ownerUserID string, targetUserID string) (*entity.UserRelation, error) {
 	key := GetFriendKey(ownerUserID, targetUserID)
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	rel := &relation.UserRelation{}
+	rel := &entity.UserRelation{}
 	if err := json.Unmarshal([]byte(val), rel); err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (r *RelationUserCacheRedis) GetRelation(ctx context.Context, ownerUserID st
 	return rel, nil
 }
 
-func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID string, targetUserID []string) ([]*relation.UserRelation, error) {
+func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID string, targetUserID []string) ([]*entity.UserRelation, error) {
 	keys := make([]string, len(targetUserID))
 	for i, targetUserID := range targetUserID {
 		keys[i] = GetFriendKey(ownerUserID, targetUserID)
@@ -117,13 +117,13 @@ func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID s
 		return nil, err
 	}
 
-	relations := make([]*relation.UserRelation, 0)
+	relations := make([]*entity.UserRelation, 0)
 	for _, val := range vals {
 		if val == nil {
 			continue
 		}
 
-		rel := &relation.UserRelation{}
+		rel := &entity.UserRelation{}
 		if err := json.Unmarshal([]byte(val.(string)), rel); err != nil {
 			return nil, err
 		}
@@ -138,7 +138,7 @@ func (r *RelationUserCacheRedis) GetRelations(ctx context.Context, ownerUserID s
 	return relations, nil
 }
 
-func (r *RelationUserCacheRedis) SetRelation(ctx context.Context, ownerUserID string, targetUserID string, data *relation.UserRelation, expiration time.Duration) error {
+func (r *RelationUserCacheRedis) SetRelation(ctx context.Context, ownerUserID string, targetUserID string, data *entity.UserRelation, expiration time.Duration) error {
 	key := GetFriendKey(ownerUserID, targetUserID)
 	if data == nil {
 		return ErrCacheContentEmpty
@@ -170,14 +170,14 @@ func (r *RelationUserCacheRedis) DeleteFriendIDs(ctx context.Context, userIDs ..
 	return r.client.Del(ctx, keys...).Err()
 }
 
-func (r *RelationUserCacheRedis) GetFriendList(ctx context.Context, ownerUserID string) ([]*relation.Friend, error) {
+func (r *RelationUserCacheRedis) GetFriendList(ctx context.Context, ownerUserID string) ([]*entity.Friend, error) {
 	key := GetFriendListKey(ownerUserID)
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	friendList := make([]*relation.Friend, 0)
+	friendList := make([]*entity.Friend, 0)
 	if err := json.Unmarshal([]byte(val), &friendList); err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (r *RelationUserCacheRedis) GetFriendList(ctx context.Context, ownerUserID 
 	return friendList, nil
 }
 
-func (r *RelationUserCacheRedis) SetFriendList(ctx context.Context, ownerUserID string, data []*relation.Friend, expiration time.Duration) error {
+func (r *RelationUserCacheRedis) SetFriendList(ctx context.Context, ownerUserID string, data []*entity.Friend, expiration time.Duration) error {
 	key := GetFriendListKey(ownerUserID)
 	if data == nil {
 		return ErrCacheContentEmpty
@@ -208,7 +208,7 @@ func (r *RelationUserCacheRedis) DeleteFriendList(ctx context.Context, ownerUser
 	return r.client.Del(ctx, keys...).Err()
 }
 
-func (r *RelationUserCacheRedis) SetFriendRequest(ctx context.Context, ownerUserID string, data *relation.FriendRequestList, expiration time.Duration) error {
+func (r *RelationUserCacheRedis) SetFriendRequest(ctx context.Context, ownerUserID string, data *entity.FriendRequestList, expiration time.Duration) error {
 	if ownerUserID == "" {
 		return ErrCacheKeyEmpty
 	}
@@ -220,14 +220,14 @@ func (r *RelationUserCacheRedis) SetFriendRequest(ctx context.Context, ownerUser
 	return r.client.Set(ctx, key, b, expiration).Err()
 }
 
-func (r *RelationUserCacheRedis) GetFriendRequestList(ctx context.Context, ownerUserID string) (*relation.FriendRequestList, error) {
+func (r *RelationUserCacheRedis) GetFriendRequestList(ctx context.Context, ownerUserID string) (*entity.FriendRequestList, error) {
 	key := GetFriendRequestListKey(ownerUserID)
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	friendRequestList := &relation.FriendRequestList{}
+	friendRequestList := &entity.FriendRequestList{}
 	if err := json.Unmarshal([]byte(val), friendRequestList); err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (r *RelationUserCacheRedis) GetFriendRequestList(ctx context.Context, owner
 	return friendRequestList, nil
 }
 
-func (r *RelationUserCacheRedis) SetFriendRequestList(ctx context.Context, ownerUserID string, data *relation.FriendRequestList, expiration time.Duration) error {
+func (r *RelationUserCacheRedis) SetFriendRequestList(ctx context.Context, ownerUserID string, data *entity.FriendRequestList, expiration time.Duration) error {
 	key := GetFriendRequestListKey(ownerUserID)
 	if data == nil {
 		return ErrCacheContentEmpty
@@ -258,7 +258,7 @@ func (r *RelationUserCacheRedis) DeleteFriendRequestList(ctx context.Context, ow
 	return r.client.Del(ctx, keys...).Err()
 }
 
-func (r *RelationUserCacheRedis) GetBlacklist(ctx context.Context, ownerUserID string) (*relation.Blacklist, error) {
+func (r *RelationUserCacheRedis) GetBlacklist(ctx context.Context, ownerUserID string) (*entity.Blacklist, error) {
 	key := GetBlacklistKey(ownerUserID)
 
 	val, err := r.client.Get(ctx, key).Result()
@@ -266,14 +266,14 @@ func (r *RelationUserCacheRedis) GetBlacklist(ctx context.Context, ownerUserID s
 		return nil, err
 	}
 
-	var blacklist relation.Blacklist
+	var blacklist entity.Blacklist
 	if err = json.Unmarshal([]byte(val), &blacklist); err != nil {
 		return nil, err
 	}
 	return &blacklist, nil
 }
 
-func (r *RelationUserCacheRedis) SetBlacklist(ctx context.Context, ownerUserID string, data *relation.Blacklist, expiration time.Duration) error {
+func (r *RelationUserCacheRedis) SetBlacklist(ctx context.Context, ownerUserID string, data *entity.Blacklist, expiration time.Duration) error {
 	key := GetBlacklistKey(ownerUserID)
 	if data == nil {
 		return r.client.Del(ctx, key).Err()

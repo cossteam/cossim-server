@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/relation/domain/relation"
+	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
@@ -18,8 +19,8 @@ var _ v1.DialogServiceServer = &dialogServiceServer{}
 
 type dialogServiceServer struct {
 	db  *gorm.DB
-	dr  relation.DialogRepository
-	dur relation.DialogUserRepository
+	dr  repository.DialogRepository
+	dur repository.DialogUserRepository
 }
 
 func (s *dialogServiceServer) CreateDialog(ctx context.Context, request *v1.CreateDialogRequest) (*v1.CreateDialogResponse, error) {
@@ -30,8 +31,8 @@ func (s *dialogServiceServer) CreateDialog(ctx context.Context, request *v1.Crea
 	//	return resp, status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
 	//}
 
-	dialog, err := s.dr.Create(ctx, &relation.CreateDialog{
-		Type:    relation.DialogType(request.Type),
+	dialog, err := s.dr.Create(ctx, &repository.CreateDialog{
+		Type:    entity.DialogType(request.Type),
 		OwnerId: request.OwnerId,
 		GroupId: request.GroupId,
 	})
@@ -64,8 +65,8 @@ func (s *dialogServiceServer) CreateAndJoinDialogWithGroup(ctx context.Context, 
 		//	return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
 		//}
 
-		dialog, err := npo.Dr.Create(ctx, &relation.CreateDialog{
-			Type:    relation.DialogType(request.Type),
+		dialog, err := npo.Dr.Create(ctx, &repository.CreateDialog{
+			Type:    entity.DialogType(request.Type),
 			OwnerId: request.OwnerId,
 			GroupId: request.GroupId,
 		})
@@ -133,8 +134,8 @@ func (s *dialogServiceServer) ConfirmFriendAndJoinDialog(ctx context.Context, re
 		//	return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
 		//}
 
-		dialog, err := npo.Dr.Create(ctx, &relation.CreateDialog{
-			Type:    relation.DialogType(request.Type),
+		dialog, err := npo.Dr.Create(ctx, &repository.CreateDialog{
+			Type:    entity.DialogType(request.Type),
 			OwnerId: request.OwnerId,
 			GroupId: request.GroupId,
 		})
@@ -147,7 +148,7 @@ func (s *dialogServiceServer) ConfirmFriendAndJoinDialog(ctx context.Context, re
 		//	return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 		//}
 
-		_, err = npo.Dur.Create(ctx, &relation.CreateDialogUser{
+		_, err = npo.Dur.Create(ctx, &repository.CreateDialogUser{
 			DialogID: dialog.ID,
 			UserID:   request.UserId,
 		})
@@ -200,7 +201,7 @@ func (s *dialogServiceServer) JoinDialog(ctx context.Context, request *v1.JoinDi
 	//	return resp, status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 	//}
 
-	_, err := s.dur.Create(ctx, &relation.CreateDialogUser{
+	_, err := s.dur.Create(ctx, &repository.CreateDialogUser{
 		DialogID: request.DialogId,
 		UserID:   request.UserId,
 	})
@@ -236,7 +237,7 @@ func (s *dialogServiceServer) GetUserDialogList(ctx context.Context, request *v1
 	//	return resp, status.Error(codes.Code(code.DialogErrGetUserDialogListFailed.Code()), err.Error())
 	//}
 
-	dialogs, err := s.dur.Find(ctx, &relation.DialogUserQuery{
+	dialogs, err := s.dur.Find(ctx, &repository.DialogUserQuery{
 		UserID:   []string{request.UserId},
 		PageSize: int(request.PageSize),
 		PageNum:  int(request.PageNum),
@@ -272,7 +273,7 @@ func (s *dialogServiceServer) GetDialogByIds(ctx context.Context, request *v1.Ge
 	//	return resp, status.Error(codes.Code(code.DialogErrGetUserDialogListFailed.Code()), err.Error())
 	//}
 
-	infos, err := s.dr.Find(ctx, &relation.DialogQuery{
+	infos, err := s.dr.Find(ctx, &repository.DialogQuery{
 		DialogID: nids,
 	})
 	if err != nil {
@@ -411,7 +412,7 @@ func (s *dialogServiceServer) GetDialogUserByDialogIDAndUserID(ctx context.Conte
 	//	return resp, status.Error(codes.Code(code.DialogErrGetDialogUserByDialogIDAndUserIDFailed.Code()), err.Error())
 	//}
 
-	users, err := s.dur.Find(ctx, &relation.DialogUserQuery{
+	users, err := s.dur.Find(ctx, &repository.DialogUserQuery{
 		DialogID: []uint32{request.DialogId},
 		UserID:   []string{request.UserId},
 		Force:    true,
@@ -460,7 +461,7 @@ func (s *dialogServiceServer) DeleteDialogUserByDialogIDAndUserIDRevert(ctx cont
 	//	return resp, status.Error(codes.Code(code.DialogErrGetDialogUserByDialogIDAndUserIDFailed.Code()), err.Error())
 	//}
 
-	finds, err := s.dur.Find(ctx, &relation.DialogUserQuery{
+	finds, err := s.dur.Find(ctx, &repository.DialogUserQuery{
 		DialogID: []uint32{request.DialogId},
 		UserID:   []string{request.UserId},
 	})
@@ -512,7 +513,7 @@ func (s *dialogServiceServer) GetDialogByGroupIds(ctx context.Context, request *
 	//	return resp, err
 	//}
 
-	ids, err := s.dr.Find(ctx, &relation.DialogQuery{
+	ids, err := s.dr.Find(ctx, &repository.DialogQuery{
 		GroupID: request.GroupId,
 	})
 	if err != nil {
@@ -546,7 +547,7 @@ func (s *dialogServiceServer) CloseOrOpenDialog(ctx context.Context, request *v1
 		isShow = true
 	}
 
-	if err := s.dur.UpdateDialogStatus(ctx, &relation.UpdateDialogStatusParam{
+	if err := s.dur.UpdateDialogStatus(ctx, &repository.UpdateDialogStatusParam{
 		DialogID: request.DialogId,
 		UserID:   []string{request.UserId},
 		IsShow:   &isShow,
@@ -577,7 +578,7 @@ func (s *dialogServiceServer) TopOrCancelTopDialog(ctx context.Context, request 
 		//}
 	}
 
-	if err := s.dur.UpdateDialogStatus(ctx, &relation.UpdateDialogStatusParam{
+	if err := s.dur.UpdateDialogStatus(ctx, &repository.UpdateDialogStatusParam{
 		DialogID: request.DialogId,
 		UserID:   []string{request.UserId},
 		TopAt:    &topAt,
@@ -644,7 +645,7 @@ func (s *dialogServiceServer) BatchCloseOrOpenDialog(ctx context.Context, reques
 		isShow = true
 	}
 
-	if err := s.dur.UpdateDialogStatus(ctx, &relation.UpdateDialogStatusParam{
+	if err := s.dur.UpdateDialogStatus(ctx, &repository.UpdateDialogStatusParam{
 		DialogID: request.DialogId,
 		UserID:   request.UserIds,
 		IsShow:   &isShow,
