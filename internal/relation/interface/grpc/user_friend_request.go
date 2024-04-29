@@ -136,9 +136,22 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 
 		//拒绝
 		if request.Status == v1.FriendRequestStatus_FriendRequestStatus_REJECT {
-			if err := npo.Ufqr.UpdateStatus(ctx, re.ID, entity.Rejected); err != nil {
-				return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
+			st := entity.Pending
+			finds, err := npo.Ufqr.Find(ctx, &repository.UserFriendRequestQuery{
+				SenderId:   senderId,
+				ReceiverId: receiverId,
+				Status:     &st,
+			})
+			if err != nil {
+				return err
 			}
+
+			for _, v := range finds.List {
+				if err := npo.Ufqr.UpdateStatus(ctx, v.ID, entity.Rejected); err != nil {
+					return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
+				}
+			}
+
 			return nil
 		} else {
 			// 修改状态
