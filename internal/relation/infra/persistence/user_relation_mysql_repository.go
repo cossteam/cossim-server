@@ -118,12 +118,19 @@ func (m *MySQLRelationUserRepository) EstablishFriendship(ctx context.Context, d
 
 func (m *MySQLRelationUserRepository) UpdateStatus(ctx context.Context, id uint32, status entity.UserRelationStatus) error {
 	var model UserRelationModel
+	var deletedAt int64 = 0
+
+	if status == entity.UserStatusDeleted {
+		deletedAt = ptime.Now()
+	}
 
 	if err := m.db.WithContext(ctx).
 		Model(&UserRelationModel{}).
 		Where("id = ?", id).
 		First(&model).
-		Update("status", uint(status)).Error; err != nil {
+		Update("status", uint(status)).
+		Update("deleted_at", deletedAt).
+		Error; err != nil {
 		return err
 	}
 
@@ -142,13 +149,31 @@ func (m *MySQLRelationUserRepository) UpdateStatus(ctx context.Context, id uint3
 func (m *MySQLRelationUserRepository) Get(ctx context.Context, userId, friendId string) (*entity.UserRelation, error) {
 	var model UserRelationModel
 
+	if m.cache != nil {
+		e, err := m.cache.GetRelation(ctx, userId, friendId)
+		if err == nil && e != nil {
+			return e, nil
+		}
+	}
+
 	if err := m.db.WithContext(ctx).
 		Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).
 		First(&model).Error; err != nil {
 		return nil, err
 	}
 
-	return model.ToEntity(), nil
+	e := model.ToEntity()
+
+	go func() {
+		if m.cache != nil {
+			if err := m.cache.SetRelation(context.Background(), userId, friendId, e, cache.RelationExpireTime); err != nil {
+				//zap.L().Error("cache.SetRelation failed", zap.Error(err))
+				log.Printf("cache.SetRelation failed err:%v", err)
+			}
+		}
+	}()
+
+	return e, nil
 }
 
 func (m *MySQLRelationUserRepository) Create(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error) {
@@ -162,9 +187,9 @@ func (m *MySQLRelationUserRepository) Create(ctx context.Context, ur *entity.Use
 		return nil, err
 	}
 
-	entity := model.ToEntity()
+	e := model.ToEntity()
 
-	return entity, nil
+	return e, nil
 }
 
 func (m *MySQLRelationUserRepository) Update(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error) {
@@ -178,7 +203,7 @@ func (m *MySQLRelationUserRepository) Update(ctx context.Context, ur *entity.Use
 		return nil, err
 	}
 
-	entity := model.ToEntity()
+	e := model.ToEntity()
 
 	if m.cache != nil {
 		if err := m.cache.DeleteRelation(ctx, ur.UserID, []string{ur.FriendID}); err != nil {
@@ -190,7 +215,7 @@ func (m *MySQLRelationUserRepository) Update(ctx context.Context, ur *entity.Use
 		}
 	}
 
-	return entity, nil
+	return e, nil
 }
 
 func (m *MySQLRelationUserRepository) Delete(ctx context.Context, userId, friendId string) error {

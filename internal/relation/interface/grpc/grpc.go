@@ -6,14 +6,12 @@ import (
 	api "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/version"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"path/filepath"
 	"runtime"
-	"strconv"
 )
 
 type RelationServiceServer struct {
@@ -27,10 +25,10 @@ type RelationServiceServer struct {
 }
 
 func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
-	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
-	if err != nil {
-		return err
-	}
+	//mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	//if err != nil {
+	//	return err
+	//}
 
 	//userCache, err := cache.NewRelationUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
 	//if err != nil {
@@ -42,46 +40,34 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 	//	return err
 	//}
 
-	dbConn, err := mysql.GetConnection()
-	if err != nil {
-		return err
-	}
+	//dbConn, err := mysql.GetConnection()
+	//if err != nil {
+	//	return err
+	//}
 
-	infra := persistence.NewRepositories(dbConn)
-	if err = infra.Automigrate(); err != nil {
+	infra := persistence.NewRepositories(cfg)
+	if err := infra.Automigrate(); err != nil {
 		return err
 	}
 
 	s.ac = cfg
 	s.UserServiceServer = &userServiceServer{
-		db:  dbConn,
-		urr: infra.Urr,
-		dr:  infra.Dr,
+		repos: infra,
 	}
 	s.GroupServiceServer = &groupServiceServer{
-		db:  dbConn,
-		grr: infra.Grr,
-		dr:  infra.Dr,
+		repos: infra,
 	}
 	s.DialogServiceServer = &dialogServiceServer{
-		db:  dbConn,
-		dr:  infra.Dr,
-		dur: infra.Dur,
+		repos: infra,
 	}
 	s.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{
-		db:   dbConn,
-		dr:   infra.Dr,
-		grr:  infra.Grr,
-		gjqr: infra.Gjqr,
+		repos: infra,
 	}
 	s.UserFriendRequestServiceServer = &userFriendRequestServiceServer{
-		db:   dbConn,
-		ufqr: infra.Ufqr,
-		ur:   infra.Urr,
+		repos: infra,
 	}
 	s.GroupAnnouncementServer = &groupAnnouncementServer{
-		db:  dbConn,
-		gar: infra.GAr,
+		repos: infra,
 	}
 	return nil
 }

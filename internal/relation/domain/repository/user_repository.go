@@ -17,7 +17,6 @@ type UserRepository interface {
 	Create(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error)
 	Update(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error)
 	Delete(ctx context.Context, userId, friendId string) error
-
 	Find(ctx context.Context, query *UserQuery) ([]*entity.UserRelation, error)
 
 	// EstablishFriendship 建立双向好友关系
@@ -41,6 +40,7 @@ type UserRepository interface {
 
 	// SetUserFriendSilentNotification 设置好友静默通知
 	SetUserFriendSilentNotification(ctx context.Context, uid, friendId string, silentNotification bool) error
+
 	// SetUserOpenBurnAfterReading 设置好友阅后即焚
 	SetUserOpenBurnAfterReading(ctx context.Context, uid, friendId string, openBurnAfterReading bool, burnAfterReadingTimeOut int64) error
 

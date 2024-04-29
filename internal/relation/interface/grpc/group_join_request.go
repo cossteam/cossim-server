@@ -4,36 +4,28 @@ import (
 	"context"
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
-	"github.com/cossim/coss-server/pkg/utils/time"
+	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"gorm.io/gorm"
-	"log"
 )
 
 var _ v1.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{}
 
 type groupJoinRequestServiceServer struct {
-	db          *gorm.DB
-	cache       cache.RelationGroupCache
-	cacheEnable bool
-	dr          repository.DialogRepository
-	grr         repository.GroupRepository
-	gjqr        repository.GroupJoinRequestRepository
+	repos *persistence.Repositories
 }
 
 func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, request *v1.InviteJoinGroupRequest) (*v1.JoinGroupResponse, error) {
 	resp := &v1.JoinGroupResponse{}
 
 	// 获取群组管理员 ID
-	adminIDs, err := s.grr.ListGroupAdmin(ctx, request.GroupId)
+	adminIDs, err := s.repos.GroupRepo.ListGroupAdmin(ctx, request.GroupId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
 	}
@@ -57,7 +49,7 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 			GroupID:     request.GroupId,
 			Inviter:     request.InviterId,
 			OwnerID:     userID,
-			InviterTime: time.Now(),
+			InviterTime: ptime.Now(),
 			Status:      entity.Invitation,
 		}
 		relations = append(relations, userGroup)
@@ -72,7 +64,7 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 				GroupID:     request.GroupId,
 				Inviter:     request.InviterId,
 				OwnerID:     id,
-				InviterTime: time.Now(),
+				InviterTime: ptime.Now(),
 				Status:      entity.Invitation,
 			}
 			relations = append(relations, userGroup)
@@ -80,17 +72,17 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	}
 
 	// 添加关系切片到数据库
-	_, err = s.gjqr.Creates(ctx, relations)
+	_, err = s.repos.GroupJoinRequestRepo.Creates(ctx, relations)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
 	}
 
 	request.Member = append(request.Member, request.InviterId)
-	if s.cacheEnable {
-		if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, request.Member...); err != nil {
-			log.Printf("delete group join request list by user failed, err: %v", err)
-		}
-	}
+	//if s.cacheEnable {
+	//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, request.Member...); err != nil {
+	//		log.Printf("delete group join request list by user failed, err: %v", err)
+	//	}
+	//}
 
 	return resp, nil
 }
@@ -105,23 +97,15 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 	//}
 
-	dialog, err := s.dr.GetByGroupID(ctx, request.GroupId)
+	dialog, err := s.repos.DialogRepo.GetByGroupID(ctx, request.GroupId)
 	if err != nil {
 		return nil, err
 	}
 
 	if !request.JoinApprove {
-		if err := s.db.Transaction(func(tx *gorm.DB) error {
-			npo := persistence.NewRepositories(tx)
-
-			// 加入对话
-			//_, err := npo.Dr.JoinDialog(dialog.ID, request.UserId)
-			//if err != nil {
-			//	return err
-			//}
-
-			if _, err := npo.Dur.Create(ctx, &repository.CreateDialogUser{
-				DialogID: uint32(dialog.ID),
+		if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
+			if _, err := txr.DialogUserRepo.Create(ctx, &repository.CreateDialogUser{
+				DialogID: dialog.ID,
 				UserID:   request.UserId,
 			}); err != nil {
 				return err
@@ -131,11 +115,11 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 				GroupID:     request.GroupId,
 				UserID:      request.UserId,
 				Identity:    entity.IdentityUser,
-				JoinedAt:    time.Now(),
+				JoinedAt:    ptime.Now(),
 				EntryMethod: entity.EntrySearch,
 			}
 			// 加入群聊
-			if _, err := s.grr.Create(ctx, gr); err != nil {
+			if _, err := txr.GroupRepo.Create(ctx, gr); err != nil {
 				return err
 			}
 
@@ -144,17 +128,17 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 			return nil, err
 		}
 
-		if s.cacheEnable {
-			if err := s.cache.DeleteRelation(ctx, request.UserId, request.GroupId); err != nil {
-				log.Printf("delete group relation list by user failed, err: %v", err)
-			}
-		}
+		//if s.cacheEnable {
+		//	if err := s.cache.DeleteRelation(ctx, request.UserId, request.GroupId); err != nil {
+		//		log.Printf("delete group relation list by user failed, err: %v", err)
+		//	}
+		//}
 
 		return nil, nil
 	}
 
 	// 添加管理员群聊申请记录
-	ids, err := s.grr.ListGroupAdmin(ctx, request.GroupId)
+	ids, err := s.repos.GroupRepo.ListGroupAdmin(ctx, request.GroupId)
 	if err != nil {
 		return resp, err
 	}
@@ -164,7 +148,7 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 			GroupID:     request.GroupId,
 			Remark:      request.Msg,
 			OwnerID:     id,
-			InviterTime: time.Now(),
+			InviterTime: ptime.Now(),
 			Status:      entity.Pending,
 		}
 		relations = append(relations, userGroup)
@@ -176,12 +160,12 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 		UserID:      request.UserId,
 		Remark:      request.Msg,
 		OwnerID:     request.UserId,
-		InviterTime: time.Now(),
+		InviterTime: ptime.Now(),
 		Status:      entity.Pending,
 	}
 	relations = append(relations, ur)
 
-	_, err = s.gjqr.Creates(ctx, relations)
+	_, err = s.repos.GroupJoinRequestRepo.Creates(ctx, relations)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrInviteFailed.Code()), err.Error())
 	}
@@ -205,7 +189,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 	//	return resp, err
 	//}
 
-	list, err := s.gjqr.Find(ctx, &repository.GroupJoinRequestQuery{
+	list, err := s.repos.GroupJoinRequestRepo.Find(ctx, &repository.GroupJoinRequestQuery{
 		UserID:   []string{request.UserId},
 		PageSize: int(request.PageSize),
 		PageNum:  int(request.PageNum),
@@ -241,7 +225,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByGroupIdAndUserId(ctx context.Context, request *v1.GetGroupJoinRequestByGroupIdAndUserIdRequest) (*v1.GetGroupJoinRequestByGroupIdAndUserIdResponse, error) {
 	var resp = &v1.GetGroupJoinRequestByGroupIdAndUserIdResponse{}
 
-	find, err := s.gjqr.Find(ctx, &repository.GroupJoinRequestQuery{
+	find, err := s.repos.GroupJoinRequestRepo.Find(ctx, &repository.GroupJoinRequestQuery{
 		UserID:  []string{request.UserId},
 		GroupID: []uint32{request.GroupId},
 	})
@@ -272,7 +256,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByGroupIdAndUserId(ct
 func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.Context, request *v1.ManageGroupJoinRequestByIDRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 
-	info, err := s.gjqr.Get(ctx, request.ID)
+	info, err := s.repos.GroupJoinRequestRepo.Get(ctx, request.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +272,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		//	return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		//}
 
-		if err := s.gjqr.UpdateStatus(ctx, info.ID, entity.RequestStatus(request.Status)); err != nil {
+		if err := s.repos.GroupJoinRequestRepo.UpdateStatus(ctx, info.ID, entity.RequestStatus(request.Status)); err != nil {
 			return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
 
@@ -302,7 +286,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 	}
 
 	// 判断用户是否已经加入该群聊
-	rel, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, info.GroupID, info.UserID)
+	rel, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, info.GroupID, info.UserID)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), err.Error())
 	}
@@ -316,21 +300,13 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 	//}
 
-	dialog, err := s.dr.GetByGroupID(ctx, info.GroupID)
+	dialog, err := s.repos.DialogRepo.GetByGroupID(ctx, info.GroupID)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 	}
 
-	err = s.db.Transaction(func(tx *gorm.DB) error {
-		npo := persistence.NewRepositories(tx)
-
-		//加入对话
-		//_, err := npo.Dr.JoinDialog(dialog.ID, info.UserID)
-		//if err != nil {
-		//	return err
-		//}
-
-		if _, err := npo.Dur.Create(ctx, &repository.CreateDialogUser{
+	if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
+		if _, err := txr.DialogUserRepo.Create(ctx, &repository.CreateDialogUser{
 			DialogID: dialog.ID,
 			UserID:   info.UserID,
 		}); err != nil {
@@ -338,10 +314,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		}
 
 		//修改请求状态
-		//if err := npo.Gjqr.ManageGroupJoinRequestByID(info.GroupID, info.UserID, relation.RequestStatus(request.Status)); err != nil {
-		//	return status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
-		//}
-		if err := npo.Gjqr.UpdateStatus(ctx, info.ID, entity.RequestStatus(request.Status)); err != nil {
+		if err := txr.GroupJoinRequestRepo.UpdateStatus(ctx, info.ID, entity.RequestStatus(request.Status)); err != nil {
 			return status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
 
@@ -349,7 +322,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 			GroupID:     info.GroupID,
 			UserID:      info.UserID,
 			Identity:    entity.IdentityUser,
-			JoinedAt:    time.Now(),
+			JoinedAt:    ptime.Now(),
 			EntryMethod: entity.EntrySearch,
 		}
 
@@ -358,13 +331,12 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 			gr.EntryMethod = entity.EntryInvitation
 		}
 		//加入群聊
-		_, err = npo.Grr.Create(ctx, gr)
+		_, err = txr.GroupRepo.Create(ctx, gr)
 		if err != nil {
 			return err
 		}
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return resp, err
 	}
 
@@ -384,15 +356,11 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByID(ctx context.Cont
 		return nil, status.Error(codes.Code(code.InvalidParameter.Code()), code.InvalidParameter.Message())
 	}
 
-	r, err := s.gjqr.Get(ctx, request.ID)
+	r, err := s.repos.GroupJoinRequestRepo.Get(ctx, request.ID)
 	if err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrGetGroupJoinRequestFailed.Code()), err.Error())
 	}
 
-	//r, err := s.gjqr.GetGroupJoinRequestByRequestID(uint(request.ID))
-	//if err != nil {
-	//	return nil, status.Error(codes.Code(code.RelationErrGetGroupJoinRequestFailed.Code()), err.Error())
-	//}
 	resp.GroupId = r.GroupID
 	resp.UserId = r.UserID
 	resp.Status = v1.GroupRequestStatus(r.Status)
@@ -410,13 +378,10 @@ func (s *groupJoinRequestServiceServer) DeleteGroupRecord(ctx context.Context, r
 		return nil, status.Error(codes.Code(code.InvalidParameter.Code()), code.InvalidParameter.Message())
 	}
 
-	if err := s.gjqr.Delete(ctx, req.ID); err != nil {
+	if err := s.repos.GroupJoinRequestRepo.Delete(ctx, req.ID); err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrDeleteGroupJoinRecord.Code()), err.Error())
 	}
 
-	//if err := s.gjqr.DeleteJoinRequestByID(uint(req.ID)); err != nil {
-	//	return nil, status.Error(codes.Code(code.RelationErrDeleteGroupJoinRecord.Code()), err.Error())
-	//}
 	//if s.cacheEnable {
 	//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, req.UserId); err != nil {
 	//		log.Printf("delete group join request list by user failed, err: %v", err)

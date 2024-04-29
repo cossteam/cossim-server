@@ -4,17 +4,17 @@ import (
 	"context"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"gorm.io/gorm"
 )
 
 var _ v1.GroupAnnouncementServiceServer = &groupAnnouncementServer{}
 
 type groupAnnouncementServer struct {
-	db  *gorm.DB
-	gar entity.GroupAnnouncementRepository
+	repos *persistence.Repositories
 }
 
 func (s *groupAnnouncementServer) CreateGroupAnnouncement(ctx context.Context, request *v1.CreateGroupAnnouncementRequest) (*v1.CreateGroupAnnouncementResponse, error) {
@@ -27,16 +27,7 @@ func (s *groupAnnouncementServer) CreateGroupAnnouncement(ctx context.Context, r
 
 	// TODO 验证用户是否是群主
 
-	//if err := s.gar.CreateGroupAnnouncement(&entity.GroupAnnouncement{
-	//	Content: in.Content,
-	//	GroupID: in.GroupId,
-	//	Title:   in.Title,
-	//	UserID:  in.UserId,
-	//}); err != nil {
-	//	return announcement, status.Error(codes.Code(code.RelationGroupErrCreateGroupAnnouncementFailed.Code()), err.Error())
-	//}
-
-	ra, err := s.gar.Create(ctx, &entity.GroupAnnouncement{
+	ra, err := s.repos.GroupAnnouncementRepo.Create(ctx, &entity.GroupAnnouncement{
 		GroupID: request.GroupId,
 		Title:   request.Title,
 		Content: request.Content,
@@ -56,7 +47,7 @@ func (s *groupAnnouncementServer) GetGroupAnnouncementList(ctx context.Context, 
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementListFailed.Code()), err.Error())
 	//}
 
-	announcements, err := s.gar.Find(ctx, &entity.GroupAnnouncementQuery{
+	announcements, err := s.repos.GroupAnnouncementRepo.Find(ctx, &repository.GroupAnnouncementQuery{
 		GroupID: []uint32{request.GroupId},
 	})
 	if err != nil {
@@ -85,7 +76,7 @@ func (s *groupAnnouncementServer) GetGroupAnnouncement(ctx context.Context, requ
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementFailed.Code()), err.Error())
 	//}
 
-	announcement, err := s.gar.Get(ctx, request.ID)
+	announcement, err := s.repos.GroupAnnouncementRepo.Get(ctx, request.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -104,17 +95,8 @@ func (s *groupAnnouncementServer) GetGroupAnnouncement(ctx context.Context, requ
 
 func (s *groupAnnouncementServer) UpdateGroupAnnouncement(ctx context.Context, request *v1.UpdateGroupAnnouncementRequest) (*v1.UpdateGroupAnnouncementResponse, error) {
 	resp := &v1.UpdateGroupAnnouncementResponse{}
-	//if err := s.gar.UpdateGroupAnnouncement(&entity.GroupAnnouncement{
-	//	BaseModel: entity.BaseModel{
-	//		ID: uint(request.ID),
-	//	},
-	//	Content: request.Content,
-	//	Title:   request.Title,
-	//}); err != nil {
-	//	return resp, status.Error(codes.Code(code.RelationGroupErrUpdateGroupAnnouncementFailed.Code()), err.Error())
-	//}
 
-	if err := s.gar.Update(ctx, &entity.UpdateGroupAnnouncement{
+	if err := s.repos.GroupAnnouncementRepo.Update(ctx, &entity.UpdateGroupAnnouncement{
 		ID:      request.ID,
 		Title:   request.Title,
 		Content: request.Content,
@@ -128,11 +110,8 @@ func (s *groupAnnouncementServer) UpdateGroupAnnouncement(ctx context.Context, r
 
 func (s *groupAnnouncementServer) DeleteGroupAnnouncement(ctx context.Context, request *v1.DeleteGroupAnnouncementRequest) (*v1.DeleteGroupAnnouncementResponse, error) {
 	resp := &v1.DeleteGroupAnnouncementResponse{}
-	//if err := s.gar.DeleteGroupAnnouncement(request.ID); err != nil {
-	//	return resp, status.Error(codes.Code(code.RelationGroupErrDeleteGroupAnnouncementFailed.Code()), err.Error())
-	//}
 
-	if err := s.gar.Delete(ctx, request.ID); err != nil {
+	if err := s.repos.GroupAnnouncementRepo.Delete(ctx, request.ID); err != nil {
 		return nil, err
 	}
 
@@ -142,12 +121,8 @@ func (s *groupAnnouncementServer) DeleteGroupAnnouncement(ctx context.Context, r
 
 func (s *groupAnnouncementServer) MarkAnnouncementAsRead(ctx context.Context, request *v1.MarkAnnouncementAsReadRequest) (*v1.MarkAnnouncementAsReadResponse, error) {
 	resp := &v1.MarkAnnouncementAsReadResponse{}
-	//err := s.gar.MarkAnnouncementAsRead(uint(request.GroupId), uint(request.AnnouncementId), request.UserIds)
-	//if err != nil {
-	//	return resp, status.Error(codes.Code(code.RelationErrGroupAnnouncementReadFailed.Code()), err.Error())
-	//}
 
-	if err := s.gar.MarkAsRead(ctx, request.GroupId, request.AnnouncementId, request.UserIds); err != nil {
+	if err := s.repos.GroupAnnouncementRepo.MarkAsRead(ctx, request.GroupId, request.AnnouncementId, request.UserIds); err != nil {
 		return nil, err
 	}
 
@@ -156,7 +131,7 @@ func (s *groupAnnouncementServer) MarkAnnouncementAsRead(ctx context.Context, re
 
 func (s *groupAnnouncementServer) GetReadUsers(ctx context.Context, request *v1.GetReadUsersRequest) (*v1.GetReadUsersResponse, error) {
 	resp := &v1.GetReadUsersResponse{}
-	list, err := s.gar.GetReadUsers(ctx, request.GroupId, request.AnnouncementId)
+	list, err := s.repos.GroupAnnouncementRepo.GetReadUsers(ctx, request.GroupId, request.AnnouncementId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrGetGroupAnnouncementReadUsersFailed.Code()), err.Error())
 	}
@@ -178,12 +153,8 @@ func (s *groupAnnouncementServer) GetReadUsers(ctx context.Context, request *v1.
 
 func (s *groupAnnouncementServer) GetAnnouncementReadByUserId(ctx context.Context, request *v1.GetAnnouncementReadByUserIdRequest) (*v1.GetAnnouncementReadByUserIdResponse, error) {
 	resp := &v1.GetAnnouncementReadByUserIdResponse{}
-	//read, err := s.gar.GetAnnouncementReadByUserId(uint(request.GroupId), uint(request.AnnouncementId), request.UserId)
-	//if err != nil {
-	//	return resp, status.Error(codes.Code(code.RelationErrGetGroupAnnouncementReadFailed.Code()), err.Error())
-	//}
 
-	read, err := s.gar.GetReadByUserId(ctx, request.GroupId, request.AnnouncementId, request.UserId)
+	read, err := s.repos.GroupAnnouncementRepo.GetReadByUserId(ctx, request.GroupId, request.AnnouncementId, request.UserId)
 	if err != nil {
 		return nil, err
 	}
