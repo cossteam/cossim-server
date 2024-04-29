@@ -7,30 +7,24 @@ import (
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
-	"github.com/cossim/coss-server/pkg/cache"
 	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
-	"log"
 )
 
 var _ v1.GroupRelationServiceServer = &groupServiceServer{}
 
 type groupServiceServer struct {
-	db          *gorm.DB
-	cache       cache.RelationGroupCache
-	cacheEnable bool
-	grr         repository.GroupRepository
-	dr          repository.DialogRepository
+	repos *persistence.Repositories
 }
 
 func (s *groupServiceServer) AddGroupAdmin(ctx context.Context, request *v1.AddGroupAdminRequest) (*v1.AddGroupAdminResponse, error) {
 	resp := &v1.AddGroupAdminResponse{}
 
-	r1, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, request.GroupID, request.UserID)
+	r1, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, request.GroupID, request.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +34,7 @@ func (s *groupServiceServer) AddGroupAdmin(ctx context.Context, request *v1.AddG
 	}
 
 	for _, v := range request.UserIDs {
-		if err := s.grr.UpdateIdentity(ctx, r1.GroupID, v, entity.IdentityAdmin); err != nil {
+		if err := s.repos.GroupRepo.UpdateIdentity(ctx, r1.GroupID, v, entity.IdentityAdmin); err != nil {
 			return nil, code.RelationErrGroupAddAdmin.Reason(err)
 		}
 	}
@@ -51,7 +45,7 @@ func (s *groupServiceServer) AddGroupAdmin(ctx context.Context, request *v1.AddG
 func (s *groupServiceServer) GetGroupUserIDs(ctx context.Context, request *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
 	resp := &v1.UserIdsResponse{}
 
-	userGroupIDs, err := s.grr.GetGroupUserIDs(ctx, request.GroupId)
+	userGroupIDs, err := s.repos.GroupRepo.GetGroupUserIDs(ctx, request.GroupId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
 	}
@@ -64,7 +58,7 @@ func (s *groupServiceServer) GetUserGroupIDs(ctx context.Context, request *v1.Ge
 	resp := &v1.GetUserGroupIDsResponse{}
 
 	//if s.cacheEnable {
-	//	ds, err := s.cache.GetUserGroupIDs(ctx, request.UserId)
+	//	ds, err := s.cache.GetUserJoinGroupIDs(ctx, request.UserId)
 	//	if err == nil && ds != nil {
 	//		for _, v := range ds {
 	//			resp.GroupId = append(resp.GroupId, v)
@@ -73,7 +67,7 @@ func (s *groupServiceServer) GetUserGroupIDs(ctx context.Context, request *v1.Ge
 	//	}
 	//}
 
-	ds, err := s.grr.GetUserJoinedGroupIDs(ctx, request.UserId)
+	ds, err := s.repos.GroupRepo.GetUserJoinedGroupIDs(ctx, request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrGetGroupIDsFailed.Code()), err.Error())
 	}
@@ -83,7 +77,7 @@ func (s *groupServiceServer) GetUserGroupIDs(ctx context.Context, request *v1.Ge
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.SetUserGroupIDs(ctx, request.UserId, ds); err != nil {
+	//	if err := s.cache.SetUserJoinGroupIDs(ctx, request.UserId, ds); err != nil {
 	//		log.Printf("set user group id cache failed, err: %v", err)
 	//	}
 	//}
@@ -97,14 +91,14 @@ func (s *groupServiceServer) GetUserGroupList(ctx context.Context, request *v1.G
 	isAdmin := false
 
 	// 获取用户所属群组的ID列表
-	groupIDs, err := s.grr.GetUserGroupIDs(ctx, request.UserId)
+	groupIDs, err := s.repos.GroupRepo.GetUserGroupIDs(ctx, request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
 	}
 
 	for _, gid := range groupIDs {
 		// 获取群组的申请记录
-		reqList, err := s.grr.ListJoinRequest(ctx, []uint32{gid})
+		reqList, err := s.repos.GroupRepo.ListJoinRequest(ctx, []uint32{gid})
 		if err != nil {
 			return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 		}
@@ -116,7 +110,7 @@ func (s *groupServiceServer) GetUserGroupList(ctx context.Context, request *v1.G
 
 		for _, v := range reqList {
 			// 判断用户是否为群组管理员
-			gr, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, gid, v.UserID)
+			gr, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, gid, v.UserID)
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					continue
@@ -154,7 +148,7 @@ func (s *groupServiceServer) GetUserGroupList(ctx context.Context, request *v1.G
 func (s *groupServiceServer) RemoveFromGroup(ctx context.Context, request *v1.RemoveFromGroupRequest) (*v1.RemoveFromGroupResponse, error) {
 	resp := &v1.RemoveFromGroupResponse{}
 
-	gr, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
+	gr, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
 	if err != nil {
 		//if errors.Is(err, gorm.ErrRecordNotFound) {
 		//	return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
@@ -162,7 +156,7 @@ func (s *groupServiceServer) RemoveFromGroup(ctx context.Context, request *v1.Re
 		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	}
 
-	if err := s.grr.Delete(ctx, gr.ID); err != nil {
+	if err := s.repos.GroupRepo.Delete(ctx, gr.ID); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrRemoveUserFromGroupFailed.Code()), err.Error())
 	}
 
@@ -170,7 +164,7 @@ func (s *groupServiceServer) RemoveFromGroup(ctx context.Context, request *v1.Re
 	//	if err := s.cache.DeleteRelation(ctx, request.UserId, request.GroupId); err != nil {
 	//		log.Printf("delete relation cache failed, err: %v", err)
 	//	}
-	//	if err := s.cache.DeleteUserGroupIDs(ctx, request.UserId); err != nil {
+	//	if err := s.cache.DeleteUserJoinGroupIDs(ctx, request.UserId); err != nil {
 	//		log.Printf("delete user group id cache failed, err: %v", err)
 	//	}
 	//}
@@ -181,7 +175,7 @@ func (s *groupServiceServer) RemoveFromGroup(ctx context.Context, request *v1.Re
 func (s *groupServiceServer) LeaveGroup(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
 	resp := &v1.LeaveGroupResponse{}
 
-	gr, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
+	gr, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
 	if err != nil {
 		//if errors.Is(err, gorm.ErrRecordNotFound) {
 		//	return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
@@ -189,7 +183,7 @@ func (s *groupServiceServer) LeaveGroup(ctx context.Context, request *v1.LeaveGr
 		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	}
 
-	if err := s.grr.Delete(ctx, gr.ID); err != nil {
+	if err := s.repos.GroupRepo.Delete(ctx, gr.ID); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrLeaveGroupFailed.Code()), err.Error())
 	}
 
@@ -197,7 +191,7 @@ func (s *groupServiceServer) LeaveGroup(ctx context.Context, request *v1.LeaveGr
 	//	if err := s.cache.DeleteRelation(ctx, request.UserId, request.GroupId); err != nil {
 	//		log.Printf("delete relation cache failed, err: %v", err)
 	//	}
-	//	if err := s.cache.DeleteUserGroupIDs(ctx, request.UserId); err != nil {
+	//	if err := s.cache.DeleteUserJoinGroupIDs(ctx, request.UserId); err != nil {
 	//		log.Printf("delete user group id cache failed, err: %v", err)
 	//	}
 	//}
@@ -207,7 +201,7 @@ func (s *groupServiceServer) LeaveGroup(ctx context.Context, request *v1.LeaveGr
 func (s *groupServiceServer) LeaveGroupRevert(ctx context.Context, request *v1.LeaveGroupRequest) (*v1.LeaveGroupResponse, error) {
 	resp := &v1.LeaveGroupResponse{}
 
-	gr, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
+	gr, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
 	if err != nil {
 		//if errors.Is(err, gorm.ErrRecordNotFound) {
 		//	return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
@@ -215,7 +209,7 @@ func (s *groupServiceServer) LeaveGroupRevert(ctx context.Context, request *v1.L
 		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	}
 
-	if err := s.grr.UpdateFields(ctx, gr.ID, map[string]interface{}{
+	if err := s.repos.GroupRepo.UpdateFields(ctx, gr.ID, map[string]interface{}{
 		"deleted_at": 0,
 	}); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrLeaveGroupFailed.Code()), err.Error())
@@ -233,7 +227,7 @@ func (s *groupServiceServer) GetGroupRelation(ctx context.Context, request *v1.G
 	//	}
 	//}
 
-	rel, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
+	rel, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, request.GroupId, request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrGroupRelationFailed.Code()), err.Error())
 	}
@@ -274,7 +268,7 @@ func (s *groupServiceServer) GetBatchGroupRelation(ctx context.Context, request 
 	//	}
 	//}
 
-	grs, err := s.grr.GetUsersGroupByGroupIDAndUserIDs(ctx, request.GroupId, request.UserIds)
+	grs, err := s.repos.GroupRepo.GetUsersGroupByGroupIDAndUserIDs(ctx, request.GroupId, request.UserIds)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.RelationGroupErrRelationNotFound.Code()), code.RelationGroupErrRelationNotFound.Message())
@@ -303,7 +297,7 @@ func (s *groupServiceServer) GetBatchGroupRelation(ctx context.Context, request 
 }
 
 func (s *groupServiceServer) DeleteGroupRelationByGroupId(ctx context.Context, request *v1.GroupIDRequest) (*emptypb.Empty, error) {
-	if err := s.grr.DeleteByGroupID(ctx, request.GroupId); err != nil {
+	if err := s.repos.GroupRepo.DeleteByGroupID(ctx, request.GroupId); err != nil {
 		return nil, code.RelationGroupErrDeleteUsersGroupRelationFailed.Reason(err)
 	}
 
@@ -318,7 +312,7 @@ func (s *groupServiceServer) DeleteGroupRelationByGroupId(ctx context.Context, r
 	//			log.Printf("delete relation cache failed, err: %v", err)
 	//		}
 	//	}
-	//	if err := s.cache.DeleteUserGroupIDs(ctx, uids...); err != nil {
+	//	if err := s.cache.DeleteUserJoinGroupIDs(ctx, uids...); err != nil {
 	//		log.Printf("delete user group id cache failed, err: %v", err)
 	//	}
 	//
@@ -330,7 +324,7 @@ func (s *groupServiceServer) DeleteGroupRelationByGroupId(ctx context.Context, r
 func (s *groupServiceServer) DeleteGroupRelationByGroupIdRevert(ctx context.Context, request *v1.GroupIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 
-	if err := s.grr.UpdateFieldsByGroupID(ctx, request.GroupId, map[string]interface{}{
+	if err := s.repos.GroupRepo.UpdateFieldsByGroupID(ctx, request.GroupId, map[string]interface{}{
 		"deleted_at": 0,
 	}); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
@@ -340,7 +334,7 @@ func (s *groupServiceServer) DeleteGroupRelationByGroupIdRevert(ctx context.Cont
 
 func (s *groupServiceServer) GetGroupAdminIds(ctx context.Context, in *v1.GroupIDRequest) (*v1.UserIdsResponse, error) {
 	var resp = &v1.UserIdsResponse{}
-	ids, err := s.grr.ListGroupAdmin(ctx, in.GroupId)
+	ids, err := s.repos.GroupRepo.ListGroupAdmin(ctx, in.GroupId)
 	if err != nil {
 		return resp, err
 	}
@@ -351,7 +345,7 @@ func (s *groupServiceServer) GetGroupAdminIds(ctx context.Context, in *v1.GroupI
 func (s *groupServiceServer) GetUserManageGroupID(ctx context.Context, request *v1.GetUserManageGroupIDRequest) (*v1.GetUserManageGroupIDResponse, error) {
 	resp := &v1.GetUserManageGroupIDResponse{}
 
-	ids, err := s.grr.GetUserManageGroupIDs(ctx, request.UserId)
+	ids, err := s.repos.GroupRepo.GetUserManageGroupIDs(ctx, request.UserId)
 	if err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
 	}
@@ -366,7 +360,7 @@ func (s *groupServiceServer) GetUserManageGroupID(ctx context.Context, request *
 func (s *groupServiceServer) DeleteGroupRelationByGroupIdAndUserID(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 
-	if err := s.grr.DeleteByGroupIDAndUserID(ctx, request.GroupID, request.UserID); err != nil {
+	if err := s.repos.GroupRepo.DeleteByGroupIDAndUserID(ctx, request.GroupID, request.UserID); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
 	}
 
@@ -387,7 +381,7 @@ func (s *groupServiceServer) DeleteGroupRelationByGroupIdAndUserID(ctx context.C
 func (s *groupServiceServer) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx context.Context, request *v1.DeleteGroupRelationByGroupIdAndUserIDRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
 
-	gr, err := s.grr.GetUserGroupByGroupIDAndUserID(ctx, request.GroupID, request.UserID)
+	gr, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, request.GroupID, request.UserID)
 	if err != nil {
 		//if errors.Is(err, gorm.ErrRecordNotFound) {
 		//	return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
@@ -395,7 +389,7 @@ func (s *groupServiceServer) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx con
 		return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	}
 
-	if err := s.grr.UpdateFields(ctx, gr.ID, map[string]interface{}{
+	if err := s.repos.GroupRepo.UpdateFields(ctx, gr.ID, map[string]interface{}{
 		"deleted_at": 0,
 	}); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
@@ -407,17 +401,9 @@ func (s *groupServiceServer) DeleteGroupRelationByGroupIdAndUserIDRevert(ctx con
 func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, request *v1.CreateGroupAndInviteUsersRequest) (*v1.CreateGroupAndInviteUsersResponse, error) {
 	resp := &v1.CreateGroupAndInviteUsersResponse{}
 
-	//return resp, status.Error(codes.Aborted, formatErrorMessage(errors.New("测试回滚")))
-
-	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		npo := persistence.NewRepositories(tx)
+	if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
 		// 创建群聊对话
-		//dialog, err := npo.Dr.CreateDialog(request.UserID, entity.GroupDialog, uint(request.GroupId))
-		//if err != nil {
-		//	return err
-		//}
-
-		dialog, err2 := npo.Dr.Create(ctx, &repository.CreateDialog{
+		dialog, err2 := txr.DialogRepo.Create(ctx, &repository.CreateDialog{
 			Type:    entity.GroupDialog,
 			OwnerId: request.UserID,
 			GroupId: request.GroupId,
@@ -429,12 +415,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		resp.DialogId = dialog.ID
 
 		// 群主加入对话
-		//_, err = npo.Dr.JoinDialog(dialog.ID, request.UserID)
-		//if err != nil {
-		//	return err
-		//}
-
-		if _, err := npo.Dur.Create(ctx, &repository.CreateDialogUser{
+		if _, err := txr.DialogUserRepo.Create(ctx, &repository.CreateDialogUser{
 			DialogID: dialog.ID,
 			UserID:   request.UserID,
 		}); err != nil {
@@ -442,18 +423,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		}
 
 		// 群主加入群聊
-		//owner := &entity.GroupRelation{
-		//	UserID:   request.UserID,
-		//	GroupID:  uint(request.GroupId),
-		//	Identity: entity.IdentityOwner,
-		//}
-		//_, err := npo.Grr.CreateRelation(owner)
-		//if err != nil {
-		//	return err
-		//}
-
-		// 群主加入群聊
-		if _, err := npo.Grr.Create(ctx, &repository.CreateGroupRelation{
+		if _, err := txr.GroupRepo.Create(ctx, &repository.CreateGroupRelation{
 			GroupID:  request.GroupId,
 			UserID:   request.UserID,
 			Identity: entity.IdentityOwner,
@@ -463,15 +433,6 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 
 		//发送邀请给其他成员
 		requests := make([]*repository.GroupJoinRequest, 0)
-
-		//gjr1 := &entity.GroupJoinRequest{
-		//	UserID:      request.UserID,
-		//	GroupID:     uint(request.GroupId),
-		//	OwnerID:     request.UserID,
-		//	InviterTime: time.Now(),
-		//	Status:      entity.Invitation,
-		//}
-		//requests = append(requests, gjr1)
 
 		for _, v := range request.Member {
 			req := &repository.GroupJoinRequest{
@@ -497,11 +458,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 			requests = append(requests, req)
 		}
 
-		//if _, err := npo.Gjqr.AddJoinRequestBatch(requests); err != nil {
-		//	return err
-		//}
-
-		if _, err := npo.Gjqr.Creates(ctx, requests); err != nil {
+		if _, err := txr.GroupJoinRequestRepo.Creates(ctx, requests); err != nil {
 			return err
 		}
 		return nil
@@ -509,16 +466,16 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		return resp, status.Error(codes.Aborted, err.Error())
 	}
 
-	if s.cacheEnable {
-		ids := append([]string{request.UserID}, request.Member...)
-		if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, ids...); err != nil {
-			log.Printf("delete relation cache failed, err: %v", err)
-			//return nil, err
-		}
-		//if err := s.cache.DeleteRelationByGroupID(ctx, request.GroupId); err != nil {
-		//	log.Printf("delete relation cache failed, err: %v", err)
-		//}
-	}
+	//if s.cacheEnable {
+	//	ids := append([]string{request.UserID}, request.Member...)
+	//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, ids...); err != nil {
+	//		log.Printf("delete relation cache failed, err: %v", err)
+	//		//return nil, err
+	//	}
+	//	//if err := s.cache.DeleteRelationByGroupID(ctx, request.GroupId); err != nil {
+	//	//	log.Printf("delete relation cache failed, err: %v", err)
+	//	//}
+	//}
 
 	return resp, nil
 }
@@ -530,7 +487,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsersRevert(ctx context.Context
 		ids = append(ids, v)
 	}
 
-	if err := s.grr.DeleteByGroupIDAndUserID(ctx, request.GroupId, ids...); err != nil {
+	if err := s.repos.GroupRepo.DeleteByGroupIDAndUserID(ctx, request.GroupId, ids...); err != nil {
 		return resp, status.Error(codes.Aborted, err.Error())
 	}
 
@@ -540,7 +497,7 @@ func (s *groupServiceServer) CreateGroupAndInviteUsersRevert(ctx context.Context
 func (s *groupServiceServer) SetGroupSilentNotification(ctx context.Context, request *v1.SetGroupSilentNotificationRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 
-	if err := s.grr.UserGroupSilentNotification(ctx, request.GroupId, request.UserId, request.IsSilent); err != nil {
+	if err := s.repos.GroupRepo.UserGroupSilentNotification(ctx, request.GroupId, request.UserId, request.IsSilent); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrSetUserGroupSilentNotificationFailed.Code()), err.Error())
 	}
 
@@ -555,42 +512,24 @@ func (s *groupServiceServer) SetGroupSilentNotification(ctx context.Context, req
 
 func (s *groupServiceServer) RemoveGroupRelationByGroupIdAndUserIDs(ctx context.Context, request *v1.RemoveGroupRelationByGroupIdAndUserIDsRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
-	err := s.db.Transaction(func(tx *gorm.DB) error {
-		npo := persistence.NewRepositories(tx)
-
+	if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
 		// 查询对话信息
-		//dialog, err := npo.Dr.GetDialogByGroupId(uint(request.GroupId))
-		//if err != nil {
-		//	return err
-		//}
-
-		dialog, err := npo.Dr.GetByGroupID(ctx, request.GroupId)
+		dialog, err := txr.DialogRepo.GetByGroupID(ctx, request.GroupId)
 		if err != nil {
 			return err
 		}
 
-		if err := npo.Dur.DeleteByDialogIDAndUserID(ctx, dialog.ID, request.UserIDs...); err != nil {
+		if err := txr.DialogUserRepo.DeleteByDialogIDAndUserID(ctx, dialog.ID, request.UserIDs...); err != nil {
 			return err
 		}
 
-		// 删除对话用户
-		//err = npo.Dr.DeleteDialogUserByDialogIDAndUserID(dialog.ID, request.UserIDs)
-		//if err != nil {
-		//	return err
-		//}
-
-		// 删除关系
-		//if err := npo.Grr.DeleteRelationByGroupIDAndUserIDs(request.GroupId, request.UserIDs); err != nil {
-		//	return err
-		//}
-
-		if err := npo.Grr.DeleteByGroupIDAndUserID(ctx, request.GroupId, request.UserIDs...); err != nil {
+		// 删除对话用户、关系
+		if err := txr.GroupRepo.DeleteByGroupIDAndUserID(ctx, request.GroupId, request.UserIDs...); err != nil {
 			return err
 		}
 
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return resp, status.Error(codes.Code(code.GroupErrDeleteUserGroupRelationFailed.Code()), err.Error())
 	}
 
@@ -621,15 +560,15 @@ func (s *groupServiceServer) SetGroupOpenBurnAfterReadingTimeOut(ctx context.Con
 
 func (s *groupServiceServer) SetGroupUserRemark(ctx context.Context, request *v1.SetGroupUserRemarkRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
-	if err := s.grr.SetUserGroupRemark(ctx, request.GroupId, request.UserId, request.Remark); err != nil {
+	if err := s.repos.GroupRepo.SetUserGroupRemark(ctx, request.GroupId, request.UserId, request.Remark); err != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrSetUserGroupRemarkFailed.Code()), err.Error())
 	}
 
-	if s.cacheEnable {
-		if err := s.cache.DeleteRelation(ctx, request.UserId, request.GroupId); err != nil {
-			log.Printf("delete relation cache failed, err: %v", err)
-		}
-	}
+	//if s.cacheEnable {
+	//	if err := s.cache.DeleteRelation(ctx, request.UserId, request.GroupId); err != nil {
+	//		log.Printf("delete relation cache failed, err: %v", err)
+	//	}
+	//}
 
 	return resp, nil
 }

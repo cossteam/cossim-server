@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
@@ -76,7 +77,7 @@ func (m *GroupAnnouncementReadModel) ToEntity() *entity.GroupAnnouncementRead {
 	}
 }
 
-var _ entity.GroupAnnouncementRepository = &MySQLRelationGroupAnnouncementRepository{}
+var _ repository.GroupAnnouncementRepository = &MySQLRelationGroupAnnouncementRepository{}
 
 func NewMySQLRelationGroupAnnouncementRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLRelationGroupAnnouncementRepository {
 	return &MySQLRelationGroupAnnouncementRepository{
@@ -103,7 +104,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) Create(ctx context.Context, a
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, query *entity.GroupAnnouncementQuery) ([]*entity.GroupAnnouncement, error) {
+func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, query *repository.GroupAnnouncementQuery) ([]*entity.GroupAnnouncement, error) {
 	var models []GroupAnnouncementModel
 
 	db := m.db.Model(&GroupAnnouncementModel{})

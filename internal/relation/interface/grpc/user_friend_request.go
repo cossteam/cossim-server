@@ -18,10 +18,7 @@ import (
 var _ v1.UserFriendRequestServiceServer = &userFriendRequestServiceServer{}
 
 type userFriendRequestServiceServer struct {
-	db *gorm.DB
-	//ufqr        repository.UserFriendRequestRepository
-	ufqr repository.UserFriendRequestRepository
-	ur   repository.UserRepository
+	repos *persistence.Repositories
 }
 
 func (s *userFriendRequestServiceServer) ManageFriend(ctx context.Context, request *v1.ManageFriendRequest) (*v1.ManageFriendResponse, error) {
@@ -32,7 +29,7 @@ func (s *userFriendRequestServiceServer) ManageFriend(ctx context.Context, reque
 func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Context, request *v1.GetFriendRequestListRequest) (*v1.GetFriendRequestListResponse, error) {
 	resp := &v1.GetFriendRequestListResponse{}
 
-	list, err := s.ufqr.Find(ctx, &repository.UserFriendRequestQuery{
+	list, err := s.repos.UserFriendRequestRepo.Find(ctx, &repository.UserFriendRequestQuery{
 		UserID:   request.UserId,
 		PageSize: int(request.PageSize),
 		PageNum:  int(request.PageNum),
@@ -63,13 +60,11 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 }
 
 func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, request *v1.SendFriendRequestStruct) (*v1.SendFriendRequestStructResponse, error) {
-	var resp = &v1.SendFriendRequestStructResponse{}
+	resp := &v1.SendFriendRequestStructResponse{}
 
-	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		npo := persistence.NewRepositories(tx)
-
+	if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
 		// 添加自己的
-		re1, err := npo.Ufqr.Create(ctx, &entity.UserFriendRequest{
+		re1, err := txr.UserFriendRequestRepo.Create(ctx, &entity.UserFriendRequest{
 			SenderID:   request.SenderId,
 			ReceiverID: request.ReceiverId,
 			Remark:     request.Remark,
@@ -81,13 +76,13 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 		}
 
 		// 对方拉黑了，不允许添加
-		re2, err := s.ur.Get(ctx, request.ReceiverId, request.SenderId)
+		re2, err := s.repos.UserRepo.Get(ctx, request.ReceiverId, request.SenderId)
 		if err == nil && re2.Status == entity.UserStatusBlocked {
 			return nil
 		}
 
 		// 添加对方的
-		_, err = npo.Ufqr.Create(ctx, &entity.UserFriendRequest{
+		_, err = txr.UserFriendRequestRepo.Create(ctx, &entity.UserFriendRequest{
 			SenderID:   request.SenderId,
 			ReceiverID: request.ReceiverId,
 			Remark:     request.Remark,
@@ -117,13 +112,11 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 }
 
 func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context, request *v1.ManageFriendRequestStruct) (*emptypb.Empty, error) {
-	var resp = &emptypb.Empty{}
+	resp := &emptypb.Empty{}
 	var senderId, receiverId string
 
-	if err := s.db.Transaction(func(tx *gorm.DB) error {
-
-		npo := persistence.NewRepositories(tx)
-		re, err := npo.Ufqr.Get(ctx, request.ID)
+	if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
+		re, err := txr.UserFriendRequestRepo.Get(ctx, request.ID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
@@ -137,7 +130,7 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 		//拒绝
 		if request.Status == v1.FriendRequestStatus_FriendRequestStatus_REJECT {
 			st := entity.Pending
-			finds, err := npo.Ufqr.Find(ctx, &repository.UserFriendRequestQuery{
+			finds, err := txr.UserFriendRequestRepo.Find(ctx, &repository.UserFriendRequestQuery{
 				SenderId:   senderId,
 				ReceiverId: receiverId,
 				Status:     &st,
@@ -147,7 +140,7 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 			}
 
 			for _, v := range finds.List {
-				if err := npo.Ufqr.UpdateStatus(ctx, v.ID, entity.Rejected); err != nil {
+				if err := txr.UserFriendRequestRepo.UpdateStatus(ctx, v.ID, entity.Rejected); err != nil {
 					return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 				}
 			}
@@ -155,7 +148,7 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 			return nil
 		} else {
 			// 修改状态
-			find, err := npo.Ufqr.Find(ctx, &repository.UserFriendRequestQuery{
+			find, err := txr.UserFriendRequestRepo.Find(ctx, &repository.UserFriendRequestQuery{
 				SenderId:   senderId,
 				ReceiverId: receiverId,
 			})
@@ -165,22 +158,14 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 
 			for _, v := range find.List {
 				if v.Status == entity.Pending {
-					if err := npo.Ufqr.UpdateStatus(ctx, v.ID, entity.Accepted); err != nil {
+					if err := txr.UserFriendRequestRepo.UpdateStatus(ctx, v.ID, entity.Accepted); err != nil {
 						return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 					}
 				}
 			}
-			//if err := npo.Ufqr.UpdateStatus(ctx, re.ID, relation.Accepted); err != nil {
-			//	return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
-			//}
 		}
 
-		//_, err = npo.Urr.GetRelationByID(senderId, receiverId)
-		//if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		//	return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "")
-		//}
-
-		_, err = npo.Urr.Get(ctx, senderId, receiverId)
+		_, err = txr.UserRepo.Get(ctx, senderId, receiverId)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return status.Error(codes.Code(code.RelationErrAlreadyFriends.Code()), "")
 		}
@@ -188,14 +173,14 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 		re.Status = entity.RequestStatus(request.Status)
 
 		// 如果是单删
-		oldrelation, err := npo.Urr.Get(ctx, receiverId, senderId)
+		oldrelation, err := txr.UserRepo.Get(ctx, receiverId, senderId)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), "")
 		}
 
 		if oldrelation != nil {
 			//添加关系
-			_, err := npo.Urr.Create(ctx, &entity.UserRelation{
+			_, err := txr.UserRepo.Create(ctx, &entity.UserRelation{
 				UserID:   re.SenderID,
 				FriendID: re.ReceiverID,
 				Status:   entity.UserStatusNormal,
@@ -205,7 +190,7 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 				return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 			}
 			//加入对话
-			_, err = npo.Dur.Create(ctx, &repository.CreateDialogUser{
+			_, err = txr.DialogUserRepo.Create(ctx, &repository.CreateDialogUser{
 				DialogID: oldrelation.DialogId,
 				UserID:   senderId,
 			})
@@ -216,7 +201,7 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 		}
 
 		// 创建对话
-		dialog, err := npo.Dr.Create(ctx, &repository.CreateDialog{
+		dialog, err := txr.DialogRepo.Create(ctx, &repository.CreateDialog{
 			Type:    entity.UserDialog,
 			OwnerId: senderId,
 			GroupId: 0,
@@ -225,45 +210,16 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 		}
 
-		//加入对话
-		//_, err = npo.Dur.Create(ctx, dialog.ID, senderId)
-		//if err != nil {
-		//	return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
-		//}
-
-		//_, err = npo.Dur.Create(ctx, dialog.ID, receiverId)
-		//if err != nil {
-		//	return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
-		//}
-
 		// 将两个用户加入同一个对话
-		_, err = npo.Dur.Creates(ctx, dialog.ID, []string{senderId, receiverId})
+		_, err = txr.DialogUserRepo.Creates(ctx, dialog.ID, []string{senderId, receiverId})
 		if err != nil {
 			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
 		}
 
 		// 建立好友关系
-		if err := npo.Urr.EstablishFriendship(ctx, dialog.ID, re.SenderID, re.ReceiverID); err != nil {
+		if err := txr.UserRepo.EstablishFriendship(ctx, dialog.ID, re.SenderID, re.ReceiverID); err != nil {
 			return err
 		}
-
-		//if _, err := npo.Urr.Create(ctx, &relation.UserRelation{
-		//	UserID:   re.SenderID,
-		//	FriendID: re.ReceiverID,
-		//	Status:   relation.UserStatusNormal,
-		//	DialogId: dialog.ID,
-		//}); err != nil {
-		//	return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
-		//}
-		//
-		//if _, err := npo.Urr.Create(ctx, &relation.UserRelation{
-		//	UserID:   re.ReceiverID,
-		//	FriendID: re.SenderID,
-		//	Status:   relation.UserStatusNormal,
-		//	DialogId: dialog.ID,
-		//}); err != nil {
-		//	return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), err.Error())
-		//}
 
 		return nil
 	}); err != nil {
@@ -290,12 +246,12 @@ func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context
 }
 
 func (s *userFriendRequestServiceServer) GetFriendRequestById(ctx context.Context, request *v1.GetFriendRequestByIdRequest) (*v1.FriendRequestList, error) {
-	var resp = &v1.FriendRequestList{}
+	resp := &v1.FriendRequestList{}
 
-	if re, err := s.ufqr.Get(ctx, request.ID); err != nil {
+	if re, err := s.repos.UserFriendRequestRepo.Get(ctx, request.ID); err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
 	} else {
-		resp.ID = uint32(re.ID)
+		resp.ID = re.ID
 		resp.SenderId = re.SenderID
 		resp.ReceiverId = re.ReceiverID
 		resp.Remark = re.Remark
@@ -307,22 +263,9 @@ func (s *userFriendRequestServiceServer) GetFriendRequestById(ctx context.Contex
 }
 
 func (s *userFriendRequestServiceServer) GetFriendRequestByUserIdAndFriendId(ctx context.Context, request *v1.GetFriendRequestByUserIdAndFriendIdRequest) (*v1.FriendRequestList, error) {
-	//var resp = &v1.FriendRequestList{}
-	//if re, err := s.ufqr.GetFriendRequestBySenderIDAndReceiverID(request.UserId, request.FriendId); err != nil {
-	//	if errors.Is(err, gorm.ErrRecordNotFound) {
-	//		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
-	//	}
-	//	return resp, err
-	//} else {
-	//	resp.ID = uint32(re.ID)
-	//	resp.SenderId = re.SenderID
-	//	resp.ReceiverId = re.ReceiverID
-	//	resp.Remark = re.Remark
-	//	resp.Status = v1.FriendRequestStatus(re.Status)
-	//	resp.CreateAt = uint64(re.CreatedAt)
-	//}
-	var resp = &v1.FriendRequestList{}
-	rel, err := s.ufqr.GetByUserIdAndFriendId(ctx, request.UserId, request.FriendId)
+	resp := &v1.FriendRequestList{}
+
+	rel, err := s.repos.UserFriendRequestRepo.GetByUserIdAndFriendId(ctx, request.UserId, request.FriendId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
@@ -340,9 +283,9 @@ func (s *userFriendRequestServiceServer) GetFriendRequestByUserIdAndFriendId(ctx
 }
 
 func (s *userFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(ctx context.Context, request *v1.DeleteFriendRequestByUserIdAndFriendIdRequest) (*emptypb.Empty, error) {
-	var resp = &emptypb.Empty{}
+	resp := &emptypb.Empty{}
 
-	find, err := s.ufqr.Find(ctx, &repository.UserFriendRequestQuery{
+	find, err := s.repos.UserFriendRequestRepo.Find(ctx, &repository.UserFriendRequestQuery{
 		SenderId:   request.UserId,
 		ReceiverId: request.FriendId,
 		PageSize:   5,
@@ -356,7 +299,7 @@ func (s *userFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(
 		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), code.RelationUserErrNoFriendRequestRecords.Message())
 	}
 
-	if err := s.ufqr.Delete(ctx, find.List[0].ID); err != nil {
+	if err := s.repos.UserFriendRequestRepo.Delete(ctx, find.List[0].ID); err != nil {
 		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), code.RelationUserErrNoFriendRequestRecords.Message())
 	}
 
@@ -368,7 +311,7 @@ func (s *userFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(
 
 func (s *userFriendRequestServiceServer) DeleteFriendRecord(ctx context.Context, req *v1.DeleteFriendRecordRequest) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
-	if err := s.ufqr.Delete(ctx, req.ID); err != nil {
+	if err := s.repos.UserFriendRequestRepo.Delete(ctx, req.ID); err != nil {
 		return nil, status.Error(codes.Code(code.RelationErrDeleteUserFriendRecord.Code()), err.Error())
 	}
 
