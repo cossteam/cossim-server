@@ -12,9 +12,6 @@ import (
 
 type GroupRelationModel struct {
 	BaseModel
-	CreatedAt          int64
-	UpdatedAt          int64
-	DeletedAt          int64
 	GroupID            uint32   `gorm:"comment:群组ID" json:"group_id"`
 	Identity           uint8    `gorm:"comment:身份 (0=普通用户, 1=管理员, 2=群主)"`
 	EntryMethod        uint8    `gorm:"comment:入群方式"`
