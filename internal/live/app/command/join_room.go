@@ -11,7 +11,6 @@ import (
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
 	any2 "github.com/golang/protobuf/ptypes/any"
-	"github.com/labstack/gommon/log"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
 	"go.uber.org/zap"
@@ -52,13 +51,13 @@ func (h *LiveHandler) JoinRoom(ctx context.Context, cmd *JoinRoom) (*JoinRoomRes
 		return nil, errors.New("invalid room type")
 	}
 	if err != nil {
-		log.Error("join room error", zap.Error(err))
+		h.logger.Error("join room error", zap.Error(err))
 		return nil, err
 	}
 
 	user, err := h.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: cmd.UserID})
 	if err != nil {
-		log.Error("get user info error", zap.Error(err))
+		h.logger.Error("get user info error", zap.Error(err))
 		return nil, err
 	}
 
@@ -69,7 +68,7 @@ func (h *LiveHandler) JoinRoom(ctx context.Context, cmd *JoinRoom) (*JoinRoomRes
 		token, err = h.GetUserJoinToken(ctx, room.ID, user.NickName, cmd.UserID)
 	}
 	if err != nil {
-		log.Error("get token error", zap.Error(err))
+		h.logger.Error("get token error", zap.Error(err))
 		return nil, err
 	}
 
