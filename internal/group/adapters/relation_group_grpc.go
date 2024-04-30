@@ -70,8 +70,12 @@ func (s *RelationGroupGrpc) DeleteGroupRelations(ctx context.Context, groupID ui
 }
 
 func (s *RelationGroupGrpc) GetGroupMembers(ctx context.Context, groupID uint32) ([]string, error) {
-	//TODO implement me
-	panic("implement me")
+	ids, err := s.client.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: groupID})
+	if err != nil {
+		return nil, err
+	}
+
+	return ids.UserIds, nil
 }
 
 func (s *RelationGroupGrpc) IsGroupOwner(ctx context.Context, groupID uint32, userID string) (bool, error) {

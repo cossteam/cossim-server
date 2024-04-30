@@ -82,6 +82,10 @@ message GetUserMsgListRequest{
   int32 PageNum = 6;
   // @inject_tag: json:"msg_id"
   uint64 MsgId = 7;
+  // @inject_tag: json:"start_at"
+  uint64 StartAt = 8;
+  // @inject_tag: json:"end_at"
+  uint64 EndAt = 9;
 }
 
 message UserMessage{
@@ -145,10 +149,11 @@ message GroupMessage {
   AtAllUserType AtAllUser = 13;
 }
 
-message GetUserMsgListResponse{
+message GetUserMsgListResponse {
   // @inject_tag: json:"user_messages" form:"user_messages" uri:"user_messages"
   repeated UserMessage UserMessages = 1;
   // @inject_tag: json:"total" form:"total" uri:"total"
+  // 返回的是这次条件查询的的总条数，而不是本次的总数
   int32 Total = 2;
   // @inject_tag: json:"current_page" form:"current_page" uri:"current_page"
   int32 CurrentPage = 3;

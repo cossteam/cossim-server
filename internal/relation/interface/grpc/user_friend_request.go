@@ -45,7 +45,7 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 		return nil, err
 	}
 
-	//list, total, err := s.ufqr.GetFriendRequestList(request.UserId, int(request.PageSize), int(request.PageNum))
+	//list, total, err := s.ufqr.GetFriendRequestList(request.UserId, int(request.PageSize), int(request.CurrentPage))
 	//if err != nil {
 	//	return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	//}

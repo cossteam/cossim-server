@@ -85,6 +85,8 @@ func (h *Handler) sendGroupMsg(c *gin.Context) {
 // @Param msg_id query int false "消息id"
 // @Param page_num query int true "页码"
 // @Param page_size query int true "页大小"
+// @Param start_at query int64 false "开始时间"
+// @Param end_at query int64 true "结束时间"
 // @Success		200 {object} model.Response{}
 // @Router /msg/list/user [get]
 func (h *Handler) getUserMsgList(c *gin.Context) {
@@ -95,6 +97,8 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 	var content = c.Query("content")
 	var msgId = c.Query("msg_id")
 	var uid = c.Query("user_id")
+	var sat = c.Query("start_at")
+	var eat = c.Query("end_at")
 
 	if id == "" {
 		response.SetFail(c, "参数错误", nil)
@@ -113,8 +117,15 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 	pageNum, _ := strconv.Atoi(num)
 	pageSize, _ := strconv.Atoi(size)
 	mt, _ := strconv.Atoi(msgType)
+	startAt, _ := strconv.Atoi(sat)
+	endAt, _ := strconv.Atoi(eat)
 	if pageNum == 0 || pageSize == 0 {
 		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	if endAt == 0 {
+		response.SetFail(c, "结束时间不能为空", nil)
 		return
 	}
 
@@ -126,6 +137,8 @@ func (h *Handler) getUserMsgList(c *gin.Context) {
 		PageNum:  pageNum,
 		PageSize: pageSize,
 		MsgId:    uint32(mId),
+		StartAt:  int64(startAt),
+		EndAt:    int64(endAt),
 	}
 
 	userID := c.Value(constants.UserID).(string)

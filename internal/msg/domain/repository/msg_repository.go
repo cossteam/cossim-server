@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"github.com/cossim/coss-server/internal/msg/api/grpc/dataTransformers"
 	"github.com/cossim/coss-server/internal/msg/domain/entity"
 )
@@ -29,6 +30,9 @@ type MsgRepository interface {
 	GetUserDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.UserMessage, int64, error)
 	GetGroupDialogLastMsgs(dialogId uint32, pageNumber, pageSize int) ([]entity.GroupMessage, int64, error)
 	GetLastUserMsgsByDialogIDs(dialogIds []uint) ([]*entity.UserMessage, error)
+
+	// Find 根据条件获取消息列表
+	Find(ctx context.Context, query *entity.UserMsgQuery) (*entity.UserMsgQueryResult, error)
 
 	ReadAllUserMsg(uid string, dialogId uint32) error
 

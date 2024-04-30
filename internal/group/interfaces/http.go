@@ -44,85 +44,66 @@ type HttpServer struct {
 	userCache cache.UserCache
 }
 
-func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
-	h.logger = plog.NewDefaultLogger(HttpServiceName, int8(cfg.Log.Level))
-	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+// SearchGroup
+// @Summary 搜索群聊
+// @Description 搜索群聊
+// @Tags group
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authentication header"
+// @Param keyword query string false "关键词"
+// @Param page_num query int false "页码"
+// @Param page_size query int false "页大小"
+// @Security ApiKeyAuth
+// @Success 200 {object} Group "成功创建群聊"
+// @Router /api/v1/group/search [get]
+func (h *HttpServer) SearchGroup(c *gin.Context, params SearchGroupParams) {
+	var page, pageSize int32 = 1, 10
+	if params.Page != nil {
+		page = *params.Page
 	}
-	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if params.PageSize != nil {
+		pageSize = *params.PageSize
+	}
+
+	searchGroup, err := h.app.Queries.SearchGroup.Handle(c, &query.SearchGroup{
+		UserID:   c.Value(constants.UserID).(string),
+		Keyword:  params.Keyword,
+		Page:     page,
+		PageSize: pageSize,
+	})
 	if err != nil {
-		panic(err)
+		c.Error(err)
+		return
 	}
-	h.userCache = userCache
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	return nil
+	response.SetSuccess(c, "搜索群聊成功", searchGroupToResponse(searchGroup))
 }
 
-func (h *HttpServer) Name() string {
-	return HttpServiceName
-}
-
-func (h *HttpServer) Version() string {
-	return version.FullVersion()
-}
-
-func (h *HttpServer) RegisterRoute(r gin.IRouter) {
-	// 添加一些中间件或其他配置
-	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
-	r.Use(middleware.AuthMiddleware(h.userCache))
-
-	swagger, err := GetSwagger()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
-		os.Exit(1)
-	}
-	// Clear out the servers array in the swagger spec, that skips validating
-	// that server names match. We don't know how this thing will be run.
-	swagger.Servers = nil
-
-	validatorOptions := &oapimiddleware.Options{
-		ErrorHandler: func(c *gin.Context, message string, statusCode int) {
-			response.SetFail(c, message, nil)
-		},
-	}
-	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-		return nil
+func searchGroupToResponse(group []*query.Group) []*Group {
+	var resp []*Group
+	for _, g := range group {
+		resp = append(resp, &Group{
+			Avatar:          g.Avatar,
+			Id:              g.Id,
+			MaxMembersLimit: g.MaxMembersLimit,
+			Member:          g.Member,
+			Name:            g.Name,
+		})
 	}
 
-	// Use our validation middleware to check all requests against the
-	// OpenAPI schema.
-	r.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, validatorOptions))
-
-	RegisterHandlers(r, h)
-}
-
-func (h *HttpServer) Health(r gin.IRouter) string {
-	return ""
-}
-
-func (h *HttpServer) Stop(ctx context.Context) error {
-	return nil
-}
-
-func (h *HttpServer) DiscoverServices(services map[string]*grpc.ClientConn) error {
-	return nil
-}
-
-func (h *HttpServer) GetAllGroup(c *gin.Context) {
-
+	return resp
 }
 
 // CreateGroup
 // @Summary 创建群聊
 // @Description 创建一个新的群聊
 // @Tags group
-// @Accept json
 // @Produce json
 // @Param Authorization header string true "Authentication header"
-// @Param requestBody body CreateGroupRequest true "创建一个新的群聊"
+// @Param keyword path integer true "群聊名称或ID" string
 // @Security ApiKeyAuth
 // @Success 200 {object} Group "成功创建群聊"
-// @Router /api/v1/group [post]
+// @Router /api/v1/group/search [get]
 func (h *HttpServer) CreateGroup(c *gin.Context) {
 	req := &CreateGroupRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -212,7 +193,7 @@ func getGroupToResponse(getGroup *query.GroupInfo) *GroupInfo {
 		MaxMembersLimit: int(getGroup.MaxMembersLimit),
 		Name:            getGroup.Name,
 		Status:          getGroup.Status,
-		Type:            getGroup.Type,
+		Type:            uint8(getGroup.Type),
 		SilenceTime:     getGroup.SilenceTime,
 		Encrypt:         getGroup.Encrypt,
 		JoinApprove:     getGroup.JoinApprove,
@@ -268,4 +249,72 @@ func (h *HttpServer) UpdateGroup(c *gin.Context, id uint32) {
 	}
 
 	response.SetSuccess(c, "更新群聊信息成功", resp)
+}
+
+func (h *HttpServer) GetAllGroup(c *gin.Context) {
+
+}
+
+func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
+	h.logger = plog.NewDefaultLogger(HttpServiceName, int8(cfg.Log.Level))
+	if cfg.Encryption.Enable {
+		return h.enc.ReadKeyPair()
+	}
+	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if err != nil {
+		panic(err)
+	}
+	h.userCache = userCache
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	return nil
+}
+
+func (h *HttpServer) Name() string {
+	return HttpServiceName
+}
+
+func (h *HttpServer) Version() string {
+	return version.FullVersion()
+}
+
+func (h *HttpServer) RegisterRoute(r gin.IRouter) {
+	// 添加一些中间件或其他配置
+	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
+	r.Use(middleware.AuthMiddleware(h.userCache))
+
+	swagger, err := GetSwagger()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
+		os.Exit(1)
+	}
+	// Clear out the servers array in the swagger spec, that skips validating
+	// that server names match. We don't know how this thing will be run.
+	swagger.Servers = nil
+
+	validatorOptions := &oapimiddleware.Options{
+		ErrorHandler: func(c *gin.Context, message string, statusCode int) {
+			response.SetFail(c, message, nil)
+		},
+	}
+	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+		return nil
+	}
+
+	// Use our validation middleware to check all requests against the
+	// OpenAPI schema.
+	r.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, validatorOptions))
+
+	RegisterHandlers(r, h)
+}
+
+func (h *HttpServer) Health(r gin.IRouter) string {
+	return ""
+}
+
+func (h *HttpServer) Stop(ctx context.Context) error {
+	return nil
+}
+
+func (h *HttpServer) DiscoverServices(services map[string]*grpc.ClientConn) error {
+	return nil
 }

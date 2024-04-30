@@ -4,7 +4,7 @@ type GroupInfo struct {
 	Id              uint32
 	Avatar          string
 	Name            string
-	Type            uint32
+	Type            uint
 	Status          int
 	MaxMembersLimit int32
 	CreatorId       string
@@ -13,6 +13,17 @@ type GroupInfo struct {
 	JoinApprove     bool
 	Encrypt         bool
 	Preferences     *Preferences
+}
+
+type Group struct {
+	Id              uint32
+	Type            uint8
+	Status          int
+	MaxMembersLimit int
+	Member          int
+	Avatar          string
+	Name            string
+	CreatorID       string
 }
 
 type Preferences struct {

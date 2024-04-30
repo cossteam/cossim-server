@@ -98,7 +98,7 @@ func (h *getGroupHandler) Handle(ctx context.Context, cmd GetGroup) (*GroupInfo,
 		Id:              r.ID,
 		Avatar:          r.Avatar,
 		Name:            r.Name,
-		Type:            uint32(r.Type),
+		Type:            uint(r.Type),
 		Status:          int(r.Status),
 		MaxMembersLimit: int32(r.MaxMembersLimit),
 		CreatorId:       r.CreatorID,
@@ -109,18 +109,3 @@ func (h *getGroupHandler) Handle(ctx context.Context, cmd GetGroup) (*GroupInfo,
 		Preferences:     per,
 	}, nil
 }
-
-//func (h *getGroupHandler) HandlerGrpcClient(serviceName string, conn *grpc.ClientConn) {
-//	addr := conn.Target()
-//	switch serviceName {
-//	case app.UserServiceName:
-//		//h.userService = adapters.NewUserGrpc(usergrpcv1.NewUserServiceClient(conn))
-//	//case app.RelationDialogServiceName:
-//	//	h.relationDialogService = adapters.NewRelationDialogGrpc(relationgrpcv1.NewDialogServiceClient(conn))
-//	//h.relationGroupService = adapters.NewRelationGroupGrpc(relationgrpcv1.NewGroupRelationServiceClient(conn))
-//	case app.PushServiceName:
-//		//h.pushService = adapters.NewPushService(pushgrpcv1.NewPushServiceClient(conn))
-//	default:
-//	}
-//	h.logger.Info("gRPC client service initialized", zap.String("service", serviceName), zap.String("addr", addr))
-//}

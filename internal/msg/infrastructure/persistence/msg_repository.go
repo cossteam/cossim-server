@@ -1,9 +1,12 @@
 package persistence
 
 import (
+	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/msg/api/grpc/dataTransformers"
 	"github.com/cossim/coss-server/internal/msg/domain/entity"
 	"github.com/cossim/coss-server/internal/msg/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
@@ -12,6 +15,95 @@ var _ repository.MsgRepository = &MsgRepo{}
 
 type MsgRepo struct {
 	db *gorm.DB
+}
+
+func (g *MsgRepo) Find(ctx context.Context, query *entity.UserMsgQuery) (*entity.UserMsgQueryResult, error) {
+	var messages []*entity.UserMessage
+	result := &entity.UserMsgQueryResult{}
+
+	db := g.db.Model(&entity.UserMessage{})
+
+	// 根据查询条件过滤消息 ID
+	if len(query.MsgIds) > 0 {
+		db = db.Where("id IN (?)", query.MsgIds)
+	}
+
+	// 根据对话 ID 过滤消息
+	if len(query.DialogIds) > 0 {
+		db = db.Where("dialog_id IN (?)", query.DialogIds)
+	}
+
+	at := time.Now()
+	if query.EndAt <= 0 {
+		query.EndAt = at
+	}
+
+	// 根据时间范围过滤消息
+	if query.EndAt > 0 {
+		if query.EndAt > at {
+			return nil, code.MyCustomErrorCode.CustomMessage("endAt must be less than or equal to the current time")
+		}
+		db = db.Where("created_at BETWEEN ? AND ?", query.StartAt, query.EndAt)
+	}
+
+	if query.Content != "" {
+		db = db.Where("content LIKE ?", "%"+query.Content+"%")
+	}
+
+	if query.SendID != "" {
+		db = db.Where("send_id = ?", query.SendID)
+	}
+
+	if entity.IsValidMessageType(query.MsgType) {
+		db = db.Where("msg_type = ?", query.MsgType)
+	}
+
+	// 查询总消息数
+	var totalCount int64
+	if err := db.Count(&totalCount).Error; err != nil {
+		return nil, err
+	}
+
+	result.TotalCount = totalCount
+
+	// 查询剩余消息数
+	if query.PageSize > 0 && totalCount > query.PageNum*query.PageSize {
+		result.Remaining = totalCount - query.PageNum*query.PageSize
+	}
+
+	// 查询总页码
+	if query.PageSize > 0 {
+		result.TotalPages = (totalCount + query.PageSize - 1) / query.PageSize
+	}
+
+	// 查询当前页码
+	result.CurrentPage = query.PageNum
+
+	// 分页
+	if query.PageNum > 0 {
+		offset := (query.PageNum - 1) * query.PageSize
+		db = db.Offset(int(offset))
+	}
+
+	if query.PageSize > 0 {
+		db = db.Limit(int(query.PageSize))
+	}
+
+	if query.Sort == "" {
+		query.Sort = "desc"
+		db = db.Order(fmt.Sprintf("created_at %s", query.Sort))
+	}
+
+	// 执行查询
+	err := db.Find(&messages).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result.Messages = messages
+	result.ReturnedCount = int64(len(result.Messages))
+
+	return result, nil
 }
 
 func (g *MsgRepo) GetGroupUnreadMsgList(dialogId uint32, msgIds []uint32) ([]*entity.GroupMessage, error) {
@@ -97,7 +189,6 @@ func (g *MsgRepo) GetUserMsgList(dialogId uint32, sendId string, content string,
 	query = query.Offset(offset).Limit(pageSize).Find(&results)
 
 	return results, int32(count), int32(pageNumber)
-
 }
 
 func (g *MsgRepo) GetLastMsgsForUserWithFriends(userID string, friendIDs []string) ([]*entity.UserMessage, error) {
