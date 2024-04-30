@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/cossim/coss-server/internal/group/interfaces"
 	"github.com/cossim/coss-server/internal/group/interfaces/grpc"
+	"github.com/cossim/coss-server/internal/group/interfaces/http"
 	"github.com/cossim/coss-server/internal/group/service"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
@@ -91,7 +91,7 @@ func main() {
 	logger := plog.NewDefaultLogger(serviceName, int8(mgr.GetConfig().Log.Level))
 	app := service.NewApplication(ctx, mgr.GetConfig(), logger)
 	hs := ctrl.HTTPServer{
-		HTTPService:        interfaces.NewHttpServer(app),
+		HTTPService:        http.NewHttpServer(app),
 		HealthCheckAddress: httpProbeAddr,
 	}
 
