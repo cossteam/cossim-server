@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/live/domain/live"
+	"github.com/cossim/coss-server/internal/live/domain/entity"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
@@ -40,7 +40,15 @@ type CreateRoomResponse struct {
 }
 
 func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateRoomResponse, error) {
-	if cmd.Type == live.GroupRoomType && cmd.GroupID == 0 {
+	h.logger.Debug("received createRoom request",
+		zap.String("type", cmd.Type),
+		zap.Uint32("group_id", cmd.GroupID),
+		zap.String("creator", cmd.Creator),
+		zap.Strings("participants", cmd.Participants),
+		zap.Any("option", cmd.Option),
+	)
+
+	if cmd.Type == entity.GroupRoomType && cmd.GroupID == 0 {
 		return nil, code.InvalidParameter.CustomMessage("group_id is required")
 	}
 
@@ -55,7 +63,7 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		return nil, code.LiveErrAlreadyInCall
 	}
 
-	roomType := live.RoomType(cmd.Type)
+	roomType := entity.RoomType(cmd.Type)
 	if !roomType.IsValid() {
 		return nil, code.InvalidParameter
 	}
@@ -63,10 +71,10 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 	roomName := generateRoomName()
 	var maxParticipants uint32
 	switch roomType {
-	case live.UserRoomType:
-		maxParticipants = live.MaxParticipantsUser
-	case live.GroupRoomType:
-		maxParticipants = live.MaxParticipantsGroup
+	case entity.UserRoomType:
+		maxParticipants = entity.MaxParticipantsUser
+	case entity.GroupRoomType:
+		maxParticipants = entity.MaxParticipantsGroup
 	}
 
 	participants := append([]string{cmd.Creator}, cmd.Participants...)
@@ -75,10 +83,10 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		return nil, code.LiveErrMaxParticipantsExceeded
 	}
 
-	if cmd.Type == live.UserRoomType {
+	if cmd.Type == entity.UserRoomType {
 		err = h.createUserLive(ctx, roomName, participants, cmd.Option)
 	}
-	if cmd.Type == live.GroupRoomType {
+	if cmd.Type == entity.GroupRoomType {
 		err = h.createGroupLive(ctx, roomName, cmd.GroupID, participants, cmd.Option)
 	}
 	if err != nil {
@@ -96,7 +104,7 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		return nil, err
 	}
 
-	if err := h.liveRepo.CreateRoom(ctx, &live.Room{
+	if err := h.liveRepo.CreateRoom(ctx, &entity.Room{
 		ID:              roomName,
 		Type:            roomType,
 		Creator:         cmd.Creator,
@@ -105,7 +113,7 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		NumParticipants: 0,
 		MaxParticipants: maxParticipants,
 		Participants:    genRoomParticipants(participants),
-		Option: live.RoomOption{
+		Option: entity.RoomOption{
 			VideoEnabled: cmd.Option.VideoEnabled,
 			AudioEnabled: cmd.Option.AudioEnabled,
 			Resolution:   cmd.Option.Resolution,
@@ -116,6 +124,11 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		h.logger.Error("Failed to create room", zap.Error(err))
 		return nil, err
 	}
+
+	h.logger.Debug("room created success",
+		zap.String("room", roomName),
+		zap.String("creator", cmd.Creator),
+	)
 
 	return &CreateRoomResponse{
 		Url:  h.webRtcUrl,
@@ -138,8 +151,6 @@ func (h *LiveHandler) areUsersFriends(ctx context.Context, userID, friendID stri
 }
 
 func (h *LiveHandler) checkUserRelations(ctx context.Context, creator string, participants []string) error {
-	fmt.Println("creator => ", creator)
-	fmt.Println("participants => ", participants)
 	friends, err := h.relationUserService.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{
 		UserId:    creator,
 		FriendIds: participants,
@@ -152,10 +163,7 @@ func (h *LiveHandler) checkUserRelations(ctx context.Context, creator string, pa
 		return code.RelationUserErrFriendRelationNotFound
 	}
 
-	fmt.Println("friends.Users => ", friends.Users)
-
 	for _, friend := range friends.Users {
-		fmt.Println("friend.UserId => ", friend.UserId)
 		relation, err := h.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 			UserId:   friend.FriendId,
 			FriendId: creator,
@@ -164,20 +172,30 @@ func (h *LiveHandler) checkUserRelations(ctx context.Context, creator string, pa
 			return err
 		}
 		if relation.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-			return code.StatusNotAvailable.CustomMessage(fmt.Sprintf("你不是%s好友", friend.FriendId))
+			r1, err := h.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: friend.FriendId})
+			if err != nil {
+				h.logger.Error("get user info error", zap.Error(err))
+				return err
+			}
+			return code.StatusNotAvailable.CustomMessage(fmt.Sprintf("你不是%s好友", r1.NickName))
 		}
 		if friend.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-			return code.StatusNotAvailable.CustomMessage(fmt.Sprintf("%s不是你的好友", friend.Remark))
+			name := friend.Remark
+			if name == "" {
+				r2, err := h.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: friend.FriendId})
+				if err != nil {
+					h.logger.Error("get user info error", zap.Error(err))
+					return err
+				}
+				name = r2.NickName
+			}
+			return code.StatusNotAvailable.CustomMessage(fmt.Sprintf("%s不是你的好友", name))
 		}
 	}
 	return nil
 }
 
 func (h *LiveHandler) createUserLive(ctx context.Context, roomName string, participants []string, option RoomOption) error {
-	fmt.Println("participants => ", participants)
-	fmt.Println("participants[0] => ", participants[0])
-	fmt.Println("participants[1] => ", participants[1])
-
 	if err := h.checkUserRelations(ctx, participants[0], participants[1:]); err != nil {
 		return err
 	}
@@ -362,15 +380,15 @@ func keys(m map[string]string) []string {
 	return keys
 }
 
-func genRoomParticipants(participants []string) map[string]*live.ActiveParticipant {
+func genRoomParticipants(participants []string) map[string]*entity.ActiveParticipant {
 	if len(participants) == 0 {
 		return nil
 	}
-	var participantsMap = make(map[string]*live.ActiveParticipant)
+	var participantsMap = make(map[string]*entity.ActiveParticipant)
 	for _, participant := range participants {
-		participantsMap[participant] = &live.ActiveParticipant{
+		participantsMap[participant] = &entity.ActiveParticipant{
 			Connected: false,
-			Status:    live.ParticipantInfo_WAITING,
+			Status:    entity.ParticipantInfo_WAITING,
 		}
 	}
 	return participantsMap

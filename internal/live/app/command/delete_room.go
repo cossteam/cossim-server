@@ -2,7 +2,7 @@ package command
 
 import (
 	"context"
-	"github.com/cossim/coss-server/internal/live/domain/live"
+	"github.com/cossim/coss-server/internal/live/domain/entity"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -24,22 +24,24 @@ type DeleteRoom struct {
 }
 
 func (h *LiveHandler) DeleteRoom(ctx context.Context, cmd *DeleteRoom) error {
+	h.logger.Debug("received deleteRoom request", zap.Any("cmd", cmd))
+
 	room, err := h.liveRepo.GetRoom(ctx, cmd.Room)
 	if err != nil {
 		return err
 	}
 
 	switch room.Type {
-	case live.UserRoomType:
+	case entity.UserRoomType:
 		return h.deleteUserRoom(ctx, cmd, room)
-	case live.GroupRoomType:
+	case entity.GroupRoomType:
 		return h.deleteGroupRoom(ctx, cmd, room)
 	default:
 		return code.MyCustomErrorCode.CustomMessage("invalid room type")
 	}
 }
 
-func (h *LiveHandler) deleteUserRoom(ctx context.Context, cmd *DeleteRoom, room *live.Room) error {
+func (h *LiveHandler) deleteUserRoom(ctx context.Context, cmd *DeleteRoom, room *entity.Room) error {
 	_, ok := room.Participants[cmd.UserID]
 	if !ok {
 		return code.LiveErrUserNotInCall
@@ -65,7 +67,7 @@ func (h *LiveHandler) deleteUserRoom(ctx context.Context, cmd *DeleteRoom, room 
 	return h.deleteRoom(ctx, room.ID)
 }
 
-func (h *LiveHandler) deleteGroupRoom(ctx context.Context, cmd *DeleteRoom, room *live.Room) error {
+func (h *LiveHandler) deleteGroupRoom(ctx context.Context, cmd *DeleteRoom, room *entity.Room) error {
 	if err := h.liveRepo.DeleteUsersLive(ctx, cmd.UserID); err != nil {
 		h.logger.Error("delete user live error", zap.Error(err), zap.String("user_id", cmd.UserID), zap.String("room", room.ID))
 		return err
@@ -107,7 +109,7 @@ func (h *LiveHandler) deleteGroupRoom(ctx context.Context, cmd *DeleteRoom, room
 	return nil
 }
 
-func (h *LiveHandler) deleteEntireGroupRoom(ctx context.Context, room *live.Room) error {
+func (h *LiveHandler) deleteEntireGroupRoom(ctx context.Context, room *entity.Room) error {
 	for userID := range room.Participants {
 		if err := h.liveRepo.DeleteUsersLive(ctx, userID); err != nil {
 			h.logger.Error("delete user live error", zap.Error(err))
@@ -138,7 +140,7 @@ func (h *LiveHandler) handleUserLeave(ctx context.Context, recipientID, senderID
 	h.sendPushMessage(ctx, senderID, recipientID, event, data)
 }
 
-func (h *LiveHandler) notifyGroupCallEnd(ctx context.Context, room *live.Room, senderID string, connected bool) {
+func (h *LiveHandler) notifyGroupCallEnd(ctx context.Context, room *entity.Room, senderID string, connected bool) {
 	var event pushgrpcv1.WSEventType
 	if !connected {
 		event = pushgrpcv1.WSEventType_GroupCallRejectEvent
@@ -155,7 +157,7 @@ func (h *LiveHandler) notifyGroupCallEnd(ctx context.Context, room *live.Room, s
 	}
 }
 
-func (h *LiveHandler) handleUserReject(ctx context.Context, participantID, senderID, driverID string, room *live.Room) error {
+func (h *LiveHandler) handleUserReject(ctx context.Context, participantID, senderID, driverID string, room *entity.Room) error {
 	rel, err := h.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: participantID, FriendId: senderID})
 	if err != nil {
 		return err

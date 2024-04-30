@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cossim/coss-server/internal/live/domain/live"
+	"github.com/cossim/coss-server/internal/live/domain/entity"
+	"github.com/cossim/coss-server/internal/live/domain/repository"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/redis/go-redis/v9"
 	"time"
@@ -23,7 +24,7 @@ var (
 	ErrCacheKeyEmpty     = errors.New("cache key cannot be empty")
 )
 
-var _ live.Repository = &RedisLiveRepository{}
+var _ repository.Repository = &RedisLiveRepository{}
 
 func NewRedisLiveRepository(addr, password string, db int) (*RedisLiveRepository, error) {
 	client := redis.NewClient(&redis.Options{
@@ -141,7 +142,7 @@ func (r *RedisLiveRepository) UpdateUserLiveExpiration(ctx context.Context, user
 	return r.setKeyExpiration(ctx, liveUserPrefix+userID, expiration)
 }
 
-func (r *RedisLiveRepository) UpdateRoomWithExpiration(ctx context.Context, room *live.Room, expiration time.Duration) error {
+func (r *RedisLiveRepository) UpdateRoomWithExpiration(ctx context.Context, room *entity.Room, expiration time.Duration) error {
 	remaining, err := r.client.TTL(ctx, liveRoomPrefix+room.ID).Result()
 	if err != nil {
 		return err
@@ -170,7 +171,7 @@ func (r *RedisLiveRepository) DeleteGroupLive(ctx context.Context, groupID strin
 	return r.client.Del(ctx, liveGroupPrefix+groupID).Err()
 }
 
-func (r *RedisLiveRepository) GetGroupRoom(ctx context.Context, groupID string) (*live.Room, error) {
+func (r *RedisLiveRepository) GetGroupRoom(ctx context.Context, groupID string) (*entity.Room, error) {
 	roomID, err := r.client.Get(ctx, liveGroupPrefix+groupID).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -187,7 +188,7 @@ func (r *RedisLiveRepository) GetGroupRoom(ctx context.Context, groupID string) 
 		return nil, err
 	}
 
-	resp := &live.Room{}
+	resp := &entity.Room{}
 	err = resp.Unmarshal([]byte(room))
 	return resp, err
 }
@@ -237,7 +238,7 @@ func (r *RedisLiveRepository) DeleteUsersLive(ctx context.Context, userIDs ...st
 	return r.client.Del(ctx, keys...).Err()
 }
 
-func (r *RedisLiveRepository) GetUserRooms(ctx context.Context, userID string) ([]*live.Room, error) {
+func (r *RedisLiveRepository) GetUserRooms(ctx context.Context, userID string) ([]*entity.Room, error) {
 	room, err := r.client.Get(ctx, liveUserPrefix+userID).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -255,14 +256,14 @@ func (r *RedisLiveRepository) GetUserRooms(ctx context.Context, userID string) (
 	//if err = resp.Unmarshal([]byte(room)); err != nil {
 	//	return nil, err
 	//}
-	return []*live.Room{getRoom}, nil
+	return []*entity.Room{getRoom}, nil
 }
 
-func (r *RedisLiveRepository) CreateRoom(ctx context.Context, room *live.Room) error {
+func (r *RedisLiveRepository) CreateRoom(ctx context.Context, room *entity.Room) error {
 	return r.client.Set(ctx, liveRoomPrefix+room.ID, room.String(), timeout).Err()
 }
 
-func (r *RedisLiveRepository) GetRoom(ctx context.Context, id string) (*live.Room, error) {
+func (r *RedisLiveRepository) GetRoom(ctx context.Context, id string) (*entity.Room, error) {
 	room, err := r.client.Get(ctx, liveRoomPrefix+id).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -271,14 +272,14 @@ func (r *RedisLiveRepository) GetRoom(ctx context.Context, id string) (*live.Roo
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	resp := &live.Room{}
+	resp := &entity.Room{}
 	if err = resp.Unmarshal([]byte(room)); err != nil {
 		return nil, err
 	}
 	return resp, nil
 }
 
-func (r *RedisLiveRepository) UpdateRoom(ctx context.Context, room *live.Room) error {
+func (r *RedisLiveRepository) UpdateRoom(ctx context.Context, room *entity.Room) error {
 	if room == nil {
 		return ErrCacheContentEmpty
 	}
@@ -302,7 +303,7 @@ func (r *RedisLiveRepository) DeleteRoom(ctx context.Context, roomID string) err
 	return r.client.Del(ctx, liveRoomPrefix+roomID).Err()
 }
 
-func (r *RedisLiveRepository) ListRooms(ctx context.Context, roomIDs []string) ([]*live.Room, error) {
+func (r *RedisLiveRepository) ListRooms(ctx context.Context, roomIDs []string) ([]*entity.Room, error) {
 	if len(roomIDs) == 0 {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -317,13 +318,13 @@ func (r *RedisLiveRepository) ListRooms(ctx context.Context, roomIDs []string) (
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	rooms := make([]*live.Room, 0, len(roomIDs))
+	rooms := make([]*entity.Room, 0, len(roomIDs))
 	for _, rm := range rms {
 		if rm == nil {
 			continue
 		}
 
-		room := &live.Room{}
+		room := &entity.Room{}
 		if err := json.Unmarshal([]byte(rm.(string)), room); err != nil {
 			return nil, err
 		}
@@ -334,7 +335,7 @@ func (r *RedisLiveRepository) ListRooms(ctx context.Context, roomIDs []string) (
 	return rooms, nil
 }
 
-func (r *RedisLiveRepository) GetParticipant(ctx context.Context, roomID string, participantID string) (*live.ParticipantInfo, error) {
+func (r *RedisLiveRepository) GetParticipant(ctx context.Context, roomID string, participantID string) (*entity.ParticipantInfo, error) {
 	room, err := r.client.Get(ctx, liveRoomPrefix+roomID).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -343,15 +344,15 @@ func (r *RedisLiveRepository) GetParticipant(ctx context.Context, roomID string,
 		return nil, fmt.Errorf("%w", err)
 	}
 
-	resp := &live.Room{}
+	resp := &entity.Room{}
 	if err = resp.Unmarshal([]byte(room)); err != nil {
 		return nil, err
 	}
 	return nil, nil
 }
 
-func (r *RedisLiveRepository) ListRoomsByCreator(ctx context.Context, creator string) ([]*live.Room, error) {
-	var rooms []*live.Room
+func (r *RedisLiveRepository) ListRoomsByCreator(ctx context.Context, creator string) ([]*entity.Room, error) {
+	var rooms []*entity.Room
 
 	// Get all room keys with the given creator prefix
 	creatorKey := liveRoomPrefix + "creator:" + creator
@@ -367,7 +368,7 @@ func (r *RedisLiveRepository) ListRoomsByCreator(ctx context.Context, creator st
 			return nil, err
 		}
 
-		room := &live.Room{}
+		room := &entity.Room{}
 		if err := json.Unmarshal([]byte(roomData), room); err != nil {
 			return nil, err
 		}
@@ -378,8 +379,8 @@ func (r *RedisLiveRepository) ListRoomsByCreator(ctx context.Context, creator st
 	return rooms, nil
 }
 
-func (r *RedisLiveRepository) ListRoomsByOwner(ctx context.Context, owner string) ([]*live.Room, error) {
-	var rooms []*live.Room
+func (r *RedisLiveRepository) ListRoomsByOwner(ctx context.Context, owner string) ([]*entity.Room, error) {
+	var rooms []*entity.Room
 
 	// Get all room keys with the given owner prefix
 	ownerKey := liveRoomPrefix + "owner:" + owner
@@ -395,7 +396,7 @@ func (r *RedisLiveRepository) ListRoomsByOwner(ctx context.Context, owner string
 			return nil, err
 		}
 
-		room := &live.Room{}
+		room := &entity.Room{}
 		if err := json.Unmarshal([]byte(roomData), room); err != nil {
 			return nil, err
 		}
