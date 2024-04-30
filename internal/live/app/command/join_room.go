@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cossim/coss-server/internal/live/domain/live"
+	"github.com/cossim/coss-server/internal/live/domain/entity"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
 	any2 "github.com/golang/protobuf/ptypes/any"
+	"github.com/labstack/gommon/log"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
 	"go.uber.org/zap"
@@ -32,30 +33,32 @@ type JoinRoomResponse struct {
 
 func (h *LiveHandler) JoinRoom(ctx context.Context, cmd *JoinRoom) (*JoinRoomResponse, error) {
 	var err error
-	var room *live.Room
+	var room *entity.Room
+
+	h.logger.Debug("received joinRoom request", zap.Any("cmd", cmd))
 
 	room1, err := h.liveRepo.GetRoom(ctx, cmd.Room)
 	if err != nil {
+		h.logger.Error("failed to get room", zap.Error(err))
 		return nil, err
 	}
 
 	switch room1.Type {
-	case live.GroupRoomType:
+	case entity.GroupRoomType:
 		room, err = h.joinGroupRoom(ctx, cmd.Room, room1.GroupID, cmd.UserID, cmd.DriverID)
-		if err != nil {
-			return nil, err
-		}
-	case live.UserRoomType:
+	case entity.UserRoomType:
 		room, err = h.joinUserRoom(ctx, cmd.Room, cmd.UserID, cmd.DriverID)
-		if err != nil {
-			return nil, err
-		}
 	default:
 		return nil, errors.New("invalid room type")
+	}
+	if err != nil {
+		log.Error("join room error", zap.Error(err))
+		return nil, err
 	}
 
 	user, err := h.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: cmd.UserID})
 	if err != nil {
+		log.Error("get user info error", zap.Error(err))
 		return nil, err
 	}
 
@@ -66,8 +69,11 @@ func (h *LiveHandler) JoinRoom(ctx context.Context, cmd *JoinRoom) (*JoinRoomRes
 		token, err = h.GetUserJoinToken(ctx, room.ID, user.NickName, cmd.UserID)
 	}
 	if err != nil {
+		log.Error("get token error", zap.Error(err))
 		return nil, err
 	}
+
+	h.logger.Debug("join response", zap.String("room", room.ID), zap.String("url", h.webRtcUrl), zap.String("token", token))
 
 	return &JoinRoomResponse{
 		Room:  room.ID,
@@ -76,7 +82,7 @@ func (h *LiveHandler) JoinRoom(ctx context.Context, cmd *JoinRoom) (*JoinRoomRes
 	}, nil
 }
 
-func (h *LiveHandler) joinUserRoom(ctx context.Context, roomID, userID, driverID string) (*live.Room, error) {
+func (h *LiveHandler) joinUserRoom(ctx context.Context, roomID, userID, driverID string) (*entity.Room, error) {
 	room, err := h.liveRepo.GetRoom(ctx, roomID)
 	if err != nil {
 		return nil, err
@@ -111,7 +117,7 @@ func (h *LiveHandler) joinUserRoom(ctx context.Context, roomID, userID, driverID
 
 	room.NumParticipants++
 	room.Participants[userID].Connected = true
-	room.Participants[userID].Status = live.ParticipantInfo_JOINED
+	room.Participants[userID].Status = entity.ParticipantInfo_JOINED
 
 	// 人数等于 MaxParticipants(2) 代表双方都加入通话了，更新过期时间为永久直至挂断才删除通话1
 	if room.NumParticipants == room.MaxParticipants {
@@ -173,7 +179,7 @@ func (h *LiveHandler) joinUserRoom(ctx context.Context, roomID, userID, driverID
 	return room, nil
 }
 
-func (h *LiveHandler) joinGroupRoom(ctx context.Context, roomID string, groupID uint32, userID, driverID string) (*live.Room, error) {
+func (h *LiveHandler) joinGroupRoom(ctx context.Context, roomID string, groupID uint32, userID, driverID string) (*entity.Room, error) {
 	_, err := h.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{UserId: userID, GroupId: groupID})
 	if err != nil {
 		return nil, err
@@ -185,7 +191,7 @@ func (h *LiveHandler) joinGroupRoom(ctx context.Context, roomID string, groupID 
 	}
 	p, ok := room.Participants[userID]
 	if ok {
-		if p.Connected || p.Status == live.ParticipantInfo_JOINED {
+		if p.Connected || p.Status == entity.ParticipantInfo_JOINED {
 			return nil, code.LiveErrAlreadyInCall
 		}
 	}
@@ -225,11 +231,11 @@ func (h *LiveHandler) joinGroupRoom(ctx context.Context, roomID string, groupID 
 	_, ok = room.Participants[userID]
 	if ok {
 		room.Participants[userID].Connected = true
-		room.Participants[userID].Status = live.ParticipantInfo_JOINED
+		room.Participants[userID].Status = entity.ParticipantInfo_JOINED
 	} else {
-		room.Participants[userID] = &live.ActiveParticipant{
+		room.Participants[userID] = &entity.ActiveParticipant{
 			Connected: true,
-			Status:    live.ParticipantInfo_JOINED,
+			Status:    entity.ParticipantInfo_JOINED,
 		}
 	}
 	room.NumParticipants++

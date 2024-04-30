@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 	"errors"
-	"github.com/cossim/coss-server/internal/live/domain/live"
+	"github.com/cossim/coss-server/internal/live/domain/entity"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -32,8 +32,11 @@ type RejectLiveResponse struct {
 }
 
 func (h *LiveHandler) RejectLive(ctx context.Context, cmd *RejectLive) (*RejectLiveResponse, error) {
+	h.logger.Debug("received reject live request", zap.Any("cmd", cmd))
+
 	room, err := h.liveRepo.GetRoom(ctx, cmd.Room)
 	if err != nil {
+		h.logger.Error("failed to get room", zap.Error(err))
 		return nil, err
 	}
 	ap, ok := room.Participants[cmd.UserID]
@@ -45,18 +48,22 @@ func (h *LiveHandler) RejectLive(ctx context.Context, cmd *RejectLive) (*RejectL
 	}
 
 	switch room.Type {
-	case live.GroupRoomType:
+	case entity.GroupRoomType:
 		err = h.rejectGroup(ctx, cmd.Room, room.GroupID, cmd.UserID, cmd.DriverID, room)
-	case live.UserRoomType:
+	case entity.UserRoomType:
 		err = h.rejectUser(ctx, cmd.Room, cmd.UserID, cmd.DriverID, room)
 	default:
 		return nil, errors.New("invalid room type")
 	}
+	if err != nil {
+		h.logger.Error("reject room failed", zap.Error(err))
+		return nil, err
+	}
 
-	return nil, err
+	return nil, nil
 }
 
-func (h *LiveHandler) rejectUser(ctx context.Context, roomID string, userID string, driverID string, room *live.Room) error {
+func (h *LiveHandler) rejectUser(ctx context.Context, roomID string, userID string, driverID string, room *entity.Room) error {
 	// Check if the user is the sender of the call
 	if room.Creator == userID {
 		h.logger.Warn("Cannot reject a call initiated by the user", zap.String("uid", userID), zap.Any("room", room))
@@ -184,7 +191,7 @@ func (h *LiveHandler) rejectUser(ctx context.Context, roomID string, userID stri
 	return nil
 }
 
-func (h *LiveHandler) rejectGroup(ctx context.Context, roomID string, groupID uint32, userID, driverID string, room *live.Room) error {
+func (h *LiveHandler) rejectGroup(ctx context.Context, roomID string, groupID uint32, userID, driverID string, room *entity.Room) error {
 	if groupID == 0 {
 		return code.LiveErrRejectCallFailed.CustomMessage("群组不存在")
 	}
@@ -254,7 +261,7 @@ func (h *LiveHandler) rejectGroup(ctx context.Context, roomID string, groupID ui
 	return nil
 }
 
-func (h *LiveHandler) deleteUserLive(ctx context.Context, room *live.Room) error {
+func (h *LiveHandler) deleteUserLive(ctx context.Context, room *entity.Room) error {
 	var users []string
 	for k, _ := range room.Participants {
 		users = append(users, k)
@@ -272,7 +279,7 @@ func (h *LiveHandler) deleteUserLive(ctx context.Context, room *live.Room) error
 	return nil
 }
 
-func (h *LiveHandler) deleteGroupLive(ctx context.Context, groupID uint32, room *live.Room) error {
+func (h *LiveHandler) deleteGroupLive(ctx context.Context, groupID uint32, room *entity.Room) error {
 	var users []string
 	for k, _ := range room.Participants {
 		users = append(users, k)

@@ -2,7 +2,7 @@ package command
 
 import (
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/live/domain/live"
+	"github.com/cossim/coss-server/internal/live/domain/repository"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -25,7 +25,7 @@ type CreateRoomHandler decorator.CommandHandler[*CreateRoom, *CreateRoomResponse
 
 type LiveHandler struct {
 	logger   *zap.Logger
-	liveRepo live.Repository
+	liveRepo repository.Repository
 
 	webRtcUrl     string
 	liveApiKey    string
@@ -43,7 +43,7 @@ type LiveHandler struct {
 
 type LiveHandlerOption func(*LiveHandler)
 
-func WithRepo(repo live.Repository) LiveHandlerOption {
+func WithRepo(repo repository.Repository) LiveHandlerOption {
 	return func(h *LiveHandler) {
 		h.liveRepo = repo
 	}

@@ -2,7 +2,7 @@ package query
 
 import (
 	"context"
-	"github.com/cossim/coss-server/internal/live/domain/live"
+	"github.com/cossim/coss-server/internal/live/domain/repository"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/config"
@@ -15,7 +15,7 @@ import (
 
 type LiveHandler struct {
 	logger   *zap.Logger
-	liveRepo live.Repository
+	liveRepo repository.Repository
 
 	webRtcUrl            string
 	liveApiKey           string
@@ -35,7 +35,7 @@ func NewLiveHandler(options ...LiveHandlerOption) *LiveHandler {
 
 type LiveHandlerOption func(*LiveHandler)
 
-func WithRepo(repo live.Repository) LiveHandlerOption {
+func WithRepo(repo repository.Repository) LiveHandlerOption {
 	return func(h *LiveHandler) {
 		h.liveRepo = repo
 	}
