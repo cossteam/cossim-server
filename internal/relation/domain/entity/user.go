@@ -19,6 +19,7 @@ const (
 type UserFriendRequest struct {
 	ID         uint32
 	CreatedAt  int64
+	ExpiredAt  int64
 	SenderID   string
 	ReceiverID string
 	Remark     string

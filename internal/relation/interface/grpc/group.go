@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"fmt"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
@@ -13,6 +14,11 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
+)
+
+const (
+	// RequestExpiredTime 群聊请求过期时间 7天的毫秒数
+	RequestExpiredTime = 7 * 24 * 60 * 60 * 1000
 )
 
 var _ v1.GroupRelationServiceServer = &groupServiceServer{}
@@ -277,6 +283,7 @@ func (s *groupServiceServer) GetBatchGroupRelation(ctx context.Context, request 
 	}
 
 	for _, gr := range grs {
+		fmt.Println("gr => ", gr)
 		resp.GroupRelationResponses = append(resp.GroupRelationResponses, &v1.GetGroupRelationResponse{
 			UserId:      gr.UserID,
 			GroupId:     gr.GroupID,
@@ -432,28 +439,31 @@ func (s *groupServiceServer) CreateGroupAndInviteUsers(ctx context.Context, requ
 		}
 
 		//发送邀请给其他成员
-		requests := make([]*repository.GroupJoinRequest, 0)
+		requests := make([]*entity.GroupJoinRequest, 0)
 
+		at := ptime.Now()
 		for _, v := range request.Member {
-			req := &repository.GroupJoinRequest{
-				UserID:      v,
-				GroupID:     request.GroupId,
-				Status:      entity.Invitation,
-				Inviter:     request.UserID,
-				OwnerID:     v,
-				InviterTime: ptime.Now(),
+			req := &entity.GroupJoinRequest{
+				UserID:    v,
+				GroupID:   request.GroupId,
+				Status:    entity.Invitation,
+				Inviter:   request.UserID,
+				OwnerID:   v,
+				InviterAt: at,
+				ExpiredAt: at + RequestExpiredTime,
 			}
 			requests = append(requests, req)
 		}
 
 		for _, s2 := range request.Member {
-			req := &repository.GroupJoinRequest{
-				UserID:      s2,
-				GroupID:     request.GroupId,
-				Status:      entity.Invitation,
-				Inviter:     request.UserID,
-				OwnerID:     request.UserID,
-				InviterTime: ptime.Now(),
+			req := &entity.GroupJoinRequest{
+				UserID:    s2,
+				GroupID:   request.GroupId,
+				Status:    entity.Invitation,
+				Inviter:   request.UserID,
+				OwnerID:   request.UserID,
+				InviterAt: at,
+				ExpiredAt: at + RequestExpiredTime,
 			}
 			requests = append(requests, req)
 		}

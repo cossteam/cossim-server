@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
@@ -48,6 +49,7 @@ func NewRepositories(cfg *pkgconfig.AppConfig) *Repositories {
 		GroupAnnouncementRepo: NewMySQLRelationGroupAnnouncementRepository(dbConn, nil),
 		UserFriendRequestRepo: NewMySQLUserFriendRequestRepository(dbConn, nil),
 		db:                    dbConn,
+		groupCache:            groupCache,
 	}
 }
 
@@ -82,4 +84,11 @@ func (r *Repositories) Automigrate() error {
 		&GroupAnnouncementModel{},
 		&GroupAnnouncementReadModel{},
 	)
+}
+
+func (r *Repositories) Close() error {
+	if r.groupCache != nil {
+		r.groupCache.DeleteAllCache(context.Background())
+	}
+	return nil
 }

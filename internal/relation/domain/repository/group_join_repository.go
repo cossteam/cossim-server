@@ -11,15 +11,16 @@ type GroupJoinRequestQuery struct {
 	UserID   []string
 	PageSize int
 	PageNum  int
+	Force    bool
 }
 
 type GroupJoinRequestRepository interface {
-	Get(ctx context.Context, id uint32) (*GroupJoinRequest, error)
-	Create(ctx context.Context, entity *GroupJoinRequest) (*GroupJoinRequest, error)
-	Find(ctx context.Context, query *GroupJoinRequestQuery) ([]*GroupJoinRequest, error)
-	Creates(ctx context.Context, entity []*GroupJoinRequest) ([]*GroupJoinRequest, error)
+	Get(ctx context.Context, id uint32) (*entity.GroupJoinRequest, error)
+	Create(ctx context.Context, entity *entity.GroupJoinRequest) (*entity.GroupJoinRequest, error)
+	Find(ctx context.Context, query *GroupJoinRequestQuery) ([]*entity.GroupJoinRequest, error)
+	Creates(ctx context.Context, entity []*entity.GroupJoinRequest) ([]*entity.GroupJoinRequest, error)
 	UpdateStatus(ctx context.Context, id uint32, status entity.RequestStatus) error
 	Delete(ctx context.Context, id uint32) error
 
-	GetByGroupIDAndUserID(ctx context.Context, groupID uint32, userID string) (*GroupJoinRequest, error)
+	GetByGroupIDAndUserID(ctx context.Context, groupID uint32, userID string) (*entity.GroupJoinRequest, error)
 }

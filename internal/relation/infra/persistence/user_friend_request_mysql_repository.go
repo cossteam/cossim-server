@@ -16,7 +16,8 @@ type UserFriendRequestModel struct {
 	ReceiverID string `gorm:"comment:接收者id"`
 	Remark     string `gorm:"comment:添加备注"`
 	OwnerID    string `gorm:"comment:所有者id"`
-	Status     uint   `gorm:"comment:申请记录状态 (0=申请中 1=已同意 2=已拒绝)"`
+	Status     uint8  `gorm:"comment:申请记录状态 (0=申请中 1=已同意 2=已拒绝)"`
+	ExpiredAt  int64  `gorm:"comment:过期时间"`
 }
 
 func (m *UserFriendRequestModel) TableName() string {
@@ -29,19 +30,21 @@ func (m *UserFriendRequestModel) FromEntity(u *entity.UserFriendRequest) error {
 	m.ReceiverID = u.ReceiverID
 	m.Remark = u.Remark
 	m.OwnerID = u.OwnerID
-	m.Status = uint(u.Status)
+	m.Status = uint8(u.Status)
+	m.ExpiredAt = u.ExpiredAt
 	return nil
 }
 
 func (m *UserFriendRequestModel) ToEntity() (*entity.UserFriendRequest, error) {
 	return &entity.UserFriendRequest{
-		ID:         uint32(m.ID),
+		ID:         m.ID,
 		CreatedAt:  m.CreatedAt,
 		SenderID:   m.SenderID,
 		ReceiverID: m.ReceiverID,
 		Remark:     m.Remark,
 		OwnerID:    m.OwnerID,
 		Status:     entity.RequestStatus(m.Status),
+		ExpiredAt:  m.ExpiredAt,
 	}, nil
 }
 
@@ -141,9 +144,7 @@ func (m *MySQLUserFriendRequestRepository) Find(ctx context.Context, query *repo
 	if query.Status != nil {
 		db = db.Where("status = ?", query.Status)
 	}
-	if query.Force {
-		db = db.Where("deleted_at != 0")
-	} else {
+	if !query.Force {
 		db = db.Where("deleted_at = 0")
 	}
 

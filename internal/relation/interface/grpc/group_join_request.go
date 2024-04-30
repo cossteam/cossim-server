@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"gorm.io/gorm"
 )
 
 var _ v1.GroupJoinRequestServiceServer = &groupJoinRequestServiceServer{}
@@ -31,7 +32,7 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	}
 
 	// 构建关系切片
-	relations := make([]*repository.GroupJoinRequest, 0)
+	relations := make([]*entity.GroupJoinRequest, 0)
 	var notifiy []string
 	notifiy = append(notifiy, request.InviterId)
 	notifiy = append(notifiy, adminIDs...)
@@ -44,13 +45,13 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	for _, userID := range request.Member {
 		fmt.Println("添加被邀请人记录")
 
-		userGroup := &repository.GroupJoinRequest{
-			UserID:      userID,
-			GroupID:     request.GroupId,
-			Inviter:     request.InviterId,
-			OwnerID:     userID,
-			InviterTime: ptime.Now(),
-			Status:      entity.Invitation,
+		userGroup := &entity.GroupJoinRequest{
+			UserID:    userID,
+			GroupID:   request.GroupId,
+			Inviter:   request.InviterId,
+			OwnerID:   userID,
+			InviterAt: ptime.Now(),
+			Status:    entity.Invitation,
 		}
 		relations = append(relations, userGroup)
 	}
@@ -59,13 +60,13 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 	for _, id := range notifiy {
 		for _, userID := range request.Member {
 			fmt.Println("添加管理员记录")
-			userGroup := &repository.GroupJoinRequest{
-				UserID:      userID,
-				GroupID:     request.GroupId,
-				Inviter:     request.InviterId,
-				OwnerID:     id,
-				InviterTime: ptime.Now(),
-				Status:      entity.Invitation,
+			userGroup := &entity.GroupJoinRequest{
+				UserID:    userID,
+				GroupID:   request.GroupId,
+				Inviter:   request.InviterId,
+				OwnerID:   id,
+				InviterAt: ptime.Now(),
+				Status:    entity.Invitation,
 			}
 			relations = append(relations, userGroup)
 		}
@@ -89,7 +90,7 @@ func (s *groupJoinRequestServiceServer) InviteJoinGroup(ctx context.Context, req
 
 func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *v1.JoinGroupRequest) (*v1.JoinGroupResponse, error) {
 	resp := &v1.JoinGroupResponse{}
-	relations := make([]*repository.GroupJoinRequest, 0)
+	relations := make([]*entity.GroupJoinRequest, 0)
 
 	// 获取对话id
 	//dialog, err := s.dr.GetDialogByGroupId(uint(request.GroupId))
@@ -143,25 +144,25 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 		return resp, err
 	}
 	for _, id := range ids {
-		userGroup := &repository.GroupJoinRequest{
-			UserID:      id,
-			GroupID:     request.GroupId,
-			Remark:      request.Msg,
-			OwnerID:     id,
-			InviterTime: ptime.Now(),
-			Status:      entity.Pending,
+		userGroup := &entity.GroupJoinRequest{
+			UserID:    id,
+			GroupID:   request.GroupId,
+			Remark:    request.Msg,
+			OwnerID:   id,
+			InviterAt: ptime.Now(),
+			Status:    entity.Pending,
 		}
 		relations = append(relations, userGroup)
 	}
 
 	// 添加用户群聊申请记录
-	ur := &repository.GroupJoinRequest{
-		GroupID:     request.GroupId,
-		UserID:      request.UserId,
-		Remark:      request.Msg,
-		OwnerID:     request.UserId,
-		InviterTime: ptime.Now(),
-		Status:      entity.Pending,
+	ur := &entity.GroupJoinRequest{
+		GroupID:   request.GroupId,
+		UserID:    request.UserId,
+		Remark:    request.Msg,
+		OwnerID:   request.UserId,
+		InviterAt: ptime.Now(),
+		Status:    entity.Pending,
 	}
 	relations = append(relations, ur)
 
@@ -207,8 +208,9 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 				GroupId:   v.GroupID,
 				Status:    v1.GroupRequestStatus(v.Status),
 				InviterId: v.Inviter,
-				CreatedAt: uint64(v.CreatedAt),
 				Remark:    v.Remark,
+				CreatedAt: uint64(v.CreatedAt),
+				ExpiredAt: uint64(v.ExpiredAt),
 			})
 		}
 	}
@@ -261,6 +263,10 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		return nil, err
 	}
 
+	if ptime.Now() > info.ExpiredAt && info.ExpiredAt > 0 {
+		return nil, code.Expired
+	}
+
 	//info, err := s.gjqr.GetGroupJoinRequestByRequestID(uint(request.ID))
 	//if err != nil {
 	//	return nil, err
@@ -288,7 +294,9 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 	// 判断用户是否已经加入该群聊
 	rel, err := s.repos.GroupRepo.GetUserGroupByGroupIDAndUserID(ctx, info.GroupID, info.UserID)
 	if err != nil {
-		return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), err.Error())
+		if err != gorm.ErrRecordNotFound {
+			return nil, status.Error(codes.Code(code.InternalServerError.Code()), err.Error())
+		}
 	}
 	if rel != nil {
 		return resp, status.Error(codes.Code(code.RelationGroupErrAlreadyInGroup.Code()), code.RelationGroupErrAlreadyInGroup.Message())
@@ -313,7 +321,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 			return err
 		}
 
-		//修改请求状态
+		// 修改请求状态
 		if err := txr.GroupJoinRequestRepo.UpdateStatus(ctx, info.ID, entity.RequestStatus(request.Status)); err != nil {
 			return status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}

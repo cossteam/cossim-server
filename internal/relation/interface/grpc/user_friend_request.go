@@ -8,11 +8,17 @@ import (
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
+	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 	"log"
+)
+
+const (
+	// UserRequestExpiredTime 用户请求过期时间 7天的毫秒数
+	UserRequestExpiredTime = 7 * 24 * 60 * 60 * 1000
 )
 
 var _ v1.UserFriendRequestServiceServer = &userFriendRequestServiceServer{}
@@ -52,6 +58,7 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 			ReceiverId: friend.ReceiverID,
 			Status:     v1.FriendRequestStatus(friend.Status),
 			CreateAt:   uint64(friend.CreatedAt),
+			ExpiredAt:  uint64(friend.ExpiredAt),
 		})
 	}
 	resp.Total = uint64(list.Total)
@@ -63,6 +70,7 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 	resp := &v1.SendFriendRequestStructResponse{}
 
 	if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
+		at := ptime.Now()
 		// 添加自己的
 		re1, err := txr.UserFriendRequestRepo.Create(ctx, &entity.UserFriendRequest{
 			SenderID:   request.SenderId,
@@ -70,6 +78,7 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 			Remark:     request.Remark,
 			OwnerID:    request.SenderId,
 			Status:     entity.Pending,
+			ExpiredAt:  at + UserRequestExpiredTime,
 		})
 		if err != nil {
 			return status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
@@ -88,6 +97,7 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 			Remark:     request.Remark,
 			OwnerID:    request.ReceiverId,
 			Status:     entity.Pending,
+			ExpiredAt:  at + UserRequestExpiredTime,
 		})
 		if err != nil {
 			return status.Error(codes.Code(code.RelationErrSendFriendRequestFailed.Code()), err.Error())
@@ -113,20 +123,23 @@ func (s *userFriendRequestServiceServer) SendFriendRequest(ctx context.Context, 
 
 func (s *userFriendRequestServiceServer) ManageFriendRequest(ctx context.Context, request *v1.ManageFriendRequestStruct) (*emptypb.Empty, error) {
 	resp := &emptypb.Empty{}
-	var senderId, receiverId string
+
+	re, err := s.repos.UserFriendRequestRepo.Get(ctx, request.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
+		}
+		return nil, status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), formatErrorMessage(err))
+	}
+
+	if ptime.Now() > re.ExpiredAt {
+		return nil, code.Expired
+	}
+
+	senderId := re.SenderID
+	receiverId := re.ReceiverID
 
 	if err := s.repos.TXRepositories(func(txr *persistence.Repositories) error {
-		re, err := txr.UserFriendRequestRepo.Get(ctx, request.ID)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
-			}
-			return status.Error(codes.Code(code.RelationErrManageFriendRequestFailed.Code()), formatErrorMessage(err))
-		}
-
-		senderId = re.SenderID
-		receiverId = re.ReceiverID
-
 		//拒绝
 		if request.Status == v1.FriendRequestStatus_FriendRequestStatus_REJECT {
 			st := entity.Pending
