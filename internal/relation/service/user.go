@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -115,48 +114,36 @@ func (s *Service) UserRequestList(ctx context.Context, userID string, pageSize i
 		return nil, err
 	}
 
-	fmt.Println("reqList => ", reqList)
-
 	var data []*model.UserRequestListResponse
 	for _, v := range reqList.FriendRequestList {
+		var (
+			targetID string
+		)
 		if v.SenderId == userID {
-			info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.ReceiverId})
-			if err != nil {
-				return nil, err
-			}
-			data = append(data, &model.UserRequestListResponse{
-				ID:         v.ID,
-				ReceiverId: v.ReceiverId,
-				Remark:     v.Remark,
-				Status:     uint32(v.Status),
-				SenderId:   v.SenderId,
-				CreateAt:   int64(v.CreateAt),
-				ReceiverInfo: &model.UserInfo{
-					UserID:     info.UserId,
-					UserName:   info.NickName,
-					UserAvatar: info.Avatar,
-				},
-			})
+			targetID = v.ReceiverId
 		} else {
-			info, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: v.SenderId})
-			if err != nil {
-				return nil, err
-			}
-			data = append(data, &model.UserRequestListResponse{
-				ID:         v.ID,
-				ReceiverId: v.ReceiverId,
-				Remark:     v.Remark,
-				Status:     uint32(v.Status),
-				SenderId:   v.SenderId,
-				CreateAt:   int64(v.CreateAt),
-				ReceiverInfo: &model.UserInfo{
-					UserID:     info.UserId,
-					UserName:   info.NickName,
-					UserAvatar: info.Avatar,
-				},
-			})
+			targetID = v.SenderId
 		}
+		userInfo, err := s.userService.UserInfo(ctx, &userApi.UserInfoRequest{UserId: targetID})
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, &model.UserRequestListResponse{
+			ID:         v.ID,
+			ReceiverId: v.ReceiverId,
+			Remark:     v.Remark,
+			Status:     uint32(v.Status),
+			SenderId:   v.SenderId,
+			CreateAt:   int64(v.CreateAt),
+			ExpiredAt:  int64(v.ExpiredAt),
+			ReceiverInfo: &model.UserInfo{
+				UserID:     userInfo.UserId,
+				UserName:   userInfo.NickName,
+				UserAvatar: userInfo.Avatar,
+			},
+		})
 	}
+
 	return &model.UserRequestListResponseList{
 		List:        data,
 		Total:       int64(reqList.Total),
@@ -314,7 +301,7 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	}
 
 	// 向用户推送通知
-	resp, err := s.sendFriendManagementNotification(ctx, userId, qs.SenderId, key, relationgrpcv1.RelationStatus(action))
+	resp, err := s.sendFriendManagementNotification(ctx, userId, qs.SenderId, key, relationgrpcv1.FriendRequestStatus(action))
 	if err != nil {
 		s.logger.Error("发送好友管理通知失败", zap.Error(err))
 	}
@@ -491,7 +478,7 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 	return nil, nil
 }
 
-func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, targetID, E2EPublicKey string, status relationgrpcv1.RelationStatus) (interface{}, error) {
+func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, targetID, E2EPublicKey string, status relationgrpcv1.FriendRequestStatus) (interface{}, error) {
 	targetInfo, err := s.getUserInfo(ctx, targetID)
 	if err != nil {
 		return nil, err
@@ -506,11 +493,11 @@ func (s *Service) sendFriendManagementNotification(ctx context.Context, userID, 
 
 	var responseData interface{}
 
-	if status == 1 {
+	if status == relationgrpcv1.FriendRequestStatus_FriendRequestStatus_ACCEPT {
 		wsMsgData.E2EPublicKey = E2EPublicKey
-		wsMsgData.TargetInfo = myInfo
-		responseData = targetInfo
 	}
+	wsMsgData.TargetInfo = myInfo
+	responseData = targetInfo
 	bytes, err := utils.StructToBytes(wsMsgData)
 	if err != nil {
 		return nil, err

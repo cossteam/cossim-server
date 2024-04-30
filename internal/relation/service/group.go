@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -346,11 +347,12 @@ func (s *Service) GroupRequestList(ctx context.Context, userID string, pageSize 
 		}
 
 		data[i] = &model.GroupRequestListResponse{
-			ID:       v.ID,
-			GroupId:  v.GroupId,
-			Remark:   v.Remark,
-			CreateAt: int64(v.CreatedAt),
-			Status:   SwitchGroupRequestStatus(userID, v.InviterId, reinfo.UserId, v.Status),
+			ID:        v.ID,
+			GroupId:   v.GroupId,
+			Remark:    v.Remark,
+			CreateAt:  int64(v.CreatedAt),
+			ExpiredAt: int64(v.ExpiredAt),
+			Status:    SwitchGroupRequestStatus(userID, v.InviterId, reinfo.UserId, v.Status),
 			ReceiverInfo: &model.UserInfo{
 				UserID:     reinfo.UserId,
 				UserName:   reinfo.NickName,
@@ -502,6 +504,8 @@ func (s *Service) ManageJoinGroup(ctx context.Context, groupID uint32, requestID
 	if err != nil {
 		s.logger.Error("get group relation failed", zap.Error(err))
 	}
+
+	fmt.Println("relation => ", relation)
 
 	if relation != nil && relation.GroupId != 0 {
 		return code.RelationGroupErrAlreadyInGroup
@@ -714,6 +718,7 @@ func (s *Service) QuitGroup(ctx context.Context, groupID uint32, userID string) 
 func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.InviteGroupRequest) error {
 	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{Gid: req.GroupID})
 	if err != nil {
+		s.logger.Error("get group info by gid failed", zap.Error(err))
 		return code.GroupErrGetGroupInfoByGidFailed
 	}
 
@@ -724,8 +729,11 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	if group.Type == groupApi.GroupType_Private {
 		relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: req.GroupID, UserId: inviterId})
 		if err != nil {
+			s.logger.Error("GetGroupRelation", zap.Error(err))
 			return err
 		}
+		fmt.Println("relation.UserId => ", relation.UserId)
+		fmt.Println("relation.Inviter => ", relation.Identity)
 		if relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_OWNER && relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
 			return code.Forbidden
 		}
@@ -733,6 +741,7 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 	//查询群聊人数
 	ds, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{GroupId: req.GroupID})
 	if err != nil {
+		s.logger.Error("GetGroupRelation", zap.Error(err))
 		return err
 	}
 
@@ -761,6 +770,9 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrGroupRelationFailed
 	}
 
+	fmt.Println("relation1 = > ", relation1.Identity)
+	fmt.Println("relation1 = > ", relation1.UserId)
+
 	if relation1.Identity == relationgrpcv1.GroupIdentity_IDENTITY_USER {
 		return code.Unauthorized
 	}
@@ -771,8 +783,10 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 		return code.RelationGroupErrInviteFailed
 	}
 
+	fmt.Println("grs => ", grs.String())
+
 	if len(grs.GroupRelationResponses) > 0 {
-		return code.RelationGroupErrInviteFailed
+		return code.MyCustomErrorCode.CustomMessage("邀请的成员已经在群里")
 	}
 
 	//查询所有管理员

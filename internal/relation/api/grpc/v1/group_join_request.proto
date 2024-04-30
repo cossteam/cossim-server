@@ -29,12 +29,14 @@ message GroupJoinRequestResponse {
   string UserId = 3;
   // @inject_tag: json:"inviter_id"
   string InviterId = 4;
-  // @inject_tag: json:"created_at"
-  uint64 CreatedAt = 5;
   //  @inject_tag: json:"status"
-  GroupRequestStatus Status = 6;
+  GroupRequestStatus Status = 5;
   // @inject_tag: json:"remark"
-  string Remark = 7;
+  string Remark = 6;
+  // @inject_tag: json:"created_at"
+  uint64 CreatedAt = 7;
+  // @inject_tag: json:"expired_at"
+  uint64 ExpiredAt = 8;
 }
 
 message GroupJoinRequestListResponse {

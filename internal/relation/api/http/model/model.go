@@ -25,6 +25,7 @@ type GroupRequestListResponse struct {
 	Status          GroupRequestStatus `json:"status" description:"请求状态"`
 	Remark          string             `json:"remark" description:"申请消息"`
 	CreateAt        int64              `json:"create_at"`
+	ExpiredAt       int64              `json:"expired_at"`
 }
 
 type GroupRequestListResponseList struct {
@@ -62,6 +63,7 @@ type UserRequestListResponse struct {
 	SenderInfo   *UserInfo `json:"sender_info,omitempty"`
 	ReceiverInfo *UserInfo `json:"receiver_info,omitempty"`
 	CreateAt     int64     `json:"create_at"`
+	ExpiredAt    int64     `json:"expired_at"`
 }
 
 type UserRequestListResponseList struct {

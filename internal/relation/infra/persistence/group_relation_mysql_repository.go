@@ -127,6 +127,14 @@ func (m *MySQLRelationGroupRepository) Create(ctx context.Context, createGroupRe
 		return nil, err
 	}
 
+	go func() {
+		if m.cache != nil {
+			if err := m.cache.DeleteRelationByGroupID(ctx, model.GroupID); err != nil {
+				log.Printf("cache delete relation by group id error: %v", err)
+			}
+		}
+	}()
+
 	return model.ToEntity(), nil
 }
 
@@ -160,8 +168,8 @@ func (m *MySQLRelationGroupRepository) Delete(ctx context.Context, id uint32) er
 	if err := m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
 		Where("id = ?", id).
-		First(&model).
-		Update("deleted_at", ptime.Now()).Error; err != nil {
+		Update("deleted_at", ptime.Now()).
+		First(&model).Error; err != nil {
 		return err
 	}
 
@@ -180,22 +188,23 @@ func (m *MySQLRelationGroupRepository) GetGroupUserIDs(ctx context.Context, gid 
 	var userGroupIDs []string
 	var model []GroupRelationModel
 
-	if m.cache != nil {
-		relations, err := m.cache.GetGroupRelations(ctx, gid)
-		if err == nil && len(relations) > 0 {
-			var userIDs []string
-			for _, v := range relations {
-				userIDs = append(userIDs, v.UserID)
-			}
-			return userIDs, nil
-		}
-	}
+	//if m.cache != nil {
+	//	relations, err := m.cache.GetGroupRelations(ctx, gid)
+	//	if err == nil && len(relations) > 0 {
+	//		var userIDs []string
+	//		for _, v := range relations {
+	//			userIDs = append(userIDs, v.UserID)
+	//		}
+	//		return userIDs, nil
+	//	}
+	//}
 
 	if err := m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
 		Where("group_id = ?  AND deleted_at = 0", gid).
+		Pluck("user_id", &userGroupIDs).
 		Find(&model).
-		Pluck("user_id", &userGroupIDs).Error; err != nil {
+		Error; err != nil {
 		return nil, err
 	}
 
@@ -245,12 +254,12 @@ func (m *MySQLRelationGroupRepository) GetUserGroupIDs(ctx context.Context, uid 
 func (m *MySQLRelationGroupRepository) GetUserGroupByGroupIDAndUserID(ctx context.Context, gid uint32, uid string) (*entity.GroupRelation, error) {
 	var model GroupRelationModel
 
-	if m.cache != nil {
-		r1, err := m.cache.GetRelation(ctx, uid, gid)
-		if err == nil && r1 != nil {
-			return r1, nil
-		}
-	}
+	//if m.cache != nil {
+	//	r1, err := m.cache.GetRelation(ctx, uid, gid)
+	//	if err == nil && r1 != nil {
+	//		return r1, nil
+	//	}
+	//}
 
 	if err := m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
@@ -397,19 +406,46 @@ func (m *MySQLRelationGroupRepository) ListGroupAdmin(ctx context.Context, gid u
 }
 
 func (m *MySQLRelationGroupRepository) SetUserGroupRemark(ctx context.Context, gid uint32, uid string, remark string) error {
-	return m.db.WithContext(ctx).
+
+	if err := m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
 		Where(" group_id = ? AND user_id = ?", gid, uid).
-		Update("remark", remark).Error
+		Update("remark", remark).Error; err != nil {
+		return err
+	}
+
+	go func() {
+		if m.cache != nil {
+			if err := m.cache.DeleteRelation(ctx, uid, gid); err != nil {
+				log.Printf("delete relation cache failed: %v", err)
+			}
+		}
+	}()
+
+	return nil
 }
 
 func (m *MySQLRelationGroupRepository) UpdateIdentity(ctx context.Context, gid uint32, uid string, identity entity.GroupIdentity) error {
 	var model GroupRelationModel
 	model.Identity = uint8(identity)
-	return m.db.WithContext(ctx).
+
+	if err := m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
 		Where(" group_id = ? AND user_id = ?", gid, uid).
-		Update("identity", model.Identity).Error
+		Update("identity", model.Identity).
+		Error; err != nil {
+		return err
+	}
+
+	go func() {
+		if m.cache != nil {
+			if err := m.cache.DeleteRelation(ctx, uid, gid); err != nil {
+				log.Printf("delete relation cache error: %v", err)
+			}
+		}
+	}()
+
+	return nil
 }
 
 func (m *MySQLRelationGroupRepository) UserGroupSilentNotification(ctx context.Context, gid uint32, uid string, silentNotification bool) error {

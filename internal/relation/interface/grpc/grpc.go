@@ -22,6 +22,8 @@ type RelationServiceServer struct {
 	GroupAnnouncementServer        *groupAnnouncementServer
 	GroupJoinRequestServiceServer  *groupJoinRequestServiceServer
 	UserFriendRequestServiceServer *userFriendRequestServiceServer
+
+	stop func() func(ctx context.Context) error
 }
 
 func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
@@ -48,6 +50,12 @@ func (s *RelationServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 	infra := persistence.NewRepositories(cfg)
 	if err := infra.Automigrate(); err != nil {
 		return err
+	}
+
+	s.stop = func() func(ctx context.Context) error {
+		return func(ctx context.Context) error {
+			return infra.Close()
+		}
 	}
 
 	s.ac = cfg
@@ -94,7 +102,7 @@ func (s *RelationServiceServer) RegisterHealth(srv *grpc.Server) {
 
 func (s *RelationServiceServer) Stop(ctx context.Context) error {
 	//return s.UserServiceServer.cache.DeleteAllCache(ctx)
-	return nil
+	return s.stop()(ctx)
 }
 
 func (s *RelationServiceServer) DiscoverServices(services map[string]*grpc.ClientConn) error {
