@@ -106,6 +106,13 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 				relationGroupService,
 				relationDialogService,
 			),
+			SearchGroup: query.NewSearchGroupHandler(
+				groupRepository,
+				logger,
+				dtmGrpcServer,
+				relationGroupService,
+				relationDialogService,
+			),
 		},
 	}
 }

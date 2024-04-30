@@ -14,6 +14,7 @@ type Query struct {
 	UpdateAt *time.Time // 更新时间范围
 	Limit    int        // 限制结果数量
 	Offset   int        // 结果的偏移量
+	Cache    bool
 }
 
 type Repository interface {

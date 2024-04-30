@@ -49,17 +49,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/group": {
-            "post": {
+        "/api/v1/group/search": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
                 "description": "创建一个新的群聊",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -76,13 +73,11 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "创建一个新的群聊",
-                        "name": "requestBody",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.CreateGroupRequest"
-                        }
+                        "type": "integer",
+                        "description": "群聊名称或ID",
+                        "name": "keyword",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -836,6 +831,19 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "页大小",
                         "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "开始时间",
+                        "name": "start_at",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "结束时间",
+                        "name": "end_at",
                         "in": "query",
                         "required": true
                     }
@@ -3413,23 +3421,6 @@ const docTemplate = `{
                 "OpenBurnAfterReading"
             ]
         },
-        "github_com_cossim_coss-server_internal_user_api_http_model.Preferences": {
-            "type": "object",
-            "properties": {
-                "open_burn_after_reading": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.OpenBurnAfterReadingType"
-                },
-                "open_burn_after_reading_time_out": {
-                    "type": "integer"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "silent_notification": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.SilentNotification"
-                }
-            }
-        },
         "github_com_cossim_coss-server_internal_user_api_http_model.Response": {
             "type": "object",
             "properties": {
@@ -3441,68 +3432,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "github_com_cossim_coss-server_internal_user_api_http_model.SilentNotification": {
-            "type": "integer",
-            "enum": [
-                0,
-                1
-            ],
-            "x-enum-comments": {
-                "IsSilentNotification": "开启静默通知",
-                "NotSilentNotification": "不开启静默通知"
-            },
-            "x-enum-varnames": [
-                "NotSilentNotification",
-                "IsSilentNotification"
-            ]
-        },
-        "interfaces.CreateGroupRequest": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "description": "Avatar 群组头像",
-                    "type": "string"
-                },
-                "encrypt": {
-                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
-                    "type": "boolean"
-                },
-                "join_approve": {
-                    "description": "JoinApprove 入群审批",
-                    "type": "boolean"
-                },
-                "member": {
-                    "description": "Member 群组成员列表",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "name": {
-                    "description": "Name 群组名称",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "Type 群组类型 0(私密群) 1(公开群)",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/interfaces.CreateGroupRequestType"
-                        }
-                    ]
-                }
-            }
-        },
-        "interfaces.CreateGroupRequestType": {
-            "type": "integer",
-            "enum": [
-                0,
-                1
-            ],
-            "x-enum-varnames": [
-                "CreateGroupRequestTypeN0",
-                "CreateGroupRequestTypeN1"
-            ]
         },
         "interfaces.CreateRoomRequest": {
             "type": "object",
@@ -3573,12 +3502,13 @@ const docTemplate = `{
                     "description": "Id 群聊ID",
                     "type": "integer"
                 },
-                "members": {
-                    "description": "Members 群组成员列表",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "max_members_limit": {
+                    "description": "MaxMembersLimit 群组成员上限",
+                    "type": "integer"
+                },
+                "member": {
+                    "description": "Member 群聊成员数量",
+                    "type": "integer"
                 },
                 "name": {
                     "description": "Name 群聊名称",
@@ -4119,6 +4049,9 @@ const docTemplate = `{
                 "creator_id": {
                     "type": "string"
                 },
+                "expired_at": {
+                    "type": "integer"
+                },
                 "group_avatar": {
                     "type": "string"
                 },
@@ -4382,6 +4315,23 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "model.Preferences": {
+            "type": "object",
+            "properties": {
+                "open_burn_after_reading": {
+                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.OpenBurnAfterReadingType"
+                },
+                "open_burn_after_reading_time_out": {
+                    "type": "integer"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "silent_notification": {
+                    "$ref": "#/definitions/model.SilentNotification"
                 }
             }
         },
@@ -4683,6 +4633,21 @@ const docTemplate = `{
                 }
             }
         },
+        "model.SilentNotification": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-comments": {
+                "IsSilentNotification": "开启静默通知",
+                "NotSilentNotification": "不开启静默通知"
+            },
+            "x-enum-varnames": [
+                "NotSilentNotification",
+                "IsSilentNotification"
+            ]
+        },
         "model.SilentNotificationType": {
             "type": "integer",
             "enum": [
@@ -4826,7 +4791,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "preferences": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.Preferences"
+                    "$ref": "#/definitions/model.Preferences"
                 },
                 "relation_status": {
                     "$ref": "#/definitions/model.UserRelationStatus"
@@ -4867,6 +4832,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "create_at": {
+                    "type": "integer"
+                },
+                "expired_at": {
                     "type": "integer"
                 },
                 "id": {

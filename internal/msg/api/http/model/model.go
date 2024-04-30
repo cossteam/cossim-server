@@ -56,6 +56,8 @@ type MsgListRequest struct {
 	Content  string `json:"content"`
 	PageNum  int    `json:"page_num" binding:"required"`
 	PageSize int    `json:"page_size" binding:"required"`
+	StartAt  int64  `json:"start_at"`
+	EndAt    int64  `json:"end_at" binding:"required"`
 }
 
 type GetUserDialogListResponse struct {

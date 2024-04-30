@@ -185,7 +185,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 	//}
 
 	//获取他自己的申请列表
-	//list, total, err := s.gjqr.GetGroupJoinRequestListByUserId(request.UserId, int(request.PageSize), int(request.PageNum))
+	//list, total, err := s.gjqr.GetGroupJoinRequestListByUserId(request.UserId, int(request.PageSize), int(request.CurrentPage))
 	//if err != nil {
 	//	return resp, err
 	//}

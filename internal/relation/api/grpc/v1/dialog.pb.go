@@ -405,7 +405,7 @@ type GetUserDialogListRequest struct {
 	// @inject_tag: json:"page_size"
 	PageSize uint32 `protobuf:"varint,2,opt,name=PageSize,proto3" json:"page_size"`
 	// @inject_tag: json:"page_num"
-	PageNum uint32 `protobuf:"varint,3,opt,name=PageNum,proto3" json:"page_num"`
+	PageNum uint32 `protobuf:"varint,3,opt,name=CurrentPage,proto3" json:"page_num"`
 }
 
 func (x *GetUserDialogListRequest) Reset() {

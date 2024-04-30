@@ -311,6 +311,8 @@ func (s *Service) GetUserMessageList(ctx context.Context, userID string, req *mo
 		PageNum:  int32(req.PageNum),
 		PageSize: int32(req.PageSize),
 		MsgId:    uint64(req.MsgId),
+		StartAt:  uint64(req.StartAt),
+		EndAt:    uint64(req.EndAt),
 	})
 	if err != nil {
 		s.logger.Error("获取用户消息列表失败", zap.Error(err))

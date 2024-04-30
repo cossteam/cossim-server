@@ -256,14 +256,12 @@ func (m *MySQLGroupRepository) Delete(ctx context.Context, id uint32) error {
 
 // Find retrieves groups based on the provided query.
 func (m *MySQLGroupRepository) Find(ctx context.Context, query repository.Query) ([]*entity.Group, error) {
-	if m.cache == nil {
-		return m.findWithoutCache(ctx, query)
-	}
-
-	cacheKey := m.generateCacheKey(query)
-	cachedGroups, err := m.cache.GetGroups(ctx, cacheKey)
-	if err == nil && cachedGroups != nil {
-		return cachedGroups, nil
+	if query.Cache && m.cache != nil {
+		cacheKey := m.generateCacheKey(query)
+		cachedGroups, err := m.cache.GetGroups(ctx, cacheKey)
+		if err == nil && len(cachedGroups) > 0 {
+			return cachedGroups, nil
+		}
 	}
 
 	groups, err := m.findWithoutCache(ctx, query)
@@ -287,11 +285,12 @@ func (m *MySQLGroupRepository) findWithoutCache(ctx context.Context, query repos
 
 	// Apply filters
 	if len(query.ID) > 0 {
-		db = db.Where("id IN (?)", query.ID)
+		db = db.Or("id IN (?)", query.ID)
 	}
 	if query.Name != "" {
-		db = db.Where("name LIKE ?", "%"+query.Name+"%")
+		db = db.Or("name LIKE ?", "%"+query.Name+"%")
 	}
+
 	if len(query.UserID) > 0 {
 		db = db.Joins("JOIN group_members ON groups.id = group_members.group_id").
 			Where("group_members.user_id IN (?)", query.UserID)
@@ -316,11 +315,11 @@ func (m *MySQLGroupRepository) findWithoutCache(ctx context.Context, query repos
 	// Convert models to entities
 	groups := make([]*entity.Group, len(models))
 	for i, model := range models {
-		entity, err := model.ToEntity()
+		e, err := model.ToEntity()
 		if err != nil {
 			return nil, err
 		}
-		groups[i] = entity
+		groups[i] = e
 	}
 
 	return groups, nil

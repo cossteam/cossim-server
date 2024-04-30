@@ -69,16 +69,19 @@ type CreateGroupResponse struct {
 // Group defines model for Group.
 type Group struct {
 	// Avatar 群组头像
-	Avatar *string `json:"avatar,omitempty"`
+	Avatar string `json:"avatar,omitempty"`
 
 	// Id 群聊ID
-	Id *uint32 `json:"id,omitempty"`
+	Id uint32 `json:"id"`
 
-	// Members 群组成员列表
-	Members *[]string `json:"members,omitempty"`
+	// MaxMembersLimit 群组成员上限
+	MaxMembersLimit int `json:"max_members_limit"`
+
+	// Member 群聊成员数量
+	Member int `json:"member"`
 
 	// Name 群聊名称
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // GroupInfo defines model for GroupInfo.
@@ -115,7 +118,7 @@ type GroupInfo struct {
 	Status int `json:"status,omitempty"`
 
 	// Type 群组类型
-	Type uint32 `json:"type,omitempty"`
+	Type uint8 `json:"type,omitempty"`
 }
 
 // Preferences defines model for Preferences.
@@ -168,6 +171,18 @@ type UpdateGroupRequest struct {
 
 // UpdateGroupRequestType 群组类型 0(私密群) 1(公开群)
 type UpdateGroupRequestType uint
+
+// SearchGroupParams defines parameters for SearchGroup.
+type SearchGroupParams struct {
+	// Keyword 搜索关键字 群聊名称或id
+	Keyword string `form:"keyword" json:"keyword"`
+
+	// Page 页码
+	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize 每页大小
+	PageSize *int32 `form:"page_size,omitempty" json:"page_size,omitempty"`
+}
 
 // CreateGroupJSONRequestBody defines body for CreateGroup for application/json ContentType.
 type CreateGroupJSONRequestBody = CreateGroupRequest

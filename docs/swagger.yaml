@@ -139,17 +139,6 @@ definitions:
     x-enum-varnames:
     - CloseBurnAfterReading
     - OpenBurnAfterReading
-  github_com_cossim_coss-server_internal_user_api_http_model.Preferences:
-    properties:
-      open_burn_after_reading:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.OpenBurnAfterReadingType'
-      open_burn_after_reading_time_out:
-        type: integer
-      remark:
-        type: string
-      silent_notification:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.SilentNotification'
-    type: object
   github_com_cossim_coss-server_internal_user_api_http_model.Response:
     properties:
       code:
@@ -158,49 +147,6 @@ definitions:
       msg:
         type: string
     type: object
-  github_com_cossim_coss-server_internal_user_api_http_model.SilentNotification:
-    enum:
-    - 0
-    - 1
-    type: integer
-    x-enum-comments:
-      IsSilentNotification: 开启静默通知
-      NotSilentNotification: 不开启静默通知
-    x-enum-varnames:
-    - NotSilentNotification
-    - IsSilentNotification
-  interfaces.CreateGroupRequest:
-    properties:
-      avatar:
-        description: Avatar 群组头像
-        type: string
-      encrypt:
-        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
-        type: boolean
-      join_approve:
-        description: JoinApprove 入群审批
-        type: boolean
-      member:
-        description: Member 群组成员列表
-        items:
-          type: string
-        type: array
-      name:
-        description: Name 群组名称
-        type: string
-      type:
-        allOf:
-        - $ref: '#/definitions/interfaces.CreateGroupRequestType'
-        description: Type 群组类型 0(私密群) 1(公开群)
-    type: object
-  interfaces.CreateGroupRequestType:
-    enum:
-    - 0
-    - 1
-    type: integer
-    x-enum-varnames:
-    - CreateGroupRequestTypeN0
-    - CreateGroupRequestTypeN1
   interfaces.CreateRoomRequest:
     properties:
       group_id:
@@ -248,11 +194,12 @@ definitions:
       id:
         description: Id 群聊ID
         type: integer
-      members:
-        description: Members 群组成员列表
-        items:
-          type: string
-        type: array
+      max_members_limit:
+        description: MaxMembersLimit 群组成员上限
+        type: integer
+      member:
+        description: Member 群聊成员数量
+        type: integer
       name:
         description: Name 群聊名称
         type: string
@@ -629,6 +576,8 @@ definitions:
         type: integer
       creator_id:
         type: string
+      expired_at:
+        type: integer
       group_avatar:
         type: string
       group_id:
@@ -806,6 +755,17 @@ definitions:
     - confirm_password
     - old_password
     - password
+    type: object
+  model.Preferences:
+    properties:
+      open_burn_after_reading:
+        $ref: '#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.OpenBurnAfterReadingType'
+      open_burn_after_reading_time_out:
+        type: integer
+      remark:
+        type: string
+      silent_notification:
+        $ref: '#/definitions/model.SilentNotification'
     type: object
   model.QuitGroupRequest:
     properties:
@@ -1004,6 +964,17 @@ definitions:
     required:
     - user_id
     type: object
+  model.SilentNotification:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-comments:
+      IsSilentNotification: 开启静默通知
+      NotSilentNotification: 不开启静默通知
+    x-enum-varnames:
+    - NotSilentNotification
+    - IsSilentNotification
   model.SilentNotificationType:
     enum:
     - 0
@@ -1103,7 +1074,7 @@ definitions:
       nickname:
         type: string
       preferences:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_user_api_http_model.Preferences'
+        $ref: '#/definitions/model.Preferences'
       relation_status:
         $ref: '#/definitions/model.UserRelationStatus'
       signature:
@@ -1132,6 +1103,8 @@ definitions:
   model.UserRequestListResponse:
     properties:
       create_at:
+        type: integer
+      expired_at:
         type: integer
       id:
         type: integer
@@ -1205,35 +1178,6 @@ paths:
       summary: 发送全体通知
       tags:
       - Admin
-  /api/v1/group:
-    post:
-      consumes:
-      - application/json
-      description: 创建一个新的群聊
-      parameters:
-      - description: Authentication header
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: 创建一个新的群聊
-        in: body
-        name: requestBody
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.CreateGroupRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功创建群聊
-          schema:
-            $ref: '#/definitions/interfaces.Group'
-      security:
-      - ApiKeyAuth: []
-      summary: 创建群聊
-      tags:
-      - group
   /api/v1/group/{id}:
     delete:
       consumes:
@@ -1299,6 +1243,32 @@ paths:
           schema:
             type: string
       summary: 更新群聊信息
+      tags:
+      - group
+  /api/v1/group/search:
+    get:
+      description: 创建一个新的群聊
+      parameters:
+      - description: Authentication header
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 群聊名称或ID
+        in: path
+        name: keyword
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功创建群聊
+          schema:
+            $ref: '#/definitions/interfaces.Group'
+      security:
+      - ApiKeyAuth: []
+      summary: 创建群聊
       tags:
       - group
   /live:
@@ -1710,6 +1680,15 @@ paths:
       - description: 页大小
         in: query
         name: page_size
+        required: true
+        type: integer
+      - description: 开始时间
+        in: query
+        name: start_at
+        type: integer
+      - description: 结束时间
+        in: query
+        name: end_at
         required: true
         type: integer
       produces:

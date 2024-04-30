@@ -75,11 +75,21 @@ func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 	resp := &v1.GetUserMsgListResponse{}
 
 	if request.MsgId != 0 {
-		list, total, err := s.mr.GetUserMsgIdBeforeMsgList(request.DialogId, uint32(request.MsgId), int(request.PageSize))
+		//list, total, err := s.mr.GetUserMsgIdBeforeMsgList(request.DialogId, uint32(request.MsgId), int(request.PageSize))
+		//if err != nil {
+		//	return nil, err
+		//}
+
+		res, err := s.mr.Find(ctx, &entity.UserMsgQuery{
+			DialogIds: []uint32{request.DialogId},
+			MsgIds:    []uint32{uint32(request.MsgId)},
+			PageSize:  int64(request.PageSize),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, m := range list {
+
+		for _, m := range res.Messages {
 			resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
 				Id:         uint32(m.ID),
 				SenderId:   m.SendID,
@@ -93,12 +103,26 @@ func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 				DialogId:   uint32(m.DialogId),
 			})
 		}
-		resp.Total = total
+		resp.Total = int32(res.TotalCount)
 		return resp, nil
 	}
-	ums, total, current := s.mr.GetUserMsgList(request.DialogId, request.UserId, request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
+	//ums, total, current := s.mr.GetUserMsgList(request.DialogId, request.UserId, request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
 
-	for _, m := range ums {
+	res, err := s.mr.Find(ctx, &entity.UserMsgQuery{
+		DialogIds: []uint32{request.DialogId},
+		MsgType:   entity.UserMessageType(request.Type),
+		PageNum:   int64(request.PageNum),
+		PageSize:  int64(request.PageSize),
+		Content:   request.Content,
+		SendID:    request.UserId,
+		StartAt:   int64(request.StartAt),
+		EndAt:     int64(request.EndAt),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range res.Messages {
 		resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
 			Id:         uint32(m.ID),
 			SenderId:   m.SendID,
@@ -112,8 +136,8 @@ func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 			DialogId:   uint32(m.DialogId),
 		})
 	}
-	resp.Total = total
-	resp.CurrentPage = current
+	resp.Total = int32(res.TotalCount)
+	resp.CurrentPage = int32(res.CurrentPage)
 
 	return resp, nil
 }

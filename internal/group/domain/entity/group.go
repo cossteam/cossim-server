@@ -3,10 +3,11 @@ package entity
 import "github.com/go-playground/validator/v10"
 
 type Group struct {
-	ID              uint32
-	CreatedAt       int64
-	Type            Type
-	Status          Status
+	ID        uint32
+	CreatedAt int64
+	Type      Type
+	Status    Status
+	//Member          int
 	MaxMembersLimit int
 	CreatorID       string
 	Name            string

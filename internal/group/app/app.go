@@ -17,7 +17,8 @@ type Commands struct {
 }
 
 type Queries struct {
-	GetGroup query.GetGroupHandler
+	GetGroup    query.GetGroupHandler
+	SearchGroup query.SearchGroupHandler
 }
 
 const (

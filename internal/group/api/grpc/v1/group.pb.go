@@ -129,7 +129,7 @@ type Group struct {
 	// @inject_tag: json:"max_members_limit"
 	MaxMembersLimit int32 `protobuf:"varint,4,opt,name=Max_members_limit,json=MaxMembersLimit,proto3" json:"max_members_limit"`
 	// @inject_tag: json:"creator_id"
-	CreatorId string `protobuf:"bytes,5,opt,name=Creator_id,json=CreatorId,proto3" json:"creator_id"`
+	CreatorId string `protobuf:"bytes,5,opt,name=Creator_id,json=CreatorID,proto3" json:"creator_id"`
 	// @inject_tag: json:"name"
 	Name string `protobuf:"bytes,6,opt,name=Name,proto3" json:"name"`
 	// @inject_tag: json:"avatar"
