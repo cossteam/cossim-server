@@ -1,8 +1,9 @@
-package interfaces
+package http
 
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/internal/group/api/http/v1"
 	"github.com/cossim/coss-server/internal/group/app"
 	"github.com/cossim/coss-server/internal/group/app/command"
 	"github.com/cossim/coss-server/internal/group/app/query"
@@ -23,7 +24,7 @@ import (
 	"os"
 )
 
-var _ ServerInterface = &HttpServer{}
+var _ v1.ServerInterface = &HttpServer{}
 
 var _ server.HTTPService = &HttpServer{}
 
@@ -57,7 +58,7 @@ type HttpServer struct {
 // @Security ApiKeyAuth
 // @Success 200 {object} Group "成功创建群聊"
 // @Router /api/v1/group/search [get]
-func (h *HttpServer) SearchGroup(c *gin.Context, params SearchGroupParams) {
+func (h *HttpServer) SearchGroup(c *gin.Context, params v1.SearchGroupParams) {
 	var page, pageSize int32 = 1, 10
 	if params.Page != nil {
 		page = *params.Page
@@ -79,10 +80,10 @@ func (h *HttpServer) SearchGroup(c *gin.Context, params SearchGroupParams) {
 	response.SetSuccess(c, "搜索群聊成功", searchGroupToResponse(searchGroup))
 }
 
-func searchGroupToResponse(group []*query.Group) []*Group {
-	var resp []*Group
+func searchGroupToResponse(group []*query.Group) []*v1.Group {
+	var resp []*v1.Group
 	for _, g := range group {
-		resp = append(resp, &Group{
+		resp = append(resp, &v1.Group{
 			Avatar:          g.Avatar,
 			Id:              g.Id,
 			MaxMembersLimit: g.MaxMembersLimit,
@@ -105,7 +106,7 @@ func searchGroupToResponse(group []*query.Group) []*Group {
 // @Success 200 {object} Group "成功创建群聊"
 // @Router /api/v1/group/search [get]
 func (h *HttpServer) CreateGroup(c *gin.Context) {
-	req := &CreateGroupRequest{}
+	req := &v1.CreateGroupRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.Error(err)
 		return
@@ -129,8 +130,8 @@ func (h *HttpServer) CreateGroup(c *gin.Context) {
 	response.SetSuccess(c, "创建群聊成功", createGroupToResponse(&createGroup))
 }
 
-func createGroupToResponse(createGroup *command.CreateGroupResponse) *CreateGroupResponse {
-	return &CreateGroupResponse{
+func createGroupToResponse(createGroup *command.CreateGroupResponse) *v1.CreateGroupResponse {
+	return &v1.CreateGroupResponse{
 		Avatar:          createGroup.Avatar,
 		CreatorId:       createGroup.CreatorID,
 		DialogId:        createGroup.DialogID,
@@ -184,8 +185,8 @@ func (h *HttpServer) GetGroup(c *gin.Context, id uint32) {
 	response.SetSuccess(c, "获取群聊信息成功", getGroupToResponse(getGroup))
 }
 
-func getGroupToResponse(getGroup *query.GroupInfo) *GroupInfo {
-	return &GroupInfo{
+func getGroupToResponse(getGroup *query.GroupInfo) *v1.GroupInfo {
+	return &v1.GroupInfo{
 		Avatar:          getGroup.Avatar,
 		CreatorId:       getGroup.CreatorId,
 		DialogId:        getGroup.DialogId,
@@ -197,7 +198,7 @@ func getGroupToResponse(getGroup *query.GroupInfo) *GroupInfo {
 		SilenceTime:     getGroup.SilenceTime,
 		Encrypt:         getGroup.Encrypt,
 		JoinApprove:     getGroup.JoinApprove,
-		Preferences: &Preferences{
+		Preferences: &v1.Preferences{
 			EntryMethod:          getGroup.Preferences.EntryMethod,
 			Identity:             getGroup.Preferences.Identity,
 			Inviter:              getGroup.Preferences.Inviter,
@@ -221,7 +222,7 @@ func getGroupToResponse(getGroup *query.GroupInfo) *GroupInfo {
 // @Success 200 {object} string "成功更新群聊信息"
 // @Router /api/v1/group/{id} [put]
 func (h *HttpServer) UpdateGroup(c *gin.Context, id uint32) {
-	req := &UpdateGroupRequest{}
+	req := &v1.UpdateGroupRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.Error(err)
 		return
@@ -282,7 +283,7 @@ func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
 	r.Use(middleware.AuthMiddleware(h.userCache))
 
-	swagger, err := GetSwagger()
+	swagger, err := v1.GetSwagger()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
 		os.Exit(1)
@@ -304,7 +305,7 @@ func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	// OpenAPI schema.
 	r.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, validatorOptions))
 
-	RegisterHandlers(r, h)
+	v1.RegisterHandlers(r, h)
 }
 
 func (h *HttpServer) Health(r gin.IRouter) string {

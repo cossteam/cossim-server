@@ -1,8 +1,9 @@
-package interfaces
+package http
 
 import (
 	"context"
 	"fmt"
+	"github.com/cossim/coss-server/internal/live/api/http/v1"
 	"github.com/cossim/coss-server/internal/live/app"
 	"github.com/cossim/coss-server/internal/live/app/command"
 	"github.com/cossim/coss-server/internal/live/app/query"
@@ -24,7 +25,7 @@ import (
 	"time"
 )
 
-var _ ServerInterface = &HttpServer{}
+var _ v1.ServerInterface = &HttpServer{}
 
 var _ server.HTTPService = &HttpServer{}
 
@@ -71,7 +72,7 @@ func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
 	r.Use(middleware.AuthMiddleware(h.userCache))
 
-	swagger, err := GetSwagger()
+	swagger, err := v1.GetSwagger()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
 		os.Exit(1)
@@ -94,7 +95,7 @@ func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	// OpenAPI schema.
 	r.Use(omiddleware.OapiRequestValidatorWithOptions(swagger, validatorOptions))
 
-	RegisterHandlers(r, h)
+	v1.RegisterHandlers(r, h)
 }
 
 func (h *HttpServer) Health(r gin.IRouter) string {
@@ -168,7 +169,7 @@ func (h *HttpServer) GetUserRoom(c *gin.Context) {
 // @Success 200 {object} CreateRoomResponse "创建通话成功"
 // @Router /live [post]
 func (h *HttpServer) CreateRoom(c *gin.Context) {
-	req := &CreateRoomRequest{}
+	req := &v1.CreateRoomRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.Error(err)
 		return
@@ -196,8 +197,8 @@ func (h *HttpServer) CreateRoom(c *gin.Context) {
 	response.SetSuccess(c, "创建通话成功", createRoomToResponse(createRoom))
 }
 
-func createRoomToResponse(room *command.CreateRoomResponse) *CreateRoomResponse {
-	return &CreateRoomResponse{
+func createRoomToResponse(room *command.CreateRoomResponse) *v1.CreateRoomResponse {
+	return &v1.CreateRoomResponse{
 		Url:  room.Url,
 		Room: room.Room,
 	}
@@ -249,14 +250,14 @@ func (h *HttpServer) GetRoom(c *gin.Context, id string) {
 	response.SetSuccess(c, "获取通话信息成功", getRoomToResponse(getRoom))
 }
 
-func getRoomToResponse(room *query.Room) *Room {
+func getRoomToResponse(room *query.Room) *v1.Room {
 	if room == nil {
 		return nil
 	}
-	var participant []ParticipantInfo
+	var participant []v1.ParticipantInfo
 
 	for _, v := range room.Participant {
-		participant = append(participant, ParticipantInfo{
+		participant = append(participant, v1.ParticipantInfo{
 			//Uid:         v.Uid,
 			Identity:    v.Identity,
 			IsPublisher: v.IsPublisher,
@@ -267,7 +268,7 @@ func getRoomToResponse(room *query.Room) *Room {
 		})
 	}
 
-	return &Room{
+	return &v1.Room{
 		Room:        room.ID,
 		Type:        room.Type,
 		Duration:    int64(time.Since(time.Unix(room.StartAt, 0)).Seconds()),
@@ -301,7 +302,7 @@ func (h *HttpServer) JoinRoom(c *gin.Context, id string) {
 		return
 	}
 
-	response.SetSuccess(c, "加入通话成功", &JoinRoomResponse{
+	response.SetSuccess(c, "加入通话成功", &v1.JoinRoomResponse{
 		Url:   joinRoom.Url,
 		Token: joinRoom.Token,
 	})
