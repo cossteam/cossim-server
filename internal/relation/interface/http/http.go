@@ -26,6 +26,7 @@ type Handler struct {
 	enc             encryption.Encryptor
 	RelationService *grpchandler.RelationServiceServer
 	userCache       cache.UserCache
+	jwtSecret       string
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -40,6 +41,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.RelationService)
+	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	return nil
 }
 
@@ -57,7 +59,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	gin.SetMode(gin.ReleaseMode)
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/relation")
-	api.Use(middleware.AuthMiddleware(h.userCache))
+	api.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
 
 	u := api.Group("/user")
 	u.GET("/friend_list", h.friendList)

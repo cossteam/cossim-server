@@ -15,20 +15,21 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func NewAuthenticator(db *gorm.DB, rdb *cache.RedisClient) *Authenticator {
-	return &Authenticator{db, rdb}
+func NewAuthenticator(db *gorm.DB, rdb *cache.RedisClient, jwtKey string) *Authenticator {
+	return &Authenticator{db, rdb, jwtKey}
 }
 
 type Authenticator struct {
-	DB  *gorm.DB
-	RDB *cache.RedisClient
+	DB     *gorm.DB
+	RDB    *cache.RedisClient
+	JwtKey string
 }
 
 const _queryUser = "SELECT * FROM users WHERE id = ?"
 const _queryAdmin = "SELECT * FROM admins WHERE user_id = ?"
 
 func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bool, error) {
-	token, claims, err := utils.ParseToken(tokenString)
+	token, claims, err := utils.ParseToken(tokenString, a.JwtKey)
 	if err != nil || !token.Valid {
 		return false, fmt.Errorf("token validation failed: %s", err.Error())
 	}
@@ -82,7 +83,7 @@ func (a *Authenticator) ValidateToken(tokenString string, driverType string) (bo
 }
 
 func (a *Authenticator) ValidateAdminToken(tokenString string) (bool, error) {
-	token, claims, err := utils.ParseToken(tokenString)
+	token, claims, err := utils.ParseToken(tokenString, a.JwtKey)
 	if err != nil || !token.Valid {
 		return false, fmt.Errorf("token validation failed: %s", err.Error())
 	}

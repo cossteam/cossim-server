@@ -26,6 +26,7 @@ type Handler struct {
 	enc       encryption.Encryptor
 	MsgClient *grpcHandler.Handler
 	userCache cache.UserCache
+	jwtSecret string
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -40,6 +41,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.MsgClient)
+	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	return nil
 }
 
@@ -56,7 +58,7 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/msg")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.userCache))
+	u.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
 
 	u.POST("/send/user", h.sendUserMsg)
 	u.POST("/send/group", h.sendGroupMsg)

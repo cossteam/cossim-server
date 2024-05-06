@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func AdminAuthMiddleware(rdb *cache.RedisClient, conn *gorm.DB) gin.HandlerFunc {
+func AdminAuthMiddleware(rdb *cache.RedisClient, conn *gorm.DB, jwtKey string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取 authorization header
 		tokenString := ""
@@ -28,7 +28,7 @@ func AdminAuthMiddleware(rdb *cache.RedisClient, conn *gorm.DB) gin.HandlerFunc 
 			tokenString = tokenString[7:]
 		}
 
-		a := auth.NewAuthenticator(conn, rdb)
+		a := auth.NewAuthenticator(conn, rdb, jwtKey)
 
 		drive := ctx.GetHeader("X-Device-Type")
 		drive = string(constants.DetermineClientType(constants.DriverType(drive)))

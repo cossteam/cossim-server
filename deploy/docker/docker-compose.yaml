@@ -9,7 +9,7 @@ services:
     depends_on:
       - etcd
     ports:
-      - "10000:9000/tcp"
+      - "8000:9000/tcp"
   apisix:
     image: apache/apisix
     container_name: cossim_apisix

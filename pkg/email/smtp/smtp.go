@@ -66,7 +66,7 @@ func (s Storage) SendEmail(to, subject, body string) error {
 }
 
 func (s Storage) GenerateEmailVerificationContent(gatewayAdd string, userId string, key string) string {
-	baseURL := "http://" + gatewayAdd + "/api/v1/user/activate" // 替换成你的网站的基本URL
+	baseURL := gatewayAdd + "/api/v1/user/activate" // 替换成你的网站的基本URL
 	verifyURL := fmt.Sprintf("%s?user_id=%s&key=%s", baseURL, userId, key)
 
 	// 将验证链接进行URL编码
