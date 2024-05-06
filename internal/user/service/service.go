@@ -47,8 +47,8 @@ type Service struct {
 	gatewayPort         string
 	tokenExpiration     time.Duration
 	cache               bool
-
-	stop func() func(ctx context.Context) error
+	jwtSecret           string
+	stop                func() func(ctx context.Context) error
 }
 
 func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s *Service) {
@@ -61,6 +61,7 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s
 		dtmGrpcServer:   ac.Dtm.Addr(),
 		downloadURL:     "/api/v1/storage/files/download",
 		smtpClient:      setupSmtpProvider(ac),
+		jwtSecret:       ac.SystemConfig.JwtSecret,
 	}
 	userCache, err := cache.NewUserCacheRedis(s.ac.Redis.Addr(), s.ac.Redis.Password, 0)
 	if err != nil {
@@ -127,40 +128,8 @@ func setupSmtpProvider(ac *pkgconfig.AppConfig) email.EmailProvider {
 }
 
 func (s *Service) setLoadSystem() {
-
-	env := s.ac.SystemConfig.Environment
-	if env == "" {
-		env = "dev"
-	}
-
-	switch env {
-	case "prod":
-		gatewayAdd := s.ac.SystemConfig.GatewayAddress
-		if gatewayAdd == "" {
-			gatewayAdd = "43.229.28.107"
-		}
-
-		s.gatewayAddress = gatewayAdd
-
-		gatewayPo := s.ac.SystemConfig.GatewayPort
-		if gatewayPo == "" {
-			gatewayPo = "8080"
-		}
-		s.gatewayPort = gatewayPo
-	default:
-		gatewayAdd := s.ac.SystemConfig.GatewayAddressDev
-		if gatewayAdd == "" {
-			gatewayAdd = "127.0.0.1"
-		}
-
-		s.gatewayAddress = gatewayAdd
-
-		gatewayPo := s.ac.SystemConfig.GatewayPortDev
-		if gatewayPo == "" {
-			gatewayPo = "8080"
-		}
-		s.gatewayPort = gatewayPo
-	}
+	s.gatewayAddress = s.ac.SystemConfig.GatewayAddress
+	s.gatewayPort = s.ac.SystemConfig.GatewayPort
 	if !s.ac.SystemConfig.Ssl {
 		s.gatewayAddress = s.gatewayAddress + ":" + s.gatewayPort
 	}

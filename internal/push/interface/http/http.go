@@ -22,6 +22,7 @@ type Handler struct {
 	PushService  *service.Service
 	userCache    cache.UserCache
 	socketServer *socketio.Server
+	jwtSecret    string
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -36,6 +37,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.userCache = userCache
 	h.socketServer = h.PushService.SocketServer
 	h.setupSocketEvent()
+	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	return nil
 }
@@ -51,7 +53,7 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/push")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.userCache))
+	u.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
 	u.GET("/ws/*any", gin.WrapH(h.socketServer))
 	u.POST("/ws/*any", gin.WrapH(h.socketServer))
 

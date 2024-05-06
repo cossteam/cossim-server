@@ -179,12 +179,10 @@ type MultipleDeviceLimitConfig struct {
 }
 
 type SystemConfig struct {
-	Environment       string `mapstructure:"environment" yaml:"environment"`
-	Ssl               bool   `mapstructure:"ssl" yaml:"ssl"`
-	GatewayAddress    string `mapstructure:"gateway_address" yaml:"gateway_address"`
-	GatewayPort       string `mapstructure:"gateway_port" yaml:"gateway_port"`
-	GatewayAddressDev string `mapstructure:"gateway_address_dev" yaml:"gateway_address_dev"`
-	GatewayPortDev    string `mapstructure:"gateway_port_dev" yaml:"gateway_port_dev"`
+	Ssl            bool   `mapstructure:"ssl" yaml:"ssl"`
+	GatewayAddress string `mapstructure:"gateway_address" yaml:"gateway_address"`
+	GatewayPort    string `mapstructure:"gateway_port" yaml:"gateway_port"`
+	JwtSecret      string `mapstructure:"jwt_secret" yaml:"jwt_secret"`
 }
 
 type EmailConfig struct {

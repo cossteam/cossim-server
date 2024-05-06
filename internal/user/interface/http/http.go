@@ -27,6 +27,7 @@ type Handler struct {
 	key        string
 	UserClient *grpchandler.UserServiceServer
 	userCache  cache.UserCache
+	jwtSecret  string
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -41,6 +42,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.UserClient)
+	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	return nil
 }
 
@@ -66,7 +68,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/email/code/send", h.sendEmailCode)
 	u.GET("/system/key/get", h.getSystemPublicKey)
 
-	u.Use(middleware.AuthMiddleware(h.userCache))
+	u.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
 	u.POST("/public_key/reset", h.resetUserPublicKey)
 	u.GET("/search", h.search)
 	u.GET("/info", h.getUserInfo)

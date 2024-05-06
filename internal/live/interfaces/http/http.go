@@ -44,6 +44,7 @@ type HttpServer struct {
 	enc       encryption.Encryptor
 	userCache cache.UserCache
 	app       app.Application
+	jwtSecret string
 }
 
 func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
@@ -57,6 +58,7 @@ func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
 	h.userCache = userCache
 	h.logger = plog.NewDefaultLogger(HttpServiceName, int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	return nil
 }
 
@@ -70,7 +72,7 @@ func (h *HttpServer) Version() string {
 
 func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
-	r.Use(middleware.AuthMiddleware(h.userCache))
+	r.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
 
 	swagger, err := v1.GetSwagger()
 	if err != nil {

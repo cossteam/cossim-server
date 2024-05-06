@@ -14,7 +14,7 @@ import (
 func (h *Handler) ws(s socketio.Conn) error {
 	url := s.URL()
 	token := url.Query().Get("token")
-	_, c2, err := utils.ParseToken(token)
+	_, c2, err := utils.ParseToken(token, h.jwtSecret)
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (h *Handler) ws(s socketio.Conn) error {
 func (h *Handler) disconnect(s socketio.Conn, msg string) {
 	url := s.URL()
 	token := url.Query().Get("token")
-	_, c2, err := utils.ParseToken(token)
+	_, c2, err := utils.ParseToken(token, h.jwtSecret)
 	if err != nil {
 		h.logger.Error("token解析失败", zap.Error(err))
 		return

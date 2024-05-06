@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var jwtKey = []byte("a_secret_create")
+//var jwtKey = []byte("a_secret_create")
 
 // ExpirationTime token过期时间 redis的目前是7天,不确定是否要一致
 const ExpirationTime = 30
@@ -19,7 +19,7 @@ type Claims struct {
 }
 
 // GenerateToken 生成token
-func GenerateToken(userId, email, driverId, publicKey string) (string, error) {
+func GenerateToken(userId, email, driverId, publicKey, jwtKey string) (string, error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		Claims{
 			UserId:           userId,
@@ -28,7 +28,7 @@ func GenerateToken(userId, email, driverId, publicKey string) (string, error) {
 			PublicKey:        publicKey,
 			RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Duration(ExpirationTime) * 24 * time.Hour)}},
 		})
-	token, err := t.SignedString(jwtKey)
+	token, err := t.SignedString([]byte(jwtKey))
 	if err != nil {
 		return "", nil
 	}
@@ -36,11 +36,11 @@ func GenerateToken(userId, email, driverId, publicKey string) (string, error) {
 }
 
 // ParseToken 解析token
-func ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
+func ParseToken(tokenString, jwtKey string) (*jwt.Token, *Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return []byte(jwtKey), nil
 	})
 
 	return token, claims, err

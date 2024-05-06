@@ -27,6 +27,7 @@ type Handler struct {
 	svc           *service.Service
 	minioAddr     string
 	userCache     cache.UserCache
+	jwtSecret     string
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -43,6 +44,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.StorageClient)
+	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	return nil
 }
 
@@ -60,7 +62,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/storage")
 	api.GET("/files/download/:type/:id", h.download)
-	api.Use(middleware.AuthMiddleware(h.userCache))
+	api.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
 
 	api.GET("/files/:id", h.getFileInfo)
 	api.POST("/files", h.upload)

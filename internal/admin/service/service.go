@@ -114,40 +114,8 @@ func (s *Service) setupDBConn() {
 }
 
 func (s *Service) setLoadSystem() {
-
-	env := s.ac.SystemConfig.Environment
-	if env == "" {
-		env = "dev"
-	}
-
-	switch env {
-	case "prod":
-		gatewayAdd := s.ac.SystemConfig.GatewayAddress
-		if gatewayAdd == "" {
-			gatewayAdd = "43.229.28.107"
-		}
-
-		s.gatewayAddress = gatewayAdd
-
-		gatewayPo := s.ac.SystemConfig.GatewayPort
-		if gatewayPo == "" {
-			gatewayPo = "8080"
-		}
-		s.gatewayPort = gatewayPo
-	default:
-		gatewayAdd := s.ac.SystemConfig.GatewayAddressDev
-		if gatewayAdd == "" {
-			gatewayAdd = "127.0.0.1"
-		}
-
-		s.gatewayAddress = gatewayAdd
-
-		gatewayPo := s.ac.SystemConfig.GatewayPortDev
-		if gatewayPo == "" {
-			gatewayPo = "8080"
-		}
-		s.gatewayPort = gatewayPo
-	}
+	s.gatewayAddress = s.ac.SystemConfig.GatewayAddress
+	s.gatewayPort = s.ac.SystemConfig.GatewayPort
 	if !s.ac.SystemConfig.Ssl {
 		s.gatewayAddress = s.gatewayAddress + ":" + s.gatewayPort
 	}

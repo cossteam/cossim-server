@@ -55,7 +55,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 		lastLoginTime = id.LoginTime
 	}
 
-	token, err := utils.GenerateToken(userInfo.UserId, userInfo.Email, req.DriverId, userInfo.PublicKey)
+	token, err := utils.GenerateToken(userInfo.UserId, userInfo.Email, req.DriverId, userInfo.PublicKey, s.jwtSecret)
 	if err != nil {
 		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
@@ -331,8 +331,15 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 			return "", err
 		}
 
+		url := "http://" + s.gatewayAddress
+		if s.ac.SystemConfig.Ssl {
+			url, err = httputil.ConvertToHttps(url)
+			if err != nil {
+				return "", err
+			}
+		}
 		//注册成功发送邮件
-		err = s.smtpClient.SendEmail(req.Email, "欢迎注册", s.smtpClient.GenerateEmailVerificationContent(s.gatewayAddress+s.gatewayPort, UserId, ekey))
+		err = s.smtpClient.SendEmail(req.Email, "欢迎注册", s.smtpClient.GenerateEmailVerificationContent(url, UserId, ekey))
 		if err != nil {
 			s.logger.Error("failed to send email", zap.Error(err))
 			return "", err

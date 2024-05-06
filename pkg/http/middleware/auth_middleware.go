@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func AuthMiddleware(userCache cache.UserCache) gin.HandlerFunc {
+func AuthMiddleware(userCache cache.UserCache, jwtKey string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//头像请求跳过验证
 		if strings.HasPrefix(ctx.FullPath(), "/api/v1/storage/files/download/") {
@@ -48,7 +48,7 @@ func AuthMiddleware(userCache cache.UserCache) gin.HandlerFunc {
 			return
 		}
 
-		_, claims, err := utils.ParseToken(tokenString)
+		_, claims, err := utils.ParseToken(tokenString, jwtKey)
 		if err != nil {
 			fmt.Printf("token解析失败: %v", err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{
