@@ -4,7 +4,8 @@ import (
 	"context"
 	grpcHandler "github.com/cossim/coss-server/internal/msg/interface/grpc"
 	"github.com/cossim/coss-server/internal/msg/service"
-	"github.com/cossim/coss-server/internal/user/cache"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -21,27 +22,24 @@ var (
 )
 
 type Handler struct {
-	svc       *service.Service
-	logger    *zap.Logger
-	enc       encryption.Encryptor
-	MsgClient *grpcHandler.Handler
-	userCache cache.UserCache
-	jwtSecret string
+	svc         *service.Service
+	logger      *zap.Logger
+	enc         encryption.Encryptor
+	MsgClient   *grpcHandler.Handler
+	authService authv1.UserAuthServiceClient
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("msg_bff", int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+		if err := h.enc.ReadKeyPair(); err != nil {
+			return err
+		}
 	}
-	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
-	h.userCache = userCache
+
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.MsgClient)
-	h.jwtSecret = cfg.SystemConfig.JwtSecret
+	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
 	return nil
 }
 
@@ -58,7 +56,7 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/msg")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
+	u.Use(middleware.AuthMiddleware(h.authService))
 
 	u.POST("/send/user", h.sendUserMsg)
 	u.POST("/send/group", h.sendGroupMsg)

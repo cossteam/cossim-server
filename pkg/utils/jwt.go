@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-//var jwtKey = []byte("a_secret_create")
-
 // ExpirationTime token过期时间 redis的目前是7天,不确定是否要一致
 const ExpirationTime = 30
 

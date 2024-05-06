@@ -4,7 +4,8 @@ import (
 	"context"
 	grpchandler "github.com/cossim/coss-server/internal/relation/interface/grpc"
 	"github.com/cossim/coss-server/internal/relation/service"
-	"github.com/cossim/coss-server/internal/user/cache"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -25,8 +26,7 @@ type Handler struct {
 	svc             *service.Service
 	enc             encryption.Encryptor
 	RelationService *grpchandler.RelationServiceServer
-	userCache       cache.UserCache
-	jwtSecret       string
+	authService     authv1.UserAuthServiceClient
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -34,14 +34,9 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	if cfg.Encryption.Enable {
 		return h.enc.ReadKeyPair()
 	}
-	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
-	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.RelationService)
-	h.jwtSecret = cfg.SystemConfig.JwtSecret
+	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
 	return nil
 }
 
@@ -59,7 +54,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	gin.SetMode(gin.ReleaseMode)
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/relation")
-	api.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
+	api.Use(middleware.AuthMiddleware(h.authService))
 
 	u := api.Group("/user")
 	u.GET("/friend_list", h.friendList)

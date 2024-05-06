@@ -55,11 +55,18 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 		lastLoginTime = id.LoginTime
 	}
 
-	token, err := utils.GenerateToken(userInfo.UserId, userInfo.Email, req.DriverId, userInfo.PublicKey, s.jwtSecret)
+	gut, err := s.authService.GenerateUserToken(ctx, &usergrpcv1.GenerateUserTokenRequest{
+		UserID:    userInfo.UserId,
+		DriverID:  req.DriverId,
+		PublicKey: userInfo.PublicKey,
+		Email:     userInfo.Email,
+	})
 	if err != nil {
 		s.logger.Error("failed to generate user token", zap.Error(err))
 		return nil, "", code.UserErrLoginFailed
 	}
+
+	token := gut.Token
 
 	infos, err := s.userCache.GetUserLoginInfos(ctx, userInfo.UserId)
 	if err != nil {

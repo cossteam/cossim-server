@@ -2,26 +2,15 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/cossim/coss-server/internal/user/cache"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/constants"
-	"github.com/cossim/coss-server/pkg/storage/minio"
-	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
 )
 
-func AuthMiddleware(userCache cache.UserCache, jwtKey string) gin.HandlerFunc {
+func AuthMiddleware(authService authv1.UserAuthServiceClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		//头像请求跳过验证
-		if strings.HasPrefix(ctx.FullPath(), "/api/v1/storage/files/download/") {
-			fileType := ctx.Param("type")
-			if fileType == minio.PublicBucket {
-				ctx.Next()
-				return
-			}
-		}
-
 		// 获取 authorization header
 		tokenString := ""
 		if ctx.GetHeader("Authorization") != "" {
@@ -48,9 +37,9 @@ func AuthMiddleware(userCache cache.UserCache, jwtKey string) gin.HandlerFunc {
 			return
 		}
 
-		_, claims, err := utils.ParseToken(tokenString, jwtKey)
+		_, err := authService.Access(ctx, &authv1.AccessRequest{Token: tokenString})
 		if err != nil {
-			fmt.Printf("token解析失败: %v", err)
+			fmt.Println(" authService.Access err => ", err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  http.StatusText(http.StatusUnauthorized),
@@ -59,20 +48,8 @@ func AuthMiddleware(userCache cache.UserCache, jwtKey string) gin.HandlerFunc {
 			return
 		}
 
-		infos, err := userCache.GetUserLoginInfos(ctx, claims.UserId)
+		claims, err := authService.ParseToken(ctx, &authv1.ParseTokenRequest{Token: tokenString})
 		if err != nil {
-			return
-		}
-
-		var found bool
-		for _, v := range infos {
-			if v.Token == tokenString {
-				found = true
-				break
-			}
-		}
-
-		if !found {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"code": 401,
 				"msg":  http.StatusText(http.StatusUnauthorized),
@@ -80,8 +57,9 @@ func AuthMiddleware(userCache cache.UserCache, jwtKey string) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		ctx.Set(constants.UserID, claims.UserId)
-		ctx.Set(constants.DriverID, claims.DriverId)
+
+		ctx.Set(constants.UserID, claims.UserID)
+		ctx.Set(constants.DriverID, claims.DriverID)
 		ctx.Set(constants.PublicKey, claims.PublicKey)
 		ctx.Next()
 	}

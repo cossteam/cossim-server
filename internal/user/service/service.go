@@ -32,6 +32,7 @@ type Service struct {
 	dialogService    relationgrpcv1.DialogServiceClient
 	pushService      pushv1.PushServiceClient
 	msgService       msggrpcv1.MsgServiceClient
+	authService      userv1.UserAuthServiceServer
 
 	storageService storage.StorageProvider
 	//redisClient    *cache.RedisClient
@@ -77,12 +78,15 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s
 		}
 	}
 
+	fmt.Println("grpcService.AuthSrv => ", grpcService)
+
 	s.setLoadSystem()
 	s.setupRedisClient()
 	s.userCache = userCache
 	s.cache = s.ac.Cache.Enable
 	s.userService = grpcService
 	s.userLoginService = grpcService
+	s.authService = grpcService
 	return s
 }
 

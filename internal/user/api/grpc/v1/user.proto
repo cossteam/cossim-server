@@ -210,22 +210,6 @@ message GetUserInfoByCossIdlRequest{
   string CossId = 1;
 }
 
-message AccessRequest {
-  // @inject_tag: json:"user_id"
-  string UserID = 1;
-
-  // @inject_tag: json:"token"
-  string Token = 2;
-}
-
-message AccessResponse {
-
-}
-
-service UserAuthService {
-  rpc Access(AccessRequest) returns(AccessResponse);
-}
-
 service UserService {
   //用户登录
   rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);

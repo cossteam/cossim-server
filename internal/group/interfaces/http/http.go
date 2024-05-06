@@ -7,7 +7,7 @@ import (
 	"github.com/cossim/coss-server/internal/group/app"
 	"github.com/cossim/coss-server/internal/group/app/command"
 	"github.com/cossim/coss-server/internal/group/app/query"
-	"github.com/cossim/coss-server/internal/user/cache"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -39,11 +39,10 @@ func NewHttpServer(application app.Application) *HttpServer {
 }
 
 type HttpServer struct {
-	app       app.Application
-	logger    *zap.Logger
-	enc       encryption.Encryptor
-	userCache cache.UserCache
-	jwtSecret string
+	app         app.Application
+	logger      *zap.Logger
+	enc         encryption.Encryptor
+	authService authv1.UserAuthServiceClient
 }
 
 // SearchGroup
@@ -262,13 +261,7 @@ func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
 	if cfg.Encryption.Enable {
 		return h.enc.ReadKeyPair()
 	}
-	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		panic(err)
-	}
-	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	return nil
 }
 
@@ -283,7 +276,7 @@ func (h *HttpServer) Version() string {
 func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
-	r.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
+	r.Use(middleware.AuthMiddleware(h.authService))
 
 	swagger, err := v1.GetSwagger()
 	if err != nil {

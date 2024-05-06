@@ -3,7 +3,8 @@ package http
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/push/service"
-	"github.com/cossim/coss-server/internal/user/cache"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -20,25 +21,21 @@ type Handler struct {
 	logger       *zap.Logger
 	enc          encryption.Encryptor
 	PushService  *service.Service
-	userCache    cache.UserCache
 	socketServer *socketio.Server
-	jwtSecret    string
+	authService  authv1.UserAuthServiceClient
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("push_bff", int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+		if err := h.enc.ReadKeyPair(); err != nil {
+			return err
+		}
 	}
-	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
-	h.userCache = userCache
 	h.socketServer = h.PushService.SocketServer
 	h.setupSocketEvent()
-	h.jwtSecret = cfg.SystemConfig.JwtSecret
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
 	return nil
 }
 
@@ -53,10 +50,9 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/push")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
+	u.Use(middleware.AuthMiddleware(h.authService))
 	u.GET("/ws/*any", gin.WrapH(h.socketServer))
 	u.POST("/ws/*any", gin.WrapH(h.socketServer))
-
 }
 
 func (h *Handler) Health(r gin.IRouter) string {
