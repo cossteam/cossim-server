@@ -12,7 +12,7 @@ import (
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/api/http/model"
 	"github.com/cossim/coss-server/internal/user/cache"
-	"github.com/cossim/coss-server/internal/user/domain/user"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
@@ -93,7 +93,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 	}
 
 	index := len(infos) + 1
-	data2 := user.UserLogin{
+	data2 := entity.UserLogin{
 		ID:        uint(index),
 		UserId:    userInfo.UserId,
 		Token:     token,

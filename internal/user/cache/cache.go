@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cossim/coss-server/internal/user/domain/user"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -48,17 +48,17 @@ func GetUserEmailVerificationCodeKey(userID string) string {
 }
 
 type UserCache interface {
-	GetUserInfo(ctx context.Context, userID string) (*user.User, error)
-	GetUsersInfo(ctx context.Context, userID []string) ([]*user.User, error)
-	SetUserInfo(ctx context.Context, userID string, data *user.User, expiration time.Duration) error
+	GetUserInfo(ctx context.Context, userID string) (*entity.User, error)
+	GetUsersInfo(ctx context.Context, userID []string) ([]*entity.User, error)
+	SetUserInfo(ctx context.Context, userID string, data *entity.User, expiration time.Duration) error
 	DeleteUsersInfo(ctx context.Context, userIDs []string) error
 	DeleteAllCache(ctx context.Context) error
-	GetUserLoginInfo(ctx context.Context, userID string, index int) (*user.UserLogin, error)
-	SetUserLoginInfo(ctx context.Context, userID string, index int, data *user.UserLogin, expiration time.Duration) error
-	GetUsersLoginInfo(ctx context.Context, userID []string) ([]*user.UserLogin, error)
+	GetUserLoginInfo(ctx context.Context, userID string, index int) (*entity.UserLogin, error)
+	SetUserLoginInfo(ctx context.Context, userID string, index int, data *entity.UserLogin, expiration time.Duration) error
+	GetUsersLoginInfo(ctx context.Context, userID []string) ([]*entity.UserLogin, error)
 	DeleteUserLoginInfo(ctx context.Context, userID string, index int) error
 	DeleteUserAllLoginInfo(ctx context.Context, userID string) error
-	GetUserLoginInfos(ctx context.Context, userID string) ([]*user.UserLogin, error)
+	GetUserLoginInfos(ctx context.Context, userID string) ([]*entity.UserLogin, error)
 	GetUserEmailVerificationCode(ctx context.Context, userID string) (string, error)
 	SetUserEmailVerificationCode(ctx context.Context, userID, code string, expiration time.Duration) error
 	DeleteUserEmailVerificationCode(ctx context.Context, userID string) error
@@ -146,16 +146,16 @@ func (u *UserCacheRedis) DeleteUserVerificationCode(ctx context.Context, userID,
 	return u.client.Del(ctx, key).Err()
 }
 
-func (u *UserCacheRedis) GetUserInfos(ctx context.Context, userID string) ([]*user.UserLogin, error) {
+func (u *UserCacheRedis) GetUserInfos(ctx context.Context, userID string) ([]*entity.UserLogin, error) {
 	key := UserInfoKey + userID
 	infoStrings, err := u.client.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	userInfos := make([]*user.UserLogin, 0)
+	userInfos := make([]*entity.UserLogin, 0)
 	for _, infoString := range infoStrings {
-		var userInfo user.UserLogin
+		var userInfo entity.UserLogin
 		if err := json.Unmarshal([]byte(infoString), &userInfo); err != nil {
 			return nil, err
 		}
@@ -193,7 +193,7 @@ func (u *UserCacheRedis) DeleteUserEmailVerificationCode(ctx context.Context, us
 	return u.client.Del(ctx, key).Err()
 }
 
-func (u *UserCacheRedis) SetUserLoginInfo(ctx context.Context, userID string, index int, data *user.UserLogin, expiration time.Duration) error {
+func (u *UserCacheRedis) SetUserLoginInfo(ctx context.Context, userID string, index int, data *entity.UserLogin, expiration time.Duration) error {
 	if userID == "" {
 		return ErrCacheKeyEmpty
 	}
@@ -211,14 +211,14 @@ func (u *UserCacheRedis) SetUserLoginInfo(ctx context.Context, userID string, in
 	return u.client.Set(ctx, key, userInfoJSON, expiration).Err()
 }
 
-func (u *UserCacheRedis) GetUserLoginInfos(ctx context.Context, userID string) ([]*user.UserLogin, error) {
+func (u *UserCacheRedis) GetUserLoginInfos(ctx context.Context, userID string) ([]*entity.UserLogin, error) {
 	if userID == "" {
 		return nil, ErrCacheKeyEmpty
 	}
 
 	iter := u.client.Scan(ctx, 0, UserLoginKey+userID+":*", 0).Iterator()
 
-	var userInfoList []*user.UserLogin
+	var userInfoList []*entity.UserLogin
 	for iter.Next(ctx) {
 		key := iter.Val()
 		data, err := u.client.Get(ctx, key).Result()
@@ -229,7 +229,7 @@ func (u *UserCacheRedis) GetUserLoginInfos(ctx context.Context, userID string) (
 			return nil, err
 		}
 
-		var userInfo user.UserLogin
+		var userInfo entity.UserLogin
 		if err := json.Unmarshal([]byte(data), &userInfo); err != nil {
 			return nil, err
 		}
@@ -244,7 +244,7 @@ func (u *UserCacheRedis) GetUserLoginInfos(ctx context.Context, userID string) (
 	return userInfoList, nil
 }
 
-func (u *UserCacheRedis) GetUserLoginInfo(ctx context.Context, userID string, index int) (*user.UserLogin, error) {
+func (u *UserCacheRedis) GetUserLoginInfo(ctx context.Context, userID string, index int) (*entity.UserLogin, error) {
 	if userID == "" {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -255,7 +255,7 @@ func (u *UserCacheRedis) GetUserLoginInfo(ctx context.Context, userID string, in
 	}
 
 	// Unmarshal the data into the UserInfo struct
-	var userInfo user.UserLogin
+	var userInfo entity.UserLogin
 	if err := json.Unmarshal([]byte(data), &userInfo); err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func (u *UserCacheRedis) GetUserLoginInfo(ctx context.Context, userID string, in
 	return &userInfo, nil
 }
 
-func (u *UserCacheRedis) GetUsersLoginInfo(ctx context.Context, userIDs []string) ([]*user.UserLogin, error) {
+func (u *UserCacheRedis) GetUsersLoginInfo(ctx context.Context, userIDs []string) ([]*entity.UserLogin, error) {
 	if len(userIDs) == 0 {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -278,13 +278,13 @@ func (u *UserCacheRedis) GetUsersLoginInfo(ctx context.Context, userIDs []string
 		return nil, err
 	}
 
-	userInfoList := make([]*user.UserLogin, len(data))
+	userInfoList := make([]*entity.UserLogin, len(data))
 	for i, d := range data {
 		if d == nil {
 			continue // Key not found
 		}
 
-		var userInfo user.UserLogin
+		var userInfo entity.UserLogin
 		if err := json.Unmarshal([]byte(d.(string)), &userInfo); err != nil {
 			return nil, err
 		}
@@ -316,7 +316,7 @@ func (u *UserCacheRedis) DeleteAllCache(ctx context.Context) error {
 	return u.client.Del(ctx, keys...).Err()
 }
 
-func (u *UserCacheRedis) GetUserInfo(ctx context.Context, userID string) (*user.User, error) {
+func (u *UserCacheRedis) GetUserInfo(ctx context.Context, userID string) (*entity.User, error) {
 	if userID == "" {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -329,7 +329,7 @@ func (u *UserCacheRedis) GetUserInfo(ctx context.Context, userID string) (*user.
 		return nil, fmt.Errorf("failed to get user info from cache: %v", err)
 	}
 
-	var userInfo user.User
+	var userInfo entity.User
 	if err = json.Unmarshal([]byte(val), &userInfo); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal user info: %v", err)
 	}
@@ -337,7 +337,7 @@ func (u *UserCacheRedis) GetUserInfo(ctx context.Context, userID string) (*user.
 	return &userInfo, nil
 }
 
-func (u *UserCacheRedis) GetUsersInfo(ctx context.Context, userIDs []string) ([]*user.User, error) {
+func (u *UserCacheRedis) GetUsersInfo(ctx context.Context, userIDs []string) ([]*entity.User, error) {
 	if len(userIDs) == 0 {
 		return nil, ErrCacheKeyEmpty
 	}
@@ -355,13 +355,13 @@ func (u *UserCacheRedis) GetUsersInfo(ctx context.Context, userIDs []string) ([]
 		return nil, fmt.Errorf("failed to get users info from cache: %v", err)
 	}
 
-	userInfos := make([]*user.User, 0)
+	userInfos := make([]*entity.User, 0)
 	for _, val := range vals {
 		if val == nil {
 			continue
 		}
 
-		var userInfo user.User
+		var userInfo entity.User
 		err = json.Unmarshal([]byte(val.(string)), &userInfo)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal user info: %v", err)
@@ -373,7 +373,7 @@ func (u *UserCacheRedis) GetUsersInfo(ctx context.Context, userIDs []string) ([]
 	return userInfos, nil
 }
 
-func (u *UserCacheRedis) SetUserInfo(ctx context.Context, userID string, data *user.User, expiration time.Duration) error {
+func (u *UserCacheRedis) SetUserInfo(ctx context.Context, userID string, data *entity.User, expiration time.Duration) error {
 	if userID == "" {
 		return ErrCacheKeyEmpty
 	}
