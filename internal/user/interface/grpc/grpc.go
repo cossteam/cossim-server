@@ -6,8 +6,9 @@ import (
 	"fmt"
 	api "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/cache"
-	"github.com/cossim/coss-server/internal/user/domain/user"
-	"github.com/cossim/coss-server/internal/user/infrastructure/persistence"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
+	"github.com/cossim/coss-server/internal/user/domain/repository"
+	"github.com/cossim/coss-server/internal/user/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
@@ -26,8 +27,8 @@ import (
 
 type UserServiceServer struct {
 	ac   *pkgconfig.AppConfig
-	ur   user.UserRepository
-	ulr  user.UserLoginRepository
+	ur   repository.UserRepository
+	ulr  repository.UserLoginRepository
 	stop func() func(ctx context.Context) error
 }
 
@@ -103,7 +104,7 @@ func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessReque
 		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
 
-	if info.Status != user.UserStatusNormal {
+	if info.Status != entity.UserStatusNormal {
 		return nil, code.UserErrStatusException
 	}
 
@@ -113,7 +114,7 @@ func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessReque
 // 用户登录
 func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	resp := &api.UserLoginResponse{}
-	userInfo := &user.User{}
+	userInfo := &entity.User{}
 	userInfo, err := s.ur.GetUserInfoByEmail(ctx, request.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -139,13 +140,13 @@ func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLogi
 		return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 	switch userInfo.Status {
-	case user.UserStatusLock:
+	case entity.UserStatusLock:
 		return resp, status.Error(codes.Code(code.UserErrLocked.Code()), code.UserErrLocked.Message())
-	case user.UserStatusDeleted:
+	case entity.UserStatusDeleted:
 		return resp, status.Error(codes.Code(code.UserErrDeleted.Code()), code.UserErrDeleted.Message())
-	case user.UserStatusDisable:
+	case entity.UserStatusDisable:
 		return resp, status.Error(codes.Code(code.UserErrDisabled.Code()), code.UserErrDisabled.Message())
-	case user.UserStatusNormal:
+	case entity.UserStatusNormal:
 		return &api.UserLoginResponse{
 			UserId:    userInfo.ID,
 			NickName:  userInfo.NickName,
@@ -170,14 +171,14 @@ func (s *UserServiceServer) UserRegister(ctx context.Context, request *api.UserR
 		//return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), code.UserErrEmailAlreadyRegistered.Message())
 		return resp, status.Error(codes.Aborted, code.UserErrEmailAlreadyRegistered.Message())
 	}
-	userInfo, err := s.ur.InsertUser(ctx, &user.User{
+	userInfo, err := s.ur.InsertUser(ctx, &entity.User{
 		ID:        uuid.New().String(),
 		Email:     request.Email,
 		Password:  request.Password,
 		NickName:  request.NickName,
 		Avatar:    request.Avatar,
 		PublicKey: request.PublicKey,
-		Status:    user.UserStatusNormal,
+		Status:    entity.UserStatusNormal,
 		//Action:   entity.UserStatusLock,
 	})
 	if err != nil {
@@ -286,13 +287,13 @@ func (s *UserServiceServer) SetUserPublicKey(ctx context.Context, request *api.S
 
 func (s *UserServiceServer) ModifyUserInfo(ctx context.Context, request *api.User) (*api.UserResponse, error) {
 	resp := &api.UserResponse{}
-	user, err := s.ur.UpdateUser(ctx, &user.User{
+	user, err := s.ur.UpdateUser(ctx, &entity.User{
 		ID:        request.UserId,
 		NickName:  request.NickName,
 		Avatar:    request.Avatar,
 		CossID:    request.CossId,
 		Signature: request.Signature,
-		Status:    user.UserStatus(request.Status),
+		Status:    entity.UserStatus(request.Status),
 		Tel:       request.Tel,
 	})
 	if err != nil {
@@ -305,7 +306,7 @@ func (s *UserServiceServer) ModifyUserInfo(ctx context.Context, request *api.Use
 
 func (s *UserServiceServer) ModifyUserPassword(ctx context.Context, request *api.ModifyUserPasswordRequest) (*api.UserResponse, error) {
 	resp := &api.UserResponse{}
-	user, err := s.ur.UpdateUser(ctx, &user.User{
+	user, err := s.ur.UpdateUser(ctx, &entity.User{
 		ID:       request.UserId,
 		Password: request.Password,
 	})
@@ -356,7 +357,7 @@ func (s *UserServiceServer) GetUserSecretBundle(ctx context.Context, request *ap
 
 func (s *UserServiceServer) ActivateUser(ctx context.Context, request *api.UserRequest) (*api.UserResponse, error) {
 	var resp = &api.UserResponse{UserId: request.UserId}
-	if err := s.ur.UpdateUserColumn(ctx, request.UserId, "email_verity", user.Activated); err != nil {
+	if err := s.ur.UpdateUserColumn(ctx, request.UserId, "email_verity", entity.Activated); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrActivateUserFailed.Code()), err.Error())
 	}
 	return resp, nil
@@ -364,12 +365,12 @@ func (s *UserServiceServer) ActivateUser(ctx context.Context, request *api.UserR
 
 func (s *UserServiceServer) CreateUser(ctx context.Context, request *api.CreateUserRequest) (*api.CreateUserResponse, error) {
 	resp := &api.CreateUserResponse{}
-	if err := s.ur.InsertAndUpdateUser(ctx, &user.User{
+	if err := s.ur.InsertAndUpdateUser(ctx, &entity.User{
 		NickName:  request.NickName,
 		Email:     request.Email,
 		Password:  request.Password,
 		Avatar:    request.Avatar,
-		Status:    user.UserStatus(request.Status),
+		Status:    entity.UserStatus(request.Status),
 		ID:        request.UserId,
 		PublicKey: request.PublicKey,
 		Bot:       uint(request.IsBot),

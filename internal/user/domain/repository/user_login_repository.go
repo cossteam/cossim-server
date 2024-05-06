@@ -1,11 +1,16 @@
 package repository
 
-//type UserLoginRepository interface {
-//	InsertUserLogin(user *entity.UserLogin) error
-//	GetUserLoginByDriverIdAndUserId(driverId, userId string) (*entity.UserLogin, error)
-//	UpdateUserLoginTokenByDriverId(driverId string, token string, userId string) error
-//	GetUserLoginByToken(token string) (*entity.UserLogin, error)
-//	GetUserDriverTokenByUserId(userId string) ([]string, error)
-//
-//	GetUserByUserId(userId string) (*entity.UserLogin, error)
-//}
+import (
+	"context"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
+)
+
+type UserLoginRepository interface {
+	InsertUserLogin(ctx context.Context, user *entity.UserLogin) error
+	GetUserLoginByDriverIdAndUserId(ctx context.Context, driverId, userId string) (*entity.UserLogin, error)
+	UpdateUserLoginTokenByDriverId(ctx context.Context, driverId string, token string, userId string) error
+	GetUserLoginByToken(ctx context.Context, token string) (*entity.UserLogin, error)
+	GetUserDriverTokenByUserId(ctx context.Context, userId string) ([]string, error)
+	GetUserByUserId(ctx context.Context, userId string) (*entity.UserLogin, error)
+	DeleteUserLoginByID(ctx context.Context, id uint32) error
+}
