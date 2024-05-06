@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	"github.com/cossim/coss-server/pkg/utils"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	socketio "github.com/googollee/go-socket.io"
 	"go.uber.org/zap"
 )
@@ -14,15 +14,18 @@ import (
 func (h *Handler) ws(s socketio.Conn) error {
 	url := s.URL()
 	token := url.Query().Get("token")
-	_, c2, err := utils.ParseToken(token, h.jwtSecret)
+
+	parseToken, err := h.authService.ParseToken(context.Background(), &authv1.ParseTokenRequest{Token: token})
 	if err != nil {
+		h.logger.Error("解析token失败", zap.Error(err))
 		return err
 	}
-	userId := c2.UserId
+
+	userId := parseToken.UserID
 
 	s.Join(userId)
 	s.SetContext(nil)
-	err = h.PushService.Ws(context.Background(), s, userId, c2.DriverId, s.ID(), token)
+	err = h.PushService.Ws(context.Background(), s, userId, parseToken.DriverID, s.ID(), token)
 	if err != nil {
 		return err
 	}
@@ -32,12 +35,14 @@ func (h *Handler) ws(s socketio.Conn) error {
 func (h *Handler) disconnect(s socketio.Conn, msg string) {
 	url := s.URL()
 	token := url.Query().Get("token")
-	_, c2, err := utils.ParseToken(token, h.jwtSecret)
+	parseToken, err := h.authService.ParseToken(context.Background(), &authv1.ParseTokenRequest{Token: token})
 	if err != nil {
-		h.logger.Error("token解析失败", zap.Error(err))
+		h.logger.Error("解析token失败", zap.Error(err))
 		return
 	}
-	userId := c2.UserId
+
+	userId := parseToken.UserID
+
 	err = h.PushService.WsOfflineClients(context.Background(), userId, s.ID())
 	if err != nil {
 		h.logger.Error("推送离线消息失败", zap.Error(err))

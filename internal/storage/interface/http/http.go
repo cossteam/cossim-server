@@ -4,7 +4,8 @@ import (
 	"context"
 	grpcinter "github.com/cossim/coss-server/internal/storage/interface/grpc"
 	"github.com/cossim/coss-server/internal/storage/service"
-	"github.com/cossim/coss-server/internal/user/cache"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
@@ -26,8 +27,7 @@ type Handler struct {
 	enc           encryption.Encryptor
 	svc           *service.Service
 	minioAddr     string
-	userCache     cache.UserCache
-	jwtSecret     string
+	authService   authv1.UserAuthServiceClient
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -37,14 +37,9 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	if cfg.Encryption.Enable {
 		return h.enc.ReadKeyPair()
 	}
-	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
-	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.StorageClient)
-	h.jwtSecret = cfg.SystemConfig.JwtSecret
+	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
 	return nil
 }
 
@@ -62,7 +57,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
 	api := r.Group("/api/v1/storage")
 	api.GET("/files/download/:type/:id", h.download)
-	api.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
+	api.Use(middleware.AuthMiddleware(h.authService))
 
 	api.GET("/files/:id", h.getFileInfo)
 	api.POST("/files", h.upload)

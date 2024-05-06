@@ -2,8 +2,9 @@ package http
 
 import (
 	"context"
-	"github.com/cossim/coss-server/internal/user/cache"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	grpchandler "github.com/cossim/coss-server/internal/user/interface/grpc"
+	"github.com/cossim/coss-server/internal/user/rpc/client"
 	"github.com/cossim/coss-server/internal/user/service"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -21,28 +22,24 @@ var (
 )
 
 type Handler struct {
-	logger     *zap.Logger
-	svc        *service.Service
-	enc        encryption.Encryptor
-	key        string
-	UserClient *grpchandler.UserServiceServer
-	userCache  cache.UserCache
-	jwtSecret  string
+	logger      *zap.Logger
+	svc         *service.Service
+	enc         encryption.Encryptor
+	key         string
+	UserClient  *grpchandler.UserServiceServer
+	authService authv1.UserAuthServiceClient
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("user_bff", int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+		if err := h.enc.ReadKeyPair(); err != nil {
+			return err
+		}
 	}
-	userCache, err := cache.NewUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	if err != nil {
-		return err
-	}
-	h.userCache = userCache
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.UserClient)
-	h.jwtSecret = cfg.SystemConfig.JwtSecret
+	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
 	return nil
 }
 
@@ -68,7 +65,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.POST("/email/code/send", h.sendEmailCode)
 	u.GET("/system/key/get", h.getSystemPublicKey)
 
-	u.Use(middleware.AuthMiddleware(h.userCache, h.jwtSecret))
+	u.Use(middleware.AuthMiddleware(h.authService))
 	u.POST("/public_key/reset", h.resetUserPublicKey)
 	u.GET("/search", h.search)
 	u.GET("/info", h.getUserInfo)
