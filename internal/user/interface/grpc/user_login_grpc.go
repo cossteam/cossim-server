@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/user/domain/user"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"google.golang.org/grpc/codes"
@@ -21,9 +21,9 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, request *v1.Use
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	}
-	var info2 *user.UserLogin
+	var info2 *entity.UserLogin
 	if info != nil {
-		info2 = &user.UserLogin{
+		info2 = &entity.UserLogin{
 			UserId:      request.UserId,
 			Token:       request.Token,
 			DriverId:    request.DriverId,
@@ -37,7 +37,7 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, request *v1.Use
 			return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 		}
 	} else {
-		info2 = &user.UserLogin{
+		info2 = &entity.UserLogin{
 			UserId:      request.UserId,
 			Token:       request.Token,
 			DriverId:    request.DriverId,
