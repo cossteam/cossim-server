@@ -52,6 +52,8 @@ type UserMsgDomain interface {
 	DeleteUserMessageByDialogIdRollback(ctx context.Context, dialogID uint) error
 	// 根据消息id删除私聊消息
 	DeleteUserMessageById(ctx context.Context, id uint, isPhysical bool) error
+	// 根据多个消息id删除私聊消息
+	DeleteUserMessageByIds(ctx context.Context, ids []uint, isPhysical bool) error
 	//修改消息标注状态
 	SetUserMsgLabel(ctx context.Context, id uint, isLabel bool) error
 }
@@ -289,6 +291,19 @@ func (u *UserMsgDomainImpl) DeleteUserMessageById(ctx context.Context, id uint, 
 		}
 	}
 	if err := u.repo.Umr.LogicalDeleteUserMessage(id); err != nil {
+		return status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
+	}
+	return nil
+}
+
+func (u *UserMsgDomainImpl) DeleteUserMessageByIds(ctx context.Context, ids []uint, isPhysical bool) error {
+	if isPhysical {
+		if err := u.repo.Umr.PhysicalDeleteUserMessages(ids); err != nil {
+			return status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
+		}
+	}
+
+	if err := u.repo.Umr.LogicalDeleteUserMessages(ids); err != nil {
 		return status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
 	}
 	return nil

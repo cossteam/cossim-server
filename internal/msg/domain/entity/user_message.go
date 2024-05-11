@@ -1,19 +1,21 @@
 package entity
 
+import v1 "github.com/cossim/coss-server/internal/msg/api/http/v1"
+
 type UserMessage struct {
 	BaseModel
-	Type               UserMessageType      `gorm:";comment:消息类型" json:"type"`
-	SubType            UserMessageSubType   `gorm:";comment:消息子类型" json:"sub_type"`
-	DialogId           uint                 `gorm:"default:0;comment:对话ID" json:"dialog_id"`
-	IsRead             ReadType             `gorm:"default:0;comment:是否已读" json:"is_read"`
-	ReplyId            uint                 `gorm:"default:0;comment:回复ID" json:"reply_id"`
-	ReadAt             int64                `gorm:"comment:阅读时间" json:"read_at"`
-	ReceiveID          string               `gorm:"default:0;comment:接收用户id" json:"receive_id"`
-	SendID             string               `gorm:"default:0;comment:发送用户id" json:"send_id"`
-	Content            string               `gorm:"longtext;comment:详细消息" json:"content"`
-	IsLabel            uint                 `gorm:"default:0;comment:是否标注" json:"is_label"`
-	IsBurnAfterReading BurnAfterReadingType `gorm:"default:0;comment:是否阅后即焚消息" json:"is_burn_after_reading"`
-	ReplyEmoji         string               `gorm:"comment:回复时使用的 Emoji" json:"reply_emoji"`
+	Type               UserMessageType
+	SubType            UserMessageSubType
+	DialogId           uint
+	IsRead             ReadType
+	ReplyId            uint
+	ReadAt             int64
+	ReceiveID          string
+	SendID             string
+	Content            string
+	IsLabel            uint
+	IsBurnAfterReading BurnAfterReadingType
+	ReplyEmoji         string
 }
 
 type BurnAfterReadingType uint
@@ -83,3 +85,21 @@ const (
 	NotRead ReadType = iota
 	IsRead
 )
+
+func (um *UserMessage) ToMessage() *v1.Message {
+	return &v1.Message{
+		Content:            um.Content,
+		IsBurnAfterReading: um.IsBurnAfterReading == IsBurnAfterReading,
+		IsLabel:            um.IsLabel == uint(IsLabel),
+		IsRead:             um.IsRead == IsRead,
+		MsgId:              int(um.ID),
+		MsgType:            int(um.Type),
+		ReadAt:             int(um.ReadAt),
+		ReplyId:            int(um.ReplyId),
+		SendAt:             int(um.CreatedAt),
+		SenderId:           um.SendID,
+		SenderInfo:         nil, // 需要确定如何设置 SenderInfo
+		ReceiverInfo:       nil, // 需要确定如何设置 ReceiverInfo
+		DialogId:           int(um.DialogId),
+	}
+}

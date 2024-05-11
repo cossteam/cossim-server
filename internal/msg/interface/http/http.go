@@ -2,20 +2,29 @@ package http
 
 import (
 	"context"
+	"fmt"
+	v1 "github.com/cossim/coss-server/internal/msg/api/http/v1"
+	appservice "github.com/cossim/coss-server/internal/msg/app/service/msg"
 	grpcHandler "github.com/cossim/coss-server/internal/msg/interface/grpc"
-	"github.com/cossim/coss-server/internal/msg/service"
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/cache"
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
+	"github.com/cossim/coss-server/pkg/http/response"
 	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/gin-gonic/gin"
+	oapimiddleware "github.com/oapi-codegen/gin-middleware"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"os"
+	"strconv"
 )
 
 var (
@@ -23,11 +32,12 @@ var (
 )
 
 type Handler struct {
-	svc         *service.Service
 	logger      *zap.Logger
 	enc         encryption.Encryptor
 	MsgClient   *grpcHandler.Handler
 	authService authv1.UserAuthServiceClient
+	svc         appservice.Service
+	userCache   cache.UserCache
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -39,7 +49,6 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	}
 
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	h.svc = service.New(cfg, h.MsgClient)
 	var userAddr string
 	if cfg.Discovers["user"].Direct {
 		userAddr = cfg.Discovers["user"].Addr()
@@ -51,6 +60,22 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 	h.authService = authClient
+
+	h.svc = appservice.NewService(cfg.Dtm.Addr(), h.logger)
+
+	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
+	if err != nil {
+		return err
+	}
+	dbConn, err := mysql.GetConnection()
+	if err != nil {
+		return err
+	}
+	err = h.svc.Init(dbConn, cfg)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -65,32 +90,34 @@ func (h *Handler) Version() string {
 // @title CossApi
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
-	u := r.Group("/api/v1/msg")
-	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	u.Use(middleware.AuthMiddleware(h.authService))
+	//u := r.Group("/api/v1/msg")
+	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
+	r.Use(middleware.AuthMiddleware(h.authService))
 
-	u.POST("/send/user", h.sendUserMsg)
-	u.POST("/send/group", h.sendGroupMsg)
-	u.GET("/list/user", h.getUserMsgList)
-	u.GET("/list/group", h.getGroupMsgList)
-	u.GET("/dialog/list", h.getUserDialogList)
-	u.POST("/recall/group", h.recallGroupMsg)
-	u.POST("/recall/user", h.recallUserMsg)
-	u.POST("/edit/group", h.editGroupMsg)
-	u.POST("/edit/user", h.editUserMsg)
-	u.POST("/read/user", h.readUserMsgs)
+	swagger, err := v1.GetSwagger()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
+		os.Exit(1)
+	}
+	// Clear out the servers array in the swagger spec, that skips validating
+	// that server names match. We don't know how this thing will be run.
+	swagger.Servers = nil
 
-	//群聊标注消息
-	u.POST("/label/group", h.labelGroupMessage)
-	u.GET("/label/group", h.getGroupLabelMsgList)
-	//私聊标注消息
-	u.POST("/label/user", h.labelUserMessage)
-	u.GET("/label/user", h.getUserLabelMsgList)
-	u.POST("/after/get", h.getDialogAfterMsg)
-	//群聊设置消息已读
-	u.POST("/read/group", h.setGroupMessagesRead)
-	//获取群聊消息阅读者
-	u.GET("/read/group", h.getGroupMessageReaders)
+	validatorOptions := &oapimiddleware.Options{
+		ErrorHandler: func(c *gin.Context, message string, statusCode int) {
+			fmt.Println("statusCode => ", statusCode)
+			response.SetFail(c, message, nil)
+		},
+	}
+	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+		return nil
+	}
+
+	// Use our validation middleware to check all requests against the
+	// OpenAPI schema.
+	r.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, validatorOptions))
+
+	v1.RegisterHandlers(r, h)
 }
 
 func (h *Handler) Health(r gin.IRouter) string {

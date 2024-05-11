@@ -7,103 +7,16 @@ definitions:
       msg:
         type: string
     type: object
-  github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType:
-    enum:
-    - 0
-    - 1
-    type: integer
-    x-enum-comments:
-      IsBurnAfterReading: 阅后即焚消息
-      NotBurnAfterReading: 非阅后即焚
-    x-enum-varnames:
-    - NotBurnAfterReading
-    - IsBurnAfterReading
-  github_com_cossim_coss-server_internal_msg_api_http_model.LabelMsgType:
-    enum:
-    - 0
-    - 1
-    type: integer
-    x-enum-comments:
-      IsLabel: 标注
-      NotLabel: 不标注
-    x-enum-varnames:
-    - NotLabel
-    - IsLabel
-  github_com_cossim_coss-server_internal_msg_api_http_model.Response:
+  github_com_cossim_coss-server_internal_msg_api_http_v1.Response:
     properties:
       code:
         type: integer
-      data: {}
+      data:
+        additionalProperties: true
+        type: object
       msg:
         type: string
     type: object
-  github_com_cossim_coss-server_internal_msg_api_http_model.SendGroupMsgRequest:
-    properties:
-      at_all_user:
-        type: integer
-      at_users:
-        items:
-          type: string
-        type: array
-      content:
-        type: string
-      dialog_id:
-        type: integer
-      group_id:
-        type: integer
-      is_burn_after_reading:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType'
-      reply_id:
-        type: integer
-      type:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.UserMessageType'
-    required:
-    - content
-    - dialog_id
-    - group_id
-    - type
-    type: object
-  github_com_cossim_coss-server_internal_msg_api_http_model.UserMessageType:
-    enum:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    - 9
-    - 10
-    - 11
-    - 12
-    type: integer
-    x-enum-comments:
-      MessageTypeCancelLabel: 取消标注
-      MessageTypeDelete: 撤回消息
-      MessageTypeEmojiReply: emoji回复
-      MessageTypeFile: 文件消息
-      MessageTypeImage: 图片消息
-      MessageTypeLabel: 标注
-      MessageTypeNotice: 群公告
-      MessageTypeText: 文本消息
-      MessageTypeVideo: 视频消息
-      MessageTypeVideoCall: 视频通话
-      MessageTypeVoice: 语音消息
-      MessageTypeVoiceCall: 语音通话
-    x-enum-varnames:
-    - MessageTypeText
-    - MessageTypeVoice
-    - MessageTypeImage
-    - MessageTypeLabel
-    - MessageTypeNotice
-    - MessageTypeFile
-    - MessageTypeVideo
-    - MessageTypeEmojiReply
-    - MessageTypeVoiceCall
-    - MessageTypeVideoCall
-    - MessageTypeDelete
-    - MessageTypeCancelLabel
   github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType:
     enum:
     - 0
@@ -147,227 +60,6 @@ definitions:
       msg:
         type: string
     type: object
-  interfaces.CreateRoomRequest:
-    properties:
-      group_id:
-        description: GroupId 群组ID
-        type: integer
-      if:
-        properties:
-          type: {}
-        type: object
-      member:
-        description: Member ID of the user who will receive the call
-        items:
-          type: string
-        type: array
-      option:
-        $ref: '#/definitions/interfaces.RoomOption'
-      then: {}
-      type:
-        allOf:
-        - $ref: '#/definitions/interfaces.CreateRoomRequestType'
-        description: Type 通话类型
-    type: object
-  interfaces.CreateRoomRequestType:
-    enum:
-    - group
-    - user
-    type: string
-    x-enum-varnames:
-    - Group
-    - User
-  interfaces.CreateRoomResponse:
-    properties:
-      room:
-        description: Room 房间ID
-        type: string
-      url:
-        description: Url webRtc服务器地址
-        type: string
-    type: object
-  interfaces.Group:
-    properties:
-      avatar:
-        description: Avatar 群组头像
-        type: string
-      id:
-        description: Id 群聊ID
-        type: integer
-      max_members_limit:
-        description: MaxMembersLimit 群组成员上限
-        type: integer
-      member:
-        description: Member 群聊成员数量
-        type: integer
-      name:
-        description: Name 群聊名称
-        type: string
-    type: object
-  interfaces.GroupInfo:
-    properties:
-      avatar:
-        description: Avatar 群组头像
-        type: string
-      creator_id:
-        description: CreatorId 创建者ID
-        type: string
-      dialog_id:
-        description: DialogId 对话ID
-        type: integer
-      encrypt:
-        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
-        type: boolean
-      id:
-        description: Id 群聊ID
-        type: integer
-      join_approve:
-        description: JoinApprove 入群审批
-        type: boolean
-      max_members_limit:
-        description: MaxMembersLimit 群组成员上限
-        type: integer
-      name:
-        description: Name 群聊名称
-        type: string
-      preferences:
-        $ref: '#/definitions/interfaces.Preferences'
-      silence_time:
-        description: SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言
-        type: integer
-      status:
-        description: Status 群组状态
-        type: integer
-      type:
-        description: Type 群组类型
-        type: integer
-    type: object
-  interfaces.JoinRoomRequest:
-    properties:
-      option:
-        $ref: '#/definitions/interfaces.RoomOption'
-    type: object
-  interfaces.JoinRoomResponse:
-    properties:
-      token:
-        description: Token 加入通话的token
-        type: string
-      url:
-        description: Url webRtc服务器地址
-        type: string
-    type: object
-  interfaces.ParticipantInfo:
-    properties:
-      identity:
-        description: Identity User nickname
-        type: string
-      is_publisher:
-        description: IsPublisher Whether the participant is the creator
-        type: boolean
-      joined_at:
-        description: JoinedAt Join time
-        type: integer
-      name:
-        type: string
-      state:
-        description: State Room Status
-        type: integer
-    type: object
-  interfaces.Preferences:
-    properties:
-      entry_method:
-        description: EntryMethod 进入方式
-        type: integer
-      identity:
-        description: Identity 身份
-        type: integer
-      inviter:
-        description: Inviter 邀请者
-        type: string
-      joined_at:
-        description: JoinedAt 加入时间
-        type: integer
-      mute_end_time:
-        description: MuteEndTime 静音结束时间
-        type: integer
-      open_burn_after_reading:
-        description: OpenBurnAfterReading 阅后即焚开启
-        type: integer
-      remark:
-        description: Remark 备注
-        type: string
-      silent_notification:
-        description: SilentNotification 静默通知
-        type: integer
-    type: object
-  interfaces.Response:
-    additionalProperties: true
-    type: object
-  interfaces.Room:
-    properties:
-      duration:
-        type: integer
-      participant:
-        items:
-          $ref: '#/definitions/interfaces.ParticipantInfo'
-        type: array
-      room:
-        type: string
-      start_at:
-        type: integer
-      type:
-        type: string
-      video_call_record_url:
-        type: string
-    type: object
-  interfaces.RoomOption:
-    properties:
-      audio_enabled:
-        description: AudioEnabled Whether to enable audio
-        type: boolean
-      codec:
-        description: Codec Codec
-        type: string
-      frame_rate:
-        description: FrameRate Frame rate
-        type: integer
-      resolution:
-        description: Resolution Resolution
-        type: string
-      video_enabled:
-        description: VideoEnabled Whether to enable video
-        type: boolean
-    type: object
-  interfaces.UpdateGroupRequest:
-    properties:
-      avatar:
-        description: Avatar 新的群聊头像
-        type: string
-      encrypt:
-        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
-        type: boolean
-      join_approve:
-        description: JoinApprove 入群审批
-        type: boolean
-      name:
-        description: Name 新的群聊名称
-        type: string
-      silence_time:
-        description: SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言
-        type: integer
-      type:
-        allOf:
-        - $ref: '#/definitions/interfaces.UpdateGroupRequestType'
-        description: Type 群组类型 0(私密群) 1(公开群)
-    type: object
-  interfaces.UpdateGroupRequestType:
-    enum:
-    - 0
-    - 1
-    type: integer
-    x-enum-varnames:
-    - UpdateGroupRequestTypeN0
-    - UpdateGroupRequestTypeN1
   model.AbortUploadRequest:
     properties:
       key:
@@ -407,13 +99,6 @@ definitions:
     required:
     - group_id
     - user_ids
-    type: object
-  model.AfterMsg:
-    properties:
-      dialog_id:
-        type: integer
-      msg_id:
-        type: integer
     type: object
   model.CloseOrOpenDialogAction:
     enum:
@@ -497,37 +182,6 @@ definitions:
     required:
     - id
     type: object
-  model.EditGroupMsgRequest:
-    properties:
-      content:
-        description: New content of the message
-        type: string
-      msg_id:
-        description: Message ID
-        type: integer
-      msg_type:
-        type: integer
-    required:
-    - content
-    - msg_id
-    - msg_type
-    type: object
-  model.EditUserMsgRequest:
-    properties:
-      content:
-        description: 消息内容
-        type: string
-      msg_id:
-        description: Message ID
-        type: integer
-      msg_type:
-        description: 消息类型
-        type: integer
-    required:
-    - content
-    - msg_id
-    - msg_type
-    type: object
   model.FileType:
     enum:
     - 0
@@ -545,31 +199,6 @@ definitions:
     - FileType_Image
     - FileType_File
     - FileType_Video
-  model.GetGroupMessageReadersResponse:
-    properties:
-      avatar:
-        type: string
-      name:
-        type: string
-      user_id:
-        type: string
-    type: object
-  model.GroupMessageReadRequest:
-    properties:
-      dialog_id:
-        description: 会话ID
-        type: integer
-      msg_ids:
-        description: 消息ID
-        items:
-          type: integer
-        type: array
-      read_all:
-        description: 全部已读
-        type: boolean
-    required:
-    - dialog_id
-    type: object
   model.GroupRequestListResponse:
     properties:
       create_at:
@@ -650,30 +279,6 @@ definitions:
         type: integer
     required:
     - group_id
-    type: object
-  model.LabelGroupMessageRequest:
-    properties:
-      is_label:
-        allOf:
-        - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.LabelMsgType'
-        description: 是否标注
-      msg_id:
-        description: 消息ID
-        type: integer
-    required:
-    - msg_id
-    type: object
-  model.LabelUserMessageRequest:
-    properties:
-      is_label:
-        allOf:
-        - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.LabelMsgType'
-        description: 是否标注
-      msg_id:
-        description: 消息ID
-        type: integer
-    required:
-    - msg_id
     type: object
   model.LoginRequest:
     properties:
@@ -786,38 +391,6 @@ definitions:
     - group_id
     - id
     type: object
-  model.ReadUserMsgsRequest:
-    properties:
-      dialog_id:
-        description: 会话ID
-        type: integer
-      msg_ids:
-        description: 消息id
-        items:
-          type: integer
-        type: array
-      read_all:
-        description: 全部已读
-        type: boolean
-    required:
-    - dialog_id
-    type: object
-  model.RecallGroupMsgRequest:
-    properties:
-      msg_id:
-        description: Message ID
-        type: integer
-    required:
-    - msg_id
-    type: object
-  model.RecallUserMsgRequest:
-    properties:
-      msg_id:
-        description: Message ID
-        type: integer
-    required:
-    - msg_id
-    type: object
   model.RegisterRequest:
     properties:
       confirm_password:
@@ -882,26 +455,6 @@ definitions:
         type: string
     required:
     - user_id
-    type: object
-  model.SendUserMsgRequest:
-    properties:
-      content:
-        type: string
-      dialog_id:
-        type: integer
-      is_burn_after_reading:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType'
-      receiver_id:
-        type: string
-      reply_id:
-        type: integer
-      type:
-        $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.UserMessageType'
-    required:
-    - content
-    - dialog_id
-    - receiver_id
-    - type
     type: object
   model.SetGroupOpenBurnAfterReadingTimeOutRequest:
     properties:
@@ -1153,6 +706,308 @@ definitions:
       status:
         type: integer
     type: object
+  v1.AfterMsg:
+    properties:
+      dialog_id:
+        type: integer
+      msg_id:
+        type: integer
+    type: object
+  v1.EditGroupMsgRequest:
+    properties:
+      content:
+        type: string
+      msg_type:
+        type: integer
+    type: object
+  v1.EditUserMsgRequest:
+    properties:
+      content:
+        type: string
+      msg_type:
+        type: integer
+    type: object
+  v1.GetGroupLabelMsgListResponse:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/v1.Message'
+        type: array
+    type: object
+  v1.GetGroupMessageReadersResponse:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  v1.GetUserLabelMsgListResponse:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/v1.Message'
+        type: array
+    type: object
+  v1.Group:
+    properties:
+      avatar:
+        description: Avatar 群组头像
+        type: string
+      id:
+        description: Id 群聊ID
+        type: integer
+      max_members_limit:
+        description: MaxMembersLimit 群组成员上限
+        type: integer
+      member:
+        description: Member 群聊成员数量
+        type: integer
+      name:
+        description: Name 群聊名称
+        type: string
+    type: object
+  v1.GroupInfo:
+    properties:
+      avatar:
+        description: Avatar 群组头像
+        type: string
+      creator_id:
+        description: CreatorId 创建者ID
+        type: string
+      dialog_id:
+        description: DialogId 对话ID
+        type: integer
+      encrypt:
+        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
+        type: boolean
+      id:
+        description: Id 群聊ID
+        type: integer
+      join_approve:
+        description: JoinApprove 入群审批
+        type: boolean
+      max_members_limit:
+        description: MaxMembersLimit 群组成员上限
+        type: integer
+      name:
+        description: Name 群聊名称
+        type: string
+      preferences:
+        $ref: '#/definitions/v1.Preferences'
+      silence_time:
+        description: SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言
+        type: integer
+      status:
+        description: Status 群组状态
+        type: integer
+      type:
+        description: Type 群组类型
+        type: integer
+    type: object
+  v1.GroupMessageReadRequest:
+    properties:
+      dialog_id:
+        type: integer
+      msg_ids:
+        items:
+          type: integer
+        type: array
+      read_all:
+        type: boolean
+    type: object
+  v1.LabelGroupMessageRequest:
+    properties:
+      is_label:
+        type: boolean
+    type: object
+  v1.LabelUserMessageRequest:
+    properties:
+      is_label:
+        type: boolean
+    type: object
+  v1.Message:
+    properties:
+      at_all_user:
+        type: boolean
+      at_users:
+        items:
+          type: string
+        type: array
+      content:
+        type: string
+      dialog_id:
+        type: integer
+      group_id:
+        type: integer
+      is_burn_after_reading:
+        type: boolean
+      is_label:
+        type: boolean
+      is_read:
+        type: boolean
+      msg_id:
+        type: integer
+      msg_type:
+        type: integer
+      read_at:
+        type: integer
+      receiver_info:
+        $ref: '#/definitions/v1.SenderInfo'
+      reply_id:
+        type: integer
+      send_at:
+        type: integer
+      sender_id:
+        type: string
+      sender_info:
+        $ref: '#/definitions/v1.SenderInfo'
+    type: object
+  v1.Preferences:
+    properties:
+      entry_method:
+        description: EntryMethod 进入方式
+        type: integer
+      identity:
+        description: Identity 身份
+        type: integer
+      inviter:
+        description: Inviter 邀请者
+        type: string
+      joined_at:
+        description: JoinedAt 加入时间
+        type: integer
+      mute_end_time:
+        description: MuteEndTime 静音结束时间
+        type: integer
+      open_burn_after_reading:
+        description: OpenBurnAfterReading 阅后即焚开启
+        type: integer
+      remark:
+        description: Remark 备注
+        type: string
+      silent_notification:
+        description: SilentNotification 静默通知
+        type: integer
+    type: object
+  v1.ReadUserMsgsRequest:
+    properties:
+      dialog_id:
+        type: integer
+      msg_ids:
+        items:
+          type: integer
+        type: array
+      read_all:
+        type: boolean
+    type: object
+  v1.SendGroupMsgRequest:
+    properties:
+      at_all_user:
+        type: boolean
+      at_users:
+        items:
+          type: string
+        type: array
+      content:
+        type: string
+      dialog_id:
+        type: integer
+      group_id:
+        type: integer
+      is_burn_after_reading:
+        type: boolean
+      reply_id:
+        type: integer
+      type:
+        type: integer
+    type: object
+  v1.SendUserMsgRequest:
+    properties:
+      content:
+        type: string
+      dialog_id:
+        type: integer
+      is_burn_after_reading:
+        type: boolean
+      receiver_id:
+        type: string
+      reply_id:
+        type: integer
+      type:
+        allOf:
+        - $ref: '#/definitions/v1.SendUserMsgRequestType'
+        description: Type 消息类型 1=文本消息 2=语音消息 3=图片消息 4=标注 5=群公告 6=文件消息 7=视频消息 8=emoji回复
+          9=语音通话 10=视频通话 11=撤回消息 12=取消标注
+    type: object
+  v1.SendUserMsgRequestType:
+    enum:
+    - 1
+    - 10
+    - 11
+    - 12
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    type: integer
+    x-enum-varnames:
+    - N1
+    - N10
+    - N11
+    - N12
+    - N2
+    - N3
+    - N4
+    - N5
+    - N6
+    - N7
+    - N8
+    - N9
+  v1.SenderInfo:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  v1.UpdateGroupRequest:
+    properties:
+      avatar:
+        description: Avatar 新的群聊头像
+        type: string
+      encrypt:
+        description: Encrypt 是否开启加密，只有当群聊为私密群才能开启
+        type: boolean
+      join_approve:
+        description: JoinApprove 入群审批
+        type: boolean
+      name:
+        description: Name 新的群聊名称
+        type: string
+      silence_time:
+        description: SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言
+        type: integer
+      type:
+        allOf:
+        - $ref: '#/definitions/v1.UpdateGroupRequestType'
+        description: Type 群组类型 0(私密群) 1(公开群)
+    type: object
+  v1.UpdateGroupRequestType:
+    enum:
+    - 0
+    - 1
+    type: integer
+    x-enum-varnames:
+    - UpdateGroupRequestTypeN0
+    - UpdateGroupRequestTypeN1
 info:
   contact: {}
 paths:
@@ -1215,7 +1070,7 @@ paths:
         "200":
           description: 返回群聊信息
           schema:
-            $ref: '#/definitions/interfaces.GroupInfo'
+            $ref: '#/definitions/v1.GroupInfo'
       summary: 获取群聊信息
       tags:
       - group
@@ -1234,7 +1089,7 @@ paths:
         name: requestBody
         required: true
         schema:
-          $ref: '#/definitions/interfaces.UpdateGroupRequest'
+          $ref: '#/definitions/v1.UpdateGroupRequest'
       produces:
       - application/json
       responses:
@@ -1265,162 +1120,13 @@ paths:
         "200":
           description: 成功创建群聊
           schema:
-            $ref: '#/definitions/interfaces.Group'
+            $ref: '#/definitions/v1.Group'
       security:
       - ApiKeyAuth: []
       summary: 创建群聊
       tags:
       - group
-  /live:
-    post:
-      consumes:
-      - application/json
-      description: 创建通话
-      parameters:
-      - description: 请求体参数
-        in: body
-        name: requestBody
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.CreateRoomRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 创建通话成功
-          schema:
-            $ref: '#/definitions/interfaces.CreateRoomResponse'
-      security:
-      - bearerAuth: []
-      summary: 创建通话
-      tags:
-      - live
-  /live/{id}:
-    delete:
-      description: 用户退出当前通话
-      parameters:
-      - description: 要退出的通话房间ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: 成功退出通话
-          schema:
-            $ref: '#/definitions/interfaces.Response'
-      security:
-      - bearerAuth: []
-      summary: 删除通话
-      tags:
-      - live
-    get:
-      description: 获取通话房间信息
-      parameters:
-      - description: 要退出的通话房间ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取通话信息成功
-          schema:
-            $ref: '#/definitions/interfaces.Room'
-      security:
-      - bearerAuth: []
-      summary: 获取通话房间信息
-      tags:
-      - live
-  /live/{id}/join:
-    post:
-      consumes:
-      - application/json
-      description: 加入已存在的通话房间
-      parameters:
-      - description: 要加入的通话房间ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 请求体参数
-        in: body
-        name: requestBody
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.JoinRoomRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功加入通话
-          schema:
-            $ref: '#/definitions/interfaces.JoinRoomResponse'
-      security:
-      - bearerAuth: []
-      summary: 加入通话
-      tags:
-      - live
-  /live/{id}/reject:
-    post:
-      consumes:
-      - application/json
-      description: 拒绝加入通话
-      parameters:
-      - description: 要拒绝的通话房间ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功拒绝通话
-          schema:
-            $ref: '#/definitions/interfaces.Response'
-      security:
-      - bearerAuth: []
-      summary: 拒绝通话
-      tags:
-      - live
-  /live/group/{id}:
-    get:
-      consumes:
-      - application/json
-      description: 获取群聊通话信息
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取群聊通话信息成功
-          schema:
-            $ref: '#/definitions/interfaces.Room'
-      security:
-      - bearerAuth: []
-      summary: 获取群聊通话
-      tags:
-      - live
-  /live/user:
-    get:
-      consumes:
-      - application/json
-      description: 获取用户通话信息
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 获取用户通话信息成功
-          schema:
-            $ref: '#/definitions/interfaces.Room'
-      security:
-      - bearerAuth: []
-      summary: 获取用户通话
-      tags:
-      - live
-  /msg/after/get:
+  /msg/dialog/after:
     post:
       consumes:
       - application/json
@@ -1432,7 +1138,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/model.AfterMsg'
+            $ref: '#/definitions/v1.AfterMsg'
           type: array
       produces:
       - application/json
@@ -1440,8 +1146,34 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
       summary: 获取指定对话落后消息
+      tags:
+      - Msg
+  /msg/dialog/group/{dialog_id}/label:
+    get:
+      consumes:
+      - application/json
+      description: 获取群聊标注信息
+      parameters:
+      - description: 对话id
+        in: path
+        name: dialog_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/v1.GetGroupLabelMsgListResponse'
+              type: object
+      summary: 获取群聊标注信息
       tags:
       - Msg
   /msg/dialog/list:
@@ -1466,104 +1198,18 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
       summary: 获取用户对话列表
       tags:
       - Msg
-  /msg/edit/group:
-    post:
-      consumes:
-      - application/json
-      description: 编辑群消息
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.EditGroupMsgRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 编辑群消息
-      tags:
-      - Msg
-  /msg/edit/user:
-    post:
-      consumes:
-      - application/json
-      description: 编辑用户消息
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.EditUserMsgRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 编辑用户消息
-      tags:
-      - Msg
-  /msg/label/group:
-    get:
-      consumes:
-      - application/json
-      description: 获取群聊标注信息
-      parameters:
-      - description: 对话id
-        in: query
-        name: dialog_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 获取群聊标注信息
-      tags:
-      - Msg
-    post:
-      consumes:
-      - application/json
-      description: 标注群聊消息状态
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.LabelGroupMessageRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 标注群聊消息状态
-      tags:
-      - Msg
-  /msg/label/user:
+  /msg/dialog/user/{dialog_id}/label:
     get:
       consumes:
       - application/json
       description: 获取私聊标注信息
       parameters:
       - description: 对话id
-        in: query
+        in: path
         name: dialog_id
         required: true
         type: string
@@ -1573,32 +1219,128 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            allOf:
+            - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/v1.GetUserLabelMsgListResponse'
+              type: object
       summary: 获取私聊标注信息
       tags:
       - Msg
-    post:
+  /msg/group/{id}:
+    delete:
       consumes:
       - application/json
-      description: 标注用户消息状态
+      description: 撤回群消息
       parameters:
-      - description: request
-        in: body
-        name: request
+      - description: 消息ID
+        in: path
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/model.LabelUserMessageRequest'
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 标注用户消息状态
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 撤回群消息
       tags:
       - Msg
-  /msg/list/group:
+    put:
+      consumes:
+      - application/json
+      description: 编辑群消息
+      parameters:
+      - description: 消息ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.EditGroupMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 编辑群消息
+      tags:
+      - Msg
+  /msg/group/{id}/label:
+    post:
+      consumes:
+      - application/json
+      description: 标注群聊消息状态
+      parameters:
+      - description: 消息ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.LabelGroupMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 标注群聊消息状态
+      tags:
+      - Msg
+  /msg/group/{id}/read:
+    get:
+      consumes:
+      - application/json
+      description: 获取消息已读人员
+      parameters:
+      - description: 消息ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 对话ID
+        in: query
+        name: dialog_id
+        required: true
+        type: integer
+      - description: 群聊ID
+        in: query
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/v1.GetGroupMessageReadersResponse'
+                  type: array
+              type: object
+      summary: 获取消息已读人员
+      tags:
+      - Msg
+  /msg/group/list:
     get:
       consumes:
       - application/json
@@ -1641,11 +1383,129 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
       summary: 获取群聊消息
       tags:
       - Msg
-  /msg/list/user:
+  /msg/group/read:
+    put:
+      consumes:
+      - application/json
+      description: 批量设置群聊消息为已读
+      parameters:
+      - description: 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.GroupMessageReadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 批量设置群聊消息为已读
+      tags:
+      - Msg
+  /msg/group/send:
+    post:
+      consumes:
+      - application/json
+      description: 发送群聊消息
+      parameters:
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.SendGroupMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 发送群聊消息
+      tags:
+      - Msg
+  /msg/user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 撤回用户消息
+      parameters:
+      - description: 消息ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 撤回用户消息
+      tags:
+      - Msg
+    put:
+      consumes:
+      - application/json
+      description: 编辑用户消息
+      parameters:
+      - description: 消息ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.EditUserMsgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 编辑用户消息
+      tags:
+      - Msg
+  /msg/user/{id}/label:
+    post:
+      consumes:
+      - application/json
+      description: 标注用户消息状态
+      parameters:
+      - description: 消息ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.LabelUserMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
+      summary: 标注用户消息状态
+      tags:
+      - Msg
+  /msg/user/list:
     get:
       consumes:
       - application/json
@@ -1697,71 +1557,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
       summary: 获取私聊消息
       tags:
       - Msg
-  /msg/read/group:
-    get:
-      consumes:
-      - application/json
-      description: 获取消息已读人员
-      parameters:
-      - description: 消息ID
-        in: query
-        name: msg_id
-        required: true
-        type: integer
-      - description: 对话ID
-        in: query
-        name: dialog_id
-        required: true
-        type: integer
-      - description: 群聊ID
-        in: query
-        name: group_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/model.GetGroupMessageReadersResponse'
-                  type: array
-              type: object
-      summary: 获取消息已读人员
-      tags:
-      - Msg
-    post:
-      consumes:
-      - application/json
-      description: 批量设置群聊消息为已读
-      parameters:
-      - description: 请求参数
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupMessageReadRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 批量设置群聊消息为已读
-      tags:
-      - Msg
-  /msg/read/user:
-    post:
+  /msg/user/read:
+    put:
       consumes:
       - application/json
       description: 批量设置私聊消息状态为已读
@@ -1771,84 +1572,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.ReadUserMsgsRequest'
+          $ref: '#/definitions/v1.ReadUserMsgsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
       summary: 批量设置私聊消息状态为已读
       tags:
       - Msg
-  /msg/recall/group:
-    post:
-      consumes:
-      - application/json
-      description: 撤回群消息
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.RecallGroupMsgRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 撤回群消息
-      tags:
-      - Msg
-  /msg/recall/user:
-    post:
-      consumes:
-      - application/json
-      description: 撤回用户消息
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.RecallUserMsgRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 撤回用户消息
-      tags:
-      - Msg
-  /msg/send/group:
-    post:
-      consumes:
-      - application/json
-      description: 发送群聊消息
-      parameters:
-      - description: request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.SendGroupMsgRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
-      summary: 发送群聊消息
-      tags:
-      - Msg
-  /msg/send/user:
+  /msg/user/send:
     post:
       consumes:
       - application/json
@@ -1859,14 +1594,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.SendUserMsgRequest'
+          $ref: '#/definitions/v1.SendUserMsgRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response'
+            $ref: '#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response'
       summary: 发送私聊消息
       tags:
       - Msg

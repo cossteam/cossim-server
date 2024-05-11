@@ -119,7 +119,9 @@ func (s *UserServiceServer) UserInfo(ctx context.Context, request *api.UserInfoR
 
 func (s *UserServiceServer) GetBatchUserInfo(ctx context.Context, request *api.GetBatchUserInfoRequest) (*api.GetBatchUserInfoResponse, error) {
 	resp := &api.GetBatchUserInfoResponse{}
-
+	if len(request.UserIds) == 0 {
+		return resp, nil
+	}
 	users, err := s.ur.GetBatchGetUserInfoByIDs(ctx, request.UserIds)
 	if err != nil {
 		fmt.Printf("无法获取用户列表信息: %v\n", err)

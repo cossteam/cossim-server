@@ -40,7 +40,7 @@ message SendWsUserMsg {
   // @inject_tag: json:"dialog_id"
   uint32 dialog_id = 8;
   // @inject_tag: json:"at_users"
-  uint32 is_burn_after_reading = 9;
+  bool is_burn_after_reading = 9;
   // @inject_tag: json:"burn_after_reading_time_out"
   int64 burn_after_reading_time_out = 10;
   // @inject_tag: json:"sender_info"
@@ -56,6 +56,43 @@ message SenderInfo {
   string Avatar = 2;
   // @inject_tag: json:"name"
   string Name = 3;
+}
+
+message WsUserOperatorMsg{
+  // @inject_tag: json:"id"
+  uint32 MsgId = 1;
+  // @inject_tag: json:"sender_id"
+  string SenderId = 2;
+  // @inject_tag: json:"receiver_id"
+  string ReceiverId = 3;
+  // @inject_tag: json:"content"
+  string Content = 4;
+  // @inject_tag: json:"msg_type"
+  uint32 Type = 5;
+  // @inject_tag: json:"reply_id"
+  uint32 ReplyId = 6;
+  // @inject_tag: json:"send_at"
+  bool IsRead = 7;
+  // @inject_tag: json:"read_at"
+  int64 ReadAt = 8;
+  // @inject_tag: json:"created_at"
+  int64 CreatedAt = 9;
+  // @inject_tag: json:"dialog_id"
+  uint32 DialogId = 10;
+  // @inject_tag: json:"is_label"
+  bool IsLabel = 11;
+  // @inject_tag: json:"is_burn_after_reading_type"
+  bool IsBurnAfterReadingType = 12;
+  // @inject_tag: json:"sender_info"
+  SenderInfo SenderInfo = 13;
+  // @inject_tag: json:"reply_msg"
+  MessageInfo ReplyMsg = 14;
+  // @inject_tag: json:"at_users"
+  repeated string AtUsers = 15;
+  // @inject_tag: json:"is_burn_after_reading"
+  bool IsBurnAfterReading = 16;
+  // @inject_tag: json:"burn_after_reading_time_out"
+  int64 BurnAfterReadingTimeOut = 17;
 }
 
 message SendWsGroupMsg {
@@ -78,9 +115,9 @@ message SendWsGroupMsg {
   // @inject_tag: json:"at_users"
   repeated string AtUsers = 9;
   // @inject_tag: json:"at_all_users"
-  uint32 AtAllUsers = 10;
+  bool AtAllUsers = 10;
   // @inject_tag: json:"is_burn_after_reading"
-  uint32 IsBurnAfterReading = 11;
+  bool IsBurnAfterReading = 11;
   // @inject_tag: json:"sender_info"
   SenderInfo SenderInfo = 12;
   // @inject_tag: json:"reply_msg"
@@ -105,17 +142,17 @@ message MessageInfo {
   // @inject_tag: json:"receiver_info"
   SenderInfo ReceiverInfo = 8;
   // @inject_tag: json:"at_all_users"
-  uint64 AtAllUser = 9;
+  bool AtAllUser = 9;
   // @inject_tag: json:"at_users"
   repeated string AtUsers = 10;
   // @inject_tag: json:"is_burn_after_reading"
-  uint64 IsBurnAfterReading = 11;
+  bool IsBurnAfterReading = 11;
   // @inject_tag: json:"is_label"
-  int32 IsLabel = 12;
+  bool IsLabel = 12;
   // @inject_tag: json:"reply_id"
   uint32 ReplyId = 13;
   // @inject_tag: json:"is_read"
-  int32 IsRead = 14;
+  bool IsRead = 14;
   // @inject_tag: json:"read_at"
   int64 ReadAt = 15;
 }

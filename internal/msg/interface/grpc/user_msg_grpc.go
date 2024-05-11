@@ -63,6 +63,22 @@ func (s *Handler) DeleteUserMessageById(ctx context.Context, request *api.Delete
 	return resp, nil
 }
 
+func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.DeleteUserMessageByIdsRequest) (*api.DeleteUserMsgByIDResponse, error) {
+	resp := &api.DeleteUserMsgByIDResponse{}
+	if len(request.IDs) == 0 {
+		return resp, nil
+	}
+	ids := make([]uint, 0)
+	for _, id := range request.IDs {
+		ids = append(ids, uint(id))
+	}
+	err := s.umd.DeleteUserMessageByIds(ctx, ids, request.IsPhysical)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
 //
 //import (
 //	"context"

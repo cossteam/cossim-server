@@ -19,46 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MsgService_SendUserMessage_FullMethodName                      = "/msg_v1.MsgService/SendUserMessage"
-	MsgService_SendUserMessageRevert_FullMethodName                = "/msg_v1.MsgService/SendUserMessageRevert"
-	MsgService_SendMultiUserMessage_FullMethodName                 = "/msg_v1.MsgService/SendMultiUserMessage"
-	MsgService_SendGroupMessage_FullMethodName                     = "/msg_v1.MsgService/SendGroupMessage"
-	MsgService_SendGroupMessageRevert_FullMethodName               = "/msg_v1.MsgService/SendGroupMessageRevert"
-	MsgService_GetUserMessageList_FullMethodName                   = "/msg_v1.MsgService/GetUserMessageList"
-	MsgService_GetUserLastMessageList_FullMethodName               = "/msg_v1.MsgService/GetUserLastMessageList"
-	MsgService_GetGroupLastMessageList_FullMethodName              = "/msg_v1.MsgService/GetGroupLastMessageList"
-	MsgService_GetLastMsgsForUserWithFriends_FullMethodName        = "/msg_v1.MsgService/GetLastMsgsForUserWithFriends"
-	MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName          = "/msg_v1.MsgService/GetLastMsgsForGroupsWithIDs"
-	MsgService_GetLastMsgsByDialogIds_FullMethodName               = "/msg_v1.MsgService/GetLastMsgsByDialogIds"
-	MsgService_EditUserMessage_FullMethodName                      = "/msg_v1.MsgService/EditUserMessage"
-	MsgService_DeleteUserMessage_FullMethodName                    = "/msg_v1.MsgService/DeleteUserMessage"
-	MsgService_GetUserMsgIdAfterMsgList_FullMethodName             = "/msg_v1.MsgService/GetUserMsgIdAfterMsgList"
-	MsgService_GetGroupMessageList_FullMethodName                  = "/msg_v1.MsgService/GetGroupMessageList"
-	MsgService_EditGroupMessage_FullMethodName                     = "/msg_v1.MsgService/EditGroupMessage"
-	MsgService_DeleteGroupMessage_FullMethodName                   = "/msg_v1.MsgService/DeleteGroupMessage"
-	MsgService_GetUserMessageById_FullMethodName                   = "/msg_v1.MsgService/GetUserMessageById"
-	MsgService_GetGroupMessageById_FullMethodName                  = "/msg_v1.MsgService/GetGroupMessageById"
-	MsgService_GetUserMessagesByIds_FullMethodName                 = "/msg_v1.MsgService/GetUserMessagesByIds"
-	MsgService_GetGroupMessagesByIds_FullMethodName                = "/msg_v1.MsgService/GetGroupMessagesByIds"
-	MsgService_SetUserMsgLabel_FullMethodName                      = "/msg_v1.MsgService/SetUserMsgLabel"
-	MsgService_SetGroupMsgLabel_FullMethodName                     = "/msg_v1.MsgService/SetGroupMsgLabel"
-	MsgService_GetUserMsgLabelByDialogId_FullMethodName            = "/msg_v1.MsgService/GetUserMsgLabelByDialogId"
-	MsgService_GetGroupMsgLabelByDialogId_FullMethodName           = "/msg_v1.MsgService/GetGroupMsgLabelByDialogId"
-	MsgService_GetGroupMsgIdAfterMsgList_FullMethodName            = "/msg_v1.MsgService/GetGroupMsgIdAfterMsgList"
-	MsgService_GetGroupUnreadMessages_FullMethodName               = "/msg_v1.MsgService/GetGroupUnreadMessages"
-	MsgService_ReadAllUserMsg_FullMethodName                       = "/msg_v1.MsgService/ReadAllUserMsg"
-	MsgService_ReadAllGroupMsg_FullMethodName                      = "/msg_v1.MsgService/ReadAllGroupMsg"
-	MsgService_SetUserMsgsReadStatus_FullMethodName                = "/msg_v1.MsgService/SetUserMsgsReadStatus"
-	MsgService_SetUserMsgReadStatus_FullMethodName                 = "/msg_v1.MsgService/SetUserMsgReadStatus"
-	MsgService_GetUnreadUserMsgs_FullMethodName                    = "/msg_v1.MsgService/GetUnreadUserMsgs"
-	MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName   = "/msg_v1.MsgService/ConfirmDeleteUserMessageByDialogId"
-	MsgService_ConfirmDeleteGroupMessageByDialogId_FullMethodName  = "/msg_v1.MsgService/ConfirmDeleteGroupMessageByDialogId"
-	MsgService_DeleteUserMessageByDialogId_FullMethodName          = "/msg_v1.MsgService/DeleteUserMessageByDialogId"
-	MsgService_DeleteGroupMessageByDialogId_FullMethodName         = "/msg_v1.MsgService/DeleteGroupMessageByDialogId"
-	MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName  = "/msg_v1.MsgService/DeleteUserMessageByDialogIdRollback"
-	MsgService_DeleteGroupMessageByDialogIdRollback_FullMethodName = "/msg_v1.MsgService/DeleteGroupMessageByDialogIdRollback"
-	MsgService_DeleteUserMessageById_FullMethodName                = "/msg_v1.MsgService/DeleteUserMessageById"
-	MsgService_DeleteUserMessageByIDs_FullMethodName               = "/msg_v1.MsgService/DeleteUserMessageByIDs"
+	MsgService_SendUserMessage_FullMethodName                    = "/msg_v1.MsgService/SendUserMessage"
+	MsgService_SendMultiUserMessage_FullMethodName               = "/msg_v1.MsgService/SendMultiUserMessage"
+	MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName = "/msg_v1.MsgService/ConfirmDeleteUserMessageByDialogId"
+	MsgService_DeleteUserMessageById_FullMethodName              = "/msg_v1.MsgService/DeleteUserMessageById"
+	MsgService_DeleteUserMessageByIDs_FullMethodName             = "/msg_v1.MsgService/DeleteUserMessageByIDs"
 )
 
 // MsgServiceClient is the client API for MsgService service.
@@ -67,81 +32,86 @@ const (
 type MsgServiceClient interface {
 	// 发送私聊消息
 	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
-	// 发送私聊消息
-	SendUserMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendUserMsgRevertResponse, error)
-	// 群发私聊消息
+	// //发送私聊消息
+	// rpc SendUserMessageRevert(MsgIdRequest)returns (SendUserMsgRevertResponse);
+	// //群发私聊消息
 	SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error)
-	// 发送群消息
-	SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error)
-	// 发送群消息回滚
-	SendGroupMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendGroupMsgRevertResponse, error)
-	// 获取用户消息列表
-	GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error)
-	// 获取私聊对话最新消息
-	GetUserLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*UserMessages, error)
-	// 获取群聊对话最新消息
-	GetGroupLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*GroupMessages, error)
-	// 根据好友id获取最后一条消息
-	GetLastMsgsForUserWithFriends(ctx context.Context, in *UserMsgsRequest, opts ...grpc.CallOption) (*UserMessages, error)
-	// 根据群组id获取最后一条消息
-	GetLastMsgsForGroupsWithIDs(ctx context.Context, in *GroupMsgsRequest, opts ...grpc.CallOption) (*GroupMessages, error)
-	// 根据对话id获取最后一条消息
-	GetLastMsgsByDialogIds(ctx context.Context, in *GetLastMsgsByDialogIdsRequest, opts ...grpc.CallOption) (*GetLastMsgsResponse, error)
-	// 编辑私聊消息
-	EditUserMessage(ctx context.Context, in *EditUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error)
-	// 撤回私聊消息
-	DeleteUserMessage(ctx context.Context, in *DeleteUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error)
-	// 根据对话id与msgId查询msgId之后的私聊消息
-	GetUserMsgIdAfterMsgList(ctx context.Context, in *GetUserMsgIdAfterMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgIdAfterMsgListResponse, error)
-	// 获取群消息列表
-	GetGroupMessageList(ctx context.Context, in *GetGroupMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgListResponse, error)
-	// 编辑群消息
-	EditGroupMessage(ctx context.Context, in *EditGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error)
-	// 撤回群消息
-	DeleteGroupMessage(ctx context.Context, in *DeleteGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error)
-	// 根据消息id获取私聊消息
-	GetUserMessageById(ctx context.Context, in *GetUserMsgByIDRequest, opts ...grpc.CallOption) (*UserMessage, error)
-	// 根据消息id获取群消息
-	GetGroupMessageById(ctx context.Context, in *GetGroupMsgByIDRequest, opts ...grpc.CallOption) (*GroupMessage, error)
-	// 根据多个消息id获取私聊消息
-	GetUserMessagesByIds(ctx context.Context, in *GetUserMessagesByIdsRequest, opts ...grpc.CallOption) (*GetUserMessagesByIdsResponse, error)
-	// 根据多个消息id获取群消息
-	GetGroupMessagesByIds(ctx context.Context, in *GetGroupMessagesByIdsRequest, opts ...grpc.CallOption) (*GetGroupMessagesByIdsResponse, error)
-	// 设置私聊消息标注状态
-	SetUserMsgLabel(ctx context.Context, in *SetUserMsgLabelRequest, opts ...grpc.CallOption) (*SetUserMsgLabelResponse, error)
-	// 设置群消息标注状态
-	SetGroupMsgLabel(ctx context.Context, in *SetGroupMsgLabelRequest, opts ...grpc.CallOption) (*SetGroupMsgLabelResponse, error)
-	// 根据对话id获取私聊标注信息
-	GetUserMsgLabelByDialogId(ctx context.Context, in *GetUserMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetUserMsgLabelByDialogIdResponse, error)
-	// 根据对话id获取群消息标注信息
-	GetGroupMsgLabelByDialogId(ctx context.Context, in *GetGroupMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetGroupMsgLabelByDialogIdResponse, error)
-	// 根据对话id与msgId查询msgId之后的群消息
-	GetGroupMsgIdAfterMsgList(ctx context.Context, in *GetGroupMsgIdAfterMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgIdAfterMsgListResponse, error)
-	// 获取群聊未读消息
-	GetGroupUnreadMessages(ctx context.Context, in *GetGroupUnreadMessagesRequest, opts ...grpc.CallOption) (*GetGroupUnreadMessagesResponse, error)
-	// 一键已读用户消息
-	ReadAllUserMsg(ctx context.Context, in *ReadAllUserMsgRequest, opts ...grpc.CallOption) (*ReadAllUserMsgResponse, error)
-	// 一键已读群聊消息
-	ReadAllGroupMsg(ctx context.Context, in *ReadAllGroupMsgRequest, opts ...grpc.CallOption) (*ReadAllGroupMsgResponse, error)
-	// 批量设置私聊消息id为已读
-	SetUserMsgsReadStatus(ctx context.Context, in *SetUserMsgsReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgsReadStatusResponse, error)
-	// 修改指定私聊消息的已读状态
-	SetUserMsgReadStatus(ctx context.Context, in *SetUserMsgReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgReadStatusResponse, error)
-	// 获取私聊对话未读消息
-	GetUnreadUserMsgs(ctx context.Context, in *GetUnreadUserMsgsRequest, opts ...grpc.CallOption) (*GetUnreadUserMsgsResponse, error)
-	// 确认根据对话id删除私聊消息
+	// //发送群消息
+	// rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
+	// //发送群消息回滚
+	// rpc SendGroupMessageRevert(MsgIdRequest)returns (SendGroupMsgRevertResponse);
+	// //获取用户消息列表
+	// rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
+	// //获取私聊对话最新消息
+	// rpc GetUserLastMessageList(GetLastMsgListRequest)returns(UserMessages);
+	// //获取群聊对话最新消息
+	// rpc GetGroupLastMessageList(GetLastMsgListRequest) returns(GroupMessages);
+	//
+	// //根据好友id获取最后一条消息
+	// rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
+	// //根据群组id获取最后一条消息
+	// rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
+	// //根据对话id获取最后一条消息
+	// rpc GetLastMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
+	// //编辑私聊消息
+	// rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
+	// //撤回私聊消息
+	// rpc DeleteUserMessage(DeleteUserMsgRequest) returns (UserMessage);
+	// //根据对话id与msgId查询msgId之后的私聊消息
+	// rpc GetUserMsgIdAfterMsgList(GetUserMsgIdAfterMsgListRequest) returns (GetUserMsgIdAfterMsgListResponse);
+	//
+	// //获取群消息列表
+	// rpc GetGroupMessageList(GetGroupMsgListRequest) returns(GetGroupMsgListResponse);
+	// //编辑群消息
+	// rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
+	// //撤回群消息
+	// rpc DeleteGroupMessage(DeleteGroupMsgRequest) returns (GroupMessage);
+	// //根据消息id获取私聊消息
+	// rpc GetUserMessageById(GetUserMsgByIDRequest) returns (UserMessage);
+	// //根据消息id获取群消息
+	// rpc GetGroupMessageById(GetGroupMsgByIDRequest) returns (GroupMessage);
+	// //根据多个消息id获取私聊消息
+	// rpc GetUserMessagesByIds(GetUserMessagesByIdsRequest) returns (GetUserMessagesByIdsResponse);
+	// //根据多个消息id获取群消息
+	// rpc GetGroupMessagesByIds(GetGroupMessagesByIdsRequest) returns (GetGroupMessagesByIdsResponse);
+	// //设置私聊消息标注状态
+	// rpc SetUserMsgLabel(SetUserMsgLabelRequest) returns (SetUserMsgLabelResponse);
+	// // 设置群消息标注状态
+	// rpc SetGroupMsgLabel(SetGroupMsgLabelRequest) returns (SetGroupMsgLabelResponse);
+	// //根据对话id获取私聊标注信息
+	// rpc GetUserMsgLabelByDialogId(GetUserMsgLabelByDialogIdRequest) returns (GetUserMsgLabelByDialogIdResponse);
+	// //根据对话id获取群消息标注信息
+	// rpc GetGroupMsgLabelByDialogId(GetGroupMsgLabelByDialogIdRequest) returns (GetGroupMsgLabelByDialogIdResponse);
+	// //根据对话id与msgId查询msgId之后的群消息
+	// rpc GetGroupMsgIdAfterMsgList(GetGroupMsgIdAfterMsgListRequest) returns (GetGroupMsgIdAfterMsgListResponse);
+	// //获取群聊未读消息
+	// rpc GetGroupUnreadMessages(GetGroupUnreadMessagesRequest) returns (GetGroupUnreadMessagesResponse);
+	//
+	// // 一键已读用户消息
+	// rpc ReadAllUserMsg(ReadAllUserMsgRequest) returns (ReadAllUserMsgResponse);
+	//
+	// // 一键已读群聊消息
+	// rpc ReadAllGroupMsg(ReadAllGroupMsgRequest) returns (ReadAllGroupMsgResponse);
+	//
+	// //批量设置私聊消息id为已读
+	// rpc SetUserMsgsReadStatus(SetUserMsgsReadStatusRequest) returns (SetUserMsgsReadStatusResponse);
+	// //修改指定私聊消息的已读状态
+	// rpc SetUserMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
+	// //获取私聊对话未读消息
+	// rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
+	// //确认根据对话id删除私聊消息
 	ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
-	// 确认根据对话id删除群聊消息
-	ConfirmDeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error)
-	// 根据对话id删除私聊消息
-	DeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
-	// 根据对话id删除群聊消息
-	DeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error)
-	// 根据对话id删除私聊消息回滚
-	DeleteUserMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
-	// 根据对话id删除群聊消息回滚
-	DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error)
-	// 根据消息id删除私聊消息
+	// //确认根据对话id删除群聊消息
+	// rpc ConfirmDeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+	// //根据对话id删除私聊消息
+	// rpc DeleteUserMessageByDialogId(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
+	// //根据对话id删除群聊消息
+	// rpc DeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+	// //根据对话id删除私聊消息回滚
+	// rpc DeleteUserMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
+	// //根据对话id删除群聊消息回滚
+	// rpc DeleteGroupMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+	// //根据消息id删除私聊消息
 	DeleteUserMessageById(ctx context.Context, in *DeleteUserMsgByIDRequest, opts ...grpc.CallOption) (*DeleteUserMsgByIDResponse, error)
 	// 根据消息ids删除私聊消息
 	DeleteUserMessageByIDs(ctx context.Context, in *DeleteUserMessageByIdsRequest, opts ...grpc.CallOption) (*DeleteUserMsgByIDResponse, error)
@@ -164,15 +134,6 @@ func (c *msgServiceClient) SendUserMessage(ctx context.Context, in *SendUserMsgR
 	return out, nil
 }
 
-func (c *msgServiceClient) SendUserMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendUserMsgRevertResponse, error) {
-	out := new(SendUserMsgRevertResponse)
-	err := c.cc.Invoke(ctx, MsgService_SendUserMessageRevert_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgServiceClient) SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error) {
 	out := new(SendMultiUserMsgResponse)
 	err := c.cc.Invoke(ctx, MsgService_SendMultiUserMessage_FullMethodName, in, out, opts...)
@@ -182,315 +143,9 @@ func (c *msgServiceClient) SendMultiUserMessage(ctx context.Context, in *SendMul
 	return out, nil
 }
 
-func (c *msgServiceClient) SendGroupMessage(ctx context.Context, in *SendGroupMsgRequest, opts ...grpc.CallOption) (*SendGroupMsgResponse, error) {
-	out := new(SendGroupMsgResponse)
-	err := c.cc.Invoke(ctx, MsgService_SendGroupMessage_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) SendGroupMessageRevert(ctx context.Context, in *MsgIdRequest, opts ...grpc.CallOption) (*SendGroupMsgRevertResponse, error) {
-	out := new(SendGroupMsgRevertResponse)
-	err := c.cc.Invoke(ctx, MsgService_SendGroupMessageRevert_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetUserMessageList(ctx context.Context, in *GetUserMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgListResponse, error) {
-	out := new(GetUserMsgListResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetUserMessageList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetUserLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*UserMessages, error) {
-	out := new(UserMessages)
-	err := c.cc.Invoke(ctx, MsgService_GetUserLastMessageList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetGroupLastMessageList(ctx context.Context, in *GetLastMsgListRequest, opts ...grpc.CallOption) (*GroupMessages, error) {
-	out := new(GroupMessages)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupLastMessageList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetLastMsgsForUserWithFriends(ctx context.Context, in *UserMsgsRequest, opts ...grpc.CallOption) (*UserMessages, error) {
-	out := new(UserMessages)
-	err := c.cc.Invoke(ctx, MsgService_GetLastMsgsForUserWithFriends_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetLastMsgsForGroupsWithIDs(ctx context.Context, in *GroupMsgsRequest, opts ...grpc.CallOption) (*GroupMessages, error) {
-	out := new(GroupMessages)
-	err := c.cc.Invoke(ctx, MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetLastMsgsByDialogIds(ctx context.Context, in *GetLastMsgsByDialogIdsRequest, opts ...grpc.CallOption) (*GetLastMsgsResponse, error) {
-	out := new(GetLastMsgsResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetLastMsgsByDialogIds_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) EditUserMessage(ctx context.Context, in *EditUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error) {
-	out := new(UserMessage)
-	err := c.cc.Invoke(ctx, MsgService_EditUserMessage_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) DeleteUserMessage(ctx context.Context, in *DeleteUserMsgRequest, opts ...grpc.CallOption) (*UserMessage, error) {
-	out := new(UserMessage)
-	err := c.cc.Invoke(ctx, MsgService_DeleteUserMessage_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetUserMsgIdAfterMsgList(ctx context.Context, in *GetUserMsgIdAfterMsgListRequest, opts ...grpc.CallOption) (*GetUserMsgIdAfterMsgListResponse, error) {
-	out := new(GetUserMsgIdAfterMsgListResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetUserMsgIdAfterMsgList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetGroupMessageList(ctx context.Context, in *GetGroupMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgListResponse, error) {
-	out := new(GetGroupMsgListResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupMessageList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) EditGroupMessage(ctx context.Context, in *EditGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error) {
-	out := new(GroupMessage)
-	err := c.cc.Invoke(ctx, MsgService_EditGroupMessage_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) DeleteGroupMessage(ctx context.Context, in *DeleteGroupMsgRequest, opts ...grpc.CallOption) (*GroupMessage, error) {
-	out := new(GroupMessage)
-	err := c.cc.Invoke(ctx, MsgService_DeleteGroupMessage_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetUserMessageById(ctx context.Context, in *GetUserMsgByIDRequest, opts ...grpc.CallOption) (*UserMessage, error) {
-	out := new(UserMessage)
-	err := c.cc.Invoke(ctx, MsgService_GetUserMessageById_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetGroupMessageById(ctx context.Context, in *GetGroupMsgByIDRequest, opts ...grpc.CallOption) (*GroupMessage, error) {
-	out := new(GroupMessage)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupMessageById_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetUserMessagesByIds(ctx context.Context, in *GetUserMessagesByIdsRequest, opts ...grpc.CallOption) (*GetUserMessagesByIdsResponse, error) {
-	out := new(GetUserMessagesByIdsResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetUserMessagesByIds_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetGroupMessagesByIds(ctx context.Context, in *GetGroupMessagesByIdsRequest, opts ...grpc.CallOption) (*GetGroupMessagesByIdsResponse, error) {
-	out := new(GetGroupMessagesByIdsResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupMessagesByIds_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) SetUserMsgLabel(ctx context.Context, in *SetUserMsgLabelRequest, opts ...grpc.CallOption) (*SetUserMsgLabelResponse, error) {
-	out := new(SetUserMsgLabelResponse)
-	err := c.cc.Invoke(ctx, MsgService_SetUserMsgLabel_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) SetGroupMsgLabel(ctx context.Context, in *SetGroupMsgLabelRequest, opts ...grpc.CallOption) (*SetGroupMsgLabelResponse, error) {
-	out := new(SetGroupMsgLabelResponse)
-	err := c.cc.Invoke(ctx, MsgService_SetGroupMsgLabel_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetUserMsgLabelByDialogId(ctx context.Context, in *GetUserMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetUserMsgLabelByDialogIdResponse, error) {
-	out := new(GetUserMsgLabelByDialogIdResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetUserMsgLabelByDialogId_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetGroupMsgLabelByDialogId(ctx context.Context, in *GetGroupMsgLabelByDialogIdRequest, opts ...grpc.CallOption) (*GetGroupMsgLabelByDialogIdResponse, error) {
-	out := new(GetGroupMsgLabelByDialogIdResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupMsgLabelByDialogId_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetGroupMsgIdAfterMsgList(ctx context.Context, in *GetGroupMsgIdAfterMsgListRequest, opts ...grpc.CallOption) (*GetGroupMsgIdAfterMsgListResponse, error) {
-	out := new(GetGroupMsgIdAfterMsgListResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupMsgIdAfterMsgList_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetGroupUnreadMessages(ctx context.Context, in *GetGroupUnreadMessagesRequest, opts ...grpc.CallOption) (*GetGroupUnreadMessagesResponse, error) {
-	out := new(GetGroupUnreadMessagesResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetGroupUnreadMessages_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) ReadAllUserMsg(ctx context.Context, in *ReadAllUserMsgRequest, opts ...grpc.CallOption) (*ReadAllUserMsgResponse, error) {
-	out := new(ReadAllUserMsgResponse)
-	err := c.cc.Invoke(ctx, MsgService_ReadAllUserMsg_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) ReadAllGroupMsg(ctx context.Context, in *ReadAllGroupMsgRequest, opts ...grpc.CallOption) (*ReadAllGroupMsgResponse, error) {
-	out := new(ReadAllGroupMsgResponse)
-	err := c.cc.Invoke(ctx, MsgService_ReadAllGroupMsg_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) SetUserMsgsReadStatus(ctx context.Context, in *SetUserMsgsReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgsReadStatusResponse, error) {
-	out := new(SetUserMsgsReadStatusResponse)
-	err := c.cc.Invoke(ctx, MsgService_SetUserMsgsReadStatus_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) SetUserMsgReadStatus(ctx context.Context, in *SetUserMsgReadStatusRequest, opts ...grpc.CallOption) (*SetUserMsgReadStatusResponse, error) {
-	out := new(SetUserMsgReadStatusResponse)
-	err := c.cc.Invoke(ctx, MsgService_SetUserMsgReadStatus_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) GetUnreadUserMsgs(ctx context.Context, in *GetUnreadUserMsgsRequest, opts ...grpc.CallOption) (*GetUnreadUserMsgsResponse, error) {
-	out := new(GetUnreadUserMsgsResponse)
-	err := c.cc.Invoke(ctx, MsgService_GetUnreadUserMsgs_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgServiceClient) ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error) {
 	out := new(DeleteUserMsgByDialogIdResponse)
 	err := c.cc.Invoke(ctx, MsgService_ConfirmDeleteUserMessageByDialogId_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) ConfirmDeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error) {
-	out := new(DeleteGroupMsgByDialogIdResponse)
-	err := c.cc.Invoke(ctx, MsgService_ConfirmDeleteGroupMessageByDialogId_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) DeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error) {
-	out := new(DeleteUserMsgByDialogIdResponse)
-	err := c.cc.Invoke(ctx, MsgService_DeleteUserMessageByDialogId_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) DeleteGroupMessageByDialogId(ctx context.Context, in *DeleteGroupMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error) {
-	out := new(DeleteGroupMsgByDialogIdResponse)
-	err := c.cc.Invoke(ctx, MsgService_DeleteGroupMessageByDialogId_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) DeleteUserMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error) {
-	out := new(DeleteUserMsgByDialogIdResponse)
-	err := c.cc.Invoke(ctx, MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgServiceClient) DeleteGroupMessageByDialogIdRollback(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteGroupMsgByDialogIdResponse, error) {
-	out := new(DeleteGroupMsgByDialogIdResponse)
-	err := c.cc.Invoke(ctx, MsgService_DeleteGroupMessageByDialogIdRollback_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -521,81 +176,86 @@ func (c *msgServiceClient) DeleteUserMessageByIDs(ctx context.Context, in *Delet
 type MsgServiceServer interface {
 	// 发送私聊消息
 	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
-	// 发送私聊消息
-	SendUserMessageRevert(context.Context, *MsgIdRequest) (*SendUserMsgRevertResponse, error)
-	// 群发私聊消息
+	// //发送私聊消息
+	// rpc SendUserMessageRevert(MsgIdRequest)returns (SendUserMsgRevertResponse);
+	// //群发私聊消息
 	SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error)
-	// 发送群消息
-	SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error)
-	// 发送群消息回滚
-	SendGroupMessageRevert(context.Context, *MsgIdRequest) (*SendGroupMsgRevertResponse, error)
-	// 获取用户消息列表
-	GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error)
-	// 获取私聊对话最新消息
-	GetUserLastMessageList(context.Context, *GetLastMsgListRequest) (*UserMessages, error)
-	// 获取群聊对话最新消息
-	GetGroupLastMessageList(context.Context, *GetLastMsgListRequest) (*GroupMessages, error)
-	// 根据好友id获取最后一条消息
-	GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error)
-	// 根据群组id获取最后一条消息
-	GetLastMsgsForGroupsWithIDs(context.Context, *GroupMsgsRequest) (*GroupMessages, error)
-	// 根据对话id获取最后一条消息
-	GetLastMsgsByDialogIds(context.Context, *GetLastMsgsByDialogIdsRequest) (*GetLastMsgsResponse, error)
-	// 编辑私聊消息
-	EditUserMessage(context.Context, *EditUserMsgRequest) (*UserMessage, error)
-	// 撤回私聊消息
-	DeleteUserMessage(context.Context, *DeleteUserMsgRequest) (*UserMessage, error)
-	// 根据对话id与msgId查询msgId之后的私聊消息
-	GetUserMsgIdAfterMsgList(context.Context, *GetUserMsgIdAfterMsgListRequest) (*GetUserMsgIdAfterMsgListResponse, error)
-	// 获取群消息列表
-	GetGroupMessageList(context.Context, *GetGroupMsgListRequest) (*GetGroupMsgListResponse, error)
-	// 编辑群消息
-	EditGroupMessage(context.Context, *EditGroupMsgRequest) (*GroupMessage, error)
-	// 撤回群消息
-	DeleteGroupMessage(context.Context, *DeleteGroupMsgRequest) (*GroupMessage, error)
-	// 根据消息id获取私聊消息
-	GetUserMessageById(context.Context, *GetUserMsgByIDRequest) (*UserMessage, error)
-	// 根据消息id获取群消息
-	GetGroupMessageById(context.Context, *GetGroupMsgByIDRequest) (*GroupMessage, error)
-	// 根据多个消息id获取私聊消息
-	GetUserMessagesByIds(context.Context, *GetUserMessagesByIdsRequest) (*GetUserMessagesByIdsResponse, error)
-	// 根据多个消息id获取群消息
-	GetGroupMessagesByIds(context.Context, *GetGroupMessagesByIdsRequest) (*GetGroupMessagesByIdsResponse, error)
-	// 设置私聊消息标注状态
-	SetUserMsgLabel(context.Context, *SetUserMsgLabelRequest) (*SetUserMsgLabelResponse, error)
-	// 设置群消息标注状态
-	SetGroupMsgLabel(context.Context, *SetGroupMsgLabelRequest) (*SetGroupMsgLabelResponse, error)
-	// 根据对话id获取私聊标注信息
-	GetUserMsgLabelByDialogId(context.Context, *GetUserMsgLabelByDialogIdRequest) (*GetUserMsgLabelByDialogIdResponse, error)
-	// 根据对话id获取群消息标注信息
-	GetGroupMsgLabelByDialogId(context.Context, *GetGroupMsgLabelByDialogIdRequest) (*GetGroupMsgLabelByDialogIdResponse, error)
-	// 根据对话id与msgId查询msgId之后的群消息
-	GetGroupMsgIdAfterMsgList(context.Context, *GetGroupMsgIdAfterMsgListRequest) (*GetGroupMsgIdAfterMsgListResponse, error)
-	// 获取群聊未读消息
-	GetGroupUnreadMessages(context.Context, *GetGroupUnreadMessagesRequest) (*GetGroupUnreadMessagesResponse, error)
-	// 一键已读用户消息
-	ReadAllUserMsg(context.Context, *ReadAllUserMsgRequest) (*ReadAllUserMsgResponse, error)
-	// 一键已读群聊消息
-	ReadAllGroupMsg(context.Context, *ReadAllGroupMsgRequest) (*ReadAllGroupMsgResponse, error)
-	// 批量设置私聊消息id为已读
-	SetUserMsgsReadStatus(context.Context, *SetUserMsgsReadStatusRequest) (*SetUserMsgsReadStatusResponse, error)
-	// 修改指定私聊消息的已读状态
-	SetUserMsgReadStatus(context.Context, *SetUserMsgReadStatusRequest) (*SetUserMsgReadStatusResponse, error)
-	// 获取私聊对话未读消息
-	GetUnreadUserMsgs(context.Context, *GetUnreadUserMsgsRequest) (*GetUnreadUserMsgsResponse, error)
-	// 确认根据对话id删除私聊消息
+	// //发送群消息
+	// rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
+	// //发送群消息回滚
+	// rpc SendGroupMessageRevert(MsgIdRequest)returns (SendGroupMsgRevertResponse);
+	// //获取用户消息列表
+	// rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
+	// //获取私聊对话最新消息
+	// rpc GetUserLastMessageList(GetLastMsgListRequest)returns(UserMessages);
+	// //获取群聊对话最新消息
+	// rpc GetGroupLastMessageList(GetLastMsgListRequest) returns(GroupMessages);
+	//
+	// //根据好友id获取最后一条消息
+	// rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
+	// //根据群组id获取最后一条消息
+	// rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
+	// //根据对话id获取最后一条消息
+	// rpc GetLastMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
+	// //编辑私聊消息
+	// rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
+	// //撤回私聊消息
+	// rpc DeleteUserMessage(DeleteUserMsgRequest) returns (UserMessage);
+	// //根据对话id与msgId查询msgId之后的私聊消息
+	// rpc GetUserMsgIdAfterMsgList(GetUserMsgIdAfterMsgListRequest) returns (GetUserMsgIdAfterMsgListResponse);
+	//
+	// //获取群消息列表
+	// rpc GetGroupMessageList(GetGroupMsgListRequest) returns(GetGroupMsgListResponse);
+	// //编辑群消息
+	// rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
+	// //撤回群消息
+	// rpc DeleteGroupMessage(DeleteGroupMsgRequest) returns (GroupMessage);
+	// //根据消息id获取私聊消息
+	// rpc GetUserMessageById(GetUserMsgByIDRequest) returns (UserMessage);
+	// //根据消息id获取群消息
+	// rpc GetGroupMessageById(GetGroupMsgByIDRequest) returns (GroupMessage);
+	// //根据多个消息id获取私聊消息
+	// rpc GetUserMessagesByIds(GetUserMessagesByIdsRequest) returns (GetUserMessagesByIdsResponse);
+	// //根据多个消息id获取群消息
+	// rpc GetGroupMessagesByIds(GetGroupMessagesByIdsRequest) returns (GetGroupMessagesByIdsResponse);
+	// //设置私聊消息标注状态
+	// rpc SetUserMsgLabel(SetUserMsgLabelRequest) returns (SetUserMsgLabelResponse);
+	// // 设置群消息标注状态
+	// rpc SetGroupMsgLabel(SetGroupMsgLabelRequest) returns (SetGroupMsgLabelResponse);
+	// //根据对话id获取私聊标注信息
+	// rpc GetUserMsgLabelByDialogId(GetUserMsgLabelByDialogIdRequest) returns (GetUserMsgLabelByDialogIdResponse);
+	// //根据对话id获取群消息标注信息
+	// rpc GetGroupMsgLabelByDialogId(GetGroupMsgLabelByDialogIdRequest) returns (GetGroupMsgLabelByDialogIdResponse);
+	// //根据对话id与msgId查询msgId之后的群消息
+	// rpc GetGroupMsgIdAfterMsgList(GetGroupMsgIdAfterMsgListRequest) returns (GetGroupMsgIdAfterMsgListResponse);
+	// //获取群聊未读消息
+	// rpc GetGroupUnreadMessages(GetGroupUnreadMessagesRequest) returns (GetGroupUnreadMessagesResponse);
+	//
+	// // 一键已读用户消息
+	// rpc ReadAllUserMsg(ReadAllUserMsgRequest) returns (ReadAllUserMsgResponse);
+	//
+	// // 一键已读群聊消息
+	// rpc ReadAllGroupMsg(ReadAllGroupMsgRequest) returns (ReadAllGroupMsgResponse);
+	//
+	// //批量设置私聊消息id为已读
+	// rpc SetUserMsgsReadStatus(SetUserMsgsReadStatusRequest) returns (SetUserMsgsReadStatusResponse);
+	// //修改指定私聊消息的已读状态
+	// rpc SetUserMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
+	// //获取私聊对话未读消息
+	// rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
+	// //确认根据对话id删除私聊消息
 	ConfirmDeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
-	// 确认根据对话id删除群聊消息
-	ConfirmDeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
-	// 根据对话id删除私聊消息
-	DeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
-	// 根据对话id删除群聊消息
-	DeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
-	// 根据对话id删除私聊消息回滚
-	DeleteUserMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
-	// 根据对话id删除群聊消息回滚
-	DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error)
-	// 根据消息id删除私聊消息
+	// //确认根据对话id删除群聊消息
+	// rpc ConfirmDeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+	// //根据对话id删除私聊消息
+	// rpc DeleteUserMessageByDialogId(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
+	// //根据对话id删除群聊消息
+	// rpc DeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+	// //根据对话id删除私聊消息回滚
+	// rpc DeleteUserMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
+	// //根据对话id删除群聊消息回滚
+	// rpc DeleteGroupMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
+	// //根据消息id删除私聊消息
 	DeleteUserMessageById(context.Context, *DeleteUserMsgByIDRequest) (*DeleteUserMsgByIDResponse, error)
 	// 根据消息ids删除私聊消息
 	DeleteUserMessageByIDs(context.Context, *DeleteUserMessageByIdsRequest) (*DeleteUserMsgByIDResponse, error)
@@ -608,116 +268,11 @@ type UnimplementedMsgServiceServer struct {
 func (UnimplementedMsgServiceServer) SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendUserMessage not implemented")
 }
-func (UnimplementedMsgServiceServer) SendUserMessageRevert(context.Context, *MsgIdRequest) (*SendUserMsgRevertResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendUserMessageRevert not implemented")
-}
 func (UnimplementedMsgServiceServer) SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMultiUserMessage not implemented")
 }
-func (UnimplementedMsgServiceServer) SendGroupMessage(context.Context, *SendGroupMsgRequest) (*SendGroupMsgResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendGroupMessage not implemented")
-}
-func (UnimplementedMsgServiceServer) SendGroupMessageRevert(context.Context, *MsgIdRequest) (*SendGroupMsgRevertResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendGroupMessageRevert not implemented")
-}
-func (UnimplementedMsgServiceServer) GetUserMessageList(context.Context, *GetUserMsgListRequest) (*GetUserMsgListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessageList not implemented")
-}
-func (UnimplementedMsgServiceServer) GetUserLastMessageList(context.Context, *GetLastMsgListRequest) (*UserMessages, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserLastMessageList not implemented")
-}
-func (UnimplementedMsgServiceServer) GetGroupLastMessageList(context.Context, *GetLastMsgListRequest) (*GroupMessages, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupLastMessageList not implemented")
-}
-func (UnimplementedMsgServiceServer) GetLastMsgsForUserWithFriends(context.Context, *UserMsgsRequest) (*UserMessages, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsForUserWithFriends not implemented")
-}
-func (UnimplementedMsgServiceServer) GetLastMsgsForGroupsWithIDs(context.Context, *GroupMsgsRequest) (*GroupMessages, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsForGroupsWithIDs not implemented")
-}
-func (UnimplementedMsgServiceServer) GetLastMsgsByDialogIds(context.Context, *GetLastMsgsByDialogIdsRequest) (*GetLastMsgsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetLastMsgsByDialogIds not implemented")
-}
-func (UnimplementedMsgServiceServer) EditUserMessage(context.Context, *EditUserMsgRequest) (*UserMessage, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EditUserMessage not implemented")
-}
-func (UnimplementedMsgServiceServer) DeleteUserMessage(context.Context, *DeleteUserMsgRequest) (*UserMessage, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessage not implemented")
-}
-func (UnimplementedMsgServiceServer) GetUserMsgIdAfterMsgList(context.Context, *GetUserMsgIdAfterMsgListRequest) (*GetUserMsgIdAfterMsgListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserMsgIdAfterMsgList not implemented")
-}
-func (UnimplementedMsgServiceServer) GetGroupMessageList(context.Context, *GetGroupMsgListRequest) (*GetGroupMsgListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessageList not implemented")
-}
-func (UnimplementedMsgServiceServer) EditGroupMessage(context.Context, *EditGroupMsgRequest) (*GroupMessage, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EditGroupMessage not implemented")
-}
-func (UnimplementedMsgServiceServer) DeleteGroupMessage(context.Context, *DeleteGroupMsgRequest) (*GroupMessage, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessage not implemented")
-}
-func (UnimplementedMsgServiceServer) GetUserMessageById(context.Context, *GetUserMsgByIDRequest) (*UserMessage, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessageById not implemented")
-}
-func (UnimplementedMsgServiceServer) GetGroupMessageById(context.Context, *GetGroupMsgByIDRequest) (*GroupMessage, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessageById not implemented")
-}
-func (UnimplementedMsgServiceServer) GetUserMessagesByIds(context.Context, *GetUserMessagesByIdsRequest) (*GetUserMessagesByIdsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserMessagesByIds not implemented")
-}
-func (UnimplementedMsgServiceServer) GetGroupMessagesByIds(context.Context, *GetGroupMessagesByIdsRequest) (*GetGroupMessagesByIdsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMessagesByIds not implemented")
-}
-func (UnimplementedMsgServiceServer) SetUserMsgLabel(context.Context, *SetUserMsgLabelRequest) (*SetUserMsgLabelResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetUserMsgLabel not implemented")
-}
-func (UnimplementedMsgServiceServer) SetGroupMsgLabel(context.Context, *SetGroupMsgLabelRequest) (*SetGroupMsgLabelResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetGroupMsgLabel not implemented")
-}
-func (UnimplementedMsgServiceServer) GetUserMsgLabelByDialogId(context.Context, *GetUserMsgLabelByDialogIdRequest) (*GetUserMsgLabelByDialogIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserMsgLabelByDialogId not implemented")
-}
-func (UnimplementedMsgServiceServer) GetGroupMsgLabelByDialogId(context.Context, *GetGroupMsgLabelByDialogIdRequest) (*GetGroupMsgLabelByDialogIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMsgLabelByDialogId not implemented")
-}
-func (UnimplementedMsgServiceServer) GetGroupMsgIdAfterMsgList(context.Context, *GetGroupMsgIdAfterMsgListRequest) (*GetGroupMsgIdAfterMsgListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupMsgIdAfterMsgList not implemented")
-}
-func (UnimplementedMsgServiceServer) GetGroupUnreadMessages(context.Context, *GetGroupUnreadMessagesRequest) (*GetGroupUnreadMessagesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupUnreadMessages not implemented")
-}
-func (UnimplementedMsgServiceServer) ReadAllUserMsg(context.Context, *ReadAllUserMsgRequest) (*ReadAllUserMsgResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ReadAllUserMsg not implemented")
-}
-func (UnimplementedMsgServiceServer) ReadAllGroupMsg(context.Context, *ReadAllGroupMsgRequest) (*ReadAllGroupMsgResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ReadAllGroupMsg not implemented")
-}
-func (UnimplementedMsgServiceServer) SetUserMsgsReadStatus(context.Context, *SetUserMsgsReadStatusRequest) (*SetUserMsgsReadStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetUserMsgsReadStatus not implemented")
-}
-func (UnimplementedMsgServiceServer) SetUserMsgReadStatus(context.Context, *SetUserMsgReadStatusRequest) (*SetUserMsgReadStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetUserMsgReadStatus not implemented")
-}
-func (UnimplementedMsgServiceServer) GetUnreadUserMsgs(context.Context, *GetUnreadUserMsgsRequest) (*GetUnreadUserMsgsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUnreadUserMsgs not implemented")
-}
 func (UnimplementedMsgServiceServer) ConfirmDeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmDeleteUserMessageByDialogId not implemented")
-}
-func (UnimplementedMsgServiceServer) ConfirmDeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfirmDeleteGroupMessageByDialogId not implemented")
-}
-func (UnimplementedMsgServiceServer) DeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessageByDialogId not implemented")
-}
-func (UnimplementedMsgServiceServer) DeleteGroupMessageByDialogId(context.Context, *DeleteGroupMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessageByDialogId not implemented")
-}
-func (UnimplementedMsgServiceServer) DeleteUserMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessageByDialogIdRollback not implemented")
-}
-func (UnimplementedMsgServiceServer) DeleteGroupMessageByDialogIdRollback(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteGroupMsgByDialogIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupMessageByDialogIdRollback not implemented")
 }
 func (UnimplementedMsgServiceServer) DeleteUserMessageById(context.Context, *DeleteUserMsgByIDRequest) (*DeleteUserMsgByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserMessageById not implemented")
@@ -755,24 +310,6 @@ func _MsgService_SendUserMessage_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MsgService_SendUserMessageRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).SendUserMessageRevert(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_SendUserMessageRevert_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SendUserMessageRevert(ctx, req.(*MsgIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _MsgService_SendMultiUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendMultiUserMsgRequest)
 	if err := dec(in); err != nil {
@@ -791,528 +328,6 @@ func _MsgService_SendMultiUserMessage_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MsgService_SendGroupMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendGroupMsgRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).SendGroupMessage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_SendGroupMessage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SendGroupMessage(ctx, req.(*SendGroupMsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_SendGroupMessageRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).SendGroupMessageRevert(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_SendGroupMessageRevert_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SendGroupMessageRevert(ctx, req.(*MsgIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetUserMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserMsgListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetUserMessageList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetUserMessageList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetUserMessageList(ctx, req.(*GetUserMsgListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetUserLastMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetLastMsgListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetUserLastMessageList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetUserLastMessageList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetUserLastMessageList(ctx, req.(*GetLastMsgListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupLastMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetLastMsgListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupLastMessageList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupLastMessageList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupLastMessageList(ctx, req.(*GetLastMsgListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetLastMsgsForUserWithFriends_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserMsgsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetLastMsgsForUserWithFriends(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetLastMsgsForUserWithFriends_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetLastMsgsForUserWithFriends(ctx, req.(*UserMsgsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetLastMsgsForGroupsWithIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GroupMsgsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetLastMsgsForGroupsWithIDs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetLastMsgsForGroupsWithIDs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetLastMsgsForGroupsWithIDs(ctx, req.(*GroupMsgsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetLastMsgsByDialogIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetLastMsgsByDialogIdsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetLastMsgsByDialogIds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetLastMsgsByDialogIds_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetLastMsgsByDialogIds(ctx, req.(*GetLastMsgsByDialogIdsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_EditUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EditUserMsgRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).EditUserMessage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_EditUserMessage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).EditUserMessage(ctx, req.(*EditUserMsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_DeleteUserMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteUserMsgRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).DeleteUserMessage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_DeleteUserMessage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).DeleteUserMessage(ctx, req.(*DeleteUserMsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetUserMsgIdAfterMsgList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserMsgIdAfterMsgListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetUserMsgIdAfterMsgList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetUserMsgIdAfterMsgList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetUserMsgIdAfterMsgList(ctx, req.(*GetUserMsgIdAfterMsgListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupMessageList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupMsgListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupMessageList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupMessageList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupMessageList(ctx, req.(*GetGroupMsgListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_EditGroupMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EditGroupMsgRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).EditGroupMessage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_EditGroupMessage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).EditGroupMessage(ctx, req.(*EditGroupMsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_DeleteGroupMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteGroupMsgRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).DeleteGroupMessage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_DeleteGroupMessage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).DeleteGroupMessage(ctx, req.(*DeleteGroupMsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetUserMessageById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserMsgByIDRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetUserMessageById(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetUserMessageById_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetUserMessageById(ctx, req.(*GetUserMsgByIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupMessageById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupMsgByIDRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupMessageById(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupMessageById_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupMessageById(ctx, req.(*GetGroupMsgByIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetUserMessagesByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserMessagesByIdsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetUserMessagesByIds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetUserMessagesByIds_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetUserMessagesByIds(ctx, req.(*GetUserMessagesByIdsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupMessagesByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupMessagesByIdsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupMessagesByIds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupMessagesByIds_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupMessagesByIds(ctx, req.(*GetGroupMessagesByIdsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_SetUserMsgLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetUserMsgLabelRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).SetUserMsgLabel(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_SetUserMsgLabel_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SetUserMsgLabel(ctx, req.(*SetUserMsgLabelRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_SetGroupMsgLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetGroupMsgLabelRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).SetGroupMsgLabel(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_SetGroupMsgLabel_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SetGroupMsgLabel(ctx, req.(*SetGroupMsgLabelRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetUserMsgLabelByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserMsgLabelByDialogIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetUserMsgLabelByDialogId(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetUserMsgLabelByDialogId_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetUserMsgLabelByDialogId(ctx, req.(*GetUserMsgLabelByDialogIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupMsgLabelByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupMsgLabelByDialogIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupMsgLabelByDialogId(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupMsgLabelByDialogId_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupMsgLabelByDialogId(ctx, req.(*GetGroupMsgLabelByDialogIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupMsgIdAfterMsgList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupMsgIdAfterMsgListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupMsgIdAfterMsgList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupMsgIdAfterMsgList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupMsgIdAfterMsgList(ctx, req.(*GetGroupMsgIdAfterMsgListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetGroupUnreadMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGroupUnreadMessagesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetGroupUnreadMessages(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetGroupUnreadMessages_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetGroupUnreadMessages(ctx, req.(*GetGroupUnreadMessagesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_ReadAllUserMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReadAllUserMsgRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).ReadAllUserMsg(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_ReadAllUserMsg_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).ReadAllUserMsg(ctx, req.(*ReadAllUserMsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_ReadAllGroupMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReadAllGroupMsgRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).ReadAllGroupMsg(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_ReadAllGroupMsg_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).ReadAllGroupMsg(ctx, req.(*ReadAllGroupMsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_SetUserMsgsReadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetUserMsgsReadStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).SetUserMsgsReadStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_SetUserMsgsReadStatus_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SetUserMsgsReadStatus(ctx, req.(*SetUserMsgsReadStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_SetUserMsgReadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetUserMsgReadStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).SetUserMsgReadStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_SetUserMsgReadStatus_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).SetUserMsgReadStatus(ctx, req.(*SetUserMsgReadStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_GetUnreadUserMsgs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUnreadUserMsgsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).GetUnreadUserMsgs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_GetUnreadUserMsgs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).GetUnreadUserMsgs(ctx, req.(*GetUnreadUserMsgsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _MsgService_ConfirmDeleteUserMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteUserMsgByDialogIdRequest)
 	if err := dec(in); err != nil {
@@ -1327,96 +342,6 @@ func _MsgService_ConfirmDeleteUserMessageByDialogId_Handler(srv interface{}, ctx
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServiceServer).ConfirmDeleteUserMessageByDialogId(ctx, req.(*DeleteUserMsgByDialogIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_ConfirmDeleteGroupMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteGroupMsgByDialogIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).ConfirmDeleteGroupMessageByDialogId(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_ConfirmDeleteGroupMessageByDialogId_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).ConfirmDeleteGroupMessageByDialogId(ctx, req.(*DeleteGroupMsgByDialogIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_DeleteUserMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteUserMsgByDialogIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).DeleteUserMessageByDialogId(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_DeleteUserMessageByDialogId_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).DeleteUserMessageByDialogId(ctx, req.(*DeleteUserMsgByDialogIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_DeleteGroupMessageByDialogId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteGroupMsgByDialogIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).DeleteGroupMessageByDialogId(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_DeleteGroupMessageByDialogId_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).DeleteGroupMessageByDialogId(ctx, req.(*DeleteGroupMsgByDialogIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_DeleteUserMessageByDialogIdRollback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteUserMsgByDialogIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).DeleteUserMessageByDialogIdRollback(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_DeleteUserMessageByDialogIdRollback_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).DeleteUserMessageByDialogIdRollback(ctx, req.(*DeleteUserMsgByDialogIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _MsgService_DeleteGroupMessageByDialogIdRollback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteUserMsgByDialogIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServiceServer).DeleteGroupMessageByDialogIdRollback(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: MsgService_DeleteGroupMessageByDialogIdRollback_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServiceServer).DeleteGroupMessageByDialogIdRollback(ctx, req.(*DeleteUserMsgByDialogIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1469,152 +394,12 @@ var MsgService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MsgService_SendUserMessage_Handler,
 		},
 		{
-			MethodName: "SendUserMessageRevert",
-			Handler:    _MsgService_SendUserMessageRevert_Handler,
-		},
-		{
 			MethodName: "SendMultiUserMessage",
 			Handler:    _MsgService_SendMultiUserMessage_Handler,
 		},
 		{
-			MethodName: "SendGroupMessage",
-			Handler:    _MsgService_SendGroupMessage_Handler,
-		},
-		{
-			MethodName: "SendGroupMessageRevert",
-			Handler:    _MsgService_SendGroupMessageRevert_Handler,
-		},
-		{
-			MethodName: "GetUserMessageList",
-			Handler:    _MsgService_GetUserMessageList_Handler,
-		},
-		{
-			MethodName: "GetUserLastMessageList",
-			Handler:    _MsgService_GetUserLastMessageList_Handler,
-		},
-		{
-			MethodName: "GetGroupLastMessageList",
-			Handler:    _MsgService_GetGroupLastMessageList_Handler,
-		},
-		{
-			MethodName: "GetLastMsgsForUserWithFriends",
-			Handler:    _MsgService_GetLastMsgsForUserWithFriends_Handler,
-		},
-		{
-			MethodName: "GetLastMsgsForGroupsWithIDs",
-			Handler:    _MsgService_GetLastMsgsForGroupsWithIDs_Handler,
-		},
-		{
-			MethodName: "GetLastMsgsByDialogIds",
-			Handler:    _MsgService_GetLastMsgsByDialogIds_Handler,
-		},
-		{
-			MethodName: "EditUserMessage",
-			Handler:    _MsgService_EditUserMessage_Handler,
-		},
-		{
-			MethodName: "DeleteUserMessage",
-			Handler:    _MsgService_DeleteUserMessage_Handler,
-		},
-		{
-			MethodName: "GetUserMsgIdAfterMsgList",
-			Handler:    _MsgService_GetUserMsgIdAfterMsgList_Handler,
-		},
-		{
-			MethodName: "GetGroupMessageList",
-			Handler:    _MsgService_GetGroupMessageList_Handler,
-		},
-		{
-			MethodName: "EditGroupMessage",
-			Handler:    _MsgService_EditGroupMessage_Handler,
-		},
-		{
-			MethodName: "DeleteGroupMessage",
-			Handler:    _MsgService_DeleteGroupMessage_Handler,
-		},
-		{
-			MethodName: "GetUserMessageById",
-			Handler:    _MsgService_GetUserMessageById_Handler,
-		},
-		{
-			MethodName: "GetGroupMessageById",
-			Handler:    _MsgService_GetGroupMessageById_Handler,
-		},
-		{
-			MethodName: "GetUserMessagesByIds",
-			Handler:    _MsgService_GetUserMessagesByIds_Handler,
-		},
-		{
-			MethodName: "GetGroupMessagesByIds",
-			Handler:    _MsgService_GetGroupMessagesByIds_Handler,
-		},
-		{
-			MethodName: "SetUserMsgLabel",
-			Handler:    _MsgService_SetUserMsgLabel_Handler,
-		},
-		{
-			MethodName: "SetGroupMsgLabel",
-			Handler:    _MsgService_SetGroupMsgLabel_Handler,
-		},
-		{
-			MethodName: "GetUserMsgLabelByDialogId",
-			Handler:    _MsgService_GetUserMsgLabelByDialogId_Handler,
-		},
-		{
-			MethodName: "GetGroupMsgLabelByDialogId",
-			Handler:    _MsgService_GetGroupMsgLabelByDialogId_Handler,
-		},
-		{
-			MethodName: "GetGroupMsgIdAfterMsgList",
-			Handler:    _MsgService_GetGroupMsgIdAfterMsgList_Handler,
-		},
-		{
-			MethodName: "GetGroupUnreadMessages",
-			Handler:    _MsgService_GetGroupUnreadMessages_Handler,
-		},
-		{
-			MethodName: "ReadAllUserMsg",
-			Handler:    _MsgService_ReadAllUserMsg_Handler,
-		},
-		{
-			MethodName: "ReadAllGroupMsg",
-			Handler:    _MsgService_ReadAllGroupMsg_Handler,
-		},
-		{
-			MethodName: "SetUserMsgsReadStatus",
-			Handler:    _MsgService_SetUserMsgsReadStatus_Handler,
-		},
-		{
-			MethodName: "SetUserMsgReadStatus",
-			Handler:    _MsgService_SetUserMsgReadStatus_Handler,
-		},
-		{
-			MethodName: "GetUnreadUserMsgs",
-			Handler:    _MsgService_GetUnreadUserMsgs_Handler,
-		},
-		{
 			MethodName: "ConfirmDeleteUserMessageByDialogId",
 			Handler:    _MsgService_ConfirmDeleteUserMessageByDialogId_Handler,
-		},
-		{
-			MethodName: "ConfirmDeleteGroupMessageByDialogId",
-			Handler:    _MsgService_ConfirmDeleteGroupMessageByDialogId_Handler,
-		},
-		{
-			MethodName: "DeleteUserMessageByDialogId",
-			Handler:    _MsgService_DeleteUserMessageByDialogId_Handler,
-		},
-		{
-			MethodName: "DeleteGroupMessageByDialogId",
-			Handler:    _MsgService_DeleteGroupMessageByDialogId_Handler,
-		},
-		{
-			MethodName: "DeleteUserMessageByDialogIdRollback",
-			Handler:    _MsgService_DeleteUserMessageByDialogIdRollback_Handler,
-		},
-		{
-			MethodName: "DeleteGroupMessageByDialogIdRollback",
-			Handler:    _MsgService_DeleteGroupMessageByDialogIdRollback_Handler,
 		},
 		{
 			MethodName: "DeleteUserMessageById",
