@@ -9,6 +9,7 @@ import (
 	"github.com/cossim/coss-server/internal/group/app/command"
 	"github.com/cossim/coss-server/internal/group/app/query"
 	"github.com/cossim/coss-server/internal/group/cache"
+	"github.com/cossim/coss-server/internal/group/infra/persistence"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
@@ -70,7 +71,7 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 		panic(err)
 	}
 
-	groupRepository := adapters.NewMySQLGroupRepository(dbConn, groupCache)
+	groupRepository := persistence.NewMySQLGroupRepository(dbConn, groupCache)
 
 	return app.Application{
 		Commands: app.Commands{

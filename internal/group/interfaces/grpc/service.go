@@ -3,10 +3,10 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/cossim/coss-server/internal/group/adapters"
 	api "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/group/cache"
 	"github.com/cossim/coss-server/internal/group/domain/repository"
+	"github.com/cossim/coss-server/internal/group/infra/persistence"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/manager/server"
@@ -57,7 +57,7 @@ func (s *GroupServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		}
 	}
 
-	repo := adapters.NewMySQLGroupRepository(dbConn, gcache)
+	repo := persistence.NewMySQLGroupRepository(dbConn, gcache)
 	if err = repo.Automigrate(); err != nil {
 		log.Printf("automigrate error: %v\n", err)
 		return err
