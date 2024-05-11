@@ -210,8 +210,9 @@ func (h *HttpServer) CreateRoom(c *gin.Context) {
 
 func createRoomToResponse(room *command.CreateRoomResponse) *v1.CreateRoomResponse {
 	return &v1.CreateRoomResponse{
-		Url:  room.Url,
-		Room: room.Room,
+		Url:     room.Url,
+		Room:    room.Room,
+		Timeout: room.Timeout,
 	}
 }
 
