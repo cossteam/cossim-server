@@ -106,11 +106,15 @@ func (g *MsgRepo) Find(ctx context.Context, query *entity.UserMsgQuery) (*entity
 	return result, nil
 }
 
-func (g *MsgRepo) GetGroupUnreadMsgList(dialogId uint32, msgIds []uint32) ([]*entity.GroupMessage, error) {
+func (g *MsgRepo) GetGroupUnreadMsgList(dialogID uint32, msgIds []uint32) ([]*entity.GroupMessage, error) {
 	var msgList []*entity.GroupMessage
-	err := g.db.Model(&entity.GroupMessage{}).
-		Where("id NOT IN (?) AND dialog_id = ? AND deleted_at = 0", msgIds, dialogId).
-		Find(&msgList).Error
+	query := g.db.Model(&entity.GroupMessage{}).Where("dialog_id = ? AND deleted_at = 0", dialogID)
+
+	if len(msgIds) > 0 {
+		query = query.Where("id NOT IN (?)", msgIds)
+	}
+
+	err := query.Find(&msgList).Error
 	if err != nil {
 		return nil, err
 	}
@@ -130,12 +134,13 @@ func NewMsgRepo(db *gorm.DB) *MsgRepo {
 	return &MsgRepo{db: db}
 }
 
-func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.UserMessage, error) {
+func (g *MsgRepo) InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, subType entity.UserMessageSubType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.UserMessage, error) {
 	content := &entity.UserMessage{
 		SendID:             senderId,
 		ReceiveID:          receiverId,
 		Content:            msg,
 		Type:               msgType,
+		SubType:            subType,
 		ReplyId:            replyId,
 		DialogId:           dialogId,
 		IsBurnAfterReading: isBurnAfterReading,

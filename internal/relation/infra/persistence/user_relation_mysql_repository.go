@@ -2,9 +2,11 @@ package persistence
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/pkg/constants"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 	"log"
@@ -113,6 +115,18 @@ func (m *MySQLRelationUserRepository) EstablishFriendship(ctx context.Context, d
 		return err
 	}
 
+	if m.cache != nil {
+		if err := m.cache.DeleteRelation(ctx, senderID, []string{receiverID}); err != nil {
+			log.Printf("delete relation cache error: %v", err)
+		}
+		if err := m.cache.DeleteRelation(ctx, receiverID, []string{senderID}); err != nil {
+			log.Printf("delete relation cache error: %v", err)
+		}
+		if err := m.cache.DeleteFriendList(ctx, senderID, receiverID); err != nil {
+			log.Printf("failed to delete cache friend list: %v", err)
+		}
+	}
+
 	return nil
 }
 
@@ -166,6 +180,7 @@ func (m *MySQLRelationUserRepository) Get(ctx context.Context, userId, friendId 
 
 	go func() {
 		if m.cache != nil {
+			fmt.Println("m.cache != m.cache.SetRelation ")
 			if err := m.cache.SetRelation(context.Background(), userId, friendId, e, cache.RelationExpireTime); err != nil {
 				//zap.L().Error("cache.SetRelation failed", zap.Error(err))
 				log.Printf("cache.SetRelation failed err:%v", err)
@@ -320,8 +335,11 @@ func (m *MySQLRelationUserRepository) FriendRequestList(ctx context.Context, use
 
 	var relations []*UserRelationModel
 	if err := m.db.WithContext(ctx).
-		Where("user_id = ? AND status NOT IN ? AND deleted_at = 0", userId,
-			[]entity.UserRelationStatus{entity.UserStatusBlocked, entity.UserStatusDeleted}).
+		Where("user_id = ? AND status NOT IN ? AND friend_id NOT IN ? AND deleted_at = 0",
+			userId,
+			[]entity.UserRelationStatus{entity.UserStatusBlocked, entity.UserStatusDeleted},
+			constants.SystemUserList,
+		).
 		Find(&relations).Error; err != nil {
 		return nil, err
 	}

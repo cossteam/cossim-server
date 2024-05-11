@@ -94,7 +94,7 @@ func (UnimplementedStorageServiceServer) Delete(context.Context, *DeleteRequest)
 func (UnimplementedStorageServiceServer) mustEmbedUnimplementedStorageServiceServer() {}
 
 // UnsafeStorageServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to StorageServiceServer will
+// Use of this interfaces is not recommended, as added methods to StorageServiceServer will
 // result in compilation errors.
 type UnsafeStorageServiceServer interface {
 	mustEmbedUnimplementedStorageServiceServer()

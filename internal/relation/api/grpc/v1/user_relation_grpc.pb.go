@@ -303,7 +303,7 @@ func (UnimplementedUserRelationServiceServer) AddFriendAfterDelete(context.Conte
 }
 
 // UnsafeUserRelationServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to UserRelationServiceServer will
+// Use of this interfaces is not recommended, as added methods to UserRelationServiceServer will
 // result in compilation errors.
 type UnsafeUserRelationServiceServer interface {
 	mustEmbedUnimplementedUserRelationServiceServer()

@@ -407,7 +407,7 @@ func (s *Service) pushFriendStatus(ctx context.Context, v status, uid, rid strin
 			}
 
 			//for _, i2 := range s.Buckets {
-			//	err := i2.SendMessage(friend.UserId, message)
+			//	err := i2.SendMessage(friend.UserID, message)
 			//	if err != nil {
 			//		s.logger.Error("推送消息失败", zap.Error(err))
 			//		continue
@@ -476,7 +476,7 @@ func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c socketio.Conn
 }
 
 func wsMsgToJSON(wsMsg *pushgrpcv1.WsMsg, slice bool) ([]byte, error) {
-	// 先将整个结构体转换为 map[string]interface{}
+	// 先将整个结构体转换为 map[string]interfaces{}
 	msgMap := map[string]interface{}{
 		"uid":          wsMsg.Uid,
 		"event":        wsMsg.Event,
@@ -494,7 +494,7 @@ func wsMsgToJSON(wsMsg *pushgrpcv1.WsMsg, slice bool) ([]byte, error) {
 			return nil, fmt.Errorf("error decoding data field: %v", err)
 		}
 		msgMap["data"] = dataSlice
-	} else { // 否则将 Data 字段解析为 map[string]interface{}
+	} else { // 否则将 Data 字段解析为 map[string]interfaces{}
 		var dataMap map[string]interface{}
 		err := json.Unmarshal(wsMsg.Data.Value, &dataMap)
 		if err != nil {
@@ -514,7 +514,7 @@ func wsMsgToJSON(wsMsg *pushgrpcv1.WsMsg, slice bool) ([]byte, error) {
 
 // 将 PushWsBatchByUserIdsRequest 消息转换为 JSON 格式
 func pushWsBatchByUserIdsRequestToJSON(req *pushgrpcv1.PushWsBatchByUserIdsRequest) ([]byte, error) {
-	// 将 Data 字段的值反序列化为 map[string]interface{}
+	// 将 Data 字段的值反序列化为 map[string]interfaces{}
 	var dataMap map[string]interface{}
 	err := json.Unmarshal(req.Data.Value, &dataMap)
 	if err != nil {
@@ -541,7 +541,7 @@ func pushWsBatchByUserIdsRequestToJSON(req *pushgrpcv1.PushWsBatchByUserIdsReque
 
 // 将 PushWsBatchRequest 消息转换为 JSON 格式
 func pushWsBatchRequestToJSON(req *pushgrpcv1.PushWsBatchRequest) ([]byte, error) {
-	// 构造一个包含所有消息的切片，每个消息将 Data 字段的值反序列化为 map[string]interface{}
+	// 构造一个包含所有消息的切片，每个消息将 Data 字段的值反序列化为 map[string]interfaces{}
 	var msgs []map[string]interface{}
 	for _, msg := range req.Msgs {
 		var dataMap map[string]interface{}

@@ -824,7 +824,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 //
 //	//查询发送者信息
 //	info, err := s.userService.UserInfo(context.Background(), &usergrpcv1.UserInfoRequest{
-//		UserId: lm.SenderId,
+//		UserID: lm.SenderId,
 //	})
 //	if err != nil {
 //		return err
@@ -852,14 +852,14 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 //	for _, userId := range userIds {
 //		dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(context.Background(), &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
 //			DialogId: dialogId,
-//			UserId:   userId,
+//			UserID:   userId,
 //		})
 //		if err != nil {
 //			return err
 //		}
 //
 //		msgs, err := s.msgService.GetGroupUnreadMessages(context.Background(), &msggrpcv1.GetGroupUnreadMessagesRequest{
-//			UserId:   userId,
+//			UserID:   userId,
 //			DialogId: dialogId,
 //		})
 //		if err != nil {
@@ -882,7 +882,7 @@ func (s *Service) GetGroupMessageReadersResponse(c context.Context, userId strin
 //				SendAt:   lm.CreatedAt,
 //				MsgId:    uint64(lm.Id),
 //				SenderInfo: model.SenderInfo{
-//					UserId: info.UserId,
+//					UserID: info.UserID,
 //					Name:   info.NickName,
 //					Avatar: info.Avatar,
 //				},

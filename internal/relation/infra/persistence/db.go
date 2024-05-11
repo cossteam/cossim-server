@@ -21,6 +21,7 @@ type Repositories struct {
 	DialogRepo            repository.DialogRepository
 	DialogUserRepo        repository.DialogUserRepository
 
+	userCache  cache.RelationUserCache
 	groupCache cache.RelationGroupCache
 }
 
@@ -35,13 +36,18 @@ func NewRepositories(cfg *pkgconfig.AppConfig) *Repositories {
 		panic(err)
 	}
 
+	userCache, err := cache.NewRelationUserCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
+	if err != nil {
+		panic(err)
+	}
+
 	groupCache, err := cache.NewRelationGroupCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
 	if err != nil {
 		panic(err)
 	}
 
 	return &Repositories{
-		UserRepo:              NewMySQLRelationUserRepository(dbConn, nil),
+		UserRepo:              NewMySQLRelationUserRepository(dbConn, userCache),
 		GroupRepo:             NewMySQLRelationGroupRepository(dbConn, groupCache),
 		DialogRepo:            NewMySQLMySQLDialogRepository(dbConn, nil),
 		DialogUserRepo:        NewMySQLDialogUserRepository(dbConn, nil),
@@ -49,6 +55,7 @@ func NewRepositories(cfg *pkgconfig.AppConfig) *Repositories {
 		GroupAnnouncementRepo: NewMySQLRelationGroupAnnouncementRepository(dbConn, nil),
 		UserFriendRequestRepo: NewMySQLUserFriendRequestRepository(dbConn, nil),
 		db:                    dbConn,
+		userCache:             userCache,
 		groupCache:            groupCache,
 	}
 }
@@ -57,7 +64,7 @@ func (r *Repositories) TXRepositories(fc func(txr *Repositories) error) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		// 创建一个新的 Repositories 实例，确保在事务中使用的是同一个数据库连接
 		txr := &Repositories{
-			UserRepo:              NewMySQLRelationUserRepository(tx, nil),
+			UserRepo:              NewMySQLRelationUserRepository(tx, r.userCache),
 			GroupRepo:             NewMySQLRelationGroupRepository(tx, r.groupCache),
 			DialogRepo:            NewMySQLMySQLDialogRepository(tx, nil),
 			DialogUserRepo:        NewMySQLDialogUserRepository(tx, nil),

@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	v1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/domain/entity"
 	"github.com/cossim/coss-server/internal/msg/infrastructure/persistence"
@@ -83,11 +84,15 @@ func (s *Handler) ReadAllGroupMsg(ctx context.Context, request *v1.ReadAllGroupM
 		return resp, status.Error(codes.Code(code.GroupErrGetGroupMsgReadByMsgIdAndUserIdFailed.Code()), err.Error())
 	}
 
+	fmt.Println("msgids => ", msgids)
+
 	list, err := s.mr.GetGroupUnreadMsgList(request.DialogId, msgids)
 	if err != nil {
 		return resp, err
 	}
 	var reads []*entity.GroupMessageRead
+
+	fmt.Println("list => ", list)
 
 	if len(list) > 0 {
 		reads = make([]*entity.GroupMessageRead, len(list))

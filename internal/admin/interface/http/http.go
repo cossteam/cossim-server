@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/admin/service"
+	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
@@ -29,13 +30,16 @@ type Handler struct {
 	enc         encryption.Encryptor
 	db          *gorm.DB
 	jwtKey      string
+	authService authv1.UserAuthServiceClient
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.setupRedisClient(cfg)
 	h.logger = plog.NewDefaultLogger("admin_bff", int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+		if err := h.enc.ReadKeyPair(); err != nil {
+			return err
+		}
 	}
 	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
 	if err != nil {
@@ -66,6 +70,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.RecoveryMiddleware())
 	//u.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler(), ginSwagger.InstanceName("admin")))
 	u.Use(middleware.AdminAuthMiddleware(h.redisClient, h.db, h.jwtKey))
+
 	u.Use(middleware.EncryptionMiddleware(h.enc))
 	u.POST("/notification/send_all", h.sendAllNotification)
 }

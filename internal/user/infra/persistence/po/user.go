@@ -22,7 +22,7 @@ type User struct {
 	LineAt       int64  `gorm:"comment:最后在线时间（接口）" json:"line_at"`
 	LastAt       int64  `gorm:"comment:最后登录时间" json:"last_at"`
 	Status       uint   `gorm:"type:tinyint(4);default:0;comment:用户状态" json:"status"`
-	EmailVerity  uint   `gorm:"type:tinyint(1);default:0;comment:邮箱是否已验证" json:"email_verity"`
+	EmailVerity  bool   `gorm:"type:tinyint(1);default:0;comment:邮箱是否已验证" json:"email_verity"`
 	Bot          uint   `gorm:"type:tinyint(4);default:0;comment:是否机器人" json:"bot"`
 	SecretBundle string `gorm:"type:longtext;comment:用户密钥" json:"secret_bundle,omitempty"`
 	CreatedAt    int64  `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`

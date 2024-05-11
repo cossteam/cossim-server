@@ -17,6 +17,8 @@ message SendUserMsgRequest{
   uint32 DialogId = 6;
   // @inject_tag: json:"is_burn_after_reading"
   BurnAfterReadingType IsBurnAfterReadingType = 7;
+  // @inject_tag: json:"sub_type"
+  int32 SubType = 8;
 }
 
 message SendGroupMsgRequest{
@@ -67,6 +69,14 @@ enum MessageType {
   CancelLabel = 12; // 取消标注
 }
 
+// 通话消息的子类型
+enum CallSubType {
+  Normal = 0;      // 正常通话
+  Cancelled = 1;   // 取消通话
+  Rejected = 2;    // 拒绝通话
+  Missed = 3;      // 未接通话
+}
+
 message GetUserMsgListRequest{
   // @inject_tag: json:"dialog_id"
   uint32 DialogId=1;
@@ -113,6 +123,8 @@ message UserMessage{
   MsgLabel IsLabel = 11;
   // @inject_tag: json:"is_burn_after_reading"
   BurnAfterReadingType IsBurnAfterReadingType = 12;
+  // @inject_tag: json:"sub_type"
+  uint32 SubType= 13;
 }
 
 enum MsgLabel {
@@ -577,6 +589,11 @@ message DeleteUserMsgByIDResponse{
 
 }
 
+message DeleteUserMessageByIdsRequest {
+  // @inject_tag: json:"ids"
+  repeated uint32 IDs = 1;
+}
+
 service MsgService {
   //发送私聊消息
   rpc SendUserMessage(SendUserMsgRequest) returns(SendUserMsgResponse);
@@ -662,4 +679,6 @@ service MsgService {
   rpc DeleteGroupMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
   //根据消息id删除私聊消息
   rpc DeleteUserMessageById(DeleteUserMsgByIDRequest) returns (DeleteUserMsgByIDResponse);
+  //根据消息ids删除私聊消息
+  rpc DeleteUserMessageByIDs(DeleteUserMessageByIdsRequest) returns (DeleteUserMsgByIDResponse);
 }

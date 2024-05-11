@@ -24,9 +24,9 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, request *v1.Use
 	var info2 *entity.UserLogin
 	if info != nil {
 		info2 = &entity.UserLogin{
-			UserId:      request.UserId,
+			UserID:      request.UserId,
 			Token:       request.Token,
-			DriverId:    request.DriverId,
+			DriverID:    request.DriverId,
 			LastAt:      time.Now(),
 			DriverToken: request.DriverToken,
 			Platform:    request.Platform,
@@ -38,9 +38,9 @@ func (s *UserServiceServer) InsertUserLogin(ctx context.Context, request *v1.Use
 		}
 	} else {
 		info2 = &entity.UserLogin{
-			UserId:      request.UserId,
+			UserID:      request.UserId,
 			Token:       request.Token,
-			DriverId:    request.DriverId,
+			DriverID:    request.DriverId,
 			LastAt:      time.Now(),
 			DriverToken: request.DriverToken,
 			Platform:    request.Platform,
@@ -67,9 +67,9 @@ func (s *UserServiceServer) GetUserLoginByToken(ctx context.Context, request *v1
 		}
 	}
 	if info != nil {
-		resp.UserId = info.UserId
+		resp.UserId = info.UserID
 		resp.Token = info.Token
-		resp.DriverId = info.DriverId
+		resp.DriverId = info.DriverID
 	}
 	return resp, nil
 }
@@ -84,9 +84,9 @@ func (s *UserServiceServer) GetUserLoginByDriverIdAndUserId(ctx context.Context,
 	}
 
 	if info != nil {
-		resp.UserId = info.UserId
+		resp.UserId = info.UserID
 		resp.Token = info.Token
-		resp.DriverId = info.DriverId
+		resp.DriverId = info.DriverID
 		resp.DriverToken = info.DriverToken
 		resp.Platform = info.Platform
 		resp.LoginTime = info.LastAt
@@ -126,9 +126,9 @@ func (s *UserServiceServer) GetUserLoginByUserId(ctx context.Context, request *v
 		return nil, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 	}
 	if info != nil {
-		resp.UserId = info.UserId
+		resp.UserId = info.UserID
 		resp.Token = info.Token
-		resp.DriverId = info.DriverId
+		resp.DriverId = info.DriverID
 		resp.DriverToken = info.DriverToken
 		resp.Platform = info.Platform
 		resp.LoginTime = info.LastAt

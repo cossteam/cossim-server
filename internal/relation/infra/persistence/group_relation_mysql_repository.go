@@ -467,7 +467,7 @@ func (m *MySQLRelationGroupRepository) DeleteByGroupID(ctx context.Context, gid 
 	return m.db.WithContext(ctx).
 		Model(&GroupRelationModel{}).
 		Where("group_id = ?", gid).
-		Update("deleted_at", time.Now()).Error
+		Update("deleted_at", ptime.Now()).Error
 }
 
 func (m *MySQLRelationGroupRepository) UpdateFields(ctx context.Context, id uint32, fields map[string]interface{}) error {

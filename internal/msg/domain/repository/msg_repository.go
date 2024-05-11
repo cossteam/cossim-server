@@ -8,7 +8,7 @@ import (
 
 type MsgRepository interface {
 	//私聊
-	InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.UserMessage, error)
+	InsertUserMessage(senderId string, receiverId string, msg string, msgType entity.UserMessageType, subType entity.UserMessageSubType, replyId uint, dialogId uint, isBurnAfterReading entity.BurnAfterReadingType) (*entity.UserMessage, error)
 	//群发消息
 	InsertUserMessages(message []entity.UserMessage) error
 	GetUserMsgList(dialogId uint32, sendId string, content string, msgType entity.UserMessageType, pageNumber, pageSize int) ([]entity.UserMessage, int32, int32)

@@ -11,7 +11,7 @@ import (
 	"github.com/mozillazg/go-pinyin"
 )
 
-// User is an interface for user data
+// User is an interfaces for user data
 type User interface{}
 
 func (udlr CustomUserData) MarshalBinary() ([]byte, error) {
@@ -34,7 +34,7 @@ func (udlr CustomGroupData) MarshalBinary() ([]byte, error) {
 	return data, nil
 }
 
-// CustomUserData Custom struct implementing the User interface
+// CustomUserData Custom struct implementing the User interfaces
 type CustomUserData struct {
 	UserID         string       `json:"user_id"`
 	NickName       string       `json:"nickname"`

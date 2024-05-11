@@ -26,6 +26,26 @@ type MySQLUserLoginRepository struct {
 	cache cache.UserCache
 }
 
+func (r *MySQLUserLoginRepository) GetWithFields(ctx context.Context, fields map[string]interface{}) (*entity.UserLogin, error) {
+	var model po.UserLogin
+
+	query := r.db.WithContext(ctx)
+
+	for field, value := range fields {
+		query = query.Where(field, value)
+	}
+
+	if err := query.First(&model).Error; err != nil {
+		//if errors.Is(err, gorm.ErrRecordNotFound) {
+		//	return nil, nil
+		//}
+		return nil, err
+	}
+
+	userLogin := converter.UserLoginPOToEntity(&model)
+	return userLogin, nil
+}
+
 func (r *MySQLUserLoginRepository) InsertUserLogin(ctx context.Context, user *entity.UserLogin) error {
 	model := converter.UserLoginEntityToPO(user)
 
@@ -35,6 +55,7 @@ func (r *MySQLUserLoginRepository) InsertUserLogin(ctx context.Context, user *en
 		LastAt:   model.LastAt,
 	}).
 		Assign(po.UserLogin{
+			DriverId:    model.DriverId,
 			LoginCount:  model.LoginCount,
 			DriverToken: model.DriverToken,
 			Token:       model.Token,
@@ -59,7 +80,7 @@ func (r *MySQLUserLoginRepository) GetUserLoginByDriverIdAndUserId(ctx context.C
 	e := converter.UserLoginPOToEntity(&model)
 
 	//if r.cache != nil {
-	//	if err := r.cache.SetUserLoginInfo(ctx, entity.UserId, int(entity.LoginCount), entity, cache.UserExpireTime); err != nil {
+	//	if err := r.cache.SetUserLoginInfo(ctx, entity.UserID, int(entity.LoginCount), entity, cache.UserExpireTime); err != nil {
 	//		log.Printf("cache set user login info error: %v", utils.NewErrorWithStack(err.Error()))
 	//	}
 	//}
@@ -137,7 +158,7 @@ func (r *MySQLUserLoginRepository) DeleteUserLoginByID(ctx context.Context, id u
 	}
 
 	if r.cache != nil {
-		if err := r.cache.DeleteUserLoginInfo(ctx, model.UserId, int(model.LoginCount)); err != nil {
+		if err := r.cache.DeleteUserLoginInfo(ctx, model.UserId, model.DriverId); err != nil {
 			log.Printf("cache del user login info error: %v", utils.NewErrorWithStack(err.Error()))
 		}
 	}

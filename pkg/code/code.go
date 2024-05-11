@@ -12,7 +12,7 @@ var (
 	_codes    = map[int]CodeC{}
 )
 
-// Codes is an interface for error code specification.
+// Codes is an interfaces for error code specification.
 type Codes interface {
 	// Error Return a string representation of the error reason.
 	Error() string

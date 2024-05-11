@@ -170,6 +170,10 @@ func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *repository.
 		db = db.Where("deleted_at = 0")
 	}
 
+	if query.IsShow {
+		db = db.Where(&DialogUserModel{IsShow: true})
+	}
+
 	if query.PageSize > 0 && query.PageNum > 0 {
 		offset := (query.PageNum - 1) * query.PageSize
 		db = db.Offset(offset).Limit(query.PageSize)

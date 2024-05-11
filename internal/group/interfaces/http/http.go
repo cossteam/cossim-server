@@ -8,8 +8,10 @@ import (
 	"github.com/cossim/coss-server/internal/group/app/command"
 	"github.com/cossim/coss-server/internal/group/app/query"
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -21,7 +23,9 @@ import (
 	oapimiddleware "github.com/oapi-codegen/gin-middleware"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"net/http"
 	"os"
+	"strings"
 )
 
 var _ v1.ServerInterface = &HttpServer{}
@@ -55,8 +59,8 @@ type HttpServer struct {
 // @Param keyword query string false "关键词"
 // @Param page_num query int false "页码"
 // @Param page_size query int false "页大小"
-// @Security ApiKeyAuth
-// @Success 200 {object} Group "成功创建群聊"
+// @Security BearerAuth
+// @Success 200 {object} v1.Group
 // @Router /api/v1/group/search [get]
 func (h *HttpServer) SearchGroup(c *gin.Context, params v1.SearchGroupParams) {
 	var page, pageSize int32 = 1, 10
@@ -102,9 +106,9 @@ func searchGroupToResponse(group []*query.Group) []*v1.Group {
 // @Produce json
 // @Param Authorization header string true "Authentication header"
 // @Param keyword path integer true "群聊名称或ID" string
-// @Security ApiKeyAuth
-// @Success 200 {object} Group "成功创建群聊"
-// @Router /api/v1/group/search [get]
+// @Security BearerAuth
+// @Success 200 {object} v1.CreateGroupResponse "成功创建群聊"
+// @Router /api/v1/group [post]
 func (h *HttpServer) CreateGroup(c *gin.Context) {
 	req := &v1.CreateGroupRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -150,7 +154,7 @@ func createGroupToResponse(createGroup *command.CreateGroupResponse) *v1.CreateG
 // @Accept json
 // @Produce json
 // @Param id path integer true "要删除的群聊ID" format(uint32)
-// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {string} string "成功删除群聊"
 // @Router /api/v1/group/{id} [delete]
 func (h *HttpServer) DeleteGroup(c *gin.Context, id uint32) {
@@ -171,7 +175,8 @@ func (h *HttpServer) DeleteGroup(c *gin.Context, id uint32) {
 // @Description 根据群聊ID获取群聊的详细信息
 // @Tags group
 // @Param id path integer true "群聊ID" format(uint32)
-// @Success 200 {object} GroupInfo "返回群聊信息"
+// @Security BearerAuth
+// @Success 200 {object} v1.GroupInfo "返回群聊信息"
 // @Router /api/v1/group/{id} [get]
 func (h *HttpServer) GetGroup(c *gin.Context, id uint32) {
 	getGroup, err := h.app.Queries.GetGroup.Handle(c, query.GetGroup{
@@ -218,7 +223,8 @@ func getGroupToResponse(getGroup *query.GroupInfo) *v1.GroupInfo {
 // @Accept json
 // @Produce json
 // @Param id path uint32 true "要更新的群聊ID"
-// @Param requestBody body UpdateGroupRequest true "更新现有群聊的信息"
+// @Param requestBody body v1.UpdateGroupRequest true "更新现有群聊的信息"
+// @Security BearerAuth
 // @Success 200 {object} string "成功更新群聊信息"
 // @Router /api/v1/group/{id} [put]
 func (h *HttpServer) UpdateGroup(c *gin.Context, id uint32) {
@@ -259,9 +265,23 @@ func (h *HttpServer) GetAllGroup(c *gin.Context) {
 func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger(HttpServiceName, int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+		if err := h.enc.ReadKeyPair(); err != nil {
+			return err
+		}
 	}
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	var userAddr string
+	if cfg.Discovers["user"].Direct {
+		userAddr = cfg.Discovers["user"].Addr()
+	} else {
+		userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
+	}
+
+	authClient, err := client.NewAuthClient(userAddr)
+	if err != nil {
+		return err
+	}
+	h.authService = authClient
 	return nil
 }
 
@@ -276,7 +296,7 @@ func (h *HttpServer) Version() string {
 func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 	// 添加一些中间件或其他配置
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
-	r.Use(middleware.AuthMiddleware(h.authService))
+	//r.Use(middleware.AuthMiddleware(h.authService))
 
 	swagger, err := v1.GetSwagger()
 	if err != nil {
@@ -289,11 +309,16 @@ func (h *HttpServer) RegisterRoute(r gin.IRouter) {
 
 	validatorOptions := &oapimiddleware.Options{
 		ErrorHandler: func(c *gin.Context, message string, statusCode int) {
-			response.SetFail(c, message, nil)
+			if strings.Contains(message, "security requirements failed: authorization failed") {
+				fmt.Println("security requirements failed: authorization failed")
+				statusCode = http.StatusUnauthorized
+			}
+			response.SetResponse(c, statusCode, message, nil)
 		},
 	}
 	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-		return nil
+		return middleware.HandleOpenApiAuthentication(ctx, h.authService, input)
+		//return nil
 	}
 
 	// Use our validation middleware to check all requests against the

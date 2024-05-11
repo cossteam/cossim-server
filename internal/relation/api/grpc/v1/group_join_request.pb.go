@@ -79,7 +79,7 @@ type GetGroupJoinRequestListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"string"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"string"`
+	UserId string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"string"`
 	// @inject_tag: json:"page_size"
 	PageSize uint32 `protobuf:"varint,2,opt,name=PageSize,proto3" json:"page_size"`
 	// @inject_tag: json:"page_num"
@@ -149,7 +149,7 @@ type GroupJoinRequestResponse struct {
 	// @inject_tag: json:"group_id"
 	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"inviter_id"
 	InviterId string `protobuf:"bytes,4,opt,name=InviterId,proto3" json:"inviter_id"`
 	// @inject_tag: json:"status"
@@ -315,7 +315,7 @@ type GetGroupJoinRequestByGroupIdAndUserIdRequest struct {
 	// @inject_tag: json:"group_id"
 	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *GetGroupJoinRequestByGroupIdAndUserIdRequest) Reset() {
@@ -374,7 +374,7 @@ type GetGroupJoinRequestByGroupIdAndUserIdResponse struct {
 	// @inject_tag: json:"group_id"
 	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"inviter_id"
 	InviterId string `protobuf:"bytes,4,opt,name=InviterId,proto3" json:"inviter_id"`
 	// @inject_tag: json:"created_at"
@@ -474,7 +474,7 @@ type JoinGroupRequest struct {
 	// @inject_tag: json:"group_id"
 	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"` // 群聊id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"` // 用户id
 	// @inject_tag: json:"msg"
 	Msg string `protobuf:"bytes,3,opt,name=Msg,proto3" json:"msg"` // 申请信息
 	// @inject_tag: json:"join_approve"
@@ -760,7 +760,7 @@ type GetGroupJoinRequestByIDResponse struct {
 	// @inject_tag: json:"group_id"
 	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"inviter_id"
 	InviterId string `protobuf:"bytes,4,opt,name=InviterId,proto3" json:"inviter_id"`
 	// @inject_tag: json:"created_at"
@@ -870,7 +870,7 @@ type DeleteGroupRecordRequest struct {
 	// @inject_tag: json:"id"
 	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *DeleteGroupRecordRequest) Reset() {

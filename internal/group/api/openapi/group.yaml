@@ -16,6 +16,8 @@ paths:
     get:
       tags:
         - group
+      security:
+        - BearerAuth: []
       summary: 搜索群聊
       description: 根据关键字搜索群聊
       operationId: searchGroup
@@ -57,6 +59,8 @@ paths:
     post:
       tags:
         - group
+      security:
+        - BearerAuth: []
       summary: 创建群聊
       description: 创建一个新的群聊
       operationId: createGroup
@@ -77,6 +81,8 @@ paths:
     get:
       tags:
         - group
+      security:
+        - BearerAuth: []
       summary: 获取所有群聊信息
       description: 获取系统中所有群聊的信息列表
       operationId: getAllGroup
@@ -101,6 +107,8 @@ paths:
     get:
       tags:
         - group
+      security:
+        - BearerAuth: []
       summary: 获取群聊信息
       description: 根据群聊ID获取群聊的详细信息
       operationId: getGroup
@@ -116,6 +124,8 @@ paths:
     put:
       tags:
         - group
+      security:
+        - BearerAuth: []
       summary: 更新群聊信息
       description: 更新现有群聊的信息
       operationId: updateGroup
@@ -144,6 +154,8 @@ paths:
     delete:
       tags:
         - group
+      security:
+        - BearerAuth: []
       summary: 删除群聊
       description: 删除系统中指定的群聊
       operationId: deleteGroup
@@ -159,6 +171,11 @@ paths:
         '200':
           description: 成功删除群聊
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   requestBodies:
     UpdateGroupRequest:
       content:

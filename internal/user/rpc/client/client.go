@@ -7,15 +7,9 @@ import (
 
 const serviceName = "user_service"
 
-func NewAuthClient(addr string) authv1.UserAuthServiceClient {
-	//conn, err := discovery.NewGrpcClient(serviceName, addr)
-	//if err != nil {
-	//	return nil
-	//}
-
+func NewAuthClient(addr string) (authv1.UserAuthServiceClient, error) {
 	var grpcOptions = []grpc.DialOption{grpc.WithInsecure()}
 
-	//addr = fmt.Sprintf(baseUrl, addr, name)
 	grpcOptions = append(grpcOptions, grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`))
 
 	conn, err := grpc.Dial(
@@ -26,5 +20,9 @@ func NewAuthClient(addr string) authv1.UserAuthServiceClient {
 		panic(err)
 	}
 
+	return authv1.NewUserAuthServiceClient(conn), nil
+}
+
+func NewAuthClientWithClientConn(conn *grpc.ClientConn) authv1.UserAuthServiceClient {
 	return authv1.NewUserAuthServiceClient(conn)
 }

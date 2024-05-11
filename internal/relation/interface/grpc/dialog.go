@@ -154,7 +154,7 @@ func (s *dialogServiceServer) ConfirmFriendAndJoinDialog(ctx context.Context, re
 	//
 	//	_, err = txr.DialogUserRepo.Create(ctx, &repository.CreateDialogUser{
 	//		DialogID: dialog.ID,
-	//		UserID:   request.UserId,
+	//		UserID:   request.UserID,
 	//	})
 	//	if err != nil {
 	//		return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
@@ -244,6 +244,7 @@ func (s *dialogServiceServer) GetUserDialogList(ctx context.Context, request *v1
 		UserID:   []string{request.UserId},
 		PageSize: int(request.PageSize),
 		PageNum:  int(request.PageNum),
+		IsShow:   true,
 	})
 	if err != nil {
 		return nil, err
@@ -253,6 +254,7 @@ func (s *dialogServiceServer) GetUserDialogList(ctx context.Context, request *v1
 	if len(dialogs) > 0 {
 		for _, dialog := range dialogs {
 			nids = append(nids, dialog.DialogId)
+
 		}
 	}
 	resp.Total = uint64(len(dialogs))

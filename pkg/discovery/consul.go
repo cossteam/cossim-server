@@ -345,7 +345,7 @@ const (
 	CommonDtmConfigKey   = CommonConfigPrefix + "dtm"           // 分布式事务
 	CommonOssConfigKey   = CommonConfigPrefix + "oss"           // 对象存储
 
-	InterfaceConfigPrefix = "interface/"
+	InterfaceConfigPrefix = "interfaces/"
 
 	ServiceConfigPrefix = "service/"
 )
@@ -648,7 +648,7 @@ func updateConfigField(fieldName string, ac *config.AppConfig, newConfig map[str
 			if reflect.DeepEqual(fieldValue.Interface(), newValue) {
 				//fmt.Printf("字段 %s 没有改变\n", fieldName)
 			} else {
-				// 将 fieldValue 转换为 map[string]interface{} 类型
+				// 将 fieldValue 转换为 map[string]interfaces{} 类型
 				oldValue := make(map[string]interface{})
 				if err = mapstructure.Decode(fieldValue.Interface(), &oldValue); err != nil {
 					return err

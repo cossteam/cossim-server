@@ -7,6 +7,7 @@ import (
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	plog "github.com/cossim/coss-server/pkg/log"
@@ -32,11 +33,23 @@ type Handler struct {
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("relation_bff", int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+		if err := h.enc.ReadKeyPair(); err != nil {
+			return err
+		}
 	}
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.RelationService)
-	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
+	var userAddr string
+	if cfg.Discovers["user"].Direct {
+		userAddr = cfg.Discovers["user"].Addr()
+	} else {
+		userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
+	}
+	authClient, err := client.NewAuthClient(userAddr)
+	if err != nil {
+		return err
+	}
+	h.authService = authClient
 	return nil
 }
 
@@ -53,8 +66,9 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	gin.SetMode(gin.ReleaseMode)
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
+	r.Use(middleware.AuthMiddleware(h.authService))
 	api := r.Group("/api/v1/relation")
-	api.Use(middleware.AuthMiddleware(h.authService))
+	//api.Use(middleware.AuthMiddleware(h.authService))
 
 	u := api.Group("/user")
 	u.GET("/friend_list", h.friendList)
@@ -120,7 +134,11 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 	gg.POST("/announcement/delete", h.deleteGroupAnnouncement)
 
 	d := api.Group("/dialog")
+
+	// 置顶对话
 	d.POST("/top", h.topOrCancelTopDialog)
+
+	// 是否展示对话
 	d.POST("/show", h.closeOrOpenDialog)
 }
 

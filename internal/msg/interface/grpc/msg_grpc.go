@@ -18,7 +18,15 @@ import (
 func (s *Handler) SendUserMessage(ctx context.Context, request *v1.SendUserMsgRequest) (*v1.SendUserMsgResponse, error) {
 	resp := &v1.SendUserMsgResponse{}
 
-	msg, err := s.mr.InsertUserMessage(request.GetSenderId(), request.GetReceiverId(), request.GetContent(), entity.UserMessageType(request.GetType()), uint(request.GetReplyId()), uint(request.GetDialogId()), entity.BurnAfterReadingType(request.IsBurnAfterReadingType))
+	msg, err := s.mr.InsertUserMessage(
+		request.GetSenderId(),
+		request.GetReceiverId(),
+		request.GetContent(),
+		entity.UserMessageType(request.GetType()),
+		entity.UserMessageSubType(request.SubType),
+		uint(request.GetReplyId()),
+		uint(request.GetDialogId()),
+		entity.BurnAfterReadingType(request.IsBurnAfterReadingType))
 	if err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrInsertUserMessageFailed.Code()), err.Error())
 	}
@@ -95,7 +103,8 @@ func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 				SenderId:   m.SendID,
 				ReceiverId: m.ReceiveID,
 				Content:    m.Content,
-				Type:       uint32(int32(m.Type)),
+				Type:       uint32(m.Type),
+				SubType:    uint32(m.SubType),
 				ReplyId:    uint64(m.ReplyId),
 				IsRead:     int32(m.IsRead),
 				ReadAt:     m.ReadAt,
@@ -106,7 +115,7 @@ func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 		resp.Total = int32(res.TotalCount)
 		return resp, nil
 	}
-	//ums, total, current := s.mr.GetUserMsgList(request.DialogId, request.UserId, request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
+	//ums, total, current := s.mr.GetUserMsgList(request.DialogId, request.UserID, request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
 
 	res, err := s.mr.Find(ctx, &entity.UserMsgQuery{
 		DialogIds: []uint32{request.DialogId},
@@ -129,6 +138,7 @@ func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsg
 			ReceiverId: m.ReceiveID,
 			Content:    m.Content,
 			Type:       uint32(int32(m.Type)),
+			SubType:    uint32(m.SubType),
 			ReplyId:    uint64(m.ReplyId),
 			IsRead:     int32(m.IsRead),
 			ReadAt:     m.ReadAt,
@@ -924,6 +934,14 @@ func (s *Handler) ReadAllUserMsg(ctx context.Context, request *v1.ReadAllUserMsg
 func (s *Handler) DeleteUserMessageById(ctx context.Context, request *v1.DeleteUserMsgByIDRequest) (*v1.DeleteUserMsgByIDResponse, error) {
 	resp := &v1.DeleteUserMsgByIDResponse{}
 	if err := s.mr.PhysicalDeleteUserMessage(request.ID); err != nil {
+		return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
+	}
+	return resp, nil
+}
+
+func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *v1.DeleteUserMessageByIdsRequest) (*v1.DeleteUserMsgByIDResponse, error) {
+	resp := &v1.DeleteUserMsgByIDResponse{}
+	if err := s.mr.PhysicalDeleteUserMessages(request.IDs); err != nil {
 		return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
 	}
 	return resp, nil

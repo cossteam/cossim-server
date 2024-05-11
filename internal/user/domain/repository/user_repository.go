@@ -19,4 +19,12 @@ type UserRepository interface {
 	UpdateUserColumn(ctx context.Context, userId string, column string, value interface{}) error
 	InsertAndUpdateUser(ctx context.Context, user *entity.User) error
 	DeleteUser(ctx context.Context, userId string) error
+
+	UpdateUserInfo(ctx context.Context, user *entity.UpdateUser) error
+	// UpdateUserStatus 更新用户状态
+	UpdateUserStatus(ctx context.Context, Param *entity.UpdateUserStatus, userId ...string) error
+	// UpdatePassword 更新用户密码
+	UpdatePassword(ctx context.Context, userID, password string) (string, error)
+
+	GetWithOptions(ctx context.Context, query *entity.User) (*entity.User, error)
 }

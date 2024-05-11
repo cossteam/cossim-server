@@ -37,6 +37,9 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		s.logger.Error("获取用户关系失败", zap.Error(err))
 		return nil, err
 	}
+
+	fmt.Println("userRelationStatus1 => ", userRelationStatus1.Status)
+
 	if userRelationStatus1.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		return nil, code.RelationUserErrFriendRelationNotFound
 	}
@@ -49,6 +52,8 @@ func (s *Service) SendUserMsg(ctx context.Context, userID string, driverId strin
 		s.logger.Error("获取用户关系失败", zap.Error(err))
 		return nil, err
 	}
+
+	fmt.Println("userRelationStatus2 => ", userRelationStatus2.Status)
 
 	if userRelationStatus2.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		return nil, code.RelationUserErrFriendRelationNotFound
@@ -415,8 +420,6 @@ func (s *Service) GetUserDialogList(ctx context.Context, userID string, pageSize
 		s.logger.Error("获取用户会话id", zap.Error(err))
 		return nil, err
 	}
-
-	fmt.Println("ids => ", ids)
 
 	//获取对话信息
 	infos, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{

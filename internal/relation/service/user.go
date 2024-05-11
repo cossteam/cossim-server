@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
@@ -150,6 +151,7 @@ func (s *Service) UserRequestList(ctx context.Context, userID string, pageSize i
 		CurrentPage: int32(pageNum),
 	}, nil
 }
+
 func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *model.SendFriendRequest) (interface{}, error) {
 	friendID := req.UserId
 	if friendID == userID {
@@ -198,6 +200,8 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		}
 	}
 
+	fmt.Println("relation2 => ", relation2)
+
 	// 单删之后再添加
 	if relation2.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
 		_, err := s.relationUserService.AddFriendAfterDelete(ctx, &relationgrpcv1.AddFriendAfterDeleteRequest{
@@ -233,10 +237,12 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		return nil, code.RelationErrSendFriendRequestFailed
 	}
 
+	fmt.Println("relation2.Status  => ", relation2.Status)
+
 	// 被拉黑了不推送消息
-	if relation2.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
-		return resp, nil
-	}
+	//if relation2.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_DELETED {
+	//	return resp, nil
+	//}
 
 	wsMsgData := constants.AddFriendEventData{
 		UserId:       userID,
@@ -259,6 +265,8 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 	if err != nil {
 		s.logger.Error("Failed to push message", zap.Error(err))
 	}
+
+	fmt.Println("push req add")
 
 	return resp, nil
 }

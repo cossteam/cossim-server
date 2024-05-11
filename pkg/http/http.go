@@ -14,7 +14,7 @@ package http
 //		if err != nil {
 //			return "", err
 //		}
-//		return c2.UserId, nil
+//		return c2.UserID, nil
 //	}
 //
 //	return "", errors.New("token is empty")
@@ -34,7 +34,7 @@ package http
 //		if err != nil {
 //			return "", err
 //		}
-//		return c2.DriverId, nil
+//		return c2.DriverID, nil
 //	}
 //
 //	return "", errors.New("token is empty")

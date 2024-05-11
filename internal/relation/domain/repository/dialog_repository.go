@@ -36,6 +36,7 @@ type DialogRepository interface {
 type DialogUserQuery struct {
 	DialogID []uint32
 	UserID   []string
+	IsShow   bool
 	Force    bool
 	PageSize int
 	PageNum  int

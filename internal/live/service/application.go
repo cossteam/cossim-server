@@ -17,7 +17,7 @@ import (
 )
 
 func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logger) *app.Application {
-	services, err := discovery.NewBalanceGrpcClient(ac)
+	services, err := discovery.NewBalanceGrpcClients(ac)
 	if err != nil {
 		panic(err)
 	}
