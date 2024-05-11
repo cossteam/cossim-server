@@ -11,20 +11,24 @@ type Application struct {
 }
 
 type Commands struct {
-	UserLogin      command.UserLoginHandler
-	UserLogout     command.UserLogoutHandler
-	UpdatePassword command.UpdatePasswordHandler
-	UserActivate   command.UserActivateHandler
-	UserRegister   command.UserRegisterHandler
-
+	UserLogin                 command.UserLoginHandler
+	UserLogout                command.UserLogoutHandler
+	UpdatePassword            command.UpdatePasswordHandler
+	UserActivate              command.UserActivateHandler
+	UserRegister              command.UserRegisterHandler
+	UpdateUserBundle          command.UpdateUserBundleHandler
+	SetUserPublicKey          command.SetUserPublicKeyHandler
+	SendUserEmailVerification command.SendUserEmailVerificationHandler
+	ResetUserPublicKey        command.ResetUserPublicKeyHandler
 	//CreateGroup command.CreateGroupHandler
 	//DeleteGroup command.DeleteGroupHandler
 	//UpdateGroup command.UpdateGroupHandler
 }
 
 type Queries struct {
-	GetUser       query.GetUserHandler
-	GetUserBundle query.GetUserBundleHandler
+	GetUser             query.GetUserHandler
+	GetUserBundle       query.GetUserBundleHandler
+	GetUserLoginClients query.GetUserClientsHandler
 	//GetGroup    query.GetGroupHandler
 	//SearchGroup query.SearchGroupHandler
 }

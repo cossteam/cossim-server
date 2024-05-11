@@ -392,7 +392,7 @@ func (g *MsgRepo) GetGroupMsgIdAfterMsgList(dialogId uint32, msgIds uint32) ([]*
 		Where("dialog_id = ? AND id > ? AND deleted_at = 0", dialogId, msgIds).
 		Order("id desc")
 	err := g.db.Model(&entity.GroupMessage{}).
-		Where("dialog_id = ? AND deleted_at = 0", dialogId, msgIds).Count(&total).Error
+		Where("dialog_id = ? AND deleted_at = 0", dialogId).Count(&total).Error
 	if err != nil {
 		return nil, 0, err
 	}

@@ -59,6 +59,7 @@ func HandleError(c *gin.Context, logger *zap.Logger, err error) {
 	} else {
 		ec, ok = err.(code.Codes)
 		if !ok {
+			logger.Error("service error", zap.Error(err))
 			response.InternalServerError(c)
 			return
 		}

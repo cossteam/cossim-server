@@ -156,6 +156,20 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 				smtpService,
 				storageService,
 			),
+			UpdateUserBundle: command.NewUpdateUserBundle(logger, userDomain),
+			SetUserPublicKey: command.NewSetUserPublicKeyHandler(logger, userDomain),
+			SendUserEmailVerification: command.NewSendUserEmailVerificationHandler(
+				logger,
+				userDomain,
+				userCache,
+				smtpService,
+			),
+			ResetUserPublicKey: command.NewResetUserPublicKeyHandler(
+				logger,
+				userDomain,
+				userCache,
+				smtpService,
+			),
 		},
 		Queries: app.Queries{
 			GetUser: query.NewGetUserHandler(
@@ -165,6 +179,11 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 			),
 			GetUserBundle: query.NewGetUserBundleHandler(
 				logger,
+				userDomain,
+			),
+			GetUserLoginClients: query.NewGetUserClientsHandler(
+				logger,
+				userCache,
 				userDomain,
 			),
 		},

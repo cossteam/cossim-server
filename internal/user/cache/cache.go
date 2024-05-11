@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
+	pcode "github.com/cossim/coss-server/pkg/code"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -125,6 +126,9 @@ func (u *UserCacheRedis) GetUserVerificationCode(ctx context.Context, userID, co
 	key := GetUserVerificationCodeKey(userID, code)
 	code, err := u.client.Get(ctx, key).Result()
 	if err != nil {
+		if err == redis.Nil {
+			return "", pcode.NotFound
+		}
 		return "", err
 	}
 	return code, nil

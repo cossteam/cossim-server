@@ -304,8 +304,8 @@ paths:
     post:
       tags:
         - user
-      security:
-        - BearerAuth: []
+#      security:
+#        - BearerAuth: []
       summary: 发送激活邮件
       description: 发送激活邮件
       operationId: userEmailVerification
@@ -315,6 +315,8 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - email
               properties:
                 email:
                   type: string
@@ -332,9 +334,20 @@ paths:
         - user
       security:
         - BearerAuth: []
-      summary: 设置用户公钥
-      description: 设置用户公钥
+      summary: 设置用户pgp公钥
+      description: 设置用户pgp公钥
       operationId: setUserPublicKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - public_key
+              properties:
+                public_key:
+                  type: string
     put:
       tags:
         - user
@@ -349,6 +362,10 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+#                - email
+                - public_key
+                - code
               properties:
                 email:
                   type: string
@@ -450,7 +467,7 @@ paths:
         - BearerAuth: []
       summary: 获取该用户当前登录的所有客户端
       description: 获取该用户当前登录的所有客户端
-      operationId: getUserClients
+      operationId: getUserLoginClients
       responses:
         '200':
           description: 获取该用户当前登录的所有客户端成功
@@ -459,14 +476,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    client_ip:
-                      type: string
-                    login_number:
-                      type: integer
-                    login_at:
-                      type: integer
+                  $ref: '#/components/schemas/UserLoginClient'
 components:
   securitySchemes:
     BearerAuth:
@@ -495,6 +505,30 @@ components:
 #          minLength: 6
 #          maxLength: 128
 #          description: 确认密码
+    UserLoginClient:
+      type: object
+      properties:
+        client_ip:
+          type: string
+          description: 客户端ip
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        driver_type:
+          type: string
+          description: 设备类型
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        driver_id:
+          type: string
+          description: 设备id
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        login_at:
+          type: integer
+          format: int64
+          description: 登录时间
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
     UserSecretBundle:
       type: object
       properties:

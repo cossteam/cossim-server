@@ -99,25 +99,75 @@ func (h *HttpServer) GetUserBundle(c *gin.Context, id string) {
 		return
 	}
 
-	response.SetSuccess(c, "获取用户信息成功", &v1.UserSecretBundle{
+	response.SetSuccess(c, "获取用户密钥包成功", &v1.UserSecretBundle{
 		UserId:       getUserBundle.UserID,
 		SecretBundle: getUserBundle.SecretBundle,
 	})
 }
 
 func (h *HttpServer) UpdateUserBundle(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := &v1.UpdateUserBundleJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	err := h.app.Commands.UpdateUserBundle.Handle(c, &command.UpdateUserBundle{
+		UserID:       c.Value(constants.UserID).(string),
+		SecretBundle: req.SecretBundle,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "更新用户密钥包成功", nil)
 }
 
-func (h *HttpServer) GetUserClients(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+func (h *HttpServer) GetUserLoginClients(c *gin.Context) {
+	getUserClients, err := h.app.Queries.GetUserLoginClients.Handle(c, &query.GetUserLoginClients{
+		UserID: c.Value(constants.UserID).(string),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取用户客户端成功", getUserClientsToResponse(getUserClients))
+}
+
+func getUserClientsToResponse(e []*query.GetUserLoginClientsResponse) []*v1.UserLoginClient {
+	var userClients []*v1.UserLoginClient
+	for _, v := range e {
+		userClients = append(userClients, &v1.UserLoginClient{
+			ClientIp:   v.ClientIP,
+			DriverId:   v.DriverID,
+			DriverType: v.DriverType,
+			LoginAt:    v.LoginAt,
+		})
+	}
+	return userClients
 }
 
 func (h *HttpServer) UserEmailVerification(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := &v1.UserEmailVerificationJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	err := h.app.Commands.SendUserEmailVerification.Handle(c, &command.SendUserEmailVerification{
+		//UserID: c.Value(constants.UserID).(string),
+		Email: string(req.Email),
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "发送邮箱验证码成功", nil)
 }
 
 func (h *HttpServer) UserLogin(c *gin.Context) {
@@ -182,13 +232,44 @@ func (h *HttpServer) UserLogout(c *gin.Context) {
 }
 
 func (h *HttpServer) SetUserPublicKey(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := &v1.SetUserPublicKeyJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	err := h.app.Commands.SetUserPublicKey.Handle(c, &command.SetUserPublicKey{
+		UserID:    c.Value(constants.UserID).(string),
+		PublicKey: req.PublicKey,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置用户公钥成功", nil)
 }
 
 func (h *HttpServer) ResetUserPublicKey(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	req := &v1.ResetUserPublicKeyJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	err := h.app.Commands.ResetUserPublicKey.Handle(c, &command.ResetUserPublicKey{
+		UserID:    c.Value(constants.UserID).(string),
+		PublicKey: req.PublicKey,
+		Code:      req.Code,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "重置用户公钥成功", nil)
 }
 
 func (h *HttpServer) UserRegister(c *gin.Context) {
@@ -216,6 +297,5 @@ func (h *HttpServer) UserRegister(c *gin.Context) {
 }
 
 func (h *HttpServer) GetPGPPublicKey(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": h.pgpKey})
 }
