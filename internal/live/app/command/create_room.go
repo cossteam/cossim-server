@@ -16,9 +16,11 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"strings"
+	"time"
 )
 
 type CreateRoom struct {
+	DriverID     string
 	Creator      string
 	Type         string
 	Participants []string
@@ -105,7 +107,7 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		return nil, err
 	}
 
-	if err := h.liveRepo.CreateRoom(ctx, &entity.Room{
+	er := &entity.Room{
 		ID:              roomName,
 		Type:            roomType,
 		Creator:         cmd.Creator,
@@ -121,7 +123,9 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 			FrameRate:    cmd.Option.FrameRate,
 			Codec:        cmd.Option.Codec,
 		},
-	}); err != nil {
+	}
+
+	if err := h.liveRepo.CreateRoom(ctx, er); err != nil {
 		h.logger.Error("Failed to create room", zap.Error(err))
 		return nil, err
 	}
@@ -131,11 +135,24 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		zap.String("creator", cmd.Creator),
 	)
 
+	// 通话超时处理
+	h.scheduleLiveTimeout(er, int(h.liveTimeout.Seconds()), cmd.DriverID)
+
 	return &CreateRoomResponse{
 		Url:     h.webRtcUrl,
 		Room:    roomName,
 		Timeout: int(h.liveTimeout.Seconds()),
 	}, nil
+}
+
+func (h *LiveHandler) scheduleLiveTimeout(room *entity.Room, timeoutSeconds int, driverID string) {
+	time.AfterFunc(time.Duration(timeoutSeconds)*time.Second, func() {
+		// 通话超时，发送 WebSocket 事件
+		h.logger.Info("推送通话超时事件", zap.Duration("timeout", time.Duration(timeoutSeconds)*time.Second), zap.Any("room", room))
+		if err := h.handleMissed(context.Background(), room, room.Creator, driverID); err != nil {
+			h.logger.Error("Failed to handle missed", zap.Error(err))
+		}
+	})
 }
 
 // areUsersFriends checks if two users are friends
