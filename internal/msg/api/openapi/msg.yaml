@@ -1,0 +1,983 @@
+openapi: 3.0.0
+info:
+  title: 消息 API
+  description: 用于管理消息的 API
+  version: 1.0.0
+#servers:
+#  - url: /api/v1
+paths:
+  /api/v1/msg/user/send:
+    post:
+      summary: 发送私信
+      operationId: SendUserMsg
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendUserMsgRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendUserMsgResponse'
+  /api/v1/msg/group/send:
+    post:
+      summary: 发送群组消息
+      operationId: SendGroupMsg
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendGroupMsgRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendGroupMsgResponse'
+  /api/v1/msg/user/list:
+    get:
+      summary: 获取私信列表
+      operationId: GetUserMsgList
+      parameters:
+        - name: dialog_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: integer
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: content
+          in: query
+          schema:
+            type: string
+        - name: msg_id
+          in: query
+          schema:
+            type: integer
+        - name: page_num
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: start_at
+          in: query
+          schema:
+            type: integer
+        - name: end_at
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserMsgListResponse'
+  /api/v1/msg/group/list:
+    get:
+      summary: 获取群组消息列表
+      operationId: GetGroupMsgList
+      parameters:
+        - name: dialog_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: msg_id
+          in: query
+          schema:
+            type: integer
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: integer
+        - name: content
+          in: query
+          schema:
+            type: string
+        - name: page_num
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGroupMsgListResponse'
+  /api/v1/msg/dialog/list:
+    get:
+      summary: 获取用户对话列表
+      operationId: GetUserDialogList
+      parameters:
+        - name: page_num
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserDialogListResponse'
+  /api/v1/msg/user/{id}:
+    put:
+      summary: 编辑用户消息
+      operationId: EditUserMsg
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditUserMsgRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+    delete:
+      summary: 撤回用户消息
+      operationId: RecallUserMsg
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/msg/group/{id}:
+    put:
+      summary: 编辑群组消息
+      operationId: EditGroupMsg
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditGroupMsgRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+    delete:
+      summary: 撤回群组消息
+      operationId: RecallGroupMsg
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/msg/user/{id}/label:
+    post:
+      summary: 标记用户消息
+      operationId: LabelUserMsg
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelUserMessageRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/msg/group/{id}/label:
+    post:
+      summary: 标记群组消息
+      operationId: LabelGroupMsg
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelGroupMessageRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/msg/dialog/user/{dialog_id}/label:
+    get:
+      summary: 获取用户标记消息列表
+      operationId: GetUserLabelMsgList
+      parameters:
+        - name: dialog_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserLabelMsgListResponse'
+  /api/v1/msg/dialog/group/{dialog_id}/label:
+    get:
+      summary: 获取群组标记消息列表
+      operationId: GetGroupLabelMsgList
+      parameters:
+        - name: dialog_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGroupLabelMsgListResponse'
+  /api/v1/msg/user/read:
+    put:
+      summary: 设置用户消息已读
+      operationId: ReadUserMsgs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadUserMsgsRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/msg/dialog/after:
+    post:
+      summary: 获取指定对话中延迟的消息
+      operationId: GetAfterMsgs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AfterMsg'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDialogAfterMsgResponse'
+  /api/v1/msg/group/read:
+    put:
+      summary: 设置群组消息已读
+      operationId: GroupMessageRead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMessageReadRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/msg/group/{id}/read:
+    get:
+      summary: 获取群组消息阅读者
+
+      operationId: GetGroupMessageReaders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: dialog_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: group_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetGroupMessageReadersResponse'
+components:
+  schemas:
+    Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        msg:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        data:
+          type: object
+    SendUserMsgRequest:
+      type: object
+      properties:
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        receiver_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+          description: 消息类型 1=文本消息 2=语音消息 3=图片消息 4=标注 5=群公告 6=文件消息 7=视频消息 8=emoji回复 9=语音通话 10=视频通话 11=撤回消息 12=取消标注
+          enum:
+            - 1 #文本消息
+            - 2 #语音消息
+            - 3 #图片消息
+            - 4 #标注
+            - 5 #群公告
+            - 6 #文件消息
+            - 7 #视频消息
+            - 8 #emoji回复
+            - 9 #语音通话
+            - 10 #视频通话
+            - 11 #撤回消息
+            - 12 #取消标注
+        reply_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_burn_after_reading:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    SendUserMsgResponse:
+      type: object
+      properties:
+        msg_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        reply_msg:
+          $ref: '#/components/schemas/Message'
+    SendGroupMsgRequest:
+      type: object
+      properties:
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        group_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        reply_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        at_users:
+          type: array
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+        at_all_user:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_burn_after_reading:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    SendGroupMsgResponse:
+      type: object
+      properties:
+        msg_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        reply_msg:
+            $ref: '#/components/schemas/Message'
+    MsgListRequest:
+      type: object
+      properties:
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        user_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        msg_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        page_num:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        page_size:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        start_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        end_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    GetUserDialogListResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          x-omitempty: false
+          items:
+            $ref: '#/components/schemas/UserDialogListResponse'
+        total:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        current_page:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    SenderInfo:
+      type: object
+      properties:
+        user_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        avatar:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        name:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    UserDialogListResponse:
+      type: object
+      properties:
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        user_id:
+          type: string
+          x-omitempty: true
+          x-go-type-skip-optional-pointer: true
+        group_id:
+          type: integer
+          x-omitempty: true
+          x-go-type-skip-optional-pointer: true
+        dialog_type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_name:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_avatar:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_unread_count:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        last_message:
+          $ref: '#/components/schemas/Message'
+        dialog_create_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        top_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    Message:
+      type: object
+      x-omitempty: false
+      properties:
+        group_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        msg_type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        sender_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        send_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        msg_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        sender_info:
+          $ref: '#/components/schemas/SenderInfo'
+        receiver_info:
+          $ref: '#/components/schemas/SenderInfo'
+        at_all_user:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        at_users:
+          type: array
+          items:
+            type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_burn_after_reading:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_label:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        reply_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_read:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        read_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    UserMessage:
+      type: object
+      properties:
+        msg_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        sender_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        receiver_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        reply_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_read:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        read_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        send_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_label:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_burn_after_reading_type:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        burn_after_reading_timeout:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        sender_info:
+          $ref: '#/components/schemas/SenderInfo'
+        receiver_info:
+          $ref: '#/components/schemas/SenderInfo'
+    GetUserMsgListResponse:
+      type: object
+      properties:
+        user_messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserMessage'
+        total:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        current_page:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    GroupMessage:
+      type: object
+      properties:
+        msg_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        group_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        reply_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        read_count:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        user_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        send_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_label:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_burn_after_reading_type:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        at_users:
+          type: array
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: string
+        at_all_user:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        read_at:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        is_read:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        sender_info:
+          $ref: '#/components/schemas/SenderInfo'
+    GetGroupMsgListResponse:
+      type: object
+      properties:
+        group_messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMessage'
+        total:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        current_page:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    EditUserMsgRequest:
+      type: object
+      properties:
+        msg_type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    EditGroupMsgRequest:
+      type: object
+      properties:
+        msg_type:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        content:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    LabelUserMessageRequest:
+      type: object
+      properties:
+        is_label:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    LabelGroupMessageRequest:
+      type: object
+      properties:
+        is_label:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    ReadUserMsgsRequest:
+      type: object
+      properties:
+        read_all:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        msg_ids:
+          type: array
+          items:
+            type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    GetDialogAfterMsgRequest:
+      type: object
+      properties:
+        msg_list:
+          $ref: '#/components/schemas/AfterMsg'
+    AfterMsg:
+      type: object
+      properties:
+        msg_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    GetDialogAfterMsgResponse:
+      type: object
+      properties:
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        total:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    GetDialogAfterMsgListResponse:
+      type: object
+      properties:
+        msg_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetDialogAfterMsgResponse'
+    GroupMessageReadRequest:
+      type: object
+      properties:
+        read_all:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        dialog_id:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        msg_ids:
+          type: array
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+          items:
+            type: integer
+    GetGroupMessageReadersResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        avatar:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        name:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    GetUserLabelMsgListResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/Message'
+    GetGroupLabelMsgListResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/Message'
