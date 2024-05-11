@@ -15,7 +15,8 @@ type LoginRequest struct {
 }
 
 type LogoutRequest struct {
-	LoginNumber uint `json:"login_number" binding:"required"`
+	//LoginNumber uint   `json:"login_number" binding:"required"`
+	DriverId string `json:"driver_id" binding:"required"`
 }
 
 type RegisterRequest struct {

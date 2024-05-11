@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//var _ api.UserAuthServiceServer = &authServiceServer{}
+var _ api.UserAuthServiceServer = &UserServiceServer{}
 
 type authServiceServer struct {
 	secret    string
@@ -22,17 +22,18 @@ type authServiceServer struct {
 	ur        repository.UserRepository
 }
 
-func (s *UserServiceServer) ParseToken(ctx context.Context, request *api.ParseTokenRequest) (*api.ParseTokenResponse, error) {
+func (s *UserServiceServer) ParseToken(ctx context.Context, request *api.ParseTokenRequest) (*api.AuthClaims, error) {
 	_, claims, err := utils.ParseToken(request.Token, s.secret)
 	if err != nil {
 		return nil, err
 	}
 
-	return &api.ParseTokenResponse{
+	return &api.AuthClaims{
 		UserID:    claims.UserId,
 		Email:     claims.Email,
 		DriverID:  claims.DriverId,
 		PublicKey: claims.PublicKey,
+		ExpireAt:  claims.ExpiresAt.UnixNano() / 1e6,
 	}, nil
 }
 
@@ -45,12 +46,20 @@ func (s *UserServiceServer) GenerateUserToken(ctx context.Context, request *api.
 	return &api.GenerateUserTokenResponse{Token: token}, nil
 }
 
-func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessRequest) (*api.AccessResponse, error) {
-	resp := &api.AccessResponse{}
+func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessRequest) (*api.AuthClaims, error) {
+	resp := &api.AuthClaims{}
 
 	_, claims, err := utils.ParseToken(request.Token, s.secret)
 	if err != nil {
 		return nil, err
+	}
+
+	resp = &api.AuthClaims{
+		UserID:    claims.UserId,
+		Email:     claims.Email,
+		DriverID:  claims.DriverId,
+		PublicKey: claims.PublicKey,
+		ExpireAt:  claims.ExpiresAt.UnixNano() / 1e6,
 	}
 
 	infos, err := s.userCache.GetUserLoginInfos(ctx, claims.UserId)
@@ -64,7 +73,7 @@ func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessReque
 		}
 
 		if !found {
-			return nil, code.Unauthorized
+			return nil, status.Error(codes.Code(code.Unauthorized.Code()), code.Unauthorized.Message())
 		}
 
 		return resp, nil
@@ -73,9 +82,9 @@ func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessReque
 	info, err := s.ur.GetUserInfoByUid(ctx, claims.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
+			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
-		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
+		return nil, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
 
 	if info.Status != entity.UserStatusNormal {

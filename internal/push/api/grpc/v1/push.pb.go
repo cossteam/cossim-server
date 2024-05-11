@@ -463,7 +463,7 @@ type SenderInfo struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"avatar"
 	Avatar string `protobuf:"bytes,2,opt,name=Avatar,proto3" json:"avatar"`
 	// @inject_tag: json:"name"
@@ -865,7 +865,7 @@ type WsMsg struct {
 	// @inject_tag: json:"rid"
 	Rid string `protobuf:"bytes,3,opt,name=Rid,proto3" json:"rid"`
 	// @inject_tag: json:"driver_id"
-	DriverId string `protobuf:"bytes,4,opt,name=DriverId,proto3" json:"driver_id"`
+	DriverId string `protobuf:"bytes,4,opt,name=DriverID,proto3" json:"driver_id"`
 	// @inject_tag: json:"send_at"
 	SendAt int64 `protobuf:"varint,5,opt,name=SendAt,proto3" json:"send_at"`
 	// @inject_tag: json:"push_offline"
@@ -955,7 +955,7 @@ func (x *WsMsg) GetData() *anypb.Any {
 	return nil
 }
 
-// driverId string, event constants.WSEventType, data interface{}, pushOffline bool
+// driverId string, event constants.WSEventType, data interfaces{}, pushOffline bool
 type PushWsBatchByUserIdsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -970,7 +970,7 @@ type PushWsBatchByUserIdsRequest struct {
 	// @inject_tag: json:"push_offline"
 	PushOffline bool `protobuf:"varint,4,opt,name=PushOffline,proto3" json:"push_offline"`
 	// @inject_tag: json:"driver_id"
-	DriverId string `protobuf:"bytes,5,opt,name=DriverId,proto3" json:"driver_id"`
+	DriverId string `protobuf:"bytes,5,opt,name=DriverID,proto3" json:"driver_id"`
 }
 
 func (x *PushWsBatchByUserIdsRequest) Reset() {

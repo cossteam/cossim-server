@@ -308,7 +308,7 @@ type JoinDialogRequest struct {
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *JoinDialogRequest) Reset() {
@@ -401,7 +401,7 @@ type GetUserDialogListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"page_size"
 	PageSize uint32 `protobuf:"varint,2,opt,name=PageSize,proto3" json:"page_size"`
 	// @inject_tag: json:"page_num"
@@ -1060,7 +1060,7 @@ type GetDialogUserByDialogIDAndUserIdRequest struct {
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *GetDialogUserByDialogIDAndUserIdRequest) Reset() {
@@ -1117,7 +1117,7 @@ type GetDialogUserByDialogIDAndUserIdResponse struct {
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"is_show"
 	IsShow uint32 `protobuf:"varint,3,opt,name=IsShow,proto3" json:"is_show"`
 	// @inject_tag: json:"top_at"
@@ -1192,7 +1192,7 @@ type DeleteDialogUserByDialogIDAndUserIDRequest struct {
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *DeleteDialogUserByDialogIDAndUserIDRequest) Reset() {
@@ -1524,7 +1524,7 @@ type ConfirmFriendAndJoinDialogRequest struct {
 	// @inject_tag: json:"owner_id"
 	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"owner_id"` // 创建者id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 对方用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"` // 对方用户id
 	// @inject_tag: json:"type"
 	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=relation_v1.DialogType" json:"type"` // 会话类型 (0:用户会话, 1:群组会话)
 	// @inject_tag: json:"group_id"
@@ -1674,7 +1674,7 @@ type ConfirmFriendAndJoinDialogRevertRequest struct {
 	// @inject_tag: json:"owner_id"
 	OwnerId string `protobuf:"bytes,1,opt,name=OwnerId,proto3" json:"owner_id"` // 创建者id
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"` // 对方用户id
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"` // 对方用户id
 	// @inject_tag: json:"type"
 	Type DialogType `protobuf:"varint,3,opt,name=Type,proto3,enum=relation_v1.DialogType" json:"type"` // 会话类型 (0:用户会话, 1:群组会话)
 	// @inject_tag: json:"group_id"
@@ -1955,7 +1955,7 @@ type CloseOrOpenDialogRequest struct {
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"action"
 	Action CloseOrOpenDialogType `protobuf:"varint,3,opt,name=Action,proto3,enum=relation_v1.CloseOrOpenDialogType" json:"action"`
 }
@@ -2087,7 +2087,7 @@ type TopOrCancelTopDialogRequest struct {
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"action"
 	Action TopOrCancelTopDialogType `protobuf:"varint,3,opt,name=Action,proto3,enum=relation_v1.TopOrCancelTopDialogType" json:"action"`
 }
@@ -2297,7 +2297,7 @@ type GetDialogTargetUserIdRequest struct {
 	// @inject_tag: json:"dialog_id"
 	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *GetDialogTargetUserIdRequest) Reset() {

@@ -20,6 +20,7 @@ require (
 	github.com/googollee/go-socket.io v1.8.0-rc.1
 	github.com/hashicorp/consul/api v1.25.1
 	github.com/lithammer/shortuuid/v3 v3.0.7
+	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/livekit/protocol v1.9.7
 	github.com/livekit/server-sdk-go v1.1.7
 	github.com/mbobakov/grpc-consul-resolver v1.5.3
@@ -110,7 +111,6 @@ require (
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
-	github.com/lithammer/shortuuid/v4 v4.0.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20230125210925-54e8a70427c1 // indirect
 	github.com/livekit/mediatransportutil v0.0.0-20231213075826-cccbf2b93d3f // indirect
 	github.com/livekit/psrpc v0.5.3-0.20231214055026-06ce27a934c9 // indirect

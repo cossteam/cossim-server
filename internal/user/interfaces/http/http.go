@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
-	grpchandler "github.com/cossim/coss-server/internal/user/interface/grpc"
+	grpchandler "github.com/cossim/coss-server/internal/user/interfaces/grpc"
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	"github.com/cossim/coss-server/internal/user/service"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
@@ -39,7 +39,17 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	}
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.UserClient)
-	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
+	var userAddr = cfg.GRPC.Addr()
+	//if cfg.Discovers["user"].Direct {
+	//	userAddr = cfg.Discovers["user"].Addr()
+	//} else {
+	//	userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
+	//}
+	authClient, err := client.NewAuthClient(userAddr)
+	if err != nil {
+		return err
+	}
+	h.authService = authClient
 	return nil
 }
 

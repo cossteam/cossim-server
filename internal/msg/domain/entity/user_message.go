@@ -3,6 +3,7 @@ package entity
 type UserMessage struct {
 	BaseModel
 	Type               UserMessageType      `gorm:";comment:消息类型" json:"type"`
+	SubType            UserMessageSubType   `gorm:";comment:消息子类型" json:"sub_type"`
 	DialogId           uint                 `gorm:"default:0;comment:对话ID" json:"dialog_id"`
 	IsRead             ReadType             `gorm:"default:0;comment:是否已读" json:"is_read"`
 	ReplyId            uint                 `gorm:"default:0;comment:回复ID" json:"reply_id"`
@@ -37,6 +38,15 @@ const (
 	MessageTypeVideoCall                              // 视频通话
 	MessageTypeDelete                                 // 撤回消息
 	MessageTypeCancelLabel                            // 取消标注
+)
+
+type UserMessageSubType uint
+
+const (
+	CallNormal    UserMessageSubType = iota // 正常通话
+	CallCancelled                    = 1    // 取消通话
+	CallRejected                     = 2    // 拒绝通话
+	CallMissed                       = 3    // 未接通话
 )
 
 type MessageLabelType uint

@@ -11,6 +11,7 @@ import (
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/constants"
+	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/http/response"
@@ -55,7 +56,18 @@ func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
 	}
 	h.logger = plog.NewDefaultLogger(HttpServiceName, int8(cfg.Log.Level))
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	h.authService = client.NewAuthClient(cfg.Discovers["user"].Addr())
+	var userAddr string
+	if cfg.Discovers["user"].Direct {
+		userAddr = cfg.Discovers["user"].Addr()
+	} else {
+		userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
+	}
+
+	authClient, err := client.NewAuthClient(userAddr)
+	if err != nil {
+		return err
+	}
+	h.authService = authClient
 	return nil
 }
 
@@ -113,7 +125,7 @@ func (h *HttpServer) DiscoverServices(services map[string]*grpc.ClientConn) erro
 // @Summary 获取群聊通话
 // @Description 获取群聊通话信息
 // @Tags live
-// @Security bearerAuth
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Success 200 {object} Room "获取群聊通话信息成功"
@@ -137,7 +149,7 @@ func (h *HttpServer) GetGroupRoom(c *gin.Context, id uint32) {
 // @Summary 获取用户通话
 // @Description 获取用户通话信息
 // @Tags live
-// @Security bearerAuth
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Success 200 {object} Room "获取用户通话信息成功"
@@ -161,7 +173,7 @@ func (h *HttpServer) GetUserRoom(c *gin.Context) {
 // @Summary 创建通话
 // @Description 创建通话
 // @Tags live
-// @Security bearerAuth
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param requestBody body CreateRoomRequest true "请求体参数"
@@ -207,7 +219,7 @@ func createRoomToResponse(room *command.CreateRoomResponse) *v1.CreateRoomRespon
 // @Summary 删除通话
 // @Description 用户退出当前通话
 // @Tags live
-// @Security bearerAuth
+// @Security BearerAuth
 // @Param id path string true "要退出的通话房间ID"
 // @Success 200 {object} Response "成功退出通话"
 // @Router /live/{id} [delete]
@@ -230,7 +242,7 @@ func (h *HttpServer) DeleteRoom(c *gin.Context, id string) {
 // @Summary 获取通话房间信息
 // @Description 获取通话房间信息
 // @Tags live
-// @Security bearerAuth
+// @Security BearerAuth
 // @Param id path string true "要退出的通话房间ID"
 // @Produce json
 // @Success 200 {object} Room "获取通话信息成功"
@@ -280,7 +292,7 @@ func getRoomToResponse(room *query.Room) *v1.Room {
 // @Summary 加入通话
 // @Description 加入已存在的通话房间
 // @Tags live
-// @Security bearerAuth
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param id path string true "要加入的通话房间ID"
@@ -311,25 +323,25 @@ func (h *HttpServer) JoinRoom(c *gin.Context, id string) {
 // @Summary 拒绝通话
 // @Description 拒绝加入通话
 // @Tags live
-// @Security bearerAuth
+// @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param id path string true "要拒绝的通话房间ID"
 // @Success 200 {object} Response "成功拒绝通话"
 // @Router /live/{id}/reject [post]
 func (h *HttpServer) RejectRoom(c *gin.Context, id string) {
-	uid := c.Value(constants.UserID).(string)
-	did := c.Value(constants.DriverID).(string)
-	rejectLive, err := h.app.Commands.LiveHandler.RejectLive(c, &command.RejectLive{
-		Room:     id,
-		UserID:   uid,
-		DriverID: did,
-		Option:   command.RoomOption{},
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "拒绝通话成功", rejectLive)
+	//uid := c.Value(constants.UserID).(string)
+	//did := c.Value(constants.DriverID).(string)
+	//rejectLive, err := h.app.Commands.LiveHandler.RejectLive(c, &command.RejectLive{
+	//	Room:     id,
+	//	UserID:   uid,
+	//	DriverID: did,
+	//	Option:   command.RoomOption{},
+	//})
+	//if err != nil {
+	//	c.Error(err)
+	//	return
+	//}
+	//
+	//response.SetSuccess(c, "拒绝通话成功", rejectLive)
 }

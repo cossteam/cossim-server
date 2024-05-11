@@ -1,0 +1,54 @@
+syntax = "proto3";
+package user_v1;
+option go_package = "github.com/cossim/coss-server/internal/user/api/v1";
+
+message AccessRequest {
+  // @inject_tag: json:"token"
+  string Token = 1;
+}
+
+message AccessResponse {
+}
+
+message GenerateUserTokenRequest {
+  // @inject_tag: json:"user_id"
+  string UserID = 1;
+  // @inject_tag: json:"email"
+  string Email = 2;
+  // @inject_tag: json:"driver_id"
+  string DriverID = 3;
+  // @inject_tag: json:"public_key"
+  string PublicKey = 4;
+}
+
+message GenerateUserTokenResponse {
+  // @inject_tag: json:"token"
+  string Token = 1;
+}
+
+
+message ParseTokenRequest {
+  // @inject_tag: json:"token"
+  string Token = 1;
+}
+
+message AuthClaims {
+  // @inject_tag: json:"user_id"
+  string UserID = 1;
+  // @inject_tag: json:"email"
+  string Email = 2;
+  // @inject_tag: json:"driver_id"
+  string DriverID = 3;
+  // @inject_tag: json:"public_key"
+  string PublicKey = 4;
+  // @inject_tag: json:"expire_time_seconds"
+  int64 ExpireTimeSeconds = 5;
+  // @inject_tag: json:"expire_at"
+  int64 ExpireAt= 6;
+}
+
+service UserAuthService {
+  rpc ParseToken(ParseTokenRequest) returns(AuthClaims);
+  rpc GenerateUserToken(GenerateUserTokenRequest) returns(GenerateUserTokenResponse);
+  rpc Access(AccessRequest) returns(AuthClaims);
+}

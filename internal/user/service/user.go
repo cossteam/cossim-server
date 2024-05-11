@@ -102,7 +102,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 	index := len(infos) + 1
 	data2 := entity.UserLogin{
 		ID:        uint(index),
-		UserId:    userInfo.UserId,
+		UserID:    userInfo.UserId,
 		Token:     token,
 		CreatedAt: time.Now(),
 		ClientIP:  clientIp,
@@ -112,13 +112,13 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 	gid := shortuuid.New()
 	wfName := "login_user_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
-		if err := s.userCache.SetUserLoginInfo(wf.Context, userInfo.UserId, index, &data2, cache.UserLoginExpireTime); err != nil {
+		if err := s.userCache.SetUserLoginInfo(wf.Context, userInfo.UserId, req.DriverId, &data2, cache.UserLoginExpireTime); err != nil {
 			s.logger.Error("failed to set user login info", zap.Error(err))
 			return status.Error(codes.Aborted, err.Error())
 		}
 
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
-			err = s.userCache.DeleteUserLoginInfo(wf.Context, userInfo.UserId, index)
+			err = s.userCache.DeleteUserLoginInfo(wf.Context, userInfo.UserId, req.DriverId)
 			return err
 		})
 
@@ -189,7 +189,7 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 }
 
 func (s *Service) Logout(ctx context.Context, userID string, token string, request *model.LogoutRequest) error {
-	loginInfo, err := s.userCache.GetUserLoginInfo(ctx, userID, int(request.LoginNumber))
+	loginInfo, err := s.userCache.GetUserLoginInfo(ctx, userID, request.DriverId)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return code.MyCustomErrorCode.CustomMessage("登录信息不存在")
@@ -232,7 +232,7 @@ func (s *Service) Logout(ctx context.Context, userID string, token string, reque
 	}
 
 	// 删除客户端信息
-	if err := s.userCache.DeleteUserLoginInfo(ctx, userID, int(request.LoginNumber)); err != nil {
+	if err := s.userCache.DeleteUserLoginInfo(ctx, userID, request.DriverId); err != nil {
 		s.logger.Error("failed to delete user login info", zap.Error(err))
 	}
 
@@ -290,7 +290,7 @@ func (s *Service) Register(ctx context.Context, req *model.RegisterRequest) (str
 			Email:           req.Email,
 			NickName:        req.Nickname,
 			Password:        utils.HashString(req.Password),
-			ConfirmPassword: req.ConfirmPass,
+			ConfirmPassword: utils.HashString(req.ConfirmPass),
 			PublicKey:       req.PublicKey,
 			Avatar:          aUrl,
 		})

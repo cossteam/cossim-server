@@ -33,7 +33,7 @@ type CreateGroupAnnouncementRequest struct {
 	// @inject_tag: json:"content"
 	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,4,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,4,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *CreateGroupAnnouncementRequest) Reset() {
@@ -574,7 +574,7 @@ type GroupAnnouncementInfo struct {
 	// @inject_tag: json:"updated_at"
 	UpdatedAt int64 `protobuf:"varint,6,opt,name=UpdatedAt,proto3" json:"updated_at"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,7,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,7,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *GroupAnnouncementInfo) Reset() {
@@ -887,7 +887,7 @@ type AnnouncementRead struct {
 	// @inject_tag: json:"announcement_id"
 	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"read_at"
 	ReadAt uint64 `protobuf:"varint,4,opt,name=ReadAt,proto3" json:"read_at"`
 	// @inject_tag: json:"id"
@@ -971,7 +971,7 @@ type GetAnnouncementReadByUserIdRequest struct {
 	// @inject_tag: json:"announcement_id"
 	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=UserID,proto3" json:"user_id"`
 }
 
 func (x *GetAnnouncementReadByUserIdRequest) Reset() {
@@ -1037,7 +1037,7 @@ type GetAnnouncementReadByUserIdResponse struct {
 	// @inject_tag: json:"announcement_id"
 	AnnouncementId uint32 `protobuf:"varint,2,opt,name=AnnouncementId,proto3" json:"announcement_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"read_at"
 	ReadAt uint64 `protobuf:"varint,4,opt,name=ReadAt,proto3" json:"read_at"`
 	// @inject_tag: json:"id"

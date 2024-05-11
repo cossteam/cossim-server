@@ -2,11 +2,13 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"github.com/cossim/coss-server/internal/user/cache"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/internal/user/domain/repository"
 	"github.com/cossim/coss-server/internal/user/infra/persistence/converter"
 	"github.com/cossim/coss-server/internal/user/infra/persistence/po"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/utils"
 	"gorm.io/gorm"
 	"log"
@@ -24,6 +26,95 @@ func NewMySQLUserRepository(db *gorm.DB, cache cache.UserCache) *MySQLUserReposi
 type MySQLUserRepository struct {
 	db    *gorm.DB
 	cache cache.UserCache
+}
+
+func (r *MySQLUserRepository) UpdateUserInfo(ctx context.Context, user *entity.UpdateUser) error {
+	if user == nil {
+		return code.InvalidParameter.CustomMessage("内容不能为空")
+	}
+
+	updateData := make(map[string]interface{})
+
+	if user.Email != nil {
+		updateData["email"] = *user.Email
+	}
+	if user.Tel != nil {
+		updateData["tel"] = *user.Tel
+	}
+	if user.NickName != nil {
+		updateData["nick_name"] = *user.NickName
+	}
+	if user.Avatar != nil {
+		updateData["avatar"] = *user.Avatar
+	}
+	if user.PublicKey != nil {
+		updateData["public_key"] = *user.PublicKey
+	}
+	if user.Password != nil {
+		updateData["password"] = *user.Password
+	}
+
+	if err := r.db.WithContext(ctx).Model(&po.User{}).Updates(updateData).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *MySQLUserRepository) UpdateUserStatus(ctx context.Context, Param *entity.UpdateUserStatus, userIDs ...string) error {
+	for _, userID := range userIDs {
+		user := &po.User{}
+		if err := r.db.WithContext(ctx).Where("id = ?", userID).First(user).Error; err != nil {
+			return err
+		}
+
+		if Param.Status != nil {
+			user.Status = uint(*Param.Status)
+		}
+
+		if Param.EmailVerity != nil {
+			user.EmailVerity = *Param.EmailVerity
+		}
+
+		if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *MySQLUserRepository) UpdatePassword(ctx context.Context, userID, password string) (string, error) {
+	var newPassword = password
+	if password == "" {
+		return "", code.InvalidParameter.CustomMessage("password can not be empty")
+	}
+
+	user := &po.User{}
+	if err := r.db.WithContext(ctx).Where("id = ?", userID).First(user).Error; err != nil {
+		return "", err
+	}
+
+	user.Password = newPassword
+
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
+		return "", err
+	}
+
+	return newPassword, nil
+}
+
+func (r *MySQLUserRepository) GetWithOptions(ctx context.Context, query *entity.User) (*entity.User, error) {
+	var model po.User
+
+	if err := r.db.WithContext(ctx).Where(query).First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
+		return nil, err
+	}
+
+	return converter.UserPOToEntity(&model), nil
 }
 
 func (r *MySQLUserRepository) GetUserInfoByEmail(ctx context.Context, email string) (*entity.User, error) {
@@ -120,6 +211,10 @@ func (r *MySQLUserRepository) InsertUser(ctx context.Context, user *entity.User)
 func (r *MySQLUserRepository) GetBatchGetUserInfoByIDs(ctx context.Context, userIds []string) ([]*entity.User, error) {
 	var models []*po.User
 
+	if len(userIds) == 0 {
+		return nil, nil
+	}
+
 	if r.cache != nil {
 		users, err := r.cache.GetUsersInfo(ctx, userIds)
 		if err == nil && len(users) != 0 {
@@ -127,7 +222,7 @@ func (r *MySQLUserRepository) GetBatchGetUserInfoByIDs(ctx context.Context, user
 		}
 	}
 
-	if err := r.db.WithContext(ctx).Where("id IN ?", userIds).Find(models).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("id IN (?)", userIds).Find(&models).Error; err != nil {
 		return nil, err
 	}
 
@@ -181,7 +276,8 @@ func (r *MySQLUserRepository) GetUserPublicKey(ctx context.Context, userId strin
 }
 
 func (r *MySQLUserRepository) SetUserSecretBundle(ctx context.Context, userId, secretBundle string) error {
-	if err := r.db.WithContext(ctx).Where("id = ?", userId).Update("secret_bundle", secretBundle).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&po.User{}).
+		Where("id = ?", userId).Update("secret_bundle", secretBundle).Error; err != nil {
 		return err
 	}
 

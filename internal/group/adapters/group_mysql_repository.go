@@ -163,7 +163,7 @@ func (m *MySQLGroupRepository) Update(ctx context.Context, group *entity.Group, 
 	//}
 	//
 	//// 获取更新后的字段列表
-	//updatedFields := make(map[string]interface{})
+	//updatedFields := make(map[string]interfaces{})
 	//updatedFieldsValue := reflect.ValueOf(model).Elem()
 	//for i := 0; i < updatedFieldsValue.NumField(); i++ {
 	//	fieldName := updatedFieldsValue.Type().Field(i).Name

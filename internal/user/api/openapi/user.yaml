@@ -1,0 +1,629 @@
+openapi: 3.0.3
+info:
+  title: 用户服务 API
+  description: 用户服务 API 提供用户认证、注册、个人资料管理等功能。
+  version: 1.0.0
+servers:
+  - url: http://api.example.com
+tags:
+  - name: user
+    description: Everything about User
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+paths:
+  /api/v1/user/{id}:
+    get:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 获取用户信息
+      description: 获取用户信息
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          description: 用户ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取用户信息成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+    put:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 修改用户信息
+      description: 修改用户信息
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          description: 用户ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  description: 用户昵称
+                tel:
+                  type: string
+                  format: phone
+                  description: 手机号
+                avatar:
+                  type: string
+                  description: 用户头像
+                signature:
+                  type: string
+                  description: 个性签名
+                coss_id:
+                  type: string
+                  description:
+      responses:
+        '200':
+          description: 修改用户信息成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+  /api/v1/user/password:
+    put:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 修改密码
+      description: 修改密码
+      operationId: updateUserPassword
+#      parameters:
+#        - name: id
+#          in: path
+#          description: 用户ID
+#          required: true
+#          schema:
+#            type: string
+      requestBody:
+        description:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - old_password
+                - password
+                - confirm_password
+              properties:
+                old_password:
+                  type: string
+                  minLength: 6
+                  maxLength: 128
+#                  pattern: '^\S+$'
+                  description: 旧密码
+                password:
+                  type: string
+                  minLength: 6
+                  maxLength: 128
+#                  pattern: '^\S+$'
+                  description: 新密码
+                confirm_password:
+                  type: string
+                  minLength: 6
+                  maxLength: 128
+#                  pattern: '^\S+$'
+                  description: 确认密码
+      responses:
+        '200':
+          description: 修改密码成功
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/user/login:
+    post:
+      tags:
+        - user
+#      security:
+#        - bearerAuth: []
+      summary: 用户登录
+      description: 用户登录认证并生成访问令牌。
+      operationId: userLogin
+      requestBody:
+        description:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 用户的电子邮件地址
+                password:
+                  type: string
+                  description: 用户密码
+                driver_id:
+                  type: string
+                  description: 当前登录设备的唯一标识符
+                driver_token:
+                  type: string
+                  description: 当前设备的设备token 用于推送手机端的系统通知
+                platform:
+                  type: string
+                  description: 用户登录的平台(ios、android、web、huawei...)
+              required:
+                - email
+                - password
+                - driver_id
+                - driver_token
+                - platform
+              example:
+                email: user@example.com
+                password: password123
+                driver_id: abc123
+                driver_token: xyz456
+                platform: ios
+        required: true
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+  /api/v1/user/register:
+    post:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 用户注册
+      description: 用户注册
+      operationId: userRegister
+      requestBody:
+        description: 注册请求参数
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: 用户邮箱
+                password:
+                  type: string
+                  description: 用户密码
+                confirm_password:
+                  type: string
+                  description: 确认密码
+                nickname:
+                  type: string
+                  description: 用户昵称
+                  x-omitempty: false
+                  x-go-type-skip-optional-pointer: true
+                public_key:
+                  type: string
+                  description: 用户公钥
+              required:
+                - public_key
+                - email
+                - password
+                - confirm_password
+#              allOf:
+#                - $ref: '#/components/schemas/PasswordMatch'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: 访问令牌。
+                  user_info:
+                    $ref: '#/components/schemas/UserInfo'
+  /api/v1/user/activate:
+    get:
+      tags:
+        - user
+#      security:
+#        - bearerAuth: []
+      summary: 用户激活
+      description: 用户激活
+      operationId: userActivate
+      parameters:
+        - name: user_id
+          in: query
+          description: 用户ID
+          required: true
+          schema:
+            type: string
+        - name: key
+          in: query
+          description: 激活密钥
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    description: 用户id
+                  user_info:
+                    $ref: '#/components/schemas/UserInfo'
+  /api/v1/user/logout:
+    post:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 退出登录
+      description: 退出登录
+      operationId: userLogout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                    - driver_id
+              properties:
+                driver_id:
+                  type: string
+      responses:
+        '200':
+          description: 退出登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/user/email/verification:
+    post:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 发送激活邮件
+      description: 发送激活邮件
+      operationId: userEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: 发送激活邮件成功
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/user/public_key:
+    post:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 设置用户公钥
+      description: 设置用户公钥
+      operationId: setUserPublicKey
+    put:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 重置用户公钥
+      description: 重置用户公钥
+      operationId: resetUserPublicKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                public_key:
+                  type: string
+                code:
+                  type: string
+      responses:
+        '200':
+          description: 重置用户公钥成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    description: 用户id
+                  public_key:
+                    type: string
+                    description: 用户公钥
+  /api/v1/user/system/public_key:
+    get:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 获取服务端pgp公钥
+      description: 获取服务端pgp公钥
+      operationId: getPGPPublicKey
+      responses:
+        '200':
+          description: 获取服务端pgp公钥成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  public_key:
+                    type: string
+                    description: 用户公钥
+  /api/v1/user/{id}/bundle:
+    get:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 获取用户密钥包
+      description: 获取用户密钥包
+      operationId: getUserBundle
+      parameters:
+        - name: id
+          in: path
+          description: 用户ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取用户密钥包成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSecretBundle'
+  /api/v1/user/bundle:
+    put:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 修改用户密钥包
+      description: 修改用户密钥包
+      operationId: updateUserBundle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - secret_bundle
+              properties:
+                secret_bundle:
+                  type: string
+                  description: 用户密钥包
+      responses:
+        '200':
+          description: 修改用户密钥包成功
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/user/clients:
+    get:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 获取该用户当前登录的所有客户端
+      description: 获取该用户当前登录的所有客户端
+      operationId: getUserClients
+      responses:
+        '200':
+          description: 获取该用户当前登录的所有客户端成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    client_ip:
+                      type: string
+                    login_number:
+                      type: integer
+                    login_at:
+                      type: integer
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+#    UpdatePasswordRequest:
+#      type: object
+#      properties:
+#        old_password:
+#          type: string
+#          format: password
+#          minLength: 6
+#          maxLength: 128
+#          description: 旧密码
+#        new_password:
+#          type: string
+#          format: password
+#          minLength: 6
+#          maxLength: 128
+#          description: 新密码
+#        confirm_password:
+#          type: string
+#          format: password
+#          minLength: 6
+#          maxLength: 128
+#          description: 确认密码
+    UserSecretBundle:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: 用户id
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        secret_bundle:
+          type: string
+          description: 用户密钥包
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    UserInfo:
+      type: object
+      properties:
+        user_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        coss_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        nickname:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        email:
+          type: string
+        tel:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        avatar:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        signature:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        status:
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+          description: >
+            0: 未知状态
+            1: 正常状态
+            2: 被禁用
+            3: 已删除
+            4: 锁定状态
+        relation_status:
+          type: integer
+        login_number:
+          type: integer
+          format: int64
+          x-go-type-skip-optional-pointer: true
+        preferences:
+          $ref: '#/components/schemas/Preferences'
+        new_device_login:
+          type: boolean
+          x-go-type-skip-optional-pointer: true
+        last_login_time:
+          type: integer
+          format: int64
+          x-go-type-skip-optional-pointer: true
+      required:
+        - user_id
+        - email
+        - status
+        - relation_status
+#        - login_number
+#        - new_device_login
+#        - last_login_time
+    Preferences:
+      type: object
+      properties:
+        silent_notification:
+          type: boolean
+          description: >
+            是否开启静默通知
+        remark:
+          type: string
+        open_burn_after_reading:
+          type: boolean
+          description: >
+            是否开启阅后即焚
+        open_burn_after_reading_time_out:
+          type: integer
+      UserStatus:
+        type: integer
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: 用户的电子邮件地址
+        password:
+          type: string
+          description: 用户密码
+        driver_id:
+          type: string
+          description: 当前登录设备的唯一标识符
+        driver_token:
+          type: string
+          description: 当前设备的设备token 用于推送手机端的系统通知
+        platform:
+          type: string
+          description: 用户登录的平台(ios、android、web、huawei...)
+      required:
+        - email
+        - password
+        - driver_id
+        - driver_token
+        - platform
+      example:
+        email: user@example.com
+        password: password123
+        driver_id: abc123
+        driver_token: xyz456
+        platform: ios

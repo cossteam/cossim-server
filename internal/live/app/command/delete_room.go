@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/live/domain/entity"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
@@ -15,6 +16,7 @@ import (
 	"github.com/livekit/protocol/livekit"
 	"go.uber.org/zap"
 	"strconv"
+	"time"
 )
 
 type DeleteRoom struct {
@@ -41,30 +43,64 @@ func (h *LiveHandler) DeleteRoom(ctx context.Context, cmd *DeleteRoom) error {
 	}
 }
 
+func (h *LiveHandler) CleanUserRoom(ctx context.Context, room *entity.Room) error {
+	// 删除房间和用户连接信息
+	if err := h.deleteRoom(ctx, room.ID); err != nil {
+		h.logger.Error("删除 Redis 房间错误", zap.Error(err))
+	}
+
+	for userID := range room.Participants {
+		if err := h.liveRepo.DeleteUsersLive(ctx, userID); err != nil {
+			h.logger.Error("删除用户连接信息错误", zap.Error(err))
+		}
+	}
+
+	return nil
+}
+
 func (h *LiveHandler) deleteUserRoom(ctx context.Context, cmd *DeleteRoom, room *entity.Room) error {
-	_, ok := room.Participants[cmd.UserID]
+	// 获取当前用户的参与者信息
+	participant, ok := room.Participants[cmd.UserID]
 	if !ok {
 		return code.LiveErrUserNotInCall
 	}
 
-	for participant, p := range room.Participants {
-		if err := h.liveRepo.DeleteUsersLive(ctx, participant); err != nil {
-			h.logger.Error("delete user live error", zap.Error(err))
-		}
-		if participant == cmd.UserID {
-			continue
-		}
+	// 无论什么情况都先删除房间信息
+	if err := h.CleanUserRoom(ctx, room); err != nil {
+		return err
+	}
 
-		if !p.Connected {
-			if err := h.handleUserReject(ctx, participant, cmd.UserID, cmd.DriverID, room); err != nil {
-				return err
-			}
-		} else {
-			h.handleUserLeave(ctx, participant, cmd.UserID, cmd.DriverID)
+	// 存储当前用户的参与者信息
+	thisActiveParticipant := participant
+	var oppositeActiveParticipant *entity.ActiveParticipant
+
+	// 获取对方用户的参与者信息
+	for userID, activeParticipant := range room.Participants {
+		if userID != cmd.UserID {
+			oppositeActiveParticipant = activeParticipant
+			break
 		}
 	}
 
-	return h.deleteRoom(ctx, room.ID)
+	// 当前用户为通话创建者，且对方未接听，取消通话
+	if cmd.UserID == room.Creator && !oppositeActiveParticipant.Connected {
+		fmt.Println("当前用户为通话创建者且对方未连接")
+		return h.handleCancelled(ctx, room, cmd.UserID, cmd.DriverID)
+	}
+
+	// 当前用户作为被呼叫者拒绝通话
+	if !thisActiveParticipant.Connected && oppositeActiveParticipant.Connected && cmd.UserID != room.Creator {
+		fmt.Println("被呼叫者拒绝通话")
+		return h.handleRejected(ctx, room, cmd.UserID, cmd.DriverID)
+	}
+
+	// 表示双方已加入通话，任意一方挂断
+	if thisActiveParticipant.Connected && oppositeActiveParticipant.Connected {
+		fmt.Println("任意一方挂断")
+		return h.handleAnyDisconnected(ctx, room, cmd.UserID, cmd.DriverID)
+	}
+
+	return nil
 }
 
 func (h *LiveHandler) deleteGroupRoom(ctx context.Context, cmd *DeleteRoom, room *entity.Room) error {
@@ -109,6 +145,12 @@ func (h *LiveHandler) deleteGroupRoom(ctx context.Context, cmd *DeleteRoom, room
 	return nil
 }
 
+func formatDuration(duration time.Duration) string {
+	minutes := int(duration.Minutes())
+	seconds := int(duration.Seconds()) % 60
+	return fmt.Sprintf("%02d:%02d", minutes, seconds)
+}
+
 func (h *LiveHandler) deleteEntireGroupRoom(ctx context.Context, room *entity.Room) error {
 	for userID := range room.Participants {
 		if err := h.liveRepo.DeleteUsersLive(ctx, userID); err != nil {
@@ -129,15 +171,122 @@ func (h *LiveHandler) deleteEntireGroupRoom(ctx context.Context, room *entity.Ro
 	return nil
 }
 
-func (h *LiveHandler) handleUserLeave(ctx context.Context, recipientID, senderID, driverID string) {
-	// TODO 需要添加用户挂断事件
-	event := pushgrpcv1.WSEventType_UserCallEndEvent
-	data := map[string]interface{}{
-		"sender_id":    senderID,
-		"recipient_id": recipientID,
-		"driver_id":    driverID,
+func (h *LiveHandler) getMessageType(room *entity.Room) uint {
+	var msgType uint
+	if room.Option.AudioEnabled {
+		msgType = uint(msggrpcv1.MessageType_VoiceCall)
 	}
-	h.sendPushMessage(ctx, senderID, recipientID, event, data)
+	if room.Option.VideoEnabled {
+		msgType = uint(msggrpcv1.MessageType_VideoCall)
+	}
+	return msgType
+}
+
+func (h *LiveHandler) sendUserMessage(ctx context.Context, msgType int32, subType int32, dialogID uint32, recipientID, senderID, content string, isBurnAfterReading bool) (uint32, error) {
+	var _isBurnAfterReading msggrpcv1.BurnAfterReadingType
+	if isBurnAfterReading {
+		_isBurnAfterReading = msggrpcv1.BurnAfterReadingType_IsBurnAfterReading
+	} else {
+		_isBurnAfterReading = msggrpcv1.BurnAfterReadingType_NotBurnAfterReading
+	}
+
+	message, err := h.msgService.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
+		DialogId:               dialogID,
+		SenderId:               senderID,
+		ReceiverId:             recipientID,
+		Content:                content,
+		Type:                   msgType,
+		SubType:                subType,
+		IsBurnAfterReadingType: _isBurnAfterReading,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return message.MsgId, nil
+}
+
+func (h *LiveHandler) pushUserMessageEvent(ctx context.Context, room *entity.Room, dialogID uint32, driverID, senderID, recipientID, content string, msgType, msgSubTye uint, msgID uint32, isBurnAfterReading bool, openBurnAfterReadingTimeOut int64) {
+	var _isBurnAfterReading constants.BurnAfterReadingType
+	if isBurnAfterReading {
+		_isBurnAfterReading = constants.IsBurnAfterReading
+	} else {
+		_isBurnAfterReading = constants.NotBurnAfterReading
+	}
+
+	data := &constants.WsUserMsg{
+		SenderId:                senderID,
+		Content:                 content,
+		MsgType:                 msgType,
+		MsgSubType:              msgSubTye,
+		MsgId:                   msgID,
+		ReceiverId:              recipientID,
+		SendAt:                  pkgtime.Now(),
+		DialogId:                dialogID,
+		IsBurnAfterReading:      _isBurnAfterReading,
+		BurnAfterReadingTimeOut: openBurnAfterReadingTimeOut,
+	}
+
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		h.logger.Error("转换结构体失败", zap.Error(err))
+		return
+	}
+
+	h.pushEventToParticipants(ctx, driverID, pushgrpcv1.WSEventType_SendUserMessageEvent, bytes, room)
+}
+
+func (h *LiveHandler) pushEventToParticipants(ctx context.Context, driverID string, event pushgrpcv1.WSEventType, data []byte, room *entity.Room) {
+	for k := range room.Participants {
+		msgContent := &pushgrpcv1.WsMsg{
+			Uid:      k,
+			Event:    event,
+			Data:     &any2.Any{Value: data},
+			DriverId: driverID,
+		}
+		toBytes, err := utils.StructToBytes(msgContent)
+		if err != nil {
+			h.logger.Error("转换结构体失败", zap.Error(err))
+			continue
+		}
+
+		h.logger.Debug("push event to room participant", zap.Any("participant", k))
+
+		_, err = h.pushService.Push(ctx, &pushgrpcv1.PushRequest{
+			Type: pushgrpcv1.Type_Ws,
+			Data: toBytes,
+		})
+		if err != nil {
+			h.logger.Error("发送消息失败", zap.Error(err))
+			continue
+		}
+	}
+}
+
+// getRoomDuration 获取房间通话时长
+func (h *LiveHandler) getRoomDuration(ctx context.Context, room string) time.Duration {
+	livekitRoom, err := h.getLivekitRoom(ctx, room)
+	if err != nil {
+		h.logger.Error("获取房间信息失败", zap.Error(err))
+		return 0
+	}
+	fmt.Println("livekitRoom.CreationTime => ", livekitRoom.CreationTime)
+	creationTime := time.Unix(livekitRoom.CreationTime, 0)
+	duration := time.Since(creationTime)
+	return duration
+}
+
+func (h *LiveHandler) getLivekitRoom(ctx context.Context, room string) (*livekit.Room, error) {
+	rooms, err := h.roomService.ListRooms(ctx, &livekit.ListRoomsRequest{Names: []string{room}})
+	if err != nil {
+		h.logger.Error("获取房间信息失败", zap.Error(err))
+		return nil, code.LiveErrGetCallInfoFailed
+	}
+
+	if len(rooms.Rooms) == 0 {
+		return nil, code.LiveErrCallNotFound
+	}
+
+	return rooms.Rooms[0], nil
 }
 
 func (h *LiveHandler) notifyGroupCallEnd(ctx context.Context, room *entity.Room, senderID string, connected bool) {
@@ -155,108 +304,6 @@ func (h *LiveHandler) notifyGroupCallEnd(ctx context.Context, room *entity.Room,
 		}
 		h.sendPushMessage(ctx, senderID, participant, event, data)
 	}
-}
-
-func (h *LiveHandler) handleUserReject(ctx context.Context, participantID, senderID, driverID string, room *entity.Room) error {
-	rel, err := h.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: participantID, FriendId: senderID})
-	if err != nil {
-		return err
-	}
-	if rel.Status != relationgrpcv1.RelationStatus_RELATION_NORMAL {
-		return code.RelationUserErrFriendRelationNotFound
-	}
-
-	var msgType int32
-	if room.Option.AudioEnabled {
-		msgType = int32(msggrpcv1.MessageType_VoiceCall)
-	}
-	if room.Option.VideoEnabled {
-		msgType = int32(msggrpcv1.MessageType_VideoCall)
-	}
-
-	var receiverId string
-	for k, _ := range room.Participants {
-		if k != room.Creator {
-			receiverId = k
-			break
-		}
-	}
-
-	isBurnAfterReading := rel.OpenBurnAfterReading
-	openBurnAfterReadingTimeout := rel.OpenBurnAfterReadingTimeOut
-	message, err := h.msgService.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
-		DialogId:               rel.DialogId,
-		SenderId:               room.Creator,
-		ReceiverId:             receiverId,
-		Content:                "已拒绝",
-		Type:                   msgType,
-		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(isBurnAfterReading),
-	})
-	if err != nil {
-		h.logger.Error("发送消息失败", zap.Error(err))
-		return code.LiveErrRejectCallFailed
-	}
-
-	// 获取发送者信息
-	info, err := h.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-		UserId: senderID,
-	})
-	if err != nil {
-		h.logger.Error("获取用户信息失败", zap.Error(err))
-		return code.LiveErrLeaveCallFailed
-	}
-
-	data := &constants.WsUserMsg{
-		SenderId:                senderID,
-		Content:                 "已拒绝",
-		MsgType:                 uint(msgType),
-		MsgId:                   message.MsgId,
-		ReceiverId:              receiverId,
-		SendAt:                  pkgtime.Now(),
-		DialogId:                rel.DialogId,
-		IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
-		BurnAfterReadingTimeOut: openBurnAfterReadingTimeout,
-		SenderInfo: constants.SenderInfo{
-			Avatar: info.Avatar,
-			Name:   info.NickName,
-			UserId: senderID,
-		},
-	}
-	bytes, err := utils.StructToBytes(data)
-	if err != nil {
-		return err
-	}
-
-	var msgs []*pushgrpcv1.WsMsg
-	msgContent := func(uid string) *pushgrpcv1.WsMsg {
-		return &pushgrpcv1.WsMsg{
-			Uid:      uid,
-			Event:    pushgrpcv1.WSEventType_SendUserMessageEvent,
-			DriverId: driverID,
-			Data:     &any2.Any{Value: bytes},
-		}
-	}
-	for k := range room.Participants {
-		if k == senderID {
-			continue
-		}
-		msgs = append(msgs, msgContent(k))
-	}
-
-	toBytes, err := utils.StructToBytes(msgs)
-	if err != nil {
-		return err
-	}
-	_, err = h.pushService.Push(ctx, &pushgrpcv1.PushRequest{
-		Type: pushgrpcv1.Type_Ws_Batch_User,
-		Data: toBytes,
-	})
-	if err != nil {
-		h.logger.Error("发送消息失败", zap.Error(err))
-	}
-
-	//h.sendPushMessage(ctx, participantID, pushgrpcv1.WSEventType_SendUserMessageEvent, msgs)
-	return nil
 }
 
 func (h *LiveHandler) sendPushMessage(ctx context.Context, senderID, recipientID string, event pushgrpcv1.WSEventType, data map[string]interface{}) {
@@ -300,6 +347,137 @@ func buildPushMessageBytes(recipientID string, event pushgrpcv1.WSEventType, dat
 
 	msg := &pushgrpcv1.WsMsg{Uid: recipientID, Event: event, Data: &any2.Any{Value: structToBytes}}
 	toBytes, err := utils.StructToBytes(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return toBytes, nil
+}
+
+func (h *LiveHandler) handleCancelled(ctx context.Context, room *entity.Room, userID, driverID string) error {
+	content := "取消"
+	subType := int32(msggrpcv1.CallSubType_Cancelled)
+	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
+}
+
+func (h *LiveHandler) handleRejected(ctx context.Context, room *entity.Room, userID, driverID string) error {
+	content := "拒绝"
+	subType := int32(msggrpcv1.CallSubType_Rejected)
+	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
+}
+
+func (h *LiveHandler) handleAnyDisconnected(ctx context.Context, room *entity.Room, userID, driverID string) error {
+	content := fmt.Sprintf("通话时长：%s", formatDuration(h.getRoomDuration(ctx, room.ID)))
+	subType := int32(msggrpcv1.CallSubType_Normal)
+	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
+}
+
+func (h *LiveHandler) handleUserMessage(ctx context.Context, room *entity.Room, userID, driverID string, content string, subType int32) error {
+	var senderID string
+	var recipientID string
+
+	if room.Creator == userID {
+		senderID = room.Creator
+		for participant := range room.Participants {
+			if participant != senderID {
+				recipientID = participant
+				break
+			}
+		}
+	} else {
+		senderID = userID
+		recipientID = room.Creator
+	}
+
+	// 获取关系信息
+	relation, err := h.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
+		UserId:   senderID,
+		FriendId: recipientID,
+	})
+	if err != nil {
+		return err
+	}
+
+	var dialogID = relation.DialogId
+	var openBurnAfterReading bool
+	var openBurnAfterReadingTimeOut = relation.OpenBurnAfterReadingTimeOut
+	if relation.OpenBurnAfterReading == relationgrpcv1.OpenBurnAfterReadingType_OPEN_BURN_AFTER_READING {
+		openBurnAfterReading = true
+	}
+
+	// 获取消息类型
+	msgType := h.getMessageType(room)
+
+	// 查询发送者信息
+	senderInfo, err := h.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{UserId: senderID})
+	if err != nil {
+		return err
+	}
+
+	// 创建通话消息
+	msgID, err := h.sendUserMessage(ctx, int32(msgType), subType, dialogID, senderID, recipientID, content, openBurnAfterReading)
+	if err != nil {
+		h.logger.Error("发送消息失败", zap.Error(err))
+		return err
+	}
+
+	// 推送通话消息
+	h.pushUserMessageEvent(ctx, room, dialogID, driverID, senderID, recipientID, content, msgType, uint(subType), msgID, openBurnAfterReading, openBurnAfterReadingTimeOut)
+
+	// 为发送者生成ws推送消息
+	message, err := buildWsUserMessage(dialogID, msgType, driverID, senderID, recipientID, content, constants.SenderInfo{
+		UserId: senderInfo.UserId,
+		Name:   senderInfo.NickName,
+		Avatar: senderInfo.Avatar,
+	}, openBurnAfterReading)
+	if err != nil {
+		return err
+	}
+
+	// 推送通话事件
+	eventType := pushgrpcv1.WSEventType_UserCallRejectEvent
+	if subType == int32(msggrpcv1.CallSubType_Normal) {
+		eventType = pushgrpcv1.WSEventType_UserCallEndEvent
+	}
+	h.pushEventToParticipants(ctx, driverID, eventType, message, room)
+
+	return nil
+}
+
+func buildWsUserMessage(dialogID uint32, msgType uint, driverID, senderID, recipientID, content string, senderInfo constants.SenderInfo, isBurnAfterReading bool) ([]byte, error) {
+	var _isBurnAfterReading constants.BurnAfterReadingType
+	if isBurnAfterReading {
+		_isBurnAfterReading = constants.IsBurnAfterReading
+	} else {
+		_isBurnAfterReading = constants.NotBurnAfterReading
+	}
+
+	data := &constants.WsUserMsg{
+		SenderId:           senderID,
+		Content:            content,
+		MsgType:            msgType,
+		DialogId:           dialogID,
+		IsBurnAfterReading: _isBurnAfterReading,
+		SenderInfo: constants.SenderInfo{
+			Avatar: senderInfo.Avatar,
+			Name:   senderInfo.Name,
+			UserId: senderInfo.UserId,
+		},
+	}
+
+	bytes, err := utils.StructToBytes(data)
+	if err != nil {
+		return nil, err
+	}
+
+	msgContent := &pushgrpcv1.WsMsg{
+		Uid:      recipientID,
+		Event:    pushgrpcv1.WSEventType_SendUserMessageEvent,
+		DriverId: driverID,
+		Data:     &any2.Any{Value: bytes},
+	}
+
+	toBytes, err := utils.StructToBytes(msgContent)
 	if err != nil {
 		return nil, err
 	}

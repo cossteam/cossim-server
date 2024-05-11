@@ -10,7 +10,16 @@ var (
 	baseUrl = "consul://%s/%s?wait=14s&healthy=true"
 )
 
-func NewGrpcClient(name string, addr string) (*grpc.ClientConn, error) {
+func GetBalanceAddr(consulAddr string, name string) string {
+	return fmt.Sprintf(baseUrl, consulAddr, name)
+}
+
+func NewGrpcClient(addr string) (*grpc.ClientConn, error) {
+	var grpcOptions = []grpc.DialOption{grpc.WithInsecure()}
+	return grpc.Dial(addr, grpcOptions...)
+}
+
+func NewBalanceGrpcClient(name string, addr string) (*grpc.ClientConn, error) {
 	var grpcOptions = []grpc.DialOption{grpc.WithInsecure()}
 
 	addr = fmt.Sprintf(baseUrl, addr, name)
@@ -27,7 +36,7 @@ func NewGrpcClient(name string, addr string) (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func NewBalanceGrpcClient(ac *config.AppConfig) (map[string]*grpc.ClientConn, error) {
+func NewBalanceGrpcClients(ac *config.AppConfig) (map[string]*grpc.ClientConn, error) {
 	servers := map[string]*grpc.ClientConn{}
 	for _, sc := range ac.Discovers {
 		var addr string

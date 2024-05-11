@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/redis/go-redis/v9"
 	"time"
@@ -147,6 +148,7 @@ func (r *RelationUserCacheRedis) SetRelation(ctx context.Context, ownerUserID st
 	if err != nil {
 		return err
 	}
+	fmt.Println("set relation: ", string(b))
 	return r.client.Set(ctx, key, b, expiration).Err()
 }
 

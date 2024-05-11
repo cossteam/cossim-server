@@ -45,7 +45,7 @@ func (s *userFriendRequestServiceServer) GetFriendRequestList(ctx context.Contex
 		return nil, err
 	}
 
-	//list, total, err := s.ufqr.GetFriendRequestList(request.UserId, int(request.PageSize), int(request.CurrentPage))
+	//list, total, err := s.ufqr.GetFriendRequestList(request.UserID, int(request.PageSize), int(request.CurrentPage))
 	//if err != nil {
 	//	return resp, status.Error(codes.Code(code.RelationUserErrGetRequestListFailed.Code()), err.Error())
 	//}
@@ -316,7 +316,7 @@ func (s *userFriendRequestServiceServer) DeleteFriendRequestByUserIdAndFriendId(
 		return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), code.RelationUserErrNoFriendRequestRecords.Message())
 	}
 
-	//if err := s.ufqr.DeleteFriendRequestByUserIdAndFriendIdRequest(request.UserId, request.FriendId); err != nil {
+	//if err := s.ufqr.DeleteFriendRequestByUserIdAndFriendIdRequest(request.UserID, request.FriendId); err != nil {
 	//	return resp, status.Error(codes.Code(code.RelationUserErrNoFriendRequestRecords.Code()), err.Error())
 	//}
 	return resp, nil
@@ -331,7 +331,7 @@ func (s *userFriendRequestServiceServer) DeleteFriendRecord(ctx context.Context,
 	//// TODO 考虑不使用异步的方式，缓存设置失败了，重试或回滚
 	//go func() {
 	//	if s.cacheEnable {
-	//		if err := s.cache.DeleteFriendRequestList(ctx, req.UserId); err != nil {
+	//		if err := s.cache.DeleteFriendRequestList(ctx, req.UserID); err != nil {
 	//			log.Printf("delete FriendRequestList cache failed: %v", err)
 	//		}
 	//	}

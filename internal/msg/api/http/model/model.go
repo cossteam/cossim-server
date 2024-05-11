@@ -100,6 +100,7 @@ type UserDialogListResponse struct {
 type Message struct {
 	GroupId            uint32               `json:"group_id,omitempty"`      //群聊id
 	MsgType            uint                 `json:"msg_type"`                // 消息类型
+	MsgSubType         uint                 `json:"msg_sub_type"`            // 消息子类型
 	Content            string               `json:"content"`                 // 消息内容
 	SenderId           string               `json:"sender_id"`               // 消息发送者
 	SendAt             int64                `json:"send_at"`                 // 消息发送时间
@@ -121,6 +122,7 @@ type UserMessage struct {
 	ReceiverId              string               `json:"receiver_id"`
 	Content                 string               `json:"content"`
 	Type                    uint32               `json:"type"`
+	SubType                 uint                 `json:"sub_type"`
 	ReplyId                 uint64               `json:"reply_id"`
 	IsRead                  int32                `json:"is_read"`
 	ReadAt                  int64                `json:"read_at"`
@@ -145,7 +147,7 @@ type GroupMessage struct {
 	Type                   uint32               `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
 	ReplyId                uint32               `protobuf:"varint,4,opt,name=Reply_id,json=ReplyId,proto3" json:"reply_id"`
 	ReadCount              int32                `protobuf:"varint,5,opt,name=Read_count,json=ReadCount,proto3" json:"read_count"`
-	UserId                 string               `protobuf:"bytes,6,opt,name=UserId,proto3" json:"user_id"`
+	UserId                 string               `protobuf:"bytes,6,opt,name=UserID,proto3" json:"user_id"`
 	Content                string               `protobuf:"bytes,7,opt,name=Content,proto3" json:"content"`
 	SendAt                 int64                `json:"send_at"`
 	DialogId               uint32               `protobuf:"varint,9,opt,name=Dialog_id,json=DialogId,proto3" json:"dialog_id"`

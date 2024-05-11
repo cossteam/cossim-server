@@ -319,7 +319,7 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 	}
 
 	// Note: We are adding the metrics httpServer directly to HTTPServers here as matching on the
-	// metricsserver.Server interface in cm.runnables.Add would be very brittle.
+	// metricsserver.Server interfaces in cm.runnables.Add would be very brittle.
 	//if cm.runnables.HTTPServers != nil {
 	//	if err := cm.runnables.HTTPServers.Add(cm.httpServer, nil); err != nil {
 	//		return fmt.Errorf("failed to add metrics httpServer: %w", err)

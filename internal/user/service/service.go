@@ -8,7 +8,7 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	userv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/cache"
-	grpchandler "github.com/cossim/coss-server/internal/user/interface/grpc"
+	grpchandler "github.com/cossim/coss-server/internal/user/interfaces/grpc"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/email"
 	"github.com/cossim/coss-server/pkg/email/smtp"
@@ -77,8 +77,6 @@ func New(ac *pkgconfig.AppConfig, grpcService *grpchandler.UserServiceServer) (s
 			return userCache.Close()
 		}
 	}
-
-	fmt.Println("grpcService.AuthSrv => ", grpcService)
 
 	s.setLoadSystem()
 	s.setupRedisClient()

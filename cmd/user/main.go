@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/cossim/coss-server/internal/user/interface/grpc"
-	"github.com/cossim/coss-server/internal/user/interface/http"
+	"github.com/cossim/coss-server/internal/user/interfaces/grpc"
+	"github.com/cossim/coss-server/internal/user/interfaces/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
@@ -79,11 +79,24 @@ func main() {
 		panic(err)
 	}
 
+	ctx := signals.SetupSignalHandler()
+	//logger := plog.NewDefaultLogger("user", int8(mgr.GetConfig().Log.Level))
+	//app := service.NewApplication(ctx, mgr.GetConfig(), logger)
+	//
+	//hs := ctrl.HTTPServer{
+	//	HTTPService:        interfaces.NewHttpServer(logger, *app),
+	//	HealthCheckAddress: httpProbeAddr,
+	//}
+
+	//if err := mgr.SetupHTTPServerWithManager(&hs); err != nil {
+	//	panic(err)
+	//}
+
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		panic(err)
 	}
 
-	if err = mgr.Start(signals.SetupSignalHandler()); err != nil {
+	if err = mgr.Start(ctx); err != nil {
 		panic(err)
 	}
 }

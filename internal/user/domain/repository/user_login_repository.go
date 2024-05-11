@@ -13,4 +13,6 @@ type UserLoginRepository interface {
 	GetUserDriverTokenByUserId(ctx context.Context, userId string) ([]string, error)
 	GetUserByUserId(ctx context.Context, userId string) (*entity.UserLogin, error)
 	DeleteUserLoginByID(ctx context.Context, id uint32) error
+
+	GetWithFields(ctx context.Context, fields map[string]interface{}) (*entity.UserLogin, error)
 }

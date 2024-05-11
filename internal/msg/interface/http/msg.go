@@ -537,6 +537,7 @@ func (h *Handler) getDialogAfterMsg(c *gin.Context) {
 	resp, err := h.svc.GetDialogAfterMsg(c, userID, *req)
 	if err != nil {
 		c.Error(err)
+		return
 	}
 	response.SetSuccess(c, "获取成功", resp)
 }

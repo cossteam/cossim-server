@@ -105,9 +105,9 @@ type SystemNotificationEventData struct {
 //	Uid      string      `json:"uid"`
 //	Event    WSEventType `json:"event"`
 //	Rid      int64       `json:"rid"`
-//	DriverId string      `json:"driverId"`
+//	DriverID string      `json:"driverId"`
 //	SendAt   int64       `json:"send_at"`
-//	Data     interface{} `json:"data"`
+//	Data     interfaces{} `json:"data"`
 //}
 
 type OfflineEventData struct {
@@ -160,6 +160,7 @@ type WsUserMsg struct {
 	IsBurnAfterReading      BurnAfterReadingType `json:"is_burn_after_reading"`
 	BurnAfterReadingTimeOut int64                `json:"burn_after_reading_time_out"`
 	SenderInfo              SenderInfo           `json:"sender_info"`
+	MsgSubType              uint                 `json:"msg_sub_type"`
 }
 
 type WsGroupMsg struct {

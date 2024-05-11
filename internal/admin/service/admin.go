@@ -142,13 +142,13 @@ func (s *Service) InitAdmin() error {
 	//	ekey := uuid.New().String()
 	//
 	//	//保存到redis
-	//	err = cache.SetKey(s.redisClient, ekey, resp.UserId, 30*ostime.Minute)
+	//	err = cache.SetKey(s.redisClient, ekey, resp.UserID, 30*ostime.Minute)
 	//	if err != nil {
 	//		return "", err
 	//	}
 	//
 	//	//注册成功发送邮件
-	//	err = s.smtpClient.SendEmail(req.Email, "欢迎注册", s.smtpClient.GenerateEmailVerificationContent(s.gatewayAddress+s.gatewayPort, resp.UserId, ekey))
+	//	err = s.smtpClient.SendEmail(req.Email, "欢迎注册", s.smtpClient.GenerateEmailVerificationContent(s.gatewayAddress+s.gatewayPort, resp.UserID, ekey))
 	//	if err != nil {
 	//		s.logger.Error("failed to send email", zap.Error(err))
 	//		return "", err
