@@ -106,7 +106,6 @@ func (h *userLoginHandler) Handle(ctx context.Context, cmd *UserLogin) (*UserLog
 		h.logger.Error("获取用户信息失败", zap.Error(err))
 		return nil, err
 	}
-	fmt.Println("user =》 ", user)
 
 	// 登录是否受限，例如账户未激活、达到设备限制等
 	if err := h.uld.IsLoginRestricted(ctx, user.ID); err != nil {
@@ -143,10 +142,13 @@ func (h *userLoginHandler) Handle(ctx context.Context, cmd *UserLogin) (*UserLog
 	var index = len(users) + 1
 
 	cacheData := entity.UserLogin{
-		UserID:    user.ID,
-		Token:     token,
-		CreatedAt: ptime.Now(),
-		ClientIP:  cmd.ClientIP,
+		UserID:      user.ID,
+		Token:       token,
+		CreatedAt:   ptime.Now(),
+		ClientIP:    cmd.ClientIP,
+		DriverID:    cmd.DriverID,
+		DriverToken: cmd.DriverToken,
+		Platform:    cmd.Platform,
 	}
 
 	workflow.InitGrpc(h.dtmGrpcServer, "", grpc.NewServer())

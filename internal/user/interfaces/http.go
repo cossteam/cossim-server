@@ -31,15 +31,18 @@ type HttpServer struct {
 	app         app.Application
 	enc         encryption.Encryptor
 	authService authv1.UserAuthServiceClient
+
+	pgpKey string
 }
 
 func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	if cfg.Encryption.Enable {
 		if err := h.enc.ReadKeyPair(); err != nil {
 			return err
 		}
+		h.pgpKey = h.enc.GetPublicKey()
 	}
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	var userAddr string
 	if cfg.Discovers["user"].Direct {
 		userAddr = cfg.Discovers["user"].Addr()

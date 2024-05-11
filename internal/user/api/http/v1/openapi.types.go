@@ -53,6 +53,21 @@ type UserInfo struct {
 // UserInfoStatus 0: 未知状态 1: 正常状态 2: 被禁用 3: 已删除 4: 锁定状态
 type UserInfoStatus int
 
+// UserLoginClient defines model for UserLoginClient.
+type UserLoginClient struct {
+	// ClientIp 客户端ip
+	ClientIp string `json:"client_ip"`
+
+	// DriverId 设备id
+	DriverId string `json:"driver_id"`
+
+	// DriverType 设备类型
+	DriverType string `json:"driver_type"`
+
+	// LoginAt 登录时间
+	LoginAt int64 `json:"login_at"`
+}
+
 // UserSecretBundle defines model for UserSecretBundle.
 type UserSecretBundle struct {
 	// SecretBundle 用户密钥包
@@ -79,7 +94,7 @@ type UpdateUserBundleJSONBody struct {
 
 // UserEmailVerificationJSONBody defines parameters for UserEmailVerification.
 type UserEmailVerificationJSONBody struct {
-	Email *openapi_types.Email `json:"email,omitempty"`
+	Email openapi_types.Email `json:"email"`
 }
 
 // UserLoginJSONBody defines parameters for UserLogin.
@@ -117,11 +132,16 @@ type UpdateUserPasswordJSONBody struct {
 	Password string `json:"password"`
 }
 
+// SetUserPublicKeyJSONBody defines parameters for SetUserPublicKey.
+type SetUserPublicKeyJSONBody struct {
+	PublicKey string `json:"public_key"`
+}
+
 // ResetUserPublicKeyJSONBody defines parameters for ResetUserPublicKey.
 type ResetUserPublicKeyJSONBody struct {
-	Code      *string              `json:"code,omitempty"`
+	Code      string               `json:"code"`
 	Email     *openapi_types.Email `json:"email,omitempty"`
-	PublicKey *string              `json:"public_key,omitempty"`
+	PublicKey string               `json:"public_key"`
 }
 
 // UserRegisterJSONBody defines parameters for UserRegister.
@@ -172,6 +192,9 @@ type UserLogoutJSONRequestBody UserLogoutJSONBody
 
 // UpdateUserPasswordJSONRequestBody defines body for UpdateUserPassword for application/json ContentType.
 type UpdateUserPasswordJSONRequestBody UpdateUserPasswordJSONBody
+
+// SetUserPublicKeyJSONRequestBody defines body for SetUserPublicKey for application/json ContentType.
+type SetUserPublicKeyJSONRequestBody SetUserPublicKeyJSONBody
 
 // ResetUserPublicKeyJSONRequestBody defines body for ResetUserPublicKey for application/json ContentType.
 type ResetUserPublicKeyJSONRequestBody ResetUserPublicKeyJSONBody

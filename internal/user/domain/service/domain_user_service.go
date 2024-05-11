@@ -16,13 +16,23 @@ type UserDomain interface {
 	GetUsers(ctx context.Context) ([]entity.User, error)
 	GetUserWithOpts(ctx context.Context, opts ...entity.UserOpt) (*entity.User, error)
 
+	UpdateBundle(ctx context.Context, userID, bundle string) error
 	UserRegister(ctx context.Context, ur *entity.UserRegister) (string, error)
 	ActivateUser(ctx context.Context, userID ...string) error
+	SetUserPublicKey(ctx context.Context, id string, publickey string) error
 }
 
 // userDomain 实现了 UserDomain 接口
 type userDomain struct {
 	ur repository.UserRepository
+}
+
+func (d *userDomain) SetUserPublicKey(ctx context.Context, userID string, publickey string) error {
+	return d.ur.UpdateUserColumn(ctx, userID, "public_key", publickey)
+}
+
+func (d *userDomain) UpdateBundle(ctx context.Context, userID, bundle string) error {
+	return d.ur.UpdateUserColumn(ctx, userID, "secret_bundle", bundle)
 }
 
 func (d *userDomain) UserRegister(ctx context.Context, ur *entity.UserRegister) (string, error) {

@@ -143,15 +143,15 @@ func (r *MySQLUserRepository) GetUserInfoByUid(ctx context.Context, id string) (
 		return nil, err
 	}
 
-	entity := converter.UserPOToEntity(&model)
+	e := converter.UserPOToEntity(&model)
 
 	if r.cache != nil {
-		if err := r.cache.SetUserInfo(ctx, entity.ID, entity, cache.UserExpireTime); err != nil {
+		if err := r.cache.SetUserInfo(ctx, e.ID, e, cache.UserExpireTime); err != nil {
 			log.Println("cache set user info error:", utils.NewErrorWithStack(err.Error()))
 		}
 	}
 
-	return entity, nil
+	return e, nil
 }
 
 func (r *MySQLUserRepository) GetUserInfoByCossID(ctx context.Context, cossId string) (*entity.User, error) {
@@ -307,7 +307,9 @@ func (r *MySQLUserRepository) GetUserSecretBundle(ctx context.Context, userId st
 }
 
 func (r *MySQLUserRepository) UpdateUserColumn(ctx context.Context, userId string, column string, value interface{}) error {
-	if err := r.db.WithContext(ctx).Where("id = ?", userId).UpdateColumn(column, value).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Model(&po.User{}).
+		Where("id = ?", userId).UpdateColumn(column, value).Error; err != nil {
 		return err
 	}
 
