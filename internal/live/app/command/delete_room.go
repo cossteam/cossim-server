@@ -354,6 +354,12 @@ func buildPushMessageBytes(recipientID string, event pushgrpcv1.WSEventType, dat
 	return toBytes, nil
 }
 
+func (h *LiveHandler) handleMissed(ctx context.Context, room *entity.Room, userID, driverID string) error {
+	content := "无应答"
+	subType := int32(msggrpcv1.CallSubType_Missed)
+	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
+}
+
 func (h *LiveHandler) handleCancelled(ctx context.Context, room *entity.Room, userID, driverID string) error {
 	content := "取消"
 	subType := int32(msggrpcv1.CallSubType_Cancelled)

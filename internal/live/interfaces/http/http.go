@@ -187,8 +187,10 @@ func (h *HttpServer) CreateRoom(c *gin.Context) {
 	}
 
 	uid := c.Value(constants.UserID).(string)
+	did := c.Value(constants.DriverID).(string)
 	createRoom, err := h.app.Commands.LiveHandler.CreateRoom(c, &command.CreateRoom{
 		Creator:      uid,
+		DriverID:     did,
 		Type:         string(req.Type),
 		Participants: req.Member,
 		GroupID:      req.GroupId,
