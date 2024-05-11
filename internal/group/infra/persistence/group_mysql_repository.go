@@ -1,93 +1,17 @@
-package adapters
+package persistence
 
 import (
 	"context"
-	"fmt"
 	"github.com/cossim/coss-server/internal/group/cache"
 	"github.com/cossim/coss-server/internal/group/domain/entity"
 	"github.com/cossim/coss-server/internal/group/domain/repository"
-	ptime "github.com/cossim/coss-server/pkg/utils/time"
+	"github.com/cossim/coss-server/internal/group/infra/persistence/converter"
+	"github.com/cossim/coss-server/internal/group/infra/persistence/po"
 	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"log"
 )
-
-type BaseModel struct {
-	ID        uint32 `gorm:"primaryKey;autoIncrement;"`
-	CreatedAt int64  `gorm:"autoCreateTime;comment:创建时间"`
-	UpdatedAt int64  `gorm:"autoUpdateTime;comment:更新时间"`
-	DeletedAt int64  `gorm:"default:0;comment:删除时间"`
-}
-
-type GroupModel struct {
-	BaseModel
-	Type            uint   `gorm:"default:0;comment:群聊类型(0=私密群, 1=公开群)"`
-	Status          uint   `gorm:"comment:群聊状态(0=正常状态, 1=锁定状态, 2=删除状态)"`
-	MaxMembersLimit int    `gorm:"comment:群聊人数限制"`
-	CreatorID       string `gorm:"type:varchar(64);comment:创建者id"`
-	Name            string `gorm:"comment:群聊名称"`
-	Avatar          string `gorm:"default:'';comment:头像（群）"`
-	SilenceTime     int64  `gorm:"comment:全员禁言结束时间"`
-	JoinApprove     bool   `gorm:"default:false;comment:是否开启入群验证"`
-	Encrypt         bool   `gorm:"default:false;comment:是否开启群聊加密，只有当群聊类型为私密群时，该字段才有效"`
-}
-
-func (bm *BaseModel) TableName() string {
-	fmt.Println("table name")
-	return "groups"
-}
-
-func (bm *BaseModel) BeforeCreate(tx *gorm.DB) error {
-	now := ptime.Now()
-	bm.CreatedAt = now
-	bm.UpdatedAt = now
-	return nil
-}
-
-func (bm *BaseModel) BeforeUpdate(tx *gorm.DB) error {
-	bm.UpdatedAt = ptime.Now()
-	return nil
-}
-
-func (m *GroupModel) FromEntity(e *entity.Group) error {
-	if m == nil {
-		m = &GroupModel{}
-	}
-	if err := e.Validate(); err != nil {
-		return err
-	}
-	m.ID = e.ID
-	m.Type = uint(e.Type)
-	m.Status = uint(e.Status)
-	m.MaxMembersLimit = e.MaxMembersLimit
-	m.CreatorID = e.CreatorID
-	m.Name = e.Name
-	m.Avatar = e.Avatar
-	m.SilenceTime = e.SilenceTime
-	m.JoinApprove = e.JoinApprove
-	m.Encrypt = e.Encrypt
-	return nil
-}
-
-func (m *GroupModel) ToEntity() (*entity.Group, error) {
-	if m == nil {
-		return nil, errors.New("group model is nil")
-	}
-	return &entity.Group{
-		ID:              m.ID,
-		CreatedAt:       m.CreatedAt,
-		Type:            entity.Type(m.Type),
-		Status:          entity.Status(m.Status),
-		MaxMembersLimit: m.MaxMembersLimit,
-		CreatorID:       m.CreatorID,
-		Name:            m.Name,
-		Avatar:          m.Avatar,
-		SilenceTime:     m.SilenceTime,
-		JoinApprove:     m.JoinApprove,
-		Encrypt:         m.Encrypt,
-	}, nil
-}
 
 const mySQLDeadlockErrorCode = 1213
 
@@ -106,11 +30,11 @@ type MySQLGroupRepository struct {
 }
 
 func (m *MySQLGroupRepository) Automigrate() error {
-	return m.db.AutoMigrate(&GroupModel{})
+	return m.db.AutoMigrate(&po.Group{})
 }
 
 func (m *MySQLGroupRepository) UpdateFields(ctx context.Context, id uint32, fields map[string]interface{}) error {
-	if err := m.db.WithContext(ctx).Model(&GroupModel{}).Where("id = ?", id).Unscoped().Updates(fields).Error; err != nil {
+	if err := m.db.WithContext(ctx).Model(&po.Group{}).Where("id = ?", id).Unscoped().Updates(fields).Error; err != nil {
 		return err
 	}
 
@@ -131,33 +55,27 @@ func (m *MySQLGroupRepository) Get(ctx context.Context, id uint32) (*entity.Grou
 		}
 	}
 
-	model := &GroupModel{}
+	model := &po.Group{}
 	if err := m.db.WithContext(ctx).First(&model, id).Error; err != nil {
 		return nil, err
 	}
 
-	entity, err := model.ToEntity()
-	if err != nil {
-		return nil, err
-	}
+	e := converter.UserPOToEntity(model)
 
 	if m.cache != nil {
-		if err := m.cache.SetGroup(ctx, entity); err != nil {
+		if err := m.cache.SetGroup(ctx, e); err != nil {
 			log.Println("Error caching group:", err)
 		}
 	}
 
-	return model.ToEntity()
+	return e, nil
 }
 
 func (m *MySQLGroupRepository) Update(ctx context.Context, group *entity.Group, updateFn func(h *entity.Group) (*entity.Group, error)) error {
-	model := &GroupModel{}
-	if err := model.FromEntity(group); err != nil {
-		return err
-	}
+	model := converter.GroupEntityToPO(group)
 
 	//// 查询数据库中原始数据
-	//originalModel := &GroupModel{}
+	//originalModel := &po.Group{}
 	//if err := m.db.WithContext(ctx).First(originalModel, "id = ?", group.ID).Error; err != nil {
 	//	return err
 	//}
@@ -198,11 +116,11 @@ func (m *MySQLGroupRepository) Update(ctx context.Context, group *entity.Group, 
 	}
 
 	if m.cache != nil {
-		entity, err := model.ToEntity()
+		e := converter.UserPOToEntity(model)
 		if err != nil {
 			return err
 		}
-		if err := m.cache.SetGroup(ctx, entity); err != nil {
+		if err := m.cache.SetGroup(ctx, e); err != nil {
 			log.Println("Error caching group:", err)
 		}
 	}
@@ -223,25 +141,18 @@ func (m *MySQLGroupRepository) Create(ctx context.Context, group *entity.Group, 
 }
 
 func (m *MySQLGroupRepository) create(ctx context.Context, group *entity.Group, createFn func(h *entity.Group) (*entity.Group, error)) (*entity.Group, error) {
-	model := &GroupModel{}
-	if err := model.FromEntity(group); err != nil {
-		return nil, err
-	}
+	model := converter.GroupEntityToPO(group)
 
 	if err := m.db.WithContext(ctx).Create(model).Error; err != nil {
 		return nil, err
 	}
 
-	entity, err := model.ToEntity()
-	if err != nil {
-		return nil, err
-	}
-
-	return createFn(entity)
+	e := converter.UserPOToEntity(model)
+	return createFn(e)
 }
 
 func (m *MySQLGroupRepository) Delete(ctx context.Context, id uint32) error {
-	if err := m.db.WithContext(ctx).Delete(&GroupModel{}, id).Error; err != nil {
+	if err := m.db.WithContext(ctx).Delete(&po.Group{}, id).Error; err != nil {
 		return err
 	}
 
@@ -279,7 +190,7 @@ func (m *MySQLGroupRepository) Find(ctx context.Context, query repository.Query)
 // findWithoutCache executes the query directly without using cache.
 func (m *MySQLGroupRepository) findWithoutCache(ctx context.Context, query repository.Query) ([]*entity.Group, error) {
 	// Perform query directly on the database
-	var models []*GroupModel
+	var models []*po.Group
 
 	db := m.db.WithContext(ctx)
 
@@ -315,10 +226,7 @@ func (m *MySQLGroupRepository) findWithoutCache(ctx context.Context, query repos
 	// Convert models to entities
 	groups := make([]*entity.Group, len(models))
 	for i, model := range models {
-		e, err := model.ToEntity()
-		if err != nil {
-			return nil, err
-		}
+		e := converter.UserPOToEntity(model)
 		groups[i] = e
 	}
 
