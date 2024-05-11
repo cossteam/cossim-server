@@ -275,41 +275,44 @@ func (s *Service) WsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, cl
 		return err
 	}
 
-	for {
-		msg2, ok, err := msg_queue.ConsumeMessages(msg.Uid, s.rabbitMQClient.GetChannel())
-		if err != nil || !ok {
-			//c.queue.Stop()
-			//拉取完之后删除队列
-			_ = s.rabbitMQClient.DeleteEmptyQueue(msg.Uid)
-			return err
-		}
+	go func() {
+		for {
+			msg2, ok, err := msg_queue.ConsumeMessages(msg.Uid, s.rabbitMQClient.GetChannel())
+			if err != nil || !ok {
+				//c.queue.Stop()
+				//拉取完之后删除队列
+				_ = s.rabbitMQClient.DeleteEmptyQueue(msg.Uid)
+				return
+			}
 
-		var a interface{}
-		err = json.Unmarshal(msg2, &a)
-		if err != nil {
-			s.logger.Error("上线失败：", zap.Error(err))
-			return err
-		}
+			var a interface{}
+			err = json.Unmarshal(msg2, &a)
+			if err != nil {
+				s.logger.Error("上线失败：", zap.Error(err))
+				return
+			}
 
-		mm := a.(string)
-		// 尝试解析消息
-		var data2 map[string]interface{}
-		err = json.Unmarshal([]byte(mm), &data2)
-		if err != nil {
-			s.logger.Error("转换消息失败1", zap.Error(err))
-			return err
-		}
+			mm := a.(string)
+			// 尝试解析消息
+			var data2 map[string]interface{}
+			err = json.Unmarshal([]byte(mm), &data2)
+			if err != nil {
+				s.logger.Error("转换消息失败1", zap.Error(err))
+				return
+			}
 
-		// 尝试将解析后的数据转换为字节
-		wsData, err := json.Marshal(data2)
-		if err != nil {
-			s.logger.Error("转换消息失败2", zap.Error(err))
-			return err
-		}
+			// 尝试将解析后的数据转换为字节
+			wsData, err := json.Marshal(data2)
+			if err != nil {
+				s.logger.Error("转换消息失败2", zap.Error(err))
+				return
+			}
 
-		// 尝试将数据写入 WebSocket 连接
-		go client.Emit("reply", string(wsData))
-	}
+			// 尝试将数据写入 WebSocket 连接
+			go client.Emit("reply", string(wsData))
+		}
+	}()
+	return nil
 }
 
 func (s *Service) WsOfflineClients(ctx context.Context, uid, rid string) error {

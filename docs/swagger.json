@@ -73,7 +73,7 @@
                     "200": {
                         "description": "成功创建群聊",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.Group"
+                            "$ref": "#/definitions/v1.Group"
                         }
                     }
                 }
@@ -100,7 +100,7 @@
                     "200": {
                         "description": "返回群聊信息",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.GroupInfo"
+                            "$ref": "#/definitions/v1.GroupInfo"
                         }
                     }
                 }
@@ -131,7 +131,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.UpdateGroupRequest"
+                            "$ref": "#/definitions/v1.UpdateGroupRequest"
                         }
                     }
                 ],
@@ -181,248 +181,7 @@
                 }
             }
         },
-        "/live": {
-            "post": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "创建通话",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "live"
-                ],
-                "summary": "创建通话",
-                "parameters": [
-                    {
-                        "description": "请求体参数",
-                        "name": "requestBody",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.CreateRoomRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建通话成功",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.CreateRoomResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/group/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "获取群聊通话信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "live"
-                ],
-                "summary": "获取群聊通话",
-                "responses": {
-                    "200": {
-                        "description": "获取群聊通话信息成功",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.Room"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/user": {
-            "get": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "获取用户通话信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "live"
-                ],
-                "summary": "获取用户通话",
-                "responses": {
-                    "200": {
-                        "description": "获取用户通话信息成功",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.Room"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "获取通话房间信息",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "live"
-                ],
-                "summary": "获取通话房间信息",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "要退出的通话房间ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "获取通话信息成功",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.Room"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "用户退出当前通话",
-                "tags": [
-                    "live"
-                ],
-                "summary": "删除通话",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "要退出的通话房间ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功退出通话",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/{id}/join": {
-            "post": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "加入已存在的通话房间",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "live"
-                ],
-                "summary": "加入通话",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "要加入的通话房间ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "请求体参数",
-                        "name": "requestBody",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.JoinRoomRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功加入通话",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.JoinRoomResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/live/{id}/reject": {
-            "post": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "拒绝加入通话",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "live"
-                ],
-                "summary": "拒绝通话",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "要拒绝的通话房间ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功拒绝通话",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/after/get": {
+        "/msg/dialog/after": {
             "post": {
                 "description": "获取指定对话落后消息",
                 "consumes": [
@@ -444,7 +203,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.AfterMsg"
+                                "$ref": "#/definitions/v1.AfterMsg"
                             }
                         }
                     }
@@ -453,7 +212,51 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/dialog/group/{dialog_id}/label": {
+            "get": {
+                "description": "获取群聊标注信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "获取群聊标注信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对话id",
+                        "name": "dialog_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/v1.GetGroupLabelMsgListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -492,145 +295,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
                         }
                     }
                 }
             }
         },
-        "/msg/edit/group": {
-            "post": {
-                "description": "编辑群消息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "编辑群消息",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EditGroupMsgRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/edit/user": {
-            "post": {
-                "description": "编辑用户消息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "编辑用户消息",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EditUserMsgRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/label/group": {
-            "get": {
-                "description": "获取群聊标注信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "获取群聊标注信息",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "对话id",
-                        "name": "dialog_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "标注群聊消息状态",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "标注群聊消息状态",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.LabelGroupMessageRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/label/user": {
+        "/msg/dialog/user/{dialog_id}/label": {
             "get": {
                 "description": "获取私聊标注信息",
                 "consumes": [
@@ -648,7 +319,7 @@
                         "type": "string",
                         "description": "对话id",
                         "name": "dialog_id",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -656,45 +327,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "标注用户消息状态",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "标注用户消息状态",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.LabelUserMessageRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/v1.GetUserLabelMsgListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             }
         },
-        "/msg/list/group": {
+        "/msg/group/list": {
             "get": {
                 "description": "获取群聊消息",
                 "consumes": [
@@ -758,13 +409,254 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
                         }
                     }
                 }
             }
         },
-        "/msg/list/user": {
+        "/msg/group/read": {
+            "put": {
+                "description": "批量设置群聊消息为已读",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "批量设置群聊消息为已读",
+                "parameters": [
+                    {
+                        "description": "请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.GroupMessageReadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/group/send": {
+            "post": {
+                "description": "发送群聊消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "发送群聊消息",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.SendGroupMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/group/{id}": {
+            "put": {
+                "description": "编辑群消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "编辑群消息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.EditGroupMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "撤回群消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "撤回群消息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/group/{id}/label": {
+            "post": {
+                "description": "标注群聊消息状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "标注群聊消息状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.LabelGroupMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/group/{id}/read": {
+            "get": {
+                "description": "获取消息已读人员",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "获取消息已读人员",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "对话ID",
+                        "name": "dialog_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "群聊ID",
+                        "name": "group_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/v1.GetGroupMessageReadersResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/user/list": {
             "get": {
                 "description": "获取私聊消息",
                 "consumes": [
@@ -841,107 +733,14 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
                         }
                     }
                 }
             }
         },
-        "/msg/read/group": {
-            "get": {
-                "description": "获取消息已读人员",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "获取消息已读人员",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "消息ID",
-                        "name": "msg_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "对话ID",
-                        "name": "dialog_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "群聊ID",
-                        "name": "group_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.GetGroupMessageReadersResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "批量设置群聊消息为已读",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "批量设置群聊消息为已读",
-                "parameters": [
-                    {
-                        "description": "请求参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.GroupMessageReadRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/read/user": {
-            "post": {
+        "/msg/user/read": {
+            "put": {
                 "description": "批量设置私聊消息状态为已读",
                 "consumes": [
                     "application/json"
@@ -960,7 +759,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ReadUserMsgsRequest"
+                            "$ref": "#/definitions/v1.ReadUserMsgsRequest"
                         }
                     }
                 ],
@@ -968,115 +767,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
                         }
                     }
                 }
             }
         },
-        "/msg/recall/group": {
-            "post": {
-                "description": "撤回群消息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "撤回群消息",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.RecallGroupMsgRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/recall/user": {
-            "post": {
-                "description": "撤回用户消息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "撤回用户消息",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.RecallUserMsgRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/send/group": {
-            "post": {
-                "description": "发送群聊消息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Msg"
-                ],
-                "summary": "发送群聊消息",
-                "parameters": [
-                    {
-                        "description": "request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.SendGroupMsgRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/msg/send/user": {
+        "/msg/user/send": {
             "post": {
                 "description": "发送私聊消息",
                 "consumes": [
@@ -1096,7 +793,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendUserMsgRequest"
+                            "$ref": "#/definitions/v1.SendUserMsgRequest"
                         }
                     }
                 ],
@@ -1104,7 +801,119 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.Response"
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/user/{id}": {
+            "put": {
+                "description": "编辑用户消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "编辑用户消息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.EditUserMsgRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "撤回用户消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "撤回用户消息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/msg/user/{id}/label": {
+            "post": {
+                "description": "标注用户消息状态",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Msg"
+                ],
+                "summary": "标注用户消息状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "消息ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.LabelUserMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_v1.Response"
                         }
                     }
                 }
@@ -3235,130 +3044,20 @@
                 }
             }
         },
-        "github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType": {
-            "type": "integer",
-            "enum": [
-                0,
-                1
-            ],
-            "x-enum-comments": {
-                "IsBurnAfterReading": "阅后即焚消息",
-                "NotBurnAfterReading": "非阅后即焚"
-            },
-            "x-enum-varnames": [
-                "NotBurnAfterReading",
-                "IsBurnAfterReading"
-            ]
-        },
-        "github_com_cossim_coss-server_internal_msg_api_http_model.LabelMsgType": {
-            "type": "integer",
-            "enum": [
-                0,
-                1
-            ],
-            "x-enum-comments": {
-                "IsLabel": "标注",
-                "NotLabel": "不标注"
-            },
-            "x-enum-varnames": [
-                "NotLabel",
-                "IsLabel"
-            ]
-        },
-        "github_com_cossim_coss-server_internal_msg_api_http_model.Response": {
+        "github_com_cossim_coss-server_internal_msg_api_http_v1.Response": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "integer"
                 },
-                "data": {},
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
                 "msg": {
                     "type": "string"
                 }
             }
-        },
-        "github_com_cossim_coss-server_internal_msg_api_http_model.SendGroupMsgRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "dialog_id",
-                "group_id",
-                "type"
-            ],
-            "properties": {
-                "at_all_user": {
-                    "type": "integer"
-                },
-                "at_users": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "content": {
-                    "type": "string"
-                },
-                "dialog_id": {
-                    "type": "integer"
-                },
-                "group_id": {
-                    "type": "integer"
-                },
-                "is_burn_after_reading": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType"
-                },
-                "reply_id": {
-                    "type": "integer"
-                },
-                "type": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.UserMessageType"
-                }
-            }
-        },
-        "github_com_cossim_coss-server_internal_msg_api_http_model.UserMessageType": {
-            "type": "integer",
-            "enum": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12
-            ],
-            "x-enum-comments": {
-                "MessageTypeCancelLabel": "取消标注",
-                "MessageTypeDelete": "撤回消息",
-                "MessageTypeEmojiReply": "emoji回复",
-                "MessageTypeFile": "文件消息",
-                "MessageTypeImage": "图片消息",
-                "MessageTypeLabel": "标注",
-                "MessageTypeNotice": "群公告",
-                "MessageTypeText": "文本消息",
-                "MessageTypeVideo": "视频消息",
-                "MessageTypeVideoCall": "视频通话",
-                "MessageTypeVoice": "语音消息",
-                "MessageTypeVoiceCall": "语音通话"
-            },
-            "x-enum-varnames": [
-                "MessageTypeText",
-                "MessageTypeVoice",
-                "MessageTypeImage",
-                "MessageTypeLabel",
-                "MessageTypeNotice",
-                "MessageTypeFile",
-                "MessageTypeVideo",
-                "MessageTypeEmojiReply",
-                "MessageTypeVoiceCall",
-                "MessageTypeVideoCall",
-                "MessageTypeDelete",
-                "MessageTypeCancelLabel"
-            ]
         },
         "github_com_cossim_coss-server_internal_relation_api_http_model.OpenBurnAfterReadingType": {
             "type": "integer",
@@ -3422,322 +3121,6 @@
                 }
             }
         },
-        "interfaces.CreateRoomRequest": {
-            "type": "object",
-            "properties": {
-                "group_id": {
-                    "description": "GroupId 群组ID",
-                    "type": "integer"
-                },
-                "if": {
-                    "type": "object",
-                    "properties": {
-                        "type": {}
-                    }
-                },
-                "member": {
-                    "description": "Member ID of the user who will receive the call",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "option": {
-                    "$ref": "#/definitions/interfaces.RoomOption"
-                },
-                "then": {},
-                "type": {
-                    "description": "Type 通话类型",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/interfaces.CreateRoomRequestType"
-                        }
-                    ]
-                }
-            }
-        },
-        "interfaces.CreateRoomRequestType": {
-            "type": "string",
-            "enum": [
-                "group",
-                "user"
-            ],
-            "x-enum-varnames": [
-                "Group",
-                "User"
-            ]
-        },
-        "interfaces.CreateRoomResponse": {
-            "type": "object",
-            "properties": {
-                "room": {
-                    "description": "Room 房间ID",
-                    "type": "string"
-                },
-                "url": {
-                    "description": "Url webRtc服务器地址",
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.Group": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "description": "Avatar 群组头像",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "Id 群聊ID",
-                    "type": "integer"
-                },
-                "max_members_limit": {
-                    "description": "MaxMembersLimit 群组成员上限",
-                    "type": "integer"
-                },
-                "member": {
-                    "description": "Member 群聊成员数量",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "Name 群聊名称",
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.GroupInfo": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "description": "Avatar 群组头像",
-                    "type": "string"
-                },
-                "creator_id": {
-                    "description": "CreatorId 创建者ID",
-                    "type": "string"
-                },
-                "dialog_id": {
-                    "description": "DialogId 对话ID",
-                    "type": "integer"
-                },
-                "encrypt": {
-                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
-                    "type": "boolean"
-                },
-                "id": {
-                    "description": "Id 群聊ID",
-                    "type": "integer"
-                },
-                "join_approve": {
-                    "description": "JoinApprove 入群审批",
-                    "type": "boolean"
-                },
-                "max_members_limit": {
-                    "description": "MaxMembersLimit 群组成员上限",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "Name 群聊名称",
-                    "type": "string"
-                },
-                "preferences": {
-                    "$ref": "#/definitions/interfaces.Preferences"
-                },
-                "silence_time": {
-                    "description": "SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言",
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "Status 群组状态",
-                    "type": "integer"
-                },
-                "type": {
-                    "description": "Type 群组类型",
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.JoinRoomRequest": {
-            "type": "object",
-            "properties": {
-                "option": {
-                    "$ref": "#/definitions/interfaces.RoomOption"
-                }
-            }
-        },
-        "interfaces.JoinRoomResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "description": "Token 加入通话的token",
-                    "type": "string"
-                },
-                "url": {
-                    "description": "Url webRtc服务器地址",
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.ParticipantInfo": {
-            "type": "object",
-            "properties": {
-                "identity": {
-                    "description": "Identity User nickname",
-                    "type": "string"
-                },
-                "is_publisher": {
-                    "description": "IsPublisher Whether the participant is the creator",
-                    "type": "boolean"
-                },
-                "joined_at": {
-                    "description": "JoinedAt Join time",
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "state": {
-                    "description": "State Room Status",
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.Preferences": {
-            "type": "object",
-            "properties": {
-                "entry_method": {
-                    "description": "EntryMethod 进入方式",
-                    "type": "integer"
-                },
-                "identity": {
-                    "description": "Identity 身份",
-                    "type": "integer"
-                },
-                "inviter": {
-                    "description": "Inviter 邀请者",
-                    "type": "string"
-                },
-                "joined_at": {
-                    "description": "JoinedAt 加入时间",
-                    "type": "integer"
-                },
-                "mute_end_time": {
-                    "description": "MuteEndTime 静音结束时间",
-                    "type": "integer"
-                },
-                "open_burn_after_reading": {
-                    "description": "OpenBurnAfterReading 阅后即焚开启",
-                    "type": "integer"
-                },
-                "remark": {
-                    "description": "Remark 备注",
-                    "type": "string"
-                },
-                "silent_notification": {
-                    "description": "SilentNotification 静默通知",
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.Response": {
-            "type": "object",
-            "additionalProperties": true
-        },
-        "interfaces.Room": {
-            "type": "object",
-            "properties": {
-                "duration": {
-                    "type": "integer"
-                },
-                "participant": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/interfaces.ParticipantInfo"
-                    }
-                },
-                "room": {
-                    "type": "string"
-                },
-                "start_at": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "video_call_record_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "interfaces.RoomOption": {
-            "type": "object",
-            "properties": {
-                "audio_enabled": {
-                    "description": "AudioEnabled Whether to enable audio",
-                    "type": "boolean"
-                },
-                "codec": {
-                    "description": "Codec Codec",
-                    "type": "string"
-                },
-                "frame_rate": {
-                    "description": "FrameRate Frame rate",
-                    "type": "integer"
-                },
-                "resolution": {
-                    "description": "Resolution Resolution",
-                    "type": "string"
-                },
-                "video_enabled": {
-                    "description": "VideoEnabled Whether to enable video",
-                    "type": "boolean"
-                }
-            }
-        },
-        "interfaces.UpdateGroupRequest": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "description": "Avatar 新的群聊头像",
-                    "type": "string"
-                },
-                "encrypt": {
-                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
-                    "type": "boolean"
-                },
-                "join_approve": {
-                    "description": "JoinApprove 入群审批",
-                    "type": "boolean"
-                },
-                "name": {
-                    "description": "Name 新的群聊名称",
-                    "type": "string"
-                },
-                "silence_time": {
-                    "description": "SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言",
-                    "type": "integer"
-                },
-                "type": {
-                    "description": "Type 群组类型 0(私密群) 1(公开群)",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/interfaces.UpdateGroupRequestType"
-                        }
-                    ]
-                }
-            }
-        },
-        "interfaces.UpdateGroupRequestType": {
-            "type": "integer",
-            "enum": [
-                0,
-                1
-            ],
-            "x-enum-varnames": [
-                "UpdateGroupRequestTypeN0",
-                "UpdateGroupRequestTypeN1"
-            ]
-        },
         "model.AbortUploadRequest": {
             "type": "object",
             "required": [
@@ -3794,17 +3177,6 @@
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "model.AfterMsg": {
-            "type": "object",
-            "properties": {
-                "dialog_id": {
-                    "type": "integer"
-                },
-                "msg_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -3928,49 +3300,6 @@
                 }
             }
         },
-        "model.EditGroupMsgRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "msg_id",
-                "msg_type"
-            ],
-            "properties": {
-                "content": {
-                    "description": "New content of the message",
-                    "type": "string"
-                },
-                "msg_id": {
-                    "description": "Message ID",
-                    "type": "integer"
-                },
-                "msg_type": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.EditUserMsgRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "msg_id",
-                "msg_type"
-            ],
-            "properties": {
-                "content": {
-                    "description": "消息内容",
-                    "type": "string"
-                },
-                "msg_id": {
-                    "description": "Message ID",
-                    "type": "integer"
-                },
-                "msg_type": {
-                    "description": "消息类型",
-                    "type": "integer"
-                }
-            }
-        },
         "model.FileType": {
             "type": "integer",
             "enum": [
@@ -3991,43 +3320,6 @@
                 "FileType_File",
                 "FileType_Video"
             ]
-        },
-        "model.GetGroupMessageReadersResponse": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.GroupMessageReadRequest": {
-            "type": "object",
-            "required": [
-                "dialog_id"
-            ],
-            "properties": {
-                "dialog_id": {
-                    "description": "会话ID",
-                    "type": "integer"
-                },
-                "msg_ids": {
-                    "description": "消息ID",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "read_all": {
-                    "description": "全部已读",
-                    "type": "boolean"
-                }
-            }
         },
         "model.GroupRequestListResponse": {
             "type": "object",
@@ -4142,46 +3434,6 @@
             ],
             "properties": {
                 "group_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.LabelGroupMessageRequest": {
-            "type": "object",
-            "required": [
-                "msg_id"
-            ],
-            "properties": {
-                "is_label": {
-                    "description": "是否标注",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.LabelMsgType"
-                        }
-                    ]
-                },
-                "msg_id": {
-                    "description": "消息ID",
-                    "type": "integer"
-                }
-            }
-        },
-        "model.LabelUserMessageRequest": {
-            "type": "object",
-            "required": [
-                "msg_id"
-            ],
-            "properties": {
-                "is_label": {
-                    "description": "是否标注",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.LabelMsgType"
-                        }
-                    ]
-                },
-                "msg_id": {
-                    "description": "消息ID",
                     "type": "integer"
                 }
             }
@@ -4352,53 +3604,6 @@
                 }
             }
         },
-        "model.ReadUserMsgsRequest": {
-            "type": "object",
-            "required": [
-                "dialog_id"
-            ],
-            "properties": {
-                "dialog_id": {
-                    "description": "会话ID",
-                    "type": "integer"
-                },
-                "msg_ids": {
-                    "description": "消息id",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "read_all": {
-                    "description": "全部已读",
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.RecallGroupMsgRequest": {
-            "type": "object",
-            "required": [
-                "msg_id"
-            ],
-            "properties": {
-                "msg_id": {
-                    "description": "Message ID",
-                    "type": "integer"
-                }
-            }
-        },
-        "model.RecallUserMsgRequest": {
-            "type": "object",
-            "required": [
-                "msg_id"
-            ],
-            "properties": {
-                "msg_id": {
-                    "description": "Message ID",
-                    "type": "integer"
-                }
-            }
-        },
         "model.RegisterRequest": {
             "type": "object",
             "required": [
@@ -4494,35 +3699,6 @@
                 },
                 "user_id": {
                     "type": "string"
-                }
-            }
-        },
-        "model.SendUserMsgRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "dialog_id",
-                "receiver_id",
-                "type"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "dialog_id": {
-                    "type": "integer"
-                },
-                "is_burn_after_reading": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.BurnAfterReadingType"
-                },
-                "receiver_id": {
-                    "type": "string"
-                },
-                "reply_id": {
-                    "type": "integer"
-                },
-                "type": {
-                    "$ref": "#/definitions/github_com_cossim_coss-server_internal_msg_api_http_model.UserMessageType"
                 }
             }
         },
@@ -4897,6 +4073,444 @@
                     "type": "integer"
                 }
             }
+        },
+        "v1.AfterMsg": {
+            "type": "object",
+            "properties": {
+                "dialog_id": {
+                    "type": "integer"
+                },
+                "msg_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.EditGroupMsgRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "msg_type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.EditUserMsgRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "msg_type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.GetGroupLabelMsgListResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.Message"
+                    }
+                }
+            }
+        },
+        "v1.GetGroupMessageReadersResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.GetUserLabelMsgListResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.Message"
+                    }
+                }
+            }
+        },
+        "v1.Group": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "Avatar 群组头像",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Id 群聊ID",
+                    "type": "integer"
+                },
+                "max_members_limit": {
+                    "description": "MaxMembersLimit 群组成员上限",
+                    "type": "integer"
+                },
+                "member": {
+                    "description": "Member 群聊成员数量",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Name 群聊名称",
+                    "type": "string"
+                }
+            }
+        },
+        "v1.GroupInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "Avatar 群组头像",
+                    "type": "string"
+                },
+                "creator_id": {
+                    "description": "CreatorId 创建者ID",
+                    "type": "string"
+                },
+                "dialog_id": {
+                    "description": "DialogId 对话ID",
+                    "type": "integer"
+                },
+                "encrypt": {
+                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
+                    "type": "boolean"
+                },
+                "id": {
+                    "description": "Id 群聊ID",
+                    "type": "integer"
+                },
+                "join_approve": {
+                    "description": "JoinApprove 入群审批",
+                    "type": "boolean"
+                },
+                "max_members_limit": {
+                    "description": "MaxMembersLimit 群组成员上限",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Name 群聊名称",
+                    "type": "string"
+                },
+                "preferences": {
+                    "$ref": "#/definitions/v1.Preferences"
+                },
+                "silence_time": {
+                    "description": "SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "Status 群组状态",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type 群组类型",
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.GroupMessageReadRequest": {
+            "type": "object",
+            "properties": {
+                "dialog_id": {
+                    "type": "integer"
+                },
+                "msg_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "read_all": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1.LabelGroupMessageRequest": {
+            "type": "object",
+            "properties": {
+                "is_label": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1.LabelUserMessageRequest": {
+            "type": "object",
+            "properties": {
+                "is_label": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1.Message": {
+            "type": "object",
+            "properties": {
+                "at_all_user": {
+                    "type": "boolean"
+                },
+                "at_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "dialog_id": {
+                    "type": "integer"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "is_burn_after_reading": {
+                    "type": "boolean"
+                },
+                "is_label": {
+                    "type": "boolean"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "msg_id": {
+                    "type": "integer"
+                },
+                "msg_type": {
+                    "type": "integer"
+                },
+                "read_at": {
+                    "type": "integer"
+                },
+                "receiver_info": {
+                    "$ref": "#/definitions/v1.SenderInfo"
+                },
+                "reply_id": {
+                    "type": "integer"
+                },
+                "send_at": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "string"
+                },
+                "sender_info": {
+                    "$ref": "#/definitions/v1.SenderInfo"
+                }
+            }
+        },
+        "v1.Preferences": {
+            "type": "object",
+            "properties": {
+                "entry_method": {
+                    "description": "EntryMethod 进入方式",
+                    "type": "integer"
+                },
+                "identity": {
+                    "description": "Identity 身份",
+                    "type": "integer"
+                },
+                "inviter": {
+                    "description": "Inviter 邀请者",
+                    "type": "string"
+                },
+                "joined_at": {
+                    "description": "JoinedAt 加入时间",
+                    "type": "integer"
+                },
+                "mute_end_time": {
+                    "description": "MuteEndTime 静音结束时间",
+                    "type": "integer"
+                },
+                "open_burn_after_reading": {
+                    "description": "OpenBurnAfterReading 阅后即焚开启",
+                    "type": "integer"
+                },
+                "remark": {
+                    "description": "Remark 备注",
+                    "type": "string"
+                },
+                "silent_notification": {
+                    "description": "SilentNotification 静默通知",
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.ReadUserMsgsRequest": {
+            "type": "object",
+            "properties": {
+                "dialog_id": {
+                    "type": "integer"
+                },
+                "msg_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "read_all": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1.SendGroupMsgRequest": {
+            "type": "object",
+            "properties": {
+                "at_all_user": {
+                    "type": "boolean"
+                },
+                "at_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "dialog_id": {
+                    "type": "integer"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "is_burn_after_reading": {
+                    "type": "boolean"
+                },
+                "reply_id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.SendUserMsgRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "dialog_id": {
+                    "type": "integer"
+                },
+                "is_burn_after_reading": {
+                    "type": "boolean"
+                },
+                "receiver_id": {
+                    "type": "string"
+                },
+                "reply_id": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type 消息类型 1=文本消息 2=语音消息 3=图片消息 4=标注 5=群公告 6=文件消息 7=视频消息 8=emoji回复 9=语音通话 10=视频通话 11=撤回消息 12=取消标注",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1.SendUserMsgRequestType"
+                        }
+                    ]
+                }
+            }
+        },
+        "v1.SendUserMsgRequestType": {
+            "type": "integer",
+            "enum": [
+                1,
+                10,
+                11,
+                12,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+            ],
+            "x-enum-varnames": [
+                "N1",
+                "N10",
+                "N11",
+                "N12",
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7",
+                "N8",
+                "N9"
+            ]
+        },
+        "v1.SenderInfo": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.UpdateGroupRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "description": "Avatar 新的群聊头像",
+                    "type": "string"
+                },
+                "encrypt": {
+                    "description": "Encrypt 是否开启加密，只有当群聊为私密群才能开启",
+                    "type": "boolean"
+                },
+                "join_approve": {
+                    "description": "JoinApprove 入群审批",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Name 新的群聊名称",
+                    "type": "string"
+                },
+                "silence_time": {
+                    "description": "SilenceTime 群禁言结束时间，不为0表示开启群聊全员禁言",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type 群组类型 0(私密群) 1(公开群)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1.UpdateGroupRequestType"
+                        }
+                    ]
+                }
+            }
+        },
+        "v1.UpdateGroupRequestType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1
+            ],
+            "x-enum-varnames": [
+                "UpdateGroupRequestTypeN0",
+                "UpdateGroupRequestTypeN1"
+            ]
         }
     }
 }

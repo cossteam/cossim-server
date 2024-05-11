@@ -3,8 +3,7 @@ package grpc
 import (
 	"context"
 	api "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/msg/domain/repository"
-	"github.com/cossim/coss-server/internal/msg/infrastructure/persistence"
+	"github.com/cossim/coss-server/internal/msg/domain/service"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/version"
@@ -20,10 +19,9 @@ var _ api.MsgServiceServer = &Handler{}
 type Handler struct {
 	db   *gorm.DB
 	ac   *pkgconfig.AppConfig
-	mr   repository.MsgRepository
-	gmrr repository.GroupMsgReadRepository
-	//cache       cache.MsgCache
-	//cacheEnable bool
+	gmd  service.GroupMsgDomain
+	umd  service.UserMsgDomain
+	gmrd service.GroupMsgReadDomain
 }
 
 func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
@@ -37,18 +35,10 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	//msgCache, err := cache.NewMsgCacheRedis(cfg.Redis.Addr(), cfg.Redis.Password, 0)
-	//if err != nil {
-	//	return err
-	//}
+	s.umd = service.NewUserMsgDomain(dbConn, cfg)
+	s.gmd = service.NewGroupMsgDomain(dbConn, cfg)
+	s.gmrd = service.NewGroupMsgReadDomain(dbConn, cfg)
 
-	infra := persistence.NewRepositories(dbConn)
-	if err = infra.Automigrate(); err != nil {
-		return err
-	}
-
-	s.mr = infra.Mr
-	s.gmrr = infra.Gmrr
 	s.db = dbConn
 	s.ac = cfg
 	//s.cache = msgCache

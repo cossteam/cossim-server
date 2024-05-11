@@ -146,7 +146,8 @@ func (s *Service) Login(ctx context.Context, req *model.LoginRequest, clientIp s
 
 			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 				_, err := s.msgService.DeleteUserMessageById(ctx, &msggrpcv1.DeleteUserMsgByIDRequest{
-					ID: msgId,
+					ID:         msgId,
+					IsPhysical: true,
 				})
 				return err
 			})

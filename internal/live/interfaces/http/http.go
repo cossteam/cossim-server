@@ -128,7 +128,7 @@ func (h *HttpServer) DiscoverServices(services map[string]*grpc.ClientConn) erro
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} Room "获取群聊通话信息成功"
+// @Success 200 {object} v1.Response "获取群聊通话信息成功"
 // @Router /live/group/{id} [get]
 func (h *HttpServer) GetGroupRoom(c *gin.Context, id uint32) {
 	uid := c.Value(constants.UserID).(string)
@@ -152,7 +152,7 @@ func (h *HttpServer) GetGroupRoom(c *gin.Context, id uint32) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} Room "获取用户通话信息成功"
+// @Success 200 {object} v1.Response "获取用户通话信息成功"
 // @Router /live/user [get]
 func (h *HttpServer) GetUserRoom(c *gin.Context) {
 	uid := c.Value(constants.UserID).(string)
@@ -176,8 +176,8 @@ func (h *HttpServer) GetUserRoom(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param requestBody body CreateRoomRequest true "请求体参数"
-// @Success 200 {object} CreateRoomResponse "创建通话成功"
+// @Param requestBody body v1.CreateRoomRequest true "请求体参数"
+// @Success 200 {object} v1.CreateRoomResponse "创建通话成功"
 // @Router /live [post]
 func (h *HttpServer) CreateRoom(c *gin.Context) {
 	req := &v1.CreateRoomRequest{}
@@ -224,7 +224,7 @@ func createRoomToResponse(room *command.CreateRoomResponse) *v1.CreateRoomRespon
 // @Tags live
 // @Security BearerAuth
 // @Param id path string true "要退出的通话房间ID"
-// @Success 200 {object} Response "成功退出通话"
+// @Success 200 {object} v1.Response "成功退出通话"
 // @Router /live/{id} [delete]
 func (h *HttpServer) DeleteRoom(c *gin.Context, id string) {
 	uid := c.Value(constants.UserID).(string)
@@ -248,7 +248,7 @@ func (h *HttpServer) DeleteRoom(c *gin.Context, id string) {
 // @Security BearerAuth
 // @Param id path string true "要退出的通话房间ID"
 // @Produce json
-// @Success 200 {object} Room "获取通话信息成功"
+// @Success 200 {object} v1.Room "获取通话信息成功"
 // @Router /live/{id} [get]
 func (h *HttpServer) GetRoom(c *gin.Context, id string) {
 	uid := c.Value(constants.UserID).(string)
@@ -299,8 +299,8 @@ func getRoomToResponse(room *query.Room) *v1.Room {
 // @Accept json
 // @Produce json
 // @Param id path string true "要加入的通话房间ID"
-// @Param requestBody body JoinRoomRequest true "请求体参数"
-// @Success 200 {object} JoinRoomResponse "成功加入通话"
+// @Param requestBody body v1.JoinRoomRequest true "请求体参数"
+// @Success 200 {object} v1.JoinRoomResponse "成功加入通话"
 // @Router /live/{id}/join [post]
 func (h *HttpServer) JoinRoom(c *gin.Context, id string) {
 	uid := c.Value(constants.UserID).(string)
@@ -330,7 +330,7 @@ func (h *HttpServer) JoinRoom(c *gin.Context, id string) {
 // @Accept json
 // @Produce json
 // @Param id path string true "要拒绝的通话房间ID"
-// @Success 200 {object} Response "成功拒绝通话"
+// @Success 200 {object} v1.Response "成功拒绝通话"
 // @Router /live/{id}/reject [post]
 func (h *HttpServer) RejectRoom(c *gin.Context, id string) {
 	//uid := c.Value(constants.UserID).(string)

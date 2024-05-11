@@ -1,27 +1,26 @@
 package entity
 
 import (
+	v1 "github.com/cossim/coss-server/internal/msg/api/http/v1"
 	"github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
 
 type GroupMessage struct {
 	BaseModel
-	DialogId           uint                 `gorm:"default:0;comment:对话ID" json:"dialog_id"`
-	GroupID            uint                 `gorm:"comment:群聊id" json:"group_id"`
-	Type               UserMessageType      `gorm:"comment:消息类型" json:"type"`
-	ReplyId            uint                 `gorm:"default:0;comment:回复ID" json:"reply_id"`
-	ReadCount          int                  `gorm:"default:0;comment:已读数量" json:"read_count"`
-	UserID             string               `gorm:"comment:用户ID" json:"user_id"`
-	Content            string               `gorm:"longtext;comment:详细消息" json:"content"`
-	IsLabel            uint                 `gorm:"default:0;comment:是否标注" json:"is_label"`
-	ReplyEmoji         string               `gorm:"comment:回复时使用的 Emoji" json:"reply_emoji"`
-	AtAllUser          AtAllUserType        `gorm:"default:0;comment:是否at全体用户" json:"at_all_users"`
-	AtUsers            AtUsers              `gorm:"serializer:json;comment:at的用户" json:"at_users"`
-	IsBurnAfterReading BurnAfterReadingType `gorm:"default:0;comment:是否阅后即焚消息" json:"is_burn_after_reading"`
+	DialogID           uint
+	GroupID            uint
+	Type               UserMessageType
+	ReplyId            uint
+	ReadCount          int
+	UserID             string
+	Content            string
+	IsLabel            uint
+	ReplyEmoji         string
+	AtAllUser          AtAllUserType
+	AtUsers            []string
+	IsBurnAfterReading BurnAfterReadingType
 }
-
-type AtUsers []string
 
 type AtAllUserType uint
 
@@ -47,4 +46,22 @@ func (bm *BaseModel) BeforeCreate(tx *gorm.DB) error {
 func (bm *BaseModel) BeforeUpdate(tx *gorm.DB) error {
 	bm.UpdatedAt = time.Now()
 	return nil
+}
+
+func (gm *GroupMessage) ToMessage() *v1.Message {
+	return &v1.Message{
+		AtAllUser:          gm.AtAllUser == AtAllUser,
+		AtUsers:            gm.AtUsers,
+		Content:            gm.Content,
+		GroupId:            int(gm.GroupID),
+		IsBurnAfterReading: gm.IsBurnAfterReading == IsBurnAfterReading,
+		IsLabel:            gm.IsLabel == uint(IsLabel),
+		IsRead:             gm.ReadCount > 0, // 根据 ReadCount 判断是否已读
+		MsgId:              int(gm.ID),
+		MsgType:            int(gm.Type),
+		ReplyId:            int(gm.ReplyId),
+		SendAt:             int(gm.CreatedAt),
+		SenderId:           gm.UserID, // 或者根据实际情况选择其他字段
+		DialogId:           int(gm.DialogID),
+	}
 }

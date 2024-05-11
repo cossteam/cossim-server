@@ -60,9 +60,9 @@ func RandomNum() string {
 }
 
 // 求差集
-func SliceDifference(slice1, slice2 []uint32) []uint32 {
-	var diff []uint32
-	set := make(map[uint32]struct{})
+func SliceDifference(slice1, slice2 []uint) []uint {
+	var diff []uint
+	set := make(map[uint]struct{})
 
 	// 将slice2中的元素存入一个集合
 	for _, num := range slice2 {
