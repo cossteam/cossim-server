@@ -35,8 +35,9 @@ type RoomOption struct { // 通话选项
 }
 
 type CreateRoomResponse struct {
-	Url  string
-	Room string
+	Url     string
+	Room    string
+	Timeout int
 }
 
 func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateRoomResponse, error) {
@@ -131,8 +132,9 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 	)
 
 	return &CreateRoomResponse{
-		Url:  h.webRtcUrl,
-		Room: roomName,
+		Url:     h.webRtcUrl,
+		Room:    roomName,
+		Timeout: int(h.liveTimeout.Seconds()),
 	}, nil
 }
 

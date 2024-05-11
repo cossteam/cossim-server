@@ -38,6 +38,9 @@ type CreateRoomResponse struct {
 	// Room 房间ID
 	Room string `json:"room"`
 
+	// Timeout 通话超时时间(单位：s)
+	Timeout int `json:"timeout"`
+
 	// Url webRtc服务器地址
 	Url string `json:"url"`
 }

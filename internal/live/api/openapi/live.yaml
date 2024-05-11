@@ -220,6 +220,12 @@ components:
           description: 房间ID
           x-omitempty: false
           x-go-type-skip-optional-pointer: true
+        timeout:
+          type: integer
+          format: int
+          description: 通话超时时间(单位：s)
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
 #        option:
 #          $ref: '#/components/schemas/RoomOption'
     JoinRoomRequest:
