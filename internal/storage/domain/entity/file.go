@@ -14,7 +14,7 @@ type File struct {
 	Path      string     `gorm:"type:text;comment:文件路径" json:"path"`
 	Type      FileType   `gorm:"comment:文件类型" json:"file_type"`
 	Status    FileStatus `gorm:"comment:文件状态" json:"file_status"`
-	Provider  string     `gorm:"default:MinIO;comment:文件供应商" json:"provider"`
+	Provider  Provider   `gorm:"default:MinIO;comment:文件供应商" json:"provider"`
 	Share     bool       `gorm:"comment:是否共享" json:"share"`
 	Size      uint64     `gorm:"comment:文件大小" json:"size"`
 	CreatedAt int64      `gorm:"autoCreateTime;comment:创建时间" json:"created_at"`

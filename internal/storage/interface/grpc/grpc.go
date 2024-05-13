@@ -7,7 +7,7 @@ import (
 	api "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/storage/domain/entity"
 	"github.com/cossim/coss-server/internal/storage/domain/repository"
-	"github.com/cossim/coss-server/internal/storage/infrastructure/persistence"
+	"github.com/cossim/coss-server/internal/storage/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
@@ -85,7 +85,7 @@ func (s *Handler) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Up
 		Path:    request.Path,
 		Type:    entity.FileType(request.Type),
 		//Action:   entity.Pending,
-		Provider: request.Provider,
+		Provider: entity.Provider(request.Provider),
 		Size:     request.Size,
 	}
 
