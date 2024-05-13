@@ -167,7 +167,7 @@ func (UnimplementedGroupAnnouncementServiceServer) GetAnnouncementReadByUserId(c
 }
 
 // UnsafeGroupAnnouncementServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interfaces is not recommended, as added methods to GroupAnnouncementServiceServer will
+// Use of this interface is not recommended, as added methods to GroupAnnouncementServiceServer will
 // result in compilation errors.
 type UnsafeGroupAnnouncementServiceServer interface {
 	mustEmbedUnimplementedGroupAnnouncementServiceServer()

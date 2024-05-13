@@ -76,7 +76,7 @@ type userRegisterHandler struct {
 
 func (h *userRegisterHandler) Handle(ctx context.Context, cmd *UserRegister) (string, error) {
 	h.logger.Info("userRegisterHandler", zap.Any("cmd", cmd))
-	if cmd == nil || cmd.Email == "" || cmd.Password == "" || cmd.PublicKey == "" || cmd.ConfirmPass == "" {
+	if cmd == nil || cmd.Email == "" || cmd.Password == "" || cmd.ConfirmPass == "" {
 		return "", code.InvalidParameter
 	}
 

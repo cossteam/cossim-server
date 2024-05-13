@@ -1,10 +1,9 @@
 package entity
 
 type AuthClaims struct {
-	UserID    string
-	Email     string
-	DriverID  string
-	PublicKey string
+	UserID   string
+	Email    string
+	DriverID string
 }
 
 type UserToken struct {

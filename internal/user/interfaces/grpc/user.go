@@ -18,10 +18,10 @@ import (
 func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLoginRequest) (*api.UserLoginResponse, error) {
 	resp := &api.UserLoginResponse{}
 	userInfo := &entity.User{}
-	userInfo, err := s.ur.GetUserInfoByEmail(ctx, request.Email)
+	userInfo, err := s.ur.GetWithOptions(ctx, &entity.User{Email: request.Email})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			userInfo, err = s.ur.GetUserInfoByCossID(ctx, request.Email)
+			userInfo, err = s.ur.GetWithOptions(ctx, &entity.User{CossID: userInfo.Email})
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), code.UserErrNotExistOrPassword.Message())
@@ -29,7 +29,6 @@ func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLogi
 				return resp, status.Error(codes.Code(code.UserErrLoginFailed.Code()), err.Error())
 			}
 
-			//return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
 		}
 	}
 
@@ -69,23 +68,26 @@ func (s *UserServiceServer) UserLogin(ctx context.Context, request *api.UserLogi
 func (s *UserServiceServer) UserRegister(ctx context.Context, request *api.UserRegisterRequest) (*api.UserRegisterResponse, error) {
 	resp := &api.UserRegisterResponse{}
 	//添加用户
-	_, err := s.ur.GetUserInfoByEmail(ctx, request.Email)
+	_, err := s.ur.GetWithOptions(ctx, &entity.User{Email: request.Email})
 	if err == nil {
-		//return resp, status.Error(codes.Code(code.UserErrEmailAlreadyRegistered.Code()), code.UserErrEmailAlreadyRegistered.Message())
 		return resp, status.Error(codes.Aborted, code.UserErrEmailAlreadyRegistered.Message())
 	}
-	userInfo, err := s.ur.InsertUser(ctx, &entity.User{
+
+	var stats = entity.UserStatusNormal
+	if s.ac.Email.Enable {
+		stats = entity.UserStatusLock
+	}
+
+	userInfo, err := s.ur.SaveUser(ctx, &entity.User{
 		ID:        uuid.New().String(),
 		Email:     request.Email,
 		Password:  request.Password,
 		NickName:  request.NickName,
 		Avatar:    request.Avatar,
 		PublicKey: request.PublicKey,
-		Status:    entity.UserStatusNormal,
-		//Action:   entity.UserStatusLock,
+		Status:    stats,
 	})
 	if err != nil {
-		//return resp, status.Error(codes.Code(code.UserErrRegistrationFailed.Code()), err.Error())
 		return resp, status.Error(codes.Aborted, err.Error())
 	}
 	resp.UserId = userInfo.ID
@@ -95,11 +97,12 @@ func (s *UserServiceServer) UserRegister(ctx context.Context, request *api.UserR
 func (s *UserServiceServer) UserInfo(ctx context.Context, request *api.UserInfoRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
 
-	userInfo, err := s.ur.GetUserInfoByUid(ctx, request.UserId)
+	userInfo, err := s.ur.GetWithOptions(ctx, &entity.User{
+		ID: request.UserId,
+	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
-			//return resp, status.Error(codes.Aborted, err.Error())
 		}
 		return resp, status.Error(codes.Code(code.UserErrGetUserInfoFailed.Code()), err.Error())
 	}
@@ -122,7 +125,10 @@ func (s *UserServiceServer) GetBatchUserInfo(ctx context.Context, request *api.G
 	if len(request.UserIds) == 0 {
 		return resp, nil
 	}
-	users, err := s.ur.GetBatchGetUserInfoByIDs(ctx, request.UserIds)
+
+	users, err := s.ur.ListUser(ctx, &entity.ListUserOptions{
+		UserID: request.UserIds,
+	})
 	if err != nil {
 		fmt.Printf("无法获取用户列表信息: %v\n", err)
 		return nil, status.Error(codes.Code(code.UserErrUnableToGetUserListInfo.Code()), err.Error())
@@ -145,10 +151,10 @@ func (s *UserServiceServer) GetBatchUserInfo(ctx context.Context, request *api.G
 
 func (s *UserServiceServer) GetUserInfoByEmail(ctx context.Context, request *api.GetUserInfoByEmailRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
-	userInfo, err := s.ur.GetUserInfoByEmail(ctx, request.Email)
+	userInfo, err := s.ur.GetWithOptions(ctx, &entity.User{Email: request.Email})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			userInfo, err = s.ur.GetUserInfoByCossID(ctx, request.Email)
+			userInfo, err = s.ur.GetWithOptions(ctx, &entity.User{CossID: request.Email})
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
@@ -173,20 +179,24 @@ func (s *UserServiceServer) GetUserInfoByEmail(ctx context.Context, request *api
 }
 
 func (s *UserServiceServer) GetUserPublicKey(ctx context.Context, request *api.UserRequest) (*api.GetUserPublicKeyResponse, error) {
-	key, err := s.ur.GetUserPublicKey(ctx, request.UserId)
+	user, err := s.ur.GetUser(ctx, request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &api.GetUserPublicKeyResponse{}, status.Error(codes.Code(code.UserErrPublicKeyNotExist.Code()), err.Error())
 		}
 		return &api.GetUserPublicKeyResponse{}, status.Error(codes.Code(code.UserErrGetUserPublicKeyFailed.Code()), err.Error())
 	}
-	return &api.GetUserPublicKeyResponse{PublicKey: key}, nil
+	return &api.GetUserPublicKeyResponse{PublicKey: user.PublicKey}, nil
 }
 
 func (s *UserServiceServer) SetUserPublicKey(ctx context.Context, request *api.SetPublicKeyRequest) (*api.UserResponse, error) {
-	if err := s.ur.SetUserPublicKey(ctx, request.UserId, request.PublicKey); err != nil {
-		return &api.UserResponse{}, status.Error(codes.Code(code.UserErrSaveUserPublicKeyFailed.Code()), err.Error())
+	_, err := s.ur.UpdateUser(ctx, &entity.User{ID: request.UserId, PublicKey: request.PublicKey})
+	if err != nil {
+		return nil, err
 	}
+	//if err := s.ur.SetUserPublicKey(ctx, request.UserId, request.PublicKey); err != nil {
+	//	return &api.UserResponse{}, status.Error(codes.Code(code.UserErrSaveUserPublicKeyFailed.Code()), err.Error())
+	//}
 	return &api.UserResponse{UserId: request.UserId}, nil
 }
 
@@ -224,7 +234,7 @@ func (s *UserServiceServer) ModifyUserPassword(ctx context.Context, request *api
 
 func (s *UserServiceServer) GetUserPasswordByUserId(ctx context.Context, request *api.UserRequest) (*api.GetUserPasswordByUserIdResponse, error) {
 	resp := &api.GetUserPasswordByUserIdResponse{}
-	userInfo, err := s.ur.GetUserInfoByUid(ctx, request.UserId)
+	userInfo, err := s.ur.GetUser(ctx, request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())
@@ -240,49 +250,64 @@ func (s *UserServiceServer) GetUserPasswordByUserId(ctx context.Context, request
 
 func (s *UserServiceServer) SetUserSecretBundle(ctx context.Context, request *api.SetUserSecretBundleRequest) (*api.SetUserSecretBundleResponse, error) {
 	var resp = &api.SetUserSecretBundleResponse{}
-	if err := s.ur.SetUserSecretBundle(ctx, request.UserId, request.SecretBundle); err != nil {
+	if _, err := s.ur.UpdateUser(ctx, &entity.User{
+		ID:           request.UserId,
+		SecretBundle: request.SecretBundle,
+	}); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrSetUserSecretBundleFailed.Code()), err.Error())
 	}
+	//if err := s.ur.SetUserSecretBundle(ctx, request.UserId, request.SecretBundle); err != nil {
+	//	return resp, status.Error(codes.Code(code.UserErrSetUserSecretBundleFailed.Code()), err.Error())
+	//}
 	return resp, nil
 }
 
 func (s *UserServiceServer) GetUserSecretBundle(ctx context.Context, request *api.GetUserSecretBundleRequest) (*api.GetUserSecretBundleResponse, error) {
 	var resp = &api.GetUserSecretBundleResponse{}
-	secretBundle, err := s.ur.GetUserSecretBundle(ctx, request.UserId)
+	user, err := s.ur.GetUser(ctx, request.UserId)
+	if err != nil {
+		return nil, err
+	}
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
 		}
 		return resp, status.Error(codes.Code(code.UserErrGetUserSecretBundleFailed.Code()), err.Error())
 	}
-	resp.SecretBundle = secretBundle
-	resp.UserId = request.UserId
+	resp.SecretBundle = user.SecretBundle
+	resp.UserId = user.ID
 	return resp, nil
 }
 
 func (s *UserServiceServer) ActivateUser(ctx context.Context, request *api.UserRequest) (*api.UserResponse, error) {
 	var resp = &api.UserResponse{UserId: request.UserId}
-	if err := s.ur.UpdateUserColumn(ctx, request.UserId, "email_verity", entity.Activated); err != nil {
+	if _, err := s.ur.UpdateUser(ctx, &entity.User{
+		ID:          request.UserId,
+		EmailVerity: true,
+	}); err != nil {
 		return resp, status.Error(codes.Code(code.UserErrActivateUserFailed.Code()), err.Error())
 	}
+	//if err := s.ur.UpdateUserColumn(ctx, request.UserId, "email_verity", entity.Activated); err != nil {
+	//	return resp, status.Error(codes.Code(code.UserErrActivateUserFailed.Code()), err.Error())
+	//}
 	return resp, nil
 }
 
 func (s *UserServiceServer) CreateUser(ctx context.Context, request *api.CreateUserRequest) (*api.CreateUserResponse, error) {
 	resp := &api.CreateUserResponse{}
-	if err := s.ur.InsertAndUpdateUser(ctx, &entity.User{
-		NickName:  request.NickName,
-		Email:     request.Email,
-		Password:  request.Password,
-		Avatar:    request.Avatar,
-		Status:    entity.UserStatus(request.Status),
-		ID:        request.UserId,
-		PublicKey: request.PublicKey,
-		Bot:       uint(request.IsBot),
-	}); err != nil {
-		return resp, status.Error(codes.Code(code.UserErrCreateUserFailed.Code()), err.Error())
-	}
-	resp.UserId = request.UserId
+	//if err := s.ur.InsertAndUpdateUser(ctx, &entity.User{
+	//	NickName:  request.NickName,
+	//	Email:     request.Email,
+	//	Password:  request.Password,
+	//	Avatar:    request.Avatar,
+	//	Status:    entity.UserStatus(request.Status),
+	//	ID:        request.UserId,
+	//	PublicKey: request.PublicKey,
+	//	Bot:       uint(request.IsBot),
+	//}); err != nil {
+	//	return resp, status.Error(codes.Code(code.UserErrCreateUserFailed.Code()), err.Error())
+	//}
+	//resp.UserId = request.UserId
 	return resp, nil
 }
 
@@ -296,7 +321,7 @@ func (s *UserServiceServer) CreateUserRollback(ctx context.Context, request *api
 
 func (s *UserServiceServer) GetUserInfoByCossId(ctx context.Context, request *api.GetUserInfoByCossIdlRequest) (*api.UserInfoResponse, error) {
 	resp := &api.UserInfoResponse{}
-	if userInfo, err := s.ur.GetUserInfoByCossID(ctx, request.CossId); err != nil {
+	if userInfo, err := s.ur.GetWithOptions(ctx, &entity.User{CossID: request.CossId}); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.UserErrNotExist.Code()), err.Error())
 		}

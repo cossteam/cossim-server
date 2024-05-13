@@ -160,25 +160,26 @@ type SwitchUserE2EPublicKeyRequest struct {
 }
 
 type SetGroupSilentNotificationRequest struct {
-	GroupId  uint32                 `json:"group_id" binding:"required"` // 群ID
-	IsSilent SilentNotificationType `json:"is_silent"`                   // 是否开启静默通知
+	GroupId  uint32 `json:"group_id" binding:"required"` // 群ID
+	IsSilent bool   `json:"is_silent"`                   // 是否开启静默通知
 }
 
 type SetUserSilentNotificationRequest struct {
-	UserId   string                 `json:"user_id" binding:"required"` // 用户ID
-	IsSilent SilentNotificationType `json:"is_silent"`                  // 是否开启静默通知
+	UserId   string `json:"user_id" binding:"required"` // 用户ID
+	IsSilent bool   `json:"is_silent"`                  // 是否开启静默通知
 }
 
-type SilentNotificationType uint
-
-const (
-	NotSilent SilentNotificationType = iota //静默通知关闭
-	IsSilent                                //开启静默通知
-)
-
-func IsValidSilentNotificationType(isSilent SilentNotificationType) bool {
-	return isSilent == NotSilent || isSilent == IsSilent
-}
+//
+//type SilentNotificationType uint
+//
+//const (
+//	NotSilent SilentNotificationType = iota //静默通知关闭
+//	IsSilent                                //开启静默通知
+//)
+//
+//func IsValidSilentNotificationType(isSilent SilentNotificationType) bool {
+//	return isSilent == NotSilent || isSilent == IsSilent
+//}
 
 type SendFriendRequest struct {
 	UserId       string `json:"user_id" binding:"required"`
@@ -235,26 +236,26 @@ const (
 )
 
 type OpenUserBurnAfterReadingRequest struct {
-	UserId  string                   `json:"user_id" binding:"required"` // 用户ID
-	TimeOut int64                    `json:"timeout"`
-	Action  OpenBurnAfterReadingType `json:"action"`
+	UserId               string `json:"user_id" binding:"required"` // 用户ID
+	TimeOut              int64  `json:"timeout"`
+	OpenBurnAfterReading bool   `json:"open_burn_after_reading"`
 }
 
-type OpenBurnAfterReadingType uint
-
-const (
-	BurnClose OpenBurnAfterReadingType = iota
-	BurnOpen
-)
+//type OpenBurnAfterReadingType uint
+//
+//const (
+//	BurnClose OpenBurnAfterReadingType = iota
+//	BurnOpen
+//)
 
 type OpenGroupBurnAfterReadingRequest struct {
-	GroupId uint32                   `json:"group_id" binding:"required"` // 群组ID
-	Action  OpenBurnAfterReadingType `json:"action"`
+	GroupId              uint32 `json:"group_id" binding:"required"` // 群组ID
+	OpenBurnAfterReading bool   `json:"open_burn_after_reading"`
 }
 
-func IsValidOpenBurnAfterReadingType(input OpenBurnAfterReadingType) bool {
-	return input == BurnClose || input == BurnOpen
-}
+//func IsValidOpenBurnAfterReadingType(input OpenBurnAfterReadingType) bool {
+//	return input == BurnClose || input == BurnOpen
+//}
 
 type CreateGroupAnnouncementRequest struct {
 	GroupId uint32 `json:"group_id" binding:"required"` // 群组ID

@@ -18,7 +18,7 @@ func GroupMessageEntityToPO(gm *entity.GroupMessage) *po.GroupMessage {
 		ReplyEmoji:         gm.ReplyEmoji,
 		AtAllUser:          uint(gm.AtAllUser),
 		AtUsers:            gm.AtUsers,
-		IsBurnAfterReading: uint(gm.IsBurnAfterReading),
+		IsBurnAfterReading: gm.IsBurnAfterReading,
 		BaseModel: po.BaseModel{
 			ID:        gm.ID,
 			CreatedAt: gm.CreatedAt,
@@ -41,7 +41,7 @@ func GroupMessagePOToEntity(model *po.GroupMessage) *entity.GroupMessage {
 		ReplyEmoji:         model.ReplyEmoji,
 		AtAllUser:          entity.AtAllUserType(model.AtAllUser),
 		AtUsers:            model.AtUsers,
-		IsBurnAfterReading: entity.BurnAfterReadingType(model.IsBurnAfterReading),
+		IsBurnAfterReading: model.IsBurnAfterReading,
 		BaseModel: entity.BaseModel{
 			ID:        model.ID,
 			CreatedAt: model.CreatedAt,

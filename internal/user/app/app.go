@@ -20,6 +20,8 @@ type Commands struct {
 	SetUserPublicKey          command.SetUserPublicKeyHandler
 	SendUserEmailVerification command.SendUserEmailVerificationHandler
 	ResetUserPublicKey        command.ResetUserPublicKeyHandler
+	UpdateUser                command.UpdateUserHandler
+	UpdateUserAvatarHandler   command.UpdateUserAvatarHandler
 	//CreateGroup command.CreateGroupHandler
 	//DeleteGroup command.DeleteGroupHandler
 	//UpdateGroup command.UpdateGroupHandler

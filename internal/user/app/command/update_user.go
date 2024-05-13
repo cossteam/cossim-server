@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/cossim/coss-server/internal/user/cache"
+	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/internal/user/domain/service"
 	"github.com/cossim/coss-server/pkg/decorator"
 	"go.uber.org/zap"
@@ -11,11 +12,11 @@ import (
 
 type UpdateUser struct {
 	UserID    string
-	Avatar    *string
-	CossID    *string
-	Nickname  *string
-	Signature *string
-	Tel       *string
+	Avatar    string
+	CossID    string
+	Nickname  string
+	Signature string
+	Tel       string
 }
 
 type UpdateUserHandler decorator.CommandHandler[*UpdateUser, *interface{}]
@@ -45,6 +46,18 @@ func (h *updateUserHandler) Handle(ctx context.Context, cmd *UpdateUser) (*inter
 		return nil, err
 	}
 
-	//h.ud.UpdateUser()
+	_, err = h.ud.UpdateUser(ctx, &entity.User{
+		ID:        cmd.UserID,
+		CossID:    cmd.CossID,
+		Tel:       cmd.Tel,
+		NickName:  cmd.Nickname,
+		Avatar:    cmd.Avatar,
+		Signature: cmd.Signature,
+	}, true)
+	if err != nil {
+		h.logger.Error("update user error", zap.Error(err))
+		return nil, err
+	}
+
 	return nil, nil
 }

@@ -422,7 +422,7 @@ func (UnimplementedGroupRelationServiceServer) AddGroupAdmin(context.Context, *A
 }
 
 // UnsafeGroupRelationServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interfaces is not recommended, as added methods to GroupRelationServiceServer will
+// Use of this interface is not recommended, as added methods to GroupRelationServiceServer will
 // result in compilation errors.
 type UnsafeGroupRelationServiceServer interface {
 	mustEmbedUnimplementedGroupRelationServiceServer()

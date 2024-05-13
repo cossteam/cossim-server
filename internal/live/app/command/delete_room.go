@@ -35,7 +35,7 @@ func (h *LiveHandler) DeleteRoom(ctx context.Context, cmd *DeleteRoom) error {
 
 	switch room.Type {
 	case entity.UserRoomType:
-		return h.deleteUserRoom(ctx, cmd, room)
+		return h.handleDeleteUserRoom(ctx, cmd, room)
 	case entity.GroupRoomType:
 		return h.deleteGroupRoom(ctx, cmd, room)
 	default:
@@ -43,7 +43,7 @@ func (h *LiveHandler) DeleteRoom(ctx context.Context, cmd *DeleteRoom) error {
 	}
 }
 
-func (h *LiveHandler) CleanUserRoom(ctx context.Context, room *entity.Room) error {
+func (h *LiveHandler) cleanUserRoom(ctx context.Context, room *entity.Room) error {
 	// 删除房间和用户连接信息
 	if err := h.deleteRoom(ctx, room.ID); err != nil {
 		h.logger.Error("删除 Redis 房间错误", zap.Error(err))
@@ -58,7 +58,7 @@ func (h *LiveHandler) CleanUserRoom(ctx context.Context, room *entity.Room) erro
 	return nil
 }
 
-func (h *LiveHandler) deleteUserRoom(ctx context.Context, cmd *DeleteRoom, room *entity.Room) error {
+func (h *LiveHandler) handleDeleteUserRoom(ctx context.Context, cmd *DeleteRoom, room *entity.Room) error {
 	// 获取当前用户的参与者信息
 	participant, ok := room.Participants[cmd.UserID]
 	if !ok {
@@ -66,7 +66,7 @@ func (h *LiveHandler) deleteUserRoom(ctx context.Context, cmd *DeleteRoom, room 
 	}
 
 	// 无论什么情况都先删除房间信息
-	if err := h.CleanUserRoom(ctx, room); err != nil {
+	if err := h.cleanUserRoom(ctx, room); err != nil {
 		return err
 	}
 
@@ -183,13 +183,6 @@ func (h *LiveHandler) getMessageType(room *entity.Room) uint {
 }
 
 func (h *LiveHandler) sendUserMessage(ctx context.Context, msgType int32, subType int32, dialogID uint32, recipientID, senderID, content string, isBurnAfterReading bool) (uint32, error) {
-	var _isBurnAfterReading msggrpcv1.BurnAfterReadingType
-	if isBurnAfterReading {
-		_isBurnAfterReading = msggrpcv1.BurnAfterReadingType_IsBurnAfterReading
-	} else {
-		_isBurnAfterReading = msggrpcv1.BurnAfterReadingType_NotBurnAfterReading
-	}
-
 	message, err := h.msgService.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
 		DialogId:               dialogID,
 		SenderId:               senderID,
@@ -197,7 +190,7 @@ func (h *LiveHandler) sendUserMessage(ctx context.Context, msgType int32, subTyp
 		Content:                content,
 		Type:                   msgType,
 		SubType:                subType,
-		IsBurnAfterReadingType: _isBurnAfterReading,
+		IsBurnAfterReadingType: isBurnAfterReading,
 	})
 	if err != nil {
 		return 0, err
@@ -206,13 +199,6 @@ func (h *LiveHandler) sendUserMessage(ctx context.Context, msgType int32, subTyp
 }
 
 func (h *LiveHandler) pushUserMessageEvent(ctx context.Context, room *entity.Room, dialogID uint32, driverID, senderID, recipientID, content string, msgType, msgSubTye uint, msgID uint32, isBurnAfterReading bool, openBurnAfterReadingTimeOut int64) {
-	var _isBurnAfterReading constants.BurnAfterReadingType
-	if isBurnAfterReading {
-		_isBurnAfterReading = constants.IsBurnAfterReading
-	} else {
-		_isBurnAfterReading = constants.NotBurnAfterReading
-	}
-
 	data := &constants.WsUserMsg{
 		SenderId:                senderID,
 		Content:                 content,
@@ -222,7 +208,7 @@ func (h *LiveHandler) pushUserMessageEvent(ctx context.Context, room *entity.Roo
 		ReceiverId:              recipientID,
 		SendAt:                  pkgtime.Now(),
 		DialogId:                dialogID,
-		IsBurnAfterReading:      _isBurnAfterReading,
+		IsBurnAfterReading:      isBurnAfterReading,
 		BurnAfterReadingTimeOut: openBurnAfterReadingTimeOut,
 	}
 
@@ -405,11 +391,8 @@ func (h *LiveHandler) handleUserMessage(ctx context.Context, room *entity.Room, 
 	}
 
 	var dialogID = relation.DialogId
-	var openBurnAfterReading bool
+	var openBurnAfterReading = relation.OpenBurnAfterReading
 	var openBurnAfterReadingTimeOut = relation.OpenBurnAfterReadingTimeOut
-	if relation.OpenBurnAfterReading == relationgrpcv1.OpenBurnAfterReadingType_OPEN_BURN_AFTER_READING {
-		openBurnAfterReading = true
-	}
 
 	// 获取消息类型
 	msgType := h.getMessageType(room)
@@ -451,19 +434,12 @@ func (h *LiveHandler) handleUserMessage(ctx context.Context, room *entity.Room, 
 }
 
 func buildWsUserMessage(dialogID uint32, msgType uint, driverID, senderID, recipientID, content string, senderInfo constants.SenderInfo, isBurnAfterReading bool) ([]byte, error) {
-	var _isBurnAfterReading constants.BurnAfterReadingType
-	if isBurnAfterReading {
-		_isBurnAfterReading = constants.IsBurnAfterReading
-	} else {
-		_isBurnAfterReading = constants.NotBurnAfterReading
-	}
-
 	data := &constants.WsUserMsg{
 		SenderId:           senderID,
 		Content:            content,
 		MsgType:            msgType,
 		DialogId:           dialogID,
-		IsBurnAfterReading: _isBurnAfterReading,
+		IsBurnAfterReading: isBurnAfterReading,
 		SenderInfo: constants.SenderInfo{
 			Avatar: senderInfo.Avatar,
 			Name:   senderInfo.Name,

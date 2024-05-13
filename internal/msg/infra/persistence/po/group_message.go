@@ -18,7 +18,7 @@ type GroupMessage struct {
 	ReplyEmoji         string   `gorm:"comment:回复时使用的 Emoji" json:"reply_emoji"`
 	AtAllUser          uint     `gorm:"default:0;comment:是否at全体用户" json:"at_all_users"`
 	AtUsers            []string `gorm:"serializer:json;comment:at的用户" json:"at_users"`
-	IsBurnAfterReading uint     `gorm:"default:0;comment:是否阅后即焚消息" json:"is_burn_after_reading"`
+	IsBurnAfterReading bool     `gorm:"default:0;comment:是否阅后即焚消息" json:"is_burn_after_reading"`
 }
 
 type BaseModel struct {

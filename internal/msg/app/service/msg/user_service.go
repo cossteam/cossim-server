@@ -39,10 +39,6 @@ type UserService interface {
 }
 
 func (s *ServiceImpl) SendUserMsg(ctx context.Context, userID string, driverId string, req *v1.SendUserMsgRequest) (*v1.SendUserMsgResponse, error) {
-	isBurnAfterReadingType := msggrpcv1.BurnAfterReadingType_IsBurnAfterReading
-	if !req.IsBurnAfterReading {
-		isBurnAfterReadingType = msggrpcv1.BurnAfterReadingType_NotBurnAfterReading
-	}
 	userRelationStatus1, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: req.ReceiverId,
@@ -150,7 +146,7 @@ func (s *ServiceImpl) SendUserMsg(ctx context.Context, userID string, driverId s
 			Content:            req.Content,
 			Type:               entity.UserMessageType(req.Type),
 			ReplyId:            uint(req.ReplyId),
-			IsBurnAfterReading: entity.BurnAfterReadingType(isBurnAfterReadingType),
+			IsBurnAfterReading: req.IsBurnAfterReading,
 		})
 		if err != nil {
 			s.logger.Error("发送消息失败", zap.Error(err))
@@ -227,13 +223,9 @@ func (s *ServiceImpl) SendUserMsg(ctx context.Context, userID string, driverId s
 			ReplyId: int(msg.ReplyId),
 		}
 
-		if msg.IsBurnAfterReading == entity.BurnAfterReadingType(msggrpcv1.BurnAfterReadingType_IsBurnAfterReading) {
-			resp.ReplyMsg.IsBurnAfterReading = true
-		}
+		resp.ReplyMsg.IsBurnAfterReading = msg.IsBurnAfterReading
+		resp.ReplyMsg.IsLabel = msg.IsLabel
 
-		if msg.IsLabel == uint(msggrpcv1.MsgLabel_IsLabel) {
-			resp.ReplyMsg.IsLabel = true
-		}
 	}
 	rmsg := &pushv1.MessageInfo{}
 	if resp.ReplyMsg != nil {
@@ -290,7 +282,7 @@ func (s *ServiceImpl) SendUserMsg(ctx context.Context, userID string, driverId s
 }
 
 // 推送私聊消息
-func (s *ServiceImpl) sendWsUserMsg(senderId, receiverId, driverId string, silent relationgrpcv1.UserSilentNotificationType, msg *pushv1.SendWsUserMsg) {
+func (s *ServiceImpl) sendWsUserMsg(senderId, receiverId, driverId string, silent bool, msg *pushv1.SendWsUserMsg) {
 
 	bytes, err := utils.StructToBytes(msg)
 	if err != nil {
@@ -301,7 +293,7 @@ func (s *ServiceImpl) sendWsUserMsg(senderId, receiverId, driverId string, silen
 	}
 
 	//是否静默通知
-	if silent == relationgrpcv1.UserSilentNotificationType_UserSilent {
+	if silent {
 		m.Event = pushv1.WSEventType_SendSilentUserMessageEvent
 	}
 	bytes2, err := utils.StructToBytes(m)
@@ -419,14 +411,8 @@ func (s *ServiceImpl) GetUserMessageList(ctx context.Context, userID string, req
 		if v.IsRead == entity.ReadType(msggrpcv1.ReadType_IsRead) {
 			read = true
 		}
-		label := false
-		if v.IsLabel == uint(msggrpcv1.MsgLabel_IsLabel) {
-			label = true
-		}
-		isBurnAfterReadingType := false
-		if v.IsBurnAfterReading == entity.BurnAfterReadingType(msggrpcv1.BurnAfterReadingType_IsBurnAfterReading) {
-			isBurnAfterReadingType = true
-		}
+		label := v.IsLabel
+		isBurnAfterReadingType := v.IsBurnAfterReading
 		msgList = append(msgList, v1.UserMessage{
 			MsgId:                   int(v.ID),
 			SenderId:                v.SendID,
@@ -955,12 +941,8 @@ func (s *ServiceImpl) ReadUserMsgs(ctx context.Context, userid string, driverId 
 		if msginfo.IsRead != 0 {
 			wsm.IsRead = true
 		}
-		if msginfo.IsLabel != 0 {
-			wsm.IsLabel = true
-		}
-		if msginfo.IsBurnAfterReading != 0 {
-			wsm.IsBurnAfterReadingType = true
-		}
+		wsm.IsLabel = msginfo.IsLabel
+		wsm.IsBurnAfterReadingType = msginfo.IsBurnAfterReading
 		wsms = append(wsms, wsm)
 	}
 
@@ -1084,7 +1066,7 @@ func (s *ServiceImpl) GetUserLabelMsgList(ctx context.Context, userID string, di
 			MsgType:  int(i2.Type),
 			ReplyId:  int(i2.ReplyId),
 			SendAt:   int(i2.CreatedAt),
-			IsLabel:  i2.IsLabel == uint(msggrpcv1.MsgLabel_IsLabel),
+			IsLabel:  i2.IsLabel,
 			SenderId: i2.SendID,
 			ReadAt:   int(i2.ReadAt),
 			IsRead:   read,
@@ -1223,9 +1205,8 @@ func (s *ServiceImpl) GetDialogAfterMsg(ctx context.Context, userID string, requ
 			if i3.IsLabel != 0 {
 				msg.IsLabel = true
 			}
-			if i3.IsBurnAfterReading != 0 {
-				msg.IsBurnAfterReading = true
-			}
+
+			msg.IsBurnAfterReading = i3.IsBurnAfterReading
 			msgs = append(msgs, msg)
 		}
 		responses = append(responses, &v1.GetDialogAfterMsgResponse{
@@ -1278,12 +1259,9 @@ func (s *ServiceImpl) GetDialogAfterMsg(ctx context.Context, userID string, requ
 			if i3.ReadAt != 0 {
 				msg.IsRead = true
 			}
-			if i3.IsLabel != 0 {
-				msg.IsLabel = true
-			}
-			if i3.IsBurnAfterReading != 0 {
-				msg.IsBurnAfterReading = true
-			}
+
+			msg.IsLabel = i3.IsLabel
+			msg.IsBurnAfterReading = i3.IsBurnAfterReading
 			msgs = append(msgs, msg)
 		}
 		responses = append(responses, &v1.GetDialogAfterMsgResponse{
@@ -1408,12 +1386,9 @@ func (s *ServiceImpl) getUserDialogLast20Msg(ctx context.Context, dialogId uint3
 		if msg.ReadAt != 0 {
 			msg.IsRead = true
 		}
-		if um.IsBurnAfterReading != 0 {
-			msg.IsBurnAfterReading = true
-		}
-		if um.IsLabel != 0 {
-			msg.IsLabel = true
-		}
+
+		msg.IsBurnAfterReading = um.IsBurnAfterReading
+		msg.IsLabel = um.IsLabel
 		msgs = append(msgs, msg)
 	}
 	responses = append(responses, &v1.GetDialogAfterMsgResponse{

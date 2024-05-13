@@ -2,7 +2,6 @@ syntax = "proto3";
 package relation_v1;
 option go_package = "github.com/cossim/coss-server/internal/relation/api/grpc/v1";
 import "google/protobuf/empty.proto";
-import "api/grpc/v1/group_relation.proto";
 
 service UserRelationService {
   // 添加好友
@@ -118,9 +117,9 @@ message Friend {
   // @inject_tag: json:"status" form:"status"
   RelationStatus Status = 4;
   // @inject_tag: json:"open_burn_after_reading"
-  OpenBurnAfterReadingType  OpenBurnAfterReading = 6;
+  bool OpenBurnAfterReading = 6;
   // @inject_tag: json:"is_silent"
-  UserSilentNotificationType IsSilent = 5;
+  bool IsSilent = 5;
   //  @inject_tag: json:"open_burn_after_reading_time_out"
   int64 OpenBurnAfterReadingTimeOut = 8;
 
@@ -174,9 +173,9 @@ message GetUserRelationResponse {
   // @inject_tag: json:"status"
   RelationStatus Status = 4;
   // @inject_tag: json:"is_silent"
-  UserSilentNotificationType IsSilent = 5;
+  bool IsSilent = 5;
   // @inject_tag: json:"open_burn_after_reading"
-  OpenBurnAfterReadingType  OpenBurnAfterReading = 6;
+  bool OpenBurnAfterReading = 6;
   // @inject_tag: json:"remark"
   string remark = 7;
   //  @inject_tag: json:"open_burn_after_reading_time_out"
@@ -207,7 +206,7 @@ message SetFriendSilentNotificationRequest {
   // @inject_tag: json:"friend_id"
   string FriendId = 2;
   // @inject_tag: json:"is_silent"
-  UserSilentNotificationType IsSilent = 3;
+  bool IsSilent = 3;
 }
 
 message SetUserOpenBurnAfterReadingRequest {
@@ -219,7 +218,7 @@ message SetUserOpenBurnAfterReadingRequest {
   // @inject_tag: json:"timeout"
   int64 TimeOut = 3;
   // @inject_tag: json:"open_burn_after_reading"
-  OpenBurnAfterReadingType  OpenBurnAfterReading = 4;
+  bool OpenBurnAfterReading = 4;
 }
 
 message SetFriendRemarkRequest {

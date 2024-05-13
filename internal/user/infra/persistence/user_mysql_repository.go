@@ -12,6 +12,7 @@ import (
 	"github.com/cossim/coss-server/pkg/utils"
 	"gorm.io/gorm"
 	"log"
+	"reflect"
 )
 
 var _ repository.UserRepository = &MySQLUserRepository{}
@@ -173,21 +174,23 @@ func (r *MySQLUserRepository) GetUserInfoByCossID(ctx context.Context, cossId st
 }
 
 func (r *MySQLUserRepository) UpdateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
-	model := converter.UserEntityToPO(user)
+	poUser := converter.UserEntityToPO(user)
 
-	if err := r.db.WithContext(ctx).Where("id = ?", user.ID).Updates(&model).Error; err != nil {
-		return nil, err
-	}
+	userValue := reflect.ValueOf(user).Elem()
+	for i := 0; i < userValue.NumField(); i++ {
+		fieldName := userValue.Type().Field(i).Name
+		fieldValue := userValue.Field(i)
 
-	entity := converter.UserPOToEntity(model)
-
-	if r.cache != nil {
-		if err := r.cache.DeleteUsersInfo(ctx, []string{entity.ID}); err != nil {
-			log.Println("cache set user info error:", utils.NewErrorWithStack(err.Error()))
+		if !fieldValue.IsZero() {
+			if err := r.db.Model(&poUser).Where("id = ?", poUser.ID).Update(fieldName, fieldValue.Interface()).Error; err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return entity, nil
+	entityUser := converter.UserPOToEntity(poUser)
+
+	return entityUser, nil
 }
 
 func (r *MySQLUserRepository) InsertUser(ctx context.Context, user *entity.User) (*entity.User, error) {
@@ -342,16 +345,16 @@ func (r *MySQLUserRepository) InsertAndUpdateUser(ctx context.Context, user *ent
 	return nil
 }
 
-func (r *MySQLUserRepository) DeleteUser(ctx context.Context, userId string) error {
-	if err := r.db.WithContext(ctx).Delete(&po.User{ID: userId}).Error; err != nil {
-		return err
-	}
-
-	if r.cache != nil {
-		if err := r.cache.DeleteUsersInfo(ctx, []string{userId}); err != nil {
-			log.Printf("无法删除用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
-		}
-	}
-
-	return nil
-}
+//func (r *MySQLUserRepository) DeleteUser(ctx context.Context, userId string) error {
+//	if err := r.db.WithContext(ctx).Delete(&po.User{ID: userId}).Error; err != nil {
+//		return err
+//	}
+//
+//	if r.cache != nil {
+//		if err := r.cache.DeleteUsersInfo(ctx, []string{userId}); err != nil {
+//			log.Printf("无法删除用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
+//		}
+//	}
+//
+//	return nil
+//}

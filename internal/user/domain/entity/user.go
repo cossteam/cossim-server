@@ -126,6 +126,10 @@ func (s UserStatus) String() string {
 	}
 }
 
+type ListUserOptions struct {
+	UserID []string
+}
+
 // User Optional
 type UserOpt func(*User)
 type UserOpts []UserOpt

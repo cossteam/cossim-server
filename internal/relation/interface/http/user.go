@@ -53,12 +53,7 @@ func (h *Handler) openUserBurnAfterReading(c *gin.Context) {
 		return
 	}
 
-	if !model.IsValidOpenBurnAfterReadingType(req.Action) {
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	if req.Action == model.BurnOpen && req.TimeOut == 0 {
+	if req.OpenBurnAfterReading && req.TimeOut == 0 {
 		response.SetFail(c, "设置消息销毁时间不能为0", nil)
 		return
 	}
@@ -86,11 +81,6 @@ func (h *Handler) setUserSilentNotification(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	if !model.IsValidSilentNotificationType(req.IsSilent) {
-		response.SetFail(c, "设置消息标注状态失败", nil)
 		return
 	}
 

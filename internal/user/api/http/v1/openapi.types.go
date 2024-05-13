@@ -23,12 +23,12 @@ const (
 // Preferences defines model for Preferences.
 type Preferences struct {
 	// OpenBurnAfterReading 是否开启阅后即焚
-	OpenBurnAfterReading        *bool   `json:"open_burn_after_reading,omitempty"`
-	OpenBurnAfterReadingTimeOut *int    `json:"open_burn_after_reading_time_out,omitempty"`
-	Remark                      *string `json:"remark,omitempty"`
+	OpenBurnAfterReading        bool   `json:"open_burn_after_reading"`
+	OpenBurnAfterReadingTimeOut int    `json:"open_burn_after_reading_time_out"`
+	Remark                      string `json:"remark"`
 
 	// SilentNotification 是否开启静默通知
-	SilentNotification *bool `json:"silent_notification,omitempty"`
+	SilentNotification bool `json:"silent_notification"`
 }
 
 // UserInfo defines model for UserInfo.
@@ -77,6 +77,22 @@ type UserSecretBundle struct {
 	UserId string `json:"user_id"`
 }
 
+// UpdateUserJSONBody defines parameters for UpdateUser.
+type UpdateUserJSONBody struct {
+	// Avatar 用户头像
+	Avatar string `json:"avatar"`
+	CossId string `json:"coss_id"`
+
+	// Nickname 用户昵称
+	Nickname string `json:"nickname"`
+
+	// Signature 个性签名
+	Signature string `json:"signature"`
+
+	// Tel 手机号
+	Tel string `json:"tel"`
+}
+
 // UserActivateParams defines parameters for UserActivate.
 type UserActivateParams struct {
 	// UserId 用户ID
@@ -84,6 +100,11 @@ type UserActivateParams struct {
 
 	// Key 激活密钥
 	Key string `form:"key" json:"key"`
+}
+
+// UpdateUserAvatarMultipartBody defines parameters for UpdateUserAvatar.
+type UpdateUserAvatarMultipartBody struct {
+	File *openapi_types.File `json:"file,omitempty"`
 }
 
 // UpdateUserBundleJSONBody defines parameters for UpdateUserBundle.
@@ -162,21 +183,17 @@ type UserRegisterJSONBody struct {
 	PublicKey string `json:"public_key"`
 }
 
-// UpdateUserJSONBody defines parameters for UpdateUser.
-type UpdateUserJSONBody struct {
-	// Avatar 用户头像
-	Avatar *string `json:"avatar,omitempty"`
-	CossId *string `json:"coss_id,omitempty"`
-
-	// Nickname 用户昵称
-	Nickname *string `json:"nickname,omitempty"`
-
-	// Signature 个性签名
-	Signature *string `json:"signature,omitempty"`
-
-	// Tel 手机号
-	Tel *string `json:"tel,omitempty"`
+// SearchUserParams defines parameters for SearchUser.
+type SearchUserParams struct {
+	// Email 用户邮箱
+	Email string `form:"email" json:"email"`
 }
+
+// UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
+type UpdateUserJSONRequestBody UpdateUserJSONBody
+
+// UpdateUserAvatarMultipartRequestBody defines body for UpdateUserAvatar for multipart/form-data ContentType.
+type UpdateUserAvatarMultipartRequestBody UpdateUserAvatarMultipartBody
 
 // UpdateUserBundleJSONRequestBody defines body for UpdateUserBundle for application/json ContentType.
 type UpdateUserBundleJSONRequestBody UpdateUserBundleJSONBody
@@ -201,6 +218,3 @@ type ResetUserPublicKeyJSONRequestBody ResetUserPublicKeyJSONBody
 
 // UserRegisterJSONRequestBody defines body for UserRegister for application/json ContentType.
 type UserRegisterJSONRequestBody UserRegisterJSONBody
-
-// UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
-type UpdateUserJSONRequestBody UpdateUserJSONBody

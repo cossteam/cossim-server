@@ -79,11 +79,11 @@ type GetFriendRequestListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"page_size"
 	PageSize uint32 `protobuf:"varint,2,opt,name=PageSize,proto3" json:"page_size"`
 	// @inject_tag: json:"page_num"
-	PageNum uint32 `protobuf:"varint,3,opt,name=CurrentPage,proto3" json:"page_num"`
+	PageNum uint32 `protobuf:"varint,3,opt,name=PageNum,proto3" json:"page_num"`
 }
 
 func (x *GetFriendRequestListRequest) Reset() {
@@ -491,7 +491,7 @@ type GetFriendRequestByUserIdAndFriendIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
 	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"`
 }
@@ -596,7 +596,7 @@ type DeleteFriendRequestByUserIdAndFriendIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
 	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"`
 }
@@ -655,7 +655,7 @@ type DeleteFriendRecordRequest struct {
 	// @inject_tag: json:"id"
 	ID uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserID,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
 }
 
 func (x *DeleteFriendRecordRequest) Reset() {

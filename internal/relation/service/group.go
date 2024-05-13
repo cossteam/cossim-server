@@ -254,7 +254,7 @@ func (s *Service) GetUserGroupList(ctx context.Context, userID string) (interfac
 	return usersorter.SortAndGroupUsers(data, "Name"), nil
 }
 
-func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, uid string, silent model.SilentNotificationType) (interface{}, error) {
+func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, uid string, silent bool) (interface{}, error) {
 	_, err := s.relationGroupService.GetGroupRelation(context.Background(), &relationgrpcv1.GetGroupRelationRequest{
 		GroupId: gid,
 		UserId:  uid,
@@ -264,19 +264,10 @@ func (s *Service) SetGroupSilentNotification(ctx context.Context, gid uint32, ui
 		return nil, err
 	}
 
-	var isSilent bool
-	switch silent {
-	case model.NotSilent:
-		isSilent = false
-	case model.IsSilent:
-		isSilent = true
-
-	}
-
 	_, err = s.relationGroupService.SetGroupSilentNotification(context.Background(), &relationgrpcv1.SetGroupSilentNotificationRequest{
 		GroupId:  gid,
 		UserId:   uid,
-		IsSilent: isSilent,
+		IsSilent: silent,
 	})
 	if err != nil {
 		s.logger.Error("设置群聊静默通知失败", zap.Error(err))
@@ -305,7 +296,7 @@ func (s *Service) SetGroupBurnAfterReading(ctx context.Context, userId string, r
 	_, err = s.relationGroupService.SetGroupOpenBurnAfterReading(ctx, &relationgrpcv1.SetGroupOpenBurnAfterReadingRequest{
 		UserId:               userId,
 		GroupId:              req.GroupId,
-		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
+		OpenBurnAfterReading: req.OpenBurnAfterReading,
 	})
 	if err != nil {
 		s.logger.Error("设置群聊消息阅后即焚失败", zap.Error(err))

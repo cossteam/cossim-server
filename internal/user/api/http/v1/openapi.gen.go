@@ -20,9 +20,15 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// 修改用户信息
+	// (PUT /api/v1/user)
+	UpdateUser(c *gin.Context)
 	// 用户激活
 	// (GET /api/v1/user/activate)
 	UserActivate(c *gin.Context, params UserActivateParams)
+	// 修改用户头像
+	// (PUT /api/v1/user/avatar)
+	UpdateUserAvatar(c *gin.Context)
 	// 修改用户密钥包
 	// (PUT /api/v1/user/bundle)
 	UpdateUserBundle(c *gin.Context)
@@ -50,15 +56,15 @@ type ServerInterface interface {
 	// 用户注册
 	// (POST /api/v1/user/register)
 	UserRegister(c *gin.Context)
+	// 搜索用户
+	// (GET /api/v1/user/search)
+	SearchUser(c *gin.Context, params SearchUserParams)
 	// 获取服务端pgp公钥
 	// (GET /api/v1/user/system/public_key)
 	GetPGPPublicKey(c *gin.Context)
 	// 获取用户信息
 	// (GET /api/v1/user/{id})
 	GetUser(c *gin.Context, id string)
-	// 修改用户信息
-	// (PUT /api/v1/user/{id})
-	UpdateUser(c *gin.Context, id string)
 	// 获取用户密钥包
 	// (GET /api/v1/user/{id}/bundle)
 	GetUserBundle(c *gin.Context, id string)
@@ -72,6 +78,21 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// UpdateUser operation middleware
+func (siw *ServerInterfaceWrapper) UpdateUser(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateUser(c)
+}
 
 // UserActivate operation middleware
 func (siw *ServerInterfaceWrapper) UserActivate(c *gin.Context) {
@@ -119,6 +140,21 @@ func (siw *ServerInterfaceWrapper) UserActivate(c *gin.Context) {
 	}
 
 	siw.Handler.UserActivate(c, params)
+}
+
+// UpdateUserAvatar operation middleware
+func (siw *ServerInterfaceWrapper) UpdateUserAvatar(c *gin.Context) {
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateUserAvatar(c)
 }
 
 // UpdateUserBundle operation middleware
@@ -240,8 +276,6 @@ func (siw *ServerInterfaceWrapper) ResetUserPublicKey(c *gin.Context) {
 // UserRegister operation middleware
 func (siw *ServerInterfaceWrapper) UserRegister(c *gin.Context) {
 
-	c.Set(BearerAuthScopes, []string{})
-
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 		if c.IsAborted() {
@@ -250,6 +284,41 @@ func (siw *ServerInterfaceWrapper) UserRegister(c *gin.Context) {
 	}
 
 	siw.Handler.UserRegister(c)
+}
+
+// SearchUser operation middleware
+func (siw *ServerInterfaceWrapper) SearchUser(c *gin.Context) {
+
+	var err error
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchUserParams
+
+	// ------------- Required query parameter "email" -------------
+
+	if paramValue := c.Query("email"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Query argument email is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "email", c.Request.URL.Query(), &params.Email)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter email: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SearchUser(c, params)
 }
 
 // GetPGPPublicKey operation middleware
@@ -291,32 +360,6 @@ func (siw *ServerInterfaceWrapper) GetUser(c *gin.Context) {
 	}
 
 	siw.Handler.GetUser(c, id)
-}
-
-// UpdateUser operation middleware
-func (siw *ServerInterfaceWrapper) UpdateUser(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.UpdateUser(c, id)
 }
 
 // GetUserBundle operation middleware
@@ -372,7 +415,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.PUT(options.BaseURL+"/api/v1/user", wrapper.UpdateUser)
 	router.GET(options.BaseURL+"/api/v1/user/activate", wrapper.UserActivate)
+	router.PUT(options.BaseURL+"/api/v1/user/avatar", wrapper.UpdateUserAvatar)
 	router.PUT(options.BaseURL+"/api/v1/user/bundle", wrapper.UpdateUserBundle)
 	router.GET(options.BaseURL+"/api/v1/user/clients", wrapper.GetUserLoginClients)
 	router.POST(options.BaseURL+"/api/v1/user/email/verification", wrapper.UserEmailVerification)
@@ -382,52 +427,54 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/user/public_key", wrapper.SetUserPublicKey)
 	router.PUT(options.BaseURL+"/api/v1/user/public_key", wrapper.ResetUserPublicKey)
 	router.POST(options.BaseURL+"/api/v1/user/register", wrapper.UserRegister)
+	router.GET(options.BaseURL+"/api/v1/user/search", wrapper.SearchUser)
 	router.GET(options.BaseURL+"/api/v1/user/system/public_key", wrapper.GetPGPPublicKey)
 	router.GET(options.BaseURL+"/api/v1/user/:id", wrapper.GetUser)
-	router.PUT(options.BaseURL+"/api/v1/user/:id", wrapper.UpdateUser)
 	router.GET(options.BaseURL+"/api/v1/user/:id/bundle", wrapper.GetUserBundle)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"CpOF/wUAAP//vM7CuuoqAAA=",
+	"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",
+	"/8vxdZYXMAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

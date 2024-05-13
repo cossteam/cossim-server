@@ -136,7 +136,7 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 	)
 
 	// 通话超时处理
-	h.scheduleLiveTimeout(er, int(h.liveTimeout.Seconds()), cmd.DriverID)
+	h.handleLiveTimeout(er, int(h.liveTimeout.Seconds()), cmd.DriverID)
 
 	return &CreateRoomResponse{
 		Url:     h.webRtcUrl,
@@ -145,12 +145,16 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 	}, nil
 }
 
-func (h *LiveHandler) scheduleLiveTimeout(room *entity.Room, timeoutSeconds int, driverID string) {
+func (h *LiveHandler) handleLiveTimeout(room *entity.Room, timeoutSeconds int, driverID string) {
 	time.AfterFunc(time.Duration(timeoutSeconds)*time.Second, func() {
 		// 通话超时，发送 WebSocket 事件
 		h.logger.Info("推送通话超时事件", zap.Duration("timeout", time.Duration(timeoutSeconds)*time.Second), zap.Any("room", room))
 		if err := h.handleMissed(context.Background(), room, room.Creator, driverID); err != nil {
 			h.logger.Error("Failed to handle missed", zap.Error(err))
+		}
+
+		if err := h.cleanUserRoom(context.Background(), room); err != nil {
+			h.logger.Error("Failed to clean user room", zap.Error(err))
 		}
 	})
 }

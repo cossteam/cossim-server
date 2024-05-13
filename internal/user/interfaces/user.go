@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/http/v1"
 	"github.com/cossim/coss-server/internal/user/app/command"
 	"github.com/cossim/coss-server/internal/user/app/query"
@@ -11,6 +10,62 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
+
+func (h *HttpServer) SearchUser(c *gin.Context, params v1.SearchUserParams) {
+	h.logger.Info("Search user", zap.String("email", params.Email))
+	searchUser, err := h.app.Queries.GetUser.Handle(c, &query.GetUse{
+		CurrentUser: c.Value(constants.UserID).(string),
+		//TargetUser:  params.Email,
+		TargetEmail: params.Email,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "User found", getUserToResponse(searchUser))
+}
+
+func (h *HttpServer) UpdateUserAvatar(c *gin.Context) {
+	// Parse form data
+	if err := c.Request.ParseMultipartForm(25 << 20); // 25 MB limit
+	err != nil {
+		response.SetFail(c, "Failed to parse form data", nil)
+		return
+	}
+
+	// Get the file from the form data
+	file, handler, err := c.Request.FormFile("file")
+	if err != nil {
+		response.SetFail(c, "Error retrieving the file", nil)
+		return
+	}
+	defer file.Close()
+
+	// Check file type
+	contentType := handler.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		response.SetFail(c, "Unsupported file type. Only JPEG and PNG are allowed.", nil)
+		return
+	}
+
+	// Check file size
+	if handler.Size > 25<<20 { // 25 MB limit
+		response.SetFail(c, "File size exceeds the limit. Maximum allowed size is 25 MB.", nil)
+		return
+	}
+
+	url, err := h.app.Commands.UpdateUserAvatarHandler.Handle(c, &command.UpdateUserAvatar{
+		UserID: c.Value(constants.UserID).(string),
+		Avatar: file,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "更新用户头像成功", gin.H{"avatar": url})
+}
 
 func (h *HttpServer) GetUser(c *gin.Context, id string) {
 	getUser, err := h.app.Queries.GetUser.Handle(c, &query.GetUse{
@@ -26,6 +81,15 @@ func (h *HttpServer) GetUser(c *gin.Context, id string) {
 }
 
 func getUserToResponse(e *entity.UserInfo) *v1.UserInfo {
+	var preferences *v1.Preferences
+	if e.Preferences != nil {
+		preferences = &v1.Preferences{
+			OpenBurnAfterReading:        e.Preferences.OpenBurnAfterReading,
+			OpenBurnAfterReadingTimeOut: int(e.Preferences.OpenBurnAfterReadingTimeOut),
+			Remark:                      e.Preferences.Remark,
+			SilentNotification:          e.Preferences.SilentNotification,
+		}
+	}
 	return &v1.UserInfo{
 		Avatar:         e.Avatar,
 		CossId:         e.CossID,
@@ -39,22 +103,31 @@ func getUserToResponse(e *entity.UserInfo) *v1.UserInfo {
 		Status:         v1.UserInfoStatus(e.Status),
 		Tel:            e.Tel,
 		UserId:         e.UserID,
-		Preferences: &v1.Preferences{
-			OpenBurnAfterReading:        nil,
-			OpenBurnAfterReadingTimeOut: nil,
-			Remark:                      nil,
-			SilentNotification:          nil,
-		},
+		Preferences:    preferences,
 	}
 }
 
-func (h *HttpServer) UpdateUser(c *gin.Context, id string) {
+func (h *HttpServer) UpdateUser(c *gin.Context) {
 	var req v1.UpdateUserJSONRequestBody
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("update user password", zap.Error(err))
 		return
 	}
 
+	_, err := h.app.Commands.UpdateUser.Handle(c, &command.UpdateUser{
+		UserID:    c.Value(constants.UserID).(string),
+		Avatar:    req.Avatar,
+		CossID:    req.CossId,
+		Nickname:  req.Nickname,
+		Signature: req.Signature,
+		Tel:       req.Tel,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "更新用户信息成功", nil)
 }
 
 func (h *HttpServer) UpdateUserPassword(c *gin.Context) {
@@ -75,6 +148,7 @@ func (h *HttpServer) UpdateUserPassword(c *gin.Context) {
 		return
 	}
 
+	response.SetSuccess(c, "更新用户密码成功", nil)
 }
 
 func (h *HttpServer) UserActivate(c *gin.Context, params v1.UserActivateParams) {
@@ -187,7 +261,6 @@ func (h *HttpServer) UserLogin(c *gin.Context) {
 		Platform:    req.Platform,
 	})
 	if err != nil {
-		fmt.Println("sfklbnsfnbjnsfjbnjsf ======> ", err)
 		c.Error(err)
 		return
 	}
@@ -198,15 +271,16 @@ func (h *HttpServer) UserLogin(c *gin.Context) {
 
 func ConversionUserLogin(userLogin *command.UserLoginResponse) *v1.UserInfo {
 	return &v1.UserInfo{
-		UserId:        userLogin.UserID,
-		Nickname:      userLogin.Nickname,
-		Avatar:        userLogin.Avatar,
-		Signature:     userLogin.Signature,
-		Status:        v1.UserInfoStatus(uint(userLogin.Status)),
-		CossId:        userLogin.CossID,
-		Email:         userLogin.Email,
-		Tel:           userLogin.Tel,
-		LastLoginTime: userLogin.LastLoginTime,
+		UserId:         userLogin.UserID,
+		Nickname:       userLogin.Nickname,
+		Avatar:         userLogin.Avatar,
+		Signature:      userLogin.Signature,
+		CossId:         userLogin.CossID,
+		Email:          userLogin.Email,
+		Tel:            userLogin.Tel,
+		Status:         v1.UserInfoStatus(uint(userLogin.Status)),
+		NewDeviceLogin: userLogin.NewDeviceLogin,
+		LastLoginTime:  userLogin.LastLoginTime,
 	}
 }
 

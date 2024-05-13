@@ -13,17 +13,17 @@ type UserMessage struct {
 	ReceiveID          string
 	SendID             string
 	Content            string
-	IsLabel            uint
-	IsBurnAfterReading BurnAfterReadingType
+	IsLabel            bool
+	IsBurnAfterReading bool
 	ReplyEmoji         string
 }
 
-type BurnAfterReadingType uint
-
-const (
-	NotBurnAfterReading BurnAfterReadingType = iota // 非阅后即焚
-	IsBurnAfterReading                              // 阅后即焚消息
-)
+//type BurnAfterReadingType uint
+//
+//const (
+//	NotBurnAfterReading BurnAfterReadingType = iota // 非阅后即焚
+//	IsBurnAfterReading                              // 阅后即焚消息
+//)
 
 type UserMessageType uint
 
@@ -89,8 +89,8 @@ const (
 func (um *UserMessage) ToMessage() *v1.Message {
 	return &v1.Message{
 		Content:            um.Content,
-		IsBurnAfterReading: um.IsBurnAfterReading == IsBurnAfterReading,
-		IsLabel:            um.IsLabel == uint(IsLabel),
+		IsBurnAfterReading: um.IsBurnAfterReading,
+		IsLabel:            um.IsLabel,
 		IsRead:             um.IsRead == IsRead,
 		MsgId:              int(um.ID),
 		MsgType:            int(um.Type),

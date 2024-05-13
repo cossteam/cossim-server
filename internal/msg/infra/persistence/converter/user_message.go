@@ -16,7 +16,7 @@ func UserMessagePOToEntity(um *po.UserMessage) *entity.UserMessage {
 		SendID:             um.SendID,
 		Content:            um.Content,
 		IsLabel:            um.IsLabel,
-		IsBurnAfterReading: entity.BurnAfterReadingType(um.IsBurnAfterReading),
+		IsBurnAfterReading: um.IsBurnAfterReading,
 		ReplyEmoji:         um.ReplyEmoji,
 		BaseModel: entity.BaseModel{
 			ID:        um.ID,
@@ -38,7 +38,7 @@ func UserMessageEntityToPO(um *entity.UserMessage) *po.UserMessage {
 		SendID:             um.SendID,
 		Content:            um.Content,
 		IsLabel:            um.IsLabel,
-		IsBurnAfterReading: uint(um.IsBurnAfterReading),
+		IsBurnAfterReading: um.IsBurnAfterReading,
 		ReplyEmoji:         um.ReplyEmoji,
 		BaseModel: po.BaseModel{
 			ID:        um.ID,

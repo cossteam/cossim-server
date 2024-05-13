@@ -6,7 +6,7 @@ import (
 )
 
 func GroupEntityToPO(e *entity.Group) *po.Group {
-	var m *po.Group
+	m := &po.Group{}
 	//if err := e.Validate(); err != nil {
 	//	return err
 	//}

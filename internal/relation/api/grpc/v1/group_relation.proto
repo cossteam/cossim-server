@@ -220,7 +220,7 @@ message SetGroupOpenBurnAfterReadingRequest {
   // @inject_tag: json:"group_id"
   uint32 GroupId = 2;
   // @inject_tag: json:"open_burn_after_reading"
-  OpenBurnAfterReadingType  OpenBurnAfterReading = 3;
+  bool OpenBurnAfterReading = 3;
 }
 
 message SetGroupOpenBurnAfterReadingTimeOutRequest{

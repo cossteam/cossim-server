@@ -167,7 +167,7 @@ func (UnimplementedGroupJoinRequestServiceServer) DeleteGroupRecord(context.Cont
 }
 
 // UnsafeGroupJoinRequestServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interfaces is not recommended, as added methods to GroupJoinRequestServiceServer will
+// Use of this interface is not recommended, as added methods to GroupJoinRequestServiceServer will
 // result in compilation errors.
 type UnsafeGroupJoinRequestServiceServer interface {
 	mustEmbedUnimplementedGroupJoinRequestServiceServer()

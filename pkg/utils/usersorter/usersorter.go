@@ -50,9 +50,9 @@ type CustomUserData struct {
 }
 
 type Preferences struct {
-	SilentNotification          uint32 `json:"silent_notification"`
+	SilentNotification          bool   `json:"silent_notification"`
 	Remark                      string ` json:"remark"`
-	OpenBurnAfterReading        uint32 `json:"open_burn_after_reading"`
+	OpenBurnAfterReading        bool   `json:"open_burn_after_reading"`
 	OpenBurnAfterReadingTimeOut int64  `json:"open_burn_after_reading_time_out"`
 }
 

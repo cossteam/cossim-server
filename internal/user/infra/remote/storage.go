@@ -15,7 +15,7 @@ import (
 
 type StorageService interface {
 	GenerateAvatar(ctx context.Context) (string, error)
-	//UploadAvatar(ctx context.Context, path string, reader bytes.Reader, avatarType string) error
+	UploadAvatar(ctx context.Context, reader *bytes.Reader) (string, error)
 }
 
 var _ StorageService = &storageService{}
@@ -28,22 +28,21 @@ func NewStorageService(client storage.StorageProvider) StorageService {
 	return &storageService{client: client}
 }
 
-func (s *storageService) UploadAvatar(ctx context.Context, path string, reader bytes.Reader, avatarType string) error {
+func (s *storageService) UploadAvatar(ctx context.Context, reader *bytes.Reader) (string, error) {
 	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Other))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	err = s.client.UploadAvatar(ctx, key, &reader, reader.Size(), minio.PutObjectOptions{
+	if err = s.client.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
 		ContentType: "image/jpeg",
-	})
-	if err != nil {
-		return err
+	}); err != nil {
+		return "", err
 	}
 
-	return nil
+	return key, nil
 }
 
 func (s *storageService) GenerateAvatar(ctx context.Context) (string, error) {

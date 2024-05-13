@@ -73,12 +73,12 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 		pushAddr = discovery.GetBalanceAddr(ac.Register.Addr(), ac.Discovers["push"].Name)
 	}
 
-	var userAddr string
-	if ac.Discovers["user"].Direct {
-		userAddr = ac.Discovers["user"].Addr()
-	} else {
-		userAddr = discovery.GetBalanceAddr(ac.Register.Addr(), ac.Discovers["user"].Name)
-	}
+	//var userAddr string
+	//if ac.Discovers["user"].Direct {
+	//	userAddr = ac.Discovers["user"].Addr()
+	//} else {
+	//	userAddr = discovery.GetBalanceAddr(ac.Register.Addr(), ac.Discovers["user"].Name)
+	//}
 
 	relationUserService, err := rpc.NewRelationUserGrpc(relationAddr)
 	if err != nil {
@@ -100,10 +100,10 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 		panic(err)
 	}
 
-	userService, err := rpc.NewUserGrpc(userAddr)
-	if err != nil {
-		panic(err)
-	}
+	//userService, err := rpc.NewUserGrpc(userAddr)
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	storageProvider, err := minio.NewMinIOStorage(ac.OSS.Addr(), ac.OSS.AccessKey, ac.OSS.SecretKey, ac.OSS.SSL)
 	if err != nil {
@@ -170,11 +170,23 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 				userCache,
 				smtpService,
 			),
+			UpdateUserAvatarHandler: command.NewUpdateUserAvatarHandler(
+				logger,
+				ac.SystemConfig.Ssl,
+				ac.SystemConfig.GatewayAddress,
+				userDomain,
+				storageService,
+			),
+			UpdateUser: command.NewUpdateUserHandler(
+				logger,
+				userDomain,
+				userCache,
+			),
 		},
 		Queries: app.Queries{
 			GetUser: query.NewGetUserHandler(
 				logger,
-				userService,
+				userDomain,
 				relationUserService,
 			),
 			GetUserBundle: query.NewGetUserBundleHandler(

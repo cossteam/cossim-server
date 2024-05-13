@@ -15,7 +15,7 @@ func (s *Handler) SendUserMessage(ctx context.Context, request *api.SendUserMsgR
 		ReceiveID:          request.ReceiverId,
 		SendID:             request.SenderId,
 		Content:            request.Content,
-		IsBurnAfterReading: entity.BurnAfterReadingType(request.IsBurnAfterReadingType),
+		IsBurnAfterReading: request.IsBurnAfterReadingType,
 	})
 	if err != nil {
 		return resp, err
@@ -35,7 +35,7 @@ func (s *Handler) SendMultiUserMessage(ctx context.Context, request *api.SendMul
 			ReceiveID:          msg.ReceiverId,
 			SendID:             msg.SenderId,
 			Content:            msg.Content,
-			IsBurnAfterReading: entity.BurnAfterReadingType(msg.IsBurnAfterReadingType),
+			IsBurnAfterReading: msg.IsBurnAfterReadingType,
 		})
 	}
 	err := s.umd.SendMultiUserMessage(ctx, messages)
