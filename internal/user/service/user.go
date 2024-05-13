@@ -434,8 +434,8 @@ func (s *Service) GetUserInfo(ctx context.Context, thisID string, userID string)
 			}
 
 			resp.Preferences = &model.Preferences{
-				OpenBurnAfterReading:        model.OpenBurnAfterReadingType(relation.OpenBurnAfterReading),
-				SilentNotification:          model.SilentNotification(relation.IsSilent),
+				OpenBurnAfterReading:        relation.OpenBurnAfterReading,
+				SilentNotification:          relation.IsSilent,
 				Remark:                      relation.Remark,
 				OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
 			}

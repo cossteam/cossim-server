@@ -362,11 +362,6 @@ func (h *Handler) setGroupSilentNotification(c *gin.Context) {
 		return
 	}
 
-	if !model.IsValidSilentNotificationType(req.IsSilent) {
-		response.SetFail(c, "设置消息标注状态失败", nil)
-		return
-	}
-
 	userID := c.Value(constants.UserID).(string)
 	_, err := h.svc.SetGroupSilentNotification(c, req.GroupId, userID, req.IsSilent)
 	if err != nil {

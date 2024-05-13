@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"context"
-	"fmt"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
@@ -46,16 +45,17 @@ func (m *UserRelationModel) FromEntity(u *entity.UserRelation) error {
 
 func (m *UserRelationModel) ToEntity() *entity.UserRelation {
 	return &entity.UserRelation{
-		ID:                   m.ID,
-		CreatedAt:            m.CreatedAt,
-		UserID:               m.UserID,
-		FriendID:             m.FriendID,
-		Status:               entity.UserRelationStatus(m.Status),
-		DialogId:             m.DialogId,
-		Remark:               m.Remark,
-		Label:                m.Label,
-		SilentNotification:   m.SilentNotification,
-		OpenBurnAfterReading: m.OpenBurnAfterReading,
+		ID:                      m.ID,
+		CreatedAt:               m.CreatedAt,
+		UserID:                  m.UserID,
+		FriendID:                m.FriendID,
+		Status:                  entity.UserRelationStatus(m.Status),
+		DialogId:                m.DialogId,
+		Remark:                  m.Remark,
+		Label:                   m.Label,
+		SilentNotification:      m.SilentNotification,
+		OpenBurnAfterReading:    m.OpenBurnAfterReading,
+		BurnAfterReadingTimeOut: m.BurnAfterReadingTimeOut,
 	}
 }
 
@@ -180,7 +180,6 @@ func (m *MySQLRelationUserRepository) Get(ctx context.Context, userId, friendId 
 
 	go func() {
 		if m.cache != nil {
-			fmt.Println("m.cache != m.cache.SetRelation ")
 			if err := m.cache.SetRelation(context.Background(), userId, friendId, e, cache.RelationExpireTime); err != nil {
 				//zap.L().Error("cache.SetRelation failed", zap.Error(err))
 				log.Printf("cache.SetRelation failed err:%v", err)
@@ -410,6 +409,9 @@ func (m *MySQLRelationUserRepository) SetUserOpenBurnAfterReading(ctx context.Co
 		if err := m.cache.DeleteRelation(ctx, userId, []string{friendId}); err != nil {
 			log.Printf("delete relation cache failed: %v", err)
 		}
+		if err := m.cache.DeleteRelation(ctx, friendId, []string{userId}); err != nil {
+			log.Printf("delete relation cache failed: %v", err)
+		}
 		if err := m.cache.DeleteFriendList(ctx, userId); err != nil {
 			log.Printf("delete friend request list cache failed: %v", err)
 		}
@@ -426,6 +428,9 @@ func (m *MySQLRelationUserRepository) SetFriendRemark(ctx context.Context, userI
 
 	if m.cache != nil {
 		if err := m.cache.DeleteRelation(ctx, userId, []string{friendId}); err != nil {
+			log.Printf("delete relation cache failed: %v", err)
+		}
+		if err := m.cache.DeleteRelation(ctx, friendId, []string{userId}); err != nil {
 			log.Printf("delete relation cache failed: %v", err)
 		}
 		if err := m.cache.DeleteFriendList(ctx, userId); err != nil {

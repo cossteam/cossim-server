@@ -255,7 +255,7 @@ func (g *UserMsgRepo) GetUnreadUserMsgs(uid string, dialogId uint) ([]*entity.Us
 func (g *UserMsgRepo) GetBatchUserMsgsBurnAfterReadingMessages(msgIds []uint, dialogID uint) ([]*entity.UserMessage, error) {
 	var userMessages []*po.UserMessage
 	err := g.db.Model(&po.UserMessage{}).
-		Where("dialog_id = ? AND id IN (?) AND is_burn_after_reading = ?", dialogID, msgIds, entity.IsBurnAfterReading).
+		Where("dialog_id = ? AND id IN (?) AND is_burn_after_reading = ?", dialogID, msgIds, true).
 		Find(&userMessages).Error
 	if err != nil {
 		return nil, err
@@ -326,7 +326,7 @@ func (g *UserMsgRepo) GetUserDialogLastMsgs(dialogId uint, pageNumber, pageSize 
 	var userMessages []*po.UserMessage
 	var total int64
 	query := g.db.Model(&po.UserMessage{}).
-		Where("dialog_id = ? AND is_burn_after_reading = ? AND deleted_at = 0", dialogId, entity.NotBurnAfterReading).
+		Where("dialog_id = ? AND is_burn_after_reading = ? AND deleted_at = 0", dialogId, false).
 		Order("id DESC")
 
 	err := g.db.Model(&po.UserMessage{}).

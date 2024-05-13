@@ -46,25 +46,25 @@ type UserInfoResponse struct {
 }
 
 type Preferences struct {
-	SilentNotification          SilentNotification       `json:"silent_notification"`
-	Remark                      string                   ` json:"remark"`
-	OpenBurnAfterReading        OpenBurnAfterReadingType `json:"open_burn_after_reading"`
-	OpenBurnAfterReadingTimeOut int64                    `json:"open_burn_after_reading_time_out"`
+	SilentNotification          bool   `json:"silent_notification"`
+	Remark                      string ` json:"remark"`
+	OpenBurnAfterReading        bool   `json:"open_burn_after_reading"`
+	OpenBurnAfterReadingTimeOut int64  `json:"open_burn_after_reading_time_out"`
 }
 
-type OpenBurnAfterReadingType uint
-
-const (
-	CloseBurnAfterReading OpenBurnAfterReadingType = iota //关闭阅后即焚
-	OpenBurnAfterReading                                  //开启阅后即焚消息
-)
-
-type SilentNotification uint
-
-const (
-	NotSilentNotification SilentNotification = iota //不开启静默通知
-	IsSilentNotification                            //开启静默通知
-)
+//type OpenBurnAfterReadingType uint
+//
+//const (
+//	CloseBurnAfterReading OpenBurnAfterReadingType = iota //关闭阅后即焚
+//	OpenBurnAfterReading                                  //开启阅后即焚消息
+//)
+//
+//type SilentNotification uint
+//
+//const (
+//	NotSilentNotification SilentNotification = iota //不开启静默通知
+//	IsSilentNotification                            //开启静默通知
+//)
 
 type UserStatus int
 

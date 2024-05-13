@@ -113,10 +113,9 @@ func (h *userLoginHandler) Handle(ctx context.Context, cmd *UserLogin) (*UserLog
 	}
 
 	token, err := h.ad.GenerateUserToken(ctx, &entity.AuthClaims{
-		UserID:    user.ID,
-		Email:     user.Email,
-		DriverID:  cmd.DriverID,
-		PublicKey: user.PublicKey,
+		UserID:   user.ID,
+		Email:    user.Email,
+		DriverID: cmd.DriverID,
 	})
 	if err != nil {
 		h.logger.Error("生成用户token失败", zap.Error(err))
@@ -126,7 +125,7 @@ func (h *userLoginHandler) Handle(ctx context.Context, cmd *UserLogin) (*UserLog
 	lastLoginTime, err := h.uld.LastLoginTime(ctx, user.ID)
 	if err != nil {
 		h.logger.Error("获取用户最近一次登录时间失败", zap.Error(err))
-		return nil, err
+		//return nil, err
 	}
 
 	isNewDevice, err := h.uld.IsNewDeviceLogin(ctx, user.ID, cmd.DriverID)

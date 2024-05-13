@@ -114,7 +114,7 @@ func (d *userLoginDomain) Get(ctx context.Context, userID string) (*entity.UserL
 }
 
 func (d *userLoginDomain) IsLoginRestricted(ctx context.Context, userID string) error {
-	user, err := d.ur.GetUserInfoByUid(ctx, userID)
+	user, err := d.ur.GetUser(ctx, userID)
 	if err != nil {
 		return err
 	}

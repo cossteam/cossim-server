@@ -167,7 +167,7 @@ func (UnimplementedUserFriendRequestServiceServer) DeleteFriendRecord(context.Co
 }
 
 // UnsafeUserFriendRequestServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interfaces is not recommended, as added methods to UserFriendRequestServiceServer will
+// Use of this interface is not recommended, as added methods to UserFriendRequestServiceServer will
 // result in compilation errors.
 type UnsafeUserFriendRequestServiceServer interface {
 	mustEmbedUnimplementedUserFriendRequestServiceServer()

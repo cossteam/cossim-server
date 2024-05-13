@@ -12,6 +12,121 @@ tags:
       description: Find out more
       url: http://swagger.io
 paths:
+  /api/v1/user/search:
+    get:
+      tags:
+        - user
+      security:
+        - BearerAuth: []
+      summary: 搜索用户
+      description: 搜索用户
+      operationId: searchUser
+      parameters:
+        - name: email
+          in: query
+          description: 用户邮箱
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 搜索用户成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+  /api/v1/user/avatar:
+    put:
+      tags:
+        - user
+      security:
+        - BearerAuth: [ ]
+      summary: 修改用户头像
+      description: 修改用户头像
+      operationId: updateUserAvatar
+#      parameters:
+#        - name: file
+#          in: formData
+#          description: 头像文件
+#          required: true
+#          schema:
+#            type: string
+#            format: binary
+#            maxLength: 25MB
+#            contentMediaType: image/jpeg,image/png
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 修改用户头像成功
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/user:
+    put:
+      tags:
+        - user
+      security:
+        - BearerAuth: [ ]
+      summary: 修改用户信息
+      description: 修改用户信息
+      operationId: updateUser
+#      parameters:
+#        - name: id
+#          in: path
+#          description: 用户ID
+#          required: true
+#          schema:
+#            type: string
+      requestBody:
+        description:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  description: 用户昵称
+                  x-omitempty: false
+                  x-go-type-skip-optional-pointer: true
+                tel:
+                  type: string
+                  format: phone
+                  description: 手机号
+                  x-omitempty: false
+                  x-go-type-skip-optional-pointer: true
+                avatar:
+                  type: string
+                  description: 用户头像
+                  x-omitempty: false
+                  x-go-type-skip-optional-pointer: true
+                signature:
+                  type: string
+                  description: 个性签名
+                  x-omitempty: false
+                  x-go-type-skip-optional-pointer: true
+                coss_id:
+                  type: string
+                  description:
+                  x-omitempty: false
+                  x-go-type-skip-optional-pointer: true
+      responses:
+        '200':
+          description: 修改用户信息成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
   /api/v1/user/{id}:
     get:
       tags:
@@ -31,51 +146,6 @@ paths:
       responses:
         '200':
           description: 获取用户信息成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserInfo'
-    put:
-      tags:
-        - user
-      security:
-        - BearerAuth: []
-      summary: 修改用户信息
-      description: 修改用户信息
-      operationId: updateUser
-      parameters:
-        - name: id
-          in: path
-          description: 用户ID
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                nickname:
-                  type: string
-                  description: 用户昵称
-                tel:
-                  type: string
-                  format: phone
-                  description: 手机号
-                avatar:
-                  type: string
-                  description: 用户头像
-                signature:
-                  type: string
-                  description: 个性签名
-                coss_id:
-                  type: string
-                  description:
-      responses:
-        '200':
-          description: 修改用户信息成功
           content:
             application/json:
               schema:
@@ -187,8 +257,8 @@ paths:
     post:
       tags:
         - user
-      security:
-        - BearerAuth: []
+#      security:
+#        - BearerAuth: []
       summary: 用户注册
       description: 用户注册
       operationId: userRegister
@@ -218,8 +288,9 @@ paths:
                 public_key:
                   type: string
                   description: 用户公钥
+                  x-omitempty: false
+                  x-go-type-skip-optional-pointer: true
               required:
-                - public_key
                 - email
                 - password
                 - confirm_password
@@ -615,14 +686,22 @@ components:
           type: boolean
           description: >
             是否开启静默通知
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
         remark:
           type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
         open_burn_after_reading:
           type: boolean
           description: >
             是否开启阅后即焚
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
         open_burn_after_reading_time_out:
           type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
       UserStatus:
         type: integer
         enum:

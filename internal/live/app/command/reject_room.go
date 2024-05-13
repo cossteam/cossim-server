@@ -104,7 +104,7 @@ func (h *LiveHandler) rejectUser(ctx context.Context, roomID string, userID stri
 		ReceiverId:             userID,
 		Content:                "已拒绝",
 		Type:                   msgType,
-		IsBurnAfterReadingType: msggrpcv1.BurnAfterReadingType(isBurnAfterReading),
+		IsBurnAfterReadingType: isBurnAfterReading,
 	})
 	if err != nil {
 		h.logger.Error("发送消息失败", zap.Error(err))
@@ -126,7 +126,7 @@ func (h *LiveHandler) rejectUser(ctx context.Context, roomID string, userID stri
 		ReceiverId:              receiverId,
 		SendAt:                  pkgtime.Now(),
 		DialogId:                rel.DialogId,
-		IsBurnAfterReading:      constants.BurnAfterReadingType(isBurnAfterReading),
+		IsBurnAfterReading:      isBurnAfterReading,
 		BurnAfterReadingTimeOut: OpenBurnAfterReadingTimeOut,
 		SenderInfo: constants.SenderInfo{
 			Avatar: info.Avatar,

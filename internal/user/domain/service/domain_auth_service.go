@@ -28,7 +28,7 @@ func NewAuthDomain(secret string, ur repository.UserRepository, userCache cache.
 }
 
 func (d *authDomain) GenerateUserToken(ctx context.Context, ac *entity.AuthClaims) (string, error) {
-	token, err := utils.GenerateToken(ac.UserID, ac.Email, ac.DriverID, ac.PublicKey, d.secret)
+	token, err := utils.GenerateToken(ac.UserID, ac.Email, ac.DriverID, d.secret)
 	if err != nil {
 		return "", err
 	}
@@ -43,10 +43,9 @@ func (d *authDomain) ParseToken(ctx context.Context, token string) (*entity.Auth
 	}
 
 	return &entity.AuthClaims{
-		UserID:    claims.UserId,
-		Email:     claims.Email,
-		DriverID:  claims.DriverId,
-		PublicKey: claims.PublicKey,
+		UserID:   claims.UserId,
+		Email:    claims.Email,
+		DriverID: claims.DriverId,
 	}, nil
 }
 
@@ -71,7 +70,7 @@ func (d *authDomain) Access(ctx context.Context, token string) error {
 		return nil
 	}
 
-	info, err := d.ur.GetUserInfoByUid(ctx, parseToken.UserID)
+	info, err := d.ur.GetUser(ctx, parseToken.UserID)
 	if err == nil && info.Status != entity.UserStatusNormal {
 		return nil
 	}

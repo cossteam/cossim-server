@@ -19,7 +19,7 @@ type GroupMessage struct {
 	ReplyEmoji         string
 	AtAllUser          AtAllUserType
 	AtUsers            []string
-	IsBurnAfterReading BurnAfterReadingType
+	IsBurnAfterReading bool
 }
 
 type AtAllUserType uint
@@ -54,7 +54,7 @@ func (gm *GroupMessage) ToMessage() *v1.Message {
 		AtUsers:            gm.AtUsers,
 		Content:            gm.Content,
 		GroupId:            int(gm.GroupID),
-		IsBurnAfterReading: gm.IsBurnAfterReading == IsBurnAfterReading,
+		IsBurnAfterReading: gm.IsBurnAfterReading,
 		IsLabel:            gm.IsLabel == uint(IsLabel),
 		IsRead:             gm.ReadCount > 0, // 根据 ReadCount 判断是否已读
 		MsgId:              int(gm.ID),

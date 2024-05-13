@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"google.golang.org/grpc"
@@ -46,6 +47,8 @@ func (s *relationUserGrpc) EstablishFriendship(ctx context.Context, userID strin
 }
 
 func (s *relationUserGrpc) GetUserRelation(ctx context.Context, userID string, friendID string) (*entity.Relation, error) {
+	fmt.Println("relation.GetUserRelation => ", userID, friendID)
+
 	relation, err := s.client.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: friendID,
@@ -66,14 +69,11 @@ func (s *relationUserGrpc) GetUserRelation(ctx context.Context, userID string, f
 		resp.Status = entity.UserRelationStatusNone
 	}
 
-	if relation.OpenBurnAfterReading == relationgrpcv1.OpenBurnAfterReadingType_OPEN_BURN_AFTER_READING {
-		resp.OpenBurnAfterReading = true
-	}
+	fmt.Println("relation.Remark => ", relation.Remark)
 
-	if relation.IsSilent == relationgrpcv1.UserSilentNotificationType_UserSilent {
-		resp.SilentNotification = true
-	}
-
+	resp.Remark = relation.Remark
+	resp.SilentNotification = relation.IsSilent
+	resp.OpenBurnAfterReading = relation.OpenBurnAfterReading
 	resp.OpenBurnAfterReadingTimeOut = relation.OpenBurnAfterReadingTimeOut
 
 	return resp, nil

@@ -2,20 +2,22 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/internal/user/domain/repository"
 	"github.com/google/uuid"
+	"strings"
 )
 
 type UserDomain interface {
 	CreateUser(ctx context.Context, user *entity.User) (*entity.User, error)
 	DeleteUser(ctx context.Context, id string) error
 	UpdateUser(ctx context.Context, user *entity.User, partialUpdate bool) (*entity.User, error)
-	UpdatePassword(ctx context.Context, userID, password string) (string, error)
 	GetUser(ctx context.Context, id string) (*entity.User, error)
 	GetUsers(ctx context.Context) ([]entity.User, error)
 	GetUserWithOpts(ctx context.Context, opts ...entity.UserOpt) (*entity.User, error)
 
+	UpdatePassword(ctx context.Context, userID, password string) (string, error)
 	UpdateBundle(ctx context.Context, userID, bundle string) error
 	UserRegister(ctx context.Context, ur *entity.UserRegister) (string, error)
 	ActivateUser(ctx context.Context, userID ...string) error
@@ -25,19 +27,32 @@ type UserDomain interface {
 // userDomain 实现了 UserDomain 接口
 type userDomain struct {
 	ur repository.UserRepository
+	//ur repository.UserRepositoryBase
 }
 
 func (d *userDomain) SetUserPublicKey(ctx context.Context, userID string, publickey string) error {
-	return d.ur.UpdateUserColumn(ctx, userID, "public_key", publickey)
+	_, err := d.ur.UpdateUser(ctx, &entity.User{ID: userID, PublicKey: publickey})
+	if err != nil {
+		return err
+	}
+
+	return nil
+	//return d.ur.UpdateUserColumn(ctx, userID, "public_key", publickey)
 }
 
 func (d *userDomain) UpdateBundle(ctx context.Context, userID, bundle string) error {
-	return d.ur.UpdateUserColumn(ctx, userID, "secret_bundle", bundle)
+	_, err := d.ur.UpdateUser(ctx, &entity.User{ID: userID, SecretBundle: bundle})
+	if err != nil {
+		return err
+	}
+
+	return nil
+	//return d.ur.UpdateUserColumn(ctx, userID, "secret_bundle", bundle)
 }
 
 func (d *userDomain) UserRegister(ctx context.Context, ur *entity.UserRegister) (string, error) {
 	uid := uuid.New().String()
-	_, err := d.ur.InsertUser(ctx, &entity.User{
+	e := &entity.User{
 		ID:        uid,
 		Email:     ur.Email,
 		Password:  ur.Password,
@@ -45,16 +60,26 @@ func (d *userDomain) UserRegister(ctx context.Context, ur *entity.UserRegister) 
 		Avatar:    ur.Avatar,
 		PublicKey: ur.PublicKey,
 		Status:    entity.UserStatusNormal,
-	})
-	if err != nil {
-		return uid, err
 	}
+	_, err := d.ur.SaveUser(ctx, e)
+	if err != nil {
+		return "", err
+	}
+
 	return uid, nil
 }
 
 func (d *userDomain) ActivateUser(ctx context.Context, userID ...string) error {
-	emailVerity := true
-	return d.ur.UpdateUserStatus(ctx, &entity.UpdateUserStatus{EmailVerity: &emailVerity}, userID...)
+	for _, id := range userID {
+		_, err := d.ur.UpdateUser(ctx, &entity.User{
+			ID:          id,
+			EmailVerity: true,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // NewUserDomain 返回 UserDomain 接口的实例
@@ -64,7 +89,14 @@ func NewUserDomain(ur repository.UserRepository) UserDomain {
 
 // CreateUser 创建用户
 func (d *userDomain) CreateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
-	return d.ur.InsertUser(ctx, user)
+	u, err := d.ur.SaveUser(ctx, user)
+	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return nil, fmt.Errorf("email ‘%s’ already exists", user.Email)
+		}
+		return nil, err
+	}
+	return u, nil
 }
 
 // DeleteUser 删除用户
@@ -79,17 +111,21 @@ func (d *userDomain) UpdateUser(ctx context.Context, user *entity.User, partialU
 		return d.ur.UpdateUser(ctx, user)
 	}
 	// 否则，调用 UserRepository 的 InsertAndUpdateUser 方法
-	return nil, d.ur.InsertAndUpdateUser(ctx, user)
+	return d.ur.UpdatesUser(ctx, user)
 }
 
 // UpdatePassword 更新用户密码
 func (d *userDomain) UpdatePassword(ctx context.Context, userID, password string) (string, error) {
-	return d.ur.UpdatePassword(ctx, userID, password)
+	user, err := d.ur.UpdateUser(ctx, &entity.User{ID: userID, Password: password})
+	if err != nil {
+		return "", err
+	}
+	return user.Password, nil
 }
 
 // GetUser 获取用户信息
 func (d *userDomain) GetUser(ctx context.Context, id string) (*entity.User, error) {
-	return d.ur.GetUserInfoByUid(ctx, id)
+	return d.ur.GetUser(ctx, id)
 }
 
 // GetUsers 获取所有用户信息

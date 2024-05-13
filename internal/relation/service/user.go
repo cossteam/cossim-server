@@ -50,9 +50,9 @@ func (s *Service) FriendList(ctx context.Context, userID string) (interface{}, e
 		for _, friend := range friendListResp.FriendList {
 			if friend.UserId == v.UserId {
 				pre := &usersorter.Preferences{
-					OpenBurnAfterReading:        uint32(friend.OpenBurnAfterReading),
+					OpenBurnAfterReading:        friend.OpenBurnAfterReading,
 					OpenBurnAfterReadingTimeOut: friend.OpenBurnAfterReadingTimeOut,
-					SilentNotification:          uint32(friend.IsSilent),
+					SilentNotification:          friend.IsSilent,
 					Remark:                      friend.Remark,
 				}
 				data = append(data, usersorter.CustomUserData{
@@ -439,7 +439,7 @@ func (s *Service) SwitchUserE2EPublicKey(ctx context.Context, userID string, fri
 	return nil, nil
 }
 
-func (s *Service) UserSilentNotification(ctx context.Context, userID string, friendID string, silent model.SilentNotificationType) (interface{}, error) {
+func (s *Service) UserSilentNotification(ctx context.Context, userID string, friendID string, silent bool) (interface{}, error) {
 	_, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: friendID,
@@ -452,7 +452,7 @@ func (s *Service) UserSilentNotification(ctx context.Context, userID string, fri
 	_, err = s.relationUserService.SetFriendSilentNotification(ctx, &relationgrpcv1.SetFriendSilentNotificationRequest{
 		UserId:   userID,
 		FriendId: friendID,
-		IsSilent: relationgrpcv1.UserSilentNotificationType(silent),
+		IsSilent: silent,
 	})
 	if err != nil {
 		s.logger.Error("设置好友静默通知失败", zap.Error(err))
@@ -475,7 +475,7 @@ func (s *Service) SetUserBurnAfterReading(ctx context.Context, userId string, re
 	_, err = s.relationUserService.SetUserOpenBurnAfterReading(ctx, &relationgrpcv1.SetUserOpenBurnAfterReadingRequest{
 		UserId:               userId,
 		FriendId:             req.UserId,
-		OpenBurnAfterReading: relationgrpcv1.OpenBurnAfterReadingType(req.Action),
+		OpenBurnAfterReading: req.OpenBurnAfterReading,
 		TimeOut:              req.TimeOut,
 	})
 	if err != nil {

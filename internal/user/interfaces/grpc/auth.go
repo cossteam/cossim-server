@@ -38,7 +38,7 @@ func (s *UserServiceServer) ParseToken(ctx context.Context, request *api.ParseTo
 }
 
 func (s *UserServiceServer) GenerateUserToken(ctx context.Context, request *api.GenerateUserTokenRequest) (*api.GenerateUserTokenResponse, error) {
-	token, err := utils.GenerateToken(request.UserID, request.Email, request.DriverID, request.PublicKey, s.secret)
+	token, err := utils.GenerateToken(request.UserID, request.Email, request.DriverID, s.secret)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessReque
 		return resp, nil
 	}
 
-	info, err := s.ur.GetUserInfoByUid(ctx, claims.UserId)
+	info, err := s.ur.GetWithOptions(ctx, &entity.User{ID: claims.UserId})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())

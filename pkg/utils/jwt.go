@@ -18,7 +18,7 @@ type Claims struct {
 }
 
 // GenerateToken 生成token
-func GenerateToken(userId, email, driverId, publicKey, jwtKey string) (string, error) {
+func GenerateToken(userId, email, driverId, jwtKey string) (string, error) {
 	var secret = jwtKey
 	if secret == "" {
 		secret = os.Getenv("JWT_SECRET")
@@ -29,7 +29,6 @@ func GenerateToken(userId, email, driverId, publicKey, jwtKey string) (string, e
 			UserId:           userId,
 			Email:            email,
 			DriverId:         driverId,
-			PublicKey:        publicKey,
 			RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Duration(ExpirationTime) * 24 * time.Hour)}},
 		})
 	token, err := t.SignedString([]byte(jwtKey))

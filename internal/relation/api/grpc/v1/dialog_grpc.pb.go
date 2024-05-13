@@ -488,7 +488,7 @@ func (UnimplementedDialogServiceServer) GetDialogTargetUserId(context.Context, *
 }
 
 // UnsafeDialogServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interfaces is not recommended, as added methods to DialogServiceServer will
+// Use of this interface is not recommended, as added methods to DialogServiceServer will
 // result in compilation errors.
 type UnsafeDialogServiceServer interface {
 	mustEmbedUnimplementedDialogServiceServer()

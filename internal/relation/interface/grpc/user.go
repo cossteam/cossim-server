@@ -262,21 +262,14 @@ func (s *userServiceServer) GetFriendList(ctx context.Context, request *v1.GetFr
 	}
 
 	for _, friend := range friends {
-		var silentNotification, openBurnAfterReading = 0, 0
-		if friend.IsSilent {
-			silentNotification = 1
-		}
-		if friend.OpenBurnAfterReading {
-			openBurnAfterReading = 1
-		}
 		resp.FriendList = append(resp.FriendList,
 			&v1.Friend{
 				UserId:                      friend.UserId,
 				DialogId:                    friend.DialogId,
 				Remark:                      friend.Remark,
 				Status:                      v1.RelationStatus(friend.Status),
-				IsSilent:                    v1.UserSilentNotificationType(silentNotification),
-				OpenBurnAfterReading:        v1.OpenBurnAfterReadingType(openBurnAfterReading),
+				IsSilent:                    friend.IsSilent,
+				OpenBurnAfterReading:        friend.OpenBurnAfterReading,
 				OpenBurnAfterReadingTimeOut: friend.OpenBurnAfterReadingTimeOut,
 			})
 	}
@@ -345,23 +338,13 @@ func (s *userServiceServer) GetUserRelation(ctx context.Context, request *v1.Get
 		return resp, err
 	}
 
-	fmt.Println("entityRelation.Status => ", entityRelation.Status)
-
-	var silentNotification, openBurnAfterReading = 0, 0
-	if entityRelation.SilentNotification {
-		silentNotification = 1
-	}
-	if entityRelation.OpenBurnAfterReading {
-		openBurnAfterReading = 1
-	}
-
 	// 将entity.UserRelation的字段值复制到v1.GetUserRelationResponse
 	resp.Status = v1.RelationStatus(entityRelation.Status)
 	resp.DialogId = entityRelation.DialogId
 	resp.UserId = entityRelation.UserID
 	resp.FriendId = entityRelation.FriendID
-	resp.IsSilent = v1.UserSilentNotificationType(silentNotification)
-	resp.OpenBurnAfterReading = v1.OpenBurnAfterReadingType(openBurnAfterReading)
+	resp.IsSilent = entityRelation.SilentNotification
+	resp.OpenBurnAfterReading = entityRelation.OpenBurnAfterReading
 	resp.Remark = entityRelation.Remark
 	resp.OpenBurnAfterReadingTimeOut = entityRelation.BurnAfterReadingTimeOut
 
@@ -421,12 +404,7 @@ func (s *userServiceServer) GetUserRelationByUserIds(ctx context.Context, reques
 func (s *userServiceServer) SetFriendSilentNotification(ctx context.Context, request *v1.SetFriendSilentNotificationRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 
-	var silentNotification bool
-	if request.IsSilent == 1 {
-		silentNotification = true
-	}
-
-	if err := s.repos.UserRepo.SetUserFriendSilentNotification(ctx, request.UserId, request.FriendId, silentNotification); err != nil {
+	if err := s.repos.UserRepo.SetUserFriendSilentNotification(ctx, request.UserId, request.FriendId, request.IsSilent); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserFriendSilentNotificationFailed.Code()), err.Error())
 	}
 
@@ -446,16 +424,11 @@ func (s *userServiceServer) SetFriendSilentNotification(ctx context.Context, req
 func (s *userServiceServer) SetUserOpenBurnAfterReading(ctx context.Context, request *v1.SetUserOpenBurnAfterReadingRequest) (*emptypb.Empty, error) {
 	var resp = &emptypb.Empty{}
 
-	var openBurnAfterReading bool
-	if request.OpenBurnAfterReading == 1 {
-		openBurnAfterReading = true
-	}
-
 	if err := s.repos.UserRepo.SetUserOpenBurnAfterReading(
 		ctx,
 		request.UserId,
 		request.FriendId,
-		openBurnAfterReading,
+		request.OpenBurnAfterReading,
 		request.TimeOut,
 	); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingFailed.Code()), err.Error())

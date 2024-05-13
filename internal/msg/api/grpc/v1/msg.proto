@@ -16,7 +16,7 @@ message SendUserMsgRequest{
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 6;
   // @inject_tag: json:"is_burn_after_reading"
-  BurnAfterReadingType IsBurnAfterReadingType = 7;
+  bool IsBurnAfterReadingType = 7;
   // @inject_tag: json:"sub_type"
   int32 SubType = 8;
 }
@@ -35,7 +35,7 @@ message SendGroupMsgRequest{
   // @inject_tag: json:"dialog_id"
   uint32 DialogId = 6;
   // @inject_tag: json:"is_burn_after_reading"
-  BurnAfterReadingType IsBurnAfterReadingType = 7;
+  bool IsBurnAfterReadingType = 7;
   // @inject_tag: json:"at_users"
   repeated string AtUsers = 8;
   // @inject_tag: json:"at_all_user"
@@ -45,11 +45,6 @@ message SendGroupMsgRequest{
 enum AtAllUserType {
   NotAtAllUser = 0;
   AtAllUser = 1;
-}
-
-enum BurnAfterReadingType{
-    NotBurnAfterReading = 0; //非阅后即焚
-    IsBurnAfterReading  = 1;                          //阅后即焚消息
 }
 
 // 定义 UserMessageType 枚举类型
@@ -122,7 +117,7 @@ message UserMessage{
   // @inject_tag: json:"is_label"
   MsgLabel IsLabel = 11;
   // @inject_tag: json:"is_burn_after_reading"
-  BurnAfterReadingType IsBurnAfterReadingType = 12;
+  bool IsBurnAfterReadingType = 12;
   // @inject_tag: json:"sub_type"
   uint32 SubType= 13;
 }
@@ -154,7 +149,7 @@ message GroupMessage {
   // @inject_tag: json:"is_label"
   MsgLabel IsLabel = 10;
   // @inject_tag: json:"is_burn_after_reading"
-  BurnAfterReadingType IsBurnAfterReadingType = 11;
+  bool IsBurnAfterReadingType = 11;
   // @inject_tag: json:"at_users"
   repeated string AtUsers = 12;
   // @inject_tag: json:"at_all_user"
@@ -237,7 +232,7 @@ message LastMsg {
   // @inject_tag: json:"receiver_id"
   string ReceiverId = 7;
   // @inject_tag: json:"is_burn_after_reading"
-  BurnAfterReadingType IsBurnAfterReadingType = 8;
+  bool IsBurnAfterReadingType = 8;
   // @inject_tag: json:"at_users"
   repeated string AtUsers = 9;
   // @inject_tag: json:"at_all_user"
