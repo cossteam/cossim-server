@@ -8,7 +8,6 @@ import (
 	"github.com/cossim/coss-server/internal/user/app"
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
-	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
 	"github.com/cossim/coss-server/pkg/version"
@@ -43,12 +42,12 @@ func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
 		}
 		h.pgpKey = h.enc.GetPublicKey()
 	}
-	var userAddr string
-	if cfg.Discovers["user"].Direct {
-		userAddr = cfg.Discovers["user"].Addr()
-	} else {
-		userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
-	}
+	var userAddr = cfg.GRPC.Addr()
+	//if cfg.Discovers["user"].Direct {
+	//	userAddr = cfg.Discovers["user"].Addr()
+	//} else {
+	//	userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
+	//}
 	authClient, err := client.NewAuthClient(userAddr)
 	if err != nil {
 		return err
