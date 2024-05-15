@@ -1,6 +1,6 @@
 .idea/
 /deploy/docker/data
 /deploy/docker/config/**/*.yaml
-/interface/**/*.yaml
+/internal/**/*.yaml
 /service/**/*.yaml
-/interface/**/.cache
+/internal/**/.cache

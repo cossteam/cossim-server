@@ -92,6 +92,7 @@ func mapUserToUserInfo(user *entity.User) *entity.UserInfo {
 		Avatar:    user.Avatar,
 		Signature: user.Signature,
 		Status:    user.Status,
+		PublicKey: user.PublicKey,
 	}
 }
 

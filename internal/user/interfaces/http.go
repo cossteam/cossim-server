@@ -41,6 +41,38 @@ func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
 			return err
 		}
 		h.pgpKey = h.enc.GetPublicKey()
+
+		////生成测试data
+		//rkey, err := encryption.GenerateRandomKey(32)
+		//if err != nil {
+		//	return err
+		//}
+		//message, err := h.enc.SecretMessage("{\n    \"driver_id\": \"51\",\n    \"driver_token\": \"deserunt commodo\",\n    \"email\": \"zzw6@qq.com\",\n    \"password\": \"123123a\",\n    \"platform\": \"in\"\n}", h.pgpKey, []byte(rkey))
+		//if err != nil {
+		//	return err
+		//}
+		//
+		//cacheDir := ".cache"
+		//if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		//	err := os.Mkdir(cacheDir, 0755) // 创建文件夹并设置权限
+		//	if err != nil {
+		//		return err
+		//	}
+		//}
+		//// 保存私钥到文件
+		//privateKeyFile, err := os.Create(cacheDir + "/data.json")
+		//if err != nil {
+		//	return err
+		//}
+		//
+		//datam, err := json.Marshal(message)
+		//_, err = privateKeyFile.WriteString(string(datam))
+		//if err != nil {
+		//	privateKeyFile.Close()
+		//	return err
+		//}
+		//privateKeyFile.Close()
+
 	}
 	var userAddr = cfg.GRPC.Addr()
 	//if cfg.Discovers["user"].Direct {
