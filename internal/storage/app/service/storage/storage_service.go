@@ -1,10 +1,10 @@
-package service
+package storage
 
 import (
 	"context"
 	"fmt"
-	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/storage/api/http/model"
+	v1 "github.com/cossim/coss-server/internal/storage/api/http/v1"
+	"github.com/cossim/coss-server/internal/storage/domain/entity"
 	"github.com/cossim/coss-server/pkg/code"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	httputil "github.com/cossim/coss-server/pkg/utils/http"
@@ -17,7 +17,17 @@ import (
 	"strings"
 )
 
-func (s *Service) Upload(ctx context.Context, userID string, file *multipart.FileHeader, _Type int) (*model.UploadFileResponse, error) {
+type StorageService interface {
+	Upload(ctx context.Context, userID string, file *multipart.FileHeader, _Type int) (*v1.UploadFileResponse, error)
+	GetFileInfo(ctx context.Context, id string) (*entity.File, error)
+	DeleteFile(ctx context.Context, id string) error
+	GetMultipartUploadKey(ctx context.Context, fileName string, _Type int) (*v1.GetMultipartUploadKeyResponse, error)
+	UploadMultipart(ctx context.Context, key string, uploadId string, partNumber int, reader io.Reader, size int64) error
+	CompleteMultipartUpload(ctx context.Context, req *v1.CompleteUploadRequest) (string, error)
+	AbortMultipartUpload(ctx context.Context, key string, uploadId string) error
+}
+
+func (s *ServiceImpl) Upload(ctx context.Context, userID string, file *multipart.FileHeader, _Type int) (*v1.UploadFileResponse, error) {
 	fileObj, err := file.Open()
 	if err != nil {
 
@@ -37,10 +47,12 @@ func (s *Service) Upload(ctx context.Context, userID string, file *multipart.Fil
 		fileExtension = file.Filename[strings.LastIndex(file.Filename, "."):]
 	}
 
-	opt := model.GetContentTypeOption(fileExtension)
+	opt := s.GetContentTypeOption(fileExtension)
 
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+fileExtension)
+
+	fmt.Println("s.sp =>", s.sp)
 	_, err = s.sp.Upload(ctx, key, fileObj, file.Size, opt)
 	if err != nil {
 		return nil, err
@@ -75,28 +87,25 @@ func (s *Service) Upload(ctx context.Context, userID string, file *multipart.Fil
 	//	}
 	//}
 
-	_, err = s.storageService.Upload(context.Background(), &storagev1.UploadRequest{
-		UserID:   userID,
-		FileName: file.Filename,
-		Path:     key,
-		Url:      aUrl,
-		Type:     storagev1.FileType(_Type),
-		Size:     uint64(file.Size),
+	err = s.sd.Upload(context.Background(), &entity.File{
+		Owner: userID,
+		Name:  file.Filename,
+		Path:  key,
+		Type:  entity.FileType(_Type),
+		Size:  uint64(file.Size),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &model.UploadFileResponse{
+	return &v1.UploadFileResponse{
 		FileId: fileID,
 		Url:    aUrl,
 	}, nil
 }
 
-func (s *Service) GetFileInfo(ctx context.Context, request *model.GetFileInfoRequest) (interface{}, error) {
-	file, err := s.storageService.GetFileInfo(ctx, &storagev1.GetFileInfoRequest{
-		FileID: request.FileId,
-	})
+func (s *ServiceImpl) GetFileInfo(ctx context.Context, id string) (*entity.File, error) {
+	file, err := s.sd.GetFileInfo(ctx, id)
 	if err != nil {
 		return nil, status.Error(codes.Code(code.StorageErrGetFileInfoFailed.Code()), err.Error())
 	}
@@ -110,8 +119,8 @@ func (s *Service) GetFileInfo(ctx context.Context, request *model.GetFileInfoReq
 	return file, nil
 }
 
-func (s *Service) DeleteFile(ctx context.Context, fileId string) error {
-	resp, err := s.storageService.GetFileInfo(ctx, &storagev1.GetFileInfoRequest{FileID: fileId})
+func (s *ServiceImpl) DeleteFile(ctx context.Context, fileId string) error {
+	resp, err := s.sd.GetFileInfo(ctx, fileId)
 	if err != nil {
 		return err
 	}
@@ -120,27 +129,27 @@ func (s *Service) DeleteFile(ctx context.Context, fileId string) error {
 		return err
 	}
 
-	_, err = s.storageService.Delete(ctx, &storagev1.DeleteRequest{FileID: fileId})
+	err = s.sd.Delete(ctx, fileId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) GetMultipartUploadKey(ctx context.Context, request *model.GetMultipartUploadKeyRequest) (*model.GetMultipartUploadKeyResponse, error) {
+func (s *ServiceImpl) GetMultipartUploadKey(ctx context.Context, fileName string, _Type int) (*v1.GetMultipartUploadKeyResponse, error) {
 	// 获取桶名称
-	bucket, err := myminio.GetBucketName(int(request.Type))
+	bucket, err := myminio.GetBucketName(_Type)
 	if err != nil {
 		return nil, err
 	}
 
 	// 生成文件ID和文件扩展名
-	lastDotIndex := strings.LastIndex(request.FileName, ".")
+	lastDotIndex := strings.LastIndex(fileName, ".")
 	fileExtension := ""
-	if lastDotIndex == -1 || lastDotIndex == len(request.FileName)-1 {
+	if lastDotIndex == -1 || lastDotIndex == len(fileName)-1 {
 		fileExtension = ""
 	} else {
-		fileExtension = request.FileName[lastDotIndex:]
+		fileExtension = fileName[lastDotIndex:]
 	}
 	fileID := uuid.New().String()
 
@@ -152,14 +161,14 @@ func (s *Service) GetMultipartUploadKey(ctx context.Context, request *model.GetM
 		return nil, err
 	}
 
-	return &model.GetMultipartUploadKeyResponse{
+	return &v1.GetMultipartUploadKeyResponse{
 		UploadId: multipartUpload,
-		Type:     request.Type,
+		Type:     _Type,
 		Key:      key,
 	}, nil
 }
 
-func (s *Service) UploadMultipart(ctx context.Context, key string, uploadId string, partNumber int, reader io.Reader, size int64) error {
+func (s *ServiceImpl) UploadMultipart(ctx context.Context, key string, uploadId string, partNumber int, reader io.Reader, size int64) error {
 
 	err := s.sp.UploadPart(ctx, key, uploadId, partNumber, reader, size, minio.PutObjectPartOptions{})
 	if err != nil {
@@ -169,9 +178,9 @@ func (s *Service) UploadMultipart(ctx context.Context, key string, uploadId stri
 	return nil
 }
 
-func (s *Service) CompleteMultipartUpload(ctx context.Context, req *model.CompleteUploadRequest) (string, error) {
+func (s *ServiceImpl) CompleteMultipartUpload(ctx context.Context, req *v1.CompleteUploadRequest) (string, error) {
 
-	headerUrl, err := s.sp.CompleteMultipartUpload(context.Background(), req.Key, req.UploadId)
+	_, err := s.sp.CompleteMultipartUpload(context.Background(), req.Key, req.UploadId)
 	if err != nil {
 		return "", err
 	}
@@ -180,13 +189,12 @@ func (s *Service) CompleteMultipartUpload(ctx context.Context, req *model.Comple
 		return "", err
 	}
 
-	_, err = s.storageService.Upload(context.Background(), &storagev1.UploadRequest{
-		UserID:   "userID",
-		FileName: req.FileName,
-		Path:     req.Key,
-		Url:      headerUrl.String(),
-		Type:     storagev1.FileType(req.Type),
-		Size:     uint64(info.Size),
+	err = s.sd.Upload(context.Background(), &entity.File{
+		Owner: "userID",
+		Name:  req.FileName,
+		Path:  req.Key,
+		Type:  entity.FileType(req.Type),
+		Size:  uint64(info.Size),
 	})
 	if err != nil {
 		return "", err
@@ -201,10 +209,38 @@ func (s *Service) CompleteMultipartUpload(ctx context.Context, req *model.Comple
 	}
 
 	return aUrl, nil
-	//headerUrl.Host = gatewayAddress + ":" + gatewayPort
-	//headerUrl.Path = downloadURL + headerUrl.Path
 }
 
-func (s *Service) AbortMultipartUpload(ctx context.Context, key string, uploadId string) error {
+func (s *ServiceImpl) AbortMultipartUpload(ctx context.Context, key string, uploadId string) error {
 	return s.sp.AbortMultipartUpload(ctx, key, uploadId)
+}
+
+func (s *ServiceImpl) GetContentTypeOption(fileExt string) minio.PutObjectOptions {
+	contentType := ""
+
+	// 根据文件扩展名设置ContentType
+	switch fileExt {
+	case ".jpg", ".jpeg":
+		contentType = "image/jpeg"
+	case ".png":
+		contentType = "image/png"
+	case ".gif":
+		contentType = "image/gif"
+	case ".mp3":
+		contentType = "audio/mpeg"
+	case ".wav":
+		contentType = "audio/wav"
+	case ".mp4":
+		contentType = "video/mp4"
+	case ".avi":
+		contentType = "video/x-msvideo"
+	// 添加其他文件类型的判断逻辑
+	default:
+		contentType = "application/octet-stream" // 默认使用二进制流的ContentType
+	}
+
+	options := minio.PutObjectOptions{
+		ContentType: contentType,
+	}
+	return options
 }

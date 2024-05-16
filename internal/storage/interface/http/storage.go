@@ -2,8 +2,9 @@ package http
 
 import (
 	"context"
+	"fmt"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/storage/api/http/model"
+	v1 "github.com/cossim/coss-server/internal/storage/api/http/v1"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,7 @@ import (
 	"strings"
 )
 
-// upload
+// Upload
 // @Summary 上传文件
 // @Description 上传文件
 // @Tags Storage
@@ -23,7 +24,7 @@ import (
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files [post]
-func (h *Handler) upload(c *gin.Context) {
+func (h *Handler) Upload(c *gin.Context) {
 	// 获取表单中的整数字段，如果字段不存在或无法解析为整数，则使用默认值 0
 	value := c.PostForm("type")
 	if value == "" {
@@ -46,6 +47,8 @@ func (h *Handler) upload(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("file.Size", file.Size)
+	fmt.Println("maxFileSize", maxFileSize)
 	if file.Size > maxFileSize {
 		h.logger.Error("文件大小超过限制", zap.Error(err))
 		response.SetFail(c, "文件大小超过限制", nil)
@@ -61,7 +64,7 @@ func (h *Handler) upload(c *gin.Context) {
 	response.SetSuccess(c, "上传成功", resp)
 }
 
-// download
+// Download
 // @Summary 下载文件
 // @Description 下载文件
 // @Tags Storage
@@ -69,7 +72,7 @@ func (h *Handler) upload(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/download/:type/:id [get]
-func (h *Handler) download(c *gin.Context) {
+func (h *Handler) Download(c *gin.Context, pType string, id string) {
 	targetURL := "http://" + h.minioAddr
 	URL := c.Request.URL.String()
 	if strings.Contains(URL, downloadURL) {
@@ -113,7 +116,7 @@ func (h *Handler) download(c *gin.Context) {
 	io.Copy(c.Writer, resp.Body)
 }
 
-// getFileInfo
+// GetFileInfo
 // @Summary 获取文件信息
 // @Description 获取文件信息
 // @Tags Storage
@@ -121,7 +124,7 @@ func (h *Handler) download(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/:id [get]
-func (h *Handler) getFileInfo(c *gin.Context) {
+func (h *Handler) GetFileInfo(c *gin.Context, id string) {
 	//fileID := c.Query("file_id")
 	fileID := c.Param("id")
 	if fileID == "" {
@@ -129,7 +132,7 @@ func (h *Handler) getFileInfo(c *gin.Context) {
 		return
 	}
 
-	info, err := h.svc.GetFileInfo(context.Background(), &model.GetFileInfoRequest{FileId: fileID})
+	info, err := h.svc.GetFileInfo(context.Background(), fileID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -138,7 +141,7 @@ func (h *Handler) getFileInfo(c *gin.Context) {
 	response.SetSuccess(c, "获取文件信息成功", info)
 }
 
-// deleteFile
+// DeleteFile
 // @Summary 删除文件
 // @Description 删除文件
 // @param id path string true "文件id"
@@ -146,7 +149,7 @@ func (h *Handler) getFileInfo(c *gin.Context) {
 // @Tags Storage
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/:id [delete]
-func (h *Handler) deleteFile(c *gin.Context) {
+func (h *Handler) DeleteFile(c *gin.Context, id string) {
 	//req := &DeleteFileRequest{}
 	//if err := c.ShouldBindJSON(&req); err != nil {
 	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -166,6 +169,7 @@ func (h *Handler) deleteFile(c *gin.Context) {
 	response.SetSuccess(c, "success", nil)
 }
 
+// GetMultipartKey
 // @Summary 生成分片上传id
 // @Description 生成分片上传id
 // @Tags Storage
@@ -174,7 +178,7 @@ func (h *Handler) deleteFile(c *gin.Context) {
 // @param type query integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/key [get]
-func (h *Handler) getMultipartKey(c *gin.Context) {
+func (h *Handler) GetMultipartKey(c *gin.Context, params v1.GetMultipartKeyParams) {
 	fileName := c.Query("file_name")
 	if fileName == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file_name is required"})
@@ -190,10 +194,7 @@ func (h *Handler) getMultipartKey(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.svc.GetMultipartUploadKey(context.Background(), &model.GetMultipartUploadKeyRequest{
-		FileName: fileName,
-		Type:     model.FileType(t),
-	})
+	resp, err := h.svc.GetMultipartUploadKey(context.Background(), fileName, t)
 	if err != nil {
 		return
 	}
@@ -201,6 +202,7 @@ func (h *Handler) getMultipartKey(c *gin.Context) {
 	response.SetSuccess(c, "获取文件信息成功", resp)
 }
 
+// UploadMultipart
 // @Summary 上传分片
 // @Description 上传分片
 // @Tags Storage
@@ -211,7 +213,7 @@ func (h *Handler) getMultipartKey(c *gin.Context) {
 // @Produce  json
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/upload [post]
-func (h *Handler) uploadMultipart(c *gin.Context) {
+func (h *Handler) UploadMultipart(c *gin.Context) {
 	//单次分片限制100m
 	maxFileSize := 100 * 1024 * 1024
 	file, err := c.FormFile("file")
@@ -270,6 +272,7 @@ func (h *Handler) uploadMultipart(c *gin.Context) {
 	response.SetSuccess(c, "分片上传成功", nil)
 }
 
+// CompleteUploadMultipart
 // @Summary 完成分片上传
 // @Description 完成分片上传
 // @Tags Storage
@@ -278,8 +281,8 @@ func (h *Handler) uploadMultipart(c *gin.Context) {
 // @param request body model.CompleteUploadRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/complete [post]
-func (h *Handler) completeUploadMultipart(c *gin.Context) {
-	req := new(model.CompleteUploadRequest)
+func (h *Handler) CompleteUploadMultipart(c *gin.Context) {
+	req := new(v1.CompleteUploadRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)
@@ -302,8 +305,8 @@ func (h *Handler) completeUploadMultipart(c *gin.Context) {
 // @param request body model.AbortUploadRequest true "request"
 // @Success		200 {object} model.Response{}
 // @Router /storage/files/multipart/abort [post]
-func (h *Handler) abortUploadMultipart(c *gin.Context) {
-	req := new(model.AbortUploadRequest)
+func (h *Handler) AbortUploadMultipart(c *gin.Context) {
+	req := new(v1.AbortUploadRequest)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("参数验证失败", zap.Error(err))
 		response.SetFail(c, "参数验证失败", nil)

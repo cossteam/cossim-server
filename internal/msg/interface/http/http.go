@@ -111,7 +111,7 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 		},
 	}
 	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-		return nil
+		return middleware.HandleOpenApiAuthentication(ctx, h.authService, input)
 	}
 
 	// Use our validation middleware to check all requests against the
