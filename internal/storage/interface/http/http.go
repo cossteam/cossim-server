@@ -34,11 +34,11 @@ type Handler struct {
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("storage_bff", int8(cfg.Log.Level))
 	h.minioAddr = cfg.OSS.Addr()
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 
 	if cfg.Encryption.Enable {
 		return h.enc.ReadKeyPair()
 	}
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	h.svc = service.New(cfg, h.StorageClient)
 	var userAddr string
 	if cfg.Discovers["user"].Direct {
