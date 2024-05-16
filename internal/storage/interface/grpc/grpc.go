@@ -6,8 +6,7 @@ import (
 	"github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	api "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/storage/domain/entity"
-	"github.com/cossim/coss-server/internal/storage/domain/repository"
-	"github.com/cossim/coss-server/internal/storage/infra/persistence"
+	"github.com/cossim/coss-server/internal/storage/domain/service"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
@@ -26,7 +25,7 @@ import (
 type Handler struct {
 	logger *zap.Logger
 	ac     *pkgconfig.AppConfig
-	fr     repository.FileRepository
+	fd     service.StorageDomain
 	v1.UnimplementedStorageServiceServer
 }
 
@@ -41,11 +40,11 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	infra := persistence.NewRepositories(dbConn)
-	if err = infra.Automigrate(); err != nil {
-		return err
-	}
-	s.fr = infra.FR
+	//infra := persistence.NewRepositories(dbConn)
+	//if err = infra.Automigrate(); err != nil {
+	//	return err
+	//}
+	s.fd = service.NewStorageDomain(dbConn, cfg)
 	s.ac = cfg
 	s.logger = plog.NewDefaultLogger("storage_service", int8(cfg.Log.Level))
 	return nil
@@ -89,7 +88,7 @@ func (s *Handler) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Up
 		Size:     request.Size,
 	}
 
-	if err = s.fr.Create(file); err != nil {
+	if err = s.fd.Upload(ctx, file); err != nil {
 		s.logger.Error("创建文件记录失败", zap.Error(err))
 		return resp, status.Error(codes.Code(code.StorageErrCreateFileRecordFailed.Code()), err.Error())
 	}
@@ -98,7 +97,7 @@ func (s *Handler) Upload(ctx context.Context, request *v1.UploadRequest) (*v1.Up
 }
 
 func (s *Handler) GetFileInfo(ctx context.Context, request *v1.GetFileInfoRequest) (*v1.GetFileInfoResponse, error) {
-	file, err := s.fr.GetByID(request.FileID)
+	file, err := s.fd.GetFileInfo(ctx, request.FileID)
 	if err != nil {
 		s.logger.Error("查询文件信息失败", zap.Error(err))
 		return nil, status.Error(codes.Code(code.StorageErrGetFileInfoFailed.Code()), err.Error())
@@ -119,7 +118,7 @@ func (s *Handler) GetFileInfo(ctx context.Context, request *v1.GetFileInfoReques
 func (s *Handler) Delete(ctx context.Context, request *v1.DeleteRequest) (*v1.DeleteResponse, error) {
 	fmt.Println("request.FileID => ", request.FileID)
 	// 根据文件 ID 删除文件
-	err := s.fr.Delete(request.FileID)
+	err := s.fd.Delete(ctx, request.FileID)
 	if err != nil {
 		s.logger.Error("删除文件记录失败", zap.Error(err))
 		return nil, status.Error(codes.Code(code.StorageErrDeleteFileFailed.Code()), err.Error())

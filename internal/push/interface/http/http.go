@@ -28,8 +28,6 @@ type Handler struct {
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	h.logger = plog.NewDefaultLogger("push_bff", int8(cfg.Log.Level))
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-
 	if cfg.Encryption.Enable {
 		if err := h.enc.ReadKeyPair(); err != nil {
 			return err
@@ -37,6 +35,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	}
 	h.socketServer = h.PushService.SocketServer
 	h.setupSocketEvent()
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	var userAddr string
 	if cfg.Discovers["user"].Direct {
 		userAddr = cfg.Discovers["user"].Addr()
@@ -62,7 +61,7 @@ func (h *Handler) Version() string {
 func (h *Handler) RegisterRoute(r gin.IRouter) {
 	u := r.Group("/api/v1/push")
 	u.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	//u.Use(middleware.AuthMiddleware(h.authService))
+	u.Use(middleware.AuthMiddleware(h.authService))
 	u.GET("/ws/*any", gin.WrapH(h.socketServer))
 	u.POST("/ws/*any", gin.WrapH(h.socketServer))
 }

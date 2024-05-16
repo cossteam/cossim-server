@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/http/v1"
 	"github.com/cossim/coss-server/internal/user/app/command"
 	"github.com/cossim/coss-server/internal/user/app/query"
@@ -266,17 +265,7 @@ func (h *HttpServer) UserLogin(c *gin.Context) {
 		return
 	}
 
-	userInfo, err := h.app.Queries.GetUser.Handle(c, &query.GetUse{
-		TargetUser: userLogin.UserID,
-	})
-	if err != nil {
-		fmt.Println("userlogin ======> ", err)
-		c.Error(err)
-		return
-	}
-
-	c.Set(constants.UserID, userLogin.UserID)
-	c.Set(constants.PublicKey, userInfo.PublicKey)
+	c.Set("user_id", userLogin.UserID)
 	response.SetSuccess(c, "登录成功", gin.H{"token": userLogin.Token, "user_info": ConversionUserLogin(userLogin)})
 }
 
@@ -377,17 +366,7 @@ func (h *HttpServer) UserRegister(c *gin.Context) {
 		return
 	}
 
-	userInfo, err := h.app.Queries.GetUser.Handle(c, &query.GetUse{
-		TargetUser: userID,
-	})
-	if err != nil {
-		fmt.Println("userlogin ======> ", err)
-		c.Error(err)
-		return
-	}
-
-	c.Set(constants.UserID, userID)
-	c.Set(constants.PublicKey, userInfo.PublicKey)
+	c.Set("user_id", userID)
 	response.SetSuccess(c, "注册成功", gin.H{"user_id": userID})
 }
 

@@ -1,0 +1,274 @@
+openapi: 3.0.1
+info:
+  title: Storage API
+  description: API for file storage operations
+  version: 1.0.0
+paths:
+  /api/v1/storage/files:
+    post:
+      summary: 上传文件
+      operationId: upload
+      description: 上传文件
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Storage
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 文件
+                type:
+                  type: integer
+                  description: 文件类型(0:音频，1:图片，2:文件，3:视频)
+      responses:
+        '200':
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+  /api/v1/storage/files/download/{type}/{id}:
+    get:
+      summary: 下载文件
+      description: 下载文件
+      operationId: download
+      tags:
+        - Storage
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 文件下载
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/storage/files/{id}:
+    get:
+      summary: 获取文件信息
+      description: 获取文件信息
+      operationId: getFileInfo
+      tags:
+        - Storage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+    delete:
+      summary: 删除文件
+      description: 删除文件
+      operationId: deleteFile
+      tags:
+        - Storage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/storage/files/multipart/key:
+    get:
+      summary: 生成分片上传id
+      description: 生成分片上传id
+      operationId: getMultipartKey
+      tags:
+        - Storage
+      parameters:
+        - name: file_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: integer
+            description: 文件类型(0:音频，1:图片，2:文件，3:视频)
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMultipartUploadKeyResponse'
+  /api/v1/storage/files/multipart/upload:
+    post:
+      summary: 上传分片
+      operationId: uploadMultipart
+      description: 上传分片
+      tags:
+        - Storage
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 本次分片
+                upload_id:
+                  type: string
+                  description: 上传id
+                part_number:
+                  type: integer
+                  description: 本次分片序号
+                key:
+                  type: string
+                  description: 文件唯一key
+      responses:
+        '200':
+          description: 分片上传成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/storage/files/multipart/complete:
+    post:
+      summary: 完成分片上传
+      description: 完成分片上传
+      operationId: completeUploadMultipart
+      tags:
+        - Storage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteUploadRequest'
+      responses:
+        '200':
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/storage/files/multipart/abort:
+    post:
+      summary: 清除文件分片(用于中断上传)
+      operationId: abortUploadMultipart
+      description: 清除文件分片
+      tags:
+        - Storage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AbortUploadRequest'
+      responses:
+        '200':
+          description: 清理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Response:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+    UploadFileResponse:
+      type: object
+      properties:
+        file_id:
+          type: string
+          description: 文件id
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        url:
+          type: string
+          description: 文件url
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    CompleteUploadRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        upload_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        file_name:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          description: 文件类型(0:音频，1:图片，2:文件，3:视频)
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    AbortUploadRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        upload_id:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+    GetMultipartUploadKeyResponse:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          description: 上传id
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        type:
+          type: integer
+          description: 文件类型
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        key:
+          type: string
+          description: 文件唯一key
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
