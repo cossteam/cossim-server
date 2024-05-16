@@ -60,7 +60,6 @@ type UserInfo struct {
 	Preferences    *Preferences
 	NewDeviceLogin bool
 	LastLoginTime  int64
-	PublicKey      string
 }
 
 type Preferences struct {
