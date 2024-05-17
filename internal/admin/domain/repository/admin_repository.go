@@ -1,9 +1,13 @@
 package repository
 
-import "github.com/cossim/coss-server/internal/admin/domain/entity"
+import (
+	"context"
+	"github.com/cossim/coss-server/internal/admin/domain/entity"
+)
 
 type AdminRepository interface {
-	InsertAdmin(admin *entity.Admin) error
-	InsertAndUpdateAdmin(admin *entity.Admin) error
-	GetAdminByID(id uint) (*entity.Admin, error)
+	InsertAdmin(ctx context.Context, admin *entity.Admin) error
+	InsertAndUpdateAdmin(ctx context.Context, admin *entity.Admin) error
+	GetAdminByID(ctx context.Context, id uint) (*entity.Admin, error)
+	Find(ctx context.Context, query *entity.Query) ([]*entity.Admin, error)
 }

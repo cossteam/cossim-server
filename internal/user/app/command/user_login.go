@@ -164,7 +164,7 @@ func (h *userLoginHandler) Handle(ctx context.Context, cmd *UserLogin) (*UserLog
 			return err
 		})
 
-		if isNewDevice {
+		if isNewDevice && user.Bot != 1 {
 			_, msgId, err := h.pushFirstLogin(ctx, user.ID, cmd.ClientIP, cmd.DriverID)
 			if err != nil {
 				return status.Error(codes.Aborted, err.Error())

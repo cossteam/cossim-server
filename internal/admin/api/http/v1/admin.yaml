@@ -1,0 +1,66 @@
+openapi: 3.0.0
+info:
+  title: Notification API
+  description: API for sending notifications
+  version: 1.0.0
+paths:
+  /api/v1/admin/notification/send_all:
+    post:
+      summary: 发送全体通知
+      description: 发送全体通知
+      operationId: sendAllNotification
+      tags:
+        - Admin
+      requestBody:
+        description: request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendAllNotificationRequest'
+      responses:
+        '200':
+          description: 成功响应
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          description: 参数验证失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '500':
+          description: 发送失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+components:
+  schemas:
+    SendAllNotificationRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: 通知内容
+          example: This is a notification
+      required:
+        - content
+    Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          example: 200
+        msg:
+          type: string
+          description: 响应消息
+          example: 发送成功
+        data:
+          type: object
+          description: 响应数据
+          nullable: true
+          example: null

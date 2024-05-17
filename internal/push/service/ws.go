@@ -174,10 +174,10 @@ func (s *Service) PushWsBatch(ctx context.Context, request *pushgrpcv1.PushWsBat
 		}
 
 		ui := s.SocketServer.RoomLen("/", msg.Uid)
-		if !msg.PushOffline && ui > 0 {
+		if !msg.PushOffline && ui == 0 {
 			continue
 		}
-		if msg.PushOffline && ui > 0 {
+		if msg.PushOffline && ui == 0 {
 			//不在线则推送到消息队列
 			go func() {
 				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)
@@ -222,10 +222,10 @@ func (s *Service) PushWsBatchByUserIds(ctx context.Context, request *pushgrpcv1.
 		}
 
 		ui := s.SocketServer.RoomLen("/", msg.Uid)
-		if !msg.PushOffline && ui > 0 {
+		if !msg.PushOffline && ui == 0 {
 			continue
 		}
-		if msg.PushOffline && ui > 0 {
+		if msg.PushOffline && ui == 0 {
 			go func() {
 				//不在线则推送到消息队列
 				err := s.rabbitMQClient.PublishMessage(msg.Uid, message)

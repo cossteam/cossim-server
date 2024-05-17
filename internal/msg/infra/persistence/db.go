@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"github.com/cossim/coss-server/internal/msg/domain/entity"
 	"github.com/cossim/coss-server/internal/msg/domain/repository"
+	"github.com/cossim/coss-server/internal/msg/infra/persistence/po"
 	"gorm.io/gorm"
 )
 
@@ -23,5 +23,5 @@ func NewRepositories(db *gorm.DB) *Repositories {
 }
 
 func (s *Repositories) Automigrate() error {
-	return s.db.AutoMigrate(&entity.GroupMessage{}, &entity.UserMessage{}, &entity.GroupMessageRead{})
+	return s.db.AutoMigrate(&po.GroupMessage{}, &po.UserMessage{}, &po.GroupMessageRead{})
 }

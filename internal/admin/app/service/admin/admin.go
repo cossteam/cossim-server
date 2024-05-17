@@ -1,4 +1,4 @@
-package service
+package admin
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	storagev1 "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	myminio "github.com/cossim/coss-server/pkg/storage/minio"
 	"github.com/cossim/coss-server/pkg/utils"
@@ -29,8 +30,15 @@ import (
 	"image/png"
 )
 
-func (s *Service) CreateAdmin(admin *entity.Admin) (interface{}, error) {
-	err := s.repo.Ar.InsertAdmin(admin)
+type AdminService interface {
+	InitAdmin() error
+	CreateAdmin(ctx context.Context, admin *entity.Admin) (interface{}, error)
+	SendAllNotification(ctx context.Context, content string) (interface{}, error)
+	GetAdminByUserID(ctx context.Context, userId string) (*entity.Admin, error)
+}
+
+func (s *ServiceImpl) CreateAdmin(ctx context.Context, admin *entity.Admin) (interface{}, error) {
+	err := s.ad.InsertAdmin(ctx, admin)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +46,7 @@ func (s *Service) CreateAdmin(admin *entity.Admin) (interface{}, error) {
 }
 
 // 创建初始账号
-func (s *Service) InitAdmin() error {
+func (s *ServiceImpl) InitAdmin() error {
 	UserId := "10000"
 	Email := "admin@admin.com"
 	Password := "123123a"
@@ -89,6 +97,7 @@ func (s *Service) InitAdmin() error {
 			Email:    Email,
 			NickName: Email,
 			Avatar:   aUrl,
+			IsBot:    1,
 			Status:   usergrpcv1.UserStatus_USER_STATUS_NORMAL,
 			//Status:   usergrpcv1.UserStatus_USER_STATUS_LOCK, //锁定账户
 
@@ -97,7 +106,7 @@ func (s *Service) InitAdmin() error {
 			return status.Error(codes.Aborted, err.Error())
 		}
 		// 创建初始化数据
-		resp2, err := s.userService.CreateUser(context.Background(), &usergrpcv1.CreateUserRequest{
+		resp2, err := s.userService.CreateUser(wf.Context, &usergrpcv1.CreateUserRequest{
 			UserId:   "10001",
 			Password: utils.HashString(Password),
 			Email:    Email2,
@@ -125,7 +134,7 @@ func (s *Service) InitAdmin() error {
 			return nil
 		})
 
-		err = s.repo.Ar.InsertAndUpdateAdmin(&entity.Admin{UserId: UserId, Role: entity.SuperAdminRole, Status: entity.NormalStatus})
+		err = s.ad.InsertAndUpdateAdmin(wf.Context, &entity.Admin{UserId: UserId, Role: entity.SuperAdminRole, Status: entity.NormalStatus})
 		if err != nil {
 			return status.Error(codes.Aborted, err.Error())
 		}
@@ -158,7 +167,7 @@ func (s *Service) InitAdmin() error {
 	return nil
 }
 
-func (s *Service) SendAllNotification(ctx context.Context, content string) (interface{}, error) {
+func (s *ServiceImpl) SendAllNotification(ctx context.Context, content string) (interface{}, error) {
 	UserId := constants.SystemNotification
 
 	//查询系统通知账号的所有好友
@@ -272,4 +281,15 @@ func (s *Service) SendAllNotification(ctx context.Context, content string) (inte
 	}
 
 	return nil, nil
+}
+
+func (s *ServiceImpl) GetAdminByUserID(ctx context.Context, userId string) (*entity.Admin, error) {
+	find, err := s.ad.Find(ctx, &entity.Query{UserId: &userId})
+	if err != nil {
+		return nil, err
+	}
+	if len(find) == 0 {
+		return nil, code.MyCustomErrorCode.CustomMessage("非管理员")
+	}
+	return find[0], nil
 }
