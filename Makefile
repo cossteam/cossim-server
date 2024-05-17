@@ -52,7 +52,7 @@ test: fmt vet## Run unittests
 
 # 定义变量
 INPUT_DIRS := $(wildcard ./internal/*/api/http/v1)
-OUTPUT_FILE := ./docs/test.yaml
+OUTPUT_FILE := ./docs/coss.yaml
 
 # 定义合并 OpenAPI 的目标
 .PHONY: merge-openapi
