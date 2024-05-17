@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/cossim/coss-server/internal/admin/interface/http"
+	"github.com/cossim/coss-server/internal/admin/interfaces/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"

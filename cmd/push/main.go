@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	pushgrpc "github.com/cossim/coss-server/internal/push/interface/grpc"
-	"github.com/cossim/coss-server/internal/push/interface/http"
+	pushgrpc "github.com/cossim/coss-server/internal/push/interfaces/grpc"
+	"github.com/cossim/coss-server/internal/push/interfaces/http"
 	"github.com/cossim/coss-server/internal/push/service"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"

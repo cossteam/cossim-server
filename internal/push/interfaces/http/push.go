@@ -10,6 +10,7 @@ import (
 // @Summary websocket请求
 // @Tags Push
 // @Description websocket请求
+// Param token query string true "token"
 // @Router /push/ws [get]
 func (h *Handler) ws(s socketio.Conn) error {
 	url := s.URL()

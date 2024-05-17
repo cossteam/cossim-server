@@ -3,10 +3,11 @@ package http
 import (
 	"context"
 	"fmt"
-	v1 "github.com/cossim/coss-server/internal/storage/api/http/v1"
-	service "github.com/cossim/coss-server/internal/storage/app/service/storage"
-	grpcinter "github.com/cossim/coss-server/internal/storage/interface/grpc"
+	v1 "github.com/cossim/coss-server/internal/msg/api/http/v1"
+	appservice "github.com/cossim/coss-server/internal/msg/app/service/msg"
+	grpcHandler "github.com/cossim/coss-server/internal/msg/interfaces/grpc"
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
+	"github.com/cossim/coss-server/internal/user/cache"
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
@@ -31,23 +32,37 @@ var (
 )
 
 type Handler struct {
-	StorageClient *grpcinter.Handler
-	logger        *zap.Logger
-	enc           encryption.Encryptor
-	svc           service.Service
-	minioAddr     string
-	authService   authv1.UserAuthServiceClient
+	logger      *zap.Logger
+	enc         encryption.Encryptor
+	MsgClient   *grpcHandler.Handler
+	authService authv1.UserAuthServiceClient
+	svc         appservice.Service
+	userCache   cache.UserCache
 }
 
 func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	h.logger = plog.NewDefaultLogger("storage_bff", int8(cfg.Log.Level))
-	h.minioAddr = cfg.OSS.Addr()
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-
+	h.logger = plog.NewDefaultLogger("msg_bff", int8(cfg.Log.Level))
 	if cfg.Encryption.Enable {
-		return h.enc.ReadKeyPair()
+		if err := h.enc.ReadKeyPair(); err != nil {
+			return err
+		}
 	}
-	h.svc = service.NewService(h.logger)
+
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
+	var userAddr string
+	if cfg.Discovers["user"].Direct {
+		userAddr = cfg.Discovers["user"].Addr()
+	} else {
+		userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
+	}
+	authClient, err := client.NewAuthClient(userAddr)
+	if err != nil {
+		return err
+	}
+	h.authService = authClient
+
+	h.svc = appservice.NewService(cfg.Dtm.Addr(), h.logger)
+
 	mysql, err := db.NewMySQL(cfg.MySQL.Address, strconv.Itoa(cfg.MySQL.Port), cfg.MySQL.Username, cfg.MySQL.Password, cfg.MySQL.Database, int64(cfg.Log.Level), cfg.MySQL.Opts)
 	if err != nil {
 		return err
@@ -60,22 +75,12 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	if err != nil {
 		return err
 	}
-	var userAddr string
-	if cfg.Discovers["user"].Direct {
-		userAddr = cfg.Discovers["user"].Addr()
-	} else {
-		userAddr = discovery.GetBalanceAddr(cfg.Register.Addr(), cfg.Discovers["user"].Name)
-	}
-	authClient, err := client.NewAuthClient(userAddr)
-	if err != nil {
-		return err
-	}
-	h.authService = authClient
+
 	return nil
 }
 
 func (h *Handler) Name() string {
-	return "storage_bff"
+	return "msg_bff"
 }
 
 func (h *Handler) Version() string {
@@ -85,7 +90,9 @@ func (h *Handler) Version() string {
 // @title CossApi
 
 func (h *Handler) RegisterRoute(r gin.IRouter) {
+	//u := r.Group("/api/v1/msg")
 	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
+	r.Use(middleware.AuthMiddleware(h.authService))
 
 	swagger, err := v1.GetSwagger()
 	if err != nil {
@@ -102,10 +109,6 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 			response.SetFail(c, message, nil)
 		},
 	}
-
-	//注册类型
-	openapi3filter.RegisterBodyDecoder("multipart/form-data", openapi3filter.FileBodyDecoder)
-
 	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		return middleware.HandleOpenApiAuthentication(ctx, h.authService, input)
 	}
@@ -123,7 +126,7 @@ func (h *Handler) Health(r gin.IRouter) string {
 }
 
 func (h *Handler) Stop(ctx context.Context) error {
-	return nil
+	return h.svc.Stop(ctx)
 }
 
 func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
@@ -134,10 +137,3 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 	}
 	return nil
 }
-
-var (
-	downloadURL     = "/api/v1/storage/files/download"
-	systemEnableSSL bool
-	gatewayAddress  string
-	gatewayPort     string
-)

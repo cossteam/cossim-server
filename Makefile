@@ -44,11 +44,20 @@ test: fmt vet## Run unittests
 	@go test -short ./...
 
 
-SWAG_CMD := swag i -g http.go -dir internal/push/interface/http,internal/push/api/http/model,internal/admin/interface/http,internal/admin/api/http/model,internal/group/interfaces,internal/group/api/http/v1,internal/user/interface/http,internal/user/api/http/model,internal/relation/interface/http,internal/relation/api/http/model,internal/msg/interface/http,internal/msg/api/http/v1,internal/storage/interface/http,internal/storage/api/http/model,internal/live/api/http/v1,pkg/utils/usersorter --packageName coss
+## Define the Makefile targets
+#.PHONY: merge-openapi
+#merge-openapi:
+#	go-swagger-merger -o ./docs/test.yaml  -i ./internal/admin/api/http/v1/*.yaml -i ./internal/storage/api/http/v1/*.yaml -i ./internal/msg/api/http/v1/*.yaml -i ./internal/user/api/http/v1/*.yaml -i ./internal/live/api/http/v1/*.yaml
+#
 
-.PHONY: swag
-swag: ## Generate Swagger documentation
-	$(SWAG_CMD)
+# 定义变量
+INPUT_DIRS := $(wildcard ./internal/*/api/http/v1)
+OUTPUT_FILE := ./docs/test.yaml
+
+# 定义合并 OpenAPI 的目标
+.PHONY: merge-openapi
+merge-openapi:
+	go-swagger-merger -o $(OUTPUT_FILE) $(foreach dir,$(INPUT_DIRS),-i $(dir)/*.yaml)
 
 # If you wish built the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64 ). However, you must enable docker buildKit for it.
