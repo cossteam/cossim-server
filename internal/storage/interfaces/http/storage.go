@@ -22,7 +22,7 @@ import (
 // @param file formData file true "文件"
 // @param type formData integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
 // @Produce  json
-// @Success		200 {object} model.Response{}
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files [post]
 func (h *Handler) Upload(c *gin.Context) {
 	// 获取表单中的整数字段，如果字段不存在或无法解析为整数，则使用默认值 0
@@ -70,7 +70,7 @@ func (h *Handler) Upload(c *gin.Context) {
 // @Tags Storage
 // @param id path string true "文件id"
 // @Produce  json
-// @Success		200 {object} model.Response{}
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files/download/:type/:id [get]
 func (h *Handler) Download(c *gin.Context, pType string, id string) {
 	targetURL := "http://" + h.minioAddr
@@ -122,7 +122,7 @@ func (h *Handler) Download(c *gin.Context, pType string, id string) {
 // @Tags Storage
 // @param id path string true "文件id"
 // @Produce  json
-// @Success		200 {object} model.Response{}
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files/:id [get]
 func (h *Handler) GetFileInfo(c *gin.Context, id string) {
 	//fileID := c.Query("file_id")
@@ -147,7 +147,7 @@ func (h *Handler) GetFileInfo(c *gin.Context, id string) {
 // @param id path string true "文件id"
 // @Produce  json
 // @Tags Storage
-// @Success		200 {object} model.Response{}
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files/:id [delete]
 func (h *Handler) DeleteFile(c *gin.Context, id string) {
 	//req := &DeleteFileRequest{}
@@ -176,7 +176,7 @@ func (h *Handler) DeleteFile(c *gin.Context, id string) {
 // @Produce  json
 // @param file_name query string true "文件名"
 // @param type query integer false "文件类型(0:音频，1:图片，2:文件，3:视频)"
-// @Success		200 {object} model.Response{}
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files/multipart/key [get]
 func (h *Handler) GetMultipartKey(c *gin.Context, params v1.GetMultipartKeyParams) {
 	fileName := c.Query("file_name")
@@ -211,7 +211,7 @@ func (h *Handler) GetMultipartKey(c *gin.Context, params v1.GetMultipartKeyParam
 // @param part_number formData integer true "本次分片序号"
 // @param key formData string true "文件唯一key"
 // @Produce  json
-// @Success		200 {object} model.Response{}
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files/multipart/upload [post]
 func (h *Handler) UploadMultipart(c *gin.Context) {
 	//单次分片限制100m
@@ -278,8 +278,8 @@ func (h *Handler) UploadMultipart(c *gin.Context) {
 // @Tags Storage
 // @Produce  json
 // @Accept  json
-// @param request body model.CompleteUploadRequest true "request"
-// @Success		200 {object} model.Response{}
+// @param request body v1.CompleteUploadRequest true "request"
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files/multipart/complete [post]
 func (h *Handler) CompleteUploadMultipart(c *gin.Context) {
 	req := new(v1.CompleteUploadRequest)
@@ -297,13 +297,14 @@ func (h *Handler) CompleteUploadMultipart(c *gin.Context) {
 	response.SetSuccess(c, "上传成功", gin.H{"file_url": resp})
 }
 
+// AbortUploadMultipart
 // @Summary 清除文件分片(用于中断上传)
 // @Description 清除文件分片
 // @Tags Storage
 // @Produce  json
 // @Accept  json
-// @param request body model.AbortUploadRequest true "request"
-// @Success		200 {object} model.Response{}
+// @param request body v1.AbortUploadRequest true "request"
+// @Success		200 {object} v1.Response{}
 // @Router /storage/files/multipart/abort [post]
 func (h *Handler) AbortUploadMultipart(c *gin.Context) {
 	req := new(v1.AbortUploadRequest)

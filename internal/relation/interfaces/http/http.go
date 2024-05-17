@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	grpchandler "github.com/cossim/coss-server/internal/relation/interface/grpc"
+	grpchandler "github.com/cossim/coss-server/internal/relation/interfaces/grpc"
 	"github.com/cossim/coss-server/internal/relation/service"
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/rpc/client"

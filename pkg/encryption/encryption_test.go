@@ -1,71 +1,49 @@
 package encryption_test
 
-//func getDefaultGateway() (string, error) {
-//	routes, err := net.InterfaceAddrs()
+//func TestSwag(t *testing.T) {
+//	// 读取第一个OpenAPI文件
+//	file1, err := ioutil.ReadFile("openapi1.yaml")
 //	if err != nil {
-//		return "", err
-//	}
-//	fmt.Println("网卡列表:", routes)
-//
-//	for _, route := range routes {
-//		if ipNet, ok := route.(*net.IPNet); ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
-//			if ipNet.IP.String() == "0.0.0.0" {
-//				fmt.Println("默认路由:", ipNet.IP.String())
-//				return ipNet.IP.String(), nil
-//			}
-//		}
+//		fmt.Println("Error reading file1:", err)
+//		os.Exit(1)
 //	}
 //
-//	return "", fmt.Errorf("找不到默认路由")
-//}
-//
-//func getInterfaceIP(defaultGateway string) (string, error) {
-//	interfaces, err := net.Interfaces()
+//	// 读取第二个OpenAPI文件
+//	file2, err := ioutil.ReadFile("openapi2.yaml")
 //	if err != nil {
-//		return "", err
-//	}
-//	fmt.Println("网卡列表:", interfaces)
-//	for _, iface := range interfaces {
-//		addrs, err := iface.Addrs()
-//		if err != nil {
-//			return "", err
-//		}
-//
-//		for _, addr := range addrs {
-//			ipNet, ok := addr.(*net.IPNet)
-//			if ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
-//				if strings.HasPrefix(ipNet.IP.String(), defaultGateway) {
-//					return ipNet.IP.String(), nil
-//				}
-//			}
-//		}
+//		fmt.Println("Error reading file2:", err)
+//		os.Exit(1)
 //	}
 //
-//	return "", fmt.Errorf("找不到默认路由网卡的IP地址")
-//}
-//
-//func TestIpadd(t *testing.T) {
-//	defaultGateway, err := getDefaultGateway()
+//	// 解析第一个OpenAPI文件
+//	swagger1, err := openapi3.NewLoader().LoadFromData(file1)
 //	if err != nil {
-//		fmt.Println("获取默认路由错误:", err)
-//		return
+//		fmt.Println("Error parsing file1:", err)
+//		os.Exit(1)
 //	}
 //
-//	interfaceIP, err := getInterfaceIP(defaultGateway)
+//	// 解析第二个OpenAPI文件
+//	swagger2, err := openapi3.NewLoader().LoadFromData(file2)
 //	if err != nil {
-//		fmt.Println("获取默认路由网卡的IP地址错误:", err)
-//		return
+//		fmt.Println("Error parsing file2:", err)
+//		os.Exit(1)
 //	}
 //
-//	fmt.Println("默认路由网卡的IP地址:", interfaceIP)
-//}
+//	// 合并两个OpenAPI文件
+//	swagger1.Merge(swagger2)
 //
-//
-//
-//func TestDns(t *testing.T) {
-//	ip, err := GetOutBoundIP()
+//	// 将合并后的OpenAPI写入文件
+//	mergedData, err := swagger1.MarshalJSON()
 //	if err != nil {
-//		fmt.Println(err)
+//		fmt.Println("Error marshaling merged OpenAPI:", err)
+//		os.Exit(1)
 //	}
-//	fmt.Println(ip)
+//
+//	err = ioutil.WriteFile("merged_openapi.yaml", mergedData, 0644)
+//	if err != nil {
+//		fmt.Println("Error writing merged OpenAPI to file:", err)
+//		os.Exit(1)
+//	}
+//
+//	fmt.Println("Merged OpenAPI written to merged_openapi.yaml")
 //}

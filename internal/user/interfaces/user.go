@@ -11,6 +11,14 @@ import (
 	"go.uber.org/zap"
 )
 
+// SearchUser searches for a user by email.
+// @Summary 搜索用户
+// @Description 搜索用户
+// @Tags user
+// @Security BearerAuth
+// @Param email query string true "用户邮箱"
+// @Success 200 {object} v1.Response{} "搜索用户成功"
+// @Router /api/v1/user/search [get]
 func (h *HttpServer) SearchUser(c *gin.Context, params v1.SearchUserParams) {
 	h.logger.Info("Search user", zap.String("email", params.Email))
 	searchUser, err := h.app.Queries.GetUser.Handle(c, &query.GetUse{
@@ -26,6 +34,15 @@ func (h *HttpServer) SearchUser(c *gin.Context, params v1.SearchUserParams) {
 	response.SetSuccess(c, "User found", getUserToResponse(searchUser))
 }
 
+// UpdateUserAvatar updates the user's avatar.
+// @Summary 修改用户头像
+// @Description 修改用户头像
+// @Tags user
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Param file formData string true "头像文件"
+// @Success 200 {object} v1.Response{} "修改用户头像成功"
+// @Router /api/v1/user/avatar [put]
 func (h *HttpServer) UpdateUserAvatar(c *gin.Context) {
 	// Parse form data
 	if err := c.Request.ParseMultipartForm(25 << 20); // 25 MB limit
@@ -67,6 +84,14 @@ func (h *HttpServer) UpdateUserAvatar(c *gin.Context) {
 	response.SetSuccess(c, "更新用户头像成功", gin.H{"avatar": url})
 }
 
+// GetUser retrieves user information by ID.
+// @Summary 获取用户信息
+// @Description 获取用户信息
+// @Tags user
+// @Security BearerAuth
+// @Param id path string true "用户ID"
+// @Success 200 {object} v1.Response{} "获取用户信息成功"
+// @Router /api/v1/user/{id} [get]
 func (h *HttpServer) GetUser(c *gin.Context, id string) {
 	getUser, err := h.app.Queries.GetUser.Handle(c, &query.GetUse{
 		CurrentUser: c.Value(constants.UserID).(string),
@@ -107,6 +132,15 @@ func getUserToResponse(e *entity.UserInfo) *v1.UserInfo {
 	}
 }
 
+// UpdateUser updates user information.
+// @Summary 修改用户信息
+// @Description 修改用户信息
+// @Tags user
+// @Security BearerAuth
+// @Accept application/json
+// @Param body v1.UpdateUserJSONRequestBody true "用户信息"
+// @Success 200 {object} v1.Response{} "修改用户信息成功"
+// @Router /api/v1/user [put]
 func (h *HttpServer) UpdateUser(c *gin.Context) {
 	var req v1.UpdateUserJSONRequestBody
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -130,6 +164,15 @@ func (h *HttpServer) UpdateUser(c *gin.Context) {
 	response.SetSuccess(c, "更新用户信息成功", nil)
 }
 
+// UpdateUserPassword updates the user's password.
+// @Summary 修改密码
+// @Description 修改密码
+// @Tags user
+// @Security BearerAuth
+// @Accept application/json
+// @Param body v1.UpdateUserPasswordJSONRequestBody true "密码信息"
+// @Success 200 {object} v1.Response{} "修改密码成功"
+// @Router /api/v1/user/password [put]
 func (h *HttpServer) UpdateUserPassword(c *gin.Context) {
 	req := &v1.UpdateUserPasswordJSONRequestBody{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -151,6 +194,14 @@ func (h *HttpServer) UpdateUserPassword(c *gin.Context) {
 	response.SetSuccess(c, "更新用户密码成功", nil)
 }
 
+// UserActivate activates a user account.
+// @Summary 用户激活
+// @Description 用户激活
+// @Tags user
+// @Param user_id query string true "用户ID"
+// @Param key query string true "激活密钥"
+// @Success 200 {object} v1.Response{} "激活成功"
+// @Router /api/v1/user/activate [get]
 func (h *HttpServer) UserActivate(c *gin.Context, params v1.UserActivateParams) {
 	_, err := h.app.Commands.UserActivate.Handle(c, &command.UserActivate{
 		UserID:           params.UserId,
@@ -164,6 +215,13 @@ func (h *HttpServer) UserActivate(c *gin.Context, params v1.UserActivateParams) 
 	response.SetSuccess(c, "用户激活成功", nil)
 }
 
+// GetUserBundle
+// @Summary 获取用户信息包
+// @Description 获取包含登录信息和用户详细信息的用户信息包
+// @Tags user
+// @Security BearerAuth
+// @Success 200 {object} v1.Response{} "获取用户信息包成功"
+// @Router /api/v1/user/bundle [get]
 func (h *HttpServer) GetUserBundle(c *gin.Context, id string) {
 	getUserBundle, err := h.app.Queries.GetUserBundle.Handle(c, &query.GetUserBundle{
 		UserID: id,
@@ -224,6 +282,14 @@ func getUserClientsToResponse(e []*query.GetUserLoginClientsResponse) []*v1.User
 	return userClients
 }
 
+// UserEmailVerification sends an activation email.
+// @Summary 发送激活邮件
+// @Description 发送激活邮件
+// @Tags user
+// @Accept application/json
+// @Param body v1.UserEmailVerificationJSONRequestBody{} true "发送激活邮件请求参数"
+// @Success 200 {object} v1.Response{} "发送激活邮件成功"
+// @Router /api/v1/user/email/verification [post]
 func (h *HttpServer) UserEmailVerification(c *gin.Context) {
 	req := &v1.UserEmailVerificationJSONRequestBody{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -244,6 +310,14 @@ func (h *HttpServer) UserEmailVerification(c *gin.Context) {
 	response.SetSuccess(c, "发送邮箱验证码成功", nil)
 }
 
+// UserLogin authenticates the user and generates an access token.
+// @Summary 用户登录
+// @Description 用户登录认证并生成访问令牌。
+// @Tags user
+// @Accept application/json
+// @Param body v1.LoginRequest true "登录请求参数"
+// @Success 200 {object} v1.Response{} "登录成功"
+// @Router /api/v1/user/login [post]
 func (h *HttpServer) UserLogin(c *gin.Context) {
 	req := &v1.UserLoginJSONRequestBody{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -284,6 +358,15 @@ func ConversionUserLogin(userLogin *command.UserLoginResponse) *v1.UserInfo {
 	}
 }
 
+// UserLogout logs out the user.
+// @Summary 退出登录
+// @Description 退出登录
+// @Tags user
+// @Security BearerAuth
+// @Accept application/json
+// @Param body v1.UserLogoutJSONRequestBody true "退出登录请求参数"
+// @Success 200 {object} v1.Response{} "退出登录成功"
+// @Router /api/v1/user/logout [post]
 func (h *HttpServer) UserLogout(c *gin.Context) {
 	req := &v1.UserLogoutJSONRequestBody{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -305,6 +388,15 @@ func (h *HttpServer) UserLogout(c *gin.Context) {
 	response.SetSuccess(c, "退出登录成功", nil)
 }
 
+// SetUserPublicKey sets the user's PGP public key.
+// @Summary 设置用户pgp公钥
+// @Description 设置用户pgp公钥
+// @Tags user
+// @Security BearerAuth
+// @Accept application/json
+// @Param body v1.SetUserPublicKeyJSONRequestBody true "设置pgp公钥请求参数"
+// @Success 200 {object} v1.Response{} "设置成功"
+// @Router /api/v1/user/public_key [post]
 func (h *HttpServer) SetUserPublicKey(c *gin.Context) {
 	req := &v1.SetUserPublicKeyJSONRequestBody{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -346,6 +438,14 @@ func (h *HttpServer) ResetUserPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "重置用户公钥成功", nil)
 }
 
+// UserRegister registers a new user.
+// @Summary 用户注册
+// @Description 用户注册
+// @Tags user
+// @Accept application/json
+// @Param body  v1.UserRegisterJSONRequestBody true "注册请求参数"
+// @Success 200 {object} v1.Response{} "注册成功"
+// @Router /api/v1/user/register [post]
 func (h *HttpServer) UserRegister(c *gin.Context) {
 	req := &v1.UserRegisterJSONRequestBody{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -370,6 +470,13 @@ func (h *HttpServer) UserRegister(c *gin.Context) {
 	response.SetSuccess(c, "注册成功", gin.H{"user_id": userID})
 }
 
+// GetPGPPublicKey retrieves the user's PGP public key.
+// @Summary 获取用户pgp公钥
+// @Description 获取用户pgp公钥
+// @Tags user
+// @Security BearerAuth
+// @Success 200 {object} v1.Response{} "获取成功"
+// @Router /api/v1/user/public_key [get]
 func (h *HttpServer) GetPGPPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": h.pgpKey})
 }

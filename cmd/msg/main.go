@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/cossim/coss-server/internal/msg/interface/grpc"
-	"github.com/cossim/coss-server/internal/msg/interface/http"
+	"github.com/cossim/coss-server/internal/msg/interfaces/grpc"
+	"github.com/cossim/coss-server/internal/msg/interfaces/http"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"

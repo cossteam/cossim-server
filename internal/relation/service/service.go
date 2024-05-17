@@ -7,7 +7,7 @@ import (
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushgrpcv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
-	grpchandler "github.com/cossim/coss-server/internal/relation/interface/grpc"
+	grpchandler "github.com/cossim/coss-server/internal/relation/interfaces/grpc"
 	userv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/pkg/cache"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"

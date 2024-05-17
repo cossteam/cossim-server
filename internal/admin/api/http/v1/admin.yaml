@@ -4,7 +4,7 @@ info:
   description: API for sending notifications
   version: 1.0.0
 paths:
-  /api/v1/admin/notification/send_all:
+  /notification/send_all:
     post:
       summary: 发送全体通知
       description: 发送全体通知
