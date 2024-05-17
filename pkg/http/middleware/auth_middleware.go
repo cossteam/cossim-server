@@ -49,7 +49,8 @@ func AuthMiddleware(authService authv1.UserAuthServiceClient) gin.HandlerFunc {
 			if code.Cause(err).Code() == code.Unauthorized.Code() {
 				fmt.Println("err 2 => ", err)
 				c = http.StatusUnauthorized
-				http.StatusText(http.StatusUnauthorized)
+				//http.StatusText(http.StatusUnauthorized)
+				m = http.StatusText(http.StatusUnauthorized)
 			} else {
 				fmt.Println("err 3 => ", err)
 				c = http.StatusInternalServerError

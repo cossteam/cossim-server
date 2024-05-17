@@ -2,55 +2,39 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/cossim/coss-server/pkg/auth"
-	"github.com/cossim/coss-server/pkg/cache"
+	"github.com/cossim/coss-server/internal/admin/app/service/admin"
+	"github.com/cossim/coss-server/internal/admin/domain/entity"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"net/http"
-	"strings"
 )
 
-func AdminAuthMiddleware(rdb *cache.RedisClient, conn *gorm.DB, jwtKey string) gin.HandlerFunc {
+func AdminAuthMiddleware(ad admin.Service) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// 获取 authorization header
-		tokenString := ""
-		if ctx.GetHeader("Authorization") != "" {
-			tokenString = ctx.GetHeader("Authorization")
-			if !strings.HasPrefix(tokenString, "Bearer ") {
-				ctx.JSON(http.StatusUnauthorized, gin.H{
-					"code": 401,
-					"msg":  http.StatusText(http.StatusUnauthorized),
-				})
-				ctx.Abort()
-				return
-			}
-			tokenString = tokenString[7:]
+		fmt.Println("admin auth middleware")
+		userID, ok := ctx.Get(constants.UserID)
+		if !ok {
+			ctx.JSON(401, gin.H{
+				"code": 401,
+				"msg":  "Unauthorized",
+			})
+			ctx.Abort()
 		}
 
-		a := auth.NewAuthenticator(conn, rdb, jwtKey)
-
-		drive := ctx.GetHeader("X-Device-Type")
-		drive = string(constants.DetermineClientType(constants.DriverType(drive)))
-
-		is, err := a.ValidateToken(tokenString, drive)
-		if err != nil || !is {
-			fmt.Printf("token验证失败: %v", err)
-			ctx.JSON(http.StatusUnauthorized, gin.H{
+		id, err := ad.GetAdminByUserID(ctx, userID.(string))
+		if err != nil {
+			ctx.JSON(401, gin.H{
 				"code": 401,
-				"msg":  http.StatusText(http.StatusUnauthorized),
+				"msg":  "Unauthorized",
 			})
 			ctx.Abort()
 			return
 		}
 
-		//验证身份是否为管理员
-		next, err := a.ValidateAdminToken(tokenString)
-		if err != nil || !next {
-			fmt.Printf("token验证失败: %v", err)
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"code": 403,
-				"msg":  http.StatusText(http.StatusForbidden),
+		if id.Status == entity.DisabledStatus {
+			ctx.JSON(401, gin.H{
+				"code": 401,
+				"msg":  "Unauthorized",
 			})
 			ctx.Abort()
 			return
