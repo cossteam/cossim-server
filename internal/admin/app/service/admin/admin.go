@@ -47,7 +47,6 @@ func (s *ServiceImpl) CreateAdmin(ctx context.Context, admin *entity.Admin) (int
 
 // 创建初始账号
 func (s *ServiceImpl) InitAdmin() error {
-	UserId := "10000"
 	Email := "admin@admin.com"
 	Password := "123123a"
 	Email2 := "tz@bot.com"
@@ -91,8 +90,8 @@ func (s *ServiceImpl) InitAdmin() error {
 	wfName := "init_admin_workflow_" + gid
 	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 		// 创建初始化数据
-		resp1, err := s.userService.CreateUser(context.Background(), &usergrpcv1.CreateUserRequest{
-			UserId:   UserId,
+		resp1, err := s.userService.CreateUser(wf.Context, &usergrpcv1.CreateUserRequest{
+			UserId:   constants.SystemAdmin,
 			Password: utils.HashString(Password),
 			Email:    Email,
 			NickName: Email,
@@ -107,7 +106,7 @@ func (s *ServiceImpl) InitAdmin() error {
 		}
 		// 创建初始化数据
 		resp2, err := s.userService.CreateUser(wf.Context, &usergrpcv1.CreateUserRequest{
-			UserId:   "10001",
+			UserId:   constants.SystemNotification,
 			Password: utils.HashString(Password),
 			Email:    Email2,
 			NickName: "系统通知",
@@ -134,7 +133,7 @@ func (s *ServiceImpl) InitAdmin() error {
 			return nil
 		})
 
-		err = s.ad.InsertAndUpdateAdmin(wf.Context, &entity.Admin{UserId: UserId, Role: entity.SuperAdminRole, Status: entity.NormalStatus})
+		err = s.ad.InsertAndUpdateAdmin(wf.Context, &entity.Admin{UserId: constants.SystemAdmin, Role: entity.SuperAdminRole, Status: entity.NormalStatus})
 		if err != nil {
 			return status.Error(codes.Aborted, err.Error())
 		}
