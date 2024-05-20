@@ -295,19 +295,20 @@ func (s *UserServiceServer) ActivateUser(ctx context.Context, request *api.UserR
 
 func (s *UserServiceServer) CreateUser(ctx context.Context, request *api.CreateUserRequest) (*api.CreateUserResponse, error) {
 	resp := &api.CreateUserResponse{}
-	//if err := s.ur.InsertAndUpdateUser(ctx, &entity.User{
-	//	NickName:  request.NickName,
-	//	Email:     request.Email,
-	//	Password:  request.Password,
-	//	Avatar:    request.Avatar,
-	//	Status:    entity.UserStatus(request.Status),
-	//	ID:        request.UserId,
-	//	PublicKey: request.PublicKey,
-	//	Bot:       uint(request.IsBot),
-	//}); err != nil {
-	//	return resp, status.Error(codes.Code(code.UserErrCreateUserFailed.Code()), err.Error())
-	//}
-	//resp.UserId = request.UserId
+
+	if err := s.ur.InsertAndUpdateUser(ctx, &entity.User{
+		NickName:  request.NickName,
+		Email:     request.Email,
+		Password:  request.Password,
+		Avatar:    request.Avatar,
+		Status:    entity.UserStatus(request.Status),
+		ID:        request.UserId,
+		PublicKey: request.PublicKey,
+		Bot:       uint(request.IsBot),
+	}); err != nil {
+		return resp, status.Error(codes.Code(code.UserErrCreateUserFailed.Code()), err.Error())
+	}
+	resp.UserId = request.UserId
 	return resp, nil
 }
 

@@ -4,10 +4,12 @@ type SystemUser string
 
 const (
 	SystemNotification = "10001"
+	SystemAdmin        = "10000"
 )
 
 var SystemUserList = []SystemUser{
 	SystemNotification,
+	SystemAdmin,
 }
 
 func IsSystemUser(user SystemUser) bool {
