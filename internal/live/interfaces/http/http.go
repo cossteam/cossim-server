@@ -333,11 +333,11 @@ func (h *HttpServer) JoinRoom(c *gin.Context, id string) {
 // @Success 200 {object} v1.Response "成功拒绝通话"
 // @Router /live/{id}/reject [post]
 func (h *HttpServer) RejectRoom(c *gin.Context, id string) {
-	//uid := c.Value(constants.UserID).(string)
+	//uid := c.Value(constants.ID).(string)
 	//did := c.Value(constants.DriverID).(string)
 	//rejectLive, err := h.app.Commands.LiveHandler.RejectLive(c, &command.RejectLive{
 	//	Room:     id,
-	//	UserID:   uid,
+	//	ID:   uid,
 	//	DriverID: did,
 	//	Option:   command.RoomOption{},
 	//})

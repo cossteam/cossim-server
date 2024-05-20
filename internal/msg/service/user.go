@@ -10,7 +10,7 @@ package service
 //		isBurnAfterReadingType = msggrpcv1.BurnAfterReadingType_NotBurnAfterReading
 //	}
 //	userRelationStatus1, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-//		UserId:   userID,
+//		ID:   userID,
 //		FriendId: req.ReceiverId,
 //	})
 //	if err != nil {
@@ -23,7 +23,7 @@ package service
 //	}
 //
 //	userRelationStatus2, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-//		UserId:   req.ReceiverId,
+//		ID:   req.ReceiverId,
 //		FriendId: userID,
 //	})
 //	if err != nil {
@@ -36,7 +36,7 @@ package service
 //	}
 //
 //	dialogs, err := s.relationDialogService.GetDialogById(ctx, &relationgrpcv1.GetDialogByIdRequest{
-//		DialogId: uint32(req.DialogId),
+//		DialogID: uint32(req.DialogID),
 //	})
 //	if err != nil {
 //		s.logger.Error("获取会话失败", zap.Error(err))
@@ -48,8 +48,8 @@ package service
 //	}
 //
 //	dialogUser, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		DialogId: uint32(req.DialogId),
-//		UserId:   userID,
+//		DialogID: uint32(req.DialogID),
+//		ID:   userID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户会话失败", zap.Error(err))
@@ -57,8 +57,8 @@ package service
 //	}
 //
 //	dialogUser2, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		DialogId: uint32(req.DialogId),
-//		UserId:   req.ReceiverId,
+//		DialogID: uint32(req.DialogID),
+//		ID:   req.ReceiverId,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户会话失败", zap.Error(err))
@@ -72,9 +72,9 @@ package service
 //	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 //		if dialogUser.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
 //			_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
-//				DialogId: uint32(req.DialogId),
+//				DialogID: uint32(req.DialogID),
 //				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
-//				UserId:   userID,
+//				ID:   userID,
 //			})
 //			if err != nil {
 //				return status.Error(codes.Aborted, err.Error())
@@ -82,9 +82,9 @@ package service
 //
 //			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 //				_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
-//					DialogId: uint32(req.DialogId),
+//					DialogID: uint32(req.DialogID),
 //					Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
-//					UserId:   userID,
+//					ID:   userID,
 //				})
 //				return err
 //			})
@@ -92,25 +92,25 @@ package service
 //
 //		if dialogUser2.IsShow != uint32(relationgrpcv1.CloseOrOpenDialogType_OPEN) {
 //			_, err = s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
-//				DialogId: uint32(req.DialogId),
+//				DialogID: uint32(req.DialogID),
 //				Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
-//				UserId:   dialogUser2.UserId,
+//				ID:   dialogUser2.ID,
 //			})
 //			if err != nil {
 //				return status.Error(codes.Aborted, err.Error())
 //			}
 //			wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 //				_, err := s.relationDialogService.CloseOrOpenDialog(ctx, &relationgrpcv1.CloseOrOpenDialogRequest{
-//					DialogId: uint32(req.DialogId),
+//					DialogID: uint32(req.DialogID),
 //					Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
-//					UserId:   dialogUser2.UserId,
+//					ID:   dialogUser2.ID,
 //				})
 //				return err
 //			})
 //		}
 //
 //		message, err = s.msgService.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
-//			DialogId:               uint32(req.DialogId),
+//			DialogID:               uint32(req.DialogID),
 //			SenderId:               userID,
 //			ReceiverId:             req.ReceiverId,
 //			Content:                req.Content,
@@ -139,7 +139,7 @@ package service
 //
 //	//查询发送者信息
 //	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//		UserId: userID,
+//		ID: userID,
 //	})
 //	if err != nil {
 //		return nil, err
@@ -158,7 +158,7 @@ package service
 //		}
 //
 //		userInfo, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//			UserId: msg.SenderId,
+//			ID: msg.SenderId,
 //		})
 //		if err != nil {
 //			return nil, err
@@ -169,9 +169,9 @@ package service
 //			Content:  msg.Content,
 //			SenderId: msg.SenderId,
 //			SendAt:   int(msg.GetCreatedAt()),
-//			MsgId:    int(msg.Id),
+//			MsgId:    int(msg.ID),
 //			SenderInfo: &v1.SenderInfo{
-//				UserId: userInfo.UserId,
+//				ID: userInfo.ID,
 //				Name:   userInfo.NickName,
 //				Avatar: userInfo.Avatar,
 //			},
@@ -189,21 +189,21 @@ package service
 //	rmsg := &pushv1.MessageInfo{}
 //	if resp.ReplyMsg != nil {
 //		rmsg = &pushv1.MessageInfo{
-//			GroupId:  uint32(resp.ReplyMsg.GroupId),
+//			GroupID:  uint32(resp.ReplyMsg.GroupID),
 //			MsgType:  uint32(resp.ReplyMsg.MsgType),
 //			Content:  resp.ReplyMsg.Content,
 //			SenderId: resp.ReplyMsg.SenderId,
 //			SendAt:   int64(resp.ReplyMsg.SendAt),
 //			MsgId:    uint64(resp.ReplyMsg.MsgId),
 //			SenderInfo: &pushv1.SenderInfo{
-//				UserId: resp.ReplyMsg.SenderInfo.UserId,
+//				ID: resp.ReplyMsg.SenderInfo.ID,
 //				Avatar: resp.ReplyMsg.SenderInfo.Avatar,
 //				Name:   resp.ReplyMsg.SenderInfo.Name,
 //			},
-//			ReceiverInfo: &pushv1.SenderInfo{
-//				UserId: resp.ReplyMsg.ReceiverInfo.UserId,
-//				Avatar: resp.ReplyMsg.ReceiverInfo.Avatar,
-//				Name:   resp.ReplyMsg.ReceiverInfo.Name,
+//			RecipientInfo: &pushv1.SenderInfo{
+//				ID: resp.ReplyMsg.RecipientInfo.ID,
+//				Avatar: resp.ReplyMsg.RecipientInfo.Avatar,
+//				Name:   resp.ReplyMsg.RecipientInfo.Name,
 //			},
 //			AtAllUser:          resp.ReplyMsg.AtAllUser,
 //			AtUsers:            resp.ReplyMsg.AtUsers,
@@ -224,13 +224,13 @@ package service
 //		MsgId:                   message.MsgId,
 //		ReceiverId:              req.ReceiverId,
 //		SendAt:                  pkgtime.Now(),
-//		DialogId:                uint32(req.DialogId),
+//		DialogID:                uint32(req.DialogID),
 //		IsBurnAfterReading:      resp.ReplyMsg.IsBurnAfterReading,
 //		BurnAfterReadingTimeOut: userRelationStatus1.OpenBurnAfterReadingTimeOut,
 //		SenderInfo: &pushv1.SenderInfo{
 //			Avatar: info.Avatar,
 //			Name:   info.NickName,
-//			UserId: userID,
+//			ID: userID,
 //		},
 //		ReplyMsg: rmsg,
 //	})
@@ -290,8 +290,8 @@ package service
 //
 //func (s *ServiceImpl) GetUserMessageList(ctx context.Context, userID string, req v1.GetUserMsgListParams) (*v1.GetUserMsgListResponse, error) {
 //	msg, err := s.msgService.GetUserMessageList(ctx, &msggrpcv1.GetUserMsgListRequest{
-//		DialogId: uint32(req.DialogId),
-//		UserId:   userID,
+//		DialogID: uint32(req.DialogID),
+//		ID:   userID,
 //		Content:  req.Content,
 //		Type:     int32(req.Type),
 //		PageNum:  int32(req.PageNum),
@@ -306,7 +306,7 @@ package service
 //	}
 //
 //	//查询对话用户
-//	id, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{DialogId: uint32(req.DialogId)})
+//	id, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{DialogID: uint32(req.DialogID)})
 //	if err != nil {
 //		return nil, err
 //	}
@@ -322,7 +322,7 @@ package service
 //	}
 //
 //	//查询关系
-//	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: id2[0]})
+//	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{ID: userID, FriendId: id2[0]})
 //	if err != nil {
 //		s.logger.Error("获取用户关系失败", zap.Error(err))
 //		return nil, err
@@ -335,13 +335,13 @@ package service
 //	msgList := make([]v1.UserMessage, 0)
 //	for _, v := range msg.UserMessages {
 //		info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//			UserId: v.SenderId,
+//			ID: v.SenderId,
 //		})
 //		if err != nil {
 //			return nil, err
 //		}
 //		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//			UserId: v.ReceiverId,
+//			ID: v.ReceiverId,
 //		})
 //		if err != nil {
 //			return nil, err
@@ -349,13 +349,13 @@ package service
 //
 //		sendinfo := &v1.SenderInfo{
 //			Name:   info.NickName,
-//			UserId: info.UserId,
+//			ID: info.ID,
 //			Avatar: info.Avatar,
 //		}
 //
 //		receinfo := &v1.SenderInfo{
 //			Name:   info2.NickName,
-//			UserId: info2.UserId,
+//			ID: info2.ID,
 //			Avatar: info2.Avatar,
 //		}
 //		name := relation.Remark
@@ -380,7 +380,7 @@ package service
 //			isBurnAfterReadingType = true
 //		}
 //		msgList = append(msgList, v1.UserMessage{
-//			MsgId:                   int(v.Id),
+//			MsgId:                   int(v.ID),
 //			SenderId:                v.SenderId,
 //			ReceiverId:              v.ReceiverId,
 //			Content:                 v.Content,
@@ -389,12 +389,12 @@ package service
 //			IsRead:                  read,
 //			ReadAt:                  int(v.ReadAt),
 //			SendAt:                  int(v.CreatedAt),
-//			DialogId:                int(v.DialogId),
+//			DialogID:                int(v.DialogID),
 //			IsLabel:                 label,
 //			IsBurnAfterReadingType:  isBurnAfterReadingType,
 //			BurnAfterReadingTimeout: int(relation.OpenBurnAfterReadingTimeOut),
 //			SenderInfo:              sendinfo,
-//			ReceiverInfo:            receinfo,
+//			RecipientInfo:            receinfo,
 //		})
 //	}
 //
@@ -406,7 +406,7 @@ package service
 //func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, pageSize int, pageNum int) (*v1.GetUserDialogListResponse, error) {
 //	//获取对话id
 //	ids, err := s.relationDialogService.GetUserDialogList(ctx, &relationgrpcv1.GetUserDialogListRequest{
-//		UserId:   userID,
+//		ID:   userID,
 //		PageNum:  uint32(pageNum),
 //		PageSize: uint32(pageSize),
 //	})
@@ -438,8 +438,8 @@ package service
 //	for _, v := range infos.Dialogs {
 //		var re v1.UserDialogListResponse
 //		du, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//			DialogId: v.Id,
-//			UserId:   userID,
+//			DialogID: v.ID,
+//			ID:   userID,
 //		})
 //		if err != nil {
 //			s.logger.Error("获取对话用户信息失败", zap.Error(err))
@@ -449,7 +449,7 @@ package service
 //		//用户
 //		if v.Type == 0 {
 //			users, _ := s.relationDialogService.GetAllUsersInConversation(ctx, &relationgrpcv1.GetAllUsersInConversationRequest{
-//				DialogId: v.Id,
+//				DialogID: v.ID,
 //			})
 //			if len(users.UserIds) == 0 {
 //				continue
@@ -459,7 +459,7 @@ package service
 //					continue
 //				}
 //				info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//					UserId: id,
+//					ID: id,
 //				})
 //				if err != nil {
 //					s.logger.Error("获取用户信息失败", zap.Error(err))
@@ -468,22 +468,22 @@ package service
 //
 //				//获取未读消息
 //				msgs, err := s.msgService.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
-//					UserId:   userID,
-//					DialogId: v.Id,
+//					ID:   userID,
+//					DialogID: v.ID,
 //				})
 //				if err != nil {
 //					s.logger.Error("获取未读消息失败", zap.Error(err))
 //				}
-//				re.DialogId = int(v.Id)
+//				re.DialogID = int(v.ID)
 //				re.DialogAvatar = info.Avatar
 //				re.DialogName = info.NickName
 //				re.DialogType = 0
 //				re.DialogUnreadCount = len(msgs.UserMessages)
-//				re.UserId = info.UserId
+//				re.ID = info.ID
 //				re.DialogCreateAt = int(v.CreateAt)
 //
 //				relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-//					UserId:   userID,
+//					ID:   userID,
 //					FriendId: id,
 //				})
 //				if err != nil {
@@ -499,7 +499,7 @@ package service
 //		} else if v.Type == 1 {
 //			//群聊
 //			info, err := s.groupService.GetGroupInfoByGid(ctx, &groupApi.GetGroupInfoRequest{
-//				Gid: v.GroupId,
+//				Gid: v.GroupID,
 //			})
 //			if err != nil {
 //				s.logger.Error("获取群聊信息失败", zap.Error(err))
@@ -508,8 +508,8 @@ package service
 //
 //			//获取未读消息
 //			msgs, err := s.msgService.GetGroupUnreadMessages(ctx, &msggrpcv1.GetGroupUnreadMessagesRequest{
-//				UserId:   userID,
-//				DialogId: v.Id,
+//				ID:   userID,
+//				DialogID: v.ID,
 //			})
 //			if err != nil {
 //				s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -520,15 +520,15 @@ package service
 //			re.DialogName = info.Name
 //			re.DialogType = 1
 //			re.DialogUnreadCount = len(msgs.GroupMessages)
-//			re.GroupId = int(info.Id)
-//			re.DialogId = int(v.Id)
+//			re.GroupID = int(info.ID)
+//			re.DialogID = int(v.ID)
 //			re.DialogCreateAt = int(v.CreateAt)
 //		}
 //		// 匹配最后一条消息
 //		for _, msg := range dialogIds.LastMsgs {
-//			if msg.DialogId == v.Id {
+//			if msg.DialogID == v.ID {
 //				re.LastMessage = &v1.Message{
-//					MsgId:    int(msg.Id),
+//					MsgId:    int(msg.ID),
 //					Content:  msg.Content,
 //					SenderId: msg.SenderId,
 //					SendAt:   int(msg.CreatedAt),
@@ -551,20 +551,20 @@ package service
 //				}
 //				if msg.SenderId != "" {
 //					info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//						UserId: msg.SenderId,
+//						ID: msg.SenderId,
 //					})
 //					if err != nil {
 //						s.logger.Error("获取用户信息失败", zap.Error(err))
 //						continue
 //					}
 //					re.LastMessage.SenderInfo = &v1.SenderInfo{
-//						UserId: info.UserId,
+//						ID: info.ID,
 //						Avatar: info.Avatar,
 //						Name:   info.NickName,
 //					}
 //					if v.Type == 1 {
 //						//查询群聊备注
-//						relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupId: v.GroupId, UserId: info.UserId})
+//						relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{GroupID: v.GroupID, ID: info.ID})
 //						if err != nil {
 //							s.logger.Error("查询群聊备注失败", zap.Error(err))
 //							//return nil, err
@@ -577,7 +577,7 @@ package service
 //
 //					} else if v.Type == 0 && msg.SenderId != userID {
 //						//查询用户备注
-//						relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: msg.SenderId})
+//						relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{ID: userID, FriendId: msg.SenderId})
 //						if err != nil {
 //							s.logger.Error("查询用户备注失败", zap.Error(err))
 //						}
@@ -632,7 +632,7 @@ package service
 //
 //	//判断是否在对话内
 //	_, err = s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-//		DialogId: msginfo.DialogId,
+//		DialogID: msginfo.DialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户对话信息失败", zap.Error(err))
@@ -642,9 +642,9 @@ package service
 //	req := &v1.SendUserMsgRequest{
 //		ReceiverId: msginfo.ReceiverId,
 //		Content:    msginfo.Content,
-//		ReplyId:    int(msginfo.Id),
+//		ReplyId:    int(msginfo.ID),
 //		Type:       v1.SendUserMsgRequestType(msggrpcv1.MessageType_Delete),
-//		DialogId:   int(msginfo.DialogId),
+//		DialogID:   int(msginfo.DialogID),
 //	}
 //
 //	_, err = s.SendUserMsg(ctx, userID, driverId, req)
@@ -661,7 +661,7 @@ package service
 //		return nil, err
 //	}
 //
-//	return msg.Id, nil
+//	return msg.ID, nil
 //}
 //
 //func isPromptMessageType(t uint32) bool {
@@ -690,7 +690,7 @@ package service
 //	}
 //
 //	relation, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
-//		UserId:   msginfo.SenderId,
+//		ID:   msginfo.SenderId,
 //		FriendId: msginfo.ReceiverId,
 //	})
 //	if err != nil {
@@ -702,7 +702,7 @@ package service
 //	}
 //
 //	relation2, err := s.relationUserService.GetUserRelation(context.Background(), &relationgrpcv1.GetUserRelationRequest{
-//		UserId:   msginfo.ReceiverId,
+//		ID:   msginfo.ReceiverId,
 //		FriendId: msginfo.SenderId,
 //	})
 //	if err != nil {
@@ -715,7 +715,7 @@ package service
 //	}
 //	//判断是否在对话内
 //	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(c, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-//		DialogId: msginfo.DialogId,
+//		DialogID: msginfo.DialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户对话信息失败", zap.Error(err))
@@ -725,7 +725,7 @@ package service
 //	// 调用相应的 gRPC 客户端方法来编辑用户消息
 //	_, err = s.msgService.EditUserMessage(context.Background(), &msggrpcv1.EditUserMsgRequest{
 //		UserMessage: &msggrpcv1.UserMessage{
-//			Id:      msgID,
+//			ID:      msgID,
 //			Content: content,
 //		},
 //	})
@@ -742,7 +742,7 @@ package service
 //
 //func (s *ServiceImpl) ReadUserMsgs(ctx context.Context, userid string, driverId string, req *v1.ReadUserMsgsRequest) (interface{}, error) {
 //	ids, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-//		DialogId: uint32(req.DialogId),
+//		DialogID: uint32(req.DialogID),
 //	})
 //	if err != nil {
 //		s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))
@@ -774,7 +774,7 @@ package service
 //	}
 //
 //	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
-//		UserId:   userid,
+//		ID:   userid,
 //		FriendId: targetId,
 //	})
 //	if err != nil {
@@ -792,8 +792,8 @@ package service
 //
 //	if req.ReadAll {
 //		_, err := s.msgService.ReadAllUserMsg(ctx, &msggrpcv1.ReadAllUserMsgRequest{
-//			DialogId: uint32(req.DialogId),
-//			UserId:   userid,
+//			DialogID: uint32(req.DialogID),
+//			ID:   userid,
 //		})
 //		if err != nil {
 //			s.logger.Error("批量设置私聊消息状态为已读", zap.Error(err))
@@ -804,7 +804,7 @@ package service
 //	} else {
 //		_, err = s.msgService.SetUserMsgsReadStatus(ctx, &msggrpcv1.SetUserMsgsReadStatusRequest{
 //			MsgIds:                      msgIdList,
-//			DialogId:                    uint32(req.DialogId),
+//			DialogID:                    uint32(req.DialogID),
 //			OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
 //		})
 //		if err != nil {
@@ -815,7 +815,7 @@ package service
 //
 //	msgs, err := s.msgService.GetUserMessagesByIds(ctx, &msggrpcv1.GetUserMessagesByIdsRequest{
 //		MsgIds: msgIdList,
-//		UserId: userid,
+//		ID: userid,
 //	})
 //	if err != nil {
 //		return nil, err
@@ -823,7 +823,7 @@ package service
 //
 //	//查询发送者信息
 //	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//		UserId: userid,
+//		ID: userid,
 //	})
 //	if err != nil {
 //		return nil, err
@@ -832,7 +832,7 @@ package service
 //	var wsms []pushv1.WsUserOperatorMsg
 //	for _, msginfo := range msgs.UserMessages {
 //		wsm := pushv1.WsUserOperatorMsg{
-//			MsgId:      msginfo.Id,
+//			MsgId:      msginfo.ID,
 //			SenderId:   msginfo.SenderId,
 //			ReceiverId: msginfo.ReceiverId,
 //			Content:    msginfo.Content,
@@ -840,7 +840,7 @@ package service
 //			ReplyId:    uint32(msginfo.ReplyId),
 //			ReadAt:     msginfo.ReadAt,
 //			CreatedAt:  msginfo.CreatedAt,
-//			DialogId:   msginfo.DialogId,
+//			DialogID:   msginfo.DialogID,
 //		}
 //		if msginfo.IsRead != 0 {
 //			wsm.IsRead = true
@@ -857,7 +857,7 @@ package service
 //	s.SendMsgToUsers(ids.UserIds, driverId, pushv1.WSEventType_UserMsgReadEvent, map[string]interface{}{"msgs": wsms, "operator_info": v1.SenderInfo{
 //		Avatar: info.Avatar,
 //		Name:   info.NickName,
-//		UserId: info.UserId,
+//		ID: info.ID,
 //	}}, true)
 //
 //	return nil, nil
@@ -880,7 +880,7 @@ package service
 //
 //	//判断是否在对话内
 //	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-//		DialogId: msginfo.DialogId,
+//		DialogID: msginfo.DialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户对话信息失败", zap.Error(err))
@@ -918,9 +918,9 @@ package service
 //	req := &v1.SendUserMsgRequest{
 //		ReceiverId: msginfo.ReceiverId,
 //		Content:    msginfo.Content,
-//		ReplyId:    int(msginfo.Id),
+//		ReplyId:    int(msginfo.ID),
 //		Type:       v1.SendUserMsgRequestType(msggrpcv1.MsgLabel_IsLabel),
-//		DialogId:   int(msginfo.DialogId),
+//		DialogID:   int(msginfo.DialogID),
 //	}
 //
 //	if msginfo.SenderId != userID {
@@ -941,8 +941,8 @@ package service
 //
 //func (s *ServiceImpl) GetUserLabelMsgList(ctx context.Context, userID string, dialogID uint32) (*v1.GetUserLabelMsgListResponse, error) {
 //	_, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		UserId:   userID,
-//		DialogId: dialogID,
+//		ID:   userID,
+//		DialogID: dialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户对话失败", zap.Error(err))
@@ -950,7 +950,7 @@ package service
 //	}
 //
 //	msgs, err := s.msgService.GetUserMsgLabelByDialogId(ctx, &msggrpcv1.GetUserMsgLabelByDialogIdRequest{
-//		DialogId: dialogID,
+//		DialogID: dialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户标注消息失败", zap.Error(err))
@@ -965,7 +965,7 @@ package service
 //			read = true
 //		}
 //		resp.MsgList = append(resp.MsgList, v1.Message{
-//			MsgId:    int(i2.Id),
+//			MsgId:    int(i2.ID),
 //			Content:  i2.Content,
 //			MsgType:  int(i2.Type),
 //			ReplyId:  int(i2.ReplyId),
@@ -1013,7 +1013,7 @@ package service
 //	var responses = make([]*v1.GetDialogAfterMsgResponse, 0)
 //	dialogIds := make([]uint32, 0)
 //	for _, v := range request {
-//		dialogIds = append(dialogIds, uint32(v.DialogId))
+//		dialogIds = append(dialogIds, uint32(v.DialogID))
 //	}
 //
 //	infos, err := s.relationDialogService.GetDialogByIds(ctx, &relationgrpcv1.GetDialogByIdsRequest{
@@ -1040,7 +1040,7 @@ package service
 //				return
 //			}
 //			infos2 = append(infos2, &msggrpcv1.GetGroupMsgIdAfterMsgRequest{
-//				DialogId: dialogID,
+//				DialogID: dialogID,
 //				MsgId:    msgID,
 //			})
 //			return
@@ -1055,15 +1055,15 @@ package service
 //			return
 //		}
 //		infos3 = append(infos3, &msggrpcv1.GetUserMsgIdAfterMsgRequest{
-//			DialogId: dialogID,
+//			DialogID: dialogID,
 //			MsgId:    msgID,
 //		})
 //	}
 //
 //	for _, i2 := range infos.Dialogs {
 //		for _, i3 := range request {
-//			if i2.Id == uint32(i3.DialogId) {
-//				addToInfos(i2.Id, uint32(i3.MsgId), i2.Type)
+//			if i2.ID == uint32(i3.DialogID) {
+//				addToInfos(i2.ID, uint32(i3.MsgId), i2.Type)
 //				break
 //			}
 //		}
@@ -1080,31 +1080,31 @@ package service
 //		msgs := make([]v1.Message, 0)
 //		for _, i3 := range i2.GroupMessages {
 //			info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//				UserId: i3.UserId,
+//				ID: i3.ID,
 //			})
 //			if err != nil {
 //				s.logger.Error("获取用户信息", zap.Error(err))
 //				continue
 //			}
 //			readmsg, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(ctx, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
-//				MsgId:  i3.Id,
-//				UserId: userID,
+//				MsgId:  i3.ID,
+//				ID: userID,
 //			})
 //			if err != nil {
 //				s.logger.Error("获取消息是否已读失败", zap.Error(err))
 //				continue
 //			}
 //			msg := v1.Message{}
-//			msg.GroupId = int(i3.GroupId)
-//			msg.MsgId = int(i3.Id)
+//			msg.GroupID = int(i3.GroupID)
+//			msg.MsgId = int(i3.ID)
 //			msg.MsgType = int(i3.Type)
 //			msg.Content = i3.Content
-//			msg.SenderId = i3.UserId
+//			msg.SenderId = i3.ID
 //			msg.SendAt = int(i3.CreatedAt)
 //			msg.SenderInfo = &v1.SenderInfo{
 //				Avatar: info.Avatar,
 //				Name:   info.NickName,
-//				UserId: info.UserId,
+//				ID: info.ID,
 //			}
 //			msg.AtUsers = i3.AtUsers
 //			msg.ReplyId = int(i3.ReplyId)
@@ -1124,7 +1124,7 @@ package service
 //			msgs = append(msgs, msg)
 //		}
 //		responses = append(responses, &v1.GetDialogAfterMsgResponse{
-//			DialogId: int(i2.DialogId),
+//			DialogID: int(i2.DialogID),
 //			Messages: &msgs,
 //			Total:    int(i2.Total),
 //		})
@@ -1142,20 +1142,20 @@ package service
 //		for _, i3 := range i2.UserMessages {
 //			//查询发送者信息
 //			info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//				UserId: i3.SenderId,
+//				ID: i3.SenderId,
 //			})
 //			if err != nil {
 //				return nil, err
 //			}
 //
 //			info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//				UserId: i3.ReceiverId,
+//				ID: i3.ReceiverId,
 //			})
 //			if err != nil {
 //				return nil, err
 //			}
 //			msg := v1.Message{}
-//			msg.MsgId = int(i3.Id)
+//			msg.MsgId = int(i3.ID)
 //			msg.MsgType = int(i3.Type)
 //			msg.Content = i3.Content
 //			msg.SenderId = i3.SenderId
@@ -1163,12 +1163,12 @@ package service
 //			msg.SenderInfo = &v1.SenderInfo{
 //				Avatar: info.Avatar,
 //				Name:   info.NickName,
-//				UserId: info.UserId,
+//				ID: info.ID,
 //			}
-//			msg.ReceiverInfo = &v1.SenderInfo{
+//			msg.RecipientInfo = &v1.SenderInfo{
 //				Avatar: info2.Avatar,
 //				Name:   info2.NickName,
-//				UserId: info2.UserId,
+//				ID: info2.ID,
 //			}
 //			msg.ReplyId = int(i3.ReplyId)
 //			msg.ReadAt = int(i3.ReadAt)
@@ -1184,7 +1184,7 @@ package service
 //			msgs = append(msgs, msg)
 //		}
 //		responses = append(responses, &v1.GetDialogAfterMsgResponse{
-//			DialogId: int(i2.DialogId),
+//			DialogID: int(i2.DialogID),
 //			Messages: &msgs,
 //			Total:    int(i2.Total),
 //		})
@@ -1196,7 +1196,7 @@ package service
 //// 获取群聊对话的最后二十条消息
 //func (s *ServiceImpl) getGroupDialogLast20Msg(ctx context.Context, thisID string, dialogId uint32, responses []*v1.GetDialogAfterMsgResponse) ([]*v1.GetDialogAfterMsgResponse, error) {
 //	list, err := s.msgService.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
-//		DialogId: dialogId,
+//		DialogID: dialogId,
 //		PageNum:  1,
 //		PageSize: 20,
 //	})
@@ -1206,31 +1206,31 @@ package service
 //	msgs := make([]v1.Message, 0)
 //	for _, gm := range list.GroupMessages {
 //		info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//			UserId: gm.UserId,
+//			ID: gm.ID,
 //		})
 //		if err != nil {
 //			return responses, err
 //		}
 //
 //		readmsg, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(ctx, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
-//			MsgId:  gm.Id,
-//			UserId: thisID,
+//			MsgId:  gm.ID,
+//			ID: thisID,
 //		})
 //		if err != nil {
 //			s.logger.Error("获取消息是否已读失败", zap.Error(err))
 //			continue
 //		}
 //		msg := v1.Message{}
-//		msg.GroupId = int(gm.GroupId)
-//		msg.MsgId = int(gm.Id)
+//		msg.GroupID = int(gm.GroupID)
+//		msg.MsgId = int(gm.ID)
 //		msg.MsgType = int(gm.Type)
 //		msg.Content = gm.Content
-//		msg.SenderId = gm.UserId
+//		msg.SenderId = gm.ID
 //		msg.SendAt = int(gm.CreatedAt)
 //		msg.SenderInfo = &v1.SenderInfo{
 //			Avatar: info.Avatar,
 //			Name:   info.NickName,
-//			UserId: info.UserId,
+//			ID: info.ID,
 //		}
 //		msg.AtUsers = gm.AtUsers
 //		msg.ReplyId = int(gm.ReplyId)
@@ -1247,7 +1247,7 @@ package service
 //		msgs = append(msgs, msg)
 //	}
 //	responses = append(responses, &v1.GetDialogAfterMsgResponse{
-//		DialogId: int(dialogId),
+//		DialogID: int(dialogId),
 //		Messages: &msgs,
 //		Total:    int(list.Total),
 //	})
@@ -1258,7 +1258,7 @@ package service
 //// 获取私聊对话的最后二十条消息
 //func (s *ServiceImpl) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*v1.GetDialogAfterMsgResponse) ([]*v1.GetDialogAfterMsgResponse, error) {
 //	list, err := s.msgService.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
-//		DialogId: dialogId,
+//		DialogID: dialogId,
 //		PageNum:  1,
 //		PageSize: 20,
 //	})
@@ -1269,19 +1269,19 @@ package service
 //	for _, um := range list.UserMessages {
 //		//查询发送者信息
 //		info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//			UserId: um.SenderId,
+//			ID: um.SenderId,
 //		})
 //		if err != nil {
 //			return responses, err
 //		}
 //		info2, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//			UserId: um.ReceiverId,
+//			ID: um.ReceiverId,
 //		})
 //		if err != nil {
 //			return responses, err
 //		}
 //		msg := v1.Message{}
-//		msg.MsgId = int(um.Id)
+//		msg.MsgId = int(um.ID)
 //		msg.MsgType = int(um.Type)
 //		msg.Content = um.Content
 //		msg.SenderId = um.SenderId
@@ -1289,12 +1289,12 @@ package service
 //		msg.SenderInfo = &v1.SenderInfo{
 //			Avatar: info.Avatar,
 //			Name:   info.NickName,
-//			UserId: info.UserId,
+//			ID: info.ID,
 //		}
-//		msg.ReceiverInfo = &v1.SenderInfo{
+//		msg.RecipientInfo = &v1.SenderInfo{
 //			Avatar: info2.Avatar,
 //			Name:   info2.NickName,
-//			UserId: info2.UserId,
+//			ID: info2.ID,
 //		}
 //		msg.ReadAt = int(um.ReadAt)
 //		msg.ReplyId = int(um.ReplyId)
@@ -1311,7 +1311,7 @@ package service
 //		msgs = append(msgs, msg)
 //	}
 //	responses = append(responses, &v1.GetDialogAfterMsgResponse{
-//		DialogId: int(dialogId),
+//		DialogID: int(dialogId),
 //		Messages: &msgs,
 //		Total:    int(list.Total),
 //	})

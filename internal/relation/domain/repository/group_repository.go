@@ -5,20 +5,13 @@ import (
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 )
 
-type CreateGroupRelation struct {
-	GroupID     uint32
-	UserID      string
-	Identity    entity.GroupIdentity
-	EntryMethod entity.EntryMethod
-	Inviter     string
-	JoinedAt    int64
-}
-
-type GroupRepository interface {
-	Get(ctx context.Context, id uint32) (*entity.GroupRelation, error)
-	Create(ctx context.Context, createGroupRelation *CreateGroupRelation) (*entity.GroupRelation, error)
+type GroupRelationRepository interface {
+	Get(ctx context.Context, groupID uint32, userID string) (*entity.GroupRelation, error)
+	Create(ctx context.Context, createGroupRelation *entity.CreateGroupRelation) (*entity.GroupRelation, error)
 	Update(ctx context.Context, ur *entity.GroupRelation) (*entity.GroupRelation, error)
 	Delete(ctx context.Context, id uint32) error
+
+	GetByGroupID(ctx context.Context, groupID uint32) ([]*entity.GroupRelation, error)
 
 	// DeleteByGroupID 删除群聊的所有关系
 	DeleteByGroupID(ctx context.Context, gid uint32) error

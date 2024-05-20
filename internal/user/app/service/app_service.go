@@ -45,7 +45,7 @@ func (s *serviceImpl) UserLogin(ctx context.Context, ul *entity.LoginRequest) (*
 	//}
 	//
 	//token, err := s.ad.GenerateUserToken(ctx, &entity.AuthClaims{
-	//	UserID:    user.ID,
+	//	ID:    user.ID,
 	//	Email:     user.Email,
 	//	DriverID:  ul.DriverID,
 	//	PublicKey: user.PublicKey,

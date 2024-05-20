@@ -274,6 +274,11 @@ func (s *Service) WsOnlineClients(ctx context.Context, msg *pushgrpcv1.WsMsg, cl
 	if err != nil {
 		return err
 	}
+	//添加在线客户端数
+	err = s.addUserWsCount(ctx, msg.Uid, msg.Rid)
+	if err != nil {
+		return err
+	}
 
 	go func() {
 		for {
@@ -320,19 +325,74 @@ func (s *Service) WsOfflineClients(ctx context.Context, uid, rid string) error {
 	if err != nil {
 		return err
 	}
+	err = s.reduceUserWsCount(ctx, uid, rid)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-//func (s *Service) addUserWsCount(ctx context.Context, uid string) error {
-//
-//
-//	//给好友推送上线
-//	err := s.pushFriendStatus(ctx, onlineEvent, uid)
-//	if err != nil {
-//		return err
-//	}
-//
-//}
+func (s *Service) addUserWsCount(ctx context.Context, uid string, rid string) error {
+	prefix := "push:online:"
+	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("%s%s", prefix, uid))
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return s.redisClient.SetKey(fmt.Sprintf("%s%s", prefix, uid), 1, 0)
+	} else {
+		value, err := s.redisClient.GetKey(fmt.Sprintf("%s%s", prefix, uid))
+		if err != nil {
+			return err
+		}
+		str := value.(string)
+		num, err := strconv.Atoi(str)
+		if err != nil {
+			return err
+		}
+		num++
+		return s.redisClient.SetKey(fmt.Sprintf("%s%s", prefix, uid), num, 0)
+	}
+}
+
+func (s *Service) reduceUserWsCount(ctx context.Context, uid string, rid string) error {
+	prefix := "push:online:"
+	exists, err := s.redisClient.ExistsKey(fmt.Sprintf("%s%s", prefix, uid))
+	if err != nil {
+		return err
+	}
+	if !exists {
+		//给好友推送下线
+		//err := c.pushFriendStatus(offlineEvent)
+		//if err != nil {
+		//	return err
+		//}
+		return nil
+	} else {
+		value, err := s.redisClient.GetKey(fmt.Sprintf("%s%s", prefix, uid))
+		if err != nil {
+			return err
+		}
+		str := value.(string)
+		num, err := strconv.Atoi(str)
+		if err != nil {
+			return err
+		}
+		//fmt.Printf("%s账号当前还有%d个客户端在线", c.Uid, num)
+		if num == 1 {
+			//给好友推送下线
+			err := s.pushFriendStatus(ctx, offlineEvent, uid, rid)
+			if err != nil {
+				return err
+			}
+			return s.redisClient.DelKey(fmt.Sprintf("%s%s", prefix, uid))
+		} else {
+			num--
+			return s.redisClient.SetKey(fmt.Sprintf("%s%s", prefix, uid), num, 0)
+		}
+	}
+}
 
 //func (s *Service) reduceUserWsCount(ctx context.Context, uid string) error {
 //	key := fmt.Sprintf("%s%s", cache.PushKeyPrefix, uid)
@@ -410,7 +470,7 @@ func (s *Service) pushFriendStatus(ctx context.Context, v status, uid, rid strin
 			}
 
 			//for _, i2 := range s.Buckets {
-			//	err := i2.SendMessage(friend.UserID, message)
+			//	err := i2.SendMessage(friend.ID, message)
 			//	if err != nil {
 			//		s.logger.Error("推送消息失败", zap.Error(err))
 			//		continue
@@ -424,6 +484,8 @@ func (s *Service) pushFriendStatus(ctx context.Context, v status, uid, rid strin
 
 // 获取所有好友在线状态
 func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c socketio.Conn, uid string, rid string) error {
+	prefix := "push:online:"
+
 	//查询所有好友
 	list, err := s.relationService.GetFriendList(context.Background(), &relationgrpcv1.GetFriendListRequest{UserId: uid})
 	if err != nil {
@@ -433,12 +495,12 @@ func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c socketio.Conn
 
 	if len(list.FriendList) > 0 {
 		for _, friend := range list.FriendList {
-			exists, err := s.redisClient.ExistsKey(friend.UserId)
+			exists, err := s.redisClient.ExistsKey(fmt.Sprintf("%s%s", prefix, friend.UserId))
 			if err != nil {
 				return err
 			}
 			if exists {
-				value, err := s.redisClient.GetKey(friend.UserId)
+				value, err := s.redisClient.GetKey(fmt.Sprintf("%s%s", prefix, friend.UserId))
 				if err != nil {
 					return err
 				}
@@ -453,7 +515,7 @@ func (s *Service) pushAllFriendOnlineStatus(ctx context.Context, c socketio.Conn
 					friendList = append(friendList, model.FriendOnlineStatusMsg{Status: int32(offlineEvent), UserId: friend.UserId})
 				}
 			} else {
-				friendList = append(friendList, model.FriendOnlineStatusMsg{Status: int32(onlineEvent), UserId: friend.UserId})
+				friendList = append(friendList, model.FriendOnlineStatusMsg{Status: int32(offlineEvent), UserId: friend.UserId})
 			}
 		}
 	}

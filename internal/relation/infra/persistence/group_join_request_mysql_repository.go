@@ -53,7 +53,7 @@ func (m *GroupJoinRequestModel) ToEntity() *entity.GroupJoinRequest {
 	return e
 }
 
-var _ repository.GroupJoinRequestRepository = &MySQLGroupJoinRequestRepository{}
+var _ repository.GroupRequestRepository = &MySQLGroupJoinRequestRepository{}
 
 func NewMySQLGroupJoinRequestRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLGroupJoinRequestRepository {
 	return &MySQLGroupJoinRequestRepository{

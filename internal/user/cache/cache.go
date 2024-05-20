@@ -52,7 +52,7 @@ type UserCache interface {
 	GetUserInfo(ctx context.Context, userID string) (*entity.User, error)
 	GetUsersInfo(ctx context.Context, userID []string) ([]*entity.User, error)
 	SetUserInfo(ctx context.Context, userID string, data *entity.User, expiration time.Duration) error
-	DeleteUsersInfo(ctx context.Context, userIDs []string) error
+	DeleteUsersInfo(ctx context.Context, userIDs ...string) error
 	DeleteAllCache(ctx context.Context) error
 	GetUserLoginInfo(ctx context.Context, userID string, driverID string) (*entity.UserLogin, error)
 	SetUserLoginInfo(ctx context.Context, userID string, driverID string, data *entity.UserLogin, expiration time.Duration) error
@@ -394,7 +394,7 @@ func (u *UserCacheRedis) SetUserInfo(ctx context.Context, userID string, data *e
 	return u.client.Set(ctx, key, userInfoJSON, expiration).Err()
 }
 
-func (u *UserCacheRedis) DeleteUsersInfo(ctx context.Context, userIDs []string) error {
+func (u *UserCacheRedis) DeleteUsersInfo(ctx context.Context, userIDs ...string) error {
 	if len(userIDs) == 0 {
 		return ErrCacheKeyEmpty
 	}

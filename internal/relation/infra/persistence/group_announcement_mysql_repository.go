@@ -2,9 +2,11 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
@@ -104,10 +106,14 @@ func (m *MySQLRelationGroupAnnouncementRepository) Create(ctx context.Context, a
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, query *repository.GroupAnnouncementQuery) ([]*entity.GroupAnnouncement, error) {
+func (m *MySQLRelationGroupAnnouncementRepository) Find(ctx context.Context, query *entity.GroupAnnouncementQuery) ([]*entity.GroupAnnouncement, error) {
 	var models []GroupAnnouncementModel
 
-	db := m.db.Model(&GroupAnnouncementModel{})
+	if len(query.ID) <= 0 && len(query.GroupID) <= 0 && query.Name == "" {
+		return nil, code.InvalidParameter
+	}
+
+	db := m.db.Model(&GroupAnnouncementModel{}).Where("deleted_at = 0")
 
 	if len(query.ID) > 0 {
 		db = db.Where("id IN (?)", query.ID)
@@ -144,6 +150,9 @@ func (m *MySQLRelationGroupAnnouncementRepository) Get(ctx context.Context, anno
 		Where("id = ? AND deleted_at = 0", announcementID).
 		First(&model).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 
@@ -151,14 +160,15 @@ func (m *MySQLRelationGroupAnnouncementRepository) Get(ctx context.Context, anno
 }
 
 func (m *MySQLRelationGroupAnnouncementRepository) Update(ctx context.Context, announcement *entity.UpdateGroupAnnouncement) error {
-	var model GroupAnnouncementModel
-
 	if err := m.db.WithContext(ctx).
-		Model(&GroupRelationModel{}).
-		Where("id = ?", model.ID).
+		Model(&GroupAnnouncementModel{}).
+		Where("id = ? and deleted_at = 0", announcement.ID).
 		Update("title", announcement.Title).
 		Update("content", announcement.Content).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return code.NotFound
+		}
 		return err
 	}
 
@@ -167,16 +177,19 @@ func (m *MySQLRelationGroupAnnouncementRepository) Update(ctx context.Context, a
 
 func (m *MySQLRelationGroupAnnouncementRepository) Delete(ctx context.Context, announcementID uint32) error {
 	if err := m.db.WithContext(ctx).
-		Model(&GroupRelationModel{}).
+		Model(&GroupAnnouncementModel{}).
 		Where("id = ?", announcementID).
 		Update("deleted_at", ptime.Now()).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return code.NotFound
+		}
 		return err
 	}
 	return nil
 }
 
-func (m *MySQLRelationGroupAnnouncementRepository) MarkAsRead(ctx context.Context, groupId, announcementId uint32, userIds []string) error {
+func (m *MySQLRelationGroupAnnouncementRepository) MarkAsRead(ctx context.Context, groupId, announcementId uint32, userIds ...string) error {
 	if err := m.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, userId := range userIds {
 			announcementRead := &GroupAnnouncementReadModel{
@@ -186,9 +199,12 @@ func (m *MySQLRelationGroupAnnouncementRepository) MarkAsRead(ctx context.Contex
 				ReadAt:         ptime.Now(),
 			}
 			if err := tx.
-				Where("id = ? and user_id = ? ", announcementId, userId).
+				Where("id = ? and user_id = ? and deleted_at = 0", announcementId, userId).
 				Assign(announcementRead).
 				FirstOrCreate(announcementRead).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return code.NotFound
+				}
 				return err
 			}
 		}
@@ -205,7 +221,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) GetReadUsers(ctx context.Cont
 
 	if err := m.db.WithContext(ctx).
 		Model(&GroupAnnouncementReadModel{}).
-		Where("group_id = ? AND announcement_id = ?", groupId, announcementId).
+		Where("group_id = ? AND announcement_id = ? and deleted_at = 0", groupId, announcementId).
 		Find(&users).
 		Error; err != nil {
 		return nil, err
@@ -224,7 +240,7 @@ func (m *MySQLRelationGroupAnnouncementRepository) GetReadByUserId(ctx context.C
 
 	if err := m.db.WithContext(ctx).
 		Model(&GroupAnnouncementReadModel{}).
-		Where("group_id = ? AND announcement_id = ? AND user_id = ?", groupId, announcementId, userId).
+		Where("group_id = ? AND announcement_id = ? AND user_id = ? and deleted_at = 0", groupId, announcementId, userId).
 		First(&model).Error; err != nil {
 		return nil, err
 	}

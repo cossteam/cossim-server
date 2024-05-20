@@ -10,7 +10,7 @@ paths:
       description: 发送全体通知
       operationId: sendAllNotification
       tags:
-        - Admin
+        - admin
       requestBody:
         description: request
         required: true

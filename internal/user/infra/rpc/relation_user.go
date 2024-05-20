@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"context"
-	"fmt"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"google.golang.org/grpc"
@@ -47,8 +46,6 @@ func (s *relationUserGrpc) EstablishFriendship(ctx context.Context, userID strin
 }
 
 func (s *relationUserGrpc) GetUserRelation(ctx context.Context, userID string, friendID string) (*entity.Relation, error) {
-	fmt.Println("relation.GetUserRelation => ", userID, friendID)
-
 	relation, err := s.client.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{
 		UserId:   userID,
 		FriendId: friendID,
@@ -66,10 +63,8 @@ func (s *relationUserGrpc) GetUserRelation(ctx context.Context, userID string, f
 	} else if relation.Status == relationgrpcv1.RelationStatus_RELATION_STATUS_BLOCKED {
 		resp.Status = entity.UserRelationStatusBlacked
 	} else {
-		resp.Status = entity.UserRelationStatusNone
+		resp.Status = entity.UserRelationStatusDeleted
 	}
-
-	fmt.Println("relation.Remark => ", relation.Remark)
 
 	resp.Remark = relation.Remark
 	resp.SilentNotification = relation.IsSilent

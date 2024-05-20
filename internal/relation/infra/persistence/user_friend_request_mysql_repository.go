@@ -5,6 +5,7 @@ import (
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -27,7 +28,7 @@ func (m *UserFriendRequestModel) TableName() string {
 func (m *UserFriendRequestModel) FromEntity(u *entity.UserFriendRequest) error {
 	m.ID = u.ID
 	m.SenderID = u.SenderID
-	m.ReceiverID = u.ReceiverID
+	m.ReceiverID = u.RecipientID
 	m.Remark = u.Remark
 	m.OwnerID = u.OwnerID
 	m.Status = uint8(u.Status)
@@ -37,14 +38,14 @@ func (m *UserFriendRequestModel) FromEntity(u *entity.UserFriendRequest) error {
 
 func (m *UserFriendRequestModel) ToEntity() (*entity.UserFriendRequest, error) {
 	return &entity.UserFriendRequest{
-		ID:         m.ID,
-		CreatedAt:  m.CreatedAt,
-		SenderID:   m.SenderID,
-		ReceiverID: m.ReceiverID,
-		Remark:     m.Remark,
-		OwnerID:    m.OwnerID,
-		Status:     entity.RequestStatus(m.Status),
-		ExpiredAt:  m.ExpiredAt,
+		ID:          m.ID,
+		CreatedAt:   m.CreatedAt,
+		SenderID:    m.SenderID,
+		RecipientID: m.ReceiverID,
+		Remark:      m.Remark,
+		OwnerID:     m.OwnerID,
+		Status:      entity.RequestStatus(m.Status),
+		ExpiredAt:   m.ExpiredAt,
 	}, nil
 }
 
@@ -61,12 +62,21 @@ type MySQLUserFriendRequestRepository struct {
 	db *gorm.DB
 }
 
+func (m *MySQLUserFriendRequestRepository) NewRepository(db *gorm.DB) repository.UserFriendRequestRepository {
+	return &MySQLUserFriendRequestRepository{
+		db: db,
+	}
+}
+
 func (m *MySQLUserFriendRequestRepository) GetByUserIdAndFriendId(ctx context.Context, senderId, receiverId string) (*entity.UserFriendRequest, error) {
 	var model UserFriendRequestModel
 
 	if err := m.db.WithContext(ctx).
 		Where("sender_id = ? AND receiver_id = ? AND status = ? AND deleted_at = 0", senderId, receiverId, entity.Pending).
 		First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 
@@ -94,6 +104,9 @@ func (m *MySQLUserFriendRequestRepository) Get(ctx context.Context, id uint32) (
 	var model UserFriendRequestModel
 
 	if err := m.db.WithContext(ctx).Where("id = ? AND deleted_at = 0", id).First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 
@@ -153,8 +166,13 @@ func (m *MySQLUserFriendRequestRepository) Find(ctx context.Context, query *repo
 		return nil, errors.Wrap(result.Error, "failed to find user friend requests")
 	}
 
+	var totalCount int64
+	if err := db.Count(&totalCount).Error; err != nil {
+		return nil, err
+	}
+
 	ufrs := &entity.UserFriendRequestList{
-		Total: result.RowsAffected,
+		Total: totalCount,
 	}
 	for _, model := range userFriendRequests {
 		entity, err := model.ToEntity()

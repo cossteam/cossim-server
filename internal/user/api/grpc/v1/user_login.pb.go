@@ -31,7 +31,7 @@ type UserLogin struct {
 	// @inject_tag: json:"token"
 	Token string `protobuf:"bytes,2,opt,name=Token,proto3" json:"token"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=ID,proto3" json:"user_id"`
 	// 设备token 用于推送到指定设备
 	// @inject_tag: json:"driver_token"
 	DriverToken string `protobuf:"bytes,4,opt,name=DriverToken,proto3" json:"driver_token"`
@@ -125,7 +125,7 @@ type DriverIdAndUserId struct {
 	// @inject_tag: json:"driver_id"
 	DriverId string `protobuf:"bytes,1,opt,name=DriverId,proto3" json:"driver_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *DriverIdAndUserId) Reset() {
@@ -184,7 +184,7 @@ type TokenUpdate struct {
 	// @inject_tag: json:"token"
 	Token string `protobuf:"bytes,2,opt,name=Token,proto3" json:"token"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,3,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,3,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *TokenUpdate) Reset() {
@@ -294,7 +294,7 @@ type GetUserDriverTokenByUserIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *GetUserDriverTokenByUserIdRequest) Reset() {
@@ -390,7 +390,7 @@ type GetUserLoginByUserIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *GetUserLoginByUserIdRequest) Reset() {

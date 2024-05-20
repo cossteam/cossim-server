@@ -148,7 +148,7 @@ func (r *RelationUserCacheRedis) SetRelation(ctx context.Context, ownerUserID st
 	if err != nil {
 		return err
 	}
-	fmt.Println("set relation: ", string(b))
+	fmt.Printf("set relation key => %s value=> %s\n", key, string(b))
 	return r.client.Set(ctx, key, b, expiration).Err()
 }
 

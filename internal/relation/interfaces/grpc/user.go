@@ -105,7 +105,7 @@ func (s *userServiceServer) AddFriend(ctx context.Context, request *v1.AddFriend
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteFriendRequestList(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteFriendRequestList(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("failed to delete cache friend request list: %v", err)
 	//	}
 	//}
@@ -121,10 +121,10 @@ func (s *userServiceServer) DeleteFriend(ctx context.Context, request *v1.Delete
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteRelation(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteRelation(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("failed to delete cache relation: %v", err)
 	//	}
-	//	if err := s.cache.DeleteFriendList(ctx, request.UserID); err != nil {
+	//	if err := s.cache.DeleteFriendList(ctx, request.ID); err != nil {
 	//		log.Printf("failed to delete cache friend list: %v", err)
 	//	}
 	//}
@@ -185,13 +185,13 @@ func (s *userServiceServer) AddBlacklist(ctx context.Context, request *v1.AddBla
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteBlacklist(ctx, request.UserID); err != nil {
+	//	if err := s.cache.DeleteBlacklist(ctx, request.ID); err != nil {
 	//		log.Printf("failed to delete cache blacklist: %v", err)
 	//	}
-	//	if err := s.cache.DeleteRelation(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteRelation(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("failed to delete cache relation: %v", err)
 	//	}
-	//	if err := s.cache.DeleteFriendList(ctx, request.UserID); err != nil {
+	//	if err := s.cache.DeleteFriendList(ctx, request.ID); err != nil {
 	//		log.Printf("failed to delete cache friend list: %v", err)
 	//	}
 	//}
@@ -222,13 +222,13 @@ func (s *userServiceServer) DeleteBlacklist(ctx context.Context, request *v1.Del
 	//}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteBlacklist(ctx, request.UserID); err != nil {
+	//	if err := s.cache.DeleteBlacklist(ctx, request.ID); err != nil {
 	//		log.Printf("failed to delete cache blacklist: %v", err)
 	//	}
-	//	if err := s.cache.DeleteRelation(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteRelation(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("failed to delete cache relation: %v", err)
 	//	}
-	//	if err := s.cache.DeleteFriendList(ctx, request.UserID); err != nil {
+	//	if err := s.cache.DeleteFriendList(ctx, request.ID); err != nil {
 	//		log.Printf("failed to delete cache friend list: %v", err)
 	//	}
 	//}
@@ -241,7 +241,7 @@ func (s *userServiceServer) GetFriendList(ctx context.Context, request *v1.GetFr
 
 	//if s.cacheEnable {
 	//	// 从缓存中获取关系对象
-	//	r, err := s.cache.GetFriendList(ctx, request.UserID)
+	//	r, err := s.cache.GetFriendList(ctx, request.ID)
 	//	if err == nil && r != nil {
 	//		// 如果缓存中存在，则直接返回缓存的结果
 	//		return r, nil
@@ -249,11 +249,11 @@ func (s *userServiceServer) GetFriendList(ctx context.Context, request *v1.GetFr
 	//}
 
 	//friends, err := s.urr.Find(ctx, &relation.UserQuery{
-	//	UserID:   request.UserID,
+	//	ID:   request.ID,
 	//	FriendId: nil,
 	//	Status:   &st,
 	//})
-	friends, err := s.repos.UserRepo.FriendRequestList(ctx, request.UserId)
+	friends, err := s.repos.UserRepo.ListFriend(ctx, request.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.RelationErrUserNotFound.Code()), fmt.Sprintf("failed to get friend list: %v", err))
@@ -264,8 +264,8 @@ func (s *userServiceServer) GetFriendList(ctx context.Context, request *v1.GetFr
 	for _, friend := range friends {
 		resp.FriendList = append(resp.FriendList,
 			&v1.Friend{
-				UserId:                      friend.UserId,
-				DialogId:                    friend.DialogId,
+				UserId:                      friend.UserID,
+				DialogId:                    friend.DialogID,
 				Remark:                      friend.Remark,
 				Status:                      v1.RelationStatus(friend.Status),
 				IsSilent:                    friend.IsSilent,
@@ -275,7 +275,7 @@ func (s *userServiceServer) GetFriendList(ctx context.Context, request *v1.GetFr
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.SetFriendList(ctx, request.UserID, resp, cache.RelationExpireTime); err != nil {
+	//	if err := s.cache.SetFriendList(ctx, request.ID, resp, cache.RelationExpireTime); err != nil {
 	//		log.Printf("failed to set get friend list cache: %v", err)
 	//	}
 	//}
@@ -295,7 +295,7 @@ func (s *userServiceServer) GetBlacklist(ctx context.Context, request *v1.GetBla
 	//	}
 	//}
 
-	blacklist, err := s.repos.UserRepo.Blacklist(ctx, request.UserId)
+	blacklist, err := s.repos.UserRepo.Blacklist(ctx, &entity.BlacklistOptions{UserID: request.UserId})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return resp, status.Error(codes.Code(code.RelationErrUserNotFound.Code()), fmt.Sprintf("failed to get black list: %v", err))
@@ -303,12 +303,12 @@ func (s *userServiceServer) GetBlacklist(ctx context.Context, request *v1.GetBla
 		return resp, status.Error(codes.Code(code.RelationErrGetBlacklistFailed.Code()), fmt.Sprintf("failed to get black list: %v", err))
 	}
 
-	for _, id := range blacklist.List {
-		resp.Blacklist = append(resp.Blacklist, &v1.Blacklist{UserId: id})
+	for _, black := range blacklist.List {
+		resp.Blacklist = append(resp.Blacklist, &v1.Blacklist{UserId: black.UserID})
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.SetBlacklist(ctx, request.UserID, resp, cache.RelationExpireTime); err != nil {
+	//	if err := s.cache.SetBlacklist(ctx, request.ID, resp, cache.RelationExpireTime); err != nil {
 	//		log.Printf("failed to set blacklist cache: %v", err)
 	//	}
 	//}
@@ -320,26 +320,28 @@ func (s *userServiceServer) GetUserRelation(ctx context.Context, request *v1.Get
 	resp := &v1.GetUserRelationResponse{}
 	var err error
 
-	//if s.cacheEnable {
-	//	// 从缓存中获取关系对象
-	//	relation, err := s.cache.GetRelation(ctx, request.UserID, request.FriendId)
-	//	if err == nil && relation != nil {
-	//		// 如果缓存中存在，则直接返回缓存的结果
-	//		return relation, nil
-	//	}
-	//}
-
 	// 从数据库中获取关系对象
 	entityRelation, err := s.repos.UserRepo.Get(ctx, request.UserId, request.FriendId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.RelationUserErrFriendRelationNotFound.Code()), err.Error())
+			return nil, status.Error(codes.Code(code.RelationUserErrFriendRelationNotFound.Code()), err.Error())
 		}
-		return resp, err
+		return nil, err
 	}
 
-	// 将entity.UserRelation的字段值复制到v1.GetUserRelationResponse
-	resp.Status = v1.RelationStatus(entityRelation.Status)
+	var stat v1.RelationStatus
+	switch entityRelation.Status {
+	case entity.UserStatusNormal:
+		stat = v1.RelationStatus_RELATION_NORMAL
+	case entity.UserStatusBlocked:
+		stat = v1.RelationStatus_RELATION_STATUS_BLOCKED
+	case entity.UserStatusDeleted:
+		stat = v1.RelationStatus_RELATION_STATUS_DELETED
+	default:
+		stat = v1.RelationStatus_RELATION_UNKNOWN
+	}
+
+	resp.Status = stat
 	resp.DialogId = entityRelation.DialogId
 	resp.UserId = entityRelation.UserID
 	resp.FriendId = entityRelation.FriendID
@@ -347,13 +349,6 @@ func (s *userServiceServer) GetUserRelation(ctx context.Context, request *v1.Get
 	resp.OpenBurnAfterReading = entityRelation.OpenBurnAfterReading
 	resp.Remark = entityRelation.Remark
 	resp.OpenBurnAfterReadingTimeOut = entityRelation.BurnAfterReadingTimeOut
-
-	//if s.cacheEnable {
-	//	if err := s.cache.SetRelation(ctx, request.UserID, request.FriendId, resp, cache.RelationExpireTime); err != nil {
-	//		log.Printf("set relation cache failed: %v", err)
-	//	}
-	//}
-
 	return resp, nil
 }
 
@@ -365,7 +360,7 @@ func (s *userServiceServer) GetUserRelationByUserIds(ctx context.Context, reques
 	}
 
 	//if s.cacheEnable {
-	//	r, err := s.cache.GetRelations(ctx, request.UserID, request.FriendIds)
+	//	r, err := s.cache.GetRelations(ctx, request.ID, request.FriendIds)
 	//	if err == nil && r != nil {
 	//		resp.Users = r
 	//		return resp, nil
@@ -392,7 +387,7 @@ func (s *userServiceServer) GetUserRelationByUserIds(ctx context.Context, reques
 	//// TODO 考虑使用异步的方式，缓存设置失败了，重试或回滚
 	//if s.cacheEnable {
 	//	for _, v := range resp.Users {
-	//		if err := s.cache.SetRelation(ctx, request.UserID, v.FriendId, v, cache.RelationExpireTime); err != nil {
+	//		if err := s.cache.SetRelation(ctx, request.ID, v.FriendId, v, cache.RelationExpireTime); err != nil {
 	//			log.Printf("failed to set get user relation cache: %v", err)
 	//		}
 	//	}
@@ -410,10 +405,10 @@ func (s *userServiceServer) SetFriendSilentNotification(ctx context.Context, req
 
 	//// TODO 考虑使用异步的方式，缓存设置失败了，重试或回滚
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteRelation(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteRelation(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("delete relation cache failed: %v", err)
 	//	}
-	//	if err := s.cache.DeleteFriendList(ctx, request.UserID); err != nil {
+	//	if err := s.cache.DeleteFriendList(ctx, request.ID); err != nil {
 	//		log.Printf("delete friend request list cache failed: %v", err)
 	//	}
 	//}
@@ -429,17 +424,17 @@ func (s *userServiceServer) SetUserOpenBurnAfterReading(ctx context.Context, req
 		request.UserId,
 		request.FriendId,
 		request.OpenBurnAfterReading,
-		request.TimeOut,
+		uint32(request.TimeOut),
 	); err != nil {
 		return resp, status.Error(codes.Code(code.RelationErrSetUserOpenBurnAfterReadingFailed.Code()), err.Error())
 	}
 
 	//// TODO 考虑使用异步的方式，缓存设置失败了，重试或回滚
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteRelation(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteRelation(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("delete relation cache failed: %v", err)
 	//	}
-	//	if err := s.cache.DeleteFriendList(ctx, request.UserID); err != nil {
+	//	if err := s.cache.DeleteFriendList(ctx, request.ID); err != nil {
 	//		log.Printf("delete friend request list cache failed: %v", err)
 	//	}
 	//}
@@ -454,10 +449,10 @@ func (s *userServiceServer) SetFriendRemark(ctx context.Context, request *v1.Set
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteRelation(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteRelation(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("delete relation cache failed: %v", err)
 	//	}
-	//	if err := s.cache.DeleteFriendList(ctx, request.UserID, request.FriendId); err != nil {
+	//	if err := s.cache.DeleteFriendList(ctx, request.ID, request.FriendId); err != nil {
 	//		log.Printf("delete friend request list cache failed: %v", err)
 	//	}
 	//}

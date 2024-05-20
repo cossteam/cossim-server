@@ -53,8 +53,8 @@ func AuthMiddleware(authService authv1.UserAuthServiceClient) gin.HandlerFunc {
 				m = http.StatusText(http.StatusUnauthorized)
 			} else {
 				fmt.Println("err 3 => ", err)
-				c = http.StatusInternalServerError
-				m = http.StatusText(http.StatusInternalServerError)
+				c = http.StatusUnauthorized
+				m = http.StatusText(http.StatusUnauthorized)
 			}
 			ctx.JSON(c, gin.H{
 				"code": c,

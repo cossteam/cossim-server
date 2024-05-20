@@ -463,7 +463,7 @@ type SenderInfo struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"avatar"
 	Avatar string `protobuf:"bytes,2,opt,name=Avatar,proto3" json:"avatar"`
 	// @inject_tag: json:"name"
@@ -547,7 +547,7 @@ type WsUserOperatorMsg struct {
 	// @inject_tag: json:"created_at"
 	CreatedAt int64 `protobuf:"varint,9,opt,name=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,10,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,10,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"is_label"
 	IsLabel bool `protobuf:"varint,11,opt,name=IsLabel,proto3" json:"is_label"`
 	// @inject_tag: json:"is_burn_after_reading_type"
@@ -723,7 +723,7 @@ type SendWsGroupMsg struct {
 	// @inject_tag: json:"msg_id"
 	MsgId uint32 `protobuf:"varint,1,opt,name=MsgId,proto3" json:"msg_id"`
 	// @inject_tag: json:"group_id"
-	GroupId int64 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id"`
+	GroupId int64 `protobuf:"varint,2,opt,name=GroupID,proto3" json:"group_id"`
 	// @inject_tag: json:"sender_id"
 	SenderId string `protobuf:"bytes,3,opt,name=SenderId,proto3" json:"sender_id"`
 	// @inject_tag: json:"content"
@@ -735,7 +735,7 @@ type SendWsGroupMsg struct {
 	// @inject_tag: json:"send_at"
 	SendAt int64 `protobuf:"varint,7,opt,name=SendAt,proto3" json:"send_at"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,8,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,8,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"at_users"
 	AtUsers []string `protobuf:"bytes,9,rep,name=AtUsers,proto3" json:"at_users"`
 	// @inject_tag: json:"at_all_users"
@@ -877,7 +877,7 @@ type MessageInfo struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupID,proto3" json:"group_id"`
 	// @inject_tag: json:"msg_type"
 	MsgType uint32 `protobuf:"varint,2,opt,name=MsgType,proto3" json:"msg_type"`
 	// @inject_tag: json:"content"
@@ -891,7 +891,7 @@ type MessageInfo struct {
 	// @inject_tag: json:"sender_info"
 	SenderInfo *SenderInfo `protobuf:"bytes,7,opt,name=SenderInfo,proto3" json:"sender_info"`
 	// @inject_tag: json:"receiver_info"
-	ReceiverInfo *SenderInfo `protobuf:"bytes,8,opt,name=ReceiverInfo,proto3" json:"receiver_info"`
+	ReceiverInfo *SenderInfo `protobuf:"bytes,8,opt,name=RecipientInfo,proto3" json:"receiver_info"`
 	// @inject_tag: json:"at_all_users"
 	AtAllUser bool `protobuf:"varint,9,opt,name=AtAllUser,proto3" json:"at_all_users"`
 	// @inject_tag: json:"at_users"
@@ -1556,7 +1556,7 @@ var file_api_grpc_v1_push_proto_depIdxs = []int32{
 	5,  // 5: push_v1.SendWsGroupMsg.SenderInfo:type_name -> push_v1.SenderInfo
 	8,  // 6: push_v1.SendWsGroupMsg.ReplyMsg:type_name -> push_v1.MessageInfo
 	5,  // 7: push_v1.MessageInfo.SenderInfo:type_name -> push_v1.SenderInfo
-	5,  // 8: push_v1.MessageInfo.ReceiverInfo:type_name -> push_v1.SenderInfo
+	5,  // 8: push_v1.MessageInfo.RecipientInfo:type_name -> push_v1.SenderInfo
 	1,  // 9: push_v1.WsMsg.Event:type_name -> push_v1.WSEventType
 	12, // 10: push_v1.WsMsg.data:type_name -> google.protobuf.Any
 	1,  // 11: push_v1.PushWsBatchByUserIdsRequest.Event:type_name -> push_v1.WSEventType

@@ -112,7 +112,7 @@ type GenerateUserTokenRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
+	UserID string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"email"
 	Email string `protobuf:"bytes,2,opt,name=Email,proto3" json:"email"`
 	// @inject_tag: json:"driver_id"
@@ -283,7 +283,7 @@ type AuthClaims struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
+	UserID string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"email"
 	Email string `protobuf:"bytes,2,opt,name=Email,proto3" json:"email"`
 	// @inject_tag: json:"driver_id"

@@ -119,25 +119,23 @@ func (h *Handler) RegisterRoute(r gin.IRouter) {
 
 	g.POST("/remark/set", h.setGroupUserRemark)
 
-	gg := api.Group("/group/admin")
+	admin := g.Group("/admin")
 	// 设置群聊管理员
-	gg.POST("/add", h.addGroupAdmin)
+	admin.POST("/add", h.addGroupAdmin)
 	// 管理员管理群聊申请
-	gg.POST("/manage/join", h.adminManageJoinGroup)
+	admin.POST("/manage/join", h.adminManageJoinGroup)
 	// 管理员移除群聊成员
-	gg.POST("/manage/remove", h.removeUserFromGroup)
+	admin.POST("/manage/remove", h.removeUserFromGroup)
 	//创建群公告
-	gg.POST("/announcement", h.createGroupAnnouncement)
+	admin.POST("/announcement", h.createGroupAnnouncement)
 	//修改群公告
-	gg.POST("/announcement/update", h.updateGroupAnnouncement)
+	admin.POST("/announcement/update", h.updateGroupAnnouncement)
 	//删除群公告
-	gg.POST("/announcement/delete", h.deleteGroupAnnouncement)
+	admin.POST("/announcement/delete", h.deleteGroupAnnouncement)
 
 	d := api.Group("/dialog")
-
 	// 置顶对话
 	d.POST("/top", h.topOrCancelTopDialog)
-
 	// 是否展示对话
 	d.POST("/show", h.closeOrOpenDialog)
 }

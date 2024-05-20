@@ -158,9 +158,10 @@ message GetUserRelationRequest {
 }
 
 enum RelationStatus {
-  RELATION_STATUS_BLOCKED = 0;    // 已拉黑
+  RELATION_UNKNOWN = 0;           // 陌生人
   RELATION_NORMAL = 1;            // 正常
-  RELATION_STATUS_DELETED = 2;    // 已删除
+  RELATION_STATUS_BLOCKED = 2;    // 已拉黑
+  RELATION_STATUS_DELETED = 3;    // 已删除
 }
 
 message GetUserRelationResponse {

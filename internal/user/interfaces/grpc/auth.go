@@ -79,7 +79,7 @@ func (s *UserServiceServer) Access(ctx context.Context, request *api.AccessReque
 		return resp, nil
 	}
 
-	info, err := s.ur.GetWithOptions(ctx, &entity.User{ID: claims.UserId})
+	info, err := s.ur.GetUser(ctx, claims.UserId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.Code(code.UserErrNotExistOrPassword.Code()), err.Error())

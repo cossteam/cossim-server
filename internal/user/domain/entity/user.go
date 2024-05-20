@@ -72,10 +72,10 @@ type Preferences struct {
 type UserRelationStatus int
 
 const (
-	UserRelationStatusNone    UserRelationStatus = iota // 没有用户关系
+	UserRelationStatusNone    UserRelationStatus = iota // 陌生人
 	UserRelationStatusFriend                            // 正常
-	UserRelationStatusBlack                             // 拉黑
-	UserRelationStatusBlacked                           // 删除
+	UserRelationStatusBlacked                           // 拉黑
+	UserRelationStatusDeleted                           // 删除
 )
 
 func (s UserRelationStatus) Int() int {
@@ -86,11 +86,11 @@ func (s UserRelationStatus) String() string {
 	switch s {
 	case UserRelationStatusNone:
 		return "没有用户关系"
-	case UserRelationStatusBlack:
+	case UserRelationStatusBlacked:
 		return "拉黑"
 	case UserRelationStatusFriend:
 		return "正常"
-	case UserRelationStatusBlacked:
+	case UserRelationStatusDeleted:
 		return "删除"
 	default:
 		return "状态不正常"

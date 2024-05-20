@@ -12,6 +12,8 @@ paths:
     post:
       summary: 发送私信
       operationId: SendUserMsg
+      tags:
+        - msg
       requestBody:
         required: true
         content:
@@ -29,6 +31,8 @@ paths:
     post:
       summary: 发送群组消息
       operationId: SendGroupMsg
+      tags:
+        - msg
       requestBody:
         required: true
         content:
@@ -46,6 +50,8 @@ paths:
     get:
       summary: 获取私信列表
       operationId: GetUserMsgList
+      tags:
+        - msg
       parameters:
         - name: dialog_id
           in: query
@@ -98,6 +104,8 @@ paths:
     get:
       summary: 获取群组消息列表
       operationId: GetGroupMsgList
+      tags:
+        - msg
       parameters:
         - name: dialog_id
           in: query
@@ -141,6 +149,8 @@ paths:
     get:
       summary: 获取用户对话列表
       operationId: GetUserDialogList
+      tags:
+        - msg
       parameters:
         - name: page_num
           in: query
@@ -163,6 +173,8 @@ paths:
     put:
       summary: 编辑用户消息
       operationId: EditUserMsg
+      tags:
+        - msg
       parameters:
         - name: id
           in: path
@@ -185,6 +197,8 @@ paths:
     delete:
       summary: 撤回用户消息
       operationId: RecallUserMsg
+      tags:
+        - msg
       parameters:
         - name: id
           in: path
@@ -202,6 +216,8 @@ paths:
     put:
       summary: 编辑群组消息
       operationId: EditGroupMsg
+      tags:
+        - msg
       parameters:
         - name: id
           in: path
@@ -224,6 +240,8 @@ paths:
     delete:
       summary: 撤回群组消息
       operationId: RecallGroupMsg
+      tags:
+        - msg
       parameters:
         - name: id
           in: path
@@ -241,6 +259,8 @@ paths:
     post:
       summary: 标记用户消息
       operationId: LabelUserMsg
+      tags:
+        - msg
       parameters:
         - name: id
           in: path
@@ -264,6 +284,8 @@ paths:
     post:
       summary: 标记群组消息
       operationId: LabelGroupMsg
+      tags:
+        - msg
       parameters:
         - name: id
           in: path
@@ -287,6 +309,8 @@ paths:
     get:
       summary: 获取用户标记消息列表
       operationId: GetUserLabelMsgList
+      tags:
+        - msg
       parameters:
         - name: dialog_id
           in: path
@@ -304,6 +328,8 @@ paths:
     get:
       summary: 获取群组标记消息列表
       operationId: GetGroupLabelMsgList
+      tags:
+        - msg
       parameters:
         - name: dialog_id
           in: path
@@ -321,6 +347,8 @@ paths:
     put:
       summary: 设置用户消息已读
       operationId: ReadUserMsgs
+      tags:
+        - msg
       requestBody:
         required: true
         content:
@@ -338,6 +366,8 @@ paths:
     post:
       summary: 获取指定对话中延迟的消息
       operationId: GetAfterMsgs
+      tags:
+        - msg
       requestBody:
         required: true
         content:
@@ -357,6 +387,8 @@ paths:
     put:
       summary: 设置群组消息已读
       operationId: GroupMessageRead
+      tags:
+        - msg
       requestBody:
         required: true
         content:
@@ -373,8 +405,9 @@ paths:
   /api/v1/msg/group/{id}/read:
     get:
       summary: 获取群组消息阅读者
-
       operationId: GetGroupMessageReaders
+      tags:
+        - msg
       parameters:
         - name: id
           in: path

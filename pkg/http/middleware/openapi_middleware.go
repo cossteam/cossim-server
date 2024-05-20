@@ -34,6 +34,9 @@ func HandleOpenAPIError(c *gin.Context, message string, statusCode int) {
 			message = code.InvalidParameter.Message()
 		}
 	}
+	if strings.Contains(message, "value is required but missing") {
+		message = code.InvalidParameter.Message()
+	}
 	response.SetResponse(c, statusCode, message, nil)
 }
 

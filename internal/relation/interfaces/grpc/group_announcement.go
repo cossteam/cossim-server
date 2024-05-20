@@ -4,7 +4,6 @@ import (
 	"context"
 	v1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
-	"github.com/cossim/coss-server/internal/relation/domain/repository"
 	"github.com/cossim/coss-server/internal/relation/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	"google.golang.org/grpc/codes"
@@ -42,12 +41,12 @@ func (s *groupAnnouncementServer) CreateGroupAnnouncement(ctx context.Context, r
 
 func (s *groupAnnouncementServer) GetGroupAnnouncementList(ctx context.Context, request *v1.GetGroupAnnouncementListRequest) (*v1.GetGroupAnnouncementListResponse, error) {
 	resp := &v1.GetGroupAnnouncementListResponse{}
-	//announcements, err := s.gar.GetGroupAnnouncementList(request.GroupId)
+	//announcements, err := s.gar.GetGroupAnnouncementList(request.GroupID)
 	//if err != nil {
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrGetGroupAnnouncementListFailed.Code()), err.Error())
 	//}
 
-	announcements, err := s.repos.GroupAnnouncementRepo.Find(ctx, &repository.GroupAnnouncementQuery{
+	announcements, err := s.repos.GroupAnnouncementRepo.Find(ctx, &entity.GroupAnnouncementQuery{
 		GroupID: []uint32{request.GroupId},
 	})
 	if err != nil {
@@ -122,7 +121,7 @@ func (s *groupAnnouncementServer) DeleteGroupAnnouncement(ctx context.Context, r
 func (s *groupAnnouncementServer) MarkAnnouncementAsRead(ctx context.Context, request *v1.MarkAnnouncementAsReadRequest) (*v1.MarkAnnouncementAsReadResponse, error) {
 	resp := &v1.MarkAnnouncementAsReadResponse{}
 
-	if err := s.repos.GroupAnnouncementRepo.MarkAsRead(ctx, request.GroupId, request.AnnouncementId, request.UserIds); err != nil {
+	if err := s.repos.GroupAnnouncementRepo.MarkAsRead(ctx, request.GroupId, request.AnnouncementId, request.UserIds...); err != nil {
 		return nil, err
 	}
 

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"gorm.io/gorm"
 )
 
 type UserFriendRequestQuery struct {
@@ -16,6 +17,8 @@ type UserFriendRequestQuery struct {
 }
 
 type UserFriendRequestRepository interface {
+	NewRepository(db *gorm.DB) UserFriendRequestRepository
+
 	Get(ctx context.Context, id uint32) (*entity.UserFriendRequest, error)
 	Create(ctx context.Context, entity *entity.UserFriendRequest) (*entity.UserFriendRequest, error)
 	// Find 根据条件查询好友申请列表

@@ -14,7 +14,7 @@ package http
 //		if err != nil {
 //			return "", err
 //		}
-//		return c2.UserID, nil
+//		return c2.ID, nil
 //	}
 //
 //	return "", errors.New("token is empty")

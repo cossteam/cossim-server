@@ -98,7 +98,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //	//msg, err := s.umr.InsertUserMessage(&entity.UserMessage{
 //	//	Type:               entity.UserMessageType(request.Type),
-//	//	DialogId:           uint(request.DialogId),
+//	//	DialogID:           uint(request.DialogID),
 //	//	ReplyId:            uint(request.ReplyId),
 //	//	ReceiveID:          request.ReceiverId,
 //	//	SendID:             request.SenderId,
@@ -111,8 +111,8 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	resp.MsgId = uint32(msg.ID)
 //
 //	//if s.cacheEnable {
-//	//	fmt.Println("DeleteLastMessage => ", request.DialogId)
-//	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogId); err != nil {
+//	//	fmt.Println("DeleteLastMessage => ", request.DialogID)
+//	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogID); err != nil {
 //	//		log.Printf("delete last message failed: %v", err)
 //	//	}
 //	//}
@@ -131,13 +131,13 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //func (s *Handler) GetUserMessageList(ctx context.Context, request *v1.GetUserMsgListRequest) (*v1.GetUserMsgListResponse, error) {
 //	resp := &v1.GetUserMsgListResponse{}
 //	//if request.MsgId != 0 {
-//	//	//list, total, err := s.umr.GetUserMsgIdBeforeMsgList(request.DialogId, uint32(request.MsgId), int(request.PageSize))
+//	//	//list, total, err := s.umr.GetUserMsgIdBeforeMsgList(request.DialogID, uint32(request.MsgId), int(request.PageSize))
 //	//	//if err != nil {
 //	//	//	return nil, err
 //	//	//}
 //	//
 //	//	res, err := s.umr.Find(ctx, &entity.UserMsgQuery{
-//	//		DialogIds: []uint32{request.DialogId},
+//	//		DialogIds: []uint32{request.DialogID},
 //	//		MsgIds:    []uint32{uint32(request.MsgId)},
 //	//		PageSize:  int64(request.PageSize),
 //	//	})
@@ -147,7 +147,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//
 //	//	for _, m := range res.Messages {
 //	//		resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
-//	//			Id:         uint32(m.ID),
+//	//			ID:         uint32(m.ID),
 //	//			SenderId:   m.SendID,
 //	//			ReceiverId: m.ReceiveID,
 //	//			Content:    m.Content,
@@ -156,21 +156,21 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//			IsRead:     int32(m.IsRead),
 //	//			ReadAt:     m.ReadAt,
 //	//			CreatedAt:  m.CreatedAt,
-//	//			DialogId:   uint32(m.DialogId),
+//	//			DialogID:   uint32(m.DialogID),
 //	//		})
 //	//	}
 //
 //		resp.Total = int32(res.TotalCount)
 //		return resp, nil
 //	}
-//	//ums, total, current := s.umr.GetUserMsgList(request.DialogId, request.UserId, request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
+//	//ums, total, current := s.umr.GetUserMsgList(request.DialogID, request.ID, request.GetContent(), entity.UserMessageType(request.GetType()), int(request.GetPageNum()), int(request.GetPageSize()))
 //	//res, err := s.umr.Find(ctx, &entity.UserMsgQuery{
-//	//	DialogIds: []uint32{request.DialogId},
+//	//	DialogIds: []uint32{request.DialogID},
 //	//	MsgType:   entity.UserMessageType(request.Type),
 //	//	PageNum:   int64(request.PageNum),
 //	//	PageSize:  int64(request.PageSize),
 //	//	Content:   request.Content,
-//	//	SendID:    request.UserId,
+//	//	SendID:    request.ID,
 //	//	StartAt:   int64(request.StartAt),
 //	//	EndAt:     int64(request.EndAt),
 //	//})
@@ -180,7 +180,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//
 //	//for _, m := range res.Messages {
 //	//	resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
-//	//		Id:         uint32(m.ID),
+//	//		ID:         uint32(m.ID),
 //	//		SenderId:   m.SendID,
 //	//		ReceiverId: m.ReceiveID,
 //	//		Content:    m.Content,
@@ -189,7 +189,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//		IsRead:     int32(m.IsRead),
 //	//		ReadAt:     m.ReadAt,
 //	//		CreatedAt:  m.CreatedAt,
-//	//		DialogId:   uint32(m.DialogId),
+//	//		DialogID:   uint32(m.DialogID),
 //	//	})
 //	//}
 //	//resp.Total = int32(res.TotalCount)
@@ -202,7 +202,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	var resp = &v1.UserMessage{}
 //	msg := entity.UserMessage{
 //		BaseModel: entity.BaseModel{
-//			ID: uint(request.UserMessage.Id),
+//			ID: uint(request.UserMessage.ID),
 //		},
 //		Content:   request.UserMessage.Content,
 //		ReplyId:   uint(request.UserMessage.ReplyId),
@@ -216,7 +216,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//}
 //	//
 //	//if s.cacheEnable {
-//	//	if err := s.cache.DeleteLastMessage(ctx, request.UserMessage.DialogId); err != nil {
+//	//	if err := s.cache.DeleteLastMessage(ctx, request.UserMessage.DialogID); err != nil {
 //	//		log.Printf("delete last message failed: %v", err)
 //	//	}
 //	//}
@@ -232,13 +232,13 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	}
 //
 //	//if s.cacheEnable {
-//	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogId); err != nil {
+//	//	if err := s.cache.DeleteLastMessage(ctx, request.DialogID); err != nil {
 //	//		log.Printf("delete last message failed: %v", err)
 //	//	}
 //	//}
 //
 //	return &v1.UserMessage{
-//		Id: request.MsgId,
+//		ID: request.MsgId,
 //	}, nil
 //}
 //
@@ -250,8 +250,8 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//}
 //
 //	resp = &v1.UserMessage{
-//		DialogId:   uint32(msg.DialogId),
-//		Id:         uint32(msg.ID),
+//		DialogID:   uint32(msg.DialogID),
+//		ID:         uint32(msg.ID),
 //		Content:    msg.Content,
 //		Type:       uint32(int32(msg.Type)),
 //		ReplyId:    uint64(msg.ReplyId),
@@ -274,7 +274,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //func (s *Handler) GetUserMsgLabelByDialogId(ctx context.Context, in *v1.GetUserMsgLabelByDialogIdRequest) (*v1.GetUserMsgLabelByDialogIdResponse, error) {
 //	var resp = &v1.GetUserMsgLabelByDialogIdResponse{}
 //
-//	//msgs, err := s.umr.GetUserMsgLabelByDialogId(in.DialogId)
+//	//msgs, err := s.umr.GetUserMsgLabelByDialogId(in.DialogID)
 //	//if err != nil {
 //	//	return resp, status.Error(codes.Code(code.GetMsgErrGetUserMsgLabelByDialogIdFailed.Code()), err.Error())
 //	//}
@@ -282,7 +282,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	var msglist = make([]*v1.UserMessage, 0)
 //	for _, msg := range msgs {
 //		msglist = append(msglist, &v1.UserMessage{
-//			Id:         uint32(msg.ID),
+//			ID:         uint32(msg.ID),
 //			Content:    msg.Content,
 //			Type:       uint32(msg.Type),
 //			ReplyId:    uint64(msg.ReplyId),
@@ -292,14 +292,14 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //		})
 //	}
 //	resp.MsgList = msglist
-//	resp.DialogId = in.DialogId
+//	resp.DialogID = in.DialogID
 //	return resp, nil
 //}
 //
 //func (s *Handler) SetUserMsgsReadStatus(ctx context.Context, in *v1.SetUserMsgsReadStatusRequest) (*v1.SetUserMsgsReadStatusResponse, error) {
 //	var resp = &v1.SetUserMsgsReadStatusResponse{}
 //	////获取阅后即焚消息id
-//	//messages, err := s.umr.GetBatchUserMsgsBurnAfterReadingMessages(in.MsgIds, in.DialogId)
+//	//messages, err := s.umr.GetBatchUserMsgsBurnAfterReadingMessages(in.MsgIds, in.DialogID)
 //	//if err != nil {
 //	//	return nil, err
 //	//}
@@ -314,7 +314,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//}
 //	//err = s.db.Transaction(func(tx *gorm.DB) error {
 //	//	npo := persistence.NewRepositories(tx)
-//	//	if err := npo.Umr.SetUserMsgsReadStatus(in.MsgIds, in.DialogId); err != nil {
+//	//	if err := npo.Umr.SetUserMsgsReadStatus(in.MsgIds, in.DialogID); err != nil {
 //	//		return err
 //	//	}
 //	//	if len(rids) > 0 {
@@ -350,14 +350,14 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //func (s *Handler) GetUnreadUserMsgs(ctx context.Context, in *v1.GetUnreadUserMsgsRequest) (*v1.GetUnreadUserMsgsResponse, error) {
 //	var resp = &v1.GetUnreadUserMsgsResponse{}
-//	//msgs, err := s.umr.GetUnreadUserMsgs(in.UserId, in.DialogId)
+//	//msgs, err := s.umr.GetUnreadUserMsgs(in.ID, in.DialogID)
 //	//if err != nil {
 //	//	return resp, status.Error(codes.Code(code.GetMsgErrGetUnreadUserMsgsFailed.Code()), err.Error())
 //	//}
 //	var list []*v1.UserMessage
 //	for _, msg := range msgs {
 //		list = append(list, &v1.UserMessage{
-//			Id:         uint32(msg.ID),
+//			ID:         uint32(msg.ID),
 //			Content:    msg.Content,
 //			Type:       uint32(msg.Type),
 //			ReplyId:    uint64(msg.ReplyId),
@@ -366,7 +366,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //			CreatedAt:  msg.CreatedAt,
 //			ReadAt:     msg.ReadAt,
 //			IsRead:     int32(msg.IsRead),
-//			DialogId:   uint32(msg.DialogId),
+//			DialogID:   uint32(msg.DialogID),
 //		})
 //	}
 //	resp.UserMessages = list
@@ -377,7 +377,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	var resp = &v1.GetUserMsgIdAfterMsgListResponse{}
 //	//if len(in.List) > 0 {
 //	//	for _, v := range in.List {
-//	//		list, total, err := s.umr.GetUserMsgIdAfterMsgList(v.DialogId, v.MsgId)
+//	//		list, total, err := s.umr.GetUserMsgIdAfterMsgList(v.DialogID, v.MsgId)
 //	//		if err != nil {
 //	//			return nil, err
 //	//		}
@@ -385,7 +385,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//			mlist := &v1.GetUserMsgIdAfterMsgResponse{}
 //	//			for _, msg := range list {
 //	//				mlist.UserMessages = append(mlist.UserMessages, &v1.UserMessage{
-//	//					Id:         uint32(msg.ID),
+//	//					ID:         uint32(msg.ID),
 //	//					Content:    msg.Content,
 //	//					Type:       uint32(msg.Type),
 //	//					ReplyId:    uint64(msg.ReplyId),
@@ -395,7 +395,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//				})
 //	//			}
 //	//			mlist.Total = uint64(total)
-//	//			mlist.DialogId = v.DialogId
+//	//			mlist.DialogID = v.DialogID
 //	//			resp.Messages = append(resp.Messages, mlist)
 //	//		}
 //	//	}
@@ -412,7 +412,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	if len(msgs) > 0 {
 //		for _, msg := range msgs {
 //			resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
-//				Id:                     uint32(msg.ID),
+//				ID:                     uint32(msg.ID),
 //				SenderId:               msg.SendID,
 //				ReceiverId:             msg.ReceiveID,
 //				ReadAt:                 msg.ReadAt,
@@ -420,7 +420,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //				Content:                msg.Content,
 //				Type:                   uint32(msg.Type),
 //				ReplyId:                uint64(msg.ReplyId),
-//				DialogId:               uint32(msg.DialogId),
+//				DialogID:               uint32(msg.DialogID),
 //				IsLabel:                v1.MsgLabel(msg.IsLabel),
 //				IsBurnAfterReadingType: v1.BurnAfterReadingType(msg.IsBurnAfterReading),
 //				CreatedAt:              msg.CreatedAt,
@@ -441,7 +441,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //				Content:   msg.Content,
 //				Type:      entity.UserMessageType(msg.Type),
 //				//ReplyId:            uint(msg.ReplyId),
-//				DialogId: uint(msg.DialogId),
+//				DialogID: uint(msg.DialogID),
 //				//IsBurnAfterReading: entity.BurnAfterReadingType(msg.IsBurnAfterReadingType),
 //			})
 //		}
@@ -455,7 +455,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //func (s *Handler) DeleteUserMessageByDialogId(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteUserMsgByDialogIdResponse, error) {
 //	resp := &v1.DeleteUserMsgByDialogIdResponse{}
-//	//err := s.umr.DeleteUserMessagesByDialogID(in.DialogId)
+//	//err := s.umr.DeleteUserMessagesByDialogID(in.DialogID)
 //	//if err != nil {
 //	//	return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete user msg: %v", err))
 //	//}
@@ -464,7 +464,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //func (s *Handler) ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteUserMsgByDialogIdResponse, error) {
 //	resp := &v1.DeleteUserMsgByDialogIdResponse{}
-//	err := s.umr.PhysicalDeleteUserMessagesByDialogID(in.DialogId)
+//	err := s.umr.PhysicalDeleteUserMessagesByDialogID(in.DialogID)
 //	if err != nil {
 //		return resp, status.Error(codes.Aborted, fmt.Sprintf("failed to delete user msg: %v", err))
 //	}
@@ -473,7 +473,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //func (s *Handler) DeleteUserMessageByDialogIdRollback(ctx context.Context, in *v1.DeleteUserMsgByDialogIdRequest) (*v1.DeleteUserMsgByDialogIdResponse, error) {
 //	resp := &v1.DeleteUserMsgByDialogIdResponse{}
-//	//err := s.umr.UpdateUserMsgColumnByDialogId(in.DialogId, "deleted_at", 0)
+//	//err := s.umr.UpdateUserMsgColumnByDialogId(in.DialogID, "deleted_at", 0)
 //	//if err != nil {
 //	//	return resp, status.Error(codes.Code(code.MsgErrDeleteUserMessageFailed.Code()), err.Error())
 //	//}
@@ -482,14 +482,14 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //func (s *Handler) GetUserLastMessageList(ctx context.Context, request *v1.GetLastMsgListRequest) (*v1.UserMessages, error) {
 //	resp := &v1.UserMessages{}
-//	//msgs, total, err := s.umr.GetUserDialogLastMsgs(request.DialogId, int(request.PageNum), int(request.PageSize))
+//	//msgs, total, err := s.umr.GetUserDialogLastMsgs(request.DialogID, int(request.PageNum), int(request.PageSize))
 //	//if err != nil {
 //	//	return nil, status.Error(codes.Code(code.GetMsgErrGetUserMsgByIDFailed.Code()), err.Error())
 //	//}
 //	if len(msgs) > 0 {
 //		for _, msg := range msgs {
 //			resp.UserMessages = append(resp.UserMessages, &v1.UserMessage{
-//				Id:                     uint32(msg.ID),
+//				ID:                     uint32(msg.ID),
 //				SenderId:               msg.SendID,
 //				ReceiverId:             msg.ReceiveID,
 //				ReadAt:                 msg.ReadAt,
@@ -497,7 +497,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //				Content:                msg.Content,
 //				Type:                   uint32(msg.Type),
 //				ReplyId:                uint64(msg.ReplyId),
-//				DialogId:               uint32(msg.DialogId),
+//				DialogID:               uint32(msg.DialogID),
 //				IsLabel:                v1.MsgLabel(msg.IsLabel),
 //				IsBurnAfterReadingType: v1.BurnAfterReadingType(msg.IsBurnAfterReading),
 //				CreatedAt:              msg.CreatedAt,
@@ -510,7 +510,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //func (s *Handler) ReadAllUserMsg(ctx context.Context, request *v1.ReadAllUserMsgRequest) (*v1.ReadAllUserMsgResponse, error) {
 //	resp := &v1.ReadAllUserMsgResponse{}
-//	//if err := s.umr.ReadAllUserMsg(request.UserId, request.DialogId); err != nil {
+//	//if err := s.umr.ReadAllUserMsg(request.ID, request.DialogID); err != nil {
 //	//	return nil, status.Error(codes.Code(code.SetMsgErrSetUserMsgsReadStatusFailed.Code()), err.Error())
 //	//}
 //	return resp, nil
@@ -526,14 +526,14 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //func (s *Handler) GetLastMsgsForUserWithFriends(ctx context.Context, request *v1.UserMsgsRequest) (*v1.UserMessages, error) {
 //	resp := &v1.UserMessages{}
-//	//msgs, err := s.umr.GetLastMsgsForUserWithFriends(request.UserId, request.FriendId)
+//	//msgs, err := s.umr.GetLastMsgsForUserWithFriends(request.ID, request.FriendId)
 //	//if err != nil {
 //	//	return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsForUserWithFriends.Code()), err.Error())
 //	//}
 //	nmsgs := make([]*v1.UserMessage, 0)
 //	for _, m := range msgs {
 //		nmsgs = append(nmsgs, &v1.UserMessage{
-//			Id:        uint32(m.ID),
+//			ID:        uint32(m.ID),
 //			Content:   m.Content,
 //			Type:      uint32(m.Type),
 //			ReplyId:   uint64(m.ReplyId),
@@ -568,7 +568,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//
 //	//for _, m := range result1 {
 //	//	//查询是否已读
-//	//	read, err := s.gmrr.GetGroupMsgReadByMsgIDAndUserID(uint32(m.ID), request.UserId)
+//	//	read, err := s.gmrr.GetGroupMsgReadByMsgIDAndUserID(uint32(m.ID), request.ID)
 //	//	if err != nil && err != gorm.ErrRecordNotFound {
 //	//		return resp, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())
 //	//	}
@@ -579,31 +579,31 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	//	}
 //	//
 //	//	resp.LastMsgs = append(resp.LastMsgs, &v1.LastMsg{
-//	//		Id:                     uint32(m.ID),
+//	//		ID:                     uint32(m.ID),
 //	//		Type:                   uint32(m.Type),
 //	//		CreatedAt:              m.CreatedAt,
 //	//		Content:                m.Content,
-//	//		SenderId:               m.UserID,
-//	//		DialogId:               uint32(m.DialogId),
+//	//		SenderId:               m.ID,
+//	//		DialogID:               uint32(m.DialogID),
 //	//		IsBurnAfterReadingType: v1.BurnAfterReadingType(m.IsBurnAfterReading),
 //	//		AtUsers:                m.AtUsers,
 //	//		AtAllUser:              v1.AtAllUserType(m.AtAllUser),
 //	//		IsLabel:                v1.MsgLabel(m.IsLabel),
 //	//		ReplyId:                uint32(m.ReplyId),
 //	//		IsRead:                 int32(isRead),
-//	//		GroupId:                uint32(m.GroupID),
+//	//		GroupID:                uint32(m.GroupID),
 //	//		ReadAt:                 read.ReadAt,
 //	//	})
 //	//}
 //	//
 //	//for _, m := range result2 {
 //	//	resp.LastMsgs = append(resp.LastMsgs, &v1.LastMsg{
-//	//		Id:                     uint32(m.ID),
+//	//		ID:                     uint32(m.ID),
 //	//		Type:                   uint32(m.Type),
 //	//		CreatedAt:              m.CreatedAt,
 //	//		Content:                m.Content,
 //	//		SenderId:               m.SendID,
-//	//		DialogId:               uint32(m.DialogId),
+//	//		DialogID:               uint32(m.DialogID),
 //	//		ReceiverId:             m.ReceiveID,
 //	//		IsBurnAfterReadingType: v1.BurnAfterReadingType(m.IsBurnAfterReading),
 //	//		IsLabel:                v1.MsgLabel(m.IsLabel),
@@ -615,7 +615,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //
 //	//if s.cacheEnable {
 //	//	for _, v := range resp.LastMsgs {
-//	//		if err := s.cache.SetLastMessage(ctx, v.DialogId, v, cache.MsgExpireTime); err != nil {
+//	//		if err := s.cache.SetLastMessage(ctx, v.DialogID, v, cache.MsgExpireTime); err != nil {
 //	//			log.Printf("set last message to cache failed, err: %v", err)
 //	//		}
 //	//	}

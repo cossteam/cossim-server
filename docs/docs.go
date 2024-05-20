@@ -4162,7 +4162,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "description": "Id 群聊ID",
+                    "description": "ID 群聊ID",
                     "type": "integer"
                 },
                 "max_members_limit": {
@@ -4191,7 +4191,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "dialog_id": {
-                    "description": "DialogId 对话ID",
+                    "description": "DialogID 对话ID",
                     "type": "integer"
                 },
                 "encrypt": {
@@ -4199,7 +4199,7 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "id": {
-                    "description": "Id 群聊ID",
+                    "description": "ID 群聊ID",
                     "type": "integer"
                 },
                 "join_approve": {

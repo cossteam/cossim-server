@@ -65,6 +65,12 @@ func (h *LiveHandler) handleDeleteUserRoom(ctx context.Context, cmd *DeleteRoom,
 		return code.LiveErrUserNotInCall
 	}
 
+	liveRoom, err := h.getLivekitRoom(ctx, room.ID)
+	if err != nil {
+		h.logger.Error("获取 LiveKit 房间错误", zap.Error(err))
+		return err
+	}
+
 	// 无论什么情况都先删除房间信息
 	if err := h.cleanUserRoom(ctx, room); err != nil {
 		return err
@@ -85,19 +91,19 @@ func (h *LiveHandler) handleDeleteUserRoom(ctx context.Context, cmd *DeleteRoom,
 	// 当前用户为通话创建者，且对方未接听，取消通话
 	if cmd.UserID == room.Creator && !oppositeActiveParticipant.Connected {
 		fmt.Println("当前用户为通话创建者且对方未连接")
-		return h.handleCancelled(ctx, room, cmd.UserID, cmd.DriverID)
+		return h.handleCancelled(ctx, liveRoom, room, cmd.UserID, cmd.DriverID)
 	}
 
 	// 当前用户作为被呼叫者拒绝通话
 	if !thisActiveParticipant.Connected && oppositeActiveParticipant.Connected && cmd.UserID != room.Creator {
 		fmt.Println("被呼叫者拒绝通话")
-		return h.handleRejected(ctx, room, cmd.UserID, cmd.DriverID)
+		return h.handleRejected(ctx, liveRoom, room, cmd.UserID, cmd.DriverID)
 	}
 
 	// 表示双方已加入通话，任意一方挂断
 	if thisActiveParticipant.Connected && oppositeActiveParticipant.Connected {
 		fmt.Println("任意一方挂断")
-		return h.handleAnyDisconnected(ctx, room, cmd.UserID, cmd.DriverID)
+		return h.handleAnyDisconnected(ctx, liveRoom, room, cmd.UserID, cmd.DriverID)
 	}
 
 	return nil
@@ -198,7 +204,7 @@ func (h *LiveHandler) sendUserMessage(ctx context.Context, msgType int32, subTyp
 	return message.MsgId, nil
 }
 
-func (h *LiveHandler) pushUserMessageEvent(ctx context.Context, room *entity.Room, dialogID uint32, driverID, senderID, recipientID, content string, msgType, msgSubTye uint, msgID uint32, isBurnAfterReading bool, openBurnAfterReadingTimeOut int64) {
+func (h *LiveHandler) pushUserMessageEvent(ctx context.Context, room *entity.Room, dialogID uint32, senderID, recipientID, content string, msgType, msgSubTye uint, msgID uint32, isBurnAfterReading bool, openBurnAfterReadingTimeOut int64) {
 	data := &constants.WsUserMsg{
 		SenderId:                senderID,
 		Content:                 content,
@@ -218,16 +224,16 @@ func (h *LiveHandler) pushUserMessageEvent(ctx context.Context, room *entity.Roo
 		return
 	}
 
-	h.pushEventToParticipants(ctx, driverID, pushgrpcv1.WSEventType_SendUserMessageEvent, bytes, room)
+	h.pushEventToParticipants(ctx, pushgrpcv1.WSEventType_SendUserMessageEvent, bytes, room)
 }
 
-func (h *LiveHandler) pushEventToParticipants(ctx context.Context, driverID string, event pushgrpcv1.WSEventType, data []byte, room *entity.Room) {
-	for k := range room.Participants {
+func (h *LiveHandler) pushEventToParticipants(ctx context.Context, event pushgrpcv1.WSEventType, data []byte, room *entity.Room) {
+	for k, v := range room.Participants {
 		msgContent := &pushgrpcv1.WsMsg{
 			Uid:      k,
 			Event:    event,
 			Data:     &any2.Any{Value: data},
-			DriverId: driverID,
+			DriverId: v.DriverID,
 		}
 		toBytes, err := utils.StructToBytes(msgContent)
 		if err != nil {
@@ -235,7 +241,7 @@ func (h *LiveHandler) pushEventToParticipants(ctx context.Context, driverID stri
 			continue
 		}
 
-		h.logger.Debug("push event to room participant", zap.Any("participant", k))
+		h.logger.Debug("push event to room participant", zap.String("event", event.String()), zap.Any("participant", k))
 
 		_, err = h.pushService.Push(ctx, &pushgrpcv1.PushRequest{
 			Type: pushgrpcv1.Type_Ws,
@@ -255,8 +261,13 @@ func (h *LiveHandler) getRoomDuration(ctx context.Context, room string) time.Dur
 		h.logger.Error("获取房间信息失败", zap.Error(err))
 		return 0
 	}
-	fmt.Println("livekitRoom.CreationTime => ", livekitRoom.CreationTime)
 	creationTime := time.Unix(livekitRoom.CreationTime, 0)
+	duration := time.Since(creationTime)
+	return duration
+}
+
+func calculationDuration(startAt int64) time.Duration {
+	creationTime := time.Unix(startAt, 0)
 	duration := time.Since(creationTime)
 	return duration
 }
@@ -340,26 +351,26 @@ func buildPushMessageBytes(recipientID string, event pushgrpcv1.WSEventType, dat
 	return toBytes, nil
 }
 
-func (h *LiveHandler) handleMissed(ctx context.Context, room *entity.Room, userID, driverID string) error {
+func (h *LiveHandler) handleMissed(ctx context.Context, liveRoom *livekit.Room, room *entity.Room, userID, driverID string) error {
 	content := "无应答"
 	subType := int32(msggrpcv1.CallSubType_Missed)
 	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
 }
 
-func (h *LiveHandler) handleCancelled(ctx context.Context, room *entity.Room, userID, driverID string) error {
+func (h *LiveHandler) handleCancelled(ctx context.Context, liveRoom *livekit.Room, room *entity.Room, userID, driverID string) error {
 	content := "取消"
 	subType := int32(msggrpcv1.CallSubType_Cancelled)
 	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
 }
 
-func (h *LiveHandler) handleRejected(ctx context.Context, room *entity.Room, userID, driverID string) error {
+func (h *LiveHandler) handleRejected(ctx context.Context, liveRoom *livekit.Room, room *entity.Room, userID, driverID string) error {
 	content := "拒绝"
 	subType := int32(msggrpcv1.CallSubType_Rejected)
 	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
 }
 
-func (h *LiveHandler) handleAnyDisconnected(ctx context.Context, room *entity.Room, userID, driverID string) error {
-	content := fmt.Sprintf("通话时长：%s", formatDuration(h.getRoomDuration(ctx, room.ID)))
+func (h *LiveHandler) handleAnyDisconnected(ctx context.Context, liveRoom *livekit.Room, room *entity.Room, userID, driverID string) error {
+	content := fmt.Sprintf("通话时长：%s", formatDuration(calculationDuration(liveRoom.CreationTime)))
 	subType := int32(msggrpcv1.CallSubType_Normal)
 	return h.handleUserMessage(ctx, room, userID, driverID, content, subType)
 }
@@ -403,16 +414,6 @@ func (h *LiveHandler) handleUserMessage(ctx context.Context, room *entity.Room, 
 		return err
 	}
 
-	// 创建通话消息
-	msgID, err := h.sendUserMessage(ctx, int32(msgType), subType, dialogID, senderID, recipientID, content, openBurnAfterReading)
-	if err != nil {
-		h.logger.Error("发送消息失败", zap.Error(err))
-		return err
-	}
-
-	// 推送通话消息
-	h.pushUserMessageEvent(ctx, room, dialogID, driverID, senderID, recipientID, content, msgType, uint(subType), msgID, openBurnAfterReading, openBurnAfterReadingTimeOut)
-
 	// 为发送者生成ws推送消息
 	message, err := buildWsUserMessage(dialogID, msgType, driverID, senderID, recipientID, content, constants.SenderInfo{
 		UserId: senderInfo.UserId,
@@ -428,7 +429,17 @@ func (h *LiveHandler) handleUserMessage(ctx context.Context, room *entity.Room, 
 	if subType == int32(msggrpcv1.CallSubType_Normal) {
 		eventType = pushgrpcv1.WSEventType_UserCallEndEvent
 	}
-	h.pushEventToParticipants(ctx, driverID, eventType, message, room)
+	h.pushEventToParticipants(ctx, eventType, message, room)
+
+	// 创建通话消息
+	msgID, err := h.sendUserMessage(ctx, int32(msgType), subType, dialogID, senderID, recipientID, content, openBurnAfterReading)
+	if err != nil {
+		h.logger.Error("发送消息失败", zap.Error(err))
+		return err
+	}
+
+	// 推送通话消息
+	h.pushUserMessageEvent(ctx, room, dialogID, senderID, recipientID, content, msgType, uint(subType), msgID, openBurnAfterReading, openBurnAfterReadingTimeOut)
 
 	return nil
 }

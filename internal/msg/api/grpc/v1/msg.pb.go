@@ -307,7 +307,7 @@ type SendUserMsgRequest struct {
 	// @inject_tag: json:"reply_id"
 	ReplyId uint64 `protobuf:"varint,5,opt,name=ReplyId,proto3" json:"reply_id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,6,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"is_burn_after_reading"
 	IsBurnAfterReadingType bool `protobuf:"varint,7,opt,name=IsBurnAfterReadingType,proto3" json:"is_burn_after_reading"`
 	// @inject_tag: json:"sub_type"
@@ -408,9 +408,9 @@ type SendGroupMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id" form:"user_id" uri:"user_id"`
 	// @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id" form:"group_id" uri:"group_id"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupID,proto3" json:"group_id" form:"group_id" uri:"group_id"`
 	// @inject_tag: json:"content" form:"content" uri:"content"
 	Content string `protobuf:"bytes,3,opt,name=Content,proto3" json:"content" form:"content" uri:"content"`
 	// @inject_tag: json:"type" form:"type" uri:"type"
@@ -418,7 +418,7 @@ type SendGroupMsgRequest struct {
 	// @inject_tag: json:"reply_id" form:"reply_id" uri:"reply_id"
 	ReplyId uint32 `protobuf:"varint,5,opt,name=ReplyId,proto3" json:"reply_id" form:"reply_id" uri:"reply_id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,6,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"is_burn_after_reading"
 	IsBurnAfterReadingType bool `protobuf:"varint,7,opt,name=IsBurnAfterReadingType,proto3" json:"is_burn_after_reading"`
 	// @inject_tag: json:"at_users"
@@ -528,9 +528,9 @@ type GetUserMsgListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"type" form:"type" uri:"type"
 	Type int32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type" form:"type" uri:"type"`
 	// @inject_tag: json:"content" form:"content" uri:"content"
@@ -648,7 +648,7 @@ type UserMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
+	Id uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"id"`
 	// @inject_tag: json:"sender_id"
 	SenderId string `protobuf:"bytes,2,opt,name=SenderId,proto3" json:"sender_id"`
 	// @inject_tag: json:"receiver_id"
@@ -666,7 +666,7 @@ type UserMessage struct {
 	// @inject_tag: json:"created_at"
 	CreatedAt int64 `protobuf:"varint,9,opt,name=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,10,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,10,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"is_label"
 	IsLabel MsgLabel `protobuf:"varint,11,opt,name=IsLabel,proto3,enum=msg_v1.MsgLabel" json:"is_label"`
 	// @inject_tag: json:"is_burn_after_reading"
@@ -804,9 +804,9 @@ type GroupMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
+	Id uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=Group_id,json=GroupId,proto3" json:"group_id"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=Group_id,json=GroupID,proto3" json:"group_id"`
 	// @inject_tag: json:"type"
 	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"reply_idreply_id"
@@ -814,13 +814,13 @@ type GroupMessage struct {
 	// @inject_tag: json:"read_count"
 	ReadCount int32 `protobuf:"varint,5,opt,name=Read_count,json=ReadCount,proto3" json:"read_count"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,6,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,6,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"content"
 	Content string `protobuf:"bytes,7,opt,name=Content,proto3" json:"content"`
 	// @inject_tag: json:"created_at"
 	CreatedAt int64 `protobuf:"varint,8,opt,name=Created_at,json=CreatedAt,proto3" json:"created_at"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,9,opt,name=Dialog_id,json=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,9,opt,name=Dialog_id,json=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"is_label"
 	IsLabel MsgLabel `protobuf:"varint,10,opt,name=IsLabel,proto3,enum=msg_v1.MsgLabel" json:"is_label"`
 	// @inject_tag: json:"is_burn_after_reading"
@@ -1077,7 +1077,7 @@ type SendGroupMsgResponse struct {
 	// @inject_tag: json:"msg_id" form:"msg_id" uri:"msg_id"
 	MsgId uint32 `protobuf:"varint,1,opt,name=MsgId,proto3" json:"msg_id" form:"msg_id" uri:"msg_id"`
 	// @inject_tag: json:"group_id" form:"group_id" uri:"group_id"
-	GroupId uint32 `protobuf:"varint,2,opt,name=GroupId,proto3" json:"group_id" form:"group_id" uri:"group_id"`
+	GroupId uint32 `protobuf:"varint,2,opt,name=GroupID,proto3" json:"group_id" form:"group_id" uri:"group_id"`
 }
 
 func (x *SendGroupMsgResponse) Reset() {
@@ -1132,7 +1132,7 @@ type UserMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
 	FriendId string `protobuf:"bytes,2,opt,name=FriendId,proto3" json:"friend_id"`
 }
@@ -1189,7 +1189,7 @@ type GroupMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=Group_id,json=GroupId,proto3" json:"user_id"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=Group_id,json=GroupID,proto3" json:"user_id"`
 }
 
 func (x *GroupMsgRequest) Reset() {
@@ -1351,7 +1351,7 @@ type UserMsgsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"friend_id"
 	FriendId []string `protobuf:"bytes,2,rep,name=Friend_id,json=FriendId,proto3" json:"friend_id"`
 }
@@ -1408,7 +1408,7 @@ type GroupMsgsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=Group_id,json=GroupId,proto3" json:"group_id"`
+	GroupId []uint32 `protobuf:"varint,1,rep,packed,name=Group_id,json=GroupID,proto3" json:"group_id"`
 }
 
 func (x *GroupMsgsRequest) Reset() {
@@ -1456,9 +1456,9 @@ type LastMsg struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
+	Id uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"type"
 	Type uint32 `protobuf:"varint,3,opt,name=Type,proto3" json:"type"`
 	// @inject_tag: json:"content"
@@ -1480,7 +1480,7 @@ type LastMsg struct {
 	// @inject_tag: json:"reply_id"
 	ReplyId uint32 `protobuf:"varint,12,opt,name=ReplyId,proto3" json:"reply_id"`
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,13,opt,name=GroupId,proto3" json:"group_id"`
+	GroupId uint32 `protobuf:"varint,13,opt,name=GroupID,proto3" json:"group_id"`
 	// @inject_tag: json:"is_read"
 	IsRead int32 `protobuf:"varint,14,opt,name=IsRead,proto3" json:"is_read"`
 	// @inject_tag: json:"read_at"
@@ -1680,7 +1680,7 @@ type GetLastMsgsByDialogIdsRequest struct {
 	// @inject_tag: json:"dialog_ids"
 	DialogIds []uint32 `protobuf:"varint,1,rep,packed,name=DialogIds,proto3" json:"dialog_ids"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *GetLastMsgsByDialogIdsRequest) Reset() {
@@ -2233,7 +2233,7 @@ type GetUserMsgLabelByDialogIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 }
 
 func (x *GetUserMsgLabelByDialogIdRequest) Reset() {
@@ -2281,7 +2281,7 @@ type GetGroupMsgLabelByDialogIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 }
 
 func (x *GetGroupMsgLabelByDialogIdRequest) Reset() {
@@ -2329,7 +2329,7 @@ type GetUserMsgLabelByDialogIdResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"msg_list"
 	MsgList []*UserMessage `protobuf:"bytes,2,rep,name=MsgList,proto3" json:"msg_list"`
 }
@@ -2386,7 +2386,7 @@ type GetGroupMsgLabelByDialogIdResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"msg_list"
 	MsgList []*GroupMessage `protobuf:"bytes,2,rep,name=MsgList,proto3" json:"msg_list"`
 }
@@ -2445,7 +2445,7 @@ type SetUserMsgsReadStatusRequest struct {
 	// @inject_tag: json:"msg_ids"
 	MsgIds []uint32 `protobuf:"varint,1,rep,packed,name=MsgIds,proto3" json:"msg_ids"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"open_burn_after_reading_time_out"
 	OpenBurnAfterReadingTimeOut int64 `protobuf:"varint,3,opt,name=OpenBurnAfterReadingTimeOut,proto3" json:"open_burn_after_reading_time_out"`
 }
@@ -2642,9 +2642,9 @@ type GetUnreadUserMsgsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogID,proto3" json:"dialog_id"`
 }
 
 func (x *GetUnreadUserMsgsRequest) Reset() {
@@ -2747,7 +2747,7 @@ type GetUserMsgIdAfterMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"msg_id"
 	MsgId uint32 `protobuf:"varint,2,opt,name=MsgId,proto3" json:"msg_id"`
 }
@@ -2854,7 +2854,7 @@ type GetUserMsgIdAfterMsgResponse struct {
 	// @inject_tag: json:"user_messages"
 	UserMessages []*UserMessage `protobuf:"bytes,1,rep,name=UserMessages,proto3" json:"user_messages"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"total"
 	Total uint64 `protobuf:"varint,3,opt,name=Total,proto3" json:"total"`
 }
@@ -2966,7 +2966,7 @@ type GetGroupMsgIdAfterMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"msg_id"
 	MsgId uint32 `protobuf:"varint,2,opt,name=MsgId,proto3" json:"msg_id"`
 }
@@ -3073,7 +3073,7 @@ type GetGroupMsgIdAfterMsgResponse struct {
 	// @inject_tag: json:"group_messages"
 	GroupMessages []*GroupMessage `protobuf:"bytes,1,rep,name=GroupMessages,proto3" json:"group_messages"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"total"
 	Total uint64 `protobuf:"varint,3,opt,name=Total,proto3" json:"total"`
 }
@@ -3185,7 +3185,7 @@ type GetGroupMsgListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id" form:"user_id" uri:"user_id"`
 	// @inject_tag: json:"type" form:"type" uri:"type"
 	Type int32 `protobuf:"varint,2,opt,name=Type,proto3" json:"type" form:"type" uri:"type"`
 	// @inject_tag: json:"content" form:"content" uri:"content"
@@ -3195,7 +3195,7 @@ type GetGroupMsgListRequest struct {
 	// @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
 	PageNum int32 `protobuf:"varint,5,opt,name=PageNum,proto3" json:"page_number" form:"page_number" uri:"page_number"`
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,6,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,6,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"msg_id"
 	MsgId uint64 `protobuf:"varint,7,opt,name=MsgId,proto3" json:"msg_id"`
 }
@@ -3287,7 +3287,7 @@ type GetGroupMessagesByIdsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"group_id"
-	GroupId uint32 `protobuf:"varint,1,opt,name=GroupId,proto3" json:"group_id"`
+	GroupId uint32 `protobuf:"varint,1,opt,name=GroupID,proto3" json:"group_id"`
 	// @inject_tag: json:"msg_ids"
 	MsgIds []uint32 `protobuf:"varint,2,rep,packed,name=MsgIds,proto3" json:"msg_ids"`
 }
@@ -3458,9 +3458,9 @@ type GetGroupUnreadMessagesRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id" form:"user_id" uri:"user_id"`
 	// @inject_tag: json:"dialog_id" form:"dialog_id" uri:"dialog_id"
-	DialogId uint32 `protobuf:"varint,2,opt,name=DialogId,proto3" json:"dialog_id" form:"dialog_id" uri:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,2,opt,name=DialogID,proto3" json:"dialog_id" form:"dialog_id" uri:"dialog_id"`
 }
 
 func (x *GetGroupUnreadMessagesRequest) Reset() {
@@ -3563,7 +3563,7 @@ type GetUserMessagesByIdsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id" form:"user_id" uri:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id" form:"user_id" uri:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id" form:"user_id" uri:"user_id"`
 	// @inject_tag: json:"msg_ids"
 	MsgIds []uint32 `protobuf:"varint,2,rep,packed,name=MsgIds,proto3" json:"msg_ids"`
 }
@@ -3754,7 +3754,7 @@ type DeleteUserMsgByDialogIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 }
 
 func (x *DeleteUserMsgByDialogIdRequest) Reset() {
@@ -3840,7 +3840,7 @@ type DeleteGroupMsgByDialogIdRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 }
 
 func (x *DeleteGroupMsgByDialogIdRequest) Reset() {
@@ -3926,7 +3926,7 @@ type GetLastMsgListRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"page_size"
 	PageSize uint32 `protobuf:"varint,2,opt,name=PageSize,proto3" json:"page_size"`
 	// @inject_tag: json:"page_number"
@@ -3992,9 +3992,9 @@ type ReadAllUserMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *ReadAllUserMsgRequest) Reset() {
@@ -4049,9 +4049,9 @@ type ReadAllGroupMsgRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"dialog_id"
-	DialogId uint32 `protobuf:"varint,1,opt,name=DialogId,proto3" json:"dialog_id"`
+	DialogId uint32 `protobuf:"varint,1,opt,name=DialogID,proto3" json:"dialog_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *ReadAllGroupMsgRequest) Reset() {
@@ -4194,7 +4194,7 @@ type UnreadGroupMessage struct {
 	// @inject_tag: json:"msg_id"
 	MsgId uint32 `protobuf:"varint,1,opt,name=MsgId,proto3" json:"msg_id"`
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,2,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,2,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *UnreadGroupMessage) Reset() {

@@ -13,10 +13,10 @@ import (
 type Repositories struct {
 	db *gorm.DB
 
-	UserRepo              repository.UserRepository
-	GroupRepo             repository.GroupRepository
+	UserRepo              repository.UserRelationRepository
+	GroupRepo             repository.GroupRelationRepository
 	UserFriendRequestRepo repository.UserFriendRequestRepository
-	GroupJoinRequestRepo  repository.GroupJoinRequestRepository
+	GroupJoinRequestRepo  repository.GroupRequestRepository
 	GroupAnnouncementRepo repository.GroupAnnouncementRepository
 	DialogRepo            repository.DialogRepository
 	DialogUserRepo        repository.DialogUserRepository

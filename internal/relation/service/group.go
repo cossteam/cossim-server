@@ -723,8 +723,6 @@ func (s *Service) InviteGroup(ctx context.Context, inviterId string, req *model.
 			s.logger.Error("GetGroupRelation", zap.Error(err))
 			return err
 		}
-		fmt.Println("relation.UserID => ", relation.UserId)
-		fmt.Println("relation.Inviter => ", relation.Identity)
 		if relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_OWNER && relation.Identity != relationgrpcv1.GroupIdentity_IDENTITY_ADMIN {
 			return code.Forbidden
 		}

@@ -24,6 +24,23 @@ type JoinRoom struct {
 	Option   RoomOption
 }
 
+func (r *JoinRoom) Validate() error {
+	if r == nil {
+		return code.InvalidParameter.CustomMessage("CreateRoom is required")
+	}
+	if r.Room == "" {
+		return code.InvalidParameter.CustomMessage("room is required")
+	}
+	if r.UserID == "" {
+		return code.InvalidParameter.CustomMessage("userID is required")
+	}
+	if r.DriverID == "" {
+		return code.InvalidParameter.CustomMessage("driverID is required")
+	}
+
+	return nil
+}
+
 type JoinRoomResponse struct {
 	Room  string
 	Url   string
@@ -31,10 +48,14 @@ type JoinRoomResponse struct {
 }
 
 func (h *LiveHandler) JoinRoom(ctx context.Context, cmd *JoinRoom) (*JoinRoomResponse, error) {
+	h.logger.Debug("received joinRoom request", zap.Any("cmd", cmd))
+
+	if err := cmd.Validate(); err != nil {
+		return nil, err
+	}
+
 	var err error
 	var room *entity.Room
-
-	h.logger.Debug("received joinRoom request", zap.Any("cmd", cmd))
 
 	room1, err := h.liveRepo.GetRoom(ctx, cmd.Room)
 	if err != nil {
@@ -72,7 +93,7 @@ func (h *LiveHandler) JoinRoom(ctx context.Context, cmd *JoinRoom) (*JoinRoomRes
 		return nil, err
 	}
 
-	h.logger.Debug("join response", zap.String("room", room.ID), zap.String("url", h.webRtcUrl), zap.String("token", token))
+	h.logger.Info("用户加入房间", zap.String("uid", cmd.UserID), zap.String("room", room.String()), zap.String("webRtcUrl", h.webRtcUrl))
 
 	return &JoinRoomResponse{
 		Room:  room.ID,
@@ -115,10 +136,11 @@ func (h *LiveHandler) joinUserRoom(ctx context.Context, roomID, userID, driverID
 	}
 
 	room.NumParticipants++
+	room.Participants[userID].DriverID = driverID
 	room.Participants[userID].Connected = true
 	room.Participants[userID].Status = entity.ParticipantInfo_JOINED
 
-	// 人数等于 MaxParticipants(2) 代表双方都加入通话了，更新过期时间为永久直至挂断才删除通话1
+	// 人数等于 MaxParticipants(2) 代表双方都加入通话了，更新过期时间为永久直至挂断才删除通话
 	if room.NumParticipants == room.MaxParticipants {
 		for i, _ := range room.Participants {
 			if err := h.liveRepo.SetUserLivePersist(ctx, i); err != nil {
@@ -170,10 +192,8 @@ func (h *LiveHandler) joinUserRoom(ctx context.Context, roomID, userID, driverID
 			h.logger.Error("发送消息失败", zap.Error(err))
 			continue
 		}
-		h.logger.Info("推送消息成功", zap.String("uid", k), zap.Any("msg", msg))
+		h.logger.Info("推送消息成功", zap.String("event", pushgrpcv1.WSEventType_UserCallAcceptEvent.String()), zap.String("uid", k), zap.Any("msg", msg))
 	}
-
-	h.logger.Info("用户加入房间", zap.String("uid", userID), zap.Any("room", room), zap.String("webRtcUrl", h.webRtcUrl))
 
 	return room, nil
 }

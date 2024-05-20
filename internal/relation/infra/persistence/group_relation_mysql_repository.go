@@ -2,9 +2,11 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -65,7 +67,7 @@ func (m *GroupRelationModel) ToEntity() *entity.GroupRelation {
 	}
 }
 
-var _ repository.GroupRepository = &MySQLRelationGroupRepository{}
+var _ repository.GroupRelationRepository = &MySQLRelationGroupRepository{}
 
 func NewMySQLRelationGroupRepository(db *gorm.DB, cache cache.RelationGroupCache) *MySQLRelationGroupRepository {
 	return &MySQLRelationGroupRepository{
@@ -77,6 +79,23 @@ func NewMySQLRelationGroupRepository(db *gorm.DB, cache cache.RelationGroupCache
 type MySQLRelationGroupRepository struct {
 	db    *gorm.DB
 	cache cache.RelationGroupCache
+}
+
+func (m *MySQLRelationGroupRepository) GetByGroupID(ctx context.Context, groupID uint32) ([]*entity.GroupRelation, error) {
+	var models []*GroupRelationModel
+
+	if err := m.db.WithContext(ctx).
+		Where("group_id = ? and deleted_at = 0", groupID).
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	var es = make([]*entity.GroupRelation, 0)
+	for _, joinRequest := range models {
+		es = append(es, joinRequest.ToEntity())
+	}
+
+	return es, nil
 }
 
 func (m *MySQLRelationGroupRepository) UpdateFieldsByGroupID(ctx context.Context, id uint32, fields map[string]interface{}) error {
@@ -98,20 +117,29 @@ func (m *MySQLRelationGroupRepository) UpdateFieldsByGroupID(ctx context.Context
 	return nil
 }
 
-func (m *MySQLRelationGroupRepository) Get(ctx context.Context, id uint32) (*entity.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) Get(ctx context.Context, groupID uint32, userID string) (*entity.GroupRelation, error) {
 	var model GroupRelationModel
 
 	if err := m.db.WithContext(ctx).
-		Where("id = ?", id).
+		Where(&GroupRelationModel{
+			GroupID: groupID,
+			UserID:  userID,
+			BaseModel: BaseModel{
+				DeletedAt: 0,
+			},
+		}).
 		First(&model).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 
 	return model.ToEntity(), nil
 }
 
-func (m *MySQLRelationGroupRepository) Create(ctx context.Context, createGroupRelation *repository.CreateGroupRelation) (*entity.GroupRelation, error) {
+func (m *MySQLRelationGroupRepository) Create(ctx context.Context, createGroupRelation *entity.CreateGroupRelation) (*entity.GroupRelation, error) {
 	model := &GroupRelationModel{
 		GroupID:     createGroupRelation.GroupID,
 		Identity:    uint8(createGroupRelation.Identity),
@@ -193,7 +221,7 @@ func (m *MySQLRelationGroupRepository) GetGroupUserIDs(ctx context.Context, gid 
 	//	if err == nil && len(relations) > 0 {
 	//		var userIDs []string
 	//		for _, v := range relations {
-	//			userIDs = append(userIDs, v.UserID)
+	//			userIDs = append(userIDs, v.ID)
 	//		}
 	//		return userIDs, nil
 	//	}
@@ -265,6 +293,9 @@ func (m *MySQLRelationGroupRepository) GetUserGroupByGroupIDAndUserID(ctx contex
 		Model(&GroupRelationModel{}).
 		Where(" group_id = ? and user_id = ? AND deleted_at = 0", gid, uid).
 		First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 

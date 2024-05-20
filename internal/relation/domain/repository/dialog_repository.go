@@ -63,6 +63,8 @@ type DialogUserRepository interface {
 	Delete(ctx context.Context, id ...uint32) error
 	Find(ctx context.Context, query *DialogUserQuery) ([]*entity.DialogUser, error)
 
+	GetByDialogIDAndUserID(ctx context.Context, dialogID uint32, userID string) (*entity.DialogUser, error)
+
 	// ListByDialogID 获取对话下的所有用户
 	ListByDialogID(ctx context.Context, dialogID uint32) ([]*entity.DialogUser, error)
 

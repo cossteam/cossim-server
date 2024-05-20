@@ -299,7 +299,7 @@ func (h *HttpServer) UserEmailVerification(c *gin.Context) {
 	}
 
 	err := h.app.Commands.SendUserEmailVerification.Handle(c, &command.SendUserEmailVerification{
-		//UserID: c.Value(constants.UserID).(string),
+		//ID: c.Value(constants.ID).(string),
 		Email: string(req.Email),
 	})
 	if err != nil {

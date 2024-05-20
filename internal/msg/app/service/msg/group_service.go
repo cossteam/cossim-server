@@ -358,7 +358,7 @@ func (s *ServiceImpl) EditGroupMsg(ctx context.Context, userID string, driverId 
 	// 调用相应的 gRPC 客户端方法来编辑群消息
 	//err = s.gmd.EditGroupMessage(ctx, &msggrpcv1.EditGroupMsgRequest{
 	//	GroupMessage: &msggrpcv1.GroupMessage{
-	//		Id:      msgID,
+	//		ID:      msgID,
 	//		Content: content,
 	//	},
 	//})
@@ -591,8 +591,8 @@ func (s *ServiceImpl) GetGroupMessageList(c context.Context, id string, request 
 		isRead := 0
 		//查询是否已读
 		//msgRead, err := s.gmrd.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
-		//	MsgId:  v.Id,
-		//	UserId: request.UserId,
+		//	MsgId:  v.ID,
+		//	ID: request.ID,
 		//})
 		msgRead, err := s.gmrd.GetGroupMessageReadByMsgIdAndUserId(c, v.ID, *request.UserId)
 		if err != nil {
@@ -711,8 +711,8 @@ func (s *ServiceImpl) SetGroupMessagesRead(c context.Context, uid string, driver
 
 	if req.ReadAll {
 		//resp1, err := s.gmrd.ReadAllGroupMsg(c, &msggrpcv1.ReadAllGroupMsgRequest{
-		//	DialogId: uint32(request.DialogId),
-		//	UserId:   uid,
+		//	DialogID: uint32(request.DialogID),
+		//	ID:   uid,
 		//})
 		resp1, err := s.gmrd.ReadAllGroupMsg(c, uint(req.DialogId), uid)
 		if err != nil {
@@ -757,7 +757,7 @@ func (s *ServiceImpl) SetGroupMessagesRead(c context.Context, uid string, driver
 	for _, v := range req.MsgIds {
 		//userId, _ := s.gmrd.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
 		//	MsgId:  uint32(v),
-		//	UserId: uid,
+		//	ID: uid,
 		//})
 		userId, _ := s.gmrd.GetGroupMessageReadByMsgIdAndUserId(c, uint(v), uid)
 		if userId != nil {
@@ -789,7 +789,7 @@ func (s *ServiceImpl) SetGroupMessagesRead(c context.Context, uid string, driver
 	}
 	//msgs, err := s.gmd.GetGroupMessagesByIds(c, &msggrpcv1.GetGroupMessagesByIdsRequest{
 	//	MsgIds:  ids,
-	//	GroupId: dialog.GroupId,
+	//	GroupID: dialog.GroupID,
 	//})
 	msgs, err := s.gmd.GetGroupMessagesByIds(c, ids)
 	if err != nil {
@@ -838,8 +838,8 @@ func (s *ServiceImpl) GetGroupMessageReadersResponse(c context.Context, userId s
 
 	//us, err := s.gmrd.GetGroupMessageReaders(c, &msggrpcv1.GetGroupMessageReadersRequest{
 	//	MsgId:    msgId,
-	//	GroupId:  groupId,
-	//	DialogId: dialogId,
+	//	GroupID:  groupId,
+	//	DialogID: dialogId,
 	//})
 	us, err := s.gmrd.GetGroupMessageReaders(c, uint(msgId), uint(groupId), uint(dialogId))
 	if err != nil {

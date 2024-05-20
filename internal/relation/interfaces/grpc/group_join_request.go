@@ -93,7 +93,7 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 	relations := make([]*entity.GroupJoinRequest, 0)
 
 	// 获取对话id
-	//dialog, err := s.dr.GetDialogByGroupId(uint(request.GroupId))
+	//dialog, err := s.dr.GetDialogByGroupId(uint(request.GroupID))
 	//if err != nil {
 	//	return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 	//}
@@ -112,7 +112,7 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 				return err
 			}
 
-			gr := &repository.CreateGroupRelation{
+			gr := &entity.CreateGroupRelation{
 				GroupID:     request.GroupId,
 				UserID:      request.UserId,
 				Identity:    entity.IdentityUser,
@@ -130,7 +130,7 @@ func (s *groupJoinRequestServiceServer) JoinGroup(ctx context.Context, request *
 		}
 
 		//if s.cacheEnable {
-		//	if err := s.cache.DeleteRelation(ctx, request.UserID, request.GroupId); err != nil {
+		//	if err := s.cache.DeleteRelation(ctx, request.ID, request.GroupID); err != nil {
 		//		log.Printf("delete group relation list by user failed, err: %v", err)
 		//	}
 		//}
@@ -178,14 +178,14 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 	var resp = &v1.GroupJoinRequestListResponse{}
 
 	//if s.cacheEnable {
-	//	users, err := s.cache.GetGroupJoinRequestListByUser(ctx, request.UserID)
+	//	users, err := s.cache.GetGroupJoinRequestListByUser(ctx, request.ID)
 	//	if err == nil && len(users.GroupJoinRequestResponses) != 0 {
 	//		return users, nil
 	//	}
 	//}
 
 	//获取他自己的申请列表
-	//list, total, err := s.gjqr.GetGroupJoinRequestListByUserId(request.UserID, int(request.PageSize), int(request.CurrentPage))
+	//list, total, err := s.gjqr.GetGroupJoinRequestListByUserId(request.ID, int(request.PageSize), int(request.CurrentPage))
 	//if err != nil {
 	//	return resp, err
 	//}
@@ -216,7 +216,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestListByUserId(ctx cont
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.SetGroupJoinRequestListByUser(ctx, request.UserID, resp, cache.RelationExpireTime); err != nil {
+	//	if err := s.cache.SetGroupJoinRequestListByUser(ctx, request.ID, resp, cache.RelationExpireTime); err != nil {
 	//		log.Printf("set group join request list by user failed, err: %v", err)
 	//	}
 	//}
@@ -239,7 +239,7 @@ func (s *groupJoinRequestServiceServer) GetGroupJoinRequestByGroupIdAndUserId(ct
 		return resp, nil
 	}
 
-	//req, err := s.gjqr.GetGroupJoinRequestByGroupIdAndUserId(uint(request.GroupId), request.UserID)
+	//req, err := s.gjqr.GetGroupJoinRequestByGroupIdAndUserId(uint(request.GroupID), request.ID)
 	//if err != nil {
 	//	return resp, err
 	//}
@@ -274,7 +274,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 
 	//拒绝请求
 	if request.Status == v1.GroupRequestStatus_Rejected {
-		//if err := s.gjqr.ManageGroupJoinRequestByID(info.GroupID, info.UserID, relation.RequestStatus(request.Status)); err != nil {
+		//if err := s.gjqr.ManageGroupJoinRequestByID(info.GroupID, info.ID, relation.RequestStatus(request.Status)); err != nil {
 		//	return resp, status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		//}
 
@@ -283,7 +283,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 		}
 
 		//if s.cacheEnable {
-		//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, info.UserID, info.Inviter); err != nil {
+		//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, info.ID, info.Inviter); err != nil {
 		//		log.Printf("delete group join request list by user failed, err: %v", err)
 		//	}
 		//}
@@ -326,7 +326,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 			return status.Error(codes.Code(code.RelationGroupErrManageJoinFailed.Code()), err.Error())
 		}
 
-		gr := &repository.CreateGroupRelation{
+		gr := &entity.CreateGroupRelation{
 			GroupID:     info.GroupID,
 			UserID:      info.UserID,
 			Identity:    entity.IdentityUser,
@@ -349,7 +349,7 @@ func (s *groupJoinRequestServiceServer) ManageGroupJoinRequestByID(ctx context.C
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, info.UserID, info.Inviter); err != nil {
+	//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, info.ID, info.Inviter); err != nil {
 	//		log.Printf("delete group join request list by user failed, err: %v", err)
 	//	}
 	//}
@@ -391,7 +391,7 @@ func (s *groupJoinRequestServiceServer) DeleteGroupRecord(ctx context.Context, r
 	}
 
 	//if s.cacheEnable {
-	//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, req.UserID); err != nil {
+	//	if err := s.cache.DeleteGroupJoinRequestListByUser(ctx, req.ID); err != nil {
 	//		log.Printf("delete group join request list by user failed, err: %v", err)
 	//	}
 	//}

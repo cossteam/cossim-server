@@ -37,3 +37,12 @@ const (
 	EntryInvitation EntryMethod = iota // 邀请
 	EntrySearch                        // 搜索
 )
+
+type CreateGroupRelation struct {
+	GroupID     uint32
+	UserID      string
+	Identity    GroupIdentity
+	EntryMethod EntryMethod
+	Inviter     string
+	JoinedAt    int64
+}

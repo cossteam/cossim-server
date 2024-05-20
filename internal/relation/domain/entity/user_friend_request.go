@@ -31,8 +31,3 @@ type FriendRequest struct {
 //	// FriendRequestExpired 过期
 //	FriendRequestExpired FriendRequestStatus = 3
 //)
-
-type Blacklist struct {
-	List  []string
-	Total int64
-}

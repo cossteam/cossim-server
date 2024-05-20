@@ -48,8 +48,9 @@ func (rt RoomType) IsValid() bool {
 }
 
 type ActiveParticipant struct {
-	Connected bool `json:"connected"`
+	Connected bool
 	Status    ParticipantState
+	DriverID  string
 }
 
 type RoomOption struct { // 通话选项
