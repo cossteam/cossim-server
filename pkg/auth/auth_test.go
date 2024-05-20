@@ -15,11 +15,11 @@ func TestValidateToken(t *testing.T) {
 	//
 	//// 模拟的claims数据
 	//claims := &auth.Claims{
-	//	UserID: "123123",
+	//	ID: "123123",
 	//	Email:  "test@example.com",
 	//}
 	//
-	//token, err := utils.GenerateToken(claims.UserID, claims.Email)
+	//token, err := utils.GenerateToken(claims.ID, claims.Email)
 	//if err != nil {
 	//	panic(err)
 	//}

@@ -102,7 +102,7 @@ type UploadRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
+	UserID string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"file_name"
 	FileName string `protobuf:"bytes,2,opt,name=FileName,proto3" json:"file_name"`
 	// @inject_tag: json:"path"

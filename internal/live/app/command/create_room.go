@@ -28,6 +28,24 @@ type CreateRoom struct {
 	Option       RoomOption
 }
 
+func (r *CreateRoom) Validate() error {
+	if r == nil {
+		return code.InvalidParameter.CustomMessage("CreateRoom is required")
+	}
+	if r.Type == entity.GroupRoomType && r.GroupID == 0 {
+		return code.InvalidParameter.CustomMessage("group_id is required")
+	}
+	if r.Participants == nil || len(r.Participants) < 1 {
+		return code.InvalidParameter.CustomMessage("participants is required")
+	}
+
+	if !entity.RoomType(r.Type).IsValid() {
+		return code.InvalidParameter
+	}
+
+	return nil
+}
+
 type RoomOption struct { // 通话选项
 	VideoEnabled bool   `json:"video_enabled"` // 是否启用视频
 	AudioEnabled bool   `json:"audio_enabled"` // 是否启用音频
@@ -43,35 +61,19 @@ type CreateRoomResponse struct {
 }
 
 func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateRoomResponse, error) {
-	h.logger.Debug("received createRoom request",
-		zap.String("type", cmd.Type),
-		zap.Uint32("group_id", cmd.GroupID),
-		zap.String("creator", cmd.Creator),
-		zap.Strings("participants", cmd.Participants),
-		zap.Any("option", cmd.Option),
-	)
+	h.logger.Debug("received createRoom request", zap.Any("cmd", cmd))
 
-	if cmd.Type == entity.GroupRoomType && cmd.GroupID == 0 {
-		return nil, code.InvalidParameter.CustomMessage("group_id is required")
+	if err := cmd.Validate(); err != nil {
+		h.logger.Error("validate createRoom request", zap.Error(err))
+		return nil, err
 	}
 
-	rooms, err := h.liveRepo.GetUserRooms(ctx, cmd.Creator)
-	if err != nil {
-		if !(code.Cause(err).Code() == code.LiveErrCallNotFound.Code()) && !strings.Contains(err.Error(), redis.Nil.Error()) {
-			h.logger.Error("get user rooms", zap.Error(err))
-			return nil, err
-		}
-	}
-	if len(rooms) > 0 {
-		return nil, code.LiveErrAlreadyInCall
+	if err := h.isUserInLive(ctx, cmd.Creator); err != nil {
+		h.logger.Error("is user in live", zap.Error(err))
+		return nil, err
 	}
 
-	roomType := entity.RoomType(cmd.Type)
-	if !roomType.IsValid() {
-		return nil, code.InvalidParameter
-	}
-
-	roomName := generateRoomName()
+	roomType := cmd.Type
 	var maxParticipants uint32
 	switch roomType {
 	case entity.UserRoomType:
@@ -81,11 +83,14 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 	}
 
 	participants := append([]string{cmd.Creator}, cmd.Participants...)
-
+	participants = uniqueParticipants(participants)
 	if len(participants) > int(maxParticipants) {
 		return nil, code.LiveErrMaxParticipantsExceeded
 	}
 
+	roomName := generateRoomName()
+
+	var err error
 	if cmd.Type == entity.UserRoomType {
 		err = h.createUserLive(ctx, roomName, participants, cmd.Option)
 	}
@@ -97,36 +102,14 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 		return nil, err
 	}
 
-	_, err = h.roomService.CreateRoom(ctx, &livekit.CreateRoomRequest{
-		Name:            roomName,
-		EmptyTimeout:    uint32(h.liveTimeout.Seconds()), // 空闲时间
-		MaxParticipants: maxParticipants,
-	})
-	if err != nil {
-		h.logger.Error("创建通话失败", zap.Error(err))
-		return nil, err
-	}
-
-	er := &entity.Room{
-		ID:              roomName,
-		Type:            roomType,
-		Creator:         cmd.Creator,
-		Owner:           cmd.Creator,
-		GroupID:         cmd.GroupID,
-		NumParticipants: 0,
-		MaxParticipants: maxParticipants,
-		Participants:    genRoomParticipants(participants),
-		Option: entity.RoomOption{
-			VideoEnabled: cmd.Option.VideoEnabled,
-			AudioEnabled: cmd.Option.AudioEnabled,
-			Resolution:   cmd.Option.Resolution,
-			FrameRate:    cmd.Option.FrameRate,
-			Codec:        cmd.Option.Codec,
-		},
-	}
-
-	if err := h.liveRepo.CreateRoom(ctx, er); err != nil {
-		h.logger.Error("Failed to create room", zap.Error(err))
+	if err := h.createRoomAndRecord(ctx, roomName, entity.RoomType(roomType), cmd.Creator, cmd.GroupID, maxParticipants, participants, entity.RoomOption{
+		VideoEnabled: cmd.Option.VideoEnabled,
+		AudioEnabled: cmd.Option.AudioEnabled,
+		Resolution:   cmd.Option.Resolution,
+		FrameRate:    cmd.Option.FrameRate,
+		Codec:        cmd.Option.Codec,
+	}); err != nil {
+		h.logger.Error("create room and record", zap.Error(err))
 		return nil, err
 	}
 
@@ -136,7 +119,7 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 	)
 
 	// 通话超时处理
-	h.handleLiveTimeout(er, int(h.liveTimeout.Seconds()), cmd.DriverID)
+	h.handleLiveTimeout(roomName, int(h.liveTimeout.Seconds()), cmd.DriverID)
 
 	return &CreateRoomResponse{
 		Url:     h.webRtcUrl,
@@ -145,18 +128,87 @@ func (h *LiveHandler) CreateRoom(ctx context.Context, cmd *CreateRoom) (*CreateR
 	}, nil
 }
 
-func (h *LiveHandler) handleLiveTimeout(room *entity.Room, timeoutSeconds int, driverID string) {
+func (h *LiveHandler) createRoomAndRecord(ctx context.Context, roomName string, roomType entity.RoomType, creator string, groupID uint32, maxParticipants uint32, participants []string, option entity.RoomOption) error {
+	_, err := h.roomService.CreateRoom(ctx, &livekit.CreateRoomRequest{
+		Name:            roomName,
+		EmptyTimeout:    uint32(h.liveTimeout.Seconds()),
+		MaxParticipants: maxParticipants,
+	})
+	if err != nil {
+		h.logger.Error("创建通话失败", zap.Error(err))
+		return err
+	}
+
+	roomEntity := &entity.Room{
+		ID:              roomName,
+		Type:            roomType,
+		Creator:         creator,
+		Owner:           creator,
+		GroupID:         groupID,
+		NumParticipants: 0,
+		MaxParticipants: maxParticipants,
+		Participants:    genRoomParticipants(participants),
+		Option: entity.RoomOption{
+			VideoEnabled: option.VideoEnabled,
+			AudioEnabled: option.AudioEnabled,
+			Resolution:   option.Resolution,
+			FrameRate:    option.FrameRate,
+			Codec:        option.Codec,
+		},
+	}
+
+	//if err := h.liveRepo.CreateRoom(ctx, roomEntity); err != nil {
+	//	h.logger.Error("Failed to create room", zap.Error(err))
+	//	return err
+	//}
+
+	return h.liveRepo.CreateRoom(ctx, roomEntity)
+}
+
+func (h *LiveHandler) handleLiveTimeout(roomID string, timeoutSeconds int, driverID string) {
 	time.AfterFunc(time.Duration(timeoutSeconds)*time.Second, func() {
-		// 通话超时，发送 WebSocket 事件
+		ctx := context.Background()
+
+		livekitRoom, err := h.getLivekitRoom(ctx, roomID)
+		if err != nil {
+			h.logger.Error("Failed to get livekit room", zap.Error(err))
+			return
+		}
+
+		room, err := h.liveRepo.GetRoom(ctx, roomID)
+		if err != nil {
+			h.logger.Error("Failed to get room", zap.Error(err))
+			return
+		}
+
+		if room.NumParticipants >= 2 {
+			return
+		}
+
 		h.logger.Info("推送通话超时事件", zap.Duration("timeout", time.Duration(timeoutSeconds)*time.Second), zap.Any("room", room))
-		if err := h.handleMissed(context.Background(), room, room.Creator, driverID); err != nil {
+		if err := h.handleMissed(ctx, livekitRoom, room, room.Creator, driverID); err != nil {
 			h.logger.Error("Failed to handle missed", zap.Error(err))
 		}
 
-		if err := h.cleanUserRoom(context.Background(), room); err != nil {
+		if err := h.cleanUserRoom(ctx, room); err != nil {
 			h.logger.Error("Failed to clean user room", zap.Error(err))
 		}
 	})
+}
+
+func (h *LiveHandler) isUserInLive(ctx context.Context, userID string) error {
+	rooms, err := h.liveRepo.GetUserRooms(ctx, userID)
+	if err != nil {
+		if !(code.Cause(err).Code() == code.LiveErrCallNotFound.Code()) && !strings.Contains(err.Error(), redis.Nil.Error()) {
+			h.logger.Error("get user rooms", zap.Error(err))
+			return err
+		}
+	}
+	if len(rooms) > 0 {
+		return code.LiveErrAlreadyInCall
+	}
+
+	return nil
 }
 
 // areUsersFriends checks if two users are friends
@@ -401,6 +453,19 @@ func keys(m map[string]string) []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// 去重参与者列表
+func uniqueParticipants(participants []string) []string {
+	result := make([]string, 0, len(participants))
+	temp := map[string]struct{}{}
+	for _, item := range participants {
+		if _, ok := temp[item]; !ok {
+			temp[item] = struct{}{}
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 func genRoomParticipants(participants []string) map[string]*entity.ActiveParticipant {

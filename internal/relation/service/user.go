@@ -168,7 +168,8 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 		FriendId: friendID,
 	})
 	if err != nil {
-		if code.Code(code.RelationUserErrNoFriendRequestRecords.Code()) != code.Cause(err) {
+		co := code.Cause(err)
+		if co != code.RelationUserErrNoFriendRequestRecords && co != code.NotFound {
 			s.logger.Error("获取好友请求失败", zap.Error(err))
 			return nil, err
 		}
@@ -183,8 +184,9 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 
 	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: userID, FriendId: friendID})
 	if err != nil {
-		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
+		co := code.Cause(err)
+		if co != code.RelationUserErrNoFriendRequestRecords && co != code.NotFound {
+			s.logger.Error("获取好友请求失败", zap.Error(err))
 			return nil, err
 		}
 	}
@@ -194,13 +196,12 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID string, req *mod
 
 	relation2, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: friendID, FriendId: userID})
 	if err != nil {
-		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
+		co := code.Cause(err)
+		if co != code.RelationUserErrNoFriendRequestRecords && co != code.NotFound {
+			s.logger.Error("获取好友请求失败", zap.Error(err))
 			return nil, err
 		}
 	}
-
-	fmt.Println("relation2 => ", relation2)
 
 	// 单删之后再添加
 	if relation2.Status == relationgrpcv1.RelationStatus_RELATION_NORMAL {
@@ -289,11 +290,13 @@ func (s *Service) ManageFriend(ctx context.Context, userId string, questId uint3
 	}
 	relation, err := s.relationUserService.GetUserRelation(ctx, &relationgrpcv1.GetUserRelationRequest{UserId: qs.SenderId, FriendId: userId})
 	if err != nil {
-		if code.Code(code.RelationUserErrFriendRelationNotFound.Code()) != code.Cause(err) {
-			s.logger.Error("获取好友关系失败", zap.Error(err))
+		co := code.Cause(err)
+		if co != code.RelationUserErrNoFriendRequestRecords && co != code.NotFound {
+			s.logger.Error("获取好友请求失败", zap.Error(err))
 			return nil, err
 		}
 	}
+	fmt.Println("relation => ", relation)
 	if relation != nil {
 		if relation.DialogId != 0 {
 			return nil, code.RelationErrAlreadyFriends

@@ -2,12 +2,14 @@ package main
 
 import (
 	"flag"
+	_interface "github.com/cossim/coss-server/internal/relation/interfaces"
 	"github.com/cossim/coss-server/internal/relation/interfaces/grpc"
-	"github.com/cossim/coss-server/internal/relation/interfaces/http"
+	"github.com/cossim/coss-server/internal/relation/service"
 	ctrl "github.com/cossim/coss-server/pkg/alias"
 	"github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/healthz"
+	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/manager/signals"
 	"strings"
 )
@@ -89,12 +91,12 @@ func main() {
 	if err := svc.Init(cfg); err != nil {
 		panic(err)
 	}
-	hs := ctrl.HTTPServer{
-		HTTPService: &http.Handler{
-			RelationService: svc,
-		},
-		HealthCheckAddress: httpProbeAddr,
-	}
+	//hs := ctrl.HTTPServer{
+	//	HTTPService: &http.Handler{
+	//		RelationService: svc,
+	//	},
+	//	HealthCheckAddress: httpProbeAddr,
+	//}
 
 	gs := ctrl.GRPCServer{
 		GRPCService:         svc,
@@ -104,6 +106,15 @@ func main() {
 	relationService := &grpc.RelationServiceServer{}
 	if err := relationService.Init(cfg); err != nil {
 		panic(err)
+	}
+
+	ctx := signals.SetupSignalHandler()
+	logger := plog.NewDefaultLogger("relation", int8(mgr.GetConfig().Log.Level))
+	app := service.NewApplication(ctx, cfg, logger)
+
+	hs := ctrl.HTTPServer{
+		HTTPService:        _interface.NewHttpServer(logger, app),
+		HealthCheckAddress: httpProbeAddr,
 	}
 
 	if err := mgr.SetupHTTPServerWithManager(&hs); err != nil {
@@ -118,7 +129,7 @@ func main() {
 		panic(err)
 	}
 
-	if err = mgr.Start(signals.SetupSignalHandler()); err != nil {
+	if err = mgr.Start(ctx); err != nil {
 		panic(err)
 	}
 }

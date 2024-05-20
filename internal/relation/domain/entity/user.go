@@ -1,5 +1,13 @@
 package entity
 
+type RequestAction uint8
+
+const (
+	Ignore RequestAction = iota
+	Accept
+	Reject
+)
+
 type RequestStatus uint8
 
 // RequestStatus 邀请状态 根据发送者和接受者和状态判断
@@ -17,14 +25,14 @@ const (
 )
 
 type UserFriendRequest struct {
-	ID         uint32
-	CreatedAt  int64
-	ExpiredAt  int64
-	SenderID   string
-	ReceiverID string
-	Remark     string
-	OwnerID    string
-	Status     RequestStatus
+	ID          uint32
+	CreatedAt   int64
+	ExpiredAt   int64
+	SenderID    string
+	RecipientID string
+	Remark      string
+	OwnerID     string
+	Status      RequestStatus
 }
 
 type UserFriendRequestList struct {
@@ -56,11 +64,31 @@ const (
 )
 
 type Friend struct {
-	UserId                      string
-	DialogId                    uint32
+	UserID                      string
+	DialogID                    uint32
 	Remark                      string
 	Status                      UserRelationStatus
 	OpenBurnAfterReading        bool
 	IsSilent                    bool
 	OpenBurnAfterReadingTimeOut int64
+}
+
+type BlacklistOptions struct {
+	UserID   string
+	PageNum  int
+	PageSize int
+}
+
+type Blacklist struct {
+	List  []*Black
+	Total int64
+	Page  int32
+}
+
+type Black struct {
+	UserID string
+	//CossID    string
+	//Nickname  string
+	//Avatar    string
+	CreatedAt int64
 }

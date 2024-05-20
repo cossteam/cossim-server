@@ -12,12 +12,14 @@ type UserQuery struct {
 	Force    bool
 }
 
-type UserRepository interface {
+type UserRelationRepository interface {
 	Get(ctx context.Context, userId, friendId string) (*entity.UserRelation, error)
 	Create(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error)
 	Update(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error)
 	Delete(ctx context.Context, userId, friendId string) error
 	Find(ctx context.Context, query *UserQuery) ([]*entity.UserRelation, error)
+
+	DeleteRollback(ctx context.Context, id uint32) error
 
 	// EstablishFriendship 建立双向好友关系
 	// 如果创建成功，将建立两个用户之间的好友关系，其中一个是发送者到接收者的关系，
@@ -28,10 +30,10 @@ type UserRepository interface {
 	RestoreFriendship(ctx context.Context, dialogID uint32, userId, friendId string) error
 
 	// Blacklist 获取黑名单
-	Blacklist(ctx context.Context, userId string) (*entity.Blacklist, error)
+	Blacklist(ctx context.Context, opts *entity.BlacklistOptions) (*entity.Blacklist, error)
 
-	// FriendRequestList 获取好友请求列表
-	FriendRequestList(ctx context.Context, userId string) ([]*entity.Friend, error)
+	// ListFriend 好友列表
+	ListFriend(ctx context.Context, userId string) ([]*entity.Friend, error)
 
 	UpdateStatus(ctx context.Context, id uint32, status entity.UserRelationStatus) error
 
@@ -42,7 +44,7 @@ type UserRepository interface {
 	SetUserFriendSilentNotification(ctx context.Context, uid, friendId string, silentNotification bool) error
 
 	// SetUserOpenBurnAfterReading 设置好友阅后即焚
-	SetUserOpenBurnAfterReading(ctx context.Context, uid, friendId string, openBurnAfterReading bool, burnAfterReadingTimeOut int64) error
+	SetUserOpenBurnAfterReading(ctx context.Context, uid, friendId string, openBurnAfterReading bool, burnAfterReadingTimeOut uint32) error
 
 	// SetFriendRemark 设置好友备注
 	SetFriendRemark(ctx context.Context, userId, friendId string, remark string) error

@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/internal/user/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"strings"
 )
 
@@ -63,6 +66,9 @@ func (d *userDomain) UserRegister(ctx context.Context, ur *entity.UserRegister) 
 	}
 	_, err := d.ur.SaveUser(ctx, e)
 	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return "", code.UserErrEmailAlreadyRegistered
+		}
 		return "", err
 	}
 

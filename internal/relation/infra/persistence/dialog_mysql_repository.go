@@ -2,9 +2,11 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
@@ -58,6 +60,9 @@ func (m *MySQLDialogRepository) GetByGroupID(ctx context.Context, groupID uint32
 		Where("group_id = ? AND deleted_at = 0", groupID).
 		First(&model).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 

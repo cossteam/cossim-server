@@ -121,7 +121,7 @@ type Group struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"id"
-	Id uint32 `protobuf:"varint,1,opt,name=Id,proto3" json:"id"`
+	Id uint32 `protobuf:"varint,1,opt,name=ID,proto3" json:"id"`
 	// @inject_tag: json:"type"
 	Type GroupType `protobuf:"varint,2,opt,name=Type,proto3,enum=group_v1.GroupType" json:"type"`
 	// @inject_tag: json:"status"

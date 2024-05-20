@@ -74,7 +74,7 @@ func (s *dialogServiceServer) CreateAndJoinDialogWithGroup(ctx context.Context, 
 	//	dialog, err := txr.DialogRepo.Create(ctx, &repository.CreateDialog{
 	//		Type:    entity.DialogType(request.Type),
 	//		OwnerId: request.OwnerId,
-	//		GroupId: request.GroupId,
+	//		GroupID: request.GroupID,
 	//	})
 	//	if err != nil {
 	//		return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), fmt.Sprintf("failed to create dialog: %s", err.Error()))
@@ -84,9 +84,9 @@ func (s *dialogServiceServer) CreateAndJoinDialogWithGroup(ctx context.Context, 
 	//	if err != nil {
 	//		return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), fmt.Sprintf("failed to join dialog: %s", err.Error()))
 	//	}
-	//	resp.Id = dialog.ID
+	//	resp.ID = dialog.ID
 	//	resp.OwnerId = dialog.OwnerId
-	//	resp.GroupId = dialog.ID
+	//	resp.GroupID = dialog.ID
 	//	resp.Type = uint32(dialog.Type)
 	//	return nil
 	//}); err != nil {
@@ -121,11 +121,11 @@ func (s *dialogServiceServer) CreateAndJoinDialogWithGroupRevert(ctx context.Con
 	//if err := s.repos.db.Transaction(func(tx *gorm.DB) error {
 	//	txr := s.repos.TXRepositories(tx)
 	//
-	//	if err := txr.DialogUserRepo.DeleteByDialogIDAndUserID(ctx, request.DialogId, ids...); err != nil {
+	//	if err := txr.DialogUserRepo.DeleteByDialogIDAndUserID(ctx, request.DialogID, ids...); err != nil {
 	//		return status.Error(codes.Code(code.DialogErrDeleteDialogUsersFailed.Code()), fmt.Sprintf("failed to delete dialog user revert : %s", err.Error()))
 	//	}
 	//
-	//	if err := txr.DialogRepo.Delete(ctx, request.DialogId); err != nil {
+	//	if err := txr.DialogRepo.Delete(ctx, request.DialogID); err != nil {
 	//		return status.Error(codes.Code(code.DialogErrDeleteDialogFailed.Code()), fmt.Sprintf("failed to delete dialog revert : %s", err.Error()))
 	//	}
 	//
@@ -146,7 +146,7 @@ func (s *dialogServiceServer) ConfirmFriendAndJoinDialog(ctx context.Context, re
 	//	dialog, err := txr.DialogRepo.Create(ctx, &repository.CreateDialog{
 	//		Type:    entity.DialogType(request.Type),
 	//		OwnerId: request.OwnerId,
-	//		GroupId: request.GroupId,
+	//		GroupID: request.GroupID,
 	//	})
 	//	if err != nil {
 	//		return status.Error(codes.Code(code.DialogErrCreateDialogFailed.Code()), err.Error())
@@ -154,15 +154,15 @@ func (s *dialogServiceServer) ConfirmFriendAndJoinDialog(ctx context.Context, re
 	//
 	//	_, err = txr.DialogUserRepo.Create(ctx, &repository.CreateDialogUser{
 	//		DialogID: dialog.ID,
-	//		UserID:   request.UserID,
+	//		ID:   request.ID,
 	//	})
 	//	if err != nil {
 	//		return status.Error(codes.Code(code.DialogErrJoinDialogFailed.Code()), err.Error())
 	//	}
-	//	resp.Id = dialog.ID
+	//	resp.ID = dialog.ID
 	//	resp.OwnerId = request.OwnerId
 	//	resp.Type = v1.DialogType(dialog.Type)
-	//	resp.GroupId = dialog.GroupId
+	//	resp.GroupID = dialog.GroupID
 	//
 	//	return nil
 	//}); err != nil {

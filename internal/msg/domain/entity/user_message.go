@@ -99,7 +99,7 @@ func (um *UserMessage) ToMessage() *v1.Message {
 		SendAt:             int(um.CreatedAt),
 		SenderId:           um.SendID,
 		SenderInfo:         nil, // 需要确定如何设置 SenderInfo
-		ReceiverInfo:       nil, // 需要确定如何设置 ReceiverInfo
+		ReceiverInfo:       nil, // 需要确定如何设置 RecipientInfo
 		DialogId:           int(um.DialogId),
 	}
 }

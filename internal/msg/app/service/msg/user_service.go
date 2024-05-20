@@ -154,7 +154,7 @@ func (s *ServiceImpl) SendUserMsg(ctx context.Context, userID string, driverId s
 		}
 		message.MsgId = uint32(mg.ID)
 		//message, err = s.ud.SendUserMessage(ctx, &msggrpcv1.SendUserMsgRequest{
-		//	DialogId:               uint32(req.DialogId),
+		//	DialogID:               uint32(req.DialogID),
 		//	SenderId:               userID,
 		//	ReceiverId:             req.ReceiverId,
 		//	Content:                req.Content,
@@ -526,8 +526,8 @@ func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, page
 
 				//获取未读消息
 				//msgs, err := s.ud.GetUnreadUserMsgs(ctx, &msggrpcv1.GetUnreadUserMsgsRequest{
-				//	UserId:   userID,
-				//	DialogId: v.Id,
+				//	ID:   userID,
+				//	DialogID: v.ID,
 				//})
 				//if err != nil {
 				//	s.logger.Error("获取未读消息失败", zap.Error(err))
@@ -570,8 +570,8 @@ func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, page
 
 			//获取未读消息
 			//msgs, err := s.gmd.GetGroupUnreadMessages(ctx, &msggrpcv1.GetGroupUnreadMessagesRequest{
-			//	UserId:   userID,
-			//	DialogId: v.Id,
+			//	ID:   userID,
+			//	DialogID: v.ID,
 			//})
 			//if err != nil {
 			//	s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -816,7 +816,7 @@ func (s *ServiceImpl) EditUserMsg(c *gin.Context, userID string, driverId string
 	// 调用相应的 gRPC 客户端方法来编辑用户消息
 	//_, err = s.ud.EditUserMessage(context.Background(), &msggrpcv1.EditUserMsgRequest{
 	//	UserMessage: &msggrpcv1.UserMessage{
-	//		Id:      msgID,
+	//		ID:      msgID,
 	//		Content: content,
 	//	},
 	//})
@@ -884,8 +884,8 @@ func (s *ServiceImpl) ReadUserMsgs(ctx context.Context, userid string, driverId 
 
 	if req.ReadAll {
 		//_, err := s.ud.ReadAllUserMsg(ctx, &msggrpcv1.ReadAllUserMsgRequest{
-		//	DialogId: uint32(req.DialogId),
-		//	UserId:   userid,
+		//	DialogID: uint32(req.DialogID),
+		//	ID:   userid,
 		//})
 		err := s.ud.ReadAllUserMsg(ctx, uint(req.DialogId), userid)
 		if err != nil {
@@ -897,7 +897,7 @@ func (s *ServiceImpl) ReadUserMsgs(ctx context.Context, userid string, driverId 
 	} else {
 		//_, err = s.ud.SetUserMsgsReadStatus(ctx, &msggrpcv1.SetUserMsgsReadStatusRequest{
 		//	MsgIds:                      msgIdList,
-		//	DialogId:                    uint32(req.DialogId),
+		//	DialogID:                    uint32(req.DialogID),
 		//	OpenBurnAfterReadingTimeOut: relation.OpenBurnAfterReadingTimeOut,
 		//})
 		err = s.ud.SetUserMsgsReadStatus(ctx, msgIdList, uint(req.DialogId), relation.OpenBurnAfterReadingTimeOut)
@@ -909,7 +909,7 @@ func (s *ServiceImpl) ReadUserMsgs(ctx context.Context, userid string, driverId 
 
 	//msgs, err := s.ud.GetUserMessagesByIds(ctx, &msggrpcv1.GetUserMessagesByIdsRequest{
 	//	MsgIds: msgIdList,
-	//	UserId: userid,
+	//	ID: userid,
 	//})
 	msgs, err := s.ud.GetUserMessagesByIds(ctx, msgIdList)
 	if err != nil {
@@ -1044,7 +1044,7 @@ func (s *ServiceImpl) GetUserLabelMsgList(ctx context.Context, userID string, di
 	}
 
 	//msgs, err := s.ud.GetUserMsgLabelByDialogId(ctx, &msggrpcv1.GetUserMsgLabelByDialogIdRequest{
-	//	DialogId: dialogID,
+	//	DialogID: dialogID,
 	//})
 	msgs, err := s.ud.GetUserMsgLabelByDialogId(ctx, uint(dialogID))
 	if err != nil {
@@ -1277,7 +1277,7 @@ func (s *ServiceImpl) GetDialogAfterMsg(ctx context.Context, userID string, requ
 // 获取群聊对话的最后二十条消息
 func (s *ServiceImpl) getGroupDialogLast20Msg(ctx context.Context, thisID string, dialogId uint32, responses []*v1.GetDialogAfterMsgResponse) ([]*v1.GetDialogAfterMsgResponse, error) {
 	//list, err := s.gmd.GetGroupLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
-	//	DialogId: dialogId,
+	//	DialogID: dialogId,
 	//	PageNum:  1,
 	//	PageSize: 20,
 	//})
@@ -1295,8 +1295,8 @@ func (s *ServiceImpl) getGroupDialogLast20Msg(ctx context.Context, thisID string
 		}
 
 		//readmsg, err := s.gmrd.GetGroupMessageReadByMsgIdAndUserId(ctx, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
-		//	MsgId:  gm.Id,
-		//	UserId: thisID,
+		//	MsgId:  gm.ID,
+		//	ID: thisID,
 		//})
 		readmsg, err := s.gmrd.GetGroupMessageReadByMsgIdAndUserId(ctx, gm.ID, thisID)
 		if err != nil {
@@ -1341,7 +1341,7 @@ func (s *ServiceImpl) getGroupDialogLast20Msg(ctx context.Context, thisID string
 // 获取私聊对话的最后二十条消息
 func (s *ServiceImpl) getUserDialogLast20Msg(ctx context.Context, dialogId uint32, responses []*v1.GetDialogAfterMsgResponse) ([]*v1.GetDialogAfterMsgResponse, error) {
 	//list, err := s.ud.GetUserLastMessageList(ctx, &msggrpcv1.GetLastMsgListRequest{
-	//	DialogId: dialogId,
+	//	DialogID: dialogId,
 	//	PageNum:  1,
 	//	PageSize: 20,
 	//})

@@ -2,13 +2,17 @@ package persistence
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 	"log"
+	"reflect"
 )
 
 // UserRelationModel 对应 relation.UserRelation
@@ -59,7 +63,7 @@ func (m *UserRelationModel) ToEntity() *entity.UserRelation {
 	}
 }
 
-var _ repository.UserRepository = &MySQLRelationUserRepository{}
+var _ repository.UserRelationRepository = &MySQLRelationUserRepository{}
 
 func NewMySQLRelationUserRepository(db *gorm.DB, cache cache.RelationUserCache) *MySQLRelationUserRepository {
 	return &MySQLRelationUserRepository{
@@ -71,6 +75,22 @@ func NewMySQLRelationUserRepository(db *gorm.DB, cache cache.RelationUserCache) 
 type MySQLRelationUserRepository struct {
 	db    *gorm.DB
 	cache cache.RelationUserCache
+}
+
+func (m *MySQLRelationUserRepository) DeleteRollback(ctx context.Context, id uint32) error {
+	var model UserRelationModel
+
+	if err := m.db.WithContext(ctx).
+		Model(&UserRelationModel{}).
+		Where("id = ?", id).
+		First(&model).
+		Update("status", uint(entity.UserStatusNormal)).
+		Update("deleted_at", 0).
+		Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *MySQLRelationUserRepository) RestoreFriendship(ctx context.Context, dialogID uint32, userId, friendId string) error {
@@ -87,7 +107,7 @@ func (m *MySQLRelationUserRepository) RestoreFriendship(ctx context.Context, dia
 		if err := m.cache.DeleteRelation(ctx, userId, []string{friendId}); err != nil {
 			log.Printf("delete relation cache error: %v", err)
 		}
-		if err := m.cache.DeleteFriendList(ctx, userId); err != nil {
+		if err := m.cache.DeleteFriendList(ctx, userId, friendId); err != nil {
 			log.Printf("failed to delete cache friend list: %v", err)
 		}
 	}
@@ -152,7 +172,10 @@ func (m *MySQLRelationUserRepository) UpdateStatus(ctx context.Context, id uint3
 		if err := m.cache.DeleteRelation(ctx, model.UserID, []string{model.FriendID}); err != nil {
 			log.Printf("delete relation cache error: %v", err)
 		}
-		if err := m.cache.DeleteFriendList(ctx, model.UserID); err != nil {
+		if err := m.cache.DeleteFriendList(ctx, model.UserID, model.FriendID); err != nil {
+			log.Printf("failed to delete cache friend list: %v", err)
+		}
+		if err := m.cache.DeleteBlacklist(ctx, model.UserID, model.FriendID); err != nil {
 			log.Printf("failed to delete cache friend list: %v", err)
 		}
 	}
@@ -173,15 +196,19 @@ func (m *MySQLRelationUserRepository) Get(ctx context.Context, userId, friendId 
 	if err := m.db.WithContext(ctx).
 		Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).
 		First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
+
+	fmt.Println("model.Status", model.Status)
 
 	e := model.ToEntity()
 
 	go func() {
 		if m.cache != nil {
 			if err := m.cache.SetRelation(context.Background(), userId, friendId, e, cache.RelationExpireTime); err != nil {
-				//zap.L().Error("cache.SetRelation failed", zap.Error(err))
 				log.Printf("cache.SetRelation failed err:%v", err)
 			}
 		}
@@ -213,9 +240,26 @@ func (m *MySQLRelationUserRepository) Update(ctx context.Context, ur *entity.Use
 		return nil, err
 	}
 
-	if err := m.db.Where("id = ?", ur.ID).Updates(&model).Error; err != nil {
-		return nil, err
+	userValue := reflect.ValueOf(ur).Elem()
+	for i := 0; i < userValue.NumField(); i++ {
+		fieldName := userValue.Type().Field(i).Name
+		fieldValue := userValue.Field(i)
+
+		if !fieldValue.IsZero() {
+			result := m.db.Model(&model).Where("id = ?", model.ID).Update(fieldName, fieldValue.Interface())
+			if result.Error != nil {
+				return nil, result.Error
+			}
+		}
 	}
+
+	//entityUser := converter.UserPOToEntity(poUser)
+
+	//return entityUser, nil
+
+	//if err := m.db.Where("id = ?", ur.ID).Updates(&model).Error; err != nil {
+	//	return nil, err
+	//}
 
 	e := model.ToEntity()
 
@@ -286,37 +330,39 @@ func (m *MySQLRelationUserRepository) Find(ctx context.Context, query *repositor
 			if err := m.cache.SetRelation(ctx, v.UserID, v.FriendID, v, cache.RelationExpireTime); err != nil {
 				log.Printf("failed to set relation cache: %v", err)
 			}
-			if err := m.cache.SetRelation(ctx, v.FriendID, v.UserID, v, cache.RelationExpireTime); err != nil {
-				log.Printf("failed to set relation cache: %v", err)
-			}
 		}
 	}
 
 	return list, nil
 }
 
-func (m *MySQLRelationUserRepository) Blacklist(ctx context.Context, userId string) (*entity.Blacklist, error) {
+func (m *MySQLRelationUserRepository) Blacklist(ctx context.Context, opts *entity.BlacklistOptions) (*entity.Blacklist, error) {
 	if m.cache != nil {
-		cachedList, err := m.cache.GetBlacklist(ctx, userId)
+		cachedList, err := m.cache.GetBlacklist(ctx, opts.UserID)
 		if err == nil && cachedList != nil {
 			return cachedList, nil
 		}
 	}
 
 	var relations []*UserRelationModel
-	if err := m.db.WithContext(ctx).Where("user_id = ? AND status = ? AND deleted_at = 0", userId, entity.UserStatusBlocked).
+	if err := m.db.WithContext(ctx).Where("user_id = ? AND status = ? AND deleted_at = 0", opts.UserID, entity.UserStatusBlocked).
 		Find(&relations).Error; err != nil {
 		return nil, err
 	}
 
-	blacklist := &entity.Blacklist{}
+	blacklist := &entity.Blacklist{
+		Page: int32(opts.PageNum),
+	}
 	for _, v := range relations {
-		blacklist.List = append(blacklist.List, v.FriendID)
+		blacklist.List = append(blacklist.List, &entity.Black{
+			UserID:    v.FriendID,
+			CreatedAt: v.CreatedAt,
+		})
 		blacklist.Total++
 	}
 
 	if m.cache != nil {
-		if err := m.cache.SetBlacklist(ctx, userId, blacklist, cache.RelationExpireTime); err != nil {
+		if err := m.cache.SetBlacklist(ctx, opts.UserID, blacklist, cache.RelationExpireTime); err != nil {
 			log.Printf("failed to set blacklist cache: %v", err)
 		}
 	}
@@ -324,9 +370,10 @@ func (m *MySQLRelationUserRepository) Blacklist(ctx context.Context, userId stri
 	return blacklist, nil
 }
 
-func (m *MySQLRelationUserRepository) FriendRequestList(ctx context.Context, userId string) ([]*entity.Friend, error) {
+func (m *MySQLRelationUserRepository) ListFriend(ctx context.Context, userId string) ([]*entity.Friend, error) {
 	if m.cache != nil {
 		r, err := m.cache.GetFriendList(ctx, userId)
+		fmt.Println("ListFriend cache => ", r)
 		if err == nil && r != nil {
 			return r, nil
 		}
@@ -346,8 +393,8 @@ func (m *MySQLRelationUserRepository) FriendRequestList(ctx context.Context, use
 	var friends []*entity.Friend
 	for _, v := range relations {
 		friends = append(friends, &entity.Friend{
-			UserId:                      v.FriendID,
-			DialogId:                    v.DialogId,
+			UserID:                      v.FriendID,
+			DialogID:                    v.DialogId,
 			Remark:                      v.Remark,
 			Status:                      entity.UserRelationStatus(v.Status),
 			OpenBurnAfterReading:        v.OpenBurnAfterReading,
@@ -383,19 +430,21 @@ func (m *MySQLRelationUserRepository) SetUserFriendSilentNotification(ctx contex
 		return err
 	}
 
-	if m.cache != nil {
-		if err := m.cache.DeleteRelation(ctx, userId, []string{friendId}); err != nil {
-			log.Printf("delete relation cache failed: %v", err)
+	go func() {
+		if m.cache != nil {
+			if err := m.cache.DeleteRelation(context.Background(), userId, []string{friendId}); err != nil {
+				log.Printf("delete relation cache failed: %v", err)
+			}
+			if err := m.cache.DeleteFriendList(context.Background(), userId); err != nil {
+				log.Printf("delete friend request list cache failed: %v", err)
+			}
 		}
-		if err := m.cache.DeleteFriendList(ctx, userId); err != nil {
-			log.Printf("delete friend request list cache failed: %v", err)
-		}
-	}
+	}()
 
 	return nil
 }
 
-func (m *MySQLRelationUserRepository) SetUserOpenBurnAfterReading(ctx context.Context, userId, friendId string, openBurnAfterReading bool, burnAfterReadingTimeOut int64) error {
+func (m *MySQLRelationUserRepository) SetUserOpenBurnAfterReading(ctx context.Context, userId, friendId string, openBurnAfterReading bool, burnAfterReadingTimeOut uint32) error {
 	if err := m.db.Model(&UserRelationModel{}).WithContext(ctx).
 		Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).
 		Updates(map[string]interface{}{

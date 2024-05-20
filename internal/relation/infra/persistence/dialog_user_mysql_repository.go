@@ -2,9 +2,11 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
@@ -52,6 +54,20 @@ func NewMySQLDialogUserRepository(db *gorm.DB, cache cache.RelationUserCache) *M
 
 type MySQLDialogUserRepository struct {
 	db *gorm.DB
+}
+
+func (m *MySQLDialogUserRepository) GetByDialogIDAndUserID(ctx context.Context, dialogID uint32, userID string) (*entity.DialogUser, error) {
+	var model DialogUserModel
+
+	if err := m.db.WithContext(ctx).
+		Where(&DialogUserModel{DialogId: dialogID, UserId: userID}).
+		First(&model).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
+	}
+
+	return model.ToEntity(), nil
 }
 
 func (m *MySQLDialogUserRepository) UpdateDialogStatus(ctx context.Context, param *repository.UpdateDialogStatusParam) error {
@@ -110,6 +126,9 @@ func (m *MySQLDialogUserRepository) Get(ctx context.Context, id uint32) (*entity
 		Where("id = ?", id).
 		First(&model).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 
@@ -154,6 +173,10 @@ func (m *MySQLDialogUserRepository) Delete(ctx context.Context, id ...uint32) er
 }
 
 func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *repository.DialogUserQuery) ([]*entity.DialogUser, error) {
+	if query == nil || (query.DialogID == nil && query.UserID == nil) {
+		return nil, code.InvalidParameter
+	}
+
 	var models []DialogUserModel
 
 	db := m.db.Model(&DialogUserModel{})

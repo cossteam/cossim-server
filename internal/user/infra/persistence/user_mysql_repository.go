@@ -59,6 +59,14 @@ func (r *MySQLUserRepository) UpdateUser(ctx context.Context, user *entity.User)
 
 	entityUser := converter.UserPOToEntity(poUser)
 
+	go func() {
+		if r.cache != nil {
+			if err := r.cache.DeleteUsersInfo(context.Background(), entityUser.ID); err != nil {
+				log.Printf("无法删除用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
+			}
+		}
+	}()
+
 	return entityUser, nil
 }
 
@@ -85,7 +93,7 @@ func (r *MySQLUserRepository) DeleteUser(ctx context.Context, id string) error {
 	}
 
 	if r.cache != nil {
-		if err := r.cache.DeleteUsersInfo(ctx, []string{id}); err != nil {
+		if err := r.cache.DeleteUsersInfo(ctx, id); err != nil {
 			log.Printf("无法删除用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
 		}
 	}
@@ -106,10 +114,25 @@ func (r *MySQLUserRepository) UpdatesUser(ctx context.Context, user *entity.User
 
 	entityUser := converter.UserPOToEntity(poUser)
 
+	go func() {
+		if r.cache != nil {
+			if err := r.cache.SetUserInfo(context.Background(), entityUser.ID, entityUser, cache.UserExpireTime); err != nil {
+				log.Printf("无法设置用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
+			}
+		}
+	}()
+
 	return entityUser, nil
 }
 
 func (r *MySQLUserRepository) GetUser(ctx context.Context, id string) (*entity.User, error) {
+	if r.cache != nil {
+		if user, err := r.cache.GetUserInfo(ctx, id); err == nil && user != nil {
+			log.Printf("从缓存获取用户信息: %v", id)
+			return user, nil
+		}
+	}
+
 	user := &po.User{}
 
 	if err := r.db.WithContext(ctx).
@@ -122,6 +145,12 @@ func (r *MySQLUserRepository) GetUser(ctx context.Context, id string) (*entity.U
 	}
 
 	entityUser := converter.UserPOToEntity(user)
+
+	if r.cache != nil {
+		if err := r.cache.SetUserInfo(ctx, entityUser.ID, entityUser, cache.UserExpireTime); err != nil {
+			log.Printf("无法设置用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
+		}
+	}
 
 	return entityUser, nil
 }
@@ -164,7 +193,7 @@ func (r *MySQLUserRepository) InsertAndUpdateUser(ctx context.Context, user *ent
 	}
 
 	if r.cache != nil {
-		if err := r.cache.DeleteUsersInfo(ctx, []string{model.ID}); err != nil {
+		if err := r.cache.DeleteUsersInfo(ctx, model.ID); err != nil {
 			log.Printf("无法删除用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
 		}
 	}

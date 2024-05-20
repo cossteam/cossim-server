@@ -16,10 +16,10 @@ package grpc
 //	//	reads = make([]*entity.GroupMessageRead, len(in.List))
 //	//	for i, _ := range in.List {
 //	//		reads[i] = &entity.GroupMessageRead{
-//	//			DialogId: uint(in.List[i].DialogId),
+//	//			DialogID: uint(in.List[i].DialogID),
 //	//			MsgId:    uint(in.List[i].MsgId),
-//	//			UserID:   in.List[i].UserId,
-//	//			GroupID:  uint(in.List[i].GroupId),
+//	//			ID:   in.List[i].ID,
+//	//			GroupID:  uint(in.List[i].GroupID),
 //	//			ReadAt:   in.List[i].ReadAt,
 //	//		}
 //	//		msgids = append(msgids, in.List[i].MsgId)
@@ -62,7 +62,7 @@ package grpc
 //
 //func (s *Handler) GetGroupMessageReadByMsgIdAndUserId(ctx context.Context, in *v1.GetGroupMessageReadByMsgIdAndUserIdRequest) (*v1.GetGroupMessageReadByMsgIdAndUserIdResponse, error) {
 //	resp := &v1.GetGroupMessageReadByMsgIdAndUserIdResponse{}
-//	//msg, err := s.gmrr.GetGroupMsgReadByMsgIDAndUserID(in.MsgId, in.UserId)
+//	//msg, err := s.gmrr.GetGroupMsgReadByMsgIDAndUserID(in.MsgId, in.ID)
 //	//if err != nil {
 //	//	return nil, status.Error(codes.Code(code.GroupErrGetGroupMsgReadByMsgIdAndUserIdFailed.Code()), err.Error())
 //	//}
@@ -73,12 +73,12 @@ package grpc
 //func (s *Handler) ReadAllGroupMsg(ctx context.Context, request *v1.ReadAllGroupMsgRequest) (*v1.ReadAllGroupMsgResponse, error) {
 //	resp := &v1.ReadAllGroupMsgResponse{}
 //	//
-//	//msgids, err := s.gmrr.GetGroupMsgUserReadIdsByDialogID(request.DialogId, request.UserId)
+//	//msgids, err := s.gmrr.GetGroupMsgUserReadIdsByDialogID(request.DialogID, request.ID)
 //	//if err != nil {
 //	//	return resp, status.Error(codes.Code(code.GroupErrGetGroupMsgReadByMsgIdAndUserIdFailed.Code()), err.Error())
 //	//}
 //	//
-//	//list, err := s.gmr.GetGroupUnreadMsgList(request.DialogId, msgids)
+//	//list, err := s.gmr.GetGroupUnreadMsgList(request.DialogID, msgids)
 //	//if err != nil {
 //	//	return resp, err
 //	//}
@@ -88,15 +88,15 @@ package grpc
 //	//	reads = make([]*entity.GroupMessageRead, len(list))
 //	//	for k, v := range list {
 //	//		reads[k] = &entity.GroupMessageRead{
-//	//			DialogId: v.DialogId,
+//	//			DialogID: v.DialogID,
 //	//			MsgId:    v.ID,
-//	//			UserID:   request.UserId,
+//	//			ID:   request.ID,
 //	//			GroupID:  v.GroupID,
 //	//			ReadAt:   time.Now(),
 //	//		}
 //	//		resp.UnreadGroupMessage = append(resp.UnreadGroupMessage, &v1.UnreadGroupMessage{
 //	//			MsgId:  uint32(v.ID),
-//	//			UserId: v.UserID,
+//	//			ID: v.ID,
 //	//		})
 //	//	}
 //	//}

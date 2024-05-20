@@ -13,8 +13,8 @@ package service
 //
 //		//查询是否静默通知
 //		groupRelation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
-//			GroupId: uint32(msg.GroupId),
-//			UserId:  uid,
+//			GroupID: uint32(msg.GroupID),
+//			ID:  uid,
 //		})
 //		if err != nil {
 //			s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -44,7 +44,7 @@ package service
 //
 //func (s *ServiceImpl) SendGroupMsg(ctx context.Context, userID string, driverId string, req *v1.SendGroupMsgRequest) (*v1.SendGroupMsgResponse, error) {
 //	group, err := s.groupService.GetGroupInfoByGid(ctx, &groupgrpcv1.GetGroupInfoRequest{
-//		Gid: uint32(req.GroupId),
+//		Gid: uint32(req.GroupID),
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊信息失败", zap.Error(err))
@@ -59,11 +59,11 @@ package service
 //		return nil, code.GroupErrGroupIsSilence
 //	}
 //
-//	dialogID := uint32(req.DialogId)
+//	dialogID := uint32(req.DialogID)
 //
 //	groupRelation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
-//		GroupId: uint32(req.GroupId),
-//		UserId:  userID,
+//		GroupID: uint32(req.GroupID),
+//		ID:  userID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -86,8 +86,8 @@ package service
 //	}
 //
 //	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		DialogId: dialogID,
-//		UserId:   userID,
+//		DialogID: dialogID,
+//		ID:   userID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户会话失败", zap.Error(err))
@@ -96,7 +96,7 @@ package service
 //
 //	//查询群聊所有用户id
 //	uids, err := s.relationGroupService.GetGroupUserIDs(ctx, &relationgrpcv1.GroupIDRequest{
-//		GroupId: uint32(req.GroupId),
+//		GroupID: uint32(req.GroupID),
 //	})
 //
 //	var message *msggrpcv1.SendGroupMsgResponse
@@ -107,7 +107,7 @@ package service
 //	if err := workflow.Register(wfName, func(wf *workflow.Workflow, data []byte) error {
 //
 //		_, err := s.relationDialogService.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
-//			DialogId: dialogID,
+//			DialogID: dialogID,
 //			Action:   relationgrpcv1.CloseOrOpenDialogType_OPEN,
 //			UserIds:  uids.UserIds,
 //		})
@@ -117,7 +117,7 @@ package service
 //
 //		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 //			_, err := s.relationDialogService.BatchCloseOrOpenDialog(ctx, &relationgrpcv1.BatchCloseOrOpenDialogRequest{
-//				DialogId: dialogID,
+//				DialogID: dialogID,
 //				Action:   relationgrpcv1.CloseOrOpenDialogType_CLOSE,
 //				UserIds:  uids.UserIds,
 //			})
@@ -129,9 +129,9 @@ package service
 //			isAtAll = msggrpcv1.AtAllUserType_AtAllUser
 //		}
 //		message, err = s.msgService.SendGroupMessage(ctx, &msggrpcv1.SendGroupMsgRequest{
-//			DialogId:  dialogID,
-//			GroupId:   uint32(req.GroupId),
-//			UserId:    userID,
+//			DialogID:  dialogID,
+//			GroupID:   uint32(req.GroupID),
+//			ID:    userID,
 //			Content:   req.Content,
 //			Type:      uint32(req.Type),
 //			ReplyId:   uint32(req.ReplyId),
@@ -152,9 +152,9 @@ package service
 //		// 发送成功后添加自己的已读记录
 //		data2 := &msggrpcv1.SetGroupMessageReadRequest{
 //			MsgId:    message.MsgId,
-//			GroupId:  message.GroupId,
-//			DialogId: uint32(req.DialogId),
-//			UserId:   userID,
+//			GroupID:  message.GroupID,
+//			DialogID: uint32(req.DialogID),
+//			ID:   userID,
 //			ReadAt:   pkgtime.Now(),
 //		}
 //
@@ -177,7 +177,7 @@ package service
 //
 //	//查询发送者信息
 //	info, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//		UserId: userID,
+//		ID: userID,
 //	})
 //	if err != nil {
 //		return nil, err
@@ -196,7 +196,7 @@ package service
 //		}
 //
 //		userInfo, err := s.userService.UserInfo(ctx, &usergrpcv1.UserInfoRequest{
-//			UserId: msg.UserId,
+//			ID: msg.ID,
 //		})
 //		if err != nil {
 //			return nil, err
@@ -205,11 +205,11 @@ package service
 //		resp.ReplyMsg = &v1.Message{
 //			MsgType:  int(msg.Type),
 //			Content:  msg.Content,
-//			SenderId: msg.UserId,
+//			SenderId: msg.ID,
 //			SendAt:   int(msg.GetCreatedAt()),
-//			MsgId:    int(msg.Id),
+//			MsgId:    int(msg.ID),
 //			SenderInfo: &v1.SenderInfo{
-//				UserId: userInfo.UserId,
+//				ID: userInfo.ID,
 //				Name:   userInfo.NickName,
 //				Avatar: userInfo.Avatar,
 //			},
@@ -223,21 +223,21 @@ package service
 //	rmsg := &pushv1.MessageInfo{}
 //	if resp.ReplyMsg != nil {
 //		rmsg = &pushv1.MessageInfo{
-//			GroupId:  uint32(resp.ReplyMsg.GroupId),
+//			GroupID:  uint32(resp.ReplyMsg.GroupID),
 //			MsgType:  uint32(resp.ReplyMsg.MsgType),
 //			Content:  resp.ReplyMsg.Content,
 //			SenderId: resp.ReplyMsg.SenderId,
 //			SendAt:   int64(resp.ReplyMsg.SendAt),
 //			MsgId:    uint64(resp.ReplyMsg.MsgId),
 //			SenderInfo: &pushv1.SenderInfo{
-//				UserId: resp.ReplyMsg.SenderInfo.UserId,
+//				ID: resp.ReplyMsg.SenderInfo.ID,
 //				Avatar: resp.ReplyMsg.SenderInfo.Avatar,
 //				Name:   resp.ReplyMsg.SenderInfo.Name,
 //			},
-//			ReceiverInfo: &pushv1.SenderInfo{
-//				UserId: resp.ReplyMsg.ReceiverInfo.UserId,
-//				Avatar: resp.ReplyMsg.ReceiverInfo.Avatar,
-//				Name:   resp.ReplyMsg.ReceiverInfo.Name,
+//			RecipientInfo: &pushv1.SenderInfo{
+//				ID: resp.ReplyMsg.RecipientInfo.ID,
+//				Avatar: resp.ReplyMsg.RecipientInfo.Avatar,
+//				Name:   resp.ReplyMsg.RecipientInfo.Name,
 //			},
 //			AtAllUser:          resp.ReplyMsg.AtAllUser,
 //			AtUsers:            resp.ReplyMsg.AtUsers,
@@ -250,19 +250,19 @@ package service
 //	}
 //	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &pushv1.SendWsGroupMsg{
 //		MsgId:      message.MsgId,
-//		GroupId:    int64(req.GroupId),
+//		GroupID:    int64(req.GroupID),
 //		SenderId:   userID,
 //		Content:    req.Content,
 //		MsgType:    uint32(req.Type),
 //		ReplyId:    uint32(req.ReplyId),
 //		SendAt:     pkgtime.Now(),
-//		DialogId:   uint32(req.DialogId),
+//		DialogID:   uint32(req.DialogID),
 //		AtUsers:    req.AtUsers,
 //		AtAllUsers: req.AtAllUser,
 //		SenderInfo: &pushv1.SenderInfo{
 //			Avatar: info.Avatar,
 //			Name:   info.NickName,
-//			UserId: userID,
+//			ID: userID,
 //		},
 //		ReplyMsg: rmsg,
 //	})
@@ -279,13 +279,13 @@ package service
 //		s.logger.Error("获取消息失败", zap.Error(err))
 //		return nil, err
 //	}
-//	if msginfo.UserId != userID {
+//	if msginfo.ID != userID {
 //		return nil, code.Unauthorized
 //	}
 //
 //	//判断是否在对话内
 //	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-//		DialogId: msginfo.DialogId,
+//		DialogID: msginfo.DialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户对话信息失败", zap.Error(err))
@@ -305,7 +305,7 @@ package service
 //	// 调用相应的 gRPC 客户端方法来编辑群消息
 //	_, err = s.msgService.EditGroupMessage(ctx, &msggrpcv1.EditGroupMsgRequest{
 //		GroupMessage: &msggrpcv1.GroupMessage{
-//			Id:      msgID,
+//			ID:      msgID,
 //			Content: content,
 //		},
 //	})
@@ -334,7 +334,7 @@ package service
 //		return nil, code.MsgErrDeleteGroupMessageFailed
 //	}
 //
-//	if msginfo.UserId != userID {
+//	if msginfo.ID != userID {
 //		return nil, code.Unauthorized
 //	}
 //
@@ -345,7 +345,7 @@ package service
 //
 //	//判断是否在对话内
 //	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-//		DialogId: msginfo.DialogId,
+//		DialogID: msginfo.DialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取用户对话信息失败", zap.Error(err))
@@ -363,10 +363,10 @@ package service
 //	}
 //
 //	msg2 := &v1.SendGroupMsgRequest{
-//		DialogId: int(msginfo.DialogId),
-//		GroupId:  int(msginfo.GroupId),
+//		DialogID: int(msginfo.DialogID),
+//		GroupID:  int(msginfo.GroupID),
 //		Content:  msginfo.Content,
-//		ReplyId:  int(msginfo.Id),
+//		ReplyId:  int(msginfo.ID),
 //		Type:     int(msggrpcv1.MessageType_Delete),
 //	}
 //	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
@@ -383,7 +383,7 @@ package service
 //		return nil, err
 //	}
 //
-//	return msg.Id, nil
+//	return msg.ID, nil
 //}
 //
 //func (s *ServiceImpl) LabelGroupMessage(ctx context.Context, userID string, driverId string, msgID uint32, label bool) (interface{}, error) {
@@ -402,7 +402,7 @@ package service
 //
 //	//判断是否在对话内
 //	userIds, err := s.relationDialogService.GetDialogUsersByDialogID(ctx, &relationgrpcv1.GetDialogUsersByDialogIDRequest{
-//		DialogId: msginfo.DialogId,
+//		DialogID: msginfo.DialogID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取对话用户失败", zap.Error(err))
@@ -436,10 +436,10 @@ package service
 //
 //	msginfo.IsLabel = isLabel
 //	msg2 := &v1.SendGroupMsgRequest{
-//		DialogId: int(msginfo.DialogId),
-//		GroupId:  int(msginfo.GroupId),
+//		DialogID: int(msginfo.DialogID),
+//		GroupID:  int(msginfo.GroupID),
 //		Content:  msginfo.Content,
-//		ReplyId:  int(msginfo.Id),
+//		ReplyId:  int(msginfo.ID),
 //		Type:     int(msggrpcv1.MessageType_Label),
 //	}
 //
@@ -457,8 +457,8 @@ package service
 //
 //func (s *ServiceImpl) GetGroupLabelMsgList(ctx context.Context, userID string, dialogId uint32) (interface{}, error) {
 //	_, err := s.relationDialogService.GetDialogUserByDialogIDAndUserID(ctx, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		UserId:   userID,
-//		DialogId: dialogId,
+//		ID:   userID,
+//		DialogID: dialogId,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取对话用户失败", zap.Error(err))
@@ -466,7 +466,7 @@ package service
 //	}
 //
 //	msgs, err := s.msgService.GetGroupMsgLabelByDialogId(ctx, &msggrpcv1.GetGroupMsgLabelByDialogIdRequest{
-//		DialogId: dialogId,
+//		DialogID: dialogId,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊消息标注失败", zap.Error(err))
@@ -479,18 +479,18 @@ package service
 //func (s *ServiceImpl) GetGroupMessageList(c *gin.Context, id string, request v1.GetGroupMsgListParams) (interface{}, error) {
 //	//查询对话信息
 //	byId, err := s.relationDialogService.GetDialogById(c, &relationgrpcv1.GetDialogByIdRequest{
-//		DialogId: uint32(request.DialogId),
+//		DialogID: uint32(request.DialogID),
 //	})
 //	if err != nil {
 //		return nil, err
 //	}
 //
-//	if byId.GroupId == 0 {
+//	if byId.GroupID == 0 {
 //		return nil, code.MsgErrGetGroupMsgListFailed
 //	}
 //
 //	_, err = s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
-//		Gid: byId.GroupId,
+//		Gid: byId.GroupID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊信息失败", zap.Error(err))
@@ -498,8 +498,8 @@ package service
 //	}
 //
 //	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
-//		GroupId: byId.GroupId,
-//		UserId:  id,
+//		GroupID: byId.GroupID,
+//		ID:  id,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -507,8 +507,8 @@ package service
 //	}
 //
 //	msg, err := s.msgService.GetGroupMessageList(c, &msggrpcv1.GetGroupMsgListRequest{
-//		DialogId: uint32(request.DialogId),
-//		UserId:   request.UserId,
+//		DialogID: uint32(request.DialogID),
+//		ID:   request.ID,
 //		Content:  request.Content,
 //		Type:     int32(request.Type),
 //		PageNum:  int32(request.PageNum),
@@ -530,8 +530,8 @@ package service
 //		isRead := 0
 //		//查询是否已读
 //		msgRead, err := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
-//			MsgId:  v.Id,
-//			UserId: request.UserId,
+//			MsgId:  v.ID,
+//			ID: request.ID,
 //		})
 //		if err != nil {
 //			s.logger.Error("获取群聊消息是否已读失败", zap.Error(err))
@@ -543,15 +543,15 @@ package service
 //
 //		//查询信息
 //		info, err := s.userService.UserInfo(c, &usergrpcv1.UserInfoRequest{
-//			UserId: v.UserId,
+//			ID: v.ID,
 //		})
 //		if err != nil {
 //			return nil, err
 //		}
 //
 //		sendRelation, err := s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
-//			GroupId: byId.GroupId,
-//			UserId:  v.UserId,
+//			GroupID: byId.GroupID,
+//			ID:  v.ID,
 //		})
 //		if err != nil {
 //			s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -576,23 +576,23 @@ package service
 //			isAtAll = true
 //		}
 //		msgList = append(msgList, v1.GroupMessage{
-//			MsgId:     int(v.Id),
+//			MsgId:     int(v.ID),
 //			Content:   v.Content,
-//			GroupId:   int(v.GroupId),
+//			GroupID:   int(v.GroupID),
 //			Type:      int(v.Type),
 //			SendAt:    int(v.CreatedAt),
-//			DialogId:  int(v.DialogId),
+//			DialogID:  int(v.DialogID),
 //			IsLabel:   isLabel,
 //			ReadCount: int(v.ReadCount),
 //			ReplyId:   int(v.ReplyId),
-//			UserId:    v.UserId,
+//			ID:    v.ID,
 //			AtUsers:   v.AtUsers,
 //			ReadAt:    ReadAt,
 //			IsRead:    isReadFlag,
 //			AtAllUser: isAtAll,
 //			SenderInfo: &v1.SenderInfo{
 //				Name:   name,
-//				UserId: info.UserId,
+//				ID: info.ID,
 //				Avatar: info.Avatar,
 //			},
 //		})
@@ -604,7 +604,7 @@ package service
 //
 //func (s *ServiceImpl) SetGroupMessagesRead(c context.Context, uid string, driverId string, request *v1.GroupMessageReadRequest) (interface{}, error) {
 //	dialog, err := s.relationDialogService.GetDialogById(c, &relationgrpcv1.GetDialogByIdRequest{
-//		DialogId: uint32(request.DialogId),
+//		DialogID: uint32(request.DialogID),
 //	})
 //	if err != nil {
 //		s.logger.Error("获取对话失败", zap.Error(err))
@@ -612,18 +612,18 @@ package service
 //	}
 //
 //	info, err := s.userService.UserInfo(c, &usergrpcv1.UserInfoRequest{
-//		UserId: uid,
+//		ID: uid,
 //	})
 //	if err != nil {
 //		return nil, err
 //	}
 //
-//	if dialog.Type != uint32(relationgrpcv1.DialogType_GROUP_DIALOG) && dialog.GroupId == 0 {
+//	if dialog.Type != uint32(relationgrpcv1.DialogType_GROUP_DIALOG) && dialog.GroupID == 0 {
 //		return nil, code.DialogErrTypeNotSupport
 //	}
 //
 //	_, err = s.groupService.GetGroupInfoByGid(c, &groupApi.GetGroupInfoRequest{
-//		Gid: dialog.GroupId,
+//		Gid: dialog.GroupID,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊信息失败", zap.Error(err))
@@ -631,8 +631,8 @@ package service
 //	}
 //
 //	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
-//		GroupId: dialog.GroupId,
-//		UserId:  uid,
+//		GroupID: dialog.GroupID,
+//		ID:  uid,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -640,8 +640,8 @@ package service
 //	}
 //
 //	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		UserId:   uid,
-//		DialogId: uint32(request.DialogId),
+//		ID:   uid,
+//		DialogID: uint32(request.DialogID),
 //	})
 //	if err != nil {
 //		return nil, err
@@ -649,8 +649,8 @@ package service
 //
 //	if request.ReadAll {
 //		resp1, err := s.msgService.ReadAllGroupMsg(c, &msggrpcv1.ReadAllGroupMsgRequest{
-//			DialogId: uint32(request.DialogId),
-//			UserId:   uid,
+//			DialogID: uint32(request.DialogID),
+//			ID:   uid,
 //		})
 //		if err != nil {
 //			s.logger.Error("设置群聊消息已读失败", zap.Error(err))
@@ -659,10 +659,10 @@ package service
 //
 //		//给消息发送者推送谁读了消息
 //		for _, v := range resp1.UnreadGroupMessage {
-//			if v.UserId != uid {
+//			if v.ID != uid {
 //				data := map[string]interface{}{"msg_id": v.MsgId, "operator_info": &v1.SenderInfo{
 //					Name:   info.NickName,
-//					UserId: info.UserId,
+//					ID: info.ID,
 //					Avatar: info.Avatar,
 //				}}
 //				bytes, err := utils.StructToBytes(data)
@@ -670,7 +670,7 @@ package service
 //					s.logger.Error("push err:", zap.Error(err))
 //					continue
 //				}
-//				msg := &pushv1.WsMsg{Uid: v.UserId, Event: pushv1.WSEventType_GroupMsgReadEvent, Data: &any.Any{Value: bytes}}
+//				msg := &pushv1.WsMsg{Uid: v.ID, Event: pushv1.WSEventType_GroupMsgReadEvent, Data: &any.Any{Value: bytes}}
 //				bytes2, err := utils.StructToBytes(msg)
 //				if err != nil {
 //					s.logger.Error("push err:", zap.Error(err))
@@ -694,16 +694,16 @@ package service
 //	for _, v := range request.MsgIds {
 //		userId, _ := s.msgGroupService.GetGroupMessageReadByMsgIdAndUserId(c, &msggrpcv1.GetGroupMessageReadByMsgIdAndUserIdRequest{
 //			MsgId:  uint32(v),
-//			UserId: uid,
+//			ID: uid,
 //		})
 //		if userId != nil {
 //			continue
 //		}
 //		msgList = append(msgList, &msggrpcv1.SetGroupMessageReadRequest{
 //			MsgId:    uint32(v),
-//			GroupId:  dialog.GroupId,
-//			DialogId: uint32(request.DialogId),
-//			UserId:   uid,
+//			GroupID:  dialog.GroupID,
+//			DialogID: uint32(request.DialogID),
+//			ID:   uid,
 //			ReadAt:   pkgtime.Now(),
 //		})
 //	}
@@ -724,7 +724,7 @@ package service
 //	}
 //	msgs, err := s.msgService.GetGroupMessagesByIds(c, &msggrpcv1.GetGroupMessagesByIdsRequest{
 //		MsgIds:  ids,
-//		GroupId: dialog.GroupId,
+//		GroupID: dialog.GroupID,
 //	})
 //	if err != nil {
 //		return nil, err
@@ -732,10 +732,10 @@ package service
 //
 //	//给消息发送者推送谁读了消息
 //	for _, message := range msgs.GroupMessages {
-//		if message.UserId != uid {
-//			s.SendMsg(message.UserId, driverId, pushv1.WSEventType_GroupMsgReadEvent, map[string]interface{}{"msg_id": message.Id, "operator_info": &v1.SenderInfo{
+//		if message.ID != uid {
+//			s.SendMsg(message.ID, driverId, pushv1.WSEventType_GroupMsgReadEvent, map[string]interface{}{"msg_id": message.ID, "operator_info": &v1.SenderInfo{
 //				Name:   info.NickName,
-//				UserId: info.UserId,
+//				ID: info.ID,
 //				Avatar: info.Avatar,
 //			}}, false)
 //		}
@@ -754,8 +754,8 @@ package service
 //	}
 //
 //	_, err = s.relationGroupService.GetGroupRelation(c, &relationgrpcv1.GetGroupRelationRequest{
-//		GroupId: groupId,
-//		UserId:  userId,
+//		GroupID: groupId,
+//		ID:  userId,
 //	})
 //	if err != nil {
 //		s.logger.Error("获取群聊关系失败", zap.Error(err))
@@ -763,8 +763,8 @@ package service
 //	}
 //
 //	_, err = s.relationDialogService.GetDialogUserByDialogIDAndUserID(c, &relationgrpcv1.GetDialogUserByDialogIDAndUserIdRequest{
-//		UserId:   userId,
-//		DialogId: dialogId,
+//		ID:   userId,
+//		DialogID: dialogId,
 //	})
 //	if err != nil {
 //		return nil, err
@@ -772,8 +772,8 @@ package service
 //
 //	us, err := s.msgGroupService.GetGroupMessageReaders(c, &msggrpcv1.GetGroupMessageReadersRequest{
 //		MsgId:    msgId,
-//		GroupId:  groupId,
-//		DialogId: dialogId,
+//		GroupID:  groupId,
+//		DialogID: dialogId,
 //	})
 //	if err != nil {
 //		return nil, err
@@ -790,9 +790,9 @@ package service
 //	if len(us.UserIds) == len(info.Users) {
 //		for _, v := range us.UserIds {
 //			for _, v6 := range info.Users {
-//				if v == v6.UserId {
+//				if v == v6.ID {
 //					response = append(response, v1.GetGroupMessageReadersResponse{
-//						UserId: v6.UserId,
+//						ID: v6.ID,
 //						Avatar: v6.Avatar,
 //						Name:   v6.NickName,
 //					})

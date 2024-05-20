@@ -139,7 +139,7 @@ type UserLoginResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"nickname"
 	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"email"
@@ -343,7 +343,7 @@ type UserRegisterResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *UserRegisterResponse) Reset() {
@@ -391,7 +391,7 @@ type UserInfoRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *UserInfoRequest) Reset() {
@@ -439,7 +439,7 @@ type UserInfoResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"nickname"
 	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"email"
@@ -702,7 +702,7 @@ type UserRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *UserRequest) Reset() {
@@ -798,7 +798,7 @@ type SetPublicKeyRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"public_key"
 	PublicKey string `protobuf:"bytes,2,opt,name=PublicKey,proto3" json:"public_key"`
 }
@@ -855,7 +855,7 @@ type UserResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *UserResponse) Reset() {
@@ -903,7 +903,7 @@ type ModifyUserPasswordRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"password"
 	Password string `protobuf:"bytes,2,opt,name=Password,proto3" json:"password"`
 }
@@ -960,7 +960,7 @@ type User struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"nickname"
 	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"email"
@@ -1071,7 +1071,7 @@ type GetUserPasswordByUserIdResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"password"
 	Password string `protobuf:"bytes,2,opt,name=Password,proto3" json:"password"`
 }
@@ -1128,7 +1128,7 @@ type SetUserSecretBundleRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"secret_bundle"
 	SecretBundle string `protobuf:"bytes,2,opt,name=SecretBundle,proto3" json:"secret_bundle"`
 }
@@ -1185,7 +1185,7 @@ type SetUserSecretBundleResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *SetUserSecretBundleResponse) Reset() {
@@ -1233,7 +1233,7 @@ type GetUserSecretBundleRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *GetUserSecretBundleRequest) Reset() {
@@ -1281,7 +1281,7 @@ type GetUserSecretBundleResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"secret_bundle"
 	SecretBundle string `protobuf:"bytes,2,opt,name=SecretBundle,proto3" json:"secret_bundle"`
 }
@@ -1338,7 +1338,7 @@ type CreateUserRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 	// @inject_tag: json:"nickname"
 	NickName string `protobuf:"bytes,2,opt,name=NickName,proto3" json:"nickname"`
 	// @inject_tag: json:"email"
@@ -1449,7 +1449,7 @@ type CreateUserResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *CreateUserResponse) Reset() {
@@ -1497,7 +1497,7 @@ type CreateUserRollbackRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserId string `protobuf:"bytes,1,opt,name=UserId,proto3" json:"user_id"`
+	UserId string `protobuf:"bytes,1,opt,name=ID,proto3" json:"user_id"`
 }
 
 func (x *CreateUserRollbackRequest) Reset() {

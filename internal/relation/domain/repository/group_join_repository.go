@@ -14,7 +14,7 @@ type GroupJoinRequestQuery struct {
 	Force    bool
 }
 
-type GroupJoinRequestRepository interface {
+type GroupRequestRepository interface {
 	Get(ctx context.Context, id uint32) (*entity.GroupJoinRequest, error)
 	Create(ctx context.Context, entity *entity.GroupJoinRequest) (*entity.GroupJoinRequest, error)
 	Find(ctx context.Context, query *GroupJoinRequestQuery) ([]*entity.GroupJoinRequest, error)

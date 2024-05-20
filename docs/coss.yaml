@@ -1,0 +1,4099 @@
+components:
+    requestBodies:
+        CreateGroupRequest:
+            content:
+                application/json:
+                    schema:
+                        oneOf:
+                            - $ref: '#/components/schemas/CreateGroupRequest'
+                            - $ref: '#/components/schemas/EncryptTrueTypePrivate'
+        UpdateGroupRequest:
+            content:
+                application/json:
+                    schema:
+                        oneOf:
+                            - $ref: '#/components/schemas/UpdateGroupRequest'
+                            - $ref: '#/components/schemas/EncryptTrueTypePrivate'
+    schemas:
+        AbortUploadRequest:
+            properties:
+                key:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                upload_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        AfterMsg:
+            properties:
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        Black:
+            properties:
+                avatar:
+                    description: 用户头像
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                coss_id:
+                    description: coss_id
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                nickname:
+                    description: 用户昵称
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                user_id:
+                    description: 用户ID
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        Blacklist:
+            properties:
+                list:
+                    description: 用户请求列表
+                    items:
+                        $ref: '#/components/schemas/Black'
+                    type: array
+                total:
+                    description: 请求总数
+                    format: int64
+                    type: integer
+            required:
+                - list
+                - total
+                - page
+            type: object
+        CompleteUploadRequest:
+            properties:
+                file_name:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                key:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                type:
+                    description: 文件类型(0:音频，1:图片，2:文件，3:视频)
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                upload_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        CreateGroupRequest:
+            properties:
+                avatar:
+                    description: 群组头像
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                encrypt:
+                    description: 是否开启加密，只有当群聊为私密群才能开启
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                join_approve:
+                    description: 入群审批
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                member:
+                    description: 群组成员列表
+                    items:
+                        type: string
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                name:
+                    description: 群组名称
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                type:
+                    description: 群组类型 0(私密群) 1(公开群)
+                    enum:
+                        - 0
+                        - 1
+                    format: uint
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+            required:
+                - name
+                - type
+            type: object
+        CreateGroupResponse:
+            properties:
+                avatar:
+                    description: 群组头像
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                creator_id:
+                    description: 创建者ID
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                dialog_id:
+                    description: 对话ID
+                    format: uint32
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                id:
+                    description: 群聊ID
+                    format: uint32
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                max_members_limit:
+                    description: 群组成员上限
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                name:
+                    description: 群聊名称
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                status:
+                    description: 群组状态
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                type:
+                    description: 群组类型
+                    format: uint32
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        CreateRoomRequest:
+            properties:
+                group_id:
+                    description: 群组ID
+                    format: uint32
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                if:
+                    properties:
+                        type:
+                            enum:
+                                - group
+                member:
+                    description: ID of the user who will receive the call
+                    items:
+                        type: string
+                    maxItems: 255
+                    minItems: 0
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                option:
+                    $ref: '#/components/schemas/RoomOption'
+                then:
+                    required:
+                        - group_id
+                type:
+                    description: 通话类型
+                    enum:
+                        - user
+                        - group
+                    example: user
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+            required:
+                - type
+                - member
+            type: object
+        CreateRoomResponse:
+            properties:
+                room:
+                    description: 房间ID
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                timeout:
+                    description: 通话超时时间(单位：s)
+                    format: int
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                url:
+                    description: webRtc服务器地址
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        DeleteGroupRequest:
+            properties:
+                id:
+                    description: 要删除的群组ID
+                    format: uint32
+                    type: integer
+            required:
+                - id
+            type: object
+        EditGroupMsgRequest:
+            properties:
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        EditUserMsgRequest:
+            properties:
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        EncryptTrueTypePrivate:
+            allOf:
+                - $ref: '#/components/schemas/UpdateGroupRequest'
+                - properties:
+                    encrypt:
+                        enum:
+                            - true
+                    type:
+                        enum:
+                            - 1
+        FriendRequest:
+            properties:
+                create_at:
+                    description: 好友请求的创建时间戳
+                    format: int64
+                    type: integer
+                expired_at:
+                    description: 好友请求的过期时间戳
+                    format: int64
+                    type: integer
+                id:
+                    description: 好友请求记录的唯一标识符
+                    format: uint32
+                    type: integer
+                recipient_id:
+                    description: 接收者的唯一标识符
+                    type: string
+                recipient_info:
+                    $ref: '#/components/schemas/FriendRequestUserInfo'
+                    description: 接收者的用户信息
+                remark:
+                    description: 好友请求备注
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                sender_id:
+                    description: 发送者的唯一标识符
+                    type: string
+                sender_info:
+                    $ref: '#/components/schemas/FriendRequestUserInfo'
+                    description: 发送者的用户信息
+                status:
+                    description: 好友请求的状态 (0=申请中, 1=已通过, 2=被拒绝)
+                    type: integer
+            required:
+                - id
+                - sender_id
+                - recipient_id
+                - status
+                - create_at
+                - expired_at
+            type: object
+        FriendRequestUserInfo:
+            properties:
+                avatar:
+                    description: 用户头像
+                    type: string
+                coss_id:
+                    description: coss_id
+                    type: string
+                nickname:
+                    description: 用户昵称
+                    type: string
+                user_id:
+                    description: 用户ID
+                    type: string
+            required:
+                - user_id
+                - coss_id
+                - nickname
+                - avatar
+            type: object
+        GetDialogAfterMsgListResponse:
+            properties:
+                msg_list:
+                    items:
+                        $ref: '#/components/schemas/GetDialogAfterMsgResponse'
+                    type: array
+            type: object
+        GetDialogAfterMsgRequest:
+            properties:
+                msg_list:
+                    $ref: '#/components/schemas/AfterMsg'
+            type: object
+        GetDialogAfterMsgResponse:
+            properties:
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                messages:
+                    items:
+                        $ref: '#/components/schemas/Message'
+                    type: array
+                total:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GetGroupLabelMsgListResponse:
+            properties:
+                list:
+                    items:
+                        $ref: '#/components/schemas/Message'
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        GetGroupMessageReadersResponse:
+            properties:
+                avatar:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                name:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GetGroupMsgListResponse:
+            properties:
+                current_page:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                group_messages:
+                    items:
+                        $ref: '#/components/schemas/GroupMessage'
+                    type: array
+                total:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GetMultipartUploadKeyResponse:
+            properties:
+                key:
+                    description: 文件唯一key
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                type:
+                    description: 文件类型
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                upload_id:
+                    description: 上传id
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GetUserDialogListResponse:
+            properties:
+                current_page:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                list:
+                    items:
+                        $ref: '#/components/schemas/UserDialogListResponse'
+                    type: array
+                    x-omitempty: false
+                total:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GetUserLabelMsgListResponse:
+            properties:
+                list:
+                    items:
+                        $ref: '#/components/schemas/Message'
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        GetUserMsgListResponse:
+            properties:
+                current_page:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                total:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_messages:
+                    items:
+                        $ref: '#/components/schemas/UserMessage'
+                    type: array
+            type: object
+        Group:
+            properties:
+                avatar:
+                    description: 群组头像
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                id:
+                    description: 群聊ID
+                    format: uint32
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                max_members_limit:
+                    description: 群组成员上限
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                member:
+                    description: 群聊成员数量
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                name:
+                    description: 群聊名称
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GroupAnnouncement:
+            description: 群组公告
+            properties:
+                content:
+                    description: 公告内容
+                    type: string
+                create_at:
+                    description: 创建时间
+                    format: int64
+                    type: integer
+                group_id:
+                    description: 群组ID
+                    format: uint32
+                    type: integer
+                id:
+                    description: 公告ID
+                    format: uint32
+                    type: integer
+                operator_info:
+                    $ref: '#/components/schemas/ShortUserInfo'
+                read_user_list:
+                    items:
+                        $ref: '#/components/schemas/GroupAnnouncementReadUser'
+                    type: array
+                title:
+                    description: 公告标题
+                    type: string
+                update_at:
+                    description: 更新时间
+                    format: int64
+                    type: integer
+            required:
+                - id
+                - group_id
+                - title
+                - content
+                - create_at
+                - update_at
+                - operator_info
+                - read_user_list
+            type: object
+        GroupAnnouncementList:
+            description: 群组公告列表
+            properties:
+                list:
+                    items:
+                        $ref: '#/components/schemas/GroupAnnouncement'
+                    type: array
+                total:
+                    description: 总数量
+                    format: uint32
+                    type: integer
+            required:
+                - list
+                - total
+            type: object
+        GroupAnnouncementReadUser:
+            description: 群组公告阅读用户
+            properties:
+                announcement_id:
+                    description: 公告ID
+                    format: uint32
+                    type: integer
+                group_id:
+                    description: 群组ID
+                    format: uint32
+                    type: integer
+                id:
+                    description: 公告ID
+                    format: uint32
+                    type: integer
+                read_at:
+                    description: 阅读时间
+                    format: int64
+                    type: integer
+                reader_info:
+                    $ref: '#/components/schemas/ShortUserInfo'
+                user_id:
+                    description: 用户ID
+                    type: string
+            required:
+                - id
+                - group_id
+                - announcement_id
+                - read_at
+                - user_id
+            type: object
+        GroupAnnouncementReaderList:
+            description: 群组公告阅读者列表
+            properties:
+                list:
+                    items:
+                        $ref: '#/components/schemas/GroupAnnouncementReadUser'
+                    type: array
+                total:
+                    format: uint32
+                    type: integer
+            required:
+                - list
+                - total
+            type: object
+        GroupInfo:
+            properties:
+                avatar:
+                    description: 群组头像
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                creator_id:
+                    description: 创建者ID
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                dialog_id:
+                    description: 对话ID
+                    format: uint32
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                encrypt:
+                    description: 是否开启加密，只有当群聊为私密群才能开启
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                id:
+                    description: 群聊ID
+                    format: uint32
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                join_approve:
+                    description: 入群审批
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                max_members_limit:
+                    description: 群组成员上限
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                name:
+                    description: 群聊名称
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                preferences:
+                    $ref: '#/components/schemas/Preferences'
+                silence_time:
+                    description: 群禁言结束时间，不为0表示开启群聊全员禁言
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                status:
+                    description: 群组状态
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                type:
+                    description: 群组类型
+                    format: uint8
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        GroupList:
+            properties:
+                list:
+                    additionalProperties:
+                        items:
+                            $ref: '#/components/schemas/GroupInfo'
+                            type: object
+                        type: array
+                    type: object
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                total:
+                    description: 总数
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GroupMember:
+            properties:
+                avatar:
+                    description: Avatar URL
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                identity:
+                    description: Group relation identity (0=user 1=admin 2=owner)
+                    enum:
+                        - 0
+                        - 1
+                        - 2
+                    format: uint8
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                nickname:
+                    description: Nickname
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                remark:
+                    description: Remark
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    description: User ID
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GroupMemberList:
+            properties:
+                list:
+                    items:
+                        $ref: '#/components/schemas/GroupMember'
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        GroupMessage:
+            properties:
+                at_all_user:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                at_users:
+                    items:
+                        type: string
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                group_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_burn_after_reading_type:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_label:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_read:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                read_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                read_count:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                reply_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                send_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                sender_info:
+                    $ref: '#/components/schemas/SenderInfo'
+                type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GroupMessageReadRequest:
+            properties:
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_ids:
+                    items:
+                        type: integer
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                read_all:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        GroupRequest:
+            properties:
+                create_at:
+                    description: Created At
+                    format: int64
+                    type: integer
+                creator_id:
+                    description: Creator ID
+                    nullable: true
+                    type: string
+                expired_at:
+                    description: Expired At
+                    format: int64
+                    type: integer
+                group_avatar:
+                    description: Group Avatar
+                    type: string
+                group_id:
+                    description: Group ID
+                    format: uint32
+                    type: integer
+                group_name:
+                    description: Group Name
+                    type: string
+                group_type:
+                    description: Group Type （0=公开群 1=私密群）
+                    enum:
+                        - 0
+                        - 1
+                    format: uint8
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                id:
+                    description: Request ID
+                    format: uint32
+                    type: integer
+                receiver_info:
+                    $ref: '#/components/schemas/ShortUserInfo'
+                    description: Receiver Info
+                remark:
+                    description: Remark
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                sender_info:
+                    $ref: '#/components/schemas/ShortUserInfo'
+                    description: Sender Info
+                status:
+                    $ref: '#/components/schemas/GroupRequestStatus'
+                    description: Request Status
+            type: object
+        GroupRequestList:
+            properties:
+                list:
+                    items:
+                        $ref: '#/components/schemas/GroupRequest'
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        GroupRequestStatus:
+            description: Request Status (0=Pending, 1=Accepted, 2=Rejected)
+            enum:
+                - 0
+                - 1
+                - 2
+            type: integer
+            x-go-type-skip-optional-pointer: true
+            x-omitempty: false
+        JoinRoomRequest:
+            properties:
+                option:
+                    $ref: '#/components/schemas/RoomOption'
+            type: object
+        JoinRoomResponse:
+            properties:
+                token:
+                    description: 加入通话的token
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                url:
+                    description: webRtc服务器地址
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        LabelGroupMessageRequest:
+            properties:
+                is_label:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        LabelUserMessageRequest:
+            properties:
+                is_label:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        LoginRequest:
+            example:
+                driver_id: abc123
+                driver_token: xyz456
+                email: user@example.com
+                password: password123
+                platform: ios
+            properties:
+                driver_id:
+                    description: 当前登录设备的唯一标识符
+                    type: string
+                driver_token:
+                    description: 当前设备的设备token 用于推送手机端的系统通知
+                    type: string
+                email:
+                    description: 用户的电子邮件地址
+                    type: string
+                password:
+                    description: 用户密码
+                    type: string
+                platform:
+                    description: 用户登录的平台(ios、android、web、huawei...)
+                    type: string
+            required:
+                - email
+                - password
+                - driver_id
+                - driver_token
+                - platform
+            type: object
+        Message:
+            properties:
+                at_all_user:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                at_users:
+                    items:
+                        type: string
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                group_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_burn_after_reading:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_label:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_read:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                read_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                receiver_info:
+                    $ref: '#/components/schemas/SenderInfo'
+                reply_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                send_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                sender_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                sender_info:
+                    $ref: '#/components/schemas/SenderInfo'
+            type: object
+            x-omitempty: false
+        MsgListRequest:
+            properties:
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                end_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                page_num:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                page_size:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                start_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        ParticipantInfo:
+            properties:
+                identity:
+                    description: User nickname
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_publisher:
+                    description: Whether the participant is the creator
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                joined_at:
+                    description: Join time
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                name:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                state:
+                    description: Room Status
+                    format: int8
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        Preferences:
+            properties:
+                entry_method:
+                    description: 进入方式
+                    format: uint
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                identity:
+                    description: 身份
+                    format: uint
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                inviter:
+                    description: 邀请者
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                joined_at:
+                    description: 加入时间
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                mute_end_time:
+                    description: 静音结束时间
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                open_burn_after_reading:
+                    description: 阅后即焚开启
+                    format: uint
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                remark:
+                    description: 备注
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                silent_notification:
+                    description: 静默通知
+                    format: uint
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        ReadUserMsgsRequest:
+            properties:
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_ids:
+                    items:
+                        type: integer
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                read_all:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        Response:
+            properties:
+                code:
+                    description: 响应码
+                    example: 200
+                    type: integer
+                data:
+                    description: 响应数据
+                    example: null
+                    nullable: true
+                    type: object
+                msg:
+                    description: 响应消息
+                    example: 发送成功
+                    type: string
+            type: object
+        Room:
+            properties:
+                duration:
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                participant:
+                    items:
+                        $ref: '#/components/schemas/ParticipantInfo'
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                room:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                start_at:
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                type:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                video_call_record_url:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+            type: object
+        RoomOption:
+            properties:
+                audio_enabled:
+                    description: Whether to enable audio
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                codec:
+                    description: Codec
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                frame_rate:
+                    description: Frame rate
+                    format: int
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                resolution:
+                    description: Resolution
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                video_enabled:
+                    description: Whether to enable video
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+            x-go-type-skip-optional-pointer: true
+            x-omitempty: false
+        SendAllNotificationRequest:
+            properties:
+                content:
+                    description: 通知内容
+                    example: This is a notification
+                    type: string
+            required:
+                - content
+            type: object
+        SendGroupMsgRequest:
+            properties:
+                at_all_user:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                at_users:
+                    items:
+                        type: string
+                    type: array
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                group_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_burn_after_reading:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                reply_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        SendGroupMsgResponse:
+            properties:
+                msg_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                reply_msg:
+                    $ref: '#/components/schemas/Message'
+            type: object
+        SendUserMsgRequest:
+            properties:
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_burn_after_reading:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                receiver_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                reply_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                type:
+                    description: 消息类型 1=文本消息 2=语音消息 3=图片消息 4=标注 5=群公告 6=文件消息 7=视频消息 8=emoji回复 9=语音通话 10=视频通话 11=撤回消息 12=取消标注
+                    enum:
+                        - 1
+                        - 2
+                        - 3
+                        - 4
+                        - 5
+                        - 6
+                        - 7
+                        - 8
+                        - 9
+                        - 10
+                        - 11
+                        - 12
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        SendUserMsgResponse:
+            properties:
+                msg_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                reply_msg:
+                    $ref: '#/components/schemas/Message'
+            type: object
+        SenderInfo:
+            properties:
+                avatar:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                name:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        ShortUserInfo:
+            properties:
+                avatar:
+                    description: Avatar URL
+                    type: string
+                coss_id:
+                    description: coss ID
+                    type: string
+                nickname:
+                    description: Nickname
+                    type: string
+                user_id:
+                    description: User ID
+                    type: string
+            required:
+                - user_id
+                - nickname
+                - avatar
+                - coss_id
+            type: object
+        UpdateGroupRequest:
+            properties:
+                avatar:
+                    description: 新的群聊头像
+                    type: string
+                encrypt:
+                    description: 是否开启加密，只有当群聊为私密群才能开启
+                    type: boolean
+                join_approve:
+                    description: 入群审批
+                    type: boolean
+                name:
+                    description: 新的群聊名称
+                    type: string
+                silence_time:
+                    description: 群禁言结束时间，不为0表示开启群聊全员禁言
+                    format: int64
+                    type: integer
+                type:
+                    description: 群组类型 0(私密群) 1(公开群)
+                    enum:
+                        - 0
+                        - 1
+                    format: uint
+                    type: integer
+            type: object
+        UploadFileResponse:
+            properties:
+                file_id:
+                    description: 文件id
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                url:
+                    description: 文件url
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        UserDialogListResponse:
+            properties:
+                dialog_avatar:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_create_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_name:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_unread_count:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                group_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: true
+                last_message:
+                    $ref: '#/components/schemas/Message'
+                top_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: true
+            type: object
+        UserFriendList:
+            properties:
+                list:
+                    additionalProperties:
+                        items:
+                            $ref: '#/components/schemas/UserInfo'
+                            type: object
+                        type: array
+                    type: object
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                total:
+                    description: 总数
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        UserFriendRequestList:
+            properties:
+                list:
+                    description: 用户请求列表
+                    items:
+                        $ref: '#/components/schemas/FriendRequest'
+                    type: array
+                total:
+                    description: 请求总数
+                    format: int64
+                    type: integer
+            required:
+                - list
+                - total
+                - current_page
+            type: object
+        UserInfo:
+            properties:
+                avatar:
+                    description: 用户头像链接
+                    type: string
+                coss_id:
+                    description: COSS ID
+                    type: string
+                dialog_id:
+                    description: 对话ID
+                    format: uint32
+                    type: integer
+                email:
+                    description: 用户电子邮件
+                    type: string
+                nickname:
+                    description: 用户昵称
+                    type: string
+                preferences:
+                    $ref: '#/components/schemas/Preferences'
+                relation_status:
+                    description: 用户关系状态 0=陌生人 1=好友 2=拉黑 3=删除
+                    enum:
+                        - 0
+                        - 1
+                        - 2
+                        - 3
+                    type: integer
+                signature:
+                    description: 用户签名
+                    type: string
+                status:
+                    description: 用户状态
+                    type: integer
+                tel:
+                    description: 用户电话号码
+                    type: string
+                user_id:
+                    description: 用户ID
+                    type: string
+            required:
+                - user_id
+                - nickname
+                - email
+                - tel
+                - avatar
+                - signature
+                - status
+                - dialog_id
+                - coss_id
+                - relation_status
+                - preferences
+            type: object
+        UserLoginClient:
+            properties:
+                client_ip:
+                    description: 客户端ip
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                driver_id:
+                    description: 设备id
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                driver_type:
+                    description: 设备类型
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                login_at:
+                    description: 登录时间
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        UserMessage:
+            properties:
+                burn_after_reading_timeout:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                content:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                dialog_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_burn_after_reading_type:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_label:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                is_read:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                msg_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                read_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                receiver_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                receiver_info:
+                    $ref: '#/components/schemas/SenderInfo'
+                reply_id:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                send_at:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                sender_id:
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                sender_info:
+                    $ref: '#/components/schemas/SenderInfo'
+                type:
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        UserSecretBundle:
+            properties:
+                secret_bundle:
+                    description: 用户密钥包
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    description: 用户id
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
+        UserStatus:
+            enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+            type: integer
+    securitySchemes:
+        BearerAuth:
+            bearerFormat: JWT
+            scheme: bearer
+            type: http
+info:
+    description: 用户服务 API 提供用户认证、注册、个人资料管理等功能。
+    title: 用户服务 API
+    version: 1.0.0
+openapi: 3.0.3
+paths:
+    /api/v1/group:
+        get:
+            description: 获取系统中所有群聊的信息列表
+            operationId: getAllGroup
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/Group'
+                                type: array
+                    description: 返回所有群聊信息
+            security:
+                - BearerAuth: []
+            summary: 获取所有群聊信息
+            tags:
+                - group
+        post:
+            description: 创建一个新的群聊
+            operationId: createGroup
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateGroupRequest'
+                description: 创建一个新的群聊
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateGroupResponse'
+                    description: 成功创建群聊
+            security:
+                - BearerAuth: []
+            summary: 创建群聊
+            tags:
+                - group
+    /api/v1/group/{id}:
+        delete:
+            description: 删除系统中指定的群聊
+            operationId: deleteGroup
+            parameters:
+                - description: 要删除的群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    description: 成功删除群聊
+            security:
+                - BearerAuth: []
+            summary: 删除群聊
+            tags:
+                - group
+        get:
+            description: 根据群聊ID获取群聊的详细信息
+            operationId: getGroup
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/GroupInfo'
+                                type: array
+                    description: 返回群聊信息
+            security:
+                - BearerAuth: []
+            summary: 获取群聊信息
+            tags:
+                - group
+        parameters:
+            - description: 群聊ID
+              in: path
+              name: id
+              required: true
+              schema:
+                format: uint32
+                type: integer
+        put:
+            description: 更新现有群聊的信息
+            operationId: updateGroup
+            parameters:
+                - description: 要更新的群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateGroupRequest'
+                description: 更新现有群聊的信息
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GroupInfo'
+                    description: 成功更新群聊信息
+            security:
+                - BearerAuth: []
+            summary: 更新群聊信息
+            tags:
+                - group
+    /api/v1/group/search:
+        get:
+            description: 根据关键字搜索群聊
+            operationId: searchGroup
+            parameters:
+                - description: 搜索关键字 群聊名称或id
+                  in: query
+                  name: keyword
+                  required: true
+                  schema:
+                    type: string
+                - description: 页码
+                  in: query
+                  name: page
+                  required: false
+                  schema:
+                    format: int32
+                    type: integer
+                - description: 每页大小
+                  in: query
+                  name: page_size
+                  required: false
+                  schema:
+                    format: int32
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/Group'
+                                type: array
+                    description: 返回搜索结果
+            security:
+                - BearerAuth: []
+            summary: 搜索群聊
+            tags:
+                - group
+    /api/v1/live:
+        post:
+            description: 创建通话
+            operationId: createRoom
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateRoomRequest'
+                description: 请求体参数
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CreateRoomResponse'
+                    description: 创建通话成功
+            security:
+                - bearerAuth: []
+            summary: 创建通话
+            tags:
+                - live
+    /api/v1/live/{id}:
+        delete:
+            description: 用户退出当前通话
+            operationId: deleteRoom
+            parameters:
+                - description: 要退出的通话房间ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: 成功退出通话
+            security:
+                - bearerAuth: []
+            summary: 删除通话
+            tags:
+                - live
+        get:
+            description: 获取通话房间信息
+            operationId: getRoom
+            parameters:
+                - description: 要退出的通话房间ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Room'
+                    description: 获取通话信息成功
+            security:
+                - bearerAuth: []
+            summary: 获取通话房间信息
+            tags:
+                - live
+    /api/v1/live/{id}/join:
+        post:
+            description: 加入已存在的通话房间
+            operationId: joinRoom
+            parameters:
+                - description: 要加入的通话房间ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/JoinRoomRequest'
+                description: 请求体参数
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/JoinRoomResponse'
+                    description: 成功加入通话
+            security:
+                - bearerAuth: []
+            summary: 加入通话
+            tags:
+                - live
+    /api/v1/live/{id}/reject:
+        post:
+            description: 拒绝加入通话
+            operationId: rejectRoom
+            parameters:
+                - description: 要拒绝的通话房间ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 成功拒绝通话
+            security:
+                - bearerAuth: []
+            summary: 拒绝通话
+            tags:
+                - live
+    /api/v1/live/group/{groupId}:
+        get:
+            description: 获取群聊当前通话房间信息
+            operationId: getGroupRoom
+            parameters:
+                - description: 群组ID
+                  in: path
+                  name: groupId
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Room'
+                    description: 获取群聊当前通话信息成功
+            security:
+                - bearerAuth: []
+            summary: 获取群聊当前通话房间信息
+            tags:
+                - live
+    /api/v1/live/user:
+        get:
+            description: 获取用户当前通话房间信息
+            operationId: getUserRoom
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Room'
+                    description: 获取用户当前通话信息成功
+            security:
+                - bearerAuth: []
+            summary: 获取用户当前通话房间信息
+            tags:
+                - live
+    /api/v1/msg/dialog/after:
+        post:
+            operationId: GetAfterMsgs
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            items:
+                                $ref: '#/components/schemas/AfterMsg'
+                            type: array
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetDialogAfterMsgResponse'
+                    description: 操作成功
+            summary: 获取指定对话中延迟的消息
+            tags:
+                - msg
+    /api/v1/msg/dialog/group/{dialog_id}/label:
+        get:
+            operationId: GetGroupLabelMsgList
+            parameters:
+                - in: path
+                  name: dialog_id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetGroupLabelMsgListResponse'
+                    description: 操作成功
+            summary: 获取群组标记消息列表
+            tags:
+                - msg
+    /api/v1/msg/dialog/list:
+        get:
+            operationId: GetUserDialogList
+            parameters:
+                - in: query
+                  name: page_num
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: page_size
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetUserDialogListResponse'
+                    description: 操作成功
+            summary: 获取用户对话列表
+            tags:
+                - msg
+    /api/v1/msg/dialog/user/{dialog_id}/label:
+        get:
+            operationId: GetUserLabelMsgList
+            parameters:
+                - in: path
+                  name: dialog_id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetUserLabelMsgListResponse'
+                    description: 操作成功
+            summary: 获取用户标记消息列表
+            tags:
+                - msg
+    /api/v1/msg/group/{id}:
+        delete:
+            operationId: RecallGroupMsg
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 撤回群组消息
+            tags:
+                - msg
+        put:
+            operationId: EditGroupMsg
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EditGroupMsgRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 编辑群组消息
+            tags:
+                - msg
+    /api/v1/msg/group/{id}/label:
+        post:
+            operationId: LabelGroupMsg
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LabelGroupMessageRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 标记群组消息
+            tags:
+                - msg
+    /api/v1/msg/group/{id}/read:
+        get:
+            operationId: GetGroupMessageReaders
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: dialog_id
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: group_id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/GetGroupMessageReadersResponse'
+                                type: array
+                    description: 操作成功
+            summary: 获取群组消息阅读者
+            tags:
+                - msg
+    /api/v1/msg/group/list:
+        get:
+            operationId: GetGroupMsgList
+            parameters:
+                - in: query
+                  name: dialog_id
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: msg_id
+                  schema:
+                    type: integer
+                - in: query
+                  name: user_id
+                  schema:
+                    type: string
+                - in: query
+                  name: type
+                  schema:
+                    type: integer
+                - in: query
+                  name: content
+                  schema:
+                    type: string
+                - in: query
+                  name: page_num
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: page_size
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetGroupMsgListResponse'
+                    description: 获取成功
+            summary: 获取群组消息列表
+            tags:
+                - msg
+    /api/v1/msg/group/read:
+        put:
+            operationId: GroupMessageRead
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/GroupMessageReadRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 设置群组消息已读
+            tags:
+                - msg
+    /api/v1/msg/group/send:
+        post:
+            operationId: SendGroupMsg
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SendGroupMsgRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SendGroupMsgResponse'
+                    description: 操作成功
+            summary: 发送群组消息
+            tags:
+                - msg
+    /api/v1/msg/user/{id}:
+        delete:
+            operationId: RecallUserMsg
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 撤回用户消息
+            tags:
+                - msg
+        put:
+            operationId: EditUserMsg
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EditUserMsgRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 编辑用户消息
+            tags:
+                - msg
+    /api/v1/msg/user/{id}/label:
+        post:
+            operationId: LabelUserMsg
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LabelUserMessageRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 标记用户消息
+            tags:
+                - msg
+    /api/v1/msg/user/list:
+        get:
+            operationId: GetUserMsgList
+            parameters:
+                - in: query
+                  name: dialog_id
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: type
+                  schema:
+                    type: integer
+                - in: query
+                  name: user_id
+                  schema:
+                    type: string
+                - in: query
+                  name: content
+                  schema:
+                    type: string
+                - in: query
+                  name: msg_id
+                  schema:
+                    type: integer
+                - in: query
+                  name: page_num
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: page_size
+                  required: true
+                  schema:
+                    type: integer
+                - in: query
+                  name: start_at
+                  schema:
+                    type: integer
+                - in: query
+                  name: end_at
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetUserMsgListResponse'
+                    description: 获取成功
+            summary: 获取私信列表
+            tags:
+                - msg
+    /api/v1/msg/user/read:
+        put:
+            operationId: ReadUserMsgs
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ReadUserMsgsRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 操作成功
+            summary: 设置用户消息已读
+            tags:
+                - msg
+    /api/v1/msg/user/send:
+        post:
+            operationId: SendUserMsg
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SendUserMsgRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SendUserMsgResponse'
+                    description: 操作成功
+            summary: 发送私信
+            tags:
+                - msg
+    /api/v1/relation/dialog/{id}/show:
+        post:
+            description: 显示对话出现消息列表
+            operationId: showDialog
+            parameters:
+                - description: 对话id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                show:
+                                    description: 是否显示
+                                    type: boolean
+                            required:
+                                - show
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 显示对话在消息列表成功
+            security:
+                - BearerAuth: []
+            summary: 显示对话出现消息列表
+            tags:
+                - relation/dialog
+    /api/v1/relation/dialog/{id}/top:
+        post:
+            description: 置顶对话
+            operationId: topDialog
+            parameters:
+                - description: 对话id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                top:
+                                    description: 是否置顶
+                                    type: boolean
+                            required:
+                                - top
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 置顶对话成功
+            security:
+                - BearerAuth: []
+            summary: 置顶对话
+            tags:
+                - relation/dialog
+    /api/v1/relation/group:
+        get:
+            description: 获取群聊列表
+            operationId: listGroup
+            parameters:
+                - description: 页码
+                  in: query
+                  name: page_num
+                  schema:
+                    default: 1
+                    type: integer
+                - description: 页大小
+                  in: query
+                  name: page_size
+                  schema:
+                    default: 10
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GroupList'
+                    description: 获取群聊列表成功
+            security:
+                - BearerAuth: []
+            summary: 获取群聊列表
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}:
+        delete:
+            description: 退出群聊
+            operationId: quitGroup
+            parameters:
+                - description: 群聊id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    description: 退出群聊成功
+            security:
+                - BearerAuth: []
+            summary: 退出群聊
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/admin:
+        post:
+            description: 添加群聊管理员
+            operationId: addGroupAdmin
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                user_ids:
+                                    description: 用户ID列表
+                                    items:
+                                        type: string
+                                    maxItems: 255
+                                    minItems: 1
+                                    type: array
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 添加群聊管理员成功
+            security:
+                - BearerAuth: []
+            summary: 添加群聊管理员
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/announcement:
+        get:
+            description: 获取群聊公告
+            operationId: listGroupAnnouncement
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GroupAnnouncementList'
+                                type: object
+                    description: 获取群聊公告成功
+            security:
+                - BearerAuth: []
+            summary: 获取群聊公告
+            tags:
+                - relation/group
+        post:
+            description: 添加群聊公告
+            operationId: addGroupAnnouncement
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                content:
+                                    description: 公告内容
+                                    maxLength: 1000
+                                    type: string
+                                title:
+                                    description: 公告标题
+                                    maxLength: 100
+                                    type: string
+                            required:
+                                - title
+                                - content
+                            type: object
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GroupAnnouncement'
+                    description: 添加群聊公告成功
+            security:
+                - BearerAuth: []
+            summary: 添加群聊公告
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/announcement/{aid}:
+        delete:
+            description: 删除群聊公告
+            operationId: deleteGroupAnnouncement
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+                - description: 群聊公告ID
+                  in: path
+                  name: aid
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    description: 删除群聊公告成功
+            security:
+                - BearerAuth: []
+            summary: 删除群聊公告
+            tags:
+                - relation/group
+        get:
+            description: 获取群聊公告
+            operationId: getGroupAnnouncement
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+                - description: 群聊公告ID
+                  in: path
+                  name: aid
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GroupAnnouncement'
+                                type: object
+                    description: 获取群聊公告成功
+            security:
+                - BearerAuth: []
+            summary: 获取群聊公告
+            tags:
+                - relation/group
+        put:
+            description: 修改群聊公告
+            operationId: updateGroupAnnouncement
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+                - description: 群聊公告ID
+                  in: path
+                  name: aid
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                content:
+                                    description: 公告内容
+                                    maxLength: 1000
+                                    type: string
+                                title:
+                                    description: 公告标题
+                                    maxLength: 100
+                                    type: string
+                            required:
+                                - title
+                                - content
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 修改群聊公告成功
+            security:
+                - BearerAuth: []
+            summary: 修改群聊公告
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/announcement/{aid}/read:
+        post:
+            description: 设置群聊公告已读
+            operationId: setGroupAnnouncementRead
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+                - description: 群聊公告ID
+                  in: path
+                  name: aid
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    description: 设置群聊公告已读成功
+            security:
+                - BearerAuth: []
+            summary: 设置群聊公告已读
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/announcement/{aid}/reader:
+        post:
+            description: 获取群聊公告已读列表
+            operationId: listGroupAnnouncementRead
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+                - description: 群聊公告ID
+                  in: path
+                  name: aid
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GroupAnnouncementReaderList'
+                                type: object
+                    description: 获取群聊公告已读列表
+            security:
+                - BearerAuth: []
+            summary: 获取群聊公告已读列表
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/invite:
+        post:
+            description: 邀请加入群聊
+            operationId: inviteJoinGroup
+            parameters:
+                - description: 群聊id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                member:
+                                    items:
+                                        type: string
+                                    type: array
+                            required:
+                                - member
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 邀请加入群聊请求发送成功
+            security:
+                - BearerAuth: []
+            summary: 邀请加入群聊
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/member:
+        delete:
+            description: 移除群聊成员
+            operationId: removeGroupMember
+            parameters:
+                - description: 群聊id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                member:
+                                    items:
+                                        description: 群成员id
+                                        type: string
+                                    maxItems: 255
+                                    minItems: 1
+                                    type: array
+                            required:
+                                - member
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 移除群聊成员成功
+            security:
+                - BearerAuth: []
+            summary: 移除群聊成员
+            tags:
+                - relation/group
+        get:
+            description: 获取群成员列表
+            operationId: listGroupMember
+            parameters:
+                - description: 群聊id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GroupMemberList'
+                    description: 获取群聊成员列表成功
+            security:
+                - BearerAuth: []
+            summary: 获取群成员列表
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/remark:
+        put:
+            description: 设置自己在群聊内的昵称
+            operationId: setGroupRemark
+            parameters:
+                - description: 群聊id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                remark:
+                                    description: 群聊昵称
+                                    maxLength: 32
+                                    minLength: 1
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 设置群聊昵称成功
+            security:
+                - BearerAuth: []
+            summary: 设置自己在群聊内的昵称
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/request:
+        post:
+            description: 添加群聊申请
+            operationId: addGroupRequest
+            parameters:
+                - description: 群聊id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                remark:
+                                    description: 群聊申请备注信息
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 添加群聊申请成功
+            security:
+                - BearerAuth: []
+            summary: 添加群聊申请
+            tags:
+                - relation/group
+    /api/v1/relation/group/{id}/silent:
+        post:
+            description: 设置群聊静默通知
+            operationId: setGroupSilent
+            parameters:
+                - description: 群聊ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                silent:
+                                    description: 是否静默通知
+                                    type: boolean
+                            required:
+                                - silent
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 设置群聊静默通知成功
+            security:
+                - BearerAuth: []
+            summary: 设置群聊静默通知
+            tags:
+                - relation/group
+    /api/v1/relation/group/request:
+        get:
+            description: 获取群聊申请列表
+            operationId: listGroupRequest
+            parameters:
+                - description: 页码
+                  in: query
+                  name: page_num
+                  schema:
+                    default: 1
+                    type: integer
+                - description: 页大小
+                  in: query
+                  name: page_size
+                  schema:
+                    default: 10
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/GroupRequestList'
+                                type: array
+                    description: 获取群聊申请列表成功
+            security:
+                - BearerAuth: []
+            summary: 获取群聊申请列表
+            tags:
+                - relation/group
+    /api/v1/relation/group/request/{id}:
+        delete:
+            description: 删除群聊申请记录
+            operationId: deleteGroupRequest
+            parameters:
+                - description: 申请记录id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    description: 删除群聊申请记录成功
+            security:
+                - BearerAuth: []
+            summary: 删除群聊申请记录
+            tags:
+                - relation/group
+        put:
+            description: 管理群聊请求
+            operationId: manageGroupRequest
+            parameters:
+                - description: 申请记录id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                action:
+                                    description: 0:拒绝 1:同意
+                                    enum:
+                                        - 0
+                                        - 1
+                                    type: integer
+                            required:
+                                - action
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 管理群聊请求成功
+            security:
+                - BearerAuth: []
+            summary: 管理群聊请求
+            tags:
+                - relation/group
+    /api/v1/relation/user/{id}/e2e_key:
+        post:
+            description: 交换用户端到端公钥
+            operationId: exchangeE2EKey
+            parameters:
+                - description: 用户ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                public_key:
+                                    description: 用户端到端公钥
+                                    type: string
+                            required:
+                                - public_key
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 好友备注设置成功
+            security:
+                - BearerAuth: []
+            summary: 交换用户端到端公钥
+            tags:
+                - relation/user
+    /api/v1/relation/user/blacklist:
+        get:
+            description: 获取黑名单中的用户列表
+            operationId: blacklist
+            parameters:
+                - description: 页码
+                  in: query
+                  name: page_num
+                  schema:
+                    default: 1
+                    type: integer
+                - description: 页大小
+                  in: query
+                  name: page_size
+                  schema:
+                    default: 10
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Blacklist'
+                    description: 黑名单中的用户列表
+            security:
+                - BearerAuth: []
+            summary: 获取黑名单
+            tags:
+                - relation/user
+        post:
+            description: 将用户添加到黑名单
+            operationId: addBlacklist
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                user_id:
+                                    description: 要添加的黑名单的用户ID
+                                    type: string
+                            required:
+                                - user_id
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 用户成功添加到黑名单
+            security:
+                - BearerAuth: []
+            summary: 添加到黑名单
+            tags:
+                - relation/user
+    /api/v1/relation/user/blacklist/{id}:
+        delete:
+            description: 从黑名单中移除用户
+            operationId: deleteBlacklist
+            parameters:
+                - description: 要从黑名单中移除的用户的ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: 用户成功从黑名单中移除
+                "404":
+                    description: 在黑名单中找不到用户
+            security:
+                - BearerAuth: []
+            summary: 从黑名单中移除
+            tags:
+                - relation/user
+    /api/v1/relation/user/friend:
+        get:
+            description: 获取用户的好友列表
+            operationId: listFriend
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/UserFriendList'
+                                type: array
+                    description: 好友列表
+            security:
+                - BearerAuth: []
+            summary: 获取好友列表
+            tags:
+                - relation/user
+        post:
+            description: 将用户添加到好友列表
+            operationId: addFriend
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                e2e_public_key:
+                                    description: 用户端加密公钥
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                                remark:
+                                    description: 发送好友申请备注
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                                user_id:
+                                    description: 要添加的好友的ID
+                                    example: 1234567890
+                                    type: string
+                            required:
+                                - user_id
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 添加好友成功
+            security:
+                - BearerAuth: []
+            summary: 添加好友
+            tags:
+                - relation/user
+    /api/v1/relation/user/friend/{id}:
+        delete:
+            description: 删除好友
+            operationId: deleteFriend
+            parameters:
+                - description: 要删除好友的id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: 删除好友成功
+            security:
+                - BearerAuth: []
+            summary: 删除好友
+            tags:
+                - relation/user
+    /api/v1/relation/user/friend/{id}/burn:
+        post:
+            description: 设置用户阅后即焚
+            operationId: setUserBurn
+            parameters:
+                - description: 用户ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                burn:
+                                    description: 是否阅后即焚
+                                    type: boolean
+                                timeout:
+                                    description: 阅后即焚时间 (单位秒)
+                                    format: uint32
+                                    type: integer
+                                    x-go-type-skip-optional-pointer: true
+                            required:
+                                - burn
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 设置用户阅后即焚成功
+            security:
+                - BearerAuth: []
+            summary: 设置用户阅后即焚
+            tags:
+                - relation/user
+    /api/v1/relation/user/friend/{id}/remark:
+        post:
+            description: 设置好友备注
+            operationId: setUserRemark
+            parameters:
+                - description: 用户ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                remark:
+                                    description: 好友备注
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 好友备注设置成功
+            security:
+                - BearerAuth: []
+            summary: 设置好友备注
+            tags:
+                - relation/user
+    /api/v1/relation/user/friend/{id}/silent:
+        post:
+            description: 设置好友静默通知
+            operationId: setUserSilent
+            parameters:
+                - description: 用户ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                silent:
+                                    description: 是否静默通知
+                                    type: boolean
+                            required:
+                                - silent
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 用户静默通知设置成功
+            security:
+                - BearerAuth: []
+            summary: 设置好友静默通知
+            tags:
+                - relation/user
+    /api/v1/relation/user/friend_request:
+        get:
+            description: 获取用户的好友请求列表
+            operationId: listFriendRequest
+            parameters:
+                - description: 页码
+                  in: query
+                  name: page_num
+                  schema:
+                    default: 1
+                    type: integer
+                - description: 页大小
+                  in: query
+                  name: page_size
+                  schema:
+                    default: 10
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserFriendRequestList'
+                    description: 获取好友列表成功
+            security:
+                - BearerAuth: []
+            summary: 获取好友请求列表
+            tags:
+                - relation/user
+    /api/v1/relation/user/friend_request/{id}:
+        delete:
+            description: 根据记录id删除好友申请
+            operationId: deleteFriendRequest
+            parameters:
+                - description: 好友请求记录id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            responses:
+                "200":
+                    description: 删除好友成功
+                "404":
+                    description: 找不到好友
+            security:
+                - BearerAuth: []
+            summary: 删除好友申请
+            tags:
+                - relation/user
+        put:
+            description: 接受或拒绝好友请求
+            operationId: manageFriendRequest
+            parameters:
+                - description: 好友请求记录id
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uint32
+                    type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                action:
+                                    description: 操作类型 0=拒绝好友请求 1=接受好友请求
+                                    enum:
+                                        - 0
+                                        - 1
+                                    type: integer
+                                    x-enum-varnames:
+                                        - RejectFriendRequest
+                                        - AcceptFriendRequest
+                                e2e_public_key:
+                                    description: null
+                                    type: string
+                            required:
+                                - action
+                            type: object
+                required: true
+            responses:
+                "200":
+                    description: 成功管理好友关系
+                "404":
+                    description: 找不到好友
+            security:
+                - BearerAuth: []
+            summary: 管理好友请求
+            tags:
+                - relation/user
+    /api/v1/storage/files:
+        post:
+            description: 上传文件
+            operationId: upload
+            requestBody:
+                content:
+                    multipart/form-data:
+                        schema:
+                            properties:
+                                file:
+                                    description: 文件
+                                    format: binary
+                                    type: string
+                                type:
+                                    description: 文件类型(0:音频，1:图片，2:文件，3:视频)
+                                    type: integer
+                            required:
+                                - file
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UploadFileResponse'
+                    description: 上传成功
+            security:
+                - BearerAuth: []
+            summary: 上传文件
+            tags:
+                - storage
+    /api/v1/storage/files/{id}:
+        delete:
+            description: 删除文件
+            operationId: deleteFile
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 删除成功
+            summary: 删除文件
+            tags:
+                - storage
+        get:
+            description: 获取文件信息
+            operationId: getFileInfo
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 获取成功
+            summary: 获取文件信息
+            tags:
+                - storage
+    /api/v1/storage/files/download/{type}/{id}:
+        get:
+            description: 下载文件
+            operationId: download
+            parameters:
+                - in: path
+                  name: type
+                  required: true
+                  schema:
+                    type: string
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 文件下载
+            summary: 下载文件
+            tags:
+                - storage
+    /api/v1/storage/files/multipart/abort:
+        post:
+            description: 清除文件分片
+            operationId: abortUploadMultipart
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AbortUploadRequest'
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 清理成功
+            summary: 清除文件分片(用于中断上传)
+            tags:
+                - storage
+    /api/v1/storage/files/multipart/complete:
+        post:
+            description: 完成分片上传
+            operationId: completeUploadMultipart
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CompleteUploadRequest'
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 上传成功
+            summary: 完成分片上传
+            tags:
+                - storage
+    /api/v1/storage/files/multipart/key:
+        get:
+            description: 生成分片上传id
+            operationId: getMultipartKey
+            parameters:
+                - in: query
+                  name: file_name
+                  required: true
+                  schema:
+                    type: string
+                - in: query
+                  name: type
+                  schema:
+                    description: 文件类型(0:音频，1:图片，2:文件，3:视频)
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GetMultipartUploadKeyResponse'
+                    description: 获取成功
+            summary: 生成分片上传id
+            tags:
+                - storage
+    /api/v1/storage/files/multipart/upload:
+        post:
+            description: 上传分片
+            operationId: uploadMultipart
+            requestBody:
+                content:
+                    multipart/form-data:
+                        schema:
+                            properties:
+                                file:
+                                    description: 本次分片
+                                    format: binary
+                                    type: string
+                                key:
+                                    description: 文件唯一key
+                                    type: string
+                                part_number:
+                                    description: 本次分片序号
+                                    type: integer
+                                upload_id:
+                                    description: 上传id
+                                    type: string
+                            type: object
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 分片上传成功
+            summary: 上传分片
+            tags:
+                - storage
+    /api/v1/user:
+        put:
+            description: 修改用户信息
+            operationId: updateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                avatar:
+                                    description: 用户头像
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                                coss_id:
+                                    description: null
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                                nickname:
+                                    description: 用户昵称
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                                signature:
+                                    description: 个性签名
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                                tel:
+                                    description: 手机号
+                                    format: phone
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                            type: object
+                description: null
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserInfo'
+                    description: 修改用户信息成功
+            security:
+                - BearerAuth: []
+            summary: 修改用户信息
+            tags:
+                - user
+    /api/v1/user/{id}:
+        get:
+            description: 获取用户信息
+            operationId: getUser
+            parameters:
+                - description: 用户ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserInfo'
+                    description: 获取用户信息成功
+            security:
+                - BearerAuth: []
+            summary: 获取用户信息
+            tags:
+                - user
+    /api/v1/user/{id}/bundle:
+        get:
+            description: 获取用户密钥包
+            operationId: getUserBundle
+            parameters:
+                - description: 用户ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserSecretBundle'
+                    description: 获取用户密钥包成功
+            security:
+                - BearerAuth: []
+            summary: 获取用户密钥包
+            tags:
+                - user
+    /api/v1/user/activate:
+        get:
+            description: 用户激活
+            operationId: userActivate
+            parameters:
+                - description: 用户ID
+                  in: query
+                  name: user_id
+                  required: true
+                  schema:
+                    type: string
+                - description: 激活密钥
+                  in: query
+                  name: key
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    user_id:
+                                        description: 用户id
+                                        type: string
+                                    user_info:
+                                        $ref: '#/components/schemas/UserInfo'
+                                type: object
+                    description: 登录成功
+            summary: 用户激活
+            tags:
+                - user
+    /api/v1/user/avatar:
+        put:
+            description: 修改用户头像
+            operationId: updateUserAvatar
+            requestBody:
+                content:
+                    multipart/form-data:
+                        schema:
+                            properties:
+                                file:
+                                    format: binary
+                                    type: string
+                            type: object
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                    description: 修改用户头像成功
+            security:
+                - BearerAuth: []
+            summary: 修改用户头像
+            tags:
+                - user
+    /api/v1/user/bundle:
+        put:
+            description: 修改用户密钥包
+            operationId: updateUserBundle
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                secret_bundle:
+                                    description: 用户密钥包
+                                    type: string
+                            required:
+                                - secret_bundle
+                            type: object
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                    description: 修改用户密钥包成功
+            security:
+                - BearerAuth: []
+            summary: 修改用户密钥包
+            tags:
+                - user
+    /api/v1/user/clients:
+        get:
+            description: 获取该用户当前登录的所有客户端
+            operationId: getUserLoginClients
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/UserLoginClient'
+                                type: array
+                    description: 获取该用户当前登录的所有客户端成功
+            security:
+                - BearerAuth: []
+            summary: 获取该用户当前登录的所有客户端
+            tags:
+                - user
+    /api/v1/user/email/verification:
+        post:
+            description: 发送激活邮件
+            operationId: userEmailVerification
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                email:
+                                    format: email
+                                    type: string
+                            required:
+                                - email
+                            type: object
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                    description: 发送激活邮件成功
+            summary: 发送激活邮件
+            tags:
+                - user
+    /api/v1/user/login:
+        post:
+            description: 用户登录认证并生成访问令牌。
+            operationId: userLogin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            example:
+                                driver_id: abc123
+                                driver_token: xyz456
+                                email: user@example.com
+                                password: password123
+                                platform: ios
+                            properties:
+                                driver_id:
+                                    description: 当前登录设备的唯一标识符
+                                    type: string
+                                driver_token:
+                                    description: 当前设备的设备token 用于推送手机端的系统通知
+                                    type: string
+                                email:
+                                    description: 用户的电子邮件地址
+                                    type: string
+                                password:
+                                    description: 用户密码
+                                    type: string
+                                platform:
+                                    description: 用户登录的平台(ios、android、web、huawei...)
+                                    type: string
+                            required:
+                                - email
+                                - password
+                                - driver_id
+                                - driver_token
+                                - platform
+                            type: object
+                description: null
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserInfo'
+                    description: 登录成功
+            summary: 用户登录
+            tags:
+                - user
+    /api/v1/user/logout:
+        post:
+            description: 退出登录
+            operationId: userLogout
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                driver_id:
+                                    type: string
+                            required:
+                                - driver_id
+                            type: object
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                    description: 退出登录成功
+            security:
+                - BearerAuth: []
+            summary: 退出登录
+            tags:
+                - user
+    /api/v1/user/password:
+        put:
+            description: 修改密码
+            operationId: updateUserPassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                confirm_password:
+                                    description: 确认密码
+                                    maxLength: 128
+                                    minLength: 6
+                                    type: string
+                                old_password:
+                                    description: 旧密码
+                                    maxLength: 128
+                                    minLength: 6
+                                    type: string
+                                password:
+                                    description: 新密码
+                                    maxLength: 128
+                                    minLength: 6
+                                    type: string
+                            required:
+                                - old_password
+                                - password
+                                - confirm_password
+                            type: object
+                description: null
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                    description: 修改密码成功
+            security:
+                - BearerAuth: []
+            summary: 修改密码
+            tags:
+                - user
+    /api/v1/user/public_key:
+        post:
+            description: 设置用户pgp公钥
+            operationId: setUserPublicKey
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                public_key:
+                                    type: string
+                            required:
+                                - public_key
+                            type: object
+                required: true
+            responses: null
+            security:
+                - BearerAuth: []
+            summary: 设置用户pgp公钥
+            tags:
+                - user
+        put:
+            description: 重置用户公钥
+            operationId: resetUserPublicKey
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                code:
+                                    type: string
+                                email:
+                                    format: email
+                                    type: string
+                                public_key:
+                                    type: string
+                            required:
+                                - public_key
+                                - code
+                            type: object
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    public_key:
+                                        description: 用户公钥
+                                        type: string
+                                    user_id:
+                                        description: 用户id
+                                        type: string
+                                type: object
+                    description: 重置用户公钥成功
+            security:
+                - BearerAuth: []
+            summary: 重置用户公钥
+            tags:
+                - user
+    /api/v1/user/register:
+        post:
+            description: 用户注册
+            operationId: userRegister
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                confirm_password:
+                                    description: 确认密码
+                                    type: string
+                                email:
+                                    description: 用户邮箱
+                                    format: email
+                                    type: string
+                                nickname:
+                                    description: 用户昵称
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                                password:
+                                    description: 用户密码
+                                    type: string
+                                public_key:
+                                    description: 用户公钥
+                                    type: string
+                                    x-go-type-skip-optional-pointer: true
+                                    x-omitempty: false
+                            required:
+                                - email
+                                - password
+                                - confirm_password
+                            type: object
+                description: 注册请求参数
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    token:
+                                        description: 访问令牌。
+                                        type: string
+                                    user_info:
+                                        $ref: '#/components/schemas/UserInfo'
+                                type: object
+                    description: 登录成功
+            summary: 用户注册
+            tags:
+                - user
+    /api/v1/user/search:
+        get:
+            description: 搜索用户
+            operationId: searchUser
+            parameters:
+                - description: 用户邮箱
+                  in: query
+                  name: email
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserInfo'
+                    description: 搜索用户成功
+            security:
+                - BearerAuth: []
+            summary: 搜索用户
+            tags:
+                - user
+    /api/v1/user/system/public_key:
+        get:
+            description: 获取服务端pgp公钥
+            operationId: getPGPPublicKey
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    public_key:
+                                        description: 用户公钥
+                                        type: string
+                                type: object
+                    description: 获取服务端pgp公钥成功
+            security:
+                - BearerAuth: []
+            summary: 获取服务端pgp公钥
+            tags:
+                - user
+    /notification/send_all:
+        post:
+            description: 发送全体通知
+            operationId: sendAllNotification
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SendAllNotificationRequest'
+                description: request
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 成功响应
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 参数验证失败
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 发送失败
+            summary: 发送全体通知
+            tags:
+                - admin
+servers:
+    - url: http://api.example.com
+tags:
+    - description: Everything about Group
+      externalDocs:
+        description: Find out more
+        url: http://swagger.io
+      name: group
+    - name: Msg
+    - description: Everything about User
+      externalDocs:
+        description: Find out more
+        url: http://swagger.io
+      name: relation
+    - description: Dialog management endpoints
+      name: relation/dialog
+    - description: Group management endpoints
+      name: relation/group
+    - description: User management endpoints
+      name: relation/user
+    - description: Everything about User
+      externalDocs:
+        description: Find out more
+        url: http://swagger.io
+      name: user

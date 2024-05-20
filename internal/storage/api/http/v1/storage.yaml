@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Storage API
+  title: storage API
   description: API for file storage operations
   version: 1.0.0
 paths:
@@ -12,7 +12,7 @@ paths:
       security:
         - BearerAuth: [ ]
       tags:
-        - Storage
+        - storage
       requestBody:
         content:
           multipart/form-data:
@@ -40,7 +40,7 @@ paths:
       description: 下载文件
       operationId: download
       tags:
-        - Storage
+        - storage
       parameters:
         - name: type
           in: path
@@ -65,7 +65,7 @@ paths:
       description: 获取文件信息
       operationId: getFileInfo
       tags:
-        - Storage
+        - storage
       parameters:
         - name: id
           in: path
@@ -84,7 +84,7 @@ paths:
       description: 删除文件
       operationId: deleteFile
       tags:
-        - Storage
+        - storage
       parameters:
         - name: id
           in: path
@@ -104,7 +104,7 @@ paths:
       description: 生成分片上传id
       operationId: getMultipartKey
       tags:
-        - Storage
+        - storage
       parameters:
         - name: file_name
           in: query
@@ -129,7 +129,7 @@ paths:
       operationId: uploadMultipart
       description: 上传分片
       tags:
-        - Storage
+        - storage
       requestBody:
         content:
           multipart/form-data:
@@ -162,7 +162,7 @@ paths:
       description: 完成分片上传
       operationId: completeUploadMultipart
       tags:
-        - Storage
+        - storage
       requestBody:
         content:
           application/json:
@@ -181,7 +181,7 @@ paths:
       operationId: abortUploadMultipart
       description: 清除文件分片
       tags:
-        - Storage
+        - storage
       requestBody:
         content:
           application/json:

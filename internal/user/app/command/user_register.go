@@ -82,10 +82,16 @@ func (h *userRegisterHandler) Handle(ctx context.Context, cmd *UserRegister) (st
 	}
 
 	user, err := h.ud.GetUserWithOpts(ctx, entity.WithEmail(cmd.Email))
-	if err != nil && user != nil {
+	if err != nil {
 		h.logger.Error("get user with email error", zap.Error(err))
+		return "", err
+	}
+
+	if user != nil {
 		return "", code.UserErrEmailAlreadyRegistered
 	}
+
+	fmt.Println("user => ", user)
 
 	password := utils.HashString(cmd.Password)
 
