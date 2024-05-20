@@ -5,6 +5,8 @@ info:
   version: 1.0.0
 #servers:
 #  - url: /api/v1
+tags:
+  - name: Msg
 paths:
   /api/v1/msg/user/send:
     post:

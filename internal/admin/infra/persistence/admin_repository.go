@@ -24,7 +24,7 @@ func (a AdminRepository) InsertAdmin(ctx context.Context, admin *entity.Admin) e
 func (a AdminRepository) InsertAndUpdateAdmin(ctx context.Context, admin *entity.Admin) error {
 	ad := converter.AdminEntityToPO(admin)
 
-	return a.db.Where(po.Admin{UserId: ad.UserId}).Assign(ad).FirstOrCreate(ad).Error
+	return a.db.Where(&po.Admin{UserId: ad.UserId}).Assign(ad).FirstOrCreate(ad).Error
 }
 
 func (a AdminRepository) GetAdminByID(ctx context.Context, id uint) (*entity.Admin, error) {
