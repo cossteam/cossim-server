@@ -61,7 +61,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 
 	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 
-	h.svc = service.NewService(cfg.Dtm.Address, h.logger)
+	h.svc = service.NewService(cfg.Dtm.Addr(), h.logger)
 	err = h.svc.Init(h.db, cfg)
 	if err != nil {
 		return err
@@ -79,6 +79,7 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 	h.authService = authClient
+
 	return nil
 }
 

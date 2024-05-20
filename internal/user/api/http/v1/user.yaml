@@ -419,6 +419,8 @@ paths:
               properties:
                 public_key:
                   type: string
+      responses:
+
     put:
       tags:
         - user
@@ -702,14 +704,14 @@ components:
           type: integer
           x-omitempty: false
           x-go-type-skip-optional-pointer: true
-      UserStatus:
-        type: integer
-        enum:
-          - 0
-          - 1
-          - 2
-          - 3
-          - 4
+    UserStatus:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
     LoginRequest:
       type: object
       properties:

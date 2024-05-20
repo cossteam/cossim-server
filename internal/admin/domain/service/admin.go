@@ -21,10 +21,12 @@ type AdminDomainImpl struct {
 }
 
 func NewAdminDomain(db *gorm.DB, cfg *pkgconfig.AppConfig) AdminDomain {
-	return &AdminDomainImpl{
+	resp := &AdminDomainImpl{
 		db: db,
 		ar: persistence.NewRepositories(db),
 	}
+	resp.ar.Automigrate()
+	return resp
 }
 
 func (a *AdminDomainImpl) GetAdminByID(ctx context.Context, id uint) (*entity.Admin, error) {

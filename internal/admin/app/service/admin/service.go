@@ -70,7 +70,7 @@ func (s *ServiceImpl) HandlerGrpcClient(serviceName string, conn *grpc.ClientCon
 		s.userService = usergrpcv1.NewUserServiceClient(conn)
 		err := s.InitAdmin()
 		if err != nil {
-			return nil
+			return err
 		}
 	case "relation_service":
 		s.relationUserService = relationgrpcv1.NewUserRelationServiceClient(conn)
