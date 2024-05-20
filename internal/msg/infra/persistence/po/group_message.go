@@ -28,6 +28,10 @@ type BaseModel struct {
 	DeletedAt int64 `gorm:"default:0;comment:删除时间" json:"deleted_at"`
 }
 
+func (bm *GroupMessage) TableName() string {
+	return "group_messages"
+}
+
 func (bm *BaseModel) BeforeCreate(tx *gorm.DB) error {
 	now := time.Now()
 	bm.CreatedAt = now

@@ -459,7 +459,7 @@ func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, page
 	}
 
 	//获取最后一条消息
-	//dialogIds, err := s.ud.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+	//dialogIds, err := s.ud.GetLastUserMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
 	//	DialogIds: ids.DialogIds,
 	//})
 	//if err != nil {
@@ -471,12 +471,12 @@ func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, page
 		dids = append(dids, uint(v))
 	}
 
-	userLastMsgs, err := s.ud.GetLastMsgsByDialogIds(ctx, dids)
+	userLastMsgs, err := s.ud.GetLastUserMsgsByDialogIds(ctx, dids)
 	if err != nil {
 		s.logger.Error("获取消息失败", zap.Error(err))
 		return nil, err
 	}
-	groupLastMsgs, err := s.gmd.GetLastMsgsByDialogIds(ctx, dids)
+	groupLastMsgs, err := s.gmd.GetLastGroupMsgsByDialogIds(ctx, dids)
 	if err != nil {
 		s.logger.Error("获取消息失败", zap.Error(err))
 		return nil, err

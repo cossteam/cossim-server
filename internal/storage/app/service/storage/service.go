@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/storage/domain/service"
+	"github.com/cossim/coss-server/internal/storage/infra/persistence"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/storage"
@@ -43,7 +44,13 @@ func NewService(logger *zap.Logger) Service {
 
 func (s *ServiceImpl) Init(db *gorm.DB, cfg *pkgconfig.AppConfig) error {
 	s.ac = cfg
-	s.sd = service.NewStorageDomain(db, cfg)
+	repo := persistence.NewRepositories(db)
+	err := repo.Automigrate()
+	if err != nil {
+		return err
+	}
+
+	s.sd = service.NewStorageDomain(db, cfg, repo)
 	s.sp = setMinIOProvider(cfg)
 	s.downloadURL = "/api/v1/storage/files/download"
 	s.setLoadSystem()

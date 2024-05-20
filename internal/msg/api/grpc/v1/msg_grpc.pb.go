@@ -52,7 +52,7 @@ type MsgServiceClient interface {
 	// //根据群组id获取最后一条消息
 	// rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
 	// //根据对话id获取最后一条消息
-	// rpc GetLastMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
+	// rpc GetLastUserMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
 	// //编辑私聊消息
 	// rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
 	// //撤回私聊消息
@@ -196,7 +196,7 @@ type MsgServiceServer interface {
 	// //根据群组id获取最后一条消息
 	// rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
 	// //根据对话id获取最后一条消息
-	// rpc GetLastMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
+	// rpc GetLastUserMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
 	// //编辑私聊消息
 	// rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
 	// //撤回私聊消息

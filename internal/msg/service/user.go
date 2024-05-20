@@ -425,7 +425,7 @@ package service
 //	}
 //
 //	//获取最后一条消息
-//	dialogIds, err := s.msgService.GetLastMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
+//	dialogIds, err := s.msgService.GetLastUserMsgsByDialogIds(ctx, &msggrpcv1.GetLastMsgsByDialogIdsRequest{
 //		DialogIds: ids.DialogIds,
 //	})
 //	if err != nil {

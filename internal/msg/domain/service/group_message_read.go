@@ -28,12 +28,13 @@ type GroupMsgReadImpl struct {
 	repo *persistence.Repositories
 }
 
-func NewGroupMsgReadDomain(db *gorm.DB, ac *pkgconfig.AppConfig) GroupMsgReadDomain {
-	return &GroupMsgReadImpl{
+func NewGroupMsgReadDomain(db *gorm.DB, ac *pkgconfig.AppConfig, repo *persistence.Repositories) GroupMsgReadDomain {
+	resp := &GroupMsgReadImpl{
 		db:   db,
 		ac:   ac,
-		repo: persistence.NewRepositories(db),
+		repo: repo,
 	}
+	return resp
 }
 
 func (g *GroupMsgReadImpl) SetGroupMessageRead(ctx context.Context, read []*entity.GroupMessageRead) error {

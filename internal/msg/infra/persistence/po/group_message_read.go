@@ -8,3 +8,7 @@ type GroupMessageRead struct {
 	ReadAt   int64  `gorm:"comment:已读时间" json:"read_at"`
 	UserID   string `gorm:"comment:用户ID" json:"user_id"`
 }
+
+func (bm *GroupMessageRead) TableName() string {
+	return "group_message_reads"
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	api "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/domain/service"
+	"github.com/cossim/coss-server/internal/msg/infra/persistence"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/version"
@@ -35,9 +36,11 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	s.umd = service.NewUserMsgDomain(dbConn, cfg)
-	s.gmd = service.NewGroupMsgDomain(dbConn, cfg)
-	s.gmrd = service.NewGroupMsgReadDomain(dbConn, cfg)
+	repo := persistence.NewRepositories(dbConn)
+
+	s.umd = service.NewUserMsgDomain(dbConn, cfg, repo)
+	s.gmd = service.NewGroupMsgDomain(dbConn, cfg, repo)
+	s.gmrd = service.NewGroupMsgReadDomain(dbConn, cfg, repo)
 
 	s.db = dbConn
 	s.ac = cfg

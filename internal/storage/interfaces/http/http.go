@@ -9,6 +9,7 @@ import (
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/db"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
@@ -136,7 +137,7 @@ func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
 }
 
 var (
-	downloadURL     = "/api/v1/storage/files/download"
+	downloadURL     = constants.DownLoadAddress
 	systemEnableSSL bool
 	gatewayAddress  string
 	gatewayPort     string

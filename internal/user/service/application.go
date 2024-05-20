@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/user/app"
 	"github.com/cossim/coss-server/internal/user/app/command"
 	"github.com/cossim/coss-server/internal/user/app/query"
@@ -100,11 +101,6 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 		panic(err)
 	}
 
-	//userService, err := rpc.NewUserGrpc(userAddr)
-	//if err != nil {
-	//	panic(err)
-	//}
-
 	storageProvider, err := minio.NewMinIOStorage(ac.OSS.Addr(), ac.OSS.AccessKey, ac.OSS.SecretKey, ac.OSS.SSL)
 	if err != nil {
 		panic(err)
@@ -118,6 +114,11 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 	}
 
 	smtpService := remote.NewSmtpService(smtpStorage)
+
+	baseUrl := fmt.Sprintf("http://%s:%s", ac.SystemConfig.GatewayAddress, ac.SystemConfig.GatewayPort)
+	if ac.SystemConfig.Ssl {
+		baseUrl = fmt.Sprintf("https://%s", ac.SystemConfig.GatewayAddress)
+	}
 
 	return &app.Application{
 		Commands: app.Commands{
@@ -147,8 +148,7 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 			UserRegister: command.NewUserRegisterHandler(
 				logger,
 				dtmGrpcServer,
-				ac.SystemConfig.GatewayAddress,
-				ac.SystemConfig.Ssl,
+				baseUrl,
 				ac.Email.Enable,
 				userCache,
 				userDomain,

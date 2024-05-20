@@ -20,12 +20,11 @@ type AdminDomainImpl struct {
 	ar *persistence.Repositories
 }
 
-func NewAdminDomain(db *gorm.DB, cfg *pkgconfig.AppConfig) AdminDomain {
+func NewAdminDomain(db *gorm.DB, cfg *pkgconfig.AppConfig, repo *persistence.Repositories) AdminDomain {
 	resp := &AdminDomainImpl{
 		db: db,
-		ar: persistence.NewRepositories(db),
+		ar: repo,
 	}
-	resp.ar.Automigrate()
 	return resp
 }
 
