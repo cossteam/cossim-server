@@ -4,6 +4,7 @@ import (
 	"context"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/msg/domain/service"
+	"github.com/cossim/coss-server/internal/msg/infra/persistence"
 	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
@@ -48,9 +49,14 @@ func NewService(dtmGrpcServer string, logger *zap.Logger) Service {
 }
 
 func (s *ServiceImpl) Init(db *gorm.DB, cfg *pkgconfig.AppConfig) error {
-	s.ud = service.NewUserMsgDomain(db, cfg)
-	s.gmd = service.NewGroupMsgDomain(db, cfg)
-	s.gmrd = service.NewGroupMsgReadDomain(db, cfg)
+	repo := persistence.NewRepositories(db)
+	err := repo.Automigrate()
+	if err != nil {
+		return err
+	}
+	s.ud = service.NewUserMsgDomain(db, cfg, repo)
+	s.gmd = service.NewGroupMsgDomain(db, cfg, repo)
+	s.gmrd = service.NewGroupMsgReadDomain(db, cfg, repo)
 	return nil
 }
 

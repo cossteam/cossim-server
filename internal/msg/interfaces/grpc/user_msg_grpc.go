@@ -545,7 +545,7 @@ func (s *Handler) DeleteUserMessageByIDs(ctx context.Context, request *api.Delet
 //	return resp, nil
 //}
 //
-//func (s *Handler) GetLastMsgsByDialogIds(ctx context.Context, request *v1.GetLastMsgsByDialogIdsRequest) (*v1.GetLastMsgsResponse, error) {
+//func (s *Handler) GetLastUserMsgsByDialogIds(ctx context.Context, request *v1.GetLastMsgsByDialogIdsRequest) (*v1.GetLastMsgsResponse, error) {
 //	resp := &v1.GetLastMsgsResponse{}
 //
 //	//ids := make([]uint, 0)

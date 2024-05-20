@@ -27,7 +27,7 @@ type UserMsgDomain interface {
 	//根据好友id获取最后一条消息
 	GetLastMsgsForUserWithFriends(ctx context.Context, userID string, friendIDs []string) ([]*entity.UserMessage, error)
 	// 根据对话id获取最后一条消息
-	GetLastMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.UserMessage, error)
+	GetLastUserMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.UserMessage, error)
 	// 编辑私聊消息
 	EditUserMessage(ctx context.Context, message *entity.UserMessage) error
 	// 根据对话id与msgId查询msgId之后的私聊消息
@@ -64,12 +64,13 @@ type UserMsgDomainImpl struct {
 	repo *persistence.Repositories
 }
 
-func NewUserMsgDomain(db *gorm.DB, ac *pkgconfig.AppConfig) UserMsgDomain {
-	return &UserMsgDomainImpl{
+func NewUserMsgDomain(db *gorm.DB, ac *pkgconfig.AppConfig, repo *persistence.Repositories) UserMsgDomain {
+	resp := &UserMsgDomainImpl{
 		db:   db,
+		repo: repo,
 		ac:   ac,
-		repo: persistence.NewRepositories(db),
 	}
+	return resp
 }
 
 func (u *UserMsgDomainImpl) SendUserMessage(ctx context.Context, message *entity.UserMessage) (*entity.UserMessage, error) {
@@ -149,7 +150,7 @@ func (u *UserMsgDomainImpl) GetLastMsgsForUserWithFriends(ctx context.Context, u
 	return msgs, nil
 }
 
-func (u *UserMsgDomainImpl) GetLastMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.UserMessage, error) {
+func (u *UserMsgDomainImpl) GetLastUserMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.UserMessage, error) {
 	result2, err := u.repo.Umr.GetLastUserMsgsByDialogIDs(dialogIDs)
 	if err != nil {
 		return nil, status.Error(codes.Code(code.MsgErrGetLastMsgsByDialogIds.Code()), err.Error())

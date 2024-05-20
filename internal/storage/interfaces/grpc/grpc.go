@@ -7,6 +7,7 @@ import (
 	api "github.com/cossim/coss-server/internal/storage/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/storage/domain/entity"
 	"github.com/cossim/coss-server/internal/storage/domain/service"
+	"github.com/cossim/coss-server/internal/storage/infra/persistence"
 	"github.com/cossim/coss-server/pkg/code"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
@@ -40,11 +41,9 @@ func (s *Handler) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	//infra := persistence.NewRepositories(dbConn)
-	//if err = infra.Automigrate(); err != nil {
-	//	return err
-	//}
-	s.fd = service.NewStorageDomain(dbConn, cfg)
+	infra := persistence.NewRepositories(dbConn)
+
+	s.fd = service.NewStorageDomain(dbConn, cfg, infra)
 	s.ac = cfg
 	s.logger = plog.NewDefaultLogger("storage_service", int8(cfg.Log.Level))
 	return nil

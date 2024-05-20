@@ -24,12 +24,13 @@ type StorageDomainImpl struct {
 	repo *persistence.Repositories
 }
 
-func NewStorageDomain(db *gorm.DB, ac *pkgconfig.AppConfig) StorageDomain {
-	return &StorageDomainImpl{
+func NewStorageDomain(db *gorm.DB, ac *pkgconfig.AppConfig, repo *persistence.Repositories) StorageDomain {
+	resp := &StorageDomainImpl{
 		db:   db,
 		ac:   ac,
-		repo: persistence.NewRepositories(db),
+		repo: repo,
 	}
+	return resp
 }
 
 func (s *StorageDomainImpl) Upload(ctx context.Context, file *entity.File) error {

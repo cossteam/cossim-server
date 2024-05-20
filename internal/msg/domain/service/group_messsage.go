@@ -46,7 +46,7 @@ type GroupMsgDomain interface {
 	// 获取群聊未读消息
 	GetGroupUnreadMessages(ctx context.Context, dialogID uint, userID string) ([]*entity.GroupMessage, error)
 	// 根据对话id获取最后一条消息
-	GetLastMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.GroupMessage, error)
+	GetLastGroupMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.GroupMessage, error)
 }
 
 type GroupMsgDomainImpl struct {
@@ -55,12 +55,13 @@ type GroupMsgDomainImpl struct {
 	repo *persistence.Repositories
 }
 
-func NewGroupMsgDomain(db *gorm.DB, ac *pkgconfig.AppConfig) GroupMsgDomain {
-	return &GroupMsgDomainImpl{
+func NewGroupMsgDomain(db *gorm.DB, ac *pkgconfig.AppConfig, repo *persistence.Repositories) GroupMsgDomain {
+	resp := &GroupMsgDomainImpl{
 		db:   db,
 		ac:   ac,
-		repo: persistence.NewRepositories(db),
+		repo: repo,
 	}
+	return resp
 }
 
 func (g GroupMsgDomainImpl) SendGroupMessage(ctx context.Context, msg *entity.GroupMessage) (*entity.GroupMessage, error) {
@@ -228,7 +229,7 @@ func (g GroupMsgDomainImpl) GetGroupUnreadMessages(ctx context.Context, dialogID
 	return msgs, nil
 }
 
-func (g GroupMsgDomainImpl) GetLastMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.GroupMessage, error) {
+func (g GroupMsgDomainImpl) GetLastGroupMsgsByDialogIds(ctx context.Context, dialogIDs []uint) ([]*entity.GroupMessage, error) {
 	ds, err := g.repo.Gmr.GetLastGroupMsgsByDialogIDs(dialogIDs)
 	if err != nil {
 		return nil, err

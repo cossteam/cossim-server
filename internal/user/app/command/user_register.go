@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"github.com/cossim/coss-server/internal/user/cache"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
 	"github.com/cossim/coss-server/internal/user/domain/service"
@@ -11,7 +12,6 @@ import (
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/decorator"
 	"github.com/cossim/coss-server/pkg/utils"
-	httputil "github.com/cossim/coss-server/pkg/utils/http"
 	"github.com/dtm-labs/client/dtmcli"
 	"github.com/dtm-labs/client/workflow"
 	"github.com/google/uuid"
@@ -36,8 +36,7 @@ type UserRegisterHandler decorator.CommandHandler[*UserRegister, string]
 func NewUserRegisterHandler(
 	logger *zap.Logger,
 	dtmGrpcServer string,
-	gatewayAddress string,
-	gatewaySSL bool,
+	baseUrl string,
 	emailEnable bool,
 	userCache cache.UserCache,
 	ud service.UserDomain,
@@ -48,8 +47,7 @@ func NewUserRegisterHandler(
 	return &userRegisterHandler{
 		logger:              logger,
 		dtmGrpcServer:       dtmGrpcServer,
-		gatewayAddress:      gatewayAddress,
-		gatewaySSL:          gatewaySSL,
+		baseUrl:             baseUrl,
 		emailEnable:         emailEnable,
 		userCache:           userCache,
 		ud:                  ud,
@@ -60,12 +58,11 @@ func NewUserRegisterHandler(
 }
 
 type userRegisterHandler struct {
-	logger         *zap.Logger
-	dtmGrpcServer  string
-	gatewayAddress string
-	gatewaySSL     bool
-	emailEnable    bool
-	userCache      cache.UserCache
+	logger        *zap.Logger
+	dtmGrpcServer string
+	baseUrl       string
+	emailEnable   bool
+	userCache     cache.UserCache
 
 	ud                  service.UserDomain
 	relationUserService rpc.RelationUserService
@@ -103,6 +100,8 @@ func (h *userRegisterHandler) Handle(ctx context.Context, cmd *UserRegister) (st
 		return "", err
 	}
 
+	aUrl := fmt.Sprintf("%s/%s", h.baseUrl+constants.DownLoadAddress, avatarUrl)
+
 	// 获取系统通知用户
 	_, err = h.ud.GetUser(ctx, constants.SystemNotification)
 	if err != nil {
@@ -120,7 +119,7 @@ func (h *userRegisterHandler) Handle(ctx context.Context, cmd *UserRegister) (st
 			Email:     cmd.Email,
 			NickName:  cmd.Nickname,
 			Password:  password,
-			Avatar:    avatarUrl,
+			Avatar:    aUrl,
 			PublicKey: cmd.PublicKey,
 		})
 		if err != nil {
@@ -170,19 +169,9 @@ func (h *userRegisterHandler) sendVerificationEmail(ctx context.Context, email, 
 		return err
 	}
 
-	// 构建验证链接
-	url := "http://" + h.gatewayAddress
-	if h.gatewaySSL {
-		nurl, err := httputil.ConvertToHttps(url)
-		if err != nil {
-			return err
-		}
-		url = nurl
-	}
-
 	// 发送邮件
 	subject := "欢迎注册"
-	content := h.smtpService.GenerateEmailVerificationContent(url, userID, emailVerificationCode)
+	content := h.smtpService.GenerateEmailVerificationContent(h.baseUrl, userID, emailVerificationCode)
 	if err := h.smtpService.SendEmail(email, subject, content); err != nil {
 		h.logger.Error("failed to send email", zap.Error(err))
 		return err

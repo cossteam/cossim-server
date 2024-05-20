@@ -14,3 +14,7 @@ type UserMessage struct {
 	IsBurnAfterReading bool   `gorm:"default:0;comment:是否阅后即焚消息" json:"is_burn_after_reading"`
 	ReplyEmoji         string `gorm:"comment:回复时使用的 Emoji" json:"reply_emoji"`
 }
+
+func (bm *UserMessage) TableName() string {
+	return "user_messages"
+}

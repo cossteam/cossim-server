@@ -3,12 +3,14 @@ package admin
 import (
 	"context"
 	"github.com/cossim/coss-server/internal/admin/domain/service"
+	"github.com/cossim/coss-server/internal/admin/infra/persistence"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
 	relationgrpcv1 "github.com/cossim/coss-server/internal/relation/api/grpc/v1"
 	usergrpcv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/cossim/coss-server/pkg/storage/minio"
 	"go.uber.org/zap"
@@ -54,9 +56,15 @@ func NewService(dtmGrpcServer string, logger *zap.Logger) Service {
 }
 
 func (s *ServiceImpl) Init(db *gorm.DB, cfg *pkgconfig.AppConfig) error {
-	s.ad = service.NewAdminDomain(db, cfg)
+	repo := persistence.NewRepositories(db)
+	err := repo.Automigrate()
+	if err != nil {
+		return err
+	}
+
+	s.ad = service.NewAdminDomain(db, cfg, repo)
 	s.ac = cfg
-	s.downloadURL = "/api/v1/storage/files/download"
+	s.downloadURL = constants.DownLoadAddress
 	s.setLoadSystem()
 	s.sp = setMinIOProvider(cfg)
 	return nil
