@@ -5,49 +5,13 @@ import (
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/converter"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/po"
 	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
-
-type UserFriendRequestModel struct {
-	BaseModel
-	SenderID   string `gorm:"comment:发送者id"`
-	ReceiverID string `gorm:"comment:接收者id"`
-	Remark     string `gorm:"comment:添加备注"`
-	OwnerID    string `gorm:"comment:所有者id"`
-	Status     uint8  `gorm:"comment:申请记录状态 (0=申请中 1=已同意 2=已拒绝)"`
-	ExpiredAt  int64  `gorm:"comment:过期时间"`
-}
-
-func (m *UserFriendRequestModel) TableName() string {
-	return "user_friend_requests"
-}
-
-func (m *UserFriendRequestModel) FromEntity(u *entity.UserFriendRequest) error {
-	m.ID = u.ID
-	m.SenderID = u.SenderID
-	m.ReceiverID = u.RecipientID
-	m.Remark = u.Remark
-	m.OwnerID = u.OwnerID
-	m.Status = uint8(u.Status)
-	m.ExpiredAt = u.ExpiredAt
-	return nil
-}
-
-func (m *UserFriendRequestModel) ToEntity() (*entity.UserFriendRequest, error) {
-	return &entity.UserFriendRequest{
-		ID:          m.ID,
-		CreatedAt:   m.CreatedAt,
-		SenderID:    m.SenderID,
-		RecipientID: m.ReceiverID,
-		Remark:      m.Remark,
-		OwnerID:     m.OwnerID,
-		Status:      entity.RequestStatus(m.Status),
-		ExpiredAt:   m.ExpiredAt,
-	}, nil
-}
 
 var _ repository.UserFriendRequestRepository = &MySQLUserFriendRequestRepository{}
 
@@ -69,27 +33,22 @@ func (m *MySQLUserFriendRequestRepository) NewRepository(db *gorm.DB) repository
 }
 
 func (m *MySQLUserFriendRequestRepository) GetByUserIdAndFriendId(ctx context.Context, senderId, receiverId string) (*entity.UserFriendRequest, error) {
-	var model UserFriendRequestModel
+	model := &po.UserFriendRequest{}
 
 	if err := m.db.WithContext(ctx).
 		Where("sender_id = ? AND receiver_id = ? AND status = ? AND deleted_at = 0", senderId, receiverId, entity.Pending).
-		First(&model).Error; err != nil {
+		First(model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, code.NotFound
 		}
 		return nil, err
 	}
 
-	entity, err := model.ToEntity()
-	if err != nil {
-		return nil, err
-	}
-
-	return entity, nil
+	return converter.UserFriendRequestPoToEntity(model), nil
 }
 
 func (m *MySQLUserFriendRequestRepository) UpdateStatus(ctx context.Context, id uint32, status entity.RequestStatus) error {
-	if err := m.db.Model(&UserFriendRequestModel{}).Where("id = ?", id).Update("status", status).Error; err != nil {
+	if err := m.db.Model(&po.UserFriendRequest{}).Where("id = ?", id).Update("status", status).Error; err != nil {
 		return err
 	}
 
@@ -101,44 +60,30 @@ func (m *MySQLUserFriendRequestRepository) UpdateStatus(ctx context.Context, id 
 func (m *MySQLUserFriendRequestRepository) Get(ctx context.Context, id uint32) (*entity.UserFriendRequest, error) {
 	// TODO cache
 
-	var model UserFriendRequestModel
+	model := &po.UserFriendRequest{}
 
-	if err := m.db.WithContext(ctx).Where("id = ? AND deleted_at = 0", id).First(&model).Error; err != nil {
+	if err := m.db.WithContext(ctx).Where("id = ? AND deleted_at = 0", id).First(model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, code.NotFound
 		}
 		return nil, err
 	}
 
-	entity, err := model.ToEntity()
-	if err != nil {
-		return nil, err
-	}
-
-	return entity, nil
+	return converter.UserFriendRequestPoToEntity(model), nil
 }
 
 func (m *MySQLUserFriendRequestRepository) Create(ctx context.Context, entity *entity.UserFriendRequest) (*entity.UserFriendRequest, error) {
-	var model UserFriendRequestModel
-
-	if err := model.FromEntity(entity); err != nil {
-		return nil, err
-	}
+	model := converter.UserFriendRequestEntityToPo(entity)
 
 	if err := m.db.WithContext(ctx).Create(&model).Error; err != nil {
 		return nil, err
 	}
 
-	entity, err := model.ToEntity()
-	if err != nil {
-		return nil, err
-	}
-
-	return entity, nil
+	return converter.UserFriendRequestPoToEntity(model), nil
 }
 
 func (m *MySQLUserFriendRequestRepository) Find(ctx context.Context, query *repository.UserFriendRequestQuery) (*entity.UserFriendRequestList, error) {
-	var userFriendRequests []*UserFriendRequestModel
+	var userFriendRequests []*po.UserFriendRequest
 
 	db := m.db
 	if query.UserID != "" {
@@ -175,18 +120,15 @@ func (m *MySQLUserFriendRequestRepository) Find(ctx context.Context, query *repo
 		Total: totalCount,
 	}
 	for _, model := range userFriendRequests {
-		entity, err := model.ToEntity()
-		if err != nil {
-			return nil, err
-		}
-		ufrs.List = append(ufrs.List, entity)
+		ufrs.List = append(ufrs.List, converter.UserFriendRequestPoToEntity(model))
 	}
 
 	return ufrs, nil
 }
 
 func (m *MySQLUserFriendRequestRepository) Delete(ctx context.Context, id uint32) error {
-	if err := m.db.Model(&UserFriendRequestModel{}).
+	if err := m.db.WithContext(ctx).
+		Model(&po.UserFriendRequest{}).
 		Where("id = ?", id).
 		Update("deleted_at", ptime.Now()).Error; err != nil {
 		return err
@@ -198,7 +140,8 @@ func (m *MySQLUserFriendRequestRepository) Delete(ctx context.Context, id uint32
 }
 
 func (m *MySQLUserFriendRequestRepository) UpdateFields(ctx context.Context, id uint32, fields map[string]interface{}) error {
-	if err := m.db.Model(&UserFriendRequestModel{}).WithContext(ctx).
+	if err := m.db.WithContext(ctx).
+		Model(&po.UserFriendRequest{}).
 		Where("id = ?", id).
 		Unscoped().
 		Updates(fields).Error; err != nil {

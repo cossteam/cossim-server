@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/po"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/db"
 	"gorm.io/gorm"
@@ -82,14 +83,14 @@ func (r *Repositories) TXRepositories(fc func(txr *Repositories) error) error {
 
 func (r *Repositories) Automigrate() error {
 	return r.db.AutoMigrate(
-		&GroupRelationModel{},
-		&UserRelationModel{},
-		&DialogModel{},
-		&DialogUserModel{},
-		&UserFriendRequestModel{},
-		&GroupJoinRequestModel{},
-		&GroupAnnouncementModel{},
-		&GroupAnnouncementReadModel{},
+		&po.GroupRelation{},
+		&po.UserRelation{},
+		&po.Dialog{},
+		&po.DialogUser{},
+		&po.UserFriendRequest{},
+		&po.GroupJoinRequest{},
+		&po.GroupAnnouncement{},
+		&po.GroupAnnouncementRead{},
 	)
 }
 

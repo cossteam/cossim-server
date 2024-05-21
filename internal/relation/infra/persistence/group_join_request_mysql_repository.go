@@ -5,53 +5,12 @@ import (
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/converter"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/po"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
-
-type GroupJoinRequestModel struct {
-	BaseModel
-	GroupID   uint32 `gorm:"comment:群聊id"`
-	InviterAt int64  `gorm:"comment:邀请时间"`
-	ExpiredAt int64  `gorm:"comment:过期时间"`
-	UserID    string `gorm:"comment:被邀请人id"`
-	Inviter   string `gorm:"comment:邀请人ID"`
-	Remark    string `gorm:"comment:邀请备注"`
-	OwnerID   string `gorm:"comment:所有者id"`
-	Status    uint8  `gorm:"comment:申请记录状态 (0=待处理 1=已接受 2=已拒绝 3=邀请)"`
-}
-
-func (m *GroupJoinRequestModel) TableName() string {
-	return "group_join_requests"
-}
-
-func (m *GroupJoinRequestModel) FromEntity(e *entity.GroupJoinRequest) {
-	m.ID = e.ID
-	m.GroupID = e.GroupID
-	m.InviterAt = e.InviterAt
-	m.ExpiredAt = e.ExpiredAt
-	m.UserID = e.UserID
-	m.Inviter = e.Inviter
-	m.Remark = e.Remark
-	m.OwnerID = e.OwnerID
-	m.Status = uint8(e.Status)
-}
-
-func (m *GroupJoinRequestModel) ToEntity() *entity.GroupJoinRequest {
-	e := &entity.GroupJoinRequest{}
-	e.ID = m.ID
-	e.CreatedAt = m.CreatedAt
-	e.InviterAt = m.InviterAt
-	e.ExpiredAt = m.ExpiredAt
-	e.GroupID = m.GroupID
-	e.UserID = m.UserID
-	e.Inviter = m.Inviter
-	e.Remark = m.Remark
-	e.OwnerID = m.OwnerID
-	e.Status = entity.RequestStatus(m.Status)
-	return e
-}
 
 var _ repository.GroupRequestRepository = &MySQLGroupJoinRequestRepository{}
 
@@ -67,42 +26,41 @@ type MySQLGroupJoinRequestRepository struct {
 }
 
 func (m *MySQLGroupJoinRequestRepository) GetByGroupIDAndUserID(ctx context.Context, groupID uint32, userID string) (*entity.GroupJoinRequest, error) {
-	var model GroupJoinRequestModel
+	model := &po.GroupJoinRequest{}
 
 	if err := m.db.WithContext(ctx).
 		Where("group_id = ? AND user_id = ?", groupID, userID).
-		First(&model).Error; err != nil {
+		First(model).Error; err != nil {
 		return nil, err
 	}
 
-	return model.ToEntity(), nil
+	return converter.GroupJoinRequestPoToEntity(model), nil
 }
 
 func (m *MySQLGroupJoinRequestRepository) Get(ctx context.Context, id uint32) (*entity.GroupJoinRequest, error) {
-	var model GroupJoinRequestModel
+	model := &po.GroupJoinRequest{}
 
-	if err := m.db.WithContext(ctx).Where("id = ?", id).First(&model).Error; err != nil {
+	if err := m.db.WithContext(ctx).Where("id = ?", id).First(model).Error; err != nil {
 		return nil, err
 	}
 
-	return model.ToEntity(), nil
+	return converter.GroupJoinRequestPoToEntity(model), nil
 }
 
 func (m *MySQLGroupJoinRequestRepository) Create(ctx context.Context, entity *entity.GroupJoinRequest) (*entity.GroupJoinRequest, error) {
-	var model GroupJoinRequestModel
-	model.FromEntity(entity)
+	model := converter.GroupJoinRequestEntityToPo(entity)
 
-	if err := m.db.WithContext(ctx).Create(&model).Error; err != nil {
+	if err := m.db.WithContext(ctx).Create(model).Error; err != nil {
 		return nil, err
 	}
 
-	return model.ToEntity(), nil
+	return converter.GroupJoinRequestPoToEntity(model), nil
 }
 
 func (m *MySQLGroupJoinRequestRepository) Find(ctx context.Context, query *repository.GroupJoinRequestQuery) ([]*entity.GroupJoinRequest, error) {
-	var models []GroupJoinRequestModel
+	var models []*po.GroupJoinRequest
 
-	db := m.db.Model(&GroupJoinRequestModel{})
+	db := m.db.WithContext(ctx).Model(&po.GroupJoinRequest{})
 
 	if query.ID != nil && len(query.ID) > 0 {
 		db = db.Where("id IN (?)", query.ID)
@@ -130,22 +88,21 @@ func (m *MySQLGroupJoinRequestRepository) Find(ctx context.Context, query *repos
 	var es []*entity.GroupJoinRequest
 
 	for _, model := range models {
-		es = append(es, model.ToEntity())
+		es = append(es, converter.GroupJoinRequestPoToEntity(model))
 	}
 
 	return es, nil
 }
 
 func (m *MySQLGroupJoinRequestRepository) Creates(ctx context.Context, es []*entity.GroupJoinRequest) ([]*entity.GroupJoinRequest, error) {
-	var models []GroupJoinRequestModel
+	var models []*po.GroupJoinRequest
 
 	if len(es) == 0 {
 		return nil, errors.New("entity is empty")
 	}
 
 	for _, e := range es {
-		var model GroupJoinRequestModel
-		model.FromEntity(e)
+		model := converter.GroupJoinRequestEntityToPo(e)
 		models = append(models, model)
 	}
 
@@ -155,18 +112,18 @@ func (m *MySQLGroupJoinRequestRepository) Creates(ctx context.Context, es []*ent
 
 	var res []*entity.GroupJoinRequest
 	for _, model := range models {
-		res = append(res, model.ToEntity())
+		res = append(res, converter.GroupJoinRequestPoToEntity(model))
 	}
 
 	return res, nil
 }
 
 func (m *MySQLGroupJoinRequestRepository) UpdateStatus(ctx context.Context, id uint32, status entity.RequestStatus) error {
-	var model GroupJoinRequestModel
+	model := &po.GroupJoinRequest{}
 	model.Status = uint8(status)
 
 	if err := m.db.WithContext(ctx).
-		Model(&GroupJoinRequestModel{}).
+		Model(&po.GroupJoinRequest{}).
 		Where("id = ?", id).
 		Update("status", model.Status).
 		Error; err != nil {
@@ -179,7 +136,7 @@ func (m *MySQLGroupJoinRequestRepository) UpdateStatus(ctx context.Context, id u
 func (m *MySQLGroupJoinRequestRepository) Delete(ctx context.Context, id uint32) error {
 
 	if err := m.db.WithContext(ctx).
-		Model(&GroupJoinRequestModel{}).
+		Model(&po.GroupJoinRequest{}).
 		Where("id = ?", id).
 		Update("deleted_at", ptime.Now()).
 		Error; err != nil {
