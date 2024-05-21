@@ -78,6 +78,7 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 				logger,
 				userRelationDomain,
 				userService,
+				dialogRelationDomain,
 			),
 			DeleteBlacklist: command.NewDeleteBlacklistHandler(
 				logger,

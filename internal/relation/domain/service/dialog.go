@@ -32,7 +32,10 @@ type dialogRelationDomain struct {
 
 func (d *dialogRelationDomain) TopDialog(ctx context.Context, dialogID uint32, userID string, top bool) error {
 	return d.updateDialogStatus(ctx, dialogID, userID, func(param *repository.UpdateDialogStatusParam) {
-		t := ptime.Now()
+		var t int64
+		if top {
+			t = ptime.Now()
+		}
 		param.TopAt = &t
 	})
 }
