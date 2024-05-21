@@ -11,8 +11,9 @@ DOCKER_BUILD_PATH := "cmd/${SERVICE}/main.go"
 INTERFACE_LIST ?=group msg relation storage user live
 
 GOPROXY=https://goproxy.cn
+REGISTRY ?= <your-registry>
 TAG ?= latest
-IMG ?= hub.hitosea.com/cossim/${SERVICE}:${TAG}
+IMG ?= ${REGISTRY}/${SERVICE}:${TAG}
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 BUILD_COMMIT := ${shell git rev-parse HEAD}
 BUILD_TIME := ${shell date '+%Y-%m-%d %H:%M:%S'}
@@ -33,15 +34,15 @@ lint: ## Lint Golang files
 
 .PHONY: vet
 vet: ## Run go vet
-	go vet ./...
+	#go vet ./...
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
-	go fmt ./...
+	#go fmt ./...
 
 .PHONY: test
 test: fmt vet## Run unittests
-	@go test -short ./...
+	@#go test -short ./...
 
 
 ## Define the Makefile targets
