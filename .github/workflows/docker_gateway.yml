@@ -6,6 +6,8 @@ on:
       - 'releases/**'
       - 'main'
       - 'master'
+    tags:
+      - '**'
     paths:
       - 'pkg/**/*.go'
       - 'cmd/gateway/**.go'
@@ -37,11 +39,16 @@ jobs:
       shell: bash
       run: |
           set -o xtrace
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+          else
+            tag="${IMAGE_TAG:-latest}"
+          fi
           branch="${GITHUB_REF#refs/heads/}"
           timestamp=`TZ="Asia/Shanghai" date +"%Y%m%d%H%M%S"`
           export GO111MODULE=on
           export VERSION="$branch-$timestamp-solo"
           export GOOS=linux
           export ARCH=all
-          export REGISTRY=${{ secrets.REGISTRY }}/cossim
-          make docker-build docker-push gateway TAG=latest REGISTRY=${{ secrets.REGISTRY }}/cossim
+          export REGISTRY=${{ secrets.REGISTRY }}
+          make docker-build docker-push gateway TAG=$tag REGISTRY=${{ secrets.REGISTRY }}
