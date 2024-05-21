@@ -7,6 +7,8 @@ import (
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/converter"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/po"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/constants"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
@@ -14,54 +16,6 @@ import (
 	"log"
 	"reflect"
 )
-
-// UserRelationModel 对应 relation.UserRelation
-type UserRelationModel struct {
-	BaseModel
-	Status                  uint     `gorm:"comment:好友关系状态 (0=拉黑 1=正常 2=删除)"`
-	UserID                  string   `gorm:"type:varchar(64);comment:用户ID"`
-	FriendID                string   `gorm:"type:varchar(64);comment:好友ID"`
-	DialogId                uint32   `gorm:"comment:对话ID"`
-	Remark                  string   `gorm:"type:varchar(255);comment:备注"`
-	Label                   []string `gorm:"type:varchar(255);comment:标签"`
-	SilentNotification      bool     `gorm:"comment:是否开启静默通知"`
-	OpenBurnAfterReading    bool     `gorm:"comment:是否开启阅后即焚消息"`
-	BurnAfterReadingTimeOut int64    `gorm:"default:10;comment:阅后即焚时间"`
-}
-
-func (m *UserRelationModel) TableName() string {
-	return "user_relations"
-}
-
-func (m *UserRelationModel) FromEntity(u *entity.UserRelation) error {
-	m.ID = u.ID
-	m.UserID = u.UserID
-	m.FriendID = u.FriendID
-	m.Status = uint(u.Status)
-	m.DialogId = u.DialogId
-	m.Remark = u.Remark
-	m.Label = u.Label
-	m.SilentNotification = u.SilentNotification
-	m.OpenBurnAfterReading = u.OpenBurnAfterReading
-	m.BurnAfterReadingTimeOut = u.BurnAfterReadingTimeOut
-	return nil
-}
-
-func (m *UserRelationModel) ToEntity() *entity.UserRelation {
-	return &entity.UserRelation{
-		ID:                      m.ID,
-		CreatedAt:               m.CreatedAt,
-		UserID:                  m.UserID,
-		FriendID:                m.FriendID,
-		Status:                  entity.UserRelationStatus(m.Status),
-		DialogId:                m.DialogId,
-		Remark:                  m.Remark,
-		Label:                   m.Label,
-		SilentNotification:      m.SilentNotification,
-		OpenBurnAfterReading:    m.OpenBurnAfterReading,
-		BurnAfterReadingTimeOut: m.BurnAfterReadingTimeOut,
-	}
-}
 
 var _ repository.UserRelationRepository = &MySQLRelationUserRepository{}
 
@@ -78,12 +32,12 @@ type MySQLRelationUserRepository struct {
 }
 
 func (m *MySQLRelationUserRepository) DeleteRollback(ctx context.Context, id uint32) error {
-	var model UserRelationModel
+	model := &po.UserRelation{}
 
 	if err := m.db.WithContext(ctx).
-		Model(&UserRelationModel{}).
+		Model(&po.UserRelation{}).
 		Where("id = ?", id).
-		First(&model).
+		First(model).
 		Update("status", uint(entity.UserStatusNormal)).
 		Update("deleted_at", 0).
 		Error; err != nil {
@@ -95,7 +49,7 @@ func (m *MySQLRelationUserRepository) DeleteRollback(ctx context.Context, id uin
 
 func (m *MySQLRelationUserRepository) RestoreFriendship(ctx context.Context, dialogID uint32, userId, friendId string) error {
 	if err := m.db.WithContext(ctx).
-		Model(&UserRelationModel{}).
+		Model(&po.UserRelation{}).
 		Where("dialog_id = ? AND user_id = ? AND friend_id = ?", dialogID, userId, friendId).
 		Update("status", entity.UserStatusNormal).
 		Update("deleted_at", 0).
@@ -116,7 +70,7 @@ func (m *MySQLRelationUserRepository) RestoreFriendship(ctx context.Context, dia
 }
 
 func (m *MySQLRelationUserRepository) EstablishFriendship(ctx context.Context, dialogID uint32, senderID, receiverID string) error {
-	models := []UserRelationModel{
+	models := []po.UserRelation{
 		{
 			UserID:   senderID,
 			FriendID: receiverID,
@@ -151,7 +105,7 @@ func (m *MySQLRelationUserRepository) EstablishFriendship(ctx context.Context, d
 }
 
 func (m *MySQLRelationUserRepository) UpdateStatus(ctx context.Context, id uint32, status entity.UserRelationStatus) error {
-	var model UserRelationModel
+	model := &po.UserRelation{}
 	var deletedAt int64 = 0
 
 	if status == entity.UserStatusDeleted {
@@ -159,7 +113,7 @@ func (m *MySQLRelationUserRepository) UpdateStatus(ctx context.Context, id uint3
 	}
 
 	if err := m.db.WithContext(ctx).
-		Model(&UserRelationModel{}).
+		Model(&po.UserRelation{}).
 		Where("id = ?", id).
 		First(&model).
 		Update("status", uint(status)).
@@ -184,7 +138,7 @@ func (m *MySQLRelationUserRepository) UpdateStatus(ctx context.Context, id uint3
 }
 
 func (m *MySQLRelationUserRepository) Get(ctx context.Context, userId, friendId string) (*entity.UserRelation, error) {
-	var model UserRelationModel
+	model := &po.UserRelation{}
 
 	if m.cache != nil {
 		e, err := m.cache.GetRelation(ctx, userId, friendId)
@@ -202,9 +156,7 @@ func (m *MySQLRelationUserRepository) Get(ctx context.Context, userId, friendId 
 		return nil, err
 	}
 
-	fmt.Println("model.Status", model.Status)
-
-	e := model.ToEntity()
+	e := converter.UserRelationPoToEntity(model)
 
 	go func() {
 		if m.cache != nil {
@@ -218,27 +170,19 @@ func (m *MySQLRelationUserRepository) Get(ctx context.Context, userId, friendId 
 }
 
 func (m *MySQLRelationUserRepository) Create(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error) {
-	var model UserRelationModel
-
-	if err := model.FromEntity(ur); err != nil {
-		return nil, err
-	}
+	model := converter.UserRelationEntityToPo(ur)
 
 	if err := m.db.Create(&model).Error; err != nil {
 		return nil, err
 	}
 
-	e := model.ToEntity()
+	e := converter.UserRelationPoToEntity(model)
 
 	return e, nil
 }
 
 func (m *MySQLRelationUserRepository) Update(ctx context.Context, ur *entity.UserRelation) (*entity.UserRelation, error) {
-	var model UserRelationModel
-
-	if err := model.FromEntity(ur); err != nil {
-		return nil, err
-	}
+	model := converter.UserRelationEntityToPo(ur)
 
 	userValue := reflect.ValueOf(ur).Elem()
 	for i := 0; i < userValue.NumField(); i++ {
@@ -261,7 +205,7 @@ func (m *MySQLRelationUserRepository) Update(ctx context.Context, ur *entity.Use
 	//	return nil, err
 	//}
 
-	e := model.ToEntity()
+	e := converter.UserRelationPoToEntity(model)
 
 	if m.cache != nil {
 		if err := m.cache.DeleteRelation(ctx, ur.UserID, []string{ur.FriendID}); err != nil {
@@ -277,7 +221,7 @@ func (m *MySQLRelationUserRepository) Update(ctx context.Context, ur *entity.Use
 }
 
 func (m *MySQLRelationUserRepository) Delete(ctx context.Context, userId, friendId string) error {
-	if err := m.db.Model(&UserRelationModel{}).WithContext(ctx).
+	if err := m.db.Model(&po.UserRelation{}).WithContext(ctx).
 		Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).
 		Update("status", entity.UserStatusDeleted).
 		Update("deleted_at", ptime.Now()).Error; err != nil {
@@ -296,10 +240,10 @@ func (m *MySQLRelationUserRepository) Delete(ctx context.Context, userId, friend
 }
 
 func (m *MySQLRelationUserRepository) Find(ctx context.Context, query *repository.UserQuery) ([]*entity.UserRelation, error) {
-	var models []*UserRelationModel
+	var models []*po.UserRelation
 
 	// 构建查询条件
-	db := m.db.WithContext(ctx).Model(&UserRelationModel{})
+	db := m.db.WithContext(ctx).Model(&po.UserRelation{})
 	if query.UserId != "" {
 		db = db.Where("user_id = ?", query.UserId)
 	}
@@ -322,7 +266,8 @@ func (m *MySQLRelationUserRepository) Find(ctx context.Context, query *repositor
 
 	var list []*entity.UserRelation
 	for _, v := range models {
-		list = append(list, v.ToEntity())
+		e := converter.UserRelationPoToEntity(v)
+		list = append(list, e)
 	}
 
 	if m.cache != nil {
@@ -344,7 +289,7 @@ func (m *MySQLRelationUserRepository) Blacklist(ctx context.Context, opts *entit
 		}
 	}
 
-	var relations []*UserRelationModel
+	var relations []*po.UserRelation
 	if err := m.db.WithContext(ctx).Where("user_id = ? AND status = ? AND deleted_at = 0", opts.UserID, entity.UserStatusBlocked).
 		Find(&relations).Error; err != nil {
 		return nil, err
@@ -379,7 +324,7 @@ func (m *MySQLRelationUserRepository) ListFriend(ctx context.Context, userId str
 		}
 	}
 
-	var relations []*UserRelationModel
+	var relations []*po.UserRelation
 	if err := m.db.WithContext(ctx).
 		Where("user_id = ? AND status NOT IN ? AND friend_id NOT IN ? AND deleted_at = 0",
 			userId,
@@ -413,7 +358,7 @@ func (m *MySQLRelationUserRepository) ListFriend(ctx context.Context, userId str
 }
 
 func (m *MySQLRelationUserRepository) UpdateFields(ctx context.Context, id uint32, fields map[string]interface{}) error {
-	if err := m.db.Model(&UserRelationModel{}).WithContext(ctx).
+	if err := m.db.Model(&po.UserRelation{}).WithContext(ctx).
 		Where("id = ?", id).
 		Unscoped().
 		Updates(fields).Error; err != nil {
@@ -424,7 +369,7 @@ func (m *MySQLRelationUserRepository) UpdateFields(ctx context.Context, id uint3
 }
 
 func (m *MySQLRelationUserRepository) SetUserFriendSilentNotification(ctx context.Context, userId, friendId string, silentNotification bool) error {
-	if err := m.db.Model(&UserRelationModel{}).WithContext(ctx).
+	if err := m.db.Model(&po.UserRelation{}).WithContext(ctx).
 		Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).
 		Update("silent_notification", silentNotification).Error; err != nil {
 		return err
@@ -445,7 +390,7 @@ func (m *MySQLRelationUserRepository) SetUserFriendSilentNotification(ctx contex
 }
 
 func (m *MySQLRelationUserRepository) SetUserOpenBurnAfterReading(ctx context.Context, userId, friendId string, openBurnAfterReading bool, burnAfterReadingTimeOut uint32) error {
-	if err := m.db.Model(&UserRelationModel{}).WithContext(ctx).
+	if err := m.db.Model(&po.UserRelation{}).WithContext(ctx).
 		Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).
 		Updates(map[string]interface{}{
 			"open_burn_after_reading":     openBurnAfterReading,
@@ -470,7 +415,7 @@ func (m *MySQLRelationUserRepository) SetUserOpenBurnAfterReading(ctx context.Co
 }
 
 func (m *MySQLRelationUserRepository) SetFriendRemark(ctx context.Context, userId, friendId string, remark string) error {
-	if err := m.db.Model(&UserRelationModel{}).WithContext(ctx).
+	if err := m.db.Model(&po.UserRelation{}).WithContext(ctx).
 		Where("user_id = ? AND friend_id = ? AND deleted_at = 0", userId, friendId).
 		Update("remark", remark).Error; err != nil {
 	}

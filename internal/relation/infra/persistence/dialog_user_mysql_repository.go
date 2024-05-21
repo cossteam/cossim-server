@@ -6,42 +6,12 @@ import (
 	"github.com/cossim/coss-server/internal/relation/cache"
 	"github.com/cossim/coss-server/internal/relation/domain/entity"
 	"github.com/cossim/coss-server/internal/relation/domain/repository"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/converter"
+	"github.com/cossim/coss-server/internal/relation/infra/persistence/po"
 	"github.com/cossim/coss-server/pkg/code"
 	ptime "github.com/cossim/coss-server/pkg/utils/time"
 	"gorm.io/gorm"
 )
-
-type DialogUserModel struct {
-	BaseModel
-	DialogId uint32 `gorm:"default:0;comment:对话ID"`
-	UserId   string `gorm:"default:0;comment:会员ID"`
-	IsShow   bool   `gorm:"default:false;comment:对话是否显示"`
-	TopAt    int64  `gorm:"comment:置顶时间"`
-}
-
-func (m *DialogUserModel) TableName() string {
-	return "dialog_users"
-}
-
-func (m *DialogUserModel) FromEntity(e *entity.DialogUser) error {
-	m.ID = e.ID
-	m.DialogId = e.DialogId
-	m.UserId = e.UserId
-	m.IsShow = e.IsShow
-	m.TopAt = e.TopAt
-	return nil
-}
-
-func (m *DialogUserModel) ToEntity() *entity.DialogUser {
-	return &entity.DialogUser{
-		ID:        m.ID,
-		CreatedAt: m.CreatedAt,
-		DialogId:  m.DialogId,
-		UserId:    m.UserId,
-		IsShow:    m.IsShow,
-		TopAt:     m.TopAt,
-	}
-}
 
 var _ repository.DialogUserRepository = &MySQLDialogUserRepository{}
 
@@ -57,17 +27,17 @@ type MySQLDialogUserRepository struct {
 }
 
 func (m *MySQLDialogUserRepository) GetByDialogIDAndUserID(ctx context.Context, dialogID uint32, userID string) (*entity.DialogUser, error) {
-	var model DialogUserModel
+	model := &po.DialogUser{}
 
 	if err := m.db.WithContext(ctx).
-		Where(&DialogUserModel{DialogId: dialogID, UserId: userID}).
-		First(&model).Error; err != nil {
+		Where(&po.DialogUser{DialogId: dialogID, UserId: userID}).
+		First(model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, code.NotFound
 		}
 	}
 
-	return model.ToEntity(), nil
+	return converter.DialogUserPoToEntity(model), nil
 }
 
 func (m *MySQLDialogUserRepository) UpdateDialogStatus(ctx context.Context, param *repository.UpdateDialogStatusParam) error {
@@ -88,17 +58,18 @@ func (m *MySQLDialogUserRepository) UpdateDialogStatus(ctx context.Context, para
 	if len(fields) == 0 {
 		return nil
 	}
-	return m.db.Model(&DialogUserModel{}).
+	return m.db.WithContext(ctx).
+		Model(&po.DialogUser{}).
 		Where("dialog_id = ?", param.DialogID).
 		Updates(fields).
 		Error
 }
 
 func (m *MySQLDialogUserRepository) Creates(ctx context.Context, dialogID uint32, userIDs []string) ([]*entity.DialogUser, error) {
-	var models []DialogUserModel
+	var models []*po.DialogUser
 
 	for _, userID := range userIDs {
-		models = append(models, DialogUserModel{
+		models = append(models, &po.DialogUser{
 			DialogId: dialogID,
 			UserId:   userID,
 			IsShow:   true,
@@ -113,18 +84,18 @@ func (m *MySQLDialogUserRepository) Creates(ctx context.Context, dialogID uint32
 
 	var dialogUsers []*entity.DialogUser
 	for _, model := range models {
-		dialogUsers = append(dialogUsers, model.ToEntity())
+		dialogUsers = append(dialogUsers, converter.DialogUserPoToEntity(model))
 	}
 
 	return dialogUsers, nil
 }
 
 func (m *MySQLDialogUserRepository) Get(ctx context.Context, id uint32) (*entity.DialogUser, error) {
-	var model DialogUserModel
+	model := &po.DialogUser{}
 
 	if err := m.db.WithContext(ctx).
 		Where("id = ?", id).
-		First(&model).
+		First(model).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, code.NotFound
@@ -132,41 +103,41 @@ func (m *MySQLDialogUserRepository) Get(ctx context.Context, id uint32) (*entity
 		return nil, err
 	}
 
-	return model.ToEntity(), nil
+	return converter.DialogUserPoToEntity(model), nil
 }
 
 func (m *MySQLDialogUserRepository) Create(ctx context.Context, createDialogUser *repository.CreateDialogUser) (*entity.DialogUser, error) {
-	model := DialogUserModel{
+	model := &po.DialogUser{
 		DialogId: createDialogUser.DialogID,
 		UserId:   createDialogUser.UserID,
 		IsShow:   true,
 	}
 
 	if err := m.db.WithContext(ctx).
-		Create(&model).
+		Create(model).
 		Error; err != nil {
 		return nil, err
 	}
 
-	return model.ToEntity(), nil
+	return converter.DialogUserPoToEntity(model), nil
 }
 
 func (m *MySQLDialogUserRepository) Update(ctx context.Context, dialog *entity.DialogUser) (*entity.DialogUser, error) {
-	var model DialogUserModel
+	model := &po.DialogUser{}
 
 	if err := m.db.WithContext(ctx).
 		Where("id = ?", dialog.ID).
-		Updates(&model).
+		Updates(model).
 		Error; err != nil {
 		return nil, err
 	}
 
-	return model.ToEntity(), nil
+	return converter.DialogUserPoToEntity(model), nil
 }
 
 func (m *MySQLDialogUserRepository) Delete(ctx context.Context, id ...uint32) error {
 	return m.db.WithContext(ctx).
-		Model(&DialogUserModel{}).
+		Model(&po.DialogUser{}).
 		Where("id in (?)", id).
 		Update("deleted_at", ptime.Now()).
 		Error
@@ -177,9 +148,9 @@ func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *repository.
 		return nil, code.InvalidParameter
 	}
 
-	var models []DialogUserModel
+	var models []*po.DialogUser
 
-	db := m.db.Model(&DialogUserModel{})
+	db := m.db.WithContext(ctx).Model(&po.DialogUser{})
 
 	if query.DialogID != nil && len(query.DialogID) > 0 {
 		db = db.Where("dialog_id IN (?)", query.DialogID)
@@ -194,7 +165,7 @@ func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *repository.
 	}
 
 	if query.IsShow {
-		db = db.Where(&DialogUserModel{IsShow: true})
+		db = db.Where(&po.DialogUser{IsShow: true})
 	}
 
 	if query.PageSize > 0 && query.PageNum > 0 {
@@ -208,16 +179,16 @@ func (m *MySQLDialogUserRepository) Find(ctx context.Context, query *repository.
 
 	var dialogs []*entity.DialogUser
 	for _, model := range models {
-		dialogs = append(dialogs, model.ToEntity())
+		dialogs = append(dialogs, converter.DialogUserPoToEntity(model))
 	}
 
 	return dialogs, nil
 }
 
 func (m *MySQLDialogUserRepository) ListByDialogID(ctx context.Context, dialogID uint32) ([]*entity.DialogUser, error) {
-	var models []DialogUserModel
+	var models []*po.DialogUser
 	if err := m.db.
-		Model(&DialogUserModel{}).
+		Model(&po.DialogUser{}).
 		Where("dialog_id =?", dialogID).
 		Find(&models).Error; err != nil {
 		return nil, err
@@ -225,7 +196,7 @@ func (m *MySQLDialogUserRepository) ListByDialogID(ctx context.Context, dialogID
 
 	var dialogUsers = make([]*entity.DialogUser, 0)
 	for _, model := range models {
-		dialogUsers = append(dialogUsers, model.ToEntity())
+		dialogUsers = append(dialogUsers, converter.DialogUserPoToEntity(model))
 	}
 
 	return dialogUsers, nil
@@ -233,7 +204,7 @@ func (m *MySQLDialogUserRepository) ListByDialogID(ctx context.Context, dialogID
 
 func (m *MySQLDialogUserRepository) DeleteByDialogID(ctx context.Context, dialogID uint32) error {
 	if err := m.db.WithContext(ctx).
-		Model(&DialogUserModel{}).
+		Model(&po.DialogUser{}).
 		Where("dialog_id = ?", dialogID).
 		Unscoped().
 		Update("deleted_at", ptime.Now()).
@@ -246,7 +217,7 @@ func (m *MySQLDialogUserRepository) DeleteByDialogID(ctx context.Context, dialog
 
 func (m *MySQLDialogUserRepository) DeleteByDialogIDAndUserID(ctx context.Context, dialogID uint32, userID ...string) error {
 	return m.db.WithContext(ctx).
-		Model(&DialogUserModel{}).
+		Model(&po.DialogUser{}).
 		Where("dialog_id = ? AND user_id IN (?)", dialogID, userID).
 		Unscoped().
 		Update("deleted_at", ptime.Now()).
@@ -255,7 +226,7 @@ func (m *MySQLDialogUserRepository) DeleteByDialogIDAndUserID(ctx context.Contex
 
 func (m *MySQLDialogUserRepository) UpdateFields(ctx context.Context, id uint32, updateFields map[string]interface{}) error {
 	return m.db.WithContext(ctx).
-		Model(&DialogUserModel{}).
+		Model(&po.DialogUser{}).
 		Where("dialog_id = ?", id).
 		Updates(updateFields).
 		Error
