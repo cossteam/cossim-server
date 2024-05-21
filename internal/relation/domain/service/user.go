@@ -218,6 +218,10 @@ func (s *userRelationService) IsFriend(ctx context.Context, userID, targetID str
 		return false, err
 	}
 
+	if rel.Status == entity.UserStatusBlocked {
+		return false, code.MyCustomErrorCode.CustomMessage("对方拒收了你的消息")
+	}
+
 	return rel.Status == entity.UserStatusNormal, nil
 	//return rel.Status == entity.UserStatusNormal || rel.Status == entity.UserStatusBlocked, nil
 
