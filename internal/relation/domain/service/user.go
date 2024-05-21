@@ -26,6 +26,7 @@ type FriendsListOptions struct {
 }
 
 type UserRelationDomain interface {
+	GetRelation(ctx context.Context, userID, targetID string) (*entity.UserRelation, error)
 	GetDialogID(ctx context.Context, userID, targetID string) (uint32, error)
 	DeleteBlacklist(ctx context.Context, userID, targetID string) error
 	AddBlacklist(ctx context.Context, userID, targetID string) error
@@ -54,6 +55,10 @@ func NewUserRelationDomain(repos *persistence.Repositories) UserRelationDomain {
 type userRelationService struct {
 	//userRepo repository.UserRelationRepository
 	repos *persistence.Repositories
+}
+
+func (s *userRelationService) GetRelation(ctx context.Context, userID, targetID string) (*entity.UserRelation, error) {
+	return s.repos.UserRepo.Get(ctx, userID, targetID)
 }
 
 func (s *userRelationService) DeleteFriendRollback(ctx context.Context, userID, targetID string) error {
