@@ -62,7 +62,7 @@ func (UnimplementedPushServiceServer) Push(context.Context, *PushRequest) (*Push
 }
 
 // UnsafePushServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interfaces is not recommended, as added methods to PushServiceServer will
+// Use of this interface is not recommended, as added methods to PushServiceServer will
 // result in compilation errors.
 type UnsafePushServiceServer interface {
 	mustEmbedUnimplementedPushServiceServer()
