@@ -57,10 +57,14 @@ func (h *addFriendHandler) Handle(ctx context.Context, cmd *AddFriend) error {
 		return code.RelationErrAlreadyFriends
 	}
 
-	// 如果对方存在好友关系，说明是当前用户单删了，重新恢复好友关系
 	fmt.Println(cmd.TargetUserID, cmd.CurrentUserID)
 	is1, err := h.userRelationDomain.IsFriend(ctx, cmd.TargetUserID, cmd.CurrentUserID)
-	if err == nil && is1 {
+	if err != nil {
+		h.logger.Error("check friend error", zap.Error(err))
+		return err
+	}
+	// 如果对方存在好友关系，说明是当前用户单删了，重新恢复好友关系
+	if is1 {
 		if err := h.userRelationDomain.AddFriendAfterDelete(ctx, cmd.CurrentUserID, cmd.TargetUserID); err != nil {
 			h.logger.Error("单删添加好友失败", zap.Error(err))
 			return err
