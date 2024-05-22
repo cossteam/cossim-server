@@ -65,7 +65,7 @@ func (s *userServiceServer) AddFriend(ctx context.Context, request *v1.AddFriend
 	resp := &v1.AddFriendResponse{}
 
 	rel, err := s.repos.UserRepo.Get(ctx, request.FriendId, request.UserId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, code.NotFound) {
 		fmt.Println("err => ", err)
 		return resp, status.Error(codes.Code(code.RelationErrAddFriendFailed.Code()), formatErrorMessage(err))
 	}

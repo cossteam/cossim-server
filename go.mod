@@ -69,13 +69,11 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/eapache/channels v1.1.0 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/efureev/go-swagger-merger v1.0.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/frostbyte73/core v0.0.9 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gammazero/deque v0.2.1 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -101,7 +99,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -160,7 +157,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
-	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -169,7 +165,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/vcaesar/cedar v0.20.1 // indirect
-	github.com/weblfe/go-swagger-merger v0.1.8 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
