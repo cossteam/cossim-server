@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/cossim/coss-server/internal/user/cache"
 	"github.com/cossim/coss-server/internal/user/domain/entity"
@@ -81,17 +82,13 @@ func (h *userRegisterHandler) Handle(ctx context.Context, cmd *UserRegister) (st
 		return "", code.InvalidParameter.CustomMessage("password and confirm password not match")
 	}
 
-	user, err := h.ud.GetUserWithOpts(ctx, entity.WithEmail(cmd.Email))
+	_, err := h.ud.GetUserWithOpts(ctx, entity.WithEmail(cmd.Email))
 	if err != nil {
-		h.logger.Error("get user with email error", zap.Error(err))
-		return "", err
+		if !errors.Is(err, code.NotFound) {
+			h.logger.Error("get user with email error", zap.Error(err))
+			return "", err
+		}
 	}
-
-	if user != nil {
-		return "", code.UserErrEmailAlreadyRegistered
-	}
-
-	fmt.Println("user => ", user)
 
 	password := utils.HashString(cmd.Password)
 
