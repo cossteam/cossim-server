@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
-	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	v1 "github.com/cossim/coss-server/internal/msg/api/http/v1"
 	"github.com/cossim/coss-server/internal/msg/domain/entity"
 	pushv1 "github.com/cossim/coss-server/internal/push/api/grpc/v1"
@@ -160,8 +159,8 @@ func (s *ServiceImpl) SendGroupMsg(ctx context.Context, userID string, driverId 
 		GroupId: uint32(req.GroupId),
 	})
 
-	message := &msggrpcv1.SendGroupMsgResponse{}
-
+	var msgID uint32
+	var groupID uint32
 	workflow.InitGrpc(s.dtmGrpcServer, "", grpc.NewServer())
 	gid := shortuuid.New()
 	wfName := "send_group_msg_workflow_" + gid
@@ -185,9 +184,9 @@ func (s *ServiceImpl) SendGroupMsg(ctx context.Context, userID string, driverId 
 			return err
 		})
 
-		isAtAll := msggrpcv1.AtAllUserType_NotAtAllUser
+		isAtAll := entity.NotAtAllUser
 		if req.AtAllUser {
-			isAtAll = msggrpcv1.AtAllUserType_AtAllUser
+			isAtAll = entity.AtAllUser
 		}
 		mg, err := s.gmd.SendGroupMessage(ctx, &entity.GroupMessage{
 			DialogID:  uint(dialogID),
@@ -206,8 +205,8 @@ func (s *ServiceImpl) SendGroupMsg(ctx context.Context, userID string, driverId 
 		}
 		fmt.Println("发送消息成功", mg.ID)
 
-		message.MsgId = uint32(mg.ID)
-		message.GroupId = uint32(mg.GroupID)
+		msgID = uint32(mg.ID)
+		groupID = uint32(mg.GroupID)
 		wf.NewBranch().OnRollback(func(bb *dtmcli.BranchBarrier) error {
 			err := s.gmd.SendGroupMessageRevert(wf.Context, mg.ID)
 
@@ -215,8 +214,8 @@ func (s *ServiceImpl) SendGroupMsg(ctx context.Context, userID string, driverId 
 		})
 		// 发送成功后添加自己的已读记录
 		data2 := &entity.GroupMessageRead{
-			MsgID:    uint(message.MsgId),
-			GroupID:  uint(message.GroupId),
+			MsgID:    uint(msgID),
+			GroupID:  uint(groupID),
 			DialogID: uint(req.DialogId),
 			UserID:   userID,
 			ReadAt:   pkgtime.Now(),
@@ -246,7 +245,7 @@ func (s *ServiceImpl) SendGroupMsg(ctx context.Context, userID string, driverId 
 	}
 
 	resp := &v1.SendGroupMsgResponse{
-		MsgId: int(message.MsgId),
+		MsgId: int(msgID),
 	}
 
 	if req.ReplyId != 0 {
@@ -304,7 +303,7 @@ func (s *ServiceImpl) SendGroupMsg(ctx context.Context, userID string, driverId 
 		}
 	}
 	s.sendWsGroupMsg(ctx, uids.UserIds, driverId, &pushv1.SendWsGroupMsg{
-		MsgId:      message.MsgId,
+		MsgId:      msgID,
 		GroupId:    int64(req.GroupId),
 		SenderId:   userID,
 		Content:    req.Content,
@@ -419,7 +418,7 @@ func (s *ServiceImpl) RecallGroupMsg(ctx context.Context, userID string, driverI
 		GroupId:  int(msginfo.GroupID),
 		Content:  msginfo.Content,
 		ReplyId:  int(msginfo.ID),
-		Type:     int(msggrpcv1.MessageType_Delete),
+		Type:     int(entity.MessageTypeDelete),
 	}
 	_, err = s.SendGroupMsg(ctx, userID, driverId, msg2)
 	if err != nil {
@@ -485,11 +484,11 @@ func (s *ServiceImpl) LabelGroupMessage(ctx context.Context, userID string, driv
 		GroupId:  int(msginfo.GroupID),
 		Content:  msginfo.Content,
 		ReplyId:  int(msginfo.ID),
-		Type:     int(msggrpcv1.MessageType_Label),
+		Type:     int(entity.IsLabel),
 	}
 
 	if !label {
-		msg2.Type = int(msggrpcv1.MessageType_CancelLabel)
+		msg2.Type = int(entity.MessageTypeCancelLabel)
 	}
 
 	fmt.Println("msg2.ReplyId", msg2.ReplyId)
@@ -531,7 +530,7 @@ func (s *ServiceImpl) GetGroupLabelMsgList(ctx context.Context, userID string, d
 			MsgType:  int(i2.Type),
 			ReplyId:  int(i2.ReplyId),
 			SendAt:   int(i2.CreatedAt),
-			IsLabel:  i2.IsLabel == uint(msggrpcv1.MsgLabel_IsLabel),
+			IsLabel:  i2.IsLabel == uint(entity.IsLabel),
 			SenderId: i2.UserID,
 		})
 	}
@@ -626,15 +625,15 @@ func (s *ServiceImpl) GetGroupMessageList(c context.Context, id string, request 
 		}
 
 		isLabel := false
-		if v.IsLabel != uint(msggrpcv1.MsgLabel_NotLabel) {
+		if v.IsLabel != uint(entity.NotLabel) {
 			isLabel = true
 		}
 		isReadFlag := false
-		if isRead == int(msggrpcv1.ReadType_IsRead) {
+		if isRead == int(entity.IsRead) {
 			isReadFlag = true
 		}
 		isAtAll := false
-		if v.AtAllUser == entity.AtAllUserType(msggrpcv1.AtAllUserType_NotAtAllUser) {
+		if v.AtAllUser == entity.AtAllUserType(entity.NotAtAllUser) {
 			isAtAll = true
 		}
 		msgList = append(msgList, v1.GroupMessage{
