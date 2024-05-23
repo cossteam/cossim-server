@@ -1,4 +1,4 @@
-package interfaces
+package http
 
 import (
 	v1 "github.com/cossim/coss-server/internal/relation/api/http/v1"

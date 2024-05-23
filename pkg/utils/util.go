@@ -8,10 +8,22 @@ import (
 	"github.com/sony/sonyflake"
 	"golang.org/x/net/html"
 	"math/rand"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 )
+
+func FormatErrorStack(err error) error {
+	getFunctionName := func() string {
+		pc, _, _, _ := runtime.Caller(1)
+		return runtime.FuncForPC(pc).Name()
+	}
+
+	funcName := getFunctionName()
+	_, file := filepath.Split(funcName)
+	return fmt.Errorf("[%s] %s: %v", file, funcName, err)
+}
 
 // ExtractText 从HTML中提取文本内容
 func ExtractText(htmlString string) (string, error) {

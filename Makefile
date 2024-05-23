@@ -11,7 +11,7 @@ DOCKER_BUILD_PATH := "cmd/${SERVICE}/main.go"
 INTERFACE_LIST ?=group msg relation storage user live
 
 GOPROXY=https://goproxy.cn
-REGISTRY ?= <your-registry>
+REGISTRY ?= hub.hitosea.com/cossim
 TAG ?= latest
 IMG ?= ${REGISTRY}/${SERVICE}:${TAG}
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)

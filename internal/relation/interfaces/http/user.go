@@ -1,282 +1,23 @@
 package http
 
 import (
-	"github.com/cossim/coss-server/internal/relation/api/http/model"
-	"github.com/cossim/coss-server/pkg/code"
+	v1 "github.com/cossim/coss-server/internal/relation/api/http/v1"
+	"github.com/cossim/coss-server/internal/relation/app/command"
+	"github.com/cossim/coss-server/internal/relation/app/query"
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-	"strconv"
+	"github.com/mozillazg/go-pinyin"
+	"reflect"
+	"strings"
+	"unicode"
 )
 
-// 修改好友备注
-// @Summary 修改好友备注
-// @Description 修改用户备注
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.SetUserFriendRemarkRequest true "request"
-// @Success 200 {object} model.Response{}
-// @Router /relation/user/remark/set [post]
-func (h *Handler) setUserFriendRemark(c *gin.Context) {
-	req := new(model.SetUserFriendRemarkRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	userID := c.Value(constants.UserID).(string)
-	_, err := h.svc.SetUserFriendRemark(c, userID, req)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "修改成功", nil)
-}
-
-// @Summary 设置阅后即焚(action: 0:关闭, 1:打开)
-// @Description 设置阅后即焚(action: 0:关闭, 1:打开)
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.OpenUserBurnAfterReadingRequest true "request"
-// @Success 200 {object} model.Response{}
-// @Router /relation/user/burn/open [post]
-func (h *Handler) openUserBurnAfterReading(c *gin.Context) {
-	req := new(model.OpenUserBurnAfterReadingRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	if req.OpenBurnAfterReading && req.TimeOut == 0 {
-		response.SetFail(c, "设置消息销毁时间不能为0", nil)
-		return
-	}
-
-	userID := c.Value(constants.UserID).(string)
-	_, err := h.svc.SetUserBurnAfterReading(c, userID, req)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "操作成功", nil)
-}
-
-// @Summary 设置私聊静默通知
-// @Description 设置私聊静默通知
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.SetUserSilentNotificationRequest true "request"
-// @Success 200 {object} model.Response{}
-// @Router /relation/user/silent [post]
-func (h *Handler) setUserSilentNotification(c *gin.Context) {
-	req := new(model.SetUserSilentNotificationRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	userID := c.Value(constants.UserID).(string)
-	_, err := h.svc.UserSilentNotification(c, userID, req.UserId, req.IsSilent)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "设置成功", gin.H{"user_id": req.UserId})
-}
-
-// @Summary 交换用户端到端公钥
-// @Description 交换用户端到端公钥
-// @Tags UserRelation
-// @Accept json
-// @Produce json
-// @param request body model.SwitchUserE2EPublicKeyRequest true "request"
-// @Security BearerToken
-// @Success 200 {object} model.Response{}
-// @Router /relation/user/switch/e2e/key [post]
-func (h *Handler) switchUserE2EPublicKey(c *gin.Context) {
-	req := new(model.SwitchUserE2EPublicKeyRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	userID := c.Value(constants.UserID).(string)
-	_, err := h.svc.SwitchUserE2EPublicKey(c, userID, req.UserId, req.PublicKey)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.SetSuccess(c, "交换用户公钥成功", nil)
-}
-
-// @Summary 黑名单
-// @Description 黑名单
-// @Tags UserRelation
-// @Produce  json
-// @Success		200 {object} model.Response{}
-// @Router /relation/user/blacklist [get]
-func (h *Handler) blackList(c *gin.Context) {
-	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.BlackList(c, userID)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, "获取黑名单列表成功", resp)
-}
-
-// @Summary 好友列表
-// @Description 好友列表
-// @Tags UserRelation
-// @Produce  json
-// @Success		200 {object} model.Response{}
-// @Router /relation/user/friend_list [get]
-func (h *Handler) friendList(c *gin.Context) {
-	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.FriendList(c, userID)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, "获取好友列表成功", resp)
-}
-
-// @Summary 群聊列表
-// @Description 群聊列表
-// @Tags GroupRelation
-// @Produce  json
-// @Success		200 {object} model.Response{data=[]usersorter.CustomGroupData} "status 0:正常状态；1:被封禁状态；2:被删除状态"
-// @Router /relation/group/list [get]
-func (h *Handler) getUserGroupList(c *gin.Context) {
-	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.GetUserGroupList(c, userID)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, "获取用户群聊列表成功", resp)
-}
-
-// @Summary 好友申请列表
-// @Description 好友申请列表
-// @Tags UserRelation
-// @Produce  json
-// @Param page_num query int false "页码"
-// @Param page_size query int false "页大小"
-// @Success		200 {object} model.Response{data=model.UserRequestListResponseList} "UserStatus 申请状态 (0=申请中, 1=待通过, 2=已添加, 3=被拒绝, 4=已删除, 5=已拒绝)"
-// @Router /relation/user/request_list [get]
-func (h *Handler) userRequestList(c *gin.Context) {
-	var num = c.Query("page_num")
-	var size = c.Query("page_size")
-
-	if num == "" {
-		num = "1"
-	}
-	if size == "" {
-		size = "20"
-	}
-
-	pageNum, _ := strconv.Atoi(num)
-	pageSize, _ := strconv.Atoi(size)
-	if pageNum == 0 || pageSize == 0 {
-		response.SetFail(c, "参数错误", nil)
-		return
-	}
-	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.UserRequestList(c, userID, pageSize, pageNum)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, "获取好友申请列表成功", resp)
-}
-
-// @Summary 删除黑名单
-// @Description 删除黑名单
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.DeleteBlacklistRequest true "request"
-// @Success		200 {object} model.Response{}
-// @Router /relation/user/delete_blacklist [post]
-func (h *Handler) deleteBlacklist(c *gin.Context) {
-	req := new(model.DeleteBlacklistRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	userID := c.Value(constants.UserID).(string)
-	_, err := h.svc.DeleteBlacklist(c, userID, req.UserID)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, "删除黑名单成功", nil)
-}
-
-// @Summary 添加黑名单
-// @Description 添加黑名单
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.AddBlacklistRequest true "request"
-// @Success		200 {object} model.Response{}
-// @Router /relation/user/add_blacklist [post]
-func (h *Handler) addBlacklist(c *gin.Context) {
-	req := new(model.AddBlacklistRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	userID := c.Value(constants.UserID).(string)
-	_, err := h.svc.AddBlacklist(c, userID, req.UserID)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, "添加到黑名单成功", nil)
-}
-
-// @Summary 删除好友
-// @Description 删除好友
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.DeleteFriendRequest true "request"
-// @Success		200 {object} model.Response{}
-// @Router /relation/user/delete_friend [post]
-func (h *Handler) deleteFriend(c *gin.Context) {
-	req := new(model.DeleteFriendRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
-		return
-	}
-
-	userID := c.Value(constants.UserID).(string)
-	if err := h.svc.DeleteFriend(c, userID, req.UserID); err != nil {
+func (h *HttpServer) DeleteFriend(c *gin.Context, id string) {
+	if err := h.app.Commands.DeleteFriend.Handle(c, &command.DeleteFriend{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  id,
+	}); err != nil {
 		c.Error(err)
 		return
 	}
@@ -284,85 +25,416 @@ func (h *Handler) deleteFriend(c *gin.Context) {
 	response.SetSuccess(c, "删除好友成功", nil)
 }
 
-// @Summary 管理好友请求
-// @Description 管理好友请求  action (0=拒绝, 1=同意)
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.ManageFriendRequest true "request"
-// @Success		200 {object} model.Response{}
-// @Router /relation/user/manage_friend [post]
-func (h *Handler) manageFriend(c *gin.Context) {
-	req := new(model.ManageFriendRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
+func (h *HttpServer) SetUserBurn(c *gin.Context, id string) {
+	req := &v1.SetUserBurnJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.SetFail(c, "参数错误", nil)
 		return
 	}
 
-	if err := req.Validator(); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
+	if err := h.app.Commands.SetUserBurn.Handle(c, &command.SetUserBurn{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  id,
+		Burn:          req.Burn,
+		Timeout:       req.Timeout,
+	}); err != nil {
+		c.Error(err)
 		return
 	}
 
-	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.ManageFriend(c, userID, req.RequestID, int32(req.Action), req.E2EPublicKey)
-	if err != nil {
-		response.SetFail(c, code.Cause(err).Message(), nil)
-		return
-	}
-
-	response.SetSuccess(c, "管理好友申请成功", resp)
+	response.SetSuccess(c, "设置用户阅后即焚成功", nil)
 }
 
-// @Summary 发送好友请求
-// @Description 发送好友请求
-// @Tags UserRelation
-// @Accept  json
-// @Produce  json
-// @param request body model.SendFriendRequest true "request"
-// @Success		200 {object} model.Response{}
-// @Router /relation/user/add_friend [post]
-func (h *Handler) addFriend(c *gin.Context) {
-	req := new(model.SendFriendRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
+func (h *HttpServer) SetUserRemark(c *gin.Context, id string) {
+	req := &v1.SetUserRemarkJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.SetFail(c, "参数错误", nil)
 		return
 	}
 
-	userID := c.Value(constants.UserID).(string)
-	resp, err := h.svc.SendFriendRequest(c, userID, req)
+	if err := h.app.Commands.SetUserRemark.Handle(c, &command.SetUserRemark{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  id,
+		Remark:        req.Remark,
+	}); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置用户备注成功", nil)
+}
+
+func (h *HttpServer) SetUserSilent(c *gin.Context, id string) {
+	req := &v1.SetUserSilentJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	if err := h.app.Commands.SetUserSilent.Handle(c, &command.SetUserSilent{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  id,
+		Silent:        req.Silent,
+	}); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "设置用户免打扰成功", nil)
+}
+
+func (h *HttpServer) ExchangeE2EKey(c *gin.Context, id string) {
+	req := &v1.ExchangeE2EKeyJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	if err := h.app.Commands.ExchangeE2EKey.Handle(c, &command.ExchangeE2EKey{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  id,
+		PublicKey:     req.PublicKey,
+	}); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "交换端到端公钥成功", nil)
+}
+
+// Blacklist
+// @Summary 黑名单
+// @Description 黑名单
+// @Tags userRelation
+// @Produce  json
+// @Success		200 {object} model.Response{}
+// @Router /api/v1/relation/user/blacklist [get]
+func (h *HttpServer) Blacklist(c *gin.Context, params v1.BlacklistParams) {
+	blacklist, err := h.app.Queries.UserBlacklist.Handle(c.Request.Context(), &query.UserBlacklist{
+		UserID:   c.Value(constants.UserID).(string),
+		PageNum:  *params.PageNum,
+		PageSize: *params.PageSize,
+	})
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "发送好友请求成功", resp)
+	response.SetSuccess(c, "获取黑名单列表成功", blacklistToResponse(blacklist))
 }
 
+func blacklistToResponse(blacklist *query.UserBlacklistResponse) *v1.Blacklist {
+	var blacklistList []v1.Black
+	for _, v := range blacklist.List {
+		blacklistList = append(blacklistList, v1.Black{
+			CossId:   v.CossID,
+			Nickname: v.Nickname,
+			UserId:   v.UserID,
+			Avatar:   v.Avatar,
+		})
+	}
+	return &v1.Blacklist{
+		List:  blacklistList,
+		Total: blacklist.Total,
+		//Page:  blacklist.Page,
+	}
+}
+
+// AddBlacklist
+// @Summary 添加黑名单
+// @Description 添加黑名单
+// @Tags UserRelation
+// @Accept  json
+// @Produce  json
+// @param request body v1.AddBlacklistJSONRequestBody true "request"
+// @Success		200 {object} model.Response{}
+// @Router /api/v1/relation/user/blacklist [post]
+func (h *HttpServer) AddBlacklist(c *gin.Context) {
+	req := &v1.AddBlacklistJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	if err := h.app.Commands.AddBlacklist.Handle(c, &command.AddBlacklist{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  req.UserId,
+	}); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "添加黑名单成功", nil)
+}
+
+// DeleteBlacklist
+// @Summary 删除黑名单
+// @Description 删除黑名单
+// @Tags userRelation
+// @Accept  json
+// @Produce  json
+// @Param id path string true "要移除黑名单的用户ID"
+// @Success		200 {object} model.Response{}
+// @Router /api/v1/relation/user/blacklist/{id} [delete]
+func (h *HttpServer) DeleteBlacklist(c *gin.Context, id string) {
+	if err := h.app.Commands.DeleteBlacklist.Handle(c, &command.DeleteBlacklist{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  id,
+	}); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "删除黑名单成功", nil)
+}
+
+// ListFriendRequest
+// @Summary 好友申请列表
+// @Description 好友申请列表
+// @Tags userRelation
+// @Produce  json
+// @Param page_num query int false "页码"
+// @Param page_size query int false "页大小"
+// @Success		200 {object} model.Response{data=v1.UserFriendRequestList} "UserStatus 申请状态 (0=申请中, 1=已通过, 2=被拒绝)"
+// @Router /api/v1/relation/user/friend_request [get]
+func (h *HttpServer) ListFriendRequest(c *gin.Context, params v1.ListFriendRequestParams) {
+	listFriendRequest, err := h.app.Queries.ListFriendRequest.Handle(c, &query.ListFriendRequest{
+		UserID:   c.Value(constants.UserID).(string),
+		PageNum:  *params.PageNum,
+		PageSize: *params.PageSize,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取好友请求列表成功", listFriendRequestToResponse(listFriendRequest))
+}
+
+func listFriendRequestToResponse(request *query.ListFriendRequestResponse) *v1.UserFriendRequestList {
+	listFriendRequestList := &v1.UserFriendRequestList{
+		Total: request.Total,
+	}
+	for _, v := range request.List {
+		listFriendRequestList.List = append(listFriendRequestList.List, v1.FriendRequest{
+			Id:        v.ID,
+			Remark:    v.Remark,
+			Status:    v.Status,
+			CreateAt:  v.CreateAt,
+			ExpiredAt: v.ExpiredAt,
+			SenderId:  v.SenderID,
+			SenderInfo: &v1.FriendRequestUserInfo{
+				Avatar:   v.SenderInfo.Avatar,
+				CossId:   v.SenderInfo.CossID,
+				Nickname: v.SenderInfo.Nickname,
+				UserId:   v.SenderInfo.UserID,
+			},
+			RecipientId: v.RecipientID,
+			RecipientInfo: &v1.FriendRequestUserInfo{
+				Avatar:   v.RecipientInfo.Avatar,
+				CossId:   v.RecipientInfo.CossID,
+				Nickname: v.RecipientInfo.Nickname,
+				UserId:   v.RecipientInfo.UserID,
+			},
+		})
+	}
+	return listFriendRequestList
+}
+
+// DeleteFriendRequest
 // @Summary 删除好友申请记录
 // @Description 删除好友申请记录
-// @Tags UserRelation
+// @Tags userRelation
 // @Accept  json
 // @Produce  json
-// @param request body model.DeleteRecordRequest true "request"
+// @Param id path int true "好友请求记录ID"
 // @Success		200 {object} model.Response{}
-// @Router /relation/user/delete_request_record [post]
-func (h *Handler) deleteUserRequestRecord(c *gin.Context) {
-	req := new(model.DeleteRecordRequest)
-	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("参数验证失败", zap.Error(err))
-		response.SetFail(c, "参数验证失败", nil)
+// @Router /api/v1/relation/user/friend_request/{id} [delete]
+func (h *HttpServer) DeleteFriendRequest(c *gin.Context, id uint32) {
+	if id == 0 {
+		response.SetFail(c, "好友请求ID不能为空", nil)
 		return
 	}
 
-	userID := c.Value(constants.UserID).(string)
-	if err := h.svc.DeleteUserFriendRecord(c, userID, req.ID); err != nil {
+	if err := h.app.Commands.DeleteFriendRequest.Handle(c, &command.DeleteFriendRequest{
+		UserID: c.Value(constants.UserID).(string),
+		ID:     id,
+	}); err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.SetSuccess(c, "删除好友申请记录成功", nil)
+	response.SetSuccess(c, "删除好友请求成功", nil)
+}
+
+// ManageFriendRequest
+// @Summary 管理好友请求
+// @Description 管理好友请求  action (0=拒绝, 1=同意)
+// @Tags userRelation
+// @Accept  json
+// @Produce  json
+// @param request body v1.ManageFriendRequestJSONRequestBody true "request"
+// @Success		200 {object} model.Response{}
+// @Router /api/v1/relation/user/friend_request/{id} [PUT]
+func (h *HttpServer) ManageFriendRequest(c *gin.Context, id uint32) {
+	req := &v1.ManageFriendRequestJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	if err := h.app.Commands.ManageFriendRequest.Handle(c, &command.ManageFriendRequest{
+		UserID: c.Value(constants.UserID).(string),
+		ID:     id,
+		Action: command.ManageFriendRequestAction(req.Action),
+	}); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "处理好友请求成功", nil)
+}
+
+// ListFriend
+// @Summary 好友列表
+// @Description 好友列表
+// @Tags userRelation
+// @Produce  json
+// @Success		200 {object} model.Response{}
+// @Router /api/v1/relation/user/friend [get]
+func (h *HttpServer) ListFriend(c *gin.Context) {
+	listFriend, err := h.app.Queries.ListFriend.Handle(c, &query.ListFriend{
+		UserID: c.Value(constants.UserID).(string),
+		//PageNum:  0,
+		//PageSize: 0,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取好友列表成功", listFriendToResponse(listFriend))
+}
+
+func listFriendToResponse(listFriend *query.ListFriendResponse) *v1.UserFriendList {
+	resp := &v1.UserFriendList{
+		List:  make(map[string][]v1.UserInfo),
+		Total: len(listFriend.List),
+	}
+	var userList []v1.UserInfo
+	for _, v := range listFriend.List {
+		userList = append(userList, v1.UserInfo{
+			Avatar:   v.Avatar,
+			CossId:   v.CossId,
+			DialogId: v.DialogId,
+			Email:    v.Email,
+			Nickname: v.NickName,
+			Preferences: v1.Preferences{
+				OpenBurnAfterReading:        v.Preferences.OpenBurnAfterReading,
+				OpenBurnAfterReadingTimeOut: v.Preferences.OpenBurnAfterReadingTimeOut,
+				Remark:                      v.Preferences.Remark,
+				SilentNotification:          v.Preferences.SilentNotification,
+			},
+			RelationStatus: v1.UserInfoRelationStatus(v.RelationStatus),
+			Signature:      v.Signature,
+			Status:         v.Status,
+			Tel:            v.Tel,
+			UserId:         v.UserID,
+		})
+	}
+	groupedUsers := sortAndGroupUsers(userList, "Nickname")
+	resp.List = groupedUsers
+	return resp
+}
+
+func sortAndGroupUsers(users []v1.UserInfo, fieldName string) map[string][]v1.UserInfo {
+	groupedUsers := make(map[string][]v1.UserInfo)
+	keyMap := make(map[string]bool)
+
+	for _, user := range users {
+		name := getFieldValue(user, fieldName)
+		groupKey := getGroupKey(name, user.Preferences.Remark)
+		groupedUsers[groupKey] = append(groupedUsers[groupKey], user)
+		keyMap[groupKey] = true
+	}
+
+	return groupedUsers
+}
+
+func getFieldValue(user v1.UserInfo, fieldName string) string {
+	r := reflect.ValueOf(user)
+	f := reflect.Indirect(r).FieldByName(fieldName)
+	if f.IsValid() {
+		return f.String()
+	}
+	return ""
+}
+
+func getGroupKey(name, remark string) string {
+	if remark != "" {
+		name = remark
+	}
+
+	if isChinese(name) {
+		pinyinSlice := pinyin.Pinyin(name, pinyin.NewArgs())
+		firstChar := getFirstChar(pinyinSlice)
+		return strings.ToUpper(firstChar)
+	} else if isSpecialChar(name) {
+		return "#"
+	}
+
+	return strings.ToUpper(name[:1])
+}
+
+func isSpecialChar(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func isChinese(s string) bool {
+	for _, r := range s {
+		if unicode.Is(unicode.Han, r) {
+			return true
+		}
+	}
+	return false
+}
+
+func getFirstChar(pinyinSlice [][]string) string {
+	if len(pinyinSlice) > 0 && len(pinyinSlice[0]) > 0 {
+		return pinyinSlice[0][0][:1]
+	}
+	return ""
+}
+
+// AddFriend
+// @Summary 发送好友请求
+// @Description 发送好友请求
+// @Tags userRelation
+// @Accept  json
+// @Produce  json
+// @param request body v1.AddFriendJSONRequestBody true "request"
+// @Success		200 {object} model.Response{}
+// @Router /api/v1/relation/user/friend [post]
+func (h *HttpServer) AddFriend(c *gin.Context) {
+	req := &v1.AddFriendJSONRequestBody{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.SetFail(c, "参数错误", nil)
+		return
+	}
+
+	if err := h.app.Commands.AddFriend.Handle(c, &command.AddFriend{
+		CurrentUserID: c.Value(constants.UserID).(string),
+		TargetUserID:  req.UserId,
+		Remark:        req.Remark,
+	}); err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "发送好友请求成功", nil)
 }

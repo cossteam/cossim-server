@@ -3,6 +3,7 @@ package code
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sync/atomic"
 )
@@ -131,4 +132,8 @@ func IsCode(err error, c Codes) bool {
 		return e.Code() == c.Code()
 	}
 	return false
+}
+
+func WrapCodeToGRPC(code Codes) error {
+	return status.Error(codes.Code(code.Code()), code.Message())
 }
