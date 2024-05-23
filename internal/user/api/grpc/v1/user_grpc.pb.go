@@ -29,32 +29,13 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
-	// //用户登录
-	// rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
-	// //用户注册
-	// rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
-	// //获取用户信息
+	// 获取用户信息
 	UserInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
-	// //批量获取用户信息
+	// 批量获取用户信息
 	GetBatchUserInfo(ctx context.Context, in *GetBatchUserInfoRequest, opts ...grpc.CallOption) (*GetBatchUserInfoResponse, error)
-	// //根据email获取用户信息
-	// rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
-	// //根据cossId获取用户信息
-	// rpc GetUserInfoByCossId(GetUserInfoByCossIdlRequest) returns (UserInfoResponse);
-	// rpc GetUserPublicKey (UserRequest) returns (GetUserPublicKeyResponse);
-	// rpc SetUserPublicKey (SetPublicKeyRequest) returns (UserResponse);
-	// rpc ModifyUserInfo(User) returns (UserResponse);
-	// rpc ModifyUserPassword(ModifyUserPasswordRequest) returns (UserResponse);
-	// rpc GetUserPasswordByUserId(UserRequest) returns (GetUserPasswordByUserIdResponse);
-	// //设置用户密钥包
-	// rpc SetUserSecretBundle (SetUserSecretBundleRequest) returns (SetUserSecretBundleResponse);
-	// //获取用户密钥包
-	// rpc GetUserSecretBundle (GetUserSecretBundleRequest) returns (GetUserSecretBundleResponse);
-	// //激活用户
-	// rpc ActivateUser (UserRequest) returns (UserResponse);
-	// //创建用户
+	// 创建用户
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
-	// //创建用户回滚
+	// 创建用户回滚
 	CreateUserRollback(ctx context.Context, in *CreateUserRollbackRequest, opts ...grpc.CallOption) (*CreateUserRollbackResponse, error)
 }
 
@@ -106,32 +87,13 @@ func (c *userServiceClient) CreateUserRollback(ctx context.Context, in *CreateUs
 // All implementations should embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
-	// //用户登录
-	// rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
-	// //用户注册
-	// rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
-	// //获取用户信息
+	// 获取用户信息
 	UserInfo(context.Context, *UserInfoRequest) (*UserInfoResponse, error)
-	// //批量获取用户信息
+	// 批量获取用户信息
 	GetBatchUserInfo(context.Context, *GetBatchUserInfoRequest) (*GetBatchUserInfoResponse, error)
-	// //根据email获取用户信息
-	// rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
-	// //根据cossId获取用户信息
-	// rpc GetUserInfoByCossId(GetUserInfoByCossIdlRequest) returns (UserInfoResponse);
-	// rpc GetUserPublicKey (UserRequest) returns (GetUserPublicKeyResponse);
-	// rpc SetUserPublicKey (SetPublicKeyRequest) returns (UserResponse);
-	// rpc ModifyUserInfo(User) returns (UserResponse);
-	// rpc ModifyUserPassword(ModifyUserPasswordRequest) returns (UserResponse);
-	// rpc GetUserPasswordByUserId(UserRequest) returns (GetUserPasswordByUserIdResponse);
-	// //设置用户密钥包
-	// rpc SetUserSecretBundle (SetUserSecretBundleRequest) returns (SetUserSecretBundleResponse);
-	// //获取用户密钥包
-	// rpc GetUserSecretBundle (GetUserSecretBundleRequest) returns (GetUserSecretBundleResponse);
-	// //激活用户
-	// rpc ActivateUser (UserRequest) returns (UserResponse);
-	// //创建用户
+	// 创建用户
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
-	// //创建用户回滚
+	// 创建用户回滚
 	CreateUserRollback(context.Context, *CreateUserRollbackRequest) (*CreateUserRollbackResponse, error)
 }
 

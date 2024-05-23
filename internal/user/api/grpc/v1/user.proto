@@ -2,51 +2,6 @@ syntax = "proto3";
 package user_v1;
 option go_package = "github.com/cossim/coss-server/internal/user/api/v1";
 
-message UserLoginRequest {
-  // @inject_tag: json:"email"
-  string Email=1;
-  // @inject_tag: json:"password"
-  string Password=2;
-}
-
-message UserLoginResponse {
-  // @inject_tag: json:"user_id"
-  string UserId=1;
-  // @inject_tag: json:"nickname"
-  string NickName=2;
-  // @inject_tag: json:"email"
-  string Email=3;
-  // @inject_tag: json:"tel"
-  string Tel=4;
-  // @inject_tag: json:"avatar"
-  string Avatar=5;
-  // @inject_tag: json:"signature"
-  string Signature=6;
-  // @inject_tag: json:"coss_id"
-  string CossId=7;
-  // @inject_tag: json:"public_key"
-  string PublicKey = 8;
-}
-
-message UserRegisterRequest {
-  // @inject_tag: json:"email"
-  string Email=1;
-  // @inject_tag: json:"nickname"
-  string NickName=2;
-  // @inject_tag: json:"password"
-  string Password=3;
-  // @inject_tag: json:"confirm_password"
-  string ConfirmPassword=4;
-  // @inject_tag: json:"avatar"
-  string Avatar=5;
-  // @inject_tag: json:"public_key"
-  string PublicKey = 6;
-}
-
-message UserRegisterResponse {
-  // @inject_tag: json:"user_id"
-  string UserId=1;
-}
 message UserInfoRequest {
   // @inject_tag: json:"user_id"
   string UserId=1;
@@ -86,90 +41,10 @@ message UserInfoResponse {
 message GetBatchUserInfoRequest {
   repeated string UserIds = 1;
 }
-message GetUserInfoByEmailRequest {
-  // @inject_tag: json:"email"
-  string Email = 1;
-}
-
 
 message GetBatchUserInfoResponse {
   // @inject_tag: json:"users" form:"users"
   repeated UserInfoResponse Users = 1;
-}
-
-message UserRequest {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-}
-
-message GetUserPublicKeyResponse {
-  // @inject_tag: json:"public_key"
-  string PublicKey = 1;
-}
-
-message SetPublicKeyRequest {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-  // @inject_tag: json:"public_key"
-  string PublicKey = 2;
-}
-message UserResponse {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-}
-message ModifyUserPasswordRequest {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-  // @inject_tag: json:"password"
-  string Password = 2;
-}
-message User {
-  // @inject_tag: json:"user_id"
-  string UserId=1;
-  // @inject_tag: json:"nickname"
-  string NickName=2;
-  // @inject_tag: json:"email"
-  string Email=3;
-  // @inject_tag: json:"tel"
-  string Tel=4;
-  // @inject_tag: json:"avatar"
-  string Avatar=5;
-  // @inject_tag: json:"signature"
-  string Signature=6;
-  // @inject_tag: json:"status"
-  UserStatus Status = 7;
-  // @inject_tag: json:"coss_id"
-  string CossId=8;
-}
-message GetUserPasswordByUserIdResponse {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-  // @inject_tag: json:"password"
-  string Password = 2;
-}
-
-message SetUserSecretBundleRequest {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-  // @inject_tag: json:"secret_bundle"
-  string SecretBundle = 2;
-}
-
-message SetUserSecretBundleResponse {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-}
-
-message GetUserSecretBundleRequest {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-}
-
-message GetUserSecretBundleResponse {
-  // @inject_tag: json:"user_id"
-  string UserId = 1;
-  // @inject_tag: json:"secret_bundle"
-  string SecretBundle = 2;
 }
 
 message  CreateUserRequest {
@@ -202,41 +77,19 @@ message CreateUserRollbackRequest {
 }
 
 message CreateUserRollbackResponse {
-
-}
-
-message GetUserInfoByCossIdlRequest{
-  // @inject_tag: json:"coss_id"
-  string CossId = 1;
 }
 
 service UserService {
-//  //用户登录
-//  rpc UserLogin(UserLoginRequest) returns(UserLoginResponse);
-//  //用户注册
-//  rpc UserRegister(UserRegisterRequest) returns(UserRegisterResponse);
-//  //获取用户信息
+  //获取用户信息
   rpc UserInfo(UserInfoRequest) returns(UserInfoResponse);
-//  //批量获取用户信息
+
+  //批量获取用户信息
   rpc GetBatchUserInfo(GetBatchUserInfoRequest) returns (GetBatchUserInfoResponse);
-//  //根据email获取用户信息
-//  rpc GetUserInfoByEmail(GetUserInfoByEmailRequest) returns (UserInfoResponse);
-//  //根据cossId获取用户信息
-//  rpc GetUserInfoByCossId(GetUserInfoByCossIdlRequest) returns (UserInfoResponse);
-//  rpc GetUserPublicKey (UserRequest) returns (GetUserPublicKeyResponse);
-//  rpc SetUserPublicKey (SetPublicKeyRequest) returns (UserResponse);
-//  rpc ModifyUserInfo(User) returns (UserResponse);
-//  rpc ModifyUserPassword(ModifyUserPasswordRequest) returns (UserResponse);
-//  rpc GetUserPasswordByUserId(UserRequest) returns (GetUserPasswordByUserIdResponse);
-//  //设置用户密钥包
-//  rpc SetUserSecretBundle (SetUserSecretBundleRequest) returns (SetUserSecretBundleResponse);
-//  //获取用户密钥包
-//  rpc GetUserSecretBundle (GetUserSecretBundleRequest) returns (GetUserSecretBundleResponse);
-//  //激活用户
-//  rpc ActivateUser (UserRequest) returns (UserResponse);
-//  //创建用户
+
+  //创建用户
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
-//  //创建用户回滚
+
+  //创建用户回滚
   rpc CreateUserRollback (CreateUserRollbackRequest) returns (CreateUserRollbackResponse);
 }
 

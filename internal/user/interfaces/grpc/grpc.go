@@ -17,10 +17,9 @@ import (
 )
 
 type UserServiceServer struct {
-	ac  *pkgconfig.AppConfig
-	ur  repository.UserRepository
-	ulr repository.UserLoginRepository
-	//AuthSrv   *authServiceServer
+	ac        *pkgconfig.AppConfig
+	ur        repository.UserRepository
+	ulr       repository.UserLoginRepository
 	secret    string
 	userCache cache.UserCache
 	stop      func() func(ctx context.Context) error
@@ -45,8 +44,8 @@ func (s *UserServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		return err
 	}
 
-	infra := persistence.NewRepositories(dbConn, userCache)
-	if err = infra.Automigrate(); err != nil {
+	repos := persistence.NewRepositories(dbConn, userCache)
+	if err = repos.Automigrate(); err != nil {
 		return err
 	}
 
@@ -59,18 +58,11 @@ func (s *UserServiceServer) Init(cfg *pkgconfig.AppConfig) error {
 		}
 	}
 
-	s.ur = infra.UR
-	s.ulr = infra.ULR
+	s.ur = repos.UR
+	s.ulr = repos.ULR
 	s.ac = cfg
 	s.secret = cfg.SystemConfig.JwtSecret
 	s.userCache = userCache
-	//s.AuthSrv = &authServiceServer{
-	//	secret:    "cfg.SystemConfig.JwtSecret",
-	//	ur:        infra.UR,
-	//	userCache: userCache,
-	//}
-
-	//fmt.Println("s.AuthSrv => ", s.AuthSrv)
 
 	return nil
 }
@@ -84,7 +76,6 @@ func (s *UserServiceServer) Version() string { return version.FullVersion() }
 
 func (s *UserServiceServer) Register(srv *grpc.Server) {
 	api.RegisterUserServiceServer(srv, s)
-	api.RegisterUserLoginServiceServer(srv, s)
 	api.RegisterUserAuthServiceServer(srv, s)
 }
 

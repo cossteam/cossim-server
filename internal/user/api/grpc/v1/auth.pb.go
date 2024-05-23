@@ -26,7 +26,7 @@ type AccessRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"token"
-	Token string `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	Token string `protobuf:"bytes,1,opt,name=Token,proto3" json:"token"`
 }
 
 func (x *AccessRequest) Reset() {
@@ -112,13 +112,13 @@ type GenerateUserTokenRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"UserID,omitempty"`
+	UserID string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"email"
-	Email string `protobuf:"bytes,2,opt,name=Email,proto3" json:"Email,omitempty"`
+	Email string `protobuf:"bytes,2,opt,name=Email,proto3" json:"email"`
 	// @inject_tag: json:"driver_id"
-	DriverID string `protobuf:"bytes,3,opt,name=DriverID,proto3" json:"DriverID,omitempty"`
+	DriverID string `protobuf:"bytes,3,opt,name=DriverID,proto3" json:"driver_id"`
 	// @inject_tag: json:"public_key"
-	PublicKey string `protobuf:"bytes,4,opt,name=PublicKey,proto3" json:"PublicKey,omitempty"`
+	PublicKey string `protobuf:"bytes,4,opt,name=PublicKey,proto3" json:"public_key"`
 }
 
 func (x *GenerateUserTokenRequest) Reset() {
@@ -187,7 +187,7 @@ type GenerateUserTokenResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"token"
-	Token string `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	Token string `protobuf:"bytes,1,opt,name=Token,proto3" json:"token"`
 }
 
 func (x *GenerateUserTokenResponse) Reset() {
@@ -235,7 +235,7 @@ type ParseTokenRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"token"
-	Token string `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	Token string `protobuf:"bytes,1,opt,name=Token,proto3" json:"token"`
 }
 
 func (x *ParseTokenRequest) Reset() {
@@ -283,17 +283,17 @@ type AuthClaims struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @inject_tag: json:"user_id"
-	UserID string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"UserID,omitempty"`
+	UserID string `protobuf:"bytes,1,opt,name=UserID,proto3" json:"user_id"`
 	// @inject_tag: json:"email"
-	Email string `protobuf:"bytes,2,opt,name=Email,proto3" json:"Email,omitempty"`
+	Email string `protobuf:"bytes,2,opt,name=Email,proto3" json:"email"`
 	// @inject_tag: json:"driver_id"
-	DriverID string `protobuf:"bytes,3,opt,name=DriverID,proto3" json:"DriverID,omitempty"`
+	DriverID string `protobuf:"bytes,3,opt,name=DriverID,proto3" json:"driver_id"`
 	// @inject_tag: json:"public_key"
-	PublicKey string `protobuf:"bytes,4,opt,name=PublicKey,proto3" json:"PublicKey,omitempty"`
+	PublicKey string `protobuf:"bytes,4,opt,name=PublicKey,proto3" json:"public_key"`
 	// @inject_tag: json:"expire_time_seconds"
-	ExpireTimeSeconds int64 `protobuf:"varint,5,opt,name=ExpireTimeSeconds,proto3" json:"ExpireTimeSeconds,omitempty"`
+	ExpireTimeSeconds int64 `protobuf:"varint,5,opt,name=ExpireTimeSeconds,proto3" json:"expire_time_seconds"`
 	// @inject_tag: json:"expire_at"
-	ExpireAt int64 `protobuf:"varint,6,opt,name=ExpireAt,proto3" json:"ExpireAt,omitempty"`
+	ExpireAt int64 `protobuf:"varint,6,opt,name=ExpireAt,proto3" json:"expire_at"`
 }
 
 func (x *AuthClaims) Reset() {
