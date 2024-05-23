@@ -335,7 +335,7 @@ func (m *MySQLRelationUserRepository) ListFriend(ctx context.Context, userId str
 		return nil, err
 	}
 
-	var friends []*entity.Friend
+	friends := make([]*entity.Friend, 0)
 	for _, v := range relations {
 		friends = append(friends, &entity.Friend{
 			UserID:                      v.FriendID,

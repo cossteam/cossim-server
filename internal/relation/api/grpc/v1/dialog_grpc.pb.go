@@ -20,52 +20,25 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DialogService_CreateDialog_FullMethodName                              = "/relation_v1.DialogService/CreateDialog"
-	DialogService_CreateAndJoinDialogWithGroup_FullMethodName              = "/relation_v1.DialogService/CreateAndJoinDialogWithGroup"
-	DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName        = "/relation_v1.DialogService/CreateAndJoinDialogWithGroupRevert"
-	DialogService_ConfirmFriendAndJoinDialog_FullMethodName                = "/relation_v1.DialogService/ConfirmFriendAndJoinDialog"
-	DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName          = "/relation_v1.DialogService/ConfirmFriendAndJoinDialogRevert"
-	DialogService_JoinDialog_FullMethodName                                = "/relation_v1.DialogService/JoinDialog"
-	DialogService_JoinDialogRevert_FullMethodName                          = "/relation_v1.DialogService/JoinDialogRevert"
-	DialogService_GetUserDialogList_FullMethodName                         = "/relation_v1.DialogService/GetUserDialogList"
-	DialogService_GetDialogByIds_FullMethodName                            = "/relation_v1.DialogService/GetDialogByIds"
-	DialogService_GetDialogById_FullMethodName                             = "/relation_v1.DialogService/GetDialogById"
-	DialogService_GetDialogUsersByDialogID_FullMethodName                  = "/relation_v1.DialogService/GetDialogUsersByDialogID"
-	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName          = "/relation_v1.DialogService/GetDialogUserByDialogIDAndUserID"
-	DialogService_GetDialogByGroupId_FullMethodName                        = "/relation_v1.DialogService/GetDialogByGroupId"
-	DialogService_GetDialogByGroupIds_FullMethodName                       = "/relation_v1.DialogService/GetDialogByGroupIds"
-	DialogService_DeleteDialogByIds_FullMethodName                         = "/relation_v1.DialogService/DeleteDialogByIds"
-	DialogService_DeleteDialogById_FullMethodName                          = "/relation_v1.DialogService/DeleteDialogById"
-	DialogService_DeleteDialogByIdRevert_FullMethodName                    = "/relation_v1.DialogService/DeleteDialogByIdRevert"
-	DialogService_DeleteDialogUsersByDialogID_FullMethodName               = "/relation_v1.DialogService/DeleteDialogUsersByDialogID"
-	DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName         = "/relation_v1.DialogService/DeleteDialogUsersByDialogIDRevert"
-	DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName       = "/relation_v1.DialogService/DeleteDialogUserByDialogIDAndUserID"
-	DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName = "/relation_v1.DialogService/DeleteDialogUserByDialogIDAndUserIDRevert"
-	DialogService_CloseOrOpenDialog_FullMethodName                         = "/relation_v1.DialogService/CloseOrOpenDialog"
-	DialogService_BatchCloseOrOpenDialog_FullMethodName                    = "/relation_v1.DialogService/BatchCloseOrOpenDialog"
-	DialogService_TopOrCancelTopDialog_FullMethodName                      = "/relation_v1.DialogService/TopOrCancelTopDialog"
-	DialogService_GetAllUsersInConversation_FullMethodName                 = "/relation_v1.DialogService/GetAllUsersInConversation"
-	DialogService_GetDialogTargetUserId_FullMethodName                     = "/relation_v1.DialogService/GetDialogTargetUserId"
+	DialogService_GetUserDialogList_FullMethodName                 = "/relation_v1.DialogService/GetUserDialogList"
+	DialogService_GetDialogByIds_FullMethodName                    = "/relation_v1.DialogService/GetDialogByIds"
+	DialogService_GetDialogById_FullMethodName                     = "/relation_v1.DialogService/GetDialogById"
+	DialogService_GetDialogUsersByDialogID_FullMethodName          = "/relation_v1.DialogService/GetDialogUsersByDialogID"
+	DialogService_GetDialogUserByDialogIDAndUserID_FullMethodName  = "/relation_v1.DialogService/GetDialogUserByDialogIDAndUserID"
+	DialogService_GetDialogByGroupId_FullMethodName                = "/relation_v1.DialogService/GetDialogByGroupId"
+	DialogService_DeleteDialogById_FullMethodName                  = "/relation_v1.DialogService/DeleteDialogById"
+	DialogService_DeleteDialogByIdRevert_FullMethodName            = "/relation_v1.DialogService/DeleteDialogByIdRevert"
+	DialogService_DeleteDialogUsersByDialogID_FullMethodName       = "/relation_v1.DialogService/DeleteDialogUsersByDialogID"
+	DialogService_DeleteDialogUsersByDialogIDRevert_FullMethodName = "/relation_v1.DialogService/DeleteDialogUsersByDialogIDRevert"
+	DialogService_CloseOrOpenDialog_FullMethodName                 = "/relation_v1.DialogService/CloseOrOpenDialog"
+	DialogService_BatchCloseOrOpenDialog_FullMethodName            = "/relation_v1.DialogService/BatchCloseOrOpenDialog"
+	DialogService_GetAllUsersInConversation_FullMethodName         = "/relation_v1.DialogService/GetAllUsersInConversation"
 )
 
 // DialogServiceClient is the client API for DialogService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DialogServiceClient interface {
-	// CreateDialog 创建对话
-	CreateDialog(ctx context.Context, in *CreateDialogRequest, opts ...grpc.CallOption) (*CreateDialogResponse, error)
-	// CreateAndJoinDialogWithGroup 创建群聊会话并加入
-	CreateAndJoinDialogWithGroup(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error)
-	// CreateAndJoinDialogWithGroup回滚操作
-	CreateAndJoinDialogWithGroupRevert(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error)
-	// 确认好友并加入对话
-	ConfirmFriendAndJoinDialog(ctx context.Context, in *ConfirmFriendAndJoinDialogRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogResponse, error)
-	// ConfirmFriendAndJoinDialog回滚操作
-	ConfirmFriendAndJoinDialogRevert(ctx context.Context, in *ConfirmFriendAndJoinDialogRevertRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogRevertResponse, error)
-	// 加入对话
-	JoinDialog(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
-	// JoinDialog回滚操作
-	JoinDialogRevert(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error)
 	// 获取用户对话列表
 	GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error)
 	// 根据多个对话ID获取对话信息
@@ -78,9 +51,6 @@ type DialogServiceClient interface {
 	GetDialogUserByDialogIDAndUserID(ctx context.Context, in *GetDialogUserByDialogIDAndUserIdRequest, opts ...grpc.CallOption) (*GetDialogUserByDialogIDAndUserIdResponse, error)
 	// 根据群组ID获取对话信息
 	GetDialogByGroupId(ctx context.Context, in *GetDialogByGroupIdRequest, opts ...grpc.CallOption) (*GetDialogByGroupIdResponse, error)
-	GetDialogByGroupIds(ctx context.Context, in *GetDialogByGroupIdsRequest, opts ...grpc.CallOption) (*GetDialogByGroupIdsResponse, error)
-	// 根据对话ID列表删除对话
-	DeleteDialogByIds(ctx context.Context, in *DeleteDialogByIdsRequest, opts ...grpc.CallOption) (*DeleteDialogByIdsResponse, error)
 	// 根据对话ID删除对话
 	DeleteDialogById(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error)
 	// DeleteDialogById回滚操作
@@ -89,20 +59,12 @@ type DialogServiceClient interface {
 	DeleteDialogUsersByDialogID(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
 	// DeleteDialogUsersByDialogID回滚操作
 	DeleteDialogUsersByDialogIDRevert(ctx context.Context, in *DeleteDialogUsersByDialogIDRequest, opts ...grpc.CallOption) (*DeleteDialogUsersByDialogIDResponse, error)
-	// 根据对话ID和用户ID删除对话成员
-	DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
-	// DeleteDialogUserByDialogIDAndUserID回滚操作
-	DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// 关闭或者打开对话
 	CloseOrOpenDialog(ctx context.Context, in *CloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 批量打开或关闭对话
 	BatchCloseOrOpenDialog(ctx context.Context, in *BatchCloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// 置顶或者取消置顶对话
-	TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// 获取对话用户（包括已退出对话）
 	GetAllUsersInConversation(ctx context.Context, in *GetAllUsersInConversationRequest, opts ...grpc.CallOption) (*GetAllUsersInConversationResponse, error)
-	// 查询对话对方userId
-	GetDialogTargetUserId(ctx context.Context, in *GetDialogTargetUserIdRequest, opts ...grpc.CallOption) (*GetDialogTargetUserIdResponse, error)
 }
 
 type dialogServiceClient struct {
@@ -111,69 +73,6 @@ type dialogServiceClient struct {
 
 func NewDialogServiceClient(cc grpc.ClientConnInterface) DialogServiceClient {
 	return &dialogServiceClient{cc}
-}
-
-func (c *dialogServiceClient) CreateDialog(ctx context.Context, in *CreateDialogRequest, opts ...grpc.CallOption) (*CreateDialogResponse, error) {
-	out := new(CreateDialogResponse)
-	err := c.cc.Invoke(ctx, DialogService_CreateDialog_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) CreateAndJoinDialogWithGroup(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error) {
-	out := new(CreateAndJoinDialogWithGroupResponse)
-	err := c.cc.Invoke(ctx, DialogService_CreateAndJoinDialogWithGroup_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) CreateAndJoinDialogWithGroupRevert(ctx context.Context, in *CreateAndJoinDialogWithGroupRequest, opts ...grpc.CallOption) (*CreateAndJoinDialogWithGroupResponse, error) {
-	out := new(CreateAndJoinDialogWithGroupResponse)
-	err := c.cc.Invoke(ctx, DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) ConfirmFriendAndJoinDialog(ctx context.Context, in *ConfirmFriendAndJoinDialogRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogResponse, error) {
-	out := new(ConfirmFriendAndJoinDialogResponse)
-	err := c.cc.Invoke(ctx, DialogService_ConfirmFriendAndJoinDialog_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) ConfirmFriendAndJoinDialogRevert(ctx context.Context, in *ConfirmFriendAndJoinDialogRevertRequest, opts ...grpc.CallOption) (*ConfirmFriendAndJoinDialogRevertResponse, error) {
-	out := new(ConfirmFriendAndJoinDialogRevertResponse)
-	err := c.cc.Invoke(ctx, DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) JoinDialog(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error) {
-	out := new(JoinDialogResponse)
-	err := c.cc.Invoke(ctx, DialogService_JoinDialog_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) JoinDialogRevert(ctx context.Context, in *JoinDialogRequest, opts ...grpc.CallOption) (*JoinDialogResponse, error) {
-	out := new(JoinDialogResponse)
-	err := c.cc.Invoke(ctx, DialogService_JoinDialogRevert_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *dialogServiceClient) GetUserDialogList(ctx context.Context, in *GetUserDialogListRequest, opts ...grpc.CallOption) (*GetUserDialogListResponse, error) {
@@ -230,24 +129,6 @@ func (c *dialogServiceClient) GetDialogByGroupId(ctx context.Context, in *GetDia
 	return out, nil
 }
 
-func (c *dialogServiceClient) GetDialogByGroupIds(ctx context.Context, in *GetDialogByGroupIdsRequest, opts ...grpc.CallOption) (*GetDialogByGroupIdsResponse, error) {
-	out := new(GetDialogByGroupIdsResponse)
-	err := c.cc.Invoke(ctx, DialogService_GetDialogByGroupIds_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) DeleteDialogByIds(ctx context.Context, in *DeleteDialogByIdsRequest, opts ...grpc.CallOption) (*DeleteDialogByIdsResponse, error) {
-	out := new(DeleteDialogByIdsResponse)
-	err := c.cc.Invoke(ctx, DialogService_DeleteDialogByIds_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *dialogServiceClient) DeleteDialogById(ctx context.Context, in *DeleteDialogByIdRequest, opts ...grpc.CallOption) (*DeleteDialogByIdResponse, error) {
 	out := new(DeleteDialogByIdResponse)
 	err := c.cc.Invoke(ctx, DialogService_DeleteDialogById_FullMethodName, in, out, opts...)
@@ -284,24 +165,6 @@ func (c *dialogServiceClient) DeleteDialogUsersByDialogIDRevert(ctx context.Cont
 	return out, nil
 }
 
-func (c *dialogServiceClient) DeleteDialogUserByDialogIDAndUserID(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
-	out := new(DeleteDialogUserByDialogIDAndUserIDResponse)
-	err := c.cc.Invoke(ctx, DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) DeleteDialogUserByDialogIDAndUserIDRevert(ctx context.Context, in *DeleteDialogUserByDialogIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
-	out := new(DeleteDialogUserByDialogIDAndUserIDResponse)
-	err := c.cc.Invoke(ctx, DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *dialogServiceClient) CloseOrOpenDialog(ctx context.Context, in *CloseOrOpenDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, DialogService_CloseOrOpenDialog_FullMethodName, in, out, opts...)
@@ -320,27 +183,9 @@ func (c *dialogServiceClient) BatchCloseOrOpenDialog(ctx context.Context, in *Ba
 	return out, nil
 }
 
-func (c *dialogServiceClient) TopOrCancelTopDialog(ctx context.Context, in *TopOrCancelTopDialogRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, DialogService_TopOrCancelTopDialog_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *dialogServiceClient) GetAllUsersInConversation(ctx context.Context, in *GetAllUsersInConversationRequest, opts ...grpc.CallOption) (*GetAllUsersInConversationResponse, error) {
 	out := new(GetAllUsersInConversationResponse)
 	err := c.cc.Invoke(ctx, DialogService_GetAllUsersInConversation_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dialogServiceClient) GetDialogTargetUserId(ctx context.Context, in *GetDialogTargetUserIdRequest, opts ...grpc.CallOption) (*GetDialogTargetUserIdResponse, error) {
-	out := new(GetDialogTargetUserIdResponse)
-	err := c.cc.Invoke(ctx, DialogService_GetDialogTargetUserId_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -351,20 +196,6 @@ func (c *dialogServiceClient) GetDialogTargetUserId(ctx context.Context, in *Get
 // All implementations should embed UnimplementedDialogServiceServer
 // for forward compatibility
 type DialogServiceServer interface {
-	// CreateDialog 创建对话
-	CreateDialog(context.Context, *CreateDialogRequest) (*CreateDialogResponse, error)
-	// CreateAndJoinDialogWithGroup 创建群聊会话并加入
-	CreateAndJoinDialogWithGroup(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error)
-	// CreateAndJoinDialogWithGroup回滚操作
-	CreateAndJoinDialogWithGroupRevert(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error)
-	// 确认好友并加入对话
-	ConfirmFriendAndJoinDialog(context.Context, *ConfirmFriendAndJoinDialogRequest) (*ConfirmFriendAndJoinDialogResponse, error)
-	// ConfirmFriendAndJoinDialog回滚操作
-	ConfirmFriendAndJoinDialogRevert(context.Context, *ConfirmFriendAndJoinDialogRevertRequest) (*ConfirmFriendAndJoinDialogRevertResponse, error)
-	// 加入对话
-	JoinDialog(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
-	// JoinDialog回滚操作
-	JoinDialogRevert(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error)
 	// 获取用户对话列表
 	GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error)
 	// 根据多个对话ID获取对话信息
@@ -377,9 +208,6 @@ type DialogServiceServer interface {
 	GetDialogUserByDialogIDAndUserID(context.Context, *GetDialogUserByDialogIDAndUserIdRequest) (*GetDialogUserByDialogIDAndUserIdResponse, error)
 	// 根据群组ID获取对话信息
 	GetDialogByGroupId(context.Context, *GetDialogByGroupIdRequest) (*GetDialogByGroupIdResponse, error)
-	GetDialogByGroupIds(context.Context, *GetDialogByGroupIdsRequest) (*GetDialogByGroupIdsResponse, error)
-	// 根据对话ID列表删除对话
-	DeleteDialogByIds(context.Context, *DeleteDialogByIdsRequest) (*DeleteDialogByIdsResponse, error)
 	// 根据对话ID删除对话
 	DeleteDialogById(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error)
 	// DeleteDialogById回滚操作
@@ -388,47 +216,18 @@ type DialogServiceServer interface {
 	DeleteDialogUsersByDialogID(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
 	// DeleteDialogUsersByDialogID回滚操作
 	DeleteDialogUsersByDialogIDRevert(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error)
-	// 根据对话ID和用户ID删除对话成员
-	DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
-	// DeleteDialogUserByDialogIDAndUserID回滚操作
-	DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error)
 	// 关闭或者打开对话
 	CloseOrOpenDialog(context.Context, *CloseOrOpenDialogRequest) (*emptypb.Empty, error)
 	// 批量打开或关闭对话
 	BatchCloseOrOpenDialog(context.Context, *BatchCloseOrOpenDialogRequest) (*emptypb.Empty, error)
-	// 置顶或者取消置顶对话
-	TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error)
 	// 获取对话用户（包括已退出对话）
 	GetAllUsersInConversation(context.Context, *GetAllUsersInConversationRequest) (*GetAllUsersInConversationResponse, error)
-	// 查询对话对方userId
-	GetDialogTargetUserId(context.Context, *GetDialogTargetUserIdRequest) (*GetDialogTargetUserIdResponse, error)
 }
 
 // UnimplementedDialogServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedDialogServiceServer struct {
 }
 
-func (UnimplementedDialogServiceServer) CreateDialog(context.Context, *CreateDialogRequest) (*CreateDialogResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateDialog not implemented")
-}
-func (UnimplementedDialogServiceServer) CreateAndJoinDialogWithGroup(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAndJoinDialogWithGroup not implemented")
-}
-func (UnimplementedDialogServiceServer) CreateAndJoinDialogWithGroupRevert(context.Context, *CreateAndJoinDialogWithGroupRequest) (*CreateAndJoinDialogWithGroupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAndJoinDialogWithGroupRevert not implemented")
-}
-func (UnimplementedDialogServiceServer) ConfirmFriendAndJoinDialog(context.Context, *ConfirmFriendAndJoinDialogRequest) (*ConfirmFriendAndJoinDialogResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfirmFriendAndJoinDialog not implemented")
-}
-func (UnimplementedDialogServiceServer) ConfirmFriendAndJoinDialogRevert(context.Context, *ConfirmFriendAndJoinDialogRevertRequest) (*ConfirmFriendAndJoinDialogRevertResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfirmFriendAndJoinDialogRevert not implemented")
-}
-func (UnimplementedDialogServiceServer) JoinDialog(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method JoinDialog not implemented")
-}
-func (UnimplementedDialogServiceServer) JoinDialogRevert(context.Context, *JoinDialogRequest) (*JoinDialogResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method JoinDialogRevert not implemented")
-}
 func (UnimplementedDialogServiceServer) GetUserDialogList(context.Context, *GetUserDialogListRequest) (*GetUserDialogListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserDialogList not implemented")
 }
@@ -447,12 +246,6 @@ func (UnimplementedDialogServiceServer) GetDialogUserByDialogIDAndUserID(context
 func (UnimplementedDialogServiceServer) GetDialogByGroupId(context.Context, *GetDialogByGroupIdRequest) (*GetDialogByGroupIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDialogByGroupId not implemented")
 }
-func (UnimplementedDialogServiceServer) GetDialogByGroupIds(context.Context, *GetDialogByGroupIdsRequest) (*GetDialogByGroupIdsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDialogByGroupIds not implemented")
-}
-func (UnimplementedDialogServiceServer) DeleteDialogByIds(context.Context, *DeleteDialogByIdsRequest) (*DeleteDialogByIdsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogByIds not implemented")
-}
 func (UnimplementedDialogServiceServer) DeleteDialogById(context.Context, *DeleteDialogByIdRequest) (*DeleteDialogByIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogById not implemented")
 }
@@ -465,26 +258,14 @@ func (UnimplementedDialogServiceServer) DeleteDialogUsersByDialogID(context.Cont
 func (UnimplementedDialogServiceServer) DeleteDialogUsersByDialogIDRevert(context.Context, *DeleteDialogUsersByDialogIDRequest) (*DeleteDialogUsersByDialogIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUsersByDialogIDRevert not implemented")
 }
-func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserID(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUserByDialogIDAndUserID not implemented")
-}
-func (UnimplementedDialogServiceServer) DeleteDialogUserByDialogIDAndUserIDRevert(context.Context, *DeleteDialogUserByDialogIDAndUserIDRequest) (*DeleteDialogUserByDialogIDAndUserIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteDialogUserByDialogIDAndUserIDRevert not implemented")
-}
 func (UnimplementedDialogServiceServer) CloseOrOpenDialog(context.Context, *CloseOrOpenDialogRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseOrOpenDialog not implemented")
 }
 func (UnimplementedDialogServiceServer) BatchCloseOrOpenDialog(context.Context, *BatchCloseOrOpenDialogRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchCloseOrOpenDialog not implemented")
 }
-func (UnimplementedDialogServiceServer) TopOrCancelTopDialog(context.Context, *TopOrCancelTopDialogRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TopOrCancelTopDialog not implemented")
-}
 func (UnimplementedDialogServiceServer) GetAllUsersInConversation(context.Context, *GetAllUsersInConversationRequest) (*GetAllUsersInConversationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllUsersInConversation not implemented")
-}
-func (UnimplementedDialogServiceServer) GetDialogTargetUserId(context.Context, *GetDialogTargetUserIdRequest) (*GetDialogTargetUserIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDialogTargetUserId not implemented")
 }
 
 // UnsafeDialogServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -496,132 +277,6 @@ type UnsafeDialogServiceServer interface {
 
 func RegisterDialogServiceServer(s grpc.ServiceRegistrar, srv DialogServiceServer) {
 	s.RegisterService(&DialogService_ServiceDesc, srv)
-}
-
-func _DialogService_CreateDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateDialogRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).CreateDialog(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_CreateDialog_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).CreateDialog(ctx, req.(*CreateDialogRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_CreateAndJoinDialogWithGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAndJoinDialogWithGroupRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroup(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_CreateAndJoinDialogWithGroup_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroup(ctx, req.(*CreateAndJoinDialogWithGroupRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_CreateAndJoinDialogWithGroupRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAndJoinDialogWithGroupRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroupRevert(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_CreateAndJoinDialogWithGroupRevert_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).CreateAndJoinDialogWithGroupRevert(ctx, req.(*CreateAndJoinDialogWithGroupRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_ConfirmFriendAndJoinDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfirmFriendAndJoinDialogRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialog(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_ConfirmFriendAndJoinDialog_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialog(ctx, req.(*ConfirmFriendAndJoinDialogRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_ConfirmFriendAndJoinDialogRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfirmFriendAndJoinDialogRevertRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialogRevert(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_ConfirmFriendAndJoinDialogRevert_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).ConfirmFriendAndJoinDialogRevert(ctx, req.(*ConfirmFriendAndJoinDialogRevertRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_JoinDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(JoinDialogRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).JoinDialog(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_JoinDialog_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).JoinDialog(ctx, req.(*JoinDialogRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_JoinDialogRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(JoinDialogRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).JoinDialogRevert(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_JoinDialogRevert_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).JoinDialogRevert(ctx, req.(*JoinDialogRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _DialogService_GetUserDialogList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -732,42 +387,6 @@ func _DialogService_GetDialogByGroupId_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DialogService_GetDialogByGroupIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDialogByGroupIdsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).GetDialogByGroupIds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_GetDialogByGroupIds_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).GetDialogByGroupIds(ctx, req.(*GetDialogByGroupIdsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_DeleteDialogByIds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDialogByIdsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).DeleteDialogByIds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_DeleteDialogByIds_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).DeleteDialogByIds(ctx, req.(*DeleteDialogByIdsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _DialogService_DeleteDialogById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteDialogByIdRequest)
 	if err := dec(in); err != nil {
@@ -840,42 +459,6 @@ func _DialogService_DeleteDialogUsersByDialogIDRevert_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DialogService_DeleteDialogUserByDialogIDAndUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDialogUserByDialogIDAndUserIDRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).DeleteDialogUserByDialogIDAndUserID(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_DeleteDialogUserByDialogIDAndUserID_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).DeleteDialogUserByDialogIDAndUserID(ctx, req.(*DeleteDialogUserByDialogIDAndUserIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDialogUserByDialogIDAndUserIDRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).DeleteDialogUserByDialogIDAndUserIDRevert(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).DeleteDialogUserByDialogIDAndUserIDRevert(ctx, req.(*DeleteDialogUserByDialogIDAndUserIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _DialogService_CloseOrOpenDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CloseOrOpenDialogRequest)
 	if err := dec(in); err != nil {
@@ -912,24 +495,6 @@ func _DialogService_BatchCloseOrOpenDialog_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DialogService_TopOrCancelTopDialog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TopOrCancelTopDialogRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).TopOrCancelTopDialog(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_TopOrCancelTopDialog_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).TopOrCancelTopDialog(ctx, req.(*TopOrCancelTopDialogRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _DialogService_GetAllUsersInConversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAllUsersInConversationRequest)
 	if err := dec(in); err != nil {
@@ -948,24 +513,6 @@ func _DialogService_GetAllUsersInConversation_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DialogService_GetDialogTargetUserId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDialogTargetUserIdRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DialogServiceServer).GetDialogTargetUserId(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DialogService_GetDialogTargetUserId_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DialogServiceServer).GetDialogTargetUserId(ctx, req.(*GetDialogTargetUserIdRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // DialogService_ServiceDesc is the grpc.ServiceDesc for DialogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -973,34 +520,6 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "relation_v1.DialogService",
 	HandlerType: (*DialogServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateDialog",
-			Handler:    _DialogService_CreateDialog_Handler,
-		},
-		{
-			MethodName: "CreateAndJoinDialogWithGroup",
-			Handler:    _DialogService_CreateAndJoinDialogWithGroup_Handler,
-		},
-		{
-			MethodName: "CreateAndJoinDialogWithGroupRevert",
-			Handler:    _DialogService_CreateAndJoinDialogWithGroupRevert_Handler,
-		},
-		{
-			MethodName: "ConfirmFriendAndJoinDialog",
-			Handler:    _DialogService_ConfirmFriendAndJoinDialog_Handler,
-		},
-		{
-			MethodName: "ConfirmFriendAndJoinDialogRevert",
-			Handler:    _DialogService_ConfirmFriendAndJoinDialogRevert_Handler,
-		},
-		{
-			MethodName: "JoinDialog",
-			Handler:    _DialogService_JoinDialog_Handler,
-		},
-		{
-			MethodName: "JoinDialogRevert",
-			Handler:    _DialogService_JoinDialogRevert_Handler,
-		},
 		{
 			MethodName: "GetUserDialogList",
 			Handler:    _DialogService_GetUserDialogList_Handler,
@@ -1026,14 +545,6 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DialogService_GetDialogByGroupId_Handler,
 		},
 		{
-			MethodName: "GetDialogByGroupIds",
-			Handler:    _DialogService_GetDialogByGroupIds_Handler,
-		},
-		{
-			MethodName: "DeleteDialogByIds",
-			Handler:    _DialogService_DeleteDialogByIds_Handler,
-		},
-		{
 			MethodName: "DeleteDialogById",
 			Handler:    _DialogService_DeleteDialogById_Handler,
 		},
@@ -1050,14 +561,6 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DialogService_DeleteDialogUsersByDialogIDRevert_Handler,
 		},
 		{
-			MethodName: "DeleteDialogUserByDialogIDAndUserID",
-			Handler:    _DialogService_DeleteDialogUserByDialogIDAndUserID_Handler,
-		},
-		{
-			MethodName: "DeleteDialogUserByDialogIDAndUserIDRevert",
-			Handler:    _DialogService_DeleteDialogUserByDialogIDAndUserIDRevert_Handler,
-		},
-		{
 			MethodName: "CloseOrOpenDialog",
 			Handler:    _DialogService_CloseOrOpenDialog_Handler,
 		},
@@ -1066,16 +569,8 @@ var DialogService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DialogService_BatchCloseOrOpenDialog_Handler,
 		},
 		{
-			MethodName: "TopOrCancelTopDialog",
-			Handler:    _DialogService_TopOrCancelTopDialog_Handler,
-		},
-		{
 			MethodName: "GetAllUsersInConversation",
 			Handler:    _DialogService_GetAllUsersInConversation_Handler,
-		},
-		{
-			MethodName: "GetDialogTargetUserId",
-			Handler:    _DialogService_GetDialogTargetUserId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

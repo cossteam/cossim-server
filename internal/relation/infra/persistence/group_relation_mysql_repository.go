@@ -271,6 +271,9 @@ func (m *MySQLRelationGroupRepository) GetUsersGroupByGroupIDAndUserIDs(ctx cont
 	if err := m.db.WithContext(ctx).
 		Where(" group_id = ? and user_id IN (?) AND deleted_at = 0", gid, uids).
 		Find(&ugs).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 

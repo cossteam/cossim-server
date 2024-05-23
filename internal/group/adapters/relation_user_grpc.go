@@ -20,7 +20,7 @@ type RelationUserGrpc struct {
 }
 
 func (s *RelationUserGrpc) IsFriendsWithAll(ctx context.Context, currentUserID string, invitedUserIDs []string) (bool, error) {
-	friends, err := s.client.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: currentUserID, FriendIds: invitedUserIDs})
+	friends, err := s.client.GetRelationsWithUsers(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: currentUserID, FriendIds: invitedUserIDs})
 	if err != nil {
 		return false, code.RelationErrCreateGroupFailed
 	}
@@ -39,7 +39,7 @@ func (s *RelationUserGrpc) GetUserRelationships(ctx context.Context, currentUser
 		return map[string]command.UserRelationship{}, nil
 	}
 
-	friends, err := s.client.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: currentUserID, FriendIds: userIDs})
+	friends, err := s.client.GetRelationsWithUsers(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{UserId: currentUserID, FriendIds: userIDs})
 	if err != nil {
 		return nil, code.RelationErrCreateGroupFailed
 	}

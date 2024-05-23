@@ -2,43 +2,47 @@ package http
 
 import (
 	"context"
-	grpchandler "github.com/cossim/coss-server/internal/relation/interfaces/grpc"
-	"github.com/cossim/coss-server/internal/relation/service"
+	"fmt"
+	v1 "github.com/cossim/coss-server/internal/relation/api/http/v1"
+	"github.com/cossim/coss-server/internal/relation/app"
 	authv1 "github.com/cossim/coss-server/internal/user/api/grpc/v1"
 	"github.com/cossim/coss-server/internal/user/rpc/client"
 	pkgconfig "github.com/cossim/coss-server/pkg/config"
 	"github.com/cossim/coss-server/pkg/discovery"
 	"github.com/cossim/coss-server/pkg/encryption"
 	"github.com/cossim/coss-server/pkg/http/middleware"
-	plog "github.com/cossim/coss-server/pkg/log"
 	"github.com/cossim/coss-server/pkg/manager/server"
 	"github.com/cossim/coss-server/pkg/version"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/gin-gonic/gin"
+	oapimiddleware "github.com/oapi-codegen/gin-middleware"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"os"
 )
 
-var (
-	_ server.HTTPService = &Handler{}
-)
+var _ v1.ServerInterface = &HttpServer{}
 
-type Handler struct {
-	logger          *zap.Logger
-	svc             *service.Service
-	enc             encryption.Encryptor
-	RelationService *grpchandler.RelationServiceServer
-	authService     authv1.UserAuthServiceClient
+var _ server.HTTPService = &HttpServer{}
+
+func NewHttpServer(logger *zap.Logger, app *app.Application) *HttpServer {
+	return &HttpServer{logger: logger, app: app}
 }
 
-func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
-	h.logger = plog.NewDefaultLogger("relation_bff", int8(cfg.Log.Level))
+type HttpServer struct {
+	logger      *zap.Logger
+	app         *app.Application
+	enc         encryption.Encryptor
+	authService authv1.UserAuthServiceClient
+}
+
+func (h *HttpServer) Init(cfg *pkgconfig.AppConfig) error {
+	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
 	if cfg.Encryption.Enable {
 		if err := h.enc.ReadKeyPair(); err != nil {
 			return err
 		}
 	}
-	h.enc = encryption.NewEncryptor([]byte(cfg.Encryption.Passphrase), cfg.Encryption.Name, cfg.Encryption.Email, cfg.Encryption.RsaBits, cfg.Encryption.Enable)
-	h.svc = service.New(cfg, h.RelationService)
 	var userAddr string
 	if cfg.Discovers["user"].Direct {
 		userAddr = cfg.Discovers["user"].Addr()
@@ -53,107 +57,48 @@ func (h *Handler) Init(cfg *pkgconfig.AppConfig) error {
 	return nil
 }
 
-func (h *Handler) Name() string {
+func (h *HttpServer) Name() string {
 	return "relation_bff"
 }
 
-func (h *Handler) Version() string {
+func (h *HttpServer) Version() string {
 	return version.FullVersion()
 }
 
-// @title CossApi
-
-func (h *Handler) RegisterRoute(r gin.IRouter) {
-	gin.SetMode(gin.ReleaseMode)
-	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc), middleware.RecoveryMiddleware())
-	r.Use(middleware.AuthMiddleware(h.authService))
-	api := r.Group("/api/v1/relation")
-	//api.Use(middleware.AuthMiddleware(h.authService))
-
-	u := api.Group("/user")
-	u.GET("/friend_list", h.friendList)
-	u.GET("/blacklist", h.blackList)
-	u.GET("/request_list", h.userRequestList)
-	u.POST("/add_friend", h.addFriend)
-	u.POST("/manage_friend", h.manageFriend)
-	u.POST("/delete_friend", h.deleteFriend)
-	u.POST("/delete_request_record", h.deleteUserRequestRecord)
-	u.POST("/add_blacklist", h.addBlacklist)
-	u.POST("/delete_blacklist", h.deleteBlacklist)
-	u.POST("/switch/e2e/key", h.switchUserE2EPublicKey)
-	//设置用户静默通知
-	u.POST("/silent", h.setUserSilentNotification)
-	// 设置阅后即焚
-	u.POST("/burn/open", h.openUserBurnAfterReading)
-	//设置好友备注
-	u.POST("/remark/set", h.setUserFriendRemark)
-
-	g := api.Group("/group")
-	g.GET("/member", h.getGroupMember)
-	g.GET("/request_list", h.groupRequestList)
-	g.POST("/delete_request_record", h.deleteGroupRequestRecord)
-	// 邀请好友加入群聊
-	g.POST("/invite", h.inviteGroup)
-	// 申请加入群聊
-	g.POST("/join", h.joinGroup)
-	// 用户加入或拒绝群聊
-	g.POST("/manage_join", h.manageJoinGroup)
-	//获取用户群聊列表
-	g.GET("/list", h.getUserGroupList)
-	// 退出群聊
-	g.POST("quit", h.quitGroup)
-	//群聊设置消息静默
-	g.POST("/silent", h.setGroupSilentNotification)
-	//关闭或打开阅后即焚消息
-	//g.POST("/burn/open", h.openGroupBurnAfterReading)
-	//g.POST("/burn/timeout/set", h.setGroupOpenBurnAfterReadingTimeOut)
-
-	//获取群聊公告列表
-	g.GET("/announcement/list", h.getGroupAnnouncementList)
-	//获取群公告详情
-	g.GET("/announcement/detail", h.getGroupAnnouncementDetail)
-	//设置群公告为已读
-	g.POST("/announcement/read", h.readGroupAnnouncement)
-	//获取群公告已读列表
-	g.GET("/announcement/read/list", h.getReadGroupAnnouncementList)
-
-	g.POST("/remark/set", h.setGroupUserRemark)
-
-	admin := g.Group("/admin")
-	// 设置群聊管理员
-	admin.POST("/add", h.addGroupAdmin)
-	// 管理员管理群聊申请
-	admin.POST("/manage/join", h.adminManageJoinGroup)
-	// 管理员移除群聊成员
-	admin.POST("/manage/remove", h.removeUserFromGroup)
-	//创建群公告
-	admin.POST("/announcement", h.createGroupAnnouncement)
-	//修改群公告
-	admin.POST("/announcement/update", h.updateGroupAnnouncement)
-	//删除群公告
-	admin.POST("/announcement/delete", h.deleteGroupAnnouncement)
-
-	d := api.Group("/dialog")
-	// 置顶对话
-	d.POST("/top", h.topOrCancelTopDialog)
-	// 是否展示对话
-	d.POST("/show", h.closeOrOpenDialog)
-}
-
-func (h *Handler) Health(r gin.IRouter) string {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (h *Handler) Stop(ctx context.Context) error {
-	return h.svc.Stop(ctx)
-}
-
-func (h *Handler) DiscoverServices(services map[string]*grpc.ClientConn) error {
-	for k, v := range services {
-		if err := h.svc.HandlerGrpcClient(k, v); err != nil {
-			h.logger.Error("handler grpc client error", zap.String("name", k), zap.String("addr", v.Target()), zap.Error(err))
-		}
+func (h *HttpServer) RegisterRoute(r gin.IRouter) {
+	// 添加一些中间件或其他配置
+	r.Use(middleware.CORSMiddleware(), middleware.GRPCErrorMiddleware(h.logger), middleware.EncryptionMiddleware(h.enc))
+	swagger, err := v1.GetSwagger()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
+		os.Exit(1)
 	}
+
+	// Clear out the servers array in the swagger spec, that skips validating
+	// that server names match. We don't know how this thing will be run.
+	swagger.Servers = nil
+
+	validatorOptions := &oapimiddleware.Options{
+		ErrorHandler: middleware.HandleOpenAPIError,
+	}
+	validatorOptions.Options.AuthenticationFunc = func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+		return middleware.HandleOpenApiAuthentication(ctx, h.authService, input)
+	}
+
+	// Use our validation middleware to check all requests against the
+	// OpenAPI schema.
+	r.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, validatorOptions))
+	v1.RegisterHandlers(r, h)
+}
+
+func (h *HttpServer) Health(r gin.IRouter) string {
+	return ""
+}
+
+func (h *HttpServer) Stop(ctx context.Context) error {
+	return nil
+}
+
+func (h *HttpServer) DiscoverServices(services map[string]*grpc.ClientConn) error {
 	return nil
 }

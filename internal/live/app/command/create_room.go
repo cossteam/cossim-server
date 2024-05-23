@@ -226,7 +226,7 @@ func (h *LiveHandler) areUsersFriends(ctx context.Context, userID, friendID stri
 }
 
 func (h *LiveHandler) checkUserRelations(ctx context.Context, creator string, participants []string) error {
-	friends, err := h.relationUserService.GetUserRelationByUserIds(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{
+	friends, err := h.relationUserService.GetRelationsWithUsers(ctx, &relationgrpcv1.GetUserRelationByUserIdsRequest{
 		UserId:    creator,
 		FriendIds: participants,
 	})
