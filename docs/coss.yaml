@@ -3686,9 +3686,9 @@ paths:
                                         description: 用户id
                                         type: string
                                     user_info:
-                                        $ref: '#/components/schemas/LoginResponse'
+                                        $ref: '#/components/schemas/UserInfo'
                                 type: object
-                    description: 登录成功
+                    description: 激活成功
             summary: 用户激活
             tags:
                 - user
@@ -3834,7 +3834,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/UserInfo'
+                                $ref: '#/components/schemas/LoginResponse'
                     description: 登录成功
             summary: 用户登录
             tags:

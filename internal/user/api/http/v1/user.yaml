@@ -252,7 +252,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserInfo'
+                $ref: '#/components/schemas/LoginResponse'
   /api/v1/user/register:
     post:
       tags:
@@ -333,7 +333,7 @@ paths:
             type: string
       responses:
         '200':
-          description: 登录成功
+          description: 激活成功
           content:
             application/json:
               schema:
@@ -343,7 +343,7 @@ paths:
                     type: string
                     description: 用户id
                   user_info:
-                    $ref: '#/components/schemas/LoginResponse'
+                    $ref: '#/components/schemas/UserInfo'
   /api/v1/user/logout:
     post:
       tags:
