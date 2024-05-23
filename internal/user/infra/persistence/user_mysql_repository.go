@@ -141,16 +141,21 @@ func (r *MySQLUserRepository) GetUser(ctx context.Context, id string) (*entity.U
 			DeletedAt: 0,
 		}).
 		First(user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, code.NotFound
+		}
 		return nil, err
 	}
 
 	entityUser := converter.UserPOToEntity(user)
 
-	if r.cache != nil {
-		if err := r.cache.SetUserInfo(ctx, entityUser.ID, entityUser, cache.UserExpireTime); err != nil {
-			log.Printf("无法设置用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
+	go func() {
+		if r.cache != nil {
+			if err := r.cache.SetUserInfo(context.Background(), entityUser.ID, entityUser, cache.UserExpireTime); err != nil {
+				log.Printf("无法设置用户信息缓存: %v", utils.NewErrorWithStack(err.Error()))
+			}
 		}
-	}
+	}()
 
 	return entityUser, nil
 }
