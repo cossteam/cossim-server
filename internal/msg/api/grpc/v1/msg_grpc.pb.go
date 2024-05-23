@@ -32,85 +32,10 @@ const (
 type MsgServiceClient interface {
 	// 发送私聊消息
 	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
-	// //发送私聊消息
-	// rpc SendUserMessageRevert(MsgIdRequest)returns (SendUserMsgRevertResponse);
 	// //群发私聊消息
 	SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error)
-	// //发送群消息
-	// rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
-	// //发送群消息回滚
-	// rpc SendGroupMessageRevert(MsgIdRequest)returns (SendGroupMsgRevertResponse);
-	// //获取用户消息列表
-	// rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
-	// //获取私聊对话最新消息
-	// rpc GetUserLastMessageList(GetLastMsgListRequest)returns(UserMessages);
-	// //获取群聊对话最新消息
-	// rpc GetGroupLastMessageList(GetLastMsgListRequest) returns(GroupMessages);
-	//
-	// //根据好友id获取最后一条消息
-	// rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
-	// //根据群组id获取最后一条消息
-	// rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
-	// //根据对话id获取最后一条消息
-	// rpc GetLastUserMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
-	// //编辑私聊消息
-	// rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
-	// //撤回私聊消息
-	// rpc DeleteUserMessage(DeleteUserMsgRequest) returns (UserMessage);
-	// //根据对话id与msgId查询msgId之后的私聊消息
-	// rpc GetUserMsgIdAfterMsgList(GetUserMsgIdAfterMsgListRequest) returns (GetUserMsgIdAfterMsgListResponse);
-	//
-	// //获取群消息列表
-	// rpc GetGroupMessageList(GetGroupMsgListRequest) returns(GetGroupMsgListResponse);
-	// //编辑群消息
-	// rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
-	// //撤回群消息
-	// rpc DeleteGroupMessage(DeleteGroupMsgRequest) returns (GroupMessage);
-	// //根据消息id获取私聊消息
-	// rpc GetUserMessageById(GetUserMsgByIDRequest) returns (UserMessage);
-	// //根据消息id获取群消息
-	// rpc GetGroupMessageById(GetGroupMsgByIDRequest) returns (GroupMessage);
-	// //根据多个消息id获取私聊消息
-	// rpc GetUserMessagesByIds(GetUserMessagesByIdsRequest) returns (GetUserMessagesByIdsResponse);
-	// //根据多个消息id获取群消息
-	// rpc GetGroupMessagesByIds(GetGroupMessagesByIdsRequest) returns (GetGroupMessagesByIdsResponse);
-	// //设置私聊消息标注状态
-	// rpc SetUserMsgLabel(SetUserMsgLabelRequest) returns (SetUserMsgLabelResponse);
-	// // 设置群消息标注状态
-	// rpc SetGroupMsgLabel(SetGroupMsgLabelRequest) returns (SetGroupMsgLabelResponse);
-	// //根据对话id获取私聊标注信息
-	// rpc GetUserMsgLabelByDialogId(GetUserMsgLabelByDialogIdRequest) returns (GetUserMsgLabelByDialogIdResponse);
-	// //根据对话id获取群消息标注信息
-	// rpc GetGroupMsgLabelByDialogId(GetGroupMsgLabelByDialogIdRequest) returns (GetGroupMsgLabelByDialogIdResponse);
-	// //根据对话id与msgId查询msgId之后的群消息
-	// rpc GetGroupMsgIdAfterMsgList(GetGroupMsgIdAfterMsgListRequest) returns (GetGroupMsgIdAfterMsgListResponse);
-	// //获取群聊未读消息
-	// rpc GetGroupUnreadMessages(GetGroupUnreadMessagesRequest) returns (GetGroupUnreadMessagesResponse);
-	//
-	// // 一键已读用户消息
-	// rpc ReadAllUserMsg(ReadAllUserMsgRequest) returns (ReadAllUserMsgResponse);
-	//
-	// // 一键已读群聊消息
-	// rpc ReadAllGroupMsg(ReadAllGroupMsgRequest) returns (ReadAllGroupMsgResponse);
-	//
-	// //批量设置私聊消息id为已读
-	// rpc SetUserMsgsReadStatus(SetUserMsgsReadStatusRequest) returns (SetUserMsgsReadStatusResponse);
-	// //修改指定私聊消息的已读状态
-	// rpc SetUserMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-	// //获取私聊对话未读消息
-	// rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
 	// //确认根据对话id删除私聊消息
 	ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
-	// //确认根据对话id删除群聊消息
-	// rpc ConfirmDeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
-	// //根据对话id删除私聊消息
-	// rpc DeleteUserMessageByDialogId(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
-	// //根据对话id删除群聊消息
-	// rpc DeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
-	// //根据对话id删除私聊消息回滚
-	// rpc DeleteUserMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
-	// //根据对话id删除群聊消息回滚
-	// rpc DeleteGroupMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
 	// //根据消息id删除私聊消息
 	DeleteUserMessageById(ctx context.Context, in *DeleteUserMsgByIDRequest, opts ...grpc.CallOption) (*DeleteUserMsgByIDResponse, error)
 	// 根据消息ids删除私聊消息
@@ -176,85 +101,10 @@ func (c *msgServiceClient) DeleteUserMessageByIDs(ctx context.Context, in *Delet
 type MsgServiceServer interface {
 	// 发送私聊消息
 	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
-	// //发送私聊消息
-	// rpc SendUserMessageRevert(MsgIdRequest)returns (SendUserMsgRevertResponse);
 	// //群发私聊消息
 	SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error)
-	// //发送群消息
-	// rpc SendGroupMessage(SendGroupMsgRequest) returns(SendGroupMsgResponse);
-	// //发送群消息回滚
-	// rpc SendGroupMessageRevert(MsgIdRequest)returns (SendGroupMsgRevertResponse);
-	// //获取用户消息列表
-	// rpc GetUserMessageList(GetUserMsgListRequest) returns(GetUserMsgListResponse);
-	// //获取私聊对话最新消息
-	// rpc GetUserLastMessageList(GetLastMsgListRequest)returns(UserMessages);
-	// //获取群聊对话最新消息
-	// rpc GetGroupLastMessageList(GetLastMsgListRequest) returns(GroupMessages);
-	//
-	// //根据好友id获取最后一条消息
-	// rpc GetLastMsgsForUserWithFriends(UserMsgsRequest) returns (UserMessages);
-	// //根据群组id获取最后一条消息
-	// rpc GetLastMsgsForGroupsWithIDs(GroupMsgsRequest) returns (GroupMessages);
-	// //根据对话id获取最后一条消息
-	// rpc GetLastUserMsgsByDialogIds(GetLastMsgsByDialogIdsRequest) returns (GetLastMsgsResponse);
-	// //编辑私聊消息
-	// rpc EditUserMessage(EditUserMsgRequest) returns (UserMessage);
-	// //撤回私聊消息
-	// rpc DeleteUserMessage(DeleteUserMsgRequest) returns (UserMessage);
-	// //根据对话id与msgId查询msgId之后的私聊消息
-	// rpc GetUserMsgIdAfterMsgList(GetUserMsgIdAfterMsgListRequest) returns (GetUserMsgIdAfterMsgListResponse);
-	//
-	// //获取群消息列表
-	// rpc GetGroupMessageList(GetGroupMsgListRequest) returns(GetGroupMsgListResponse);
-	// //编辑群消息
-	// rpc EditGroupMessage(EditGroupMsgRequest) returns (GroupMessage);
-	// //撤回群消息
-	// rpc DeleteGroupMessage(DeleteGroupMsgRequest) returns (GroupMessage);
-	// //根据消息id获取私聊消息
-	// rpc GetUserMessageById(GetUserMsgByIDRequest) returns (UserMessage);
-	// //根据消息id获取群消息
-	// rpc GetGroupMessageById(GetGroupMsgByIDRequest) returns (GroupMessage);
-	// //根据多个消息id获取私聊消息
-	// rpc GetUserMessagesByIds(GetUserMessagesByIdsRequest) returns (GetUserMessagesByIdsResponse);
-	// //根据多个消息id获取群消息
-	// rpc GetGroupMessagesByIds(GetGroupMessagesByIdsRequest) returns (GetGroupMessagesByIdsResponse);
-	// //设置私聊消息标注状态
-	// rpc SetUserMsgLabel(SetUserMsgLabelRequest) returns (SetUserMsgLabelResponse);
-	// // 设置群消息标注状态
-	// rpc SetGroupMsgLabel(SetGroupMsgLabelRequest) returns (SetGroupMsgLabelResponse);
-	// //根据对话id获取私聊标注信息
-	// rpc GetUserMsgLabelByDialogId(GetUserMsgLabelByDialogIdRequest) returns (GetUserMsgLabelByDialogIdResponse);
-	// //根据对话id获取群消息标注信息
-	// rpc GetGroupMsgLabelByDialogId(GetGroupMsgLabelByDialogIdRequest) returns (GetGroupMsgLabelByDialogIdResponse);
-	// //根据对话id与msgId查询msgId之后的群消息
-	// rpc GetGroupMsgIdAfterMsgList(GetGroupMsgIdAfterMsgListRequest) returns (GetGroupMsgIdAfterMsgListResponse);
-	// //获取群聊未读消息
-	// rpc GetGroupUnreadMessages(GetGroupUnreadMessagesRequest) returns (GetGroupUnreadMessagesResponse);
-	//
-	// // 一键已读用户消息
-	// rpc ReadAllUserMsg(ReadAllUserMsgRequest) returns (ReadAllUserMsgResponse);
-	//
-	// // 一键已读群聊消息
-	// rpc ReadAllGroupMsg(ReadAllGroupMsgRequest) returns (ReadAllGroupMsgResponse);
-	//
-	// //批量设置私聊消息id为已读
-	// rpc SetUserMsgsReadStatus(SetUserMsgsReadStatusRequest) returns (SetUserMsgsReadStatusResponse);
-	// //修改指定私聊消息的已读状态
-	// rpc SetUserMsgReadStatus(SetUserMsgReadStatusRequest) returns (SetUserMsgReadStatusResponse);
-	// //获取私聊对话未读消息
-	// rpc GetUnreadUserMsgs(GetUnreadUserMsgsRequest) returns (GetUnreadUserMsgsResponse);
 	// //确认根据对话id删除私聊消息
 	ConfirmDeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)
-	// //确认根据对话id删除群聊消息
-	// rpc ConfirmDeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
-	// //根据对话id删除私聊消息
-	// rpc DeleteUserMessageByDialogId(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
-	// //根据对话id删除群聊消息
-	// rpc DeleteGroupMessageByDialogId(DeleteGroupMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
-	// //根据对话id删除私聊消息回滚
-	// rpc DeleteUserMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteUserMsgByDialogIdResponse);
-	// //根据对话id删除群聊消息回滚
-	// rpc DeleteGroupMessageByDialogIdRollback(DeleteUserMsgByDialogIdRequest) returns (DeleteGroupMsgByDialogIdResponse);
 	// //根据消息id删除私聊消息
 	DeleteUserMessageById(context.Context, *DeleteUserMsgByIDRequest) (*DeleteUserMsgByIDResponse, error)
 	// 根据消息ids删除私聊消息

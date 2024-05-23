@@ -58,7 +58,6 @@ func (s *Handler) Version() string { return version.FullVersion() }
 
 func (s *Handler) Register(srv *grpc.Server) {
 	api.RegisterMsgServiceServer(srv, s)
-	api.RegisterGroupMessageServiceServer(srv, s)
 }
 
 func (s *Handler) RegisterHealth(srv *grpc.Server) {
