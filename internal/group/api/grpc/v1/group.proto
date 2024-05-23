@@ -45,23 +45,6 @@ message GetBatchGroupInfoResponse {
   repeated Group groups = 1;
 }
 
-message UpdateGroupRequest {
-  // @inject_tag: json:"group"
-  Group group = 1;
-}
-
-message CreateGroupRequest {
-  // @inject_tag: json:"group"
-  Group group = 1;
-}
-
-message DeleteGroupRequest {
-  // @inject_tag: json:"gid"
-  uint32 Gid = 1;
-}
-
-message EmptyResponse {}
-
 enum GroupStatus {
   GROUP_STATUS_NORMAL = 0;   // 正常状态
   GROUP_STATUS_LOCKED = 1;   // 锁定状态
@@ -78,19 +61,4 @@ service GroupService {
 
   // 批量通过群组ID获取群组信息
   rpc GetBatchGroupInfoByIDs (GetBatchGroupInfoRequest) returns (GetBatchGroupInfoResponse);
-
-  // 更新群组信息
-  rpc UpdateGroup (UpdateGroupRequest) returns (Group);
-
-  // 创建群组
-  rpc CreateGroup (CreateGroupRequest) returns (Group);
-
-  // CreateGroup回滚操作
-  rpc CreateGroupRevert (CreateGroupRequest) returns (Group);
-
-  // 删除群组
-  rpc DeleteGroup(DeleteGroupRequest) returns (EmptyResponse);
-
-  // 删除群组回滚操作
-  rpc DeleteGroupRevert(DeleteGroupRequest) returns (EmptyResponse);
 }

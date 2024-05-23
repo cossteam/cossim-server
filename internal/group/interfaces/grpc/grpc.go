@@ -3,52 +3,54 @@ package grpc
 import (
 	"context"
 	groupgrpcv1 "github.com/cossim/coss-server/internal/group/api/grpc/v1"
-	"github.com/cossim/coss-server/internal/group/domain/entity"
 	"github.com/cossim/coss-server/internal/group/domain/repository"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/utils"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"gorm.io/gorm"
 )
 
 var _ groupgrpcv1.GroupServiceServer = &GroupServiceServer{}
 
+// todo
 func (s *GroupServiceServer) GetGroupInfoByGid(ctx context.Context, request *groupgrpcv1.GetGroupInfoRequest) (*groupgrpcv1.Group, error) {
+	if request == nil || request.Gid == 0 {
+		return nil, code.WrapCodeToGRPC(code.InvalidParameter)
+	}
+
 	resp := &groupgrpcv1.Group{}
 
-	entity, err := s.repo.Get(ctx, request.Gid)
+	e, err := s.repo.Get(ctx, request.Gid)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return resp, status.Error(codes.Code(code.GroupErrGroupNotFound.Code()), err.Error())
+		if errors.Is(err, code.NotFound) {
+			return nil, code.WrapCodeToGRPC(code.GroupErrGroupNotFound.Reason(utils.FormatErrorStack(err)))
 		}
-		return resp, status.Error(codes.Code(code.GroupErrGetGroupInfoByGidFailed.Code()), err.Error())
+		return nil, code.WrapCodeToGRPC(code.GroupErrGetGroupInfoByGidFailed.Reason(utils.FormatErrorStack(err)))
 	}
 
 	resp = &groupgrpcv1.Group{
-		Id:              entity.ID,
-		Type:            groupgrpcv1.GroupType(entity.Type),
-		Status:          groupgrpcv1.GroupStatus(entity.Status),
-		MaxMembersLimit: int32(entity.MaxMembersLimit),
-		CreatorId:       entity.CreatorID,
-		Name:            entity.Name,
-		Avatar:          entity.Avatar,
-		SilenceTime:     entity.SilenceTime,
-		JoinApprove:     entity.JoinApprove,
-		Encrypt:         entity.Encrypt,
+		Id:              e.ID,
+		Type:            groupgrpcv1.GroupType(e.Type),
+		Status:          groupgrpcv1.GroupStatus(e.Status),
+		MaxMembersLimit: int32(e.MaxMembersLimit),
+		CreatorId:       e.CreatorID,
+		Name:            e.Name,
+		Avatar:          e.Avatar,
+		SilenceTime:     e.SilenceTime,
+		JoinApprove:     e.JoinApprove,
+		Encrypt:         e.Encrypt,
 	}
 
 	return resp, nil
 }
 
+// todo
 func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request *groupgrpcv1.GetBatchGroupInfoRequest) (*groupgrpcv1.GetBatchGroupInfoResponse, error) {
-	resp := &groupgrpcv1.GetBatchGroupInfoResponse{}
-
-	if len(request.GroupIds) == 0 {
-		return resp, code.MyCustomErrorCode.CustomMessage("entity ids is empty")
+	if request == nil || len(request.GroupIds) == 0 {
+		return nil, code.WrapCodeToGRPC(code.InvalidParameter)
 	}
 
-	//将uint32转成uint
+	resp := &groupgrpcv1.GetBatchGroupInfoResponse{}
+
 	groupIds := make([]uint, len(request.GroupIds))
 	for i, id := range request.GroupIds {
 		groupIds[i] = uint(id)
@@ -59,129 +61,28 @@ func (s *GroupServiceServer) GetBatchGroupInfoByIDs(ctx context.Context, request
 		groupIDsUint32[i] = uint32(id)
 	}
 
-	entitys, err := s.repo.Find(ctx, repository.Query{ID: groupIDsUint32})
+	es, err := s.repo.Find(ctx, repository.Query{ID: groupIDsUint32})
 	if err != nil {
-		return resp, status.Error(codes.Code(code.GroupErrGetBatchGroupInfoByIDsFailed.Code()), err.Error())
+		return nil, code.WrapCodeToGRPC(code.GroupErrGetBatchGroupInfoByIDsFailed.Reason(utils.FormatErrorStack(err)))
 	}
 
 	var groupAPIs []*groupgrpcv1.Group
-	for _, entity := range entitys {
+	for _, e := range es {
 		groupAPI := &groupgrpcv1.Group{
-			Id:              entity.ID,
-			Type:            groupgrpcv1.GroupType(entity.Type),
-			Status:          groupgrpcv1.GroupStatus(entity.Status),
-			MaxMembersLimit: int32(entity.MaxMembersLimit),
-			CreatorId:       entity.CreatorID,
-			Name:            entity.Name,
-			Avatar:          entity.Avatar,
-			SilenceTime:     entity.SilenceTime,
-			JoinApprove:     entity.JoinApprove,
-			Encrypt:         entity.Encrypt,
+			Id:              e.ID,
+			Type:            groupgrpcv1.GroupType(e.Type),
+			Status:          groupgrpcv1.GroupStatus(e.Status),
+			MaxMembersLimit: int32(e.MaxMembersLimit),
+			CreatorId:       e.CreatorID,
+			Name:            e.Name,
+			Avatar:          e.Avatar,
+			SilenceTime:     e.SilenceTime,
+			JoinApprove:     e.JoinApprove,
+			Encrypt:         e.Encrypt,
 		}
 		groupAPIs = append(groupAPIs, groupAPI)
 	}
 
 	resp.Groups = groupAPIs
-	return resp, nil
-}
-
-func (s *GroupServiceServer) UpdateGroup(ctx context.Context, request *groupgrpcv1.UpdateGroupRequest) (*groupgrpcv1.Group, error) {
-	resp := &groupgrpcv1.Group{}
-
-	e := &entity.Group{
-		ID:              request.Group.Id,
-		Type:            entity.Type(request.Group.Type),
-		Status:          entity.Status(request.Group.Status),
-		MaxMembersLimit: int(request.Group.MaxMembersLimit),
-		CreatorID:       request.Group.CreatorId,
-		Name:            request.Group.Name,
-		Avatar:          request.Group.Avatar,
-		SilenceTime:     request.Group.SilenceTime,
-		JoinApprove:     request.Group.JoinApprove,
-		Encrypt:         request.Group.Encrypt,
-	}
-
-	if err := s.repo.Update(ctx, e, func(h *entity.Group) (*entity.Group, error) {
-		resp = &groupgrpcv1.Group{
-			Id:              h.ID,
-			Type:            groupgrpcv1.GroupType(h.Type),
-			Status:          groupgrpcv1.GroupStatus(h.Status),
-			MaxMembersLimit: int32(h.MaxMembersLimit),
-			CreatorId:       h.CreatorID,
-			Name:            h.Name,
-			Avatar:          h.Avatar,
-			SilenceTime:     h.SilenceTime,
-			JoinApprove:     h.JoinApprove,
-			Encrypt:         h.Encrypt,
-		}
-		return nil, nil
-	}); err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
-func (s *GroupServiceServer) CreateGroup(ctx context.Context, request *groupgrpcv1.CreateGroupRequest) (*groupgrpcv1.Group, error) {
-	resp := &groupgrpcv1.Group{}
-
-	e := &entity.Group{
-		Type:            entity.Type(request.Group.Type),
-		Status:          entity.Status(request.Group.Status),
-		MaxMembersLimit: int(request.Group.MaxMembersLimit),
-		CreatorID:       request.Group.CreatorId,
-		Name:            request.Group.Name,
-		Avatar:          request.Group.Avatar,
-		SilenceTime:     request.Group.SilenceTime,
-		JoinApprove:     request.Group.JoinApprove,
-		Encrypt:         request.Group.Encrypt,
-	}
-
-	if err := s.repo.Create(ctx, e, func(h *entity.Group) (*entity.Group, error) {
-		resp = &groupgrpcv1.Group{
-			Id:              h.ID,
-			Type:            groupgrpcv1.GroupType(h.Type),
-			Status:          groupgrpcv1.GroupStatus(h.Status),
-			MaxMembersLimit: int32(h.MaxMembersLimit),
-			CreatorId:       h.CreatorID,
-			Name:            h.Name,
-			Avatar:          h.Avatar,
-			SilenceTime:     h.SilenceTime,
-			JoinApprove:     h.JoinApprove,
-			Encrypt:         h.Encrypt,
-		}
-		return nil, nil
-	}); err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
-func (s *GroupServiceServer) CreateGroupRevert(ctx context.Context, request *groupgrpcv1.CreateGroupRequest) (*groupgrpcv1.Group, error) {
-	resp := &groupgrpcv1.Group{}
-	if err := s.repo.Delete(ctx, request.Group.Id); err != nil {
-		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
-	}
-	return resp, nil
-}
-
-func (s *GroupServiceServer) DeleteGroup(ctx context.Context, request *groupgrpcv1.DeleteGroupRequest) (*groupgrpcv1.EmptyResponse, error) {
-	resp := &groupgrpcv1.EmptyResponse{}
-
-	if err := s.repo.Delete(ctx, request.GetGid()); err != nil {
-		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
-	}
-
-	return resp, nil
-}
-
-func (s *GroupServiceServer) DeleteGroupRevert(ctx context.Context, request *groupgrpcv1.DeleteGroupRequest) (*groupgrpcv1.EmptyResponse, error) {
-	resp := &groupgrpcv1.EmptyResponse{}
-	if err := s.repo.UpdateFields(ctx, request.Gid, map[string]interface{}{
-		"deleted_at": 0,
-	}); err != nil {
-		return resp, status.Error(codes.Code(code.GroupErrDeleteGroupFailed.Code()), err.Error())
-	}
 	return resp, nil
 }
