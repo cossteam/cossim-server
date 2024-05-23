@@ -2,7 +2,7 @@ syntax = "proto3";
 package user_v1;
 option go_package = "github.com/cossim/coss-server/internal/user/api/v1";
 
-import "google/protobuf/empty.proto";
+//import "google/protobuf/empty.proto";
 
 message UserLogin {
   // @inject_tag: json:"driver_id"
@@ -70,13 +70,13 @@ message UserLoginIDRequest {
 }
 
 service UserLoginService {
-  rpc InsertUserLogin(UserLogin) returns (InsertUserLoginResponse) {}
-  rpc GetUserLoginByToken(GetUserLoginByTokenRequest) returns (UserLogin) {}
-  rpc GetUserLoginByDriverIdAndUserId(DriverIdAndUserId) returns (UserLogin) {}
-  rpc UpdateUserLoginTokenByDriverId(TokenUpdate) returns (google.protobuf.Empty) {}
-  rpc GetUserDriverTokenByUserId(GetUserDriverTokenByUserIdRequest) returns (GetUserDriverTokenByUserIdResponse) {}
-  // 根据用户ID获取登录信息
-  rpc GetUserLoginByUserId(GetUserLoginByUserIdRequest) returns (UserLogin) {}
-  //根据ID删除登录信息
-  rpc DeleteUserLoginByID(UserLoginIDRequest) returns (google.protobuf.Empty) {}
+//  rpc InsertUserLogin(UserLogin) returns (InsertUserLoginResponse) {}
+//  rpc GetUserLoginByToken(GetUserLoginByTokenRequest) returns (UserLogin) {}
+//  rpc GetUserLoginByDriverIdAndUserId(DriverIdAndUserId) returns (UserLogin) {}
+//  rpc UpdateUserLoginTokenByDriverId(TokenUpdate) returns (google.protobuf.Empty) {}
+//  rpc GetUserDriverTokenByUserId(GetUserDriverTokenByUserIdRequest) returns (GetUserDriverTokenByUserIdResponse) {}
+//  // 根据用户ID获取登录信息
+//  rpc GetUserLoginByUserId(GetUserLoginByUserIdRequest) returns (UserLogin) {}
+//  //根据ID删除登录信息
+//  rpc DeleteUserLoginByID(UserLoginIDRequest) returns (google.protobuf.Empty) {}
 }

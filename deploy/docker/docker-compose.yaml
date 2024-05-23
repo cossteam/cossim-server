@@ -52,7 +52,7 @@ services:
     ports:
       - "33306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: "Hitosea@123.."
+      MYSQL_ROOT_PASSWORD: "888888"
       MYSQL_DATABASE: coss
       MYSQL_USER: coss
       MYSQL_PASSWORD: "Hitosea@123.."
