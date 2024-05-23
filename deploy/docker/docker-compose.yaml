@@ -137,20 +137,20 @@ services:
       - '8500:8500'
       - '8600:8600'
       - '8600:8600/udp'
-  hipush:
-    container_name: cossim_hipush
-    image: hub.hitosea.com/cossim/hipush
-    volumes:
-      - ./config/common/hipush.yaml:/config/config.yaml
-      # 如果启用了ios推送，需要将推送证书挂载到容器中
-      #- /Users/macos-15/Desktop/key/AuthKey_UU2D9Z4ANF.p8:/config/key/AuthKey_UU2D9Z4ANF.p8
-    command:
-      - "-config"
-      - "/config/config.yaml"
-    ports:
-      - "7070:7070"
-      - "7071:7071"
-    restart: on-failure
+#  hipush:
+#    container_name: cossim_hipush
+#    image: hub.hitosea.com/cossim/hipush
+#    volumes:
+#      - ./config/common/hipush.yaml:/config/config.yaml
+#      # 如果启用了ios推送，需要将推送证书挂载到容器中
+#      #- /Users/macos-15/Desktop/key/AuthKey_UU2D9Z4ANF.p8:/config/key/AuthKey_UU2D9Z4ANF.p8
+#    command:
+#      - "-config"
+#      - "/config/config.yaml"
+#    ports:
+#      - "7070:7070"
+#      - "7071:7071"
+#    restart: on-failure
   admin:
     container_name: cossim_admin
     image: hub.hitosea.com/cossim/admin
