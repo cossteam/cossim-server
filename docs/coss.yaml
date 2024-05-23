@@ -901,6 +901,30 @@ components:
                 - driver_token
                 - platform
             type: object
+        LoginResponse:
+            properties:
+                last_login_time:
+                    description: 上次登录时间
+                    format: int64
+                    type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                new_device_login:
+                    description: 是否是新设备登录
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                token:
+                    description: 用户登录凭证
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+                user_id:
+                    description: 用户id
+                    type: string
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
+            type: object
         Message:
             properties:
                 at_all_user:
@@ -3662,7 +3686,7 @@ paths:
                                         description: 用户id
                                         type: string
                                     user_info:
-                                        $ref: '#/components/schemas/UserInfo'
+                                        $ref: '#/components/schemas/LoginResponse'
                                 type: object
                     description: 登录成功
             summary: 用户激活

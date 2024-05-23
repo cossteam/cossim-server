@@ -343,7 +343,7 @@ paths:
                     type: string
                     description: 用户id
                   user_info:
-                    $ref: '#/components/schemas/UserInfo'
+                    $ref: '#/components/schemas/LoginResponse'
   /api/v1/user/logout:
     post:
       tags:
@@ -742,3 +742,27 @@ components:
         driver_id: abc123
         driver_token: xyz456
         platform: ios
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 用户登录凭证
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        user_id:
+          type: string
+          description: 用户id
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        new_device_login:
+          type: boolean
+          description: 是否是新设备登录
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        last_login_time:
+          type: integer
+          format: int64
+          description: 上次登录时间
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true

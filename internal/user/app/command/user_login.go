@@ -37,15 +37,15 @@ type UserLogin struct {
 }
 
 type UserLoginResponse struct {
-	Token          string
-	UserID         string
-	CossID         string
-	Nickname       string
-	Email          string
-	Tel            string
-	Avatar         string
-	Signature      string
-	Status         uint8
+	Token  string
+	UserID string
+	//CossID         string
+	//Nickname       string
+	//Email          string
+	//Tel            string
+	//Avatar         string
+	//Signature      string
+	//Status         uint8
 	NewDeviceLogin bool
 	LastLoginTime  int64
 }
@@ -206,15 +206,15 @@ func (h *userLoginHandler) Handle(ctx context.Context, cmd *UserLogin) (*UserLog
 	}
 
 	return &UserLoginResponse{
-		Token:          token,
-		UserID:         user.ID,
-		CossID:         user.CossID,
-		Nickname:       user.NickName,
-		Email:          user.Email,
-		Tel:            user.Tel,
-		Avatar:         user.Avatar,
-		Signature:      user.Signature,
-		Status:         uint8(user.Status),
+		Token:  token,
+		UserID: user.ID,
+		//CossID:         user.CossID,
+		//Nickname:       user.NickName,
+		//Email:          user.Email,
+		//Tel:            user.Tel,
+		//Avatar:         user.Avatar,
+		//Signature:      user.Signature,
+		//Status:         uint8(user.Status),
 		NewDeviceLogin: isNewDevice,
 		LastLoginTime:  lastLoginTime,
 	}, nil
