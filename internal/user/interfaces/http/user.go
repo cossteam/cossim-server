@@ -112,7 +112,7 @@ func getUserToResponse(e *entity.UserInfo) *v1.UserInfo {
 			OpenBurnAfterReading:        e.Preferences.OpenBurnAfterReading,
 			OpenBurnAfterReadingTimeOut: int(e.Preferences.OpenBurnAfterReadingTimeOut),
 			Remark:                      e.Preferences.Remark,
-			SilentNotification:          e.Preferences.SilentNotification,
+			Silent:                      e.Preferences.SilentNotification,
 		}
 	}
 	return &v1.UserInfo{

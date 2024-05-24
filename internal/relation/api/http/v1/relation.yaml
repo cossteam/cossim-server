@@ -284,7 +284,6 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 $ref: '#/components/schemas/GroupAnnouncement'
   /api/v1/relation/group/{id}/announcement/{aid}/read:
     post:
@@ -343,7 +342,6 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 $ref: '#/components/schemas/GroupAnnouncementReaderList'
   /api/v1/relation/group/{id}/silent:
     post:
@@ -1520,11 +1518,14 @@ components:
         sender_id:
           type: string
           description: 发送者的唯一标识符
-        recipient_id:
+          x-go-type-skip-optional-pointer: true
+        receiver_id:
           type: string
           description: 接收者的唯一标识符
+          x-go-type-skip-optional-pointer: true
         remark:
           type: string
+          x-omitempty: false
           description: 好友请求备注
           x-go-type-skip-optional-pointer: true
         status:
@@ -1533,7 +1534,7 @@ components:
         sender_info:
           $ref: '#/components/schemas/FriendRequestUserInfo'
           description: 发送者的用户信息
-        recipient_info:
+        receiver_info:
           $ref: '#/components/schemas/FriendRequestUserInfo'
           description: 接收者的用户信息
         create_at:

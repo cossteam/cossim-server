@@ -684,7 +684,7 @@ components:
     Preferences:
       type: object
       properties:
-        silent_notification:
+        silent:
           type: boolean
           description: >
             是否开启静默通知

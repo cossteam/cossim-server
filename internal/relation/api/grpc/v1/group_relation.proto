@@ -48,21 +48,14 @@ message GetGroupRelationResponse {
   //  @inject_tag: json:"mute_end_time"
   int64 MuteEndTime = 7; //禁言结束时间
   // @inject_tag: json:"is_silent"
-  GroupSilentNotificationType IsSilent = 8; //是否静默通知
+  bool IsSilent = 8; //是否静默通知
   // @inject_tag: json:"inviter"
   string Inviter = 9; //邀请人
   // @inject_tag: json:"remark"
   string Remark = 11; //群聊备注
-  // @inject_tag: json:"open_burn_after_reading"
-  OpenBurnAfterReadingType  OpenBurnAfterReading = 12;
-  // @inject_tag: json:"open_burn_after_reading_time_out"
-  int64 OpenBurnAfterReadingTimeOut = 13;
 }
 
-enum OpenBurnAfterReadingType {
-  CLOSE_BURN_AFTER_READING = 0; // 关闭
-  OPEN_BURN_AFTER_READING = 1; // 开启
-}
+
 // 添加 GroupIdentity 枚举定义
 enum GroupIdentity {
   IDENTITY_USER = 0;  // 普通用户
@@ -126,13 +119,6 @@ message GetBatchGroupRelationResponse {
 
 message DeleteGroupRelationByGroupIdAndUserIDResponse {}
 
-
-enum GroupSilentNotificationType {
-  // @inject_tag: json:"not_silent"
-  GroupNotSilent = 0;
-  // @inject_tag: json:"silent"
-  GroupSilent = 1;
-}
 
 message CreateGroupAndInviteUsersResponse {
   // @inject_tag: json:"dialog_id"

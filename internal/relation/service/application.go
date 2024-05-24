@@ -139,6 +139,8 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 				groupRelationDomain,
 				groupAnnouncementDomain,
 			),
+			SetGroupSilent: command.NewSetGroupSilentHandler(
+				logger, groupRelationDomain),
 			RemoveGroupMember: command.NewRemoveGroupMemberHandler(
 				logger,
 				groupRelationDomain,

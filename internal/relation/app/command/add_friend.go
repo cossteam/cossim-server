@@ -81,7 +81,7 @@ func (h *addFriendHandler) Handle(ctx context.Context, cmd *AddFriend) error {
 	}
 
 	// 创建好友申请
-	if err := h.userFriendRequestDomain.CreateFriendRequest(ctx, cmd.CurrentUserID, cmd.TargetUserID); err != nil {
+	if err := h.userFriendRequestDomain.CreateFriendRequest(ctx, cmd.CurrentUserID, cmd.TargetUserID, cmd.Remark); err != nil {
 		return err
 	}
 

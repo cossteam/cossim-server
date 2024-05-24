@@ -208,6 +208,7 @@ type UserDialogListResponse struct {
 	DialogType        int      `json:"dialog_type"`
 	DialogUnreadCount int      `json:"dialog_unread_count"`
 	GroupId           int      `json:"group_id,omitempty"`
+	IsSilent          bool     `json:"is_silent"`
 	LastMessage       *Message `json:"last_message"`
 	TopAt             int      `json:"top_at"`
 	UserId            string   `json:"user_id,omitempty"`

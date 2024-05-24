@@ -66,11 +66,6 @@ func (ReadType) EnumDescriptor() ([]byte, []int) {
 	return file_api_grpc_v1_msg_proto_rawDescGZIP(), []int{0}
 }
 
-//	enum AtAllUserType {
-//	 NotAtAllUser = 0;
-//	 AtAllUser = 1;
-//	}
-//
 // // 定义 UserMessageType 枚举类型
 type MessageType int32
 
@@ -315,99 +310,6 @@ func (x *SendUserMsgRequest) GetSubType() int32 {
 	return 0
 }
 
-//	message GetUserMsgListRequest{
-//	 // @inject_tag: json:"dialog_id"
-//	 uint32 DialogId=1;
-//	 // @inject_tag: json:"user_id"
-//	 string UserId=2;
-//	 // @inject_tag: json:"type" form:"type" uri:"type"
-//	 int32 Type = 3;
-//	 // @inject_tag: json:"content" form:"content" uri:"content"
-//	 string Content = 4;
-//	 // @inject_tag: json:"page_size" form:"page_size" uri:"page_size"
-//	 int32 PageSize = 5;
-//	 // @inject_tag: json:"page_number" form:"page_number" uri:"page_number"
-//	 int32 PageNum = 6;
-//	 // @inject_tag: json:"msg_id"
-//	 uint64 MsgId = 7;
-//	 // @inject_tag: json:"start_at"
-//	 uint64 StartAt = 8;
-//	 // @inject_tag: json:"end_at"
-//	 uint64 EndAt = 9;
-//	}
-//
-//	message UserMessage{
-//	 // @inject_tag: json:"id"
-//	 uint32 Id=1;
-//	 // @inject_tag: json:"sender_id"
-//	 string SenderId=2;
-//	 // @inject_tag: json:"receiver_id"
-//	 string ReceiverId=3;
-//	 // @inject_tag: json:"content"
-//	 string Content=4;
-//	 // @inject_tag: json:"type"
-//	 uint32 Type=5;
-//	 // @inject_tag: json:"reply_id"
-//	 uint64 ReplyId=6;
-//	 // @inject_tag: json:"is_read"
-//	 int32 IsRead=7;
-//	 // @inject_tag: json:"read_at"
-//	 int64 ReadAt=8;
-//	 // @inject_tag: json:"created_at"
-//	 int64 CreatedAt=9;
-//	 // @inject_tag: json:"dialog_id"
-//	 uint32 DialogId = 10;
-//	 // @inject_tag: json:"is_label"
-//	 MsgLabel IsLabel = 11;
-//	 // @inject_tag: json:"is_burn_after_reading"
-//	 bool IsBurnAfterReadingType = 12;
-//	 // @inject_tag: json:"sub_type"
-//	 uint32 SubType= 13;
-//	}
-//
-//	enum MsgLabel {
-//	 NotLabel = 0; //未标注
-//	 IsLabel = 1; //标注
-//	}
-//
-//	message GroupMessage {
-//	 // @inject_tag: json:"id"
-//	 uint32 Id = 1;
-//	 //  @inject_tag: json:"group_id"
-//	 uint32 Group_id = 2;
-//	 // @inject_tag: json:"type"
-//	 uint32 Type = 3;
-//	 // @inject_tag: json:"reply_idreply_id"
-//	 uint32 reply_id = 4;
-//	 // @inject_tag: json:"read_count"
-//	 int32 Read_count = 5;
-//	 // @inject_tag: json:"user_id"
-//	 string UserId = 6;
-//	 // @inject_tag: json:"content"
-//	 string Content = 7;
-//	 // @inject_tag: json:"created_at"
-//	 int64 Created_at = 8;
-//	 // @inject_tag: json:"dialog_id"
-//	 uint32 Dialog_id = 9;
-//	 // @inject_tag: json:"is_label"
-//	 MsgLabel IsLabel = 10;
-//	 // @inject_tag: json:"is_burn_after_reading"
-//	 bool IsBurnAfterReadingType = 11;
-//	 // @inject_tag: json:"at_users"
-//	 repeated string AtUsers = 12;
-//	 // @inject_tag: json:"at_all_user"
-//	 AtAllUserType AtAllUser = 13;
-//	}
-//
-//	message GetUserMsgListResponse {
-//	 // @inject_tag: json:"user_messages" form:"user_messages" uri:"user_messages"
-//	 repeated UserMessage UserMessages = 1;
-//	 // @inject_tag: json:"total" form:"total" uri:"total"
-//	 // 返回的是这次条件查询的的总条数，而不是本次的总数
-//	 int32 Total = 2;
-//	 // @inject_tag: json:"current_page" form:"current_page" uri:"current_page"
-//	 int32 CurrentPage = 3;
-//	}
 type SendUserMsgResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -77,6 +77,8 @@ func (h *HttpServer) SetGroupSilent(c *gin.Context, id uint32) {
 		return
 	}
 
+	fmt.Println("开始设置")
+
 	if err := h.app.Commands.SetGroupSilent.Handle(c, &command.SetGroupSilent{
 		UserID:  c.Value(constants.UserID).(string),
 		GroupID: id,
@@ -85,6 +87,8 @@ func (h *HttpServer) SetGroupSilent(c *gin.Context, id uint32) {
 		c.Error(err)
 		return
 	}
+
+	fmt.Println("设置成功")
 
 	response.SetSuccess(c, "设置群聊免打扰成功", nil)
 }

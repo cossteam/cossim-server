@@ -655,6 +655,10 @@ components:
           type: integer
           x-omitempty: false
           x-go-type-skip-optional-pointer: true
+        is_silent:
+          type: boolean
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
     Message:
       type: object
       x-omitempty: false

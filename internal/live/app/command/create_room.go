@@ -408,7 +408,7 @@ func (h *LiveHandler) checkGroupRelations(ctx context.Context, gid uint32, parti
 		for _, r := range rels.GroupRelationResponses {
 			if r.UserId == p {
 				// TODO 从participants删除这个用户，因为开启了免打扰不需要推送
-				if r.IsSilent != relationgrpcv1.GroupSilentNotificationType_GroupSilent {
+				if !r.IsSilent {
 					filteredParticipants = append(filteredParticipants, p)
 				}
 				found = true

@@ -27,12 +27,11 @@ type Group struct {
 }
 
 type Preferences struct {
-	EntryMethod          uint
-	JoinedAt             int64
-	MuteEndTime          int64
-	SilentNotification   uint
-	Inviter              string
-	Remark               string
-	OpenBurnAfterReading uint
-	Identity             uint
+	EntryMethod        uint
+	JoinedAt           int64
+	MuteEndTime        int64
+	SilentNotification bool
+	Inviter            string
+	Remark             string
+	Identity           uint
 }
