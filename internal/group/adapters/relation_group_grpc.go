@@ -33,17 +33,15 @@ func (s *RelationGroupGrpc) GetRelation(ctx context.Context, groupID uint32, use
 	}
 
 	return &command.GroupRelationship{
-		UserId:                      resp.UserId,
-		ID:                          resp.GroupId,
-		Identity:                    uint(resp.Identity),
-		JoinMethod:                  uint(resp.JoinMethod),
-		JoinTime:                    resp.JoinTime,
-		MuteEndTime:                 resp.MuteEndTime,
-		IsSilent:                    uint(resp.IsSilent),
-		Inviter:                     resp.Inviter,
-		Remark:                      resp.Remark,
-		OpenBurnAfterReading:        uint(resp.OpenBurnAfterReading),
-		OpenBurnAfterReadingTimeOut: uint(resp.OpenBurnAfterReadingTimeOut),
+		UserId:      resp.UserId,
+		ID:          resp.GroupId,
+		Identity:    uint(resp.Identity),
+		JoinMethod:  uint(resp.JoinMethod),
+		JoinTime:    resp.JoinTime,
+		MuteEndTime: resp.MuteEndTime,
+		IsSilent:    resp.IsSilent,
+		Inviter:     resp.Inviter,
+		Remark:      resp.Remark,
 	}, nil
 }
 

@@ -14,7 +14,7 @@ func UserFriendRequestEntityToPo(e *entity.UserFriendRequest) *po.UserFriendRequ
 	m.OwnerID = e.OwnerID
 	m.Status = uint8(e.Status)
 	m.ExpiredAt = e.ExpiredAt
-	return nil
+	return m
 }
 
 func UserFriendRequestPoToEntity(po *po.UserFriendRequest) *entity.UserFriendRequest {

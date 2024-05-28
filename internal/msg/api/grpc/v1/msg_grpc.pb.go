@@ -32,7 +32,7 @@ const (
 type MsgServiceClient interface {
 	// 发送私聊消息
 	SendUserMessage(ctx context.Context, in *SendUserMsgRequest, opts ...grpc.CallOption) (*SendUserMsgResponse, error)
-	// //群发私聊消息
+	// 群发私聊消息
 	SendMultiUserMessage(ctx context.Context, in *SendMultiUserMsgRequest, opts ...grpc.CallOption) (*SendMultiUserMsgResponse, error)
 	// //确认根据对话id删除私聊消息
 	ConfirmDeleteUserMessageByDialogId(ctx context.Context, in *DeleteUserMsgByDialogIdRequest, opts ...grpc.CallOption) (*DeleteUserMsgByDialogIdResponse, error)
@@ -101,7 +101,7 @@ func (c *msgServiceClient) DeleteUserMessageByIDs(ctx context.Context, in *Delet
 type MsgServiceServer interface {
 	// 发送私聊消息
 	SendUserMessage(context.Context, *SendUserMsgRequest) (*SendUserMsgResponse, error)
-	// //群发私聊消息
+	// 群发私聊消息
 	SendMultiUserMessage(context.Context, *SendMultiUserMsgRequest) (*SendMultiUserMsgResponse, error)
 	// //确认根据对话id删除私聊消息
 	ConfirmDeleteUserMessageByDialogId(context.Context, *DeleteUserMsgByDialogIdRequest) (*DeleteUserMsgByDialogIdResponse, error)

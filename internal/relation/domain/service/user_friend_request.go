@@ -45,7 +45,7 @@ type UserFriendRequestDomain interface {
 	IsHandled(ctx context.Context, requestID uint32) (bool, error)
 
 	// CreateFriendRequest 创建好友请求
-	CreateFriendRequest(ctx context.Context, userID, friendID string) error
+	CreateFriendRequest(ctx context.Context, userID, friendID, remark string) error
 
 	// GetLatest 获取最新的好友请求
 	GetLatest(ctx context.Context, currentUserID string, targetUserID string) (*entity.UserFriendRequest, error)
@@ -83,16 +83,20 @@ func (s *userFriendRequestService) GetLatest(ctx context.Context, currentUserID 
 	return find.List[0], nil
 }
 
-func (s *userFriendRequestService) CreateFriendRequest(ctx context.Context, userID, friendID string) error {
+func (s *userFriendRequestService) CreateFriendRequest(ctx context.Context, userID, friendID, remark string) error {
 	latest, err := s.GetLatest(ctx, userID, friendID)
 	if err != nil {
-		return err
+		if err != code.RelationUserErrNoFriendRequestRecords {
+			return err
+		}
 	}
 
 	return s.repos.TXRepositories(func(txr *persistence.Repositories) error {
-		// 删除最近最新的一条
-		if err := txr.UserFriendRequestRepo.Delete(ctx, latest.ID); err != nil {
-			return err
+		if latest != nil {
+			// 删除最近最新的一条
+			if err := txr.UserFriendRequestRepo.Delete(ctx, latest.ID); err != nil {
+				return err
+			}
 		}
 
 		// 添加自己的
@@ -100,6 +104,7 @@ func (s *userFriendRequestService) CreateFriendRequest(ctx context.Context, user
 			OwnerID:     userID,
 			SenderID:    userID,
 			RecipientID: friendID,
+			Remark:      remark,
 			Status:      entity.Pending,
 		})
 		if err != nil {
@@ -111,6 +116,7 @@ func (s *userFriendRequestService) CreateFriendRequest(ctx context.Context, user
 			OwnerID:     friendID,
 			SenderID:    userID,
 			RecipientID: friendID,
+			Remark:      remark,
 			Status:      entity.Pending,
 		})
 		if err != nil {

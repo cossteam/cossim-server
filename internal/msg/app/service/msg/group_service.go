@@ -54,7 +54,7 @@ func (s *ServiceImpl) sendWsGroupMsg(ctx context.Context, uIds []string, driverI
 		}
 
 		//判断是否静默通知
-		if groupRelation.IsSilent == relationgrpcv1.GroupSilentNotificationType_GroupSilent {
+		if groupRelation.IsSilent {
 			m.Event = pushv1.WSEventType_SendSilentGroupMessageEvent
 		}
 

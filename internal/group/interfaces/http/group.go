@@ -163,14 +163,13 @@ func getGroupToResponse(getGroup *query.GroupInfo) *v1.GroupInfo {
 		Encrypt:         getGroup.Encrypt,
 		JoinApprove:     getGroup.JoinApprove,
 		Preferences: &v1.Preferences{
-			EntryMethod:          getGroup.Preferences.EntryMethod,
-			Identity:             getGroup.Preferences.Identity,
-			Inviter:              getGroup.Preferences.Inviter,
-			JoinedAt:             getGroup.Preferences.JoinedAt,
-			MuteEndTime:          getGroup.Preferences.MuteEndTime,
-			OpenBurnAfterReading: getGroup.Preferences.OpenBurnAfterReading,
-			Remark:               getGroup.Preferences.Remark,
-			SilentNotification:   getGroup.Preferences.SilentNotification,
+			EntryMethod: getGroup.Preferences.EntryMethod,
+			Identity:    getGroup.Preferences.Identity,
+			Inviter:     getGroup.Preferences.Inviter,
+			JoinedAt:    getGroup.Preferences.JoinedAt,
+			MuteEndTime: getGroup.Preferences.MuteEndTime,
+			Remark:      getGroup.Preferences.Remark,
+			Silent:      getGroup.Preferences.SilentNotification,
 		},
 	}
 }

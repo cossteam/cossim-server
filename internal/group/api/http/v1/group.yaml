@@ -375,9 +375,8 @@ components:
           description: 静音结束时间
           x-omitempty: false
           x-go-type-skip-optional-pointer: true
-        silent_notification:
-          type: integer
-          format: uint
+        silent:
+          type: boolean
           description: 静默通知
           x-omitempty: false
           x-go-type-skip-optional-pointer: true
@@ -389,12 +388,6 @@ components:
         remark:
           type: string
           description: 备注
-          x-omitempty: false
-          x-go-type-skip-optional-pointer: true
-        open_burn_after_reading:
-          type: integer
-          format: uint
-          description: 阅后即焚开启
           x-omitempty: false
           x-go-type-skip-optional-pointer: true
         identity:

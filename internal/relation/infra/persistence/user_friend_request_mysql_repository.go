@@ -75,7 +75,7 @@ func (m *MySQLUserFriendRequestRepository) Get(ctx context.Context, id uint32) (
 func (m *MySQLUserFriendRequestRepository) Create(ctx context.Context, entity *entity.UserFriendRequest) (*entity.UserFriendRequest, error) {
 	model := converter.UserFriendRequestEntityToPo(entity)
 
-	if err := m.db.WithContext(ctx).Create(&model).Error; err != nil {
+	if err := m.db.WithContext(ctx).Create(model).Error; err != nil {
 		return nil, err
 	}
 

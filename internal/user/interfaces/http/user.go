@@ -112,7 +112,7 @@ func getUserToResponse(e *entity.UserInfo) *v1.UserInfo {
 			OpenBurnAfterReading:        e.Preferences.OpenBurnAfterReading,
 			OpenBurnAfterReadingTimeOut: int(e.Preferences.OpenBurnAfterReadingTimeOut),
 			Remark:                      e.Preferences.Remark,
-			SilentNotification:          e.Preferences.SilentNotification,
+			Silent:                      e.Preferences.SilentNotification,
 		}
 	}
 	return &v1.UserInfo{
@@ -340,22 +340,17 @@ func (h *HttpServer) UserLogin(c *gin.Context) {
 	}
 
 	c.Set("user_id", userLogin.UserID)
-	response.SetSuccess(c, "登录成功", gin.H{"token": userLogin.Token, "user_info": ConversionUserLogin(userLogin)})
+	response.SetSuccess(c, "登录成功", ConversionUserLogin(userLogin))
 }
 
 func ConversionUserLogin(userLogin *command.UserLoginResponse) *v1.LoginResponse {
 	return &v1.LoginResponse{
-		UserId: userLogin.UserID,
-		Token:  userLogin.Token,
-		//Nickname:       userLogin.Nickname,
-		//Avatar:         userLogin.Avatar,
-		//Signature:      userLogin.Signature,
-		//CossId:         userLogin.CossID,
-		//Email:          userLogin.Email,
-		//Tel:            userLogin.Tel,
-		//Status:         v1.UserInfoStatus(uint(userLogin.Status)),
-		NewDeviceLogin: userLogin.NewDeviceLogin,
-		LastLoginTime:  userLogin.LastLoginTime,
+		Token: userLogin.Token,
+		UserInfo: &struct {
+			LastLoginTime  int64  `json:"last_login_time"`
+			NewDeviceLogin bool   `json:"new_device_login"`
+			UserId         string `json:"user_id"`
+		}{LastLoginTime: userLogin.LastLoginTime, NewDeviceLogin: userLogin.NewDeviceLogin, UserId: userLogin.UserID},
 	}
 }
 
@@ -480,4 +475,29 @@ func (h *HttpServer) UserRegister(c *gin.Context) {
 // @Router /api/v1/user/public_key [get]
 func (h *HttpServer) GetPGPPublicKey(c *gin.Context) {
 	response.SetSuccess(c, "获取系统pgp公钥成功", gin.H{"public_key": h.pgpKey})
+}
+
+func (h *HttpServer) ConfirmLogin(c *gin.Context, token string) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (h *HttpServer) GenerateQRCode(c *gin.Context) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (h *HttpServer) SsoLogin(c *gin.Context, token string) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (h *HttpServer) VerifyQRCodeStatus(c *gin.Context, token string) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (h *HttpServer) ScanQRCode(c *gin.Context) {
+	//TODO implement me
+	panic("implement me")
 }

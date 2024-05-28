@@ -229,8 +229,8 @@ func listFriendRequestToResponse(request *query.ListFriendRequestResponse) *v1.U
 				Nickname: v.SenderInfo.Nickname,
 				UserId:   v.SenderInfo.UserID,
 			},
-			RecipientId: v.RecipientID,
-			RecipientInfo: &v1.FriendRequestUserInfo{
+			ReceiverId: v.RecipientID,
+			ReceiverInfo: &v1.FriendRequestUserInfo{
 				Avatar:   v.RecipientInfo.Avatar,
 				CossId:   v.RecipientInfo.CossID,
 				Nickname: v.RecipientInfo.Nickname,

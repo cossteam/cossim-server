@@ -48,19 +48,11 @@ func (s *groupServiceServer) GetGroupRelation(ctx context.Context, request *v1.G
 		return nil, code.WrapCodeToGRPC(code.RelationGroupErrGroupRelationFailed.Reason(utils.FormatErrorStack(err)))
 	}
 
-	var silentNotification uint
-	if rel.SilentNotification {
-		silentNotification = 1
-	} else {
-		silentNotification = 0
-	}
-
 	resp.GroupId = rel.GroupID
 	resp.UserId = rel.UserID
 	resp.Identity = v1.GroupIdentity(rel.Identity)
 	resp.MuteEndTime = rel.MuteEndTime
-	resp.IsSilent = v1.GroupSilentNotificationType(silentNotification)
-	resp.OpenBurnAfterReading = v1.OpenBurnAfterReadingType(silentNotification)
+	resp.IsSilent = rel.SilentNotification
 	resp.JoinTime = rel.JoinedAt
 	resp.Remark = rel.Remark
 	resp.JoinMethod = uint32(rel.EntryMethod)

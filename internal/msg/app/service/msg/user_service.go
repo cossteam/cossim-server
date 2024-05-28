@@ -2,7 +2,6 @@ package msg
 
 import (
 	"context"
-	"fmt"
 	groupApi "github.com/cossim/coss-server/internal/group/api/grpc/v1"
 	msggrpcv1 "github.com/cossim/coss-server/internal/msg/api/grpc/v1"
 	v1 "github.com/cossim/coss-server/internal/msg/api/http/v1"
@@ -489,7 +488,6 @@ func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, page
 	for _, v := range groupLastMsgs {
 		dialogIds = append(dialogIds, v.ToMessage())
 	}
-	fmt.Println("len(dialogIds)", len(dialogIds))
 	//封装响应数据
 	var responseList = make([]v1.UserDialogListResponse, 0)
 	for _, v := range infos.Dialogs {
@@ -555,6 +553,7 @@ func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, page
 				if relation.Remark != "" {
 					re.DialogName = relation.Remark
 				}
+				re.IsSilent = relation.IsSilent
 				break
 			}
 
@@ -568,6 +567,15 @@ func (s *ServiceImpl) GetUserDialogList(ctx context.Context, userID string, page
 				continue
 			}
 
+			relation, err := s.relationGroupService.GetGroupRelation(ctx, &relationgrpcv1.GetGroupRelationRequest{
+				GroupId: v.GroupId,
+				UserId:  userID,
+			})
+			if err != nil {
+				s.logger.Error("获取用户关系失败", zap.Error(err))
+			}
+
+			re.IsSilent = relation.IsSilent
 			//获取未读消息
 			//msgs, err := s.gmd.GetGroupUnreadMessages(ctx, &msggrpcv1.GetGroupUnreadMessagesRequest{
 			//	ID:   userID,

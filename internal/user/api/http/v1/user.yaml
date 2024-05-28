@@ -550,6 +550,111 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserLoginClient'
+  /api/v1/user/sso/generate_qr:
+    get:
+      tags:
+        - user/sso
+      summary: 生成二维码
+      description: 生成用于登录的二维码
+      operationId: generateQRCode
+      responses:
+        '200':
+          description: 成功生成二维码
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateQRCodeResponse'
+  /api/v1/user/sso/scan_qr:
+    post:
+      tags:
+        - user/sso
+      summary: 扫描二维码
+      security:
+        - BearerAuth: [ ]
+      description: 用户扫描二维码后调用此接口
+      operationId: scanQRCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanQRCodeRequest'
+      responses:
+        '200':
+          description: 成功扫描二维码
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  /api/v1/user/sso/qr_status/{token}:
+    get:
+      tags:
+        - user/sso
+      summary: 验证二维码状态
+      description: 验证二维码是否已被扫描或是否有效
+      operationId: verifyQRCodeStatus
+      parameters:
+        - name: token
+          in: path
+          description: 二维码token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 二维码状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRCodeStatusResponse'
+
+  /api/v1/user/sso/login/{token}:
+    post:
+      tags:
+        - user/sso
+      summary: 完成登录
+      description: 扫描二维码并验证成功后调用此接口完成登录
+      operationId: ssoLogin
+      parameters:
+        - name: token
+          in: path
+          description: 二维码token
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSOLoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+  /api/v1/user/sso/confirm_login/{token}:
+    post:
+      tags:
+        - user/sso
+      summary: 确认登录
+      description: 确认扫描二维码并验证成功后调用此接口确认登录
+      operationId: confirmLogin
+      parameters:
+        - name: token
+          in: path
+          description: 二维码token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 登录确认成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
 components:
   securitySchemes:
     BearerAuth:
@@ -557,27 +662,71 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-#    UpdatePasswordRequest:
-#      type: object
-#      properties:
-#        old_password:
-#          type: string
-#          format: password
-#          minLength: 6
-#          maxLength: 128
-#          description: 旧密码
-#        new_password:
-#          type: string
-#          format: password
-#          minLength: 6
-#          maxLength: 128
-#          description: 新密码
-#        confirm_password:
-#          type: string
-#          format: password
-#          minLength: 6
-#          maxLength: 128
-#          description: 确认密码
+    Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        msg:
+          type: string
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
+        data:
+          type: object
+    GenerateQRCodeResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 二维码token
+        qr_code:
+          type: string
+          description: 二维码图片
+    ScanQRCodeRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: 二维码token
+    QRCodeStatusResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+          description: >
+            0: 未扫描
+            1: 已扫描
+            2: 已确认
+            3: 已过期
+    SSOLoginRequest:
+      type: object
+      required:
+        - token
+        - driver_id
+        - driver_token
+        - platform
+      properties:
+        token:
+          type: string
+          description: 二维码token
+        driver_id:
+          type: string
+          description: 当前登录设备的唯一标识符
+        driver_token:
+          type: string
+          description: 当前设备的设备token 用于推送手机端的系统通知
+        platform:
+          type: string
+          description: 用户登录的平台
     UserLoginClient:
       type: object
       properties:
@@ -684,7 +833,7 @@ components:
     Preferences:
       type: object
       properties:
-        silent_notification:
+        silent:
           type: boolean
           description: >
             是否开启静默通知
@@ -750,19 +899,22 @@ components:
           description: 用户登录凭证
           x-omitempty: false
           x-go-type-skip-optional-pointer: true
-        user_id:
-          type: string
-          description: 用户id
-          x-omitempty: false
-          x-go-type-skip-optional-pointer: true
-        new_device_login:
-          type: boolean
-          description: 是否是新设备登录
-          x-omitempty: false
-          x-go-type-skip-optional-pointer: true
-        last_login_time:
-          type: integer
-          format: int64
-          description: 上次登录时间
-          x-omitempty: false
-          x-go-type-skip-optional-pointer: true
+        user_info:
+          type: object
+          properties:
+            user_id:
+              type: string
+              description: 用户id
+              x-omitempty: false
+              x-go-type-skip-optional-pointer: true
+            new_device_login:
+              type: boolean
+              description: 是否是新设备登录
+              x-omitempty: false
+              x-go-type-skip-optional-pointer: true
+            last_login_time:
+              type: integer
+              format: int64
+              description: 上次登录时间
+              x-omitempty: false
+              x-go-type-skip-optional-pointer: true

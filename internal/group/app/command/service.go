@@ -24,18 +24,16 @@ type RelationUserService interface {
 }
 
 type GroupRelationship struct {
-	UserId                      string
-	ID                          uint32
-	Status                      int32
-	Identity                    uint
-	JoinMethod                  uint
-	JoinTime                    int64
-	MuteEndTime                 int64
-	IsSilent                    uint
-	Inviter                     string
-	Remark                      string
-	OpenBurnAfterReading        uint
-	OpenBurnAfterReadingTimeOut uint
+	UserId      string
+	ID          uint32
+	Status      int32
+	Identity    uint
+	JoinMethod  uint
+	JoinTime    int64
+	MuteEndTime int64
+	IsSilent    bool
+	Inviter     string
+	Remark      string
 }
 
 type RelationGroupService interface {

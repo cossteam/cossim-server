@@ -83,14 +83,13 @@ func (h *getGroupHandler) Handle(ctx context.Context, cmd GetGroup) (*GroupInfo,
 	per := &Preferences{}
 	if relation != nil && relation.ID != 0 {
 		per = &Preferences{
-			OpenBurnAfterReading: relation.OpenBurnAfterReading,
-			SilentNotification:   relation.IsSilent,
-			Remark:               relation.Remark,
-			EntryMethod:          relation.JoinMethod,
-			Inviter:              relation.Inviter,
-			JoinedAt:             relation.JoinTime,
-			MuteEndTime:          relation.MuteEndTime,
-			Identity:             relation.Identity,
+			SilentNotification: relation.IsSilent,
+			Remark:             relation.Remark,
+			EntryMethod:        relation.JoinMethod,
+			Inviter:            relation.Inviter,
+			JoinedAt:           relation.JoinTime,
+			MuteEndTime:        relation.MuteEndTime,
+			Identity:           relation.Identity,
 		}
 	}
 
