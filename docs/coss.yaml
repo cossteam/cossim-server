@@ -278,19 +278,22 @@ components:
                     description: 好友请求记录的唯一标识符
                     format: uint32
                     type: integer
-                recipient_id:
+                receiver_id:
                     description: 接收者的唯一标识符
                     type: string
-                recipient_info:
+                    x-go-type-skip-optional-pointer: true
+                receiver_info:
                     $ref: '#/components/schemas/FriendRequestUserInfo'
                     description: 接收者的用户信息
                 remark:
                     description: 好友请求备注
                     type: string
                     x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
                 sender_id:
                     description: 发送者的唯一标识符
                     type: string
+                    x-go-type-skip-optional-pointer: true
                 sender_info:
                     $ref: '#/components/schemas/FriendRequestUserInfo'
                     description: 发送者的用户信息
@@ -324,6 +327,15 @@ components:
                 - coss_id
                 - nickname
                 - avatar
+            type: object
+        GenerateQRCodeResponse:
+            properties:
+                qr_code:
+                    description: 二维码图片
+                    type: string
+                token:
+                    description: 二维码token
+                    type: string
             type: object
         GetDialogAfterMsgListResponse:
             properties:
@@ -903,27 +915,30 @@ components:
             type: object
         LoginResponse:
             properties:
-                last_login_time:
-                    description: 上次登录时间
-                    format: int64
-                    type: integer
-                    x-go-type-skip-optional-pointer: true
-                    x-omitempty: false
-                new_device_login:
-                    description: 是否是新设备登录
-                    type: boolean
-                    x-go-type-skip-optional-pointer: true
-                    x-omitempty: false
                 token:
                     description: 用户登录凭证
                     type: string
                     x-go-type-skip-optional-pointer: true
                     x-omitempty: false
-                user_id:
-                    description: 用户id
-                    type: string
-                    x-go-type-skip-optional-pointer: true
-                    x-omitempty: false
+                user_info:
+                    properties:
+                        last_login_time:
+                            description: 上次登录时间
+                            format: int64
+                            type: integer
+                            x-go-type-skip-optional-pointer: true
+                            x-omitempty: false
+                        new_device_login:
+                            description: 是否是新设备登录
+                            type: boolean
+                            x-go-type-skip-optional-pointer: true
+                            x-omitempty: false
+                        user_id:
+                            description: 用户id
+                            type: string
+                            x-go-type-skip-optional-pointer: true
+                            x-omitempty: false
+                    type: object
             type: object
         Message:
             properties:
@@ -1090,23 +1105,28 @@ components:
                     type: integer
                     x-go-type-skip-optional-pointer: true
                     x-omitempty: false
-                open_burn_after_reading:
-                    description: 阅后即焚开启
-                    format: uint
-                    type: integer
-                    x-go-type-skip-optional-pointer: true
-                    x-omitempty: false
                 remark:
                     description: 备注
                     type: string
                     x-go-type-skip-optional-pointer: true
                     x-omitempty: false
-                silent_notification:
+                silent:
                     description: 静默通知
-                    format: uint
-                    type: integer
+                    type: boolean
                     x-go-type-skip-optional-pointer: true
                     x-omitempty: false
+            type: object
+        QRCodeStatusResponse:
+            properties:
+                status:
+                    description: |
+                        0: 未扫描 1: 已扫描 2: 已确认 3: 已过期
+                    enum:
+                        - 0
+                        - 1
+                        - 2
+                        - 3
+                    type: integer
             type: object
         ReadUserMsgsRequest:
             properties:
@@ -1202,6 +1222,34 @@ components:
             type: object
             x-go-type-skip-optional-pointer: true
             x-omitempty: false
+        SSOLoginRequest:
+            properties:
+                driver_id:
+                    description: 当前登录设备的唯一标识符
+                    type: string
+                driver_token:
+                    description: 当前设备的设备token 用于推送手机端的系统通知
+                    type: string
+                platform:
+                    description: 用户登录的平台
+                    type: string
+                token:
+                    description: 二维码token
+                    type: string
+            required:
+                - token
+                - driver_id
+                - driver_token
+                - platform
+            type: object
+        ScanQRCodeRequest:
+            properties:
+                token:
+                    description: 二维码token
+                    type: string
+            required:
+                - token
+            type: object
         SendAllNotificationRequest:
             properties:
                 content:
@@ -1411,6 +1459,10 @@ components:
                     type: integer
                     x-go-type-skip-optional-pointer: true
                     x-omitempty: true
+                is_silent:
+                    type: boolean
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
                 last_message:
                     $ref: '#/components/schemas/Message'
                 top_at:
@@ -2624,7 +2676,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/GroupAnnouncement'
-                                type: object
                     description: 获取群聊公告成功
             security:
                 - BearerAuth: []
@@ -2727,7 +2778,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/GroupAnnouncementReaderList'
-                                type: object
                     description: 获取群聊公告已读列表
             security:
                 - BearerAuth: []
@@ -4043,6 +4093,110 @@ paths:
             summary: 搜索用户
             tags:
                 - user
+    /api/v1/user/sso/confirm_login/{token}:
+        post:
+            description: 确认扫描二维码并验证成功后调用此接口确认登录
+            operationId: confirmLogin
+            parameters:
+                - description: 二维码token
+                  in: path
+                  name: token
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 登录确认成功
+            summary: 确认登录
+            tags:
+                - user/sso
+    /api/v1/user/sso/generate_qr:
+        get:
+            description: 生成用于登录的二维码
+            operationId: generateQRCode
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GenerateQRCodeResponse'
+                    description: 成功生成二维码
+            summary: 生成二维码
+            tags:
+                - user/sso
+    /api/v1/user/sso/login/{token}:
+        post:
+            description: 扫描二维码并验证成功后调用此接口完成登录
+            operationId: ssoLogin
+            parameters:
+                - description: 二维码token
+                  in: path
+                  name: token
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SSOLoginRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoginResponse'
+                    description: 登录成功
+            summary: 完成登录
+            tags:
+                - user/sso
+    /api/v1/user/sso/qr_status/{token}:
+        get:
+            description: 验证二维码是否已被扫描或是否有效
+            operationId: verifyQRCodeStatus
+            parameters:
+                - description: 二维码token
+                  in: path
+                  name: token
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/QRCodeStatusResponse'
+                    description: 二维码状态
+            summary: 验证二维码状态
+            tags:
+                - user/sso
+    /api/v1/user/sso/scan_qr:
+        post:
+            description: 用户扫描二维码后调用此接口
+            operationId: scanQRCode
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ScanQRCodeRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Response'
+                    description: 成功扫描二维码
+            security:
+                - BearerAuth: []
+            summary: 扫描二维码
+            tags:
+                - user/sso
     /api/v1/user/system/public_key:
         get:
             description: 获取服务端pgp公钥
