@@ -1127,6 +1127,8 @@ components:
                         - 2
                         - 3
                     type: integer
+                    x-go-type-skip-optional-pointer: true
+                    x-omitempty: false
             type: object
         ReadUserMsgsRequest:
             properties:
@@ -1233,22 +1235,10 @@ components:
                 platform:
                     description: 用户登录的平台
                     type: string
-                token:
-                    description: 二维码token
-                    type: string
             required:
-                - token
                 - driver_id
                 - driver_token
                 - platform
-            type: object
-        ScanQRCodeRequest:
-            properties:
-                token:
-                    description: 二维码token
-                    type: string
-            required:
-                - token
             type: object
         SendAllNotificationRequest:
             properties:
@@ -4111,6 +4101,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/Response'
                     description: 登录确认成功
+            security:
+                - BearerAuth: []
             summary: 确认登录
             tags:
                 - user/sso
@@ -4151,6 +4143,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/LoginResponse'
                     description: 登录成功
+            security:
+                - BearerAuth: []
             summary: 完成登录
             tags:
                 - user/sso
@@ -4175,16 +4169,17 @@ paths:
             summary: 验证二维码状态
             tags:
                 - user/sso
-    /api/v1/user/sso/scan_qr:
+    /api/v1/user/sso/scan_qr/{token}:
         post:
             description: 用户扫描二维码后调用此接口
             operationId: scanQRCode
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ScanQRCodeRequest'
-                required: true
+            parameters:
+                - description: 二维码token
+                  in: path
+                  name: token
+                  required: true
+                  schema:
+                    type: string
             responses:
                 "200":
                     content:

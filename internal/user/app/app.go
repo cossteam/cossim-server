@@ -22,6 +22,9 @@ type Commands struct {
 	ResetUserPublicKey        command.ResetUserPublicKeyHandler
 	UpdateUser                command.UpdateUserHandler
 	UpdateUserAvatarHandler   command.UpdateUserAvatarHandler
+	GenerateQRCode            command.GenerateQRCodeHandler
+	UpdateQRCode              command.UpdateQRCodeHandler
+	SSOLogin                  command.SSOLoginHandler
 	//CreateGroup command.CreateGroupHandler
 	//DeleteGroup command.DeleteGroupHandler
 	//UpdateGroup command.UpdateGroupHandler
@@ -31,6 +34,7 @@ type Queries struct {
 	GetUser             query.GetUserHandler
 	GetUserBundle       query.GetUserBundleHandler
 	GetUserLoginClients query.GetUserClientsHandler
+	GetQRCode           query.GetQRCodeHandler
 	//GetGroup    query.GetGroupHandler
 	//SearchGroup query.SearchGroupHandler
 }

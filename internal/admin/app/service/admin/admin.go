@@ -72,7 +72,7 @@ func (s *ServiceImpl) InitAdmin() error {
 	reader := bytes.NewReader(buf.Bytes())
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	err = s.sp.UploadAvatar(context.Background(), key, reader, reader.Size(), minio.PutObjectOptions{ContentType: "image/jpeg"})
+	err = s.sp.UploadOther(context.Background(), key, reader, reader.Size(), minio.PutObjectOptions{ContentType: "image/jpeg"})
 	if err != nil {
 		return err
 	}

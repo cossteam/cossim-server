@@ -24,6 +24,7 @@ const (
 	UserKeyPrefix                       = "user:"
 	UserInfoKey                         = UserKeyPrefix + "info:"
 	UserLoginKey                        = UserKeyPrefix + "login:"
+	UserQRCodeKey                       = UserKeyPrefix + "qrcode:"
 	UserVerificationCode                = UserKeyPrefix + "verification_code:"
 	UserEmailVerificationCode           = UserKeyPrefix + "email_verification_code:"
 )
@@ -66,6 +67,8 @@ type UserCache interface {
 	GetUserVerificationCode(ctx context.Context, userID, code string) (string, error)
 	SetUserVerificationCode(ctx context.Context, userID, code string, expiration time.Duration) error
 	DeleteUserVerificationCode(ctx context.Context, userID, code string) error
+	SetQrCode(ctx context.Context, code *entity.QRCode) error
+	GetQrCode(ctx context.Context, token string) (*entity.QRCode, error)
 	Close() error
 }
 
@@ -406,4 +409,40 @@ func (u *UserCacheRedis) DeleteUsersInfo(ctx context.Context, userIDs ...string)
 		keys[i] = GetUserInfoKey(userID)
 	}
 	return u.client.Del(ctx, keys...).Err()
+}
+
+func (u *UserCacheRedis) SetQrCode(ctx context.Context, code *entity.QRCode) error {
+	codeJSON, err := json.Marshal(code)
+	if err != nil {
+		return err
+	}
+	err = u.client.Set(ctx, UserQRCodeKey+code.Token, codeJSON, 60*time.Second).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *UserCacheRedis) GetQrCode(ctx context.Context, token string) (*entity.QRCode, error) {
+	code := new(entity.QRCode)
+	c := u.client.Get(ctx, UserQRCodeKey+token)
+	if c.Err() != nil {
+		if c.Err() == redis.Nil {
+			code.Status = entity.QRCodeStatusExpired
+			return code, nil
+		}
+		return nil, c.Err()
+	}
+
+	s, err := c.Result()
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal([]byte(s), &code)
+	if err != nil {
+		return nil, err
+	}
+	return code, nil
 }

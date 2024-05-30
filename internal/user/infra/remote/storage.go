@@ -15,7 +15,8 @@ import (
 
 type StorageService interface {
 	GenerateAvatar(ctx context.Context) (string, error)
-	UploadAvatar(ctx context.Context, reader *bytes.Reader) (string, error)
+	UploadOther(ctx context.Context, reader *bytes.Reader, opt minio.PutObjectOptions) (string, error)
+	UploadQRCode(ctx context.Context, reader *bytes.Reader, opt minio.PutObjectOptions) (string, error)
 }
 
 var _ StorageService = &storageService{}
@@ -28,7 +29,7 @@ func NewStorageService(client storage.StorageProvider) StorageService {
 	return &storageService{client: client}
 }
 
-func (s *storageService) UploadAvatar(ctx context.Context, reader *bytes.Reader) (string, error) {
+func (s *storageService) UploadOther(ctx context.Context, reader *bytes.Reader, opt minio.PutObjectOptions) (string, error) {
 	bucket, err := myminio.GetBucketName(int(storagev1.FileType_Other))
 	if err != nil {
 		return "", err
@@ -36,9 +37,7 @@ func (s *storageService) UploadAvatar(ctx context.Context, reader *bytes.Reader)
 
 	fileID := uuid.New().String()
 	key := myminio.GenKey(bucket, fileID+".jpeg")
-	if err = s.client.UploadAvatar(ctx, key, reader, reader.Size(), minio.PutObjectOptions{
-		ContentType: "image/jpeg",
-	}); err != nil {
+	if err = s.client.UploadOther(ctx, key, reader, reader.Size(), opt); err != nil {
 		return "", err
 	}
 
@@ -66,11 +65,21 @@ func (s *storageService) GenerateAvatar(ctx context.Context) (string, error) {
 	reader := bytes.NewReader(buf.Bytes())
 	fileID := uuid.New().String()
 	path := myminio.GenKey(bucket, fileID+".jpeg")
-	if err = s.client.UploadAvatar(ctx, path, reader, reader.Size(), minio.PutObjectOptions{
+	if err = s.client.UploadOther(ctx, path, reader, reader.Size(), minio.PutObjectOptions{
 		ContentType: "image/jpeg",
 	}); err != nil {
 		return "", err
 	}
 
 	return path, nil
+}
+
+func (s *storageService) UploadQRCode(ctx context.Context, reader *bytes.Reader, opt minio.PutObjectOptions) (string, error) {
+	fileID := uuid.New().String()
+	object, err := s.client.UploadTemporaryObject(ctx, fileID+".jpeg", reader, reader.Size(), opt)
+	if err != nil {
+		return "", err
+	}
+
+	return object.RequestURI(), nil
 }

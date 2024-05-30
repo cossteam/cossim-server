@@ -7,6 +7,7 @@ import (
 	"github.com/cossim/coss-server/pkg/storage"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/minio/minio-go/v7/pkg/lifecycle"
 	"io"
 	"net/url"
 	"sort"
@@ -23,6 +24,9 @@ const AudioBucket = "audio"
 
 // 公开桶
 const PublicBucket = "public"
+
+// 临时桶
+const TemporaryBucket = "temp"
 
 var BucketList = map[storev1.FileType]string{
 	//storev1.FileType_Text:  FileBucket,
@@ -41,7 +45,7 @@ func NewMinIOStorage(endpoint, accessKey, secretKey string, useSSL bool, opts ..
 		AccessKey:        accessKey,
 		SecretKey:        secretKey,
 		UseSSL:           useSSL,
-		PresignedExpires: time.Hour * 24 * 7,
+		PresignedExpires: time.Hour * 24,
 		BucketList:       BucketList,
 	}
 	for _, opt := range opts {
@@ -63,12 +67,18 @@ func NewMinIOStorage(endpoint, accessKey, secretKey string, useSSL bool, opts ..
 	if err != nil {
 		return nil, err
 	}
+
 	c.coreClient = coreCli
 
 	for _, v := range []string{FileBucket, AudioBucket, PublicBucket} {
 		if err = c.CreateMinoBuket(v, 0); err != nil {
 			panic(err)
 		}
+	}
+
+	// 创建临时存储桶
+	if err = c.CreateTemporaryBucket(context.Background(), TemporaryBucket); err != nil {
+		panic(err)
 	}
 
 	return c, nil
@@ -128,7 +138,8 @@ func (m *MinIOStorage) Upload(ctx context.Context, key string, reader io.Reader,
 	return presignedURL, nil
 }
 
-func (m *MinIOStorage) UploadAvatar(ctx context.Context, key string, reader io.Reader, size int64, opt minio.PutObjectOptions) error {
+// 上传到公开桶
+func (m *MinIOStorage) UploadOther(ctx context.Context, key string, reader io.Reader, size int64, opt minio.PutObjectOptions) error {
 	bucketName, objectName, err := ParseKey(key)
 	if err != nil {
 		return err
@@ -184,21 +195,6 @@ func (m *MinIOStorage) CreateMinoBuket(bucketName string, fileType int) error {
 	if err = m.client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{Region: bucketName}); err != nil {
 		return err
 	}
-	//if bucketName == PublicBucket {
-	//	//// 设置存储桶访问策略为公开读
-	//	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + bucketName + `/*"]}]}`
-	//
-	//	err = m.client.SetBucketPolicy(context.Background(), bucketName, policy)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//} else {
-	//	// 设置存储桶策略
-	//	if err = m.client.SetBucketPolicy(context.Background(), bucketName, string(policy.BucketPolicyReadWrite)); err != nil {
-	//		return err
-	//	}
-	//}
 	//// 统一设置存储桶访问策略为公开读
 	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + bucketName + `/*"]}]}`
 
@@ -210,6 +206,41 @@ func (m *MinIOStorage) CreateMinoBuket(bucketName string, fileType int) error {
 	// 将存储桶名称与文件类型关联起来
 	//m.BucketList[storev1.FileType(fileType)] = bucketName
 	fmt.Printf("Successfully created %s bucket for file type %v\n", bucketName, fileType)
+
+	return nil
+}
+
+func (m *MinIOStorage) CreateTemporaryBucket(ctx context.Context, bucketName string) error {
+	// 先检查存储桶是否已经存在
+	exists, err := m.client.BucketExists(ctx, bucketName)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		// 创建存储桶
+		if err = m.client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
+			return err
+		}
+	}
+
+	// 定义生命周期策略
+	lifecycleConfig := &lifecycle.Configuration{
+		Rules: []lifecycle.Rule{{
+			Expiration: lifecycle.Expiration{
+				Days: 1,
+			},
+			ID:         "DeleteAfterOneDay",
+			RuleFilter: lifecycle.Filter{Prefix: ""},
+			Status:     "Enabled",
+		},
+		},
+	}
+
+	// 应用生命周期策略
+	err = m.client.SetBucketLifecycle(ctx, bucketName, lifecycleConfig)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -325,4 +356,9 @@ func (m *MinIOStorage) GetObjectInfo(ctx context.Context, key string, opt minio.
 		return minio.ObjectInfo{}, err
 	}
 	return info, nil
+}
+
+func (m *MinIOStorage) UploadTemporaryObject(ctx context.Context, key string, reader io.Reader, objectSize int64, opt minio.PutObjectOptions) (*url.URL, error) {
+	key = fmt.Sprintf("%s/%s", TemporaryBucket, key) // 指定 temp 存储桶
+	return m.Upload(ctx, key, reader, objectSize, opt)
 }
