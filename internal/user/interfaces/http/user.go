@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	v1 "github.com/cossim/coss-server/internal/user/api/http/v1"
 	"github.com/cossim/coss-server/internal/user/app/command"
 	"github.com/cossim/coss-server/internal/user/app/query"
@@ -478,26 +479,160 @@ func (h *HttpServer) GetPGPPublicKey(c *gin.Context) {
 }
 
 func (h *HttpServer) ConfirmLogin(c *gin.Context, token string) {
-	//TODO implement me
-	panic("implement me")
+	thisID := c.Value(constants.UserID).(string)
+	handle, err := h.app.Queries.GetQRCode.Handle(c, &query.GetQrCode{Token: token})
+	if err != nil {
+		fmt.Println(err)
+		c.Error(err)
+		return
+	}
+
+	if handle.Status == entity.QRCodeStatusExpired {
+		response.SetFail(c, "二维码已过期", nil)
+		return
+	}
+
+	if handle.UserID != thisID || handle.Status != entity.QRCodeStatusScanned {
+		response.SetFail(c, "确认登录失败", nil)
+		return
+	}
+
+	err = h.app.Commands.UpdateQRCode.Handle(c, &entity.QRCode{
+		Token:  token,
+		Status: entity.QRCodeStatusConfirmed,
+		UserID: thisID,
+	})
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "登录确认成功", nil)
 }
 
 func (h *HttpServer) GenerateQRCode(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+	handle, err := h.app.Commands.GenerateQRCode.Handle(c, &command.GenerateQRCode{})
+	if err != nil {
+		fmt.Println(err)
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "生成二维码成功", v1.GenerateQRCodeResponse{
+		QrCode: &handle.QrCode,
+		Token:  &handle.Token,
+	})
 }
 
 func (h *HttpServer) SsoLogin(c *gin.Context, token string) {
-	//TODO implement me
-	panic("implement me")
+	req := &v1.SSOLoginRequest{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		h.logger.Error("参数验证失败", zap.Error(err))
+		response.SetFail(c, "参数验证失败", nil)
+		return
+	}
+
+	handle, err := h.app.Queries.GetQRCode.Handle(c, &query.GetQrCode{Token: token})
+	if err != nil {
+		fmt.Println(err)
+		c.Error(err)
+		return
+	}
+
+	if handle.Status == entity.QRCodeStatusExpired {
+		response.SetFail(c, "二维码已过期", nil)
+		return
+	}
+
+	if handle.Status != entity.QRCodeStatusConfirmed || handle.UserID == "" {
+		response.SetFail(c, "登录失败", nil)
+		return
+	}
+
+	handle2, err := h.app.Commands.SSOLogin.Handle(c, &command.SSOLogin{
+		UserID:      handle.UserID,
+		DriverID:    req.DriverId,
+		ClientIP:    c.ClientIP(),
+		Platform:    req.Platform,
+		DriverToken: req.DriverToken,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.app.Commands.UpdateQRCode.Handle(c, &entity.QRCode{
+		Token:  token,
+		Status: entity.QRCodeStatusExpired,
+		UserID: handle2.UserID,
+	})
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "登录成功", ConversionSSOLogin(handle2))
+}
+
+func ConversionSSOLogin(userLogin *command.SSOLoginResponse) *v1.LoginResponse {
+	return &v1.LoginResponse{
+		Token: userLogin.Token,
+		UserInfo: &struct {
+			LastLoginTime  int64  `json:"last_login_time"`
+			NewDeviceLogin bool   `json:"new_device_login"`
+			UserId         string `json:"user_id"`
+		}{LastLoginTime: userLogin.LastLoginTime, NewDeviceLogin: userLogin.NewDeviceLogin, UserId: userLogin.UserID},
+	}
 }
 
 func (h *HttpServer) VerifyQRCodeStatus(c *gin.Context, token string) {
-	//TODO implement me
-	panic("implement me")
+	handle, err := h.app.Queries.GetQRCode.Handle(c, &query.GetQrCode{Token: token})
+	if err != nil {
+		fmt.Println(err)
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "获取二维码状态成功", v1.QRCodeStatusResponse{
+		Status: v1.QRCodeStatusResponseStatus(handle.Status),
+	})
 }
 
-func (h *HttpServer) ScanQRCode(c *gin.Context) {
-	//TODO implement me
-	panic("implement me")
+func (h *HttpServer) ScanQRCode(c *gin.Context, token string) {
+	handle, err := h.app.Queries.GetQRCode.Handle(c, &query.GetQrCode{Token: token})
+	if err != nil {
+		fmt.Println(err)
+		c.Error(err)
+		return
+	}
+
+	if handle.Status == entity.QRCodeStatusScanned {
+		response.SetFail(c, "重复扫码", nil)
+		return
+	}
+
+	if handle.Status == entity.QRCodeStatusExpired {
+		response.SetFail(c, "二维码已过期", nil)
+		return
+	}
+
+	if handle.Status != entity.QRCodeStatusNotScanned {
+		response.SetFail(c, "扫码失败", nil)
+		return
+	}
+
+	err = h.app.Commands.UpdateQRCode.Handle(c, &entity.QRCode{
+		Token:  token,
+		Status: entity.QRCodeStatusScanned,
+		UserID: c.Value(constants.UserID).(string),
+	})
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.SetSuccess(c, "扫码成功", nil)
 }

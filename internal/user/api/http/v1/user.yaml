@@ -564,7 +564,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GenerateQRCodeResponse'
-  /api/v1/user/sso/scan_qr:
+  /api/v1/user/sso/scan_qr/{token}:
     post:
       tags:
         - user/sso
@@ -572,13 +572,14 @@ paths:
       security:
         - BearerAuth: [ ]
       description: 用户扫描二维码后调用此接口
+      parameters:
+        - name: token
+          in: path
+          description: 二维码token
+          required: true
+          schema:
+            type: string
       operationId: scanQRCode
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ScanQRCodeRequest'
       responses:
         '200':
           description: 成功扫描二维码
@@ -612,7 +613,7 @@ paths:
     post:
       tags:
         - user/sso
-      summary: 完成登录
+      summary: sso登录
       description: 扫描二维码并验证成功后调用此接口完成登录
       operationId: ssoLogin
       parameters:
@@ -639,6 +640,8 @@ paths:
       tags:
         - user/sso
       summary: 确认登录
+      security:
+        - BearerAuth: [ ]
       description: 确认扫描二维码并验证成功后调用此接口确认登录
       operationId: confirmLogin
       parameters:
@@ -684,19 +687,13 @@ components:
         qr_code:
           type: string
           description: 二维码图片
-    ScanQRCodeRequest:
-      type: object
-      required:
-        - token
-      properties:
-        token:
-          type: string
-          description: 二维码token
     QRCodeStatusResponse:
       type: object
       properties:
         status:
           type: integer
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
           enum:
             - 0
             - 1
@@ -710,14 +707,10 @@ components:
     SSOLoginRequest:
       type: object
       required:
-        - token
         - driver_id
         - driver_token
         - platform
       properties:
-        token:
-          type: string
-          description: 二维码token
         driver_id:
           type: string
           description: 当前登录设备的唯一标识符

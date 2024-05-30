@@ -67,7 +67,7 @@ type Preferences struct {
 // QRCodeStatusResponse defines model for QRCodeStatusResponse.
 type QRCodeStatusResponse struct {
 	// Status 0: 未扫描 1: 已扫描 2: 已确认 3: 已过期
-	Status *QRCodeStatusResponseStatus `json:"status,omitempty"`
+	Status QRCodeStatusResponseStatus `json:"status"`
 }
 
 // QRCodeStatusResponseStatus 0: 未扫描 1: 已扫描 2: 已确认 3: 已过期
@@ -90,15 +90,6 @@ type SSOLoginRequest struct {
 
 	// Platform 用户登录的平台
 	Platform string `json:"platform"`
-
-	// Token 二维码token
-	Token string `json:"token"`
-}
-
-// ScanQRCodeRequest defines model for ScanQRCodeRequest.
-type ScanQRCodeRequest struct {
-	// Token 二维码token
-	Token string `json:"token"`
 }
 
 // UserInfo defines model for UserInfo.
@@ -291,6 +282,3 @@ type UserRegisterJSONRequestBody UserRegisterJSONBody
 
 // SsoLoginJSONRequestBody defines body for SsoLogin for application/json ContentType.
 type SsoLoginJSONRequestBody = SSOLoginRequest
-
-// ScanQRCodeJSONRequestBody defines body for ScanQRCode for application/json ContentType.
-type ScanQRCodeJSONRequestBody = ScanQRCodeRequest

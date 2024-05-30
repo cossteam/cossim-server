@@ -8,8 +8,9 @@ import (
 	"github.com/cossim/coss-server/internal/user/domain/service"
 	"github.com/cossim/coss-server/internal/user/infra/remote"
 	"github.com/cossim/coss-server/pkg/code"
+	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/decorator"
-	httputil "github.com/cossim/coss-server/pkg/utils/http"
+	"github.com/minio/minio-go/v7"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"mime/multipart"
@@ -27,15 +28,12 @@ type UpdateUserAvatarResponse struct {
 type UpdateUserAvatarHandler decorator.CommandHandler[*UpdateUserAvatar, *UpdateUserAvatarResponse]
 
 func NewUpdateUserAvatarHandler(logger *zap.Logger,
-	ssl bool,
-	gatewayAddress string,
 	ud service.UserDomain,
 	storageService remote.StorageService,
+	baseUrl string,
 ) UpdateUserAvatarHandler {
 	return &updateUserAvatarHandler{
 		logger:         logger,
-		ssl:            ssl,
-		gatewayAddress: gatewayAddress,
 		ud:             ud,
 		storageService: storageService,
 	}
@@ -44,10 +42,9 @@ func NewUpdateUserAvatarHandler(logger *zap.Logger,
 type updateUserAvatarHandler struct {
 	logger         *zap.Logger
 	ssl            bool
-	gatewayAddress string
-	downloadURL    string
 	ud             service.UserDomain
 	storageService remote.StorageService
+	baseUrl        string
 }
 
 func (h *updateUserAvatarHandler) Handle(ctx context.Context, cmd *UpdateUserAvatar) (*UpdateUserAvatarResponse, error) {
@@ -72,19 +69,14 @@ func (h *updateUserAvatarHandler) Handle(ctx context.Context, cmd *UpdateUserAva
 
 	reader := bytes.NewReader(data)
 
-	path, err := h.storageService.UploadAvatar(ctx, reader)
+	path, err := h.storageService.UploadOther(ctx, reader, minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	aUrl := fmt.Sprintf("http://%s%s/%s", h.gatewayAddress, h.downloadURL, path)
-	if h.ssl {
-		aUrl, err = httputil.ConvertToHttps(aUrl)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+	aUrl := fmt.Sprintf("%s/%s", h.baseUrl+constants.DownLoadAddress, path)
 	_, err = h.ud.UpdateUser(ctx, &entity.User{ID: cmd.UserID, Avatar: aUrl}, true)
 	if err != nil {
 		return nil, err

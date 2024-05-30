@@ -172,15 +172,28 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 			),
 			UpdateUserAvatarHandler: command.NewUpdateUserAvatarHandler(
 				logger,
-				ac.SystemConfig.Ssl,
-				ac.SystemConfig.GatewayAddress,
 				userDomain,
 				storageService,
+				baseUrl,
 			),
 			UpdateUser: command.NewUpdateUserHandler(
 				logger,
 				userDomain,
 				userCache,
+			),
+			GenerateQRCode: command.NewGenerateQRCodeHandler(logger, storageService, userCache, baseUrl),
+			UpdateQRCode:   command.NewUpdateQRCodeHandler(logger, userCache),
+			SSOLogin: command.NewSSOLoginHandler(
+				logger,
+				userCache,
+				dtmGrpcServer,
+				authDomain,
+				userDomain,
+				userLoginDomain,
+				relationUserService,
+				relationDialogService,
+				msgService,
+				pushService,
 			),
 		},
 		Queries: app.Queries{
@@ -198,6 +211,7 @@ func NewApplication(ctx context.Context, ac *config.AppConfig, logger *zap.Logge
 				userCache,
 				userDomain,
 			),
+			GetQRCode: query.NewGetQRCodeHandler(logger, userCache),
 		},
 	}
 }
