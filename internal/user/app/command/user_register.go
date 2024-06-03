@@ -82,12 +82,15 @@ func (h *userRegisterHandler) Handle(ctx context.Context, cmd *UserRegister) (st
 		return "", code.InvalidParameter.CustomMessage("password and confirm password not match")
 	}
 
-	_, err := h.ud.GetUserWithOpts(ctx, entity.WithEmail(cmd.Email))
+	user, err := h.ud.GetUserWithOpts(ctx, entity.WithEmail(cmd.Email))
 	if err != nil {
 		if !errors.Is(err, code.NotFound) {
 			h.logger.Error("get user with email error", zap.Error(err))
 			return "", err
 		}
+	}
+	if user != nil {
+		return "", code.UserErrEmailAlreadyRegistered
 	}
 
 	password := utils.HashString(cmd.Password)
