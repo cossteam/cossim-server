@@ -41,7 +41,7 @@ coss-server
 ## 快速启动
 > 以下两种方式都需要安装docker-compose与docker
 > 
-> 请安装[coss-cli工具](https://github.com/cossim/coss-cli/releases)
+> ⚠️请先安装[coss-cli工具](https://github.com/cossim/coss-cli/releases)
 > 
 > 有关cli工具更多的信息请[参阅](https://github.com/cossim/coss-cli)
 ### 源码启动
@@ -63,6 +63,8 @@ docker-compose -f deploy/docker/docker-compose.base.yaml up -d
 go run ./cmd/user/main.go -config deploy/docker/config/service/user.yaml
 ```
 ### cli工具启动
+> ⚠️请先安装[coss-cli工具](https://github.com/cossim/coss-cli/releases)
+> 
 > ⚠️请注意：cli工具启动时，会自动生成配置文件在当前目录下，如有需要请创建文件夹
 ```
 mkdir coss-server
