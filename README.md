@@ -40,7 +40,7 @@ coss-server
 
 ## 快速启动
 > 以下两种方式都需要安装docker-compose
-> 请安装[coss-cli工具](https://github.com/zwtesttt/coss-cli/releases)
+> 请安装[coss-cli工具](https://github.com/cossim/coss-cli/releases)
 ### 源码启动
 ```
 1.拉取最新代码
