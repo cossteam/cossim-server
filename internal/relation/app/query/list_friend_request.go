@@ -2,7 +2,7 @@ package query
 
 import (
 	"context"
-	"github.com/cossim/coss-server/internal/relation/domain/entity"
+	"sync"
 
 	"github.com/cossim/coss-server/internal/relation/domain/service"
 	"github.com/cossim/coss-server/internal/relation/infra/rpc"
@@ -86,64 +86,60 @@ func (h *listFriendRequestHandler) Handle(ctx context.Context, cmd *ListFriendRe
 		return nil, err
 	}
 
-	recipientInfoCh := make(chan *ShortUserInfo, len(requestList.List))
-	senderInfoCh := make(chan *ShortUserInfo, len(requestList.List))
+	resp := &ListFriendRequestResponse{
+		Total: requestList.Total,
+		List:  make([]*FriendRequest, len(requestList.List)),
+	}
 
-	for _, request := range requestList.List {
-		go func(request *entity.UserFriendRequest) {
+	var wg sync.WaitGroup
+	wg.Add(len(requestList.List))
+
+	// 并行获取 RecipientInfo 和 SenderInfo
+	for i, request := range requestList.List {
+		i := i
+		request := request
+
+		go func() {
+			defer wg.Done()
+
 			recipientInfo, err := h.userService.GetUserInfo(ctx, request.RecipientID)
 			if err != nil {
 				h.logger.Error("get recipient info error", zap.Error(err))
-				recipientInfoCh <- &ShortUserInfo{}
-				return
+				//recipientInfo = &UserInfo{} // 设置一个空的默认值
 			}
-			recipientInfoCh <- &ShortUserInfo{
-				UserID:   recipientInfo.ID,
-				CossID:   recipientInfo.CossID,
-				Avatar:   recipientInfo.Avatar,
-				Nickname: recipientInfo.Nickname,
-			}
-		}(request)
-	}
-
-	for _, request := range requestList.List {
-		go func(request *entity.UserFriendRequest) {
 			senderInfo, err := h.userService.GetUserInfo(ctx, request.SenderID)
 			if err != nil {
 				h.logger.Error("get sender info error", zap.Error(err))
-				senderInfoCh <- &ShortUserInfo{}
+				//senderInfo = &UserInfo{} // 设置一个空的默认值
 				return
 			}
-			senderInfoCh <- &ShortUserInfo{
-				UserID:   senderInfo.ID,
-				CossID:   senderInfo.CossID,
-				Avatar:   senderInfo.Avatar,
-				Nickname: senderInfo.Nickname,
+
+			resp.List[i] = &FriendRequest{
+				ID:          request.ID,
+				CreateAt:    request.CreatedAt,
+				ExpiredAt:   request.ExpiredAt,
+				RecipientID: request.RecipientID,
+				RecipientInfo: &ShortUserInfo{
+					UserID:   recipientInfo.ID,
+					CossID:   recipientInfo.CossID,
+					Avatar:   recipientInfo.Avatar,
+					Nickname: recipientInfo.Nickname,
+				},
+				Remark:   request.Remark,
+				SenderID: request.SenderID,
+				SenderInfo: &ShortUserInfo{
+					UserID:   senderInfo.ID,
+					CossID:   senderInfo.CossID,
+					Avatar:   senderInfo.Avatar,
+					Nickname: senderInfo.Nickname,
+				},
+				Status: int(request.Status),
 			}
-		}(request)
+		}()
 	}
 
-	resp := &ListFriendRequestResponse{
-		Total: requestList.Total,
-		List:  make([]*FriendRequest, 0, len(requestList.List)),
-	}
-	for i := 0; i < len(requestList.List); i++ {
-		recipientInfo := <-recipientInfoCh
-		senderInfo := <-senderInfoCh
-
-		request := requestList.List[i]
-		resp.List = append(resp.List, &FriendRequest{
-			ID:            request.ID,
-			CreateAt:      request.CreatedAt,
-			ExpiredAt:     request.ExpiredAt,
-			RecipientID:   request.RecipientID,
-			RecipientInfo: recipientInfo,
-			Remark:        request.Remark,
-			SenderID:      request.SenderID,
-			SenderInfo:    senderInfo,
-			Status:        int(request.Status),
-		})
-	}
+	// 等待所有goroutine完成
+	wg.Wait()
 
 	return resp, nil
 }
