@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"sort"
 	"sync"
 
 	"github.com/cossim/coss-server/internal/relation/domain/service"
@@ -105,12 +106,11 @@ func (h *listFriendRequestHandler) Handle(ctx context.Context, cmd *ListFriendRe
 			recipientInfo, err := h.userService.GetUserInfo(ctx, request.RecipientID)
 			if err != nil {
 				h.logger.Error("get recipient info error", zap.Error(err))
-				//recipientInfo = &UserInfo{} // 设置一个空的默认值
+				return
 			}
 			senderInfo, err := h.userService.GetUserInfo(ctx, request.SenderID)
 			if err != nil {
 				h.logger.Error("get sender info error", zap.Error(err))
-				//senderInfo = &UserInfo{} // 设置一个空的默认值
 				return
 			}
 
@@ -138,8 +138,12 @@ func (h *listFriendRequestHandler) Handle(ctx context.Context, cmd *ListFriendRe
 		}()
 	}
 
-	// 等待所有goroutine完成
 	wg.Wait()
+
+	// 按 CreateAt 降序排序，最近的请求排在最前面
+	sort.Slice(resp.List, func(i, j int) bool {
+		return resp.List[i].CreateAt > resp.List[j].CreateAt
+	})
 
 	return resp, nil
 }

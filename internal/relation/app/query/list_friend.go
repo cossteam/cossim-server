@@ -8,7 +8,10 @@ import (
 	"github.com/cossim/coss-server/internal/relation/infra/rpc"
 	"github.com/cossim/coss-server/pkg/code"
 	"github.com/cossim/coss-server/pkg/decorator"
+	"github.com/mozillazg/go-pinyin"
 	"go.uber.org/zap"
+	"strings"
+	"unicode"
 )
 
 type ListFriend struct {
@@ -31,6 +34,7 @@ type UserInfo struct {
 	Avatar         string
 	Signature      string
 	CossId         string
+	Letter         string
 	Status         int
 	DialogId       uint32
 	RelationStatus int
@@ -106,6 +110,11 @@ func (h *listFriendHandler) Handle(ctx context.Context, cmd *ListFriend) (*ListF
 			rs = 3
 		}
 
+		letter := friend.Remark
+		if letter == "" {
+			letter = userInfo.Nickname
+		}
+
 		resp.List = append(resp.List, &UserInfo{
 			UserID:         userInfo.ID,
 			NickName:       userInfo.Nickname,
@@ -113,6 +122,7 @@ func (h *listFriendHandler) Handle(ctx context.Context, cmd *ListFriend) (*ListF
 			Tel:            userInfo.Tel,
 			Avatar:         userInfo.Avatar,
 			Signature:      userInfo.Signature,
+			Letter:         getGroupKey(letter),
 			CossId:         userInfo.CossID,
 			Status:         int(userInfo.Status),
 			DialogId:       friend.DialogID,
@@ -127,4 +137,41 @@ func (h *listFriendHandler) Handle(ctx context.Context, cmd *ListFriend) (*ListF
 	}
 
 	return resp, nil
+}
+
+func getGroupKey(name string) string {
+	if isChinese(name) {
+		pinyinSlice := pinyin.Pinyin(name, pinyin.NewArgs())
+		firstChar := getFirstChar(pinyinSlice)
+		return strings.ToUpper(firstChar)
+	} else if isSpecialChar(name) {
+		return "#"
+	}
+
+	return strings.ToUpper(name[:1])
+}
+
+func isSpecialChar(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func isChinese(s string) bool {
+	for _, r := range s {
+		if unicode.Is(unicode.Han, r) {
+			return true
+		}
+	}
+	return false
+}
+
+func getFirstChar(pinyinSlice [][]string) string {
+	if len(pinyinSlice) > 0 && len(pinyinSlice[0]) > 0 {
+		return pinyinSlice[0][0][:1]
+	}
+	return ""
 }

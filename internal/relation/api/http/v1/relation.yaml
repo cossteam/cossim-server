@@ -1377,6 +1377,11 @@ components:
         signature:
           type: string
           description: 用户签名
+        letter:
+          type: string
+          description: 首字母key
+          x-omitempty: false
+          x-go-type-skip-optional-pointer: true
         status:
           type: integer
           description: 用户状态
