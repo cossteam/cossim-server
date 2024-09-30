@@ -7,10 +7,6 @@ import (
 	"github.com/cossim/coss-server/pkg/constants"
 	"github.com/cossim/coss-server/pkg/http/response"
 	"github.com/gin-gonic/gin"
-	"github.com/mozillazg/go-pinyin"
-	"reflect"
-	"strings"
-	"unicode"
 )
 
 func (h *HttpServer) DeleteFriend(c *gin.Context, id string) {
@@ -321,14 +317,14 @@ func listFriendToResponse(listFriend *query.ListFriendResponse) *v1.UserFriendLi
 		List:  make(map[string][]v1.UserInfo),
 		Total: len(listFriend.List),
 	}
-	var userList []v1.UserInfo
 	for _, v := range listFriend.List {
-		userList = append(userList, v1.UserInfo{
+		resp.List[v.Letter] = append(resp.List[v.Letter], v1.UserInfo{
 			Avatar:   v.Avatar,
 			CossId:   v.CossId,
 			DialogId: v.DialogId,
 			Email:    v.Email,
 			Nickname: v.NickName,
+			Letter:   v.Letter,
 			Preferences: v1.Preferences{
 				OpenBurnAfterReading:        v.Preferences.OpenBurnAfterReading,
 				OpenBurnAfterReadingTimeOut: v.Preferences.OpenBurnAfterReadingTimeOut,
@@ -342,73 +338,7 @@ func listFriendToResponse(listFriend *query.ListFriendResponse) *v1.UserFriendLi
 			UserId:         v.UserID,
 		})
 	}
-	groupedUsers := sortAndGroupUsers(userList, "Nickname")
-	resp.List = groupedUsers
 	return resp
-}
-
-func sortAndGroupUsers(users []v1.UserInfo, fieldName string) map[string][]v1.UserInfo {
-	groupedUsers := make(map[string][]v1.UserInfo)
-	keyMap := make(map[string]bool)
-
-	for _, user := range users {
-		name := getFieldValue(user, fieldName)
-		groupKey := getGroupKey(name, user.Preferences.Remark)
-		groupedUsers[groupKey] = append(groupedUsers[groupKey], user)
-		keyMap[groupKey] = true
-	}
-
-	return groupedUsers
-}
-
-func getFieldValue(user v1.UserInfo, fieldName string) string {
-	r := reflect.ValueOf(user)
-	f := reflect.Indirect(r).FieldByName(fieldName)
-	if f.IsValid() {
-		return f.String()
-	}
-	return ""
-}
-
-func getGroupKey(name, remark string) string {
-	if remark != "" {
-		name = remark
-	}
-
-	if isChinese(name) {
-		pinyinSlice := pinyin.Pinyin(name, pinyin.NewArgs())
-		firstChar := getFirstChar(pinyinSlice)
-		return strings.ToUpper(firstChar)
-	} else if isSpecialChar(name) {
-		return "#"
-	}
-
-	return strings.ToUpper(name[:1])
-}
-
-func isSpecialChar(s string) bool {
-	for _, r := range s {
-		if !unicode.IsLetter(r) {
-			return true
-		}
-	}
-	return false
-}
-
-func isChinese(s string) bool {
-	for _, r := range s {
-		if unicode.Is(unicode.Han, r) {
-			return true
-		}
-	}
-	return false
-}
-
-func getFirstChar(pinyinSlice [][]string) string {
-	if len(pinyinSlice) > 0 && len(pinyinSlice[0]) > 0 {
-		return pinyinSlice[0][0][:1]
-	}
-	return ""
 }
 
 // AddFriend
